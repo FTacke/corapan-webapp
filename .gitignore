@@ -1,0 +1,9 @@
+# Aus .line.json workspace.exclude übernommen
+db/
+db_public/
+grabaciones/
+keys/
+LOKAL/
+split/
+temp-mp3/
+venv/

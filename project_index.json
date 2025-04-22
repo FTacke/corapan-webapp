@@ -1,0 +1,13 @@
+{
+  "indexed_files": [
+    ".cline.json",
+    ".dockerignore",
+    ".gitignore",
+    "app.py",
+    "Dockerfile",
+    "requirements.txt",
+    "robots.txt",
+    "static/",
+    "templates/"
+  ]
+}

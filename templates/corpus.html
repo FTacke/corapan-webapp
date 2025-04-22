@@ -1,0 +1,876 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <!-- ===========================================================================
+         Meta & Head
+         =========================================================================== -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" type="image/x-icon" href="data:image/x-icon;,">
+    <title>CO.RA.PAN</title>
+    <link rel="icon" type="image/x-icon" href="static/img/favicon.ico">
+    <link rel="stylesheet" href="static/css/corapan_styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.2/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script>
+      const playerPath = '{{ url_for("player") }}';
+    </script>
+    <script defer src="{{ url_for('static', filename='js/corpus_script.js') }}"></script>    
+  </head>
+<body>
+  <header>
+    <div id="logoContainer">
+      <a href="{{ url_for('index') }}"><img src="static/img/logo.jpg" alt="CO.RA.PAN"></a>
+    </div>
+    <!-- Navigation -->
+    <div id="mainNavigation">
+      <nav>
+        <ul>
+          <li><a href="{{ url_for('index') }}" class="page-link"><i class="bi bi-house"></i></a></li>
+          <li><a href="{{ url_for('proyecto') }}" class="page-link">Proyecto</a></li>
+          <li><a href="{{ url_for('atlas') }}" class="page-link">Atlas</a></li>
+          <li><a href="{{ url_for('corpus') }}" class="page-link active">Corpus</a></li>
+          <li class="logout-item">
+            <a href="{{ url_for('logout') }}" class="logout-link"><i class="bi bi-box-arrow-right" alt="Logout"></i></a>
+          </li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+<!-- PAGE CONTENT HERE (content-container) -->
+<div id="content-container">
+
+  <h1>Búsqueda por palabra 
+    <i class="fa-solid fa-circle-question" onclick="toggleTooltip(event)"></i>
+    <span id="clickTooltip" class="tooltip-text">
+      <p>Pueden buscarse <span class="tooltip-high">palabras o secuencias de letras</span>.</p>
+      <p>Utilizando los parámetros de búsqueda, puedes ajustar la búsqueda a <span class="tooltip-high">países</span> específicos, <span class="tooltip-high">tipos de hablantes</span>, <span class="tooltip-high">sexos</span> o <span class="tooltip-high">modos de habla</span>.</p>
+      <p>También es posible buscar dentro de <span class="tooltip-high">formatos de discurso particulares</span>, como pronósticos del tiempo e informes de tránsito.</p>
+    </span>
+  </h1>
+
+  <!-- TABS -->
+
+  <div class="search-tabs">
+    <button class="tab-btn {% if selected_tab=='simple' %}active{% endif %}"
+            onclick="showTab('simple')">Búsqueda simple</button>
+  
+    <button class="tab-btn {% if selected_tab=='advanced' %}active{% endif %}"
+            onclick="showTab('advanced')">Búsqueda avanzada</button>
+  
+    <button class="tab-btn {% if selected_tab=='token' %}active{% endif %}"
+            onclick="showTab('token')">Token</button>
+  </div>  
+
+  <!-- TABS-Contents -->
+  <div id="simple-search-container" class="tab-content active-tab">
+    <form id="searchform" action="{{ url_for('search') }}" method="get">
+      <input type="hidden" name="tab" value="simple">
+      
+      <!-- Palabra + NEU: Dropdown "search_mode" -->
+      <table class="filter-table">
+        <tr>
+          <td class="td-category">
+            <span id="category">Palabra:</span>
+          </td>
+          <td>
+            <input class="entrar_letras" type="text" name="query" id="query" autocomplete="name"
+                   value="{{ request.args.get('query', '') }}" required>
+
+            <!-- NEU: Auswahl Text/Lemma/Exakt -->
+            <select name="search_mode" id="search_mode" class="searchModeSelect">
+              <option value="text"
+                {% if request.args.get('search_mode', 'text') == 'text' %}selected{% endif %}>Forma</option>
+              <option value="text_exact"
+                {% if request.args.get('search_mode') == 'text_exact' %}selected{% endif %}>Forma exacta</option>
+              <option value="lemma_exact"
+                {% if request.args.get('search_mode') == 'lemma_exact' %}selected{% endif %}>Lema</option>
+            </select>
+          </td>
+        </tr>
+      </table>
+
+      <!-- Filter‑Zeile --------------------------------------------------------- -->
+      <table class="filter-table">
+        <tr>
+          <td class="td-category"><span id="category">Filtros:</span></td>
+          <td>
+            <div class="filter-row">
+              <!-- País‑Dropdown -->
+              <div class="dropdown-select">
+                <div class="select-box" onclick="toggleDrop('country')">País <i class="fa-solid fa-angle-down"></i></div>
+
+                <div class="select-menu" id="drop-country">
+                <!-- Todos -->
+                <label><input type="checkbox" id="country_code_all"
+                  name="country_code" value="all"
+                  {% if 'all' in (request.args.getlist('country_code') or ['all']) %}checked{% endif %}
+                  onclick="uncheckAll('country_code', this)">Todos</label>
+
+                <!-- Argentina -->
+                <label title="Argentina"><input type="checkbox" id="country_argentina"
+                  name="country_code" value="ARG"
+                  {% if 'ARG' in request.args.getlist('country_code') %}checked{% endif %}
+                  onclick="uncheckAll('country_code', this)">ARG</label>
+
+                <!-- Argentina / Chubut -->
+                <label title="Argentina / Chubut"><input type="checkbox" id="country_arg-cht"
+                  name="country_code" value="ARG-CHT"
+                  {% if 'ARG-CHT' in request.args.getlist('country_code') %}checked{% endif %}
+                  onclick="uncheckAll('country_code', this)">ARG‑Cht</label>
+
+                <!-- Argentina / Córdoba -->
+                <label title="Argentina / Córdoba"><input type="checkbox" id="country_arg-cba"
+                  name="country_code" value="ARG-CBA"
+                  {% if 'ARG-CBA' in request.args.getlist('country_code') %}checked{% endif %}
+                  onclick="uncheckAll('country_code', this)">ARG‑Cba</label>
+
+                <!-- Argentina / Santiago del Estero -->
+                <label title="Argentina / Santiago del Estero"><input type="checkbox" id="country_arg-sde"
+                  name="country_code" value="ARG-SDE"
+                  {% if 'ARG-SDE' in request.args.getlist('country_code') %}checked{% endif %}
+                  onclick="uncheckAll('country_code', this)">ARG‑SdE</label>
+
+                <!-- Bolivia -->
+                <label title="Bolivia"><input type="checkbox" id="country_bolivia"
+                  name="country_code" value="BOL"
+                  {% if 'BOL' in request.args.getlist('country_code') %}checked{% endif %}
+                  onclick="uncheckAll('country_code', this)">BOL</label>
+
+                <!-- Chile -->
+                <label title="Chile"><input type="checkbox" id="country_chile"
+                  name="country_code" value="CHI"
+                  {% if 'CHI' in request.args.getlist('country_code') %}checked{% endif %}
+                  onclick="uncheckAll('country_code', this)">CHI</label>
+
+                <!-- Colombia -->
+                <label title="Colombia"><input type="checkbox" id="country_colombia"
+                  name="country_code" value="COL"
+                  {% if 'COL' in request.args.getlist('country_code') %}checked{% endif %}
+                  onclick="uncheckAll('country_code', this)">COL</label>
+
+                <!-- Costa Rica -->
+                <label title="Costa Rica"><input type="checkbox" id="country_costarica"
+                  name="country_code" value="CR"
+                  {% if 'CR' in request.args.getlist('country_code') %}checked{% endif %}
+                  onclick="uncheckAll('country_code', this)">CR</label>
+
+                <!-- Cuba -->
+                <label title="Cuba"><input type="checkbox" id="country_cuba"
+                  name="country_code" value="CUB"
+                  {% if 'CUB' in request.args.getlist('country_code') %}checked{% endif %}
+                  onclick="uncheckAll('country_code', this)">CUB</label>
+
+                <!-- Ecuador -->
+                <label title="Ecuador"><input type="checkbox" id="country_ecuador"
+                  name="country_code" value="ECU"
+                  {% if 'ECU' in request.args.getlist('country_code') %}checked{% endif %}
+                  onclick="uncheckAll('country_code', this)">ECU</label>
+
+                <!-- España / Canarias -->
+                <label title="España / Canarias"><input type="checkbox" id="country_es-can"
+                  name="country_code" value="ES-CAN"
+                  {% if 'ES-CAN' in request.args.getlist('country_code') %}checked{% endif %}
+                  onclick="uncheckAll('country_code', this)">ES‑CAN</label>
+
+                <!-- España / Madrid -->
+                <label title="España / Madrid"><input type="checkbox" id="country_es-mad"
+                  name="country_code" value="ES-MAD"
+                  {% if 'ES-MAD' in request.args.getlist('country_code') %}checked{% endif %}
+                  onclick="uncheckAll('country_code', this)">ES‑MAD</label>
+
+                <!-- España / Sevilla -->
+                <label title="España / Sevilla"><input type="checkbox" id="country_es-sev"
+                  name="country_code" value="ES-SEV"
+                  {% if 'ES-SEV' in request.args.getlist('country_code') %}checked{% endif %}
+                  onclick="uncheckAll('country_code', this)">ES‑SEV</label>
+
+                <!-- Guatemala -->
+                <label title="Guatemala"><input type="checkbox" id="country_guatemala"
+                  name="country_code" value="GUA"
+                  {% if 'GUA' in request.args.getlist('country_code') %}checked{% endif %}
+                  onclick="uncheckAll('country_code', this)">GUA</label>
+
+                <!-- Honduras -->
+                <label title="Honduras"><input type="checkbox" id="country_honduras"
+                  name="country_code" value="HON"
+                  {% if 'HON' in request.args.getlist('country_code') %}checked{% endif %}
+                  onclick="uncheckAll('country_code', this)">HON</label>
+
+                <!-- México -->
+                <label title="México"><input type="checkbox" id="country_mexico"
+                  name="country_code" value="MEX"
+                  {% if 'MEX' in request.args.getlist('country_code') %}checked{% endif %}
+                  onclick="uncheckAll('country_code', this)">MEX</label>
+
+                <!-- Nicaragua -->
+                <label title="Nicaragua"><input type="checkbox" id="country_nicaragua"
+                  name="country_code" value="NIC"
+                  {% if 'NIC' in request.args.getlist('country_code') %}checked{% endif %}
+                  onclick="uncheckAll('country_code', this)">NIC</label>
+
+                <!-- Panamá -->
+                <label title="Panamá"><input type="checkbox" id="country_panama"
+                  name="country_code" value="PAN"
+                  {% if 'PAN' in request.args.getlist('country_code') %}checked{% endif %}
+                  onclick="uncheckAll('country_code', this)">PAN</label>
+
+                <!-- Perú -->
+                <label title="Perú"><input type="checkbox" id="country_peru"
+                  name="country_code" value="PER"
+                  {% if 'PER' in request.args.getlist('country_code') %}checked{% endif %}
+                  onclick="uncheckAll('country_code', this)">PER</label>
+
+                <!-- República Dominicana -->
+                <label title="República Dominicana"><input type="checkbox" id="country_rd"
+                  name="country_code" value="RD"
+                  {% if 'RD' in request.args.getlist('country_code') %}checked{% endif %}
+                  onclick="uncheckAll('country_code', this)">RD</label>
+
+                <!-- El Salvador -->
+                <label title="El Salvador"><input type="checkbox" id="country_salvador"
+                  name="country_code" value="SAL"
+                  {% if 'SAL' in request.args.getlist('country_code') %}checked{% endif %}
+                  onclick="uncheckAll('country_code', this)">SAL</label>
+
+                <!-- Uruguay -->
+                <label title="Uruguay"><input type="checkbox" id="country_uruguay"
+                  name="country_code" value="URU"
+                  {% if 'URU' in request.args.getlist('country_code') %}checked{% endif %}
+                  onclick="uncheckAll('country_code', this)">URU</label>
+
+                <!-- Venezuela -->
+                <label title="Venezuela"><input type="checkbox" id="country_venezuela"
+                  name="country_code" value="VEN"
+                  {% if 'VEN' in request.args.getlist('country_code') %}checked{% endif %}
+                  onclick="uncheckAll('country_code', this)">VEN</label>
+
+              </div>
+            </div>
+          
+            <!-- Hablante ----------------------------------------------------------- -->
+
+            <div class="dropdown-select">
+              <div class="select-box" onclick="toggleDrop('speaker')">Hablante <i class="fa-solid fa-angle-down"></i></div>
+
+              <div class="select-menu" id="drop-speaker">
+                <label><input type="checkbox" id="speaker_type_all"
+                              name="speaker_type" value="all"
+                              {% if 'all' in (request.args.getlist('speaker_type') or ['all']) %}checked{% endif %}
+                              onclick="uncheckAll('speaker_type', this)">Todos</label>
+
+                <label><input type="checkbox" id="speaker_type_professional"
+                              name="speaker_type" value="pro"
+                              {% if 'pro' in request.args.getlist('speaker_type') %}checked{% endif %}
+                              onclick="uncheckAll('speaker_type', this)">Profesional</label>
+
+                <label><input type="checkbox" id="speaker_type_other"
+                              name="speaker_type" value="otro"
+                              {% if 'otro' in request.args.getlist('speaker_type') %}checked{% endif %}
+                              onclick="uncheckAll('speaker_type', this)">Otro</label>
+              </div>
+            </div>
+          
+            <!-- Sexo --------------------------------------------------------------- -->
+
+            <div class="dropdown-select">
+              <div class="select-box" onclick="toggleDrop('sex')">Sexo <i class="fa-solid fa-angle-down"></i></div>
+
+              <div class="select-menu" id="drop-sex">
+                <label><input type="checkbox" id="sex_all"
+                              name="sex" value="all"
+                              {% if 'all' in (request.args.getlist('sex') or ['all']) %}checked{% endif %}
+                              onclick="uncheckAll('sex', this)">Todos</label>
+
+                <label><input type="checkbox" id="sex_male"
+                              name="sex" value="m"
+                              {% if 'm' in request.args.getlist('sex') %}checked{% endif %}
+                              onclick="uncheckAll('sex', this)">Masculino</label>
+
+                <label><input type="checkbox" id="sex_female"
+                              name="sex" value="f"
+                              {% if 'f' in request.args.getlist('sex') %}checked{% endif %}
+                              onclick="uncheckAll('sex', this)">Femenino</label>
+              </div>
+            </div>
+           
+            <!-- Modo --------------------------------------------------------------- -->
+
+            <div class="dropdown-select">
+              <div class="select-box" onclick="toggleDrop('speechmode')">Modo <i class="fa-solid fa-angle-down"></i></div>
+
+              <div class="select-menu" id="drop-speechmode">
+                <label><input type="checkbox" id="speech_mode_all"
+                              name="speech_mode" value="all"
+                              {% if 'all' in (request.args.getlist('speech_mode') or ['all']) %}checked{% endif %}
+                              onclick="uncheckAll('speech_mode', this)">Todos</label>
+
+                <label><input type="checkbox" id="speech_mode_pre"
+                              name="speech_mode" value="pre"
+                              {% if 'pre' in request.args.getlist('speech_mode') %}checked{% endif %}
+                              onclick="uncheckAll('speech_mode', this)">Anuncio</label>
+
+                <label><input type="checkbox" id="speech_mode_lectura"
+                              name="speech_mode" value="lectura"
+                              {% if 'lectura' in request.args.getlist('speech_mode') %}checked{% endif %}
+                              onclick="uncheckAll('speech_mode', this)">Lectura</label>
+
+                <label><input type="checkbox" id="speech_mode_libre"
+                              name="speech_mode" value="libre"
+                              {% if 'libre' in request.args.getlist('speech_mode') %}checked{% endif %}
+                              onclick="uncheckAll('speech_mode', this)">Habla libre</label>
+              </div>
+            </div>
+
+            <!-- Discurso ----------------------------------------------------------- -->
+
+            <div class="dropdown-select">
+              <div class="select-box" onclick="toggleDrop('discourse')">Discurso <i class="fa-solid fa-angle-down"></i></div>
+
+              <div class="select-menu" id="drop-discourse">
+                <label><input type="checkbox" id="discourse_all"
+                              name="discourse" value="all"
+                              {% if 'all' in (request.args.getlist('discourse') or ['all']) %}checked{% endif %}
+                              onclick="uncheckAll('discourse', this)">Todos</label>
+
+                <label><input type="checkbox" id="discourse_general"
+                              name="discourse" value="general"
+                              {% if 'general' in request.args.getlist('discourse') %}checked{% endif %}
+                              onclick="uncheckAll('discourse', this)">General</label>
+
+                <label><input type="checkbox" id="discourse_tiempo"
+                              name="discourse" value="tiempo"
+                              {% if 'tiempo' in request.args.getlist('discourse') %}checked{% endif %}
+                              onclick="uncheckAll('discourse', this)">Tiempo</label>
+
+                <label><input type="checkbox" id="discourse_transito"
+                              name="discourse" value="tránsito"
+                              {% if 'tránsito' in request.args.getlist('discourse') %}checked{% endif %}
+                              onclick="uncheckAll('discourse', this)">Tránsito</label>
+              </div>
+            </div>
+          </div><!-- /.filter-row -->
+        </td>
+      </tr>
+    </table>
+
+
+      <!-- Submit-Buttons -->
+      <table class="filter-table">
+        <tr>
+          <td class="td-category">  </td>
+          <td>
+            <div class="filter-submit">
+              <button class="button" type="submit">Buscar</button>
+              <button class="borrar" type="button" onclick="resetForm()">Restablecer</button>
+            </div>
+          </td>
+        </tr>
+      </table>
+
+    </form>
+  </div>
+
+  <!-- Advanced Search -->
+  <div id="advanced-search-container" class="tab-content">
+    <form id="searchform" action="{{ url_for('search') }}" method="get">
+      <input type="hidden" name="tab" value="advanced">
+      <!-- Palabra -->
+      <table class="filter-table">
+        <tr>
+          <td class="td-category">
+            <span id="category">Palabra:</span>
+          </td>
+          <td>
+            <input class="entrar_letras" type="text" name="query" id="query" autocomplete="name"
+                   value="{{ request.args.get('query', '') }}" required>
+            A continuar ...
+          </td>
+        </tr>
+      </table>
+    </form>
+  </div>
+
+  <!-- Token-Search -->
+
+  <div id="token-search-container"
+     class="tab-content{% if selected_tab=='token' %} active-tab{% endif %}">
+  <form id="tokenForm"
+          action="{{ url_for('search') }}"
+          method="get"
+          onsubmit="return addTokens();">
+      <input type="hidden" name="tab" value="token">
+
+      <table class="filter-table">
+        <tr>
+          <td class="td-category">
+            <span id="category">TokenID(s):</span>
+          </td>
+          <td>
+            <!-- Eingabe für neue Token -->
+            <input type="text"
+                  id="token_new"
+                  class="entrar_letras"
+                  placeholder="z.B. VEN05e5d">
+            <!-- Verstecktes Feld für alle Token -->
+            <input type="hidden"
+                  name="token_ids"
+                  id="token_ids_hidden"
+                  value="{{ token_ids|default('') }}">
+            <!-- einziger Button -->
+            <button type="submit" class="button">Añadir</button>
+          </td>
+        </tr>
+      </table>
+    </form>
+  </div>
+
+  <div id="loading-indicator" style="display: none;">
+    <p class="buscando-text" id="buscandoText">
+      <span>B</span><span>u</span><span>s</span><span>c</span><span>a</span><span>n</span><span>d</span><span>o</span><span>.</span><span>.</span><span>.</span>
+    </p>
+  </div>  
+
+  <div id="results-container">
+    {% if error_message %}
+      {{ error_message | safe }}
+    {% else %}
+      {% if results %}
+        <div id="results-stats">
+          <h1>Resultados <i class="fa-solid fa-circle-question" style="color: #053c96;" onclick="toggleTooltip(event)"></i>
+            <span id="clickTooltip" class="tooltip-text">
+              <p>Los resultados proporcionan cinco palabras de contexto a la izquierda y a la derecha de la palabra/secuencia buscada.</p>
+              <p>En la columna <span class="tooltip-high">Audio</span>, se ofrece la opción de escuchar el resultado de la búsqueda y descargar el segmento de audio.</p>
+              <p>Los resultados de la búsqueda se pueden exportar en formato <span class="tooltip-high">.txt</span>, <span class="tooltip-high">.csv</span> y <span class="tooltip-high">.xlsx</span>.</p>
+            </span>
+          </h1>
+          <div class="results-stats2">
+            <table class="stats-table">
+              <tr>
+                <td class="td-category"><span id="category">Buscado:</span></td>
+                <td class="stats">"{{ query }}"</td>
+              </tr>
+              <tr>
+                <td class="td-category"><span id="category">Resultados:</span></td>
+                <td class="stats">{{ total_results }}</td>
+              </tr>
+              <tr>
+                <td class="td-category"><span id="category">Grabaciones:</span></td>
+                <td class="stats">{{ unique_filenames }}</td>
+              </tr>
+              <tr>
+                <td class="td-category"><span id="category">País(es):</span></td>
+                <td class="stats">{{ unique_countries }}</td>
+              </tr>
+              <tr>
+                <td class="td-category"><span id="category">Exportar:</span></td>
+                <td class="stats">
+                  <a class="link-txt" href="#"><i class="bi bi-filetype-txt"></i></a>
+                  <a class="link-csv" href="#"><i class="bi bi-filetype-csv"></i></a>
+                  <a class="link-xlsx" href="#"><i class="bi bi-filetype-xlsx"></i></a></td>
+              </tr>
+            </table>            
+          </div>
+          <div style="display: none;">
+            <span class="data">{{ query|e }}</span>         <!-- index 0 -->
+            <span class="data">{{ total_results }}</span>   <!-- index 1 -->
+            <span class="data">{{ unique_filenames }}</span><!-- index 2 -->
+            <span class="data">{{ unique_countries }}</span><!-- index 3 -->
+          </div>
+        </div>
+
+            <!-- PAGINATION ------------------------------------------------------------- -->
+            <div id="pagination-box">
+
+              <!-- linker Block: Seiten‑Links -->
+              <div class="pagination-left">
+
+                {# Basis-URL vollständig für Pagination #}
+                {% set base_pagination = request.full_path.split('?')[0] + '?' + request.args|dictsort|urlencode %}
+                {% if token_ids %}
+                  {% set base_pagination = base_pagination ~ '&token_ids=' ~ token_ids %}
+                {% endif %}
+                {% set base_pagination = base_pagination ~ '&query=' ~ query|urlencode ~ '&search_mode=' ~ search_mode %}
+                {% for c in selected_countries     %}{% set base_pagination = base_pagination ~ '&country_code='   ~ c %}{% endfor %}
+                {% for s in selected_speaker_types %}{% set base_pagination = base_pagination ~ '&speaker_type='   ~ s %}{% endfor %}
+                {% for x in selected_sexes         %}{% set base_pagination = base_pagination ~ '&sex='            ~ x %}{% endfor %}
+                {% for m in selected_speech_modes  %}{% set base_pagination = base_pagination ~ '&speech_mode='    ~ m %}{% endfor %}
+                {% for d in selected_discourses    %}{% set base_pagination = base_pagination ~ '&discourse='      ~ d %}{% endfor %}
+                {% set base_pagination = base_pagination ~ '&sort=' ~ current_sort ~ '&order=' ~ current_order %}                                       
+
+                <div class="page-links">
+
+                  {% if page > 1 %}
+                  {% set new_args = request.args.to_dict() %}
+                  {% set _ = new_args.update({'page': p}) %}
+                  <a class="pagination-button"
+                     href="{{ request.path }}?{{ new_args|urlencode }}">
+                    <i class="bi bi-arrow-left"></i>
+                  </a>
+                  {% endif %}
+
+                  {% for p in display_pages %}
+                  {% if p == "…" %}
+                    <span class="pagination-button disabled">…</span>
+                  {% elif p == page %}
+                    <span class="pagination-button active">{{ p }}</span>
+                  {% else %}
+                  {% set new_args = request.args.to_dict() %}
+                  {% set _ = new_args.update({'page': p}) %}
+                    <a class="pagination-button"
+                       href="{{ request.path }}?{{ new_args|urlencode }}">{{ p }}</a>
+                  {% endif %}
+                  {% endfor %}                
+
+                  {% if page < total_pages %}
+                  {% set new_args = request.args.to_dict() %}
+                  {% set _ = new_args.update({'page': p}) %}
+                  <a class="pagination-button"
+                    href="{{ request.path }}?{{ new_args|urlencode }}">
+                    <i class="bi bi-arrow-right"></i>
+                  </a>
+                  {% endif %}
+
+                </div>
+
+              </div>
+
+              <!-- rechter Block: Ergebnisse pro Seite -->
+              <div class="pagination-right">
+                <div class="page-size-selector">
+                  <label for="pageSizeSelect" class="pagination-right">Resultados&nbsp;por&nbsp;página:</label>
+                  <select id="pageSizeSelect" onchange="changePageSize(this.value)">
+                    {% for size in [10,20,30,40,50] %}
+                      <option value="{{ size }}" {% if page_size == size %}selected{% endif %}>{{ size }}</option>
+                    {% endfor %}
+                  </select>
+                </div>
+              </div>
+
+            </div>
+
+            {# Basis-URL vollständig für Sortierung #}
+            {% set base_sort = '?tab=' ~ selected_tab %}
+            {% if token_ids %}
+              {% set base_sort = base_sort ~ '&token_ids=' ~ token_ids %}
+            {% endif %}
+            {% set base_sort = base_sort ~ '&query=' ~ query|urlencode ~ '&search_mode=' ~ search_mode %}
+            {% for c in selected_countries     %}{% set base_sort = base_sort ~ '&country_code='   ~ c %}{% endfor %}
+            {% for s in selected_speaker_types %}{% set base_sort = base_sort ~ '&speaker_type='   ~ s %}{% endfor %}
+            {% for x in selected_sexes         %}{% set base_sort = base_sort ~ '&sex='            ~ x %}{% endfor %}
+            {% for m in selected_speech_modes  %}{% set base_sort = base_sort ~ '&speech_mode='    ~ m %}{% endfor %}
+            {% for d in selected_discourses    %}{% set base_sort = base_sort ~ '&discourse='      ~ d %}{% endfor %}
+            {% set base_sort = base_sort ~ '&page=' ~ page ~ '&page_size=' ~ page_size %}           
+            
+        <div id="results">
+          <!-- Sichtbare Ergebnistabelle -->
+          <table id="results-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th class="right-align">Contexto izquierdo</th>
+                <th class="center-align">
+                  <a href="{{ base_sort }}&sort=palabra&order={% if current_sort=='palabra' and current_order=='asc' %}desc{% else %}asc{% endif %}" class="sort">
+                    Palabra
+                    {% if current_sort=='palabra' %}
+                      {% if current_order=='asc' %}
+                        <i class="bi bi-sort-up-alt"></i>
+                      {% else %}
+                        <i class="bi bi-sort-up"></i>
+                      {% endif %}
+                    {% endif %}
+                  </a>
+                </th>
+                <th>Contexto derecho</th>
+                <th class="center-align">Audio/contexto</th>
+                <th class="center-align">Audio/palabra</th>
+                <th class="filter-class">
+                  <a href="{{ base_sort }}&sort=pais&order={% if current_sort=='pais' and current_order=='asc' %}desc{% else %}asc{% endif %}" class="sort">
+                    País
+                    {% if current_sort=='pais' %}
+                      {% if current_order=='asc' %}
+                        <i class="bi bi-sort-up-alt"></i>
+                      {% else %}
+                        <i class="bi bi-sort-up"></i>
+                      {% endif %}
+                    {% endif %}
+                  </a>
+                </th>                
+                <th class="filter-class">
+                  <a href="{{ base_sort }}&sort=hablante&order={% if current_sort=='hablante' and current_order=='asc' %}desc{% else %}asc{% endif %}" class="sort">
+                    Hablante
+                    {% if current_sort=='hablante' %}
+                      {% if current_order=='asc' %}
+                        <i class="bi bi-sort-up-alt"></i>
+                      {% else %}
+                        <i class="bi bi-sort-up"></i>
+                      {% endif %}
+                    {% endif %}
+                  </a>
+                </th>
+                
+                <th class="filter-class">
+                  <a href="{{ base_sort }}&sort=sexo&order={% if current_sort=='sexo' and current_order=='asc' %}desc{% else %}asc{% endif %}" class="sort">
+                    Sexo
+                    {% if current_sort=='sexo' %}
+                      {% if current_order=='asc' %}
+                        <i class="bi bi-sort-up-alt"></i>
+                      {% else %}
+                        <i class="bi bi-sort-up"></i>
+                      {% endif %}
+                    {% endif %}
+                  </a>
+                </th>
+                
+                <th class="filter-class">
+                  <a href="{{ base_sort }}&sort=modo&order={% if current_sort=='modo' and current_order=='asc' %}desc{% else %}asc{% endif %}" class="sort">
+                    Modo
+                    {% if current_sort=='modo' %}
+                      {% if current_order=='asc' %}
+                        <i class="bi bi-sort-up-alt"></i>
+                      {% else %}
+                        <i class="bi bi-sort-up"></i>
+                      {% endif %}
+                    {% endif %}
+                  </a>
+                </th>
+                
+                <th class="filter-class">
+                  <a href="{{ base_sort }}&sort=discurso&order={% if current_sort=='discurso' and current_order=='asc' %}desc{% else %}asc{% endif %}" class="sort">
+                    Discurso
+                    {% if current_sort=='discurso' %}
+                      {% if current_order=='asc' %}
+                        <i class="bi bi-sort-up-alt"></i>
+                      {% else %}
+                        <i class="bi bi-sort-up"></i>
+                      {% endif %}
+                    {% endif %}
+                  </a>
+                </th>
+                
+                <th>Token‑ID</th>
+                
+                <th>
+                  <a href="{{ base_sort }}&sort=archivo&order={% if current_sort=='archivo' and current_order=='asc' %}desc{% else %}asc{% endif %}" class="sort">
+                    Archivo
+                    {% if current_sort=='archivo' %}
+                      {% if current_order=='asc' %}
+                        <i class="bi bi-sort-up-alt"></i>
+                      {% else %}
+                        <i class="bi bi-sort-up"></i>
+                      {% endif %}
+                    {% endif %}
+                  </a>
+                </th>
+                
+                <th>Emisión</th>
+              </tr>              
+            </thead>
+            
+            {% set country_names = {
+              'ARG': 'Argentina',
+              'ARG-CHT': 'Argentina/Chubut',
+              'ARG-CBA': 'Argentina/Córdoba',
+              'ARG-SDE': 'Argentina/Santiago del Estero',
+              'BOL': 'Bolivia',
+              'CHI': 'Chile',
+              'COL': 'Colombia',
+              'CR':  'Costa Rica',
+              'CUB': 'Cuba',
+              'ECU': 'Ecuador',
+              'ES-CAN': 'España/Canarias',
+              'ES-MAD': 'España/Madrid',
+              'ES-SEV': 'España/Sevilla',
+              'GUA': 'Guatemala',
+              'HON': 'Honduras',
+              'MEX': 'México',
+              'NIC': 'Nicaragua',
+              'PAN': 'Panamá',
+              'PER': 'Perú',
+              'RD':  'República Dominicana',
+              'SAL': 'El Salvador',
+              'URU': 'Uruguay',
+              'VEN': 'Venezuela'
+            } %}            
+            <tbody>
+              {% for result in results %}
+                <tr>
+                  <td>{{ (page - 1)*page_size + loop.index }}</td>
+                  <td class="right-align"><span class="contexto">{{ result[13] }}</span></td>
+                  <td class="center-align">
+                    <span onclick="togglePlayButton(this, '{{ result[2] }}', '{{ result[11] }}', '{{ result[12] }}', '{{ query }}', '{{ loop.index }}')" class="palabra-buscada">
+                      {{ result[10] }}
+                    </span>
+                  </td>
+                  <td class="rightcontext"><span class="contexto">{{ result[14] }}</span></td>
+                  <td style="display: none;">{{ result[11] }}</td>
+                  <td style="display: none;">{{ result[12] }}</td>
+                  <td class="center-align">
+                    <a class="audio-context-button" onclick="togglePlayButton(this, '{{ result[2] }}', '{{ result[15] }}', '{{ result[16] }}', '{{ query }}', '{{ loop.index }}')">
+                      <i class="fa-solid fa-play"></i>
+                      <i class="fa-solid fa-play fa-fade" style="display: none;"></i>
+                    </a>
+                    <a class="download-context-button" href="javascript:void(0);" onclick="downloadAudio(event.currentTarget, '{{ result[2] }}', '{{ result[15] }}', '{{ result[16] }}', '{{ query }}', '{{ loop.index }}')">
+                      <i class="fa-solid fa-download"></i>
+                      <i class="fa-solid fa-download fa-bounce" style="display: none;"></i>
+                    </a>
+                  </td>
+                  <td class="center-align">
+                    <a class="audio-button"
+                      onclick="togglePlayButton(this, 
+                                                '{{ result[2] }}', 
+                                                '{{ result[11] }}',  
+                                                '{{ (result[12]|float + 0.1) }}',
+                                                '{{ query }}', 
+                                                '{{ loop.index }}')">
+                      <i class="fa-solid fa-play"></i>
+                      <i class="fa-solid fa-play fa-fade" style="display: none;"></i>
+                    </a>
+                    <a class="download-button"
+                      href="javascript:void(0);"
+                      onclick="downloadAudio(event.currentTarget, 
+                                              '{{ result[2] }}',
+                                              '{{ result[11] }}',
+                                              '{{ (result[12]|float + 0.1) }}',
+                                              '{{ query }}',
+                                              '{{ loop.index }}')">
+                      <i class="fa-solid fa-download"></i>
+                      <i class="fa-solid fa-download fa-bounce" style="display: none;"></i>
+                    </a>
+                    <a class="download-button"
+                      href="javascript:void(0);"
+                      style="display:none;"
+                      onclick="showSpectrogramOverlay(
+                          '{{ result[2] }}',
+                          '{{ result[11] }}',
+                          '{{ result[12] }}',
+                          '{{ query }}',
+                          '{{ loop.index }}',
+                          '{{ result[10] }}'
+                      )">
+                      <i class="fa-solid fa-wave-square"></i>
+                    </a>
+                    <a class="download-button"
+                      href="javascript:void(0);"
+                      onclick="showSpectrogramOverlay(
+                          '{{ result[2] }}',
+                          '{{ result[11] }}',
+                          '{{ result[12] }}',
+                          '{{ query }}',
+                          '{{ loop.index }}',
+                          '{{ result[10] }}'
+                      )"
+                      title="Spektrogramm anzeigen">
+                      <i class="fa-solid fa-wave-square"></i>
+                    </a>
+                  </td>
+                  <td class="filter-class" title="{{ country_names.get(result[3]|trim, result[3]) }}"> <!-- País -->
+                    {{ result[3] }}
+                  </td>
+                  <td class="filter-class">{{ result[6] }}</td>  <!-- Hablante -->
+                  <td class="filter-class">{{ result[7] }}</td>  <!-- Sexo -->
+                  <td class="filter-class">{{ result[8] }}</td>  <!-- Modo -->
+                  <td class="filter-class">{{ result[9] }}</td>  <!-- Discurso -->
+
+                  <td class="token-id">{{ result[1] }}</td>                
+                  <td class="center-align">
+                    <i class="fa-regular fa-file" title="{{ result[2]|trim }}"></i> <!-- Archivo -->
+                  </td>  
+                  <td class="center-align">
+                    <a href="#" title="Abrir player" class="player-button"
+                       onclick="openPlayerBusq('{{ result[2] }}','{{ result[1] }}')">
+                       <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                    </a>
+                  </td>                                
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+
+      <!-- Export-Tabelle (unsichtbar) -->
+      <table id="results-table-full" style="display: none;">
+        <thead>
+          <tr>
+            <th>N°</th>
+            <th>Token‑ID</th>
+            <th>Contexto izquierdo</th>
+            <th>Palabra</th>
+            <th>Contexto derecho</th>
+            <th>Audio/contexto</th>
+            <th>Audio/palabra</th>
+            <th>Hablante</th>
+            <th>Sexo</th>
+            <th>Modo</th>
+            <th>Discurso</th>
+            <th>País</th>
+            <th>Archivo</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in all_results %}
+            <tr>
+              <td>{{ loop.index }}</td>
+              <td>{{ row[1] }}</td>
+              <td>{{ row[13] }}</td>
+              <td>{{ row[9] }}</td>
+              <td>{{ row[14] }}</td>
+              <td>{{ row[2] }}</td>
+              <td>{{ row[2] }}</td>
+              <td>{{ row[6] }}</td>  <!-- Hablante -->
+              <td>{{ row[7] }}</td>  <!-- Sexo -->
+              <td>{{ row[8] }}</td>  <!-- Modo -->
+              <td>{{ row[9] }}</td>  <!-- Discurso -->
+              <td>{{ row[3] }}</td>  <!-- País -->
+              <td>{{ row[2] }}</td>  <!-- Archivo -->
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% endif %}
+{% endif %}
+
+  <!-- PAGE FOOTER -->
+
+  <div class="footer">
+    <div class="footer-left">
+      &copy; <span id="currentYear">2025</span> | 
+      <a href="https://uni-marburg.de/YW1KYG" target="_blank">Felix Tacke</a> | 
+      Philipps-Universität Marburg | 
+      <a href="{{ url_for('impressum') }}">Impressum</a> | 
+      <a href="{{ url_for('datenschutz') }}">Datenschutz</a>
+    </div>
+    <div class="footer-right">
+      El corpus contiene  
+      <span id="totalDuration">Duración/audios: 0:00:00</span> y 
+      <span id="totalWordCount">Palabras: 0</span>.
+    </div>
+  </div>
+
+  <!-- OVERLAY für das Spektrogramm -->
+  <div id="spectrogramOverlay" class="spectrogram-overlay" style="display: none;">
+    <div class="spectrogram-content" id="spectrogramContent">
+      <!-- Schließen-Button -->
+      <span class="spectrogram-close" onclick="closeSpectrogramOverlay()" class="spectrogram-download">x</span>
+
+      <!-- Bild-Container -->
+      <img id="spectrogramImage" src="" alt="Spectrogram" />
+
+      <!-- Play-Button -->
+      <a id="spectrogramPlay" class="spectrogram-play" href="javascript:void(0);">
+        <i class="fa-solid fa-play"></i>
+      </a>
+
+      <!-- Download-Button -->
+      <a id="spectrogramDownload" class="spectrogram-download" href="#" download>
+        Descargar <i class="fa-solid fa-download"></i>
+      </a>
+
+    </div>
+  </div>
+
+</body>
+</html>

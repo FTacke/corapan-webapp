@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <!-- META & HEAD-BEREICH -->
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CO.RA.PAN</title>
+  <link rel="icon" type="image/x-icon" href="static/img/favicon.ico">
+  <link rel="stylesheet" href="static/css/corapan_styles.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.2/font/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <script defer src="{{ url_for('static', filename='js/index_script.js') }}"></script>
+</head>
+<body>
+  <!-- HEADER -->
+  <header>
+    <div id="logoContainer">
+      <a href="{{ url_for('index') }}"><img src="static/img/logo.jpg" alt="CO.RA.PAN"></a>
+    </div>
+    <!-- Navigation -->
+    <div id="mainNavigation">
+      <nav>
+        <ul>
+          <li><a href="{{ url_for('index') }}" class="page-link"><i class="bi bi-house"></i></a></li>
+          <li><a href="{{ url_for('proyecto') }}" class="page-link active">Proyecto</a></li>
+          <li><a href="{{ url_for('atlas') }}" class="page-link">Atlas</a></li>
+          <li><a href="{{ url_for('corpus') }}" class="page-link">Corpus</a></li>
+          <li class="logout-item">
+            <a href="{{ url_for('logout') }}" class="logout-link"><i class="bi bi-box-arrow-right" alt="Logout"></i></a>
+          </li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <!-- CONTENT -->
+  <div id="content-container">
+    <div class="section">
+        <h1>El proyecto CO.RA.PAN</h1>
+        <p>
+          El proyecto <span class="i">CO.RA.PAN</span> está dedicado al <span class="i">estudio de las variedades nacionales estándares emergentes en el mundo de habla hispana</span>. Su objetivo es recopilar y proporcionar un corpus de habla estándar y casi estándar que sea accesible y susceptible de análisis cuantitativo. Se parte de la premisa de que el análisis país por país es tanto un punto de partida metodológico necesario como una premisa conceptual, que proporciona un marco para comprender más profundamente las dinámicas del español como lengua pluricéntrica. El corpus incluye el habla oral auténtica recopilada de la(s) principal(es) emisora(s) de radio en cada país de habla hispana e abarca diversos tipos de programas radiofónicos, clasificados según su contexto comunicativo, para captar mejor los procesos actuales de estandarización informal y el uso de determinadas características lingüísticas en situaciones de habla estándar y casi estándar. En consecuencia, el proyecto se centrará en el uso del lenguaje que refleje las “normas descriptivas de producción” que es más evidente en el comportamiento verbal de hablantes profesionales.
+        </p>
+        <p>
+          Las pautas centrales del proyecto CO.RA.PAN se expondrán en los siguientes párrafos. Para una exposición más detallada del diseño, véase Tacke (en prensa).
+        </p>
+        
+        <!-- Versteckte Checkbox als Toggle -->
+        <input type="checkbox" id="toggle-more" class="toggle-more">
+        <!-- Label als "Leer más"-Button -->
+        <label for="toggle-more" class="leer-button">Leer más/menos</label>
+        <p> </p>
+      <!-- Dieser Block wird ein- und ausgeklappt -->
+      <div class="truncate-text">
+        <h3>El estudio de las hablas cultas</h3>
+        <p>
+          El enfoque tradicional considera que las regularidades observadas en el habla o escritura de hablantes educados son representativas del “buen uso” y constitutivas de la lengua estándar. Esta antigua suposición, ya formulada por Quintiliano, se basa en los principios de <span class="i">consuetudo</span> y <span class="i">consensus eruditorum</span>, que se refieren al consenso entre hablantes educados sobre lo que constituye el buen uso del lenguaje. En la tradición española, estos principios se reflejan en las nociones de <span class="i">hablantes cultos</span>, cuyas regularidades del habla constituyen la llamada <span class="i">habla culta</span>, de la cual se puede derivar la <span class="i">norma culta</span> (cf. Lebsanft & Tacke 2020: 37–40). Por lo tanto, incluso el habla de hablantes educados en situaciones formales muestra “variaciones mínimas entre las diferentes zonas” (ibíd.). A la luz de esta suposición, el desafío clave para comprender la aparición de variedades nacionales estándar es examinar la verdadera extensión de la variación entre las variedades de habla culta de diferentes regiones y países.
+        </p>
+        <h3>Focalizando hablantes profesionales: locutores de radio</h3>
+        <p>
+          El estudio de las diferencias entre las hablas cultas ha sido tradicionalmente el dominio de la sociolingüística laboviana, que implica realizar entrevistas con informantes cuidadosamente seleccionados, típicamente hablantes educados. Sin embargo, la investigación estándar reciente ha adoptado un enfoque diferente, desplazando su atención de los hablantes educados en general a un grupo más específico: los hablantes profesionales, también conocidos como “hablantes modelo”. Dada la omnipresencia de los medios de comunicación audiovisuales en las comunidades lingüísticas modernas, se acepta ampliamente que los presentadores de televisión y radio sirven como modelos lingüísticos para la comunidad, es decir, como referencia de cómo se debería usar el lenguaje. El proyecto CO.RA.PAN se basa precisamente en esta suposición, de que los hablantes profesionales empleados por estaciones de radio son los mejores representantes de la variedad nacional estándar única de cada país.
+        </p>
+        <h3>Lenguaje oral auténtico: contextos comunicativos en transmisiones radiofónicas</h3>
+        <p>
+          A diferencia de la mayoría de los corpus en línea que se centran en datos de habla escrita, el proyecto CO.RA.PAN recopila datos de lenguaje oral auténtico. Se selecciona al menos una emisora de radio con cobertura nacional de cada país. El corpus registra los programas de noticias y sobre la actualidad, ya que es probable que tengan una influencia significativa en las audiencias en términos de difusión de normas lingüísticas. Este enfoque ofrece la ventaja de proporcionar datos empíricos comparables, ya que las transmisiones radiofónicas generalmente tienen un formato y estructura similares. Además, este enfoque permite analizar discursos específicos a nivel nacional en términos de vocabulario y referencias culturales, al tiempo que proporciona datos comparables sobre temas políticos y sociales actuales en diferentes países.
+        </p>
+        <h2>Referencias bibliográficas</h2>
+        <p class="biblio">
+          Ávila, Raul (2003): “La pronunciación del español. Medios de difusión masiva y norma culta”, Nueva Revista de Filología Hispánica 51, 57–79.
+        </p>
+        <p class="biblio">
+          Ávila, Raul (2016): “La pronunciación del español en la radio de veinte países hispánicos: comentarios deportivos espontáneos”, Nueva Revista de Filología Hispánica 64, 495–509.
+        </p>
+        <p class="biblio">
+          DPD = Real Academia Española/Asociación de Academias de la Lengua Española (2005): Diccionario panhispánico de dudas. Madrid: Santillana.
+        </p>
+        <p class="biblio">
+          Greußlich, Sebastian (2015): “El pluricentrismo de la cultura lingüística hispánica: política lingüística, los estándares regionales y la cuestión de su codificación”, Lexis 39, 57–99.
+        </p>
+        <p class="biblio">
+          Lebsanft, Franz/Tacke, Felix (2020): “Romance Standardology: Roots and Traditions”, in: Lebsanft, Franz/Tacke, Felix (edd.): Manual of Standardization in the Romance Languages. Berlin/Boston: De Gruyter, 3–59.
+        </p>
+        <p class="biblio">
+          Tacke, Felix (en prensa): “A corpus-driven approach to emerging national standard varieties in Spanish: The Corpus Radiofónico Panhispánico (CO.RA.PAN)”, in: Elspaß, Stephan et al. (edd.): Double Standards. Codified Norms and Norms of Usage in European Languages (1600–2020). Frankfurt a.M.: Lang.
+        </p>
+      </div>
+    </div>
+    <!-- Credits Section -->
+    <section id="credits">
+      <h1>Créditos</h1>
+      <p><span class="text-bold">Responsable del proyecto y diseño: </span>Felix Tacke</p>
+      <p><span class="text-bold">Estudiantes colaboradores (clasificación y corrección de las transcripciones automáticas): </span>Yannick Bächler (YB), Carolin Grote (CG)</p>
+      <p><span class="text-bold">Contribuyentes en fases previas del proyecto: </span>Ana Goás Pérez (Marburg), Lisa Thomas (Bonn)</p>
+      <p><span class="text-bold">Gestión y procesamiento de datos digitales: </span>Felix Tacke</p>
+      <p><span class="text-bold">Informática, diseño web y gráfico: </span>Felix Tacke</p>
+    </section>
+  </div>
+  <!-- END CONTENT -->
+
+  <!-- FOOTER (wie bisher) -->
+  <div class="footer">
+    <div class="footer-left">
+      &copy; <span id="currentYear">2025</span> | 
+      <a href="https://uni-marburg.de/YW1KYG" target="_blank">Felix Tacke</a> | 
+      Philipps-Universität Marburg | 
+      <a href="{{ url_for('impressum') }}">Impressum</a> | 
+      <a href="{{ url_for('datenschutz') }}">Datenschutz</a>
+    </div>
+    <div class="footer-right">
+      El corpus contiene  
+      <span id="totalDuration">Duración/audios: 0:00:00</span> y 
+      <span id="totalWordCount">Palabras: 0</span>.
+    </div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <!-- ===========================================================================
+       Meta & Head
+       =========================================================================== -->
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/x-icon" href="data:image/x-icon;,">
+    <title>CO.RA.PAN</title>
+    <link rel="icon" type="image/x-icon" href="static/img/favicon.ico">
+    <link rel="stylesheet" href="static/css/corapan_styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.2/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <!-- JS-Code wird in player_script.js eingebunden -->
+    <script type="module" src="{{ url_for('static', filename='js/player_script.js') }}"></script>
+  </head>
+
+  <body>
+
+    <!-- ===========================================================================
+         Header
+         =========================================================================== -->
+    <header>
+      <div id="logoContainer">
+        <a href="{{ url_for('index') }}"><img src="static/img/logo.jpg" alt="CO.RA.PAN"></a>
+      </div>
+      <!-- ===========================================================================
+           Navigation
+           =========================================================================== -->
+      <div id="mainNavigation">
+        <nav>
+          <ul>
+            <li><a href="{{ url_for('index') }}" class="page-link"><i class="bi bi-house"></i></a></li>
+            <li><a href="{{ url_for('proyecto') }}" class="page-link">Proyecto</a></li>
+            <li>
+              <a href="{{ url_for('atlas') }}" class="page-link active">Atlas</a>
+            </li>
+            <li><a href="{{ url_for('corpus') }}" class="page-link">Corpus</a></li>
+            <li class="logout-item">
+              <a href="{{ url_for('logout') }}" class="logout-link"><i class="bi bi-box-arrow-right" alt="Logout"></i></a>
+            </li>
+          </ul>
+        </nav>
+      </div>
+    </header>
+
+    <!-- ===========================================================================
+         Content
+         =========================================================================== -->
+    <div id="content-container">
+
+      <!-- Kopfbereich mit Zurück-Link und Dokumenttitel -->
+      <div class="header-container">
+        <a href="javascript:history.back()" class="back-link">
+          <i class="bi bi-chevron-left" alt="Volver"></i>
+        </a>
+        <h1 id="documentName"></h1>
+      </div>
+
+      <!-- Tabelle mit Transkript und Sidebar -->
+      <table id="player-table">
+        <tr>
+          <!-- Linke Spalte: Transkript -->
+          <td>
+            <div id="transcriptionContainer"></div>
+          </td>
+
+          <!-- Rechte Spalte: Sidebarelemente -->
+          <td id="sidebars">
+
+            <!-- Metadaten-Bereich -->
+            <div id="sidebarContainer-meta">
+              <h5>Metadatos</h5>
+              <p class="narrow" id="country"></p>
+              <p class="narrow" id="city"></p>
+              <p class="narrow" id="radio"></p>
+              <p class="narrow" id="date"></p>
+              <p class="narrow" id="revision"></p>
+            </div>
+
+            <!-- Transkript-Überschrift -->
+            <div id="sidebarContainer-meta">
+              <h6>Transcripción</h6>
+            </div>
+
+            <!-- Buchstabenmarkierung -->
+            <div id="sidebarContainer">
+              <h5>
+                Marcar letras
+                <i class="fa-solid fa-circle-question" style="color: #053c96;" onclick="toggleTooltip(event)"></i>
+                <span id="clickTooltip" class="tooltip-text">
+                  <p>Pueden destacarse letras, secuencias de letras y palabras individuales en el texto, und se mostrará el número de resultados.</p>
+                  <p>Al ingresar una letra mit "<span class="tooltip-high">_</span>" (p.ej., "<span class="tooltip-high">s_</span>"), solo se marcarán las ocurrencias al final de las palabras.</p>
+                  <p>Al ingresar mit "<span class="tooltip-high">#</span>" (p.ej., "<span class="tooltip-high">s#</span>") solo se marcarán las ocurrencias antes de signos de puntuación (<span class="tooltip-high">.,?!</span>).</p>
+                </span>
+              </h5>
+              <input type="text" class="entrar_letras" id="markInput" placeholder="letra(s)">
+              <br>
+              <button class="button" onclick="markLetters()">Marcar</button>
+              <div id="buttonsContainer">
+                <button class="borrar" id="resetMarkingsButton" style="display: none;" onclick="resetMarkings()">Borrar todo</button>
+              </div>
+            </div>
+
+            <!-- Token Collector (Token-ID-Sammlung) -->
+            <div id="sidebarContainer" class="sidebar-box">
+              <h5>
+                Tokens seleccionados
+                <i class="fa-solid fa-circle-question" style="color: #053c96;" onclick="toggleTooltip(event)"></i>
+                <span id="tokenTooltip" class="tooltip-text">
+                  <p>Haz clic en una palabra en la transcripción para agregar su <span class="tooltip-high">token_id</span> aquí.</p>
+                  <p>Los IDs seleccionados se muestran separados por comas. Puedes copiarlos al portapapeles con el ícono correspondiente.</p>
+                  <p>Usa <span class="tooltip-high">Borrar</span> para limpiar la lista.</p>
+                  <p>Los <span class="tooltip-high">token_id</span> pueden utilizarse para acceder al corpus y permiten descargar segmentos MP3 correspondientes.</p>
+                </span>
+              </h5>
+
+              <textarea id="tokenCollectorInput" class="collector-input" placeholder="Token IDs ..." readonly></textarea>
+
+              <div class="token-icon-bar">
+                <i id="copyTokenList" class="fa-regular fa-copy" style="color: #053c96; cursor: pointer;" title="Copiar al portapapeles"></i>
+                <i id="resetTokenList" class="fa-regular fa-trash-can" style="color: #053c96; cursor: pointer;" title="Borrar lista de tokens"></i>
+              </div>
+            </div>
+
+            <!-- Shortcuts und Audio-Steuerung -->
+            <div id="sidebarContainer">
+              <h5>Shortcuts/Audio</h5>
+              <p><span class="code">CTRL</span> + <span class="code">ESPACIO</span> = iniciar/pausar</p>
+              <p><span class="code">CTRL</span> + <span class="code">,</span> = saltar -3s</p>
+              <p><span class="code">CTRL</span> + <span class="code">.</span> = saltar +3s</p>
+              <p><span class="code">Click</span> + <span class="code">CTRL</span> = desde palabra</p>
+              <p><span class="code">Click</span> = solo palabra</p>
+            </div>
+
+            <!-- Export-Bereich -->
+            <div id="sidebarContainer">
+              <h5>
+                Exportar
+                <i class="fa-solid fa-circle-question" style="color: #053c96;" onclick="toggleTooltip(event)"></i>
+                <span id="clickTooltip" class="tooltip-text">
+                  <p>Aquí se pueden descargar los datos en bruto:</p>
+                  <p>El archivo <span class="tooltip-high">mp3</span> tiene la calidad máxima disponible (generalmente 128 kBit/s).</p>
+                  <p>El archivo <span class="tooltip-high">JSON</span> contiene toda la información junto con las marcas de tiempo de cada palabra individual.</p>
+                  <p>El archivo <span class="tooltip-high">TXT</span> contiene los metadatos und la transcripción sin marcas tal como se presentan aquí.</p>
+                </span>
+              </h5>
+              <a id="downloadMp3" class="download-link">
+                <i class="bi bi-filetype-mp3"></i>
+              </a>
+              <a id="downloadJson" class="download-link">
+                <i class="bi bi-filetype-json"></i>
+              </a>
+              <a id="downloadTxt" class="download-link">
+                <i class="bi bi-filetype-txt"></i>
+              </a>
+            </div>
+          </td>
+        </tr>
+      </table>
+
+      <div class="custom-audio-player">
+        <div class="player-controls">
+          <div class="player-controls-top">
+            <input type="range" id="progressBar" min="0" max="100" value="0" class="progress-bar">
+            <div class="volume-control-container">
+              <i id="muteBtn" class="fa-solid fa-volume-high" style="color: #053c96;"></i>
+              <input type="range" id="volumeControl" min="0" max="1" step="0.01" value="1.0" class="volume-control">
+            </div>
+          </div>
+          <div class="player-controls-bottom">
+            <div class="time-display" id="timeDisplay">0:00 / 0:00</div>
+            <div class="playContainer">
+              <div id="seconds">
+                <i id="rewindBtn" class="fa-solid fa-rotate-left fa-xl" style="color: #053c96;"></i>
+                <span>3</span>
+              </div>
+              <i id="playPauseBtn" class="bi bi-play-circle-fill" style="font-size: 3em; color: #053c96"></i>
+              <div id="seconds">
+                <i id="forwardBtn" class="fa-solid fa-rotate-right fa-xl" style="color: #053c96;"></i>
+                <span>3</span>
+              </div>
+            </div>
+            <div class="speed-control-container">
+              <i class="bi bi-speedometer2" style="font-size: 1.2em; color: #053c96"></i>
+              <input type="range" id="speedControlSlider" min="0.5" max="2" step="0.1" value="1.0">
+              <div id="speedDisplay">1.0x</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <audio id="audioPlayer" controls preload="auto">
+        Your browser does not support the audio element.
+      </audio>
+
+      <div id="scrollToTopBtn" style="display: block;"><i class="bi bi-chevron-up"></i></div>
+    </div>
+
+    <!-- ===========================================================================
+         Footer
+         =========================================================================== -->
+    <div class="footer">
+      <div class="footer-left">
+        &copy; <span id="currentYear">2025</span> | 
+        <a href="https://uni-marburg.de/YW1KYG" target="_blank">Felix Tacke</a> | 
+        Philipps-Universität Marburg | 
+        <a href="{{ url_for('impressum') }}">Impressum</a> | 
+        <a href="{{ url_for('datenschutz') }}">Datenschutz</a>
+      </div>
+      <div class="footer-right">
+        El corpus contiene  
+        <span id="totalDuration">Duración/audios: 0:00:00</span> y 
+        <span id="totalWordCount">Palabras: 0</span>.
+      </div>
+    </div>
+  </body>
+</html>
+</replace_in_file>

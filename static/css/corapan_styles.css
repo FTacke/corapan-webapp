@@ -1,0 +1,2634 @@
+/* ============================ */
+/* Basic Layout
+/* ============================ */
+
+body {
+  font-family: Arial Narrow, Arial, sans-serif, Arial, sans-serif;
+  min-height: 100vh;
+  padding: 0;
+  padding-bottom: 60px;
+  width: clamp(300px, 95%, 1400px); /* Mindest-, Ideal- und Maximalwert */
+  margin: 0 auto;
+  background-color: #c7d5d8;
+}
+
+@media only screen and (max-width: 730px) {
+  body {
+    font-size: 0.8em;
+  }
+}
+
+header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px;
+  padding: 0px;
+  width: auto;
+}
+
+@media only screen and (max-width: 730px) {
+  header {
+    display: block;
+    text-align: center;
+  }
+}
+
+#logoContainer img {
+  width: 300px;
+  height: auto;
+}
+
+.footer {
+  position: fixed;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: clamp(300px, 95%, 1400px);
+  border-top: 1px solid #053c96;
+  text-align: center;
+  display: flex;
+  justify-content: space-between;
+  padding: 5px;
+  font-size: 0.8em;
+  flex-direction: row;
+  align-items: center;
+  z-index: 1000;
+  background-color: rgb(199, 213, 216);
+}
+
+@media only screen and (max-width: 730px) {
+  .footer {
+    position: static !important;  /* Kein fixed, sondern normaler Flow */
+    bottom: auto !important;      /* Keine feste Platzierung am unteren Rand */
+    left: auto !important;
+    transform: none !important;
+    width: auto;                  /* Breite ggf. anpassen */
+    text-align: center;           /* Inhalt zentrieren */
+    display: flex;
+    justify-content: center;      /* Zentriert den Flexinhalt horizontal */
+    align-items: center;          /* Zentriert den Inhalt vertikal */
+    padding: 5px;
+    margin-top: 50px;
+  }
+  
+  /* Blende .footer-right komplett aus */
+  .footer-right {
+    display: none !important;
+  }
+}
+
+
+.p {
+  margin-bottom: 10px;
+}
+
+p {
+  font-family: Arial Narrow, Arial, sans-serif, Arial, sans-serif;
+  margin-block-start: 0.5em;
+  margin-block-end: 0.5em;
+}
+
+.narrow {
+  font-family: Arial Narrow, Arial, sans-serif, Arial, sans-serif;
+  margin-block-start: 0.0em;
+  margin-block-end: 0.0em;
+}
+
+.footnote {
+  color: #393939;
+  font-size: 0.9em;
+}
+
+.footnoteMarker {
+  color: #0049c8;
+  font-weight: bold;
+  font-size: 1.0em;
+}
+
+.text {
+  margin-bottom: 10px;
+}
+
+.text-bold-blue {
+  font-weight: bold;
+  color: #053c96;
+}
+
+.text-bold {
+  font-weight: bold;
+  margin-bottom: 10px;
+}
+
+.text-italic {
+  font-style:italic;
+  font-size: 0.8em;
+  color:#404040;
+  margin-bottom: 0px;
+}
+
+.td-todos {
+  width: 40px;
+}
+
+td.empty-cell {
+  min-width: 10px;
+  border-left: 10px solid transparent; /* Erstellt eine transparente Grenze von 20px */
+}
+
+#scaled-content {
+  transform: scale(0.75);
+  transform-origin: top left;
+  width: 125%; /* Kompensation für die Skalierung */
+}
+
+/* NAVIGATION */
+
+#mainNavigation {
+  margin-top: 100px; /* Add this to push it to the left */
+  margin-right: auto; /* Add this to push it to the left */
+}
+
+#mainNavigation ul {
+  list-style-type: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+}
+
+#mainNavigation li {
+  margin-left: 10px;
+}
+
+#mainNavigation a {
+  text-transform: none;
+  font-weight: normal;
+  font-size: 1.1em;
+  font-family: Arial Narrow, Arial, sans-serif;
+  color: #414141;
+  background: #a9c9d0;
+  border-radius: 3px;
+  padding: 4px 12px 4px;
+  box-shadow: inset 0 0 0 1px rgba(0,0,0,.06);
+  text-decoration: none;
+  cursor: pointer;
+}
+
+#mainNavigation a:hover {
+  background-color: #efede1; 
+  color: #053c96; /* Blau des Logos */
+  border-radius: 3px;
+  box-shadow: inset 0 0 0 1px rgba(0,0,0,.06);
+}
+
+#mainNavigation a.active {
+  background-color: #efede1; 
+  font-weight: normal;
+  color: #053c96; /* Blau des Logos */
+  border-radius: 3px;
+  box-shadow: inset 0 0 0 1px rgba(0,0,0,.06);
+}
+
+#Button a {
+  border: 1px solid #053c96;
+  font-family: Arial Narrow, Arial, sans-serif, Arial, sans-serif;
+  text-transform: uppercase;
+  font-weight: bold;
+  font-size: 16px; /* Set your desired font size */
+  border-radius: 4px;
+  color: #414141;
+  text-decoration: none;
+  padding: 5px;
+}
+
+#Button a:hover {
+  color: #053c96; /* Blau des Logos */
+  background-color: #efede1; 
+}
+
+navd {
+  background-color: #00000000;
+  color: hwb(0 0% 100%);
+  padding: 10px;
+  text-align: left;
+}
+
+navd a {
+  color: #000000;
+  text-decoration: none;
+  border-radius: 4px;
+  padding: 5px;
+  background-color: hsl(208, 27%, 60%);
+}
+
+#scrollToTopBtn {
+  font-family: Arial, sans-serif;
+  text-transform: uppercase;
+  font-weight: bolder;
+  font-size: 2em;
+  color: #053c96;
+  text-decoration: none;
+  position: fixed;
+  left: calc((100% - clamp(300px, 95%, 1400px)) / 2 + 15px);
+  top: 75%;
+  cursor: pointer;
+  display: none;
+  transform: translateY(0%);
+  width: 50px;
+  height: 50px;
+  background-color: #c7d5d8d7;
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 1px rgba(0,0,0,.06);
+  z-index: 9999;
+}
+
+
+#scrollToTopBtn i {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+
+
+/* CONTENT */
+
+#content-container {
+  padding-top: 20px;
+  padding-left: 0px;
+  flex: 1; /* Allow the content container to grow and fill available space */
+  font-size: 1.0em;
+  line-height: 1.5; 
+  margin-bottom: 50px;
+}
+
+/* Heading styles */
+h1 {
+  font-family: Arial Narrow, Arial, sans-serif, Arial, sans-serif;
+  color: #053c96; /* Blau des Logos */
+  font-size: 1.2em;
+}
+
+h2 {
+  font-family: Arial Narrow, Arial, sans-serif, Arial, sans-serif;
+  color: #053c96; /* Blau des Logos */
+  font-size: 1.0em;
+  margin-bottom: 0.6em;
+}
+
+h3 {
+  font-family: Arial Narrow, Arial, sans-serif, Arial, sans-serif;
+  font-style:normal;
+  font-size: 1.0em;
+  margin-left: 0em;
+  margin-bottom: 0.3em;
+  margin-block-start: 0em;
+  margin-block-end: 0.2em;
+}
+
+h4 {
+  font-family: Arial Narrow, Arial, sans-serif, Arial, sans-serif;
+  font-style: italic;
+  font-size: 1.0em;
+  margin-bottom: 0.3em;
+  margin-block-start: 0em;
+  margin-block-end: 0em;
+}
+
+h5 {
+  font-family: Arial Narrow, Arial, sans-serif, Arial, sans-serif;
+  color: #053c96; /* Blau des Logos */
+  font-size: 1.0em;
+  margin-top: 0.2em;
+  margin-bottom: 0.2em;
+}
+
+h6 {
+  font-family: Arial Narrow, Arial, sans-serif, Arial, sans-serif;
+  color: #053c96; /* Blau des Logos */
+  font-size: 1.0em;
+  margin-top: 0.2em;
+  margin-bottom: 0.2em;
+  display: none;
+}
+
+#main {
+  text-align: left;
+}
+
+.truncate-text {
+  height: auto; /* Änderung der Höhe auf 'auto' oder einen anderen geeigneten Wert */
+  overflow: hidden;
+  line-height: 1.5em;
+}
+
+.section {
+  font-size: 1.0em;
+}
+
+.biblio {
+  font-size: 0.9em;
+  margin-bottom: 0px;
+}
+
+.i {
+  font-size: 1.0em;
+  font-style: italic;
+  color: #053c96;
+}
+
+.fecha {
+  font-family: 'Consolas', 'Courier New', Courier, monospace;
+  font-weight: bold;
+  color: #404040; 
+  font-size: 1.0em;
+  margin-right: 0px;
+}
+
+#blog-entrada {
+  padding: 5px;
+  margin-top: 10px;
+  display: flex;
+  align-items: flex-start;
+  max-width: 100%; /* Anpassen Sie die Breite nach Bedarf */
+}
+
+#blog-entrada-highlight {
+  padding: 5px;
+  background-color: rgba(255, 255, 255, 0.417);
+  border: 1px solid #4d4d4d;
+  border-radius: 4px;
+  margin-top: 10px;
+  display: flex;
+  align-items: flex-start;
+  max-width: 100%; /* Anpassen Sie die Breite nach Bedarf */
+}
+
+.blog {
+  width: 70%;
+  margin-bottom: 40px;
+}
+
+.blog td {
+  padding-right: 20px;
+}
+
+/* ACCESS-FORMULAR */
+
+.form-wrapper1 {
+  max-width: 400px;
+  box-sizing: border-box;
+}
+
+.form-wrapper2 {
+  box-sizing: border-box;
+  border: 1px solid #4d4d4d;
+  margin-bottom: 20px;
+  border-radius: 3px;
+  padding: 2px 12px;
+  max-width: fit-content;
+}
+
+/* Bestehender Stil für den Bestätigungsbereich */
+#terms {
+  border: 1px solid #4d4d4d;
+  font-size: 0.8em;
+  line-height: 1.0; 
+  margin-bottom: 20px;
+  border-radius: 3px;
+  padding: 2px 4px;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.06);
+  box-sizing: border-box;
+  width: 100%;
+}
+
+/* Beispiel für die Formularfelder */
+.access {
+  color: #414141;
+  background: #a9c9d0;
+  border-radius: 3px;
+  padding: 2px 4px;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.06);
+  font-size: 1.0em;
+  font-family: Arial Narrow, Arial, sans-serif, "Consolas", Menlo, Monaco, "Lucida Console", "Liberation Mono", "DejaVu Sans Mono", "Bitstream Vera Sans Mono", "Courier New", monospace;
+  width: 100%;
+  box-sizing: border-box;
+  margin-bottom: 20px;
+}
+
+.grey {
+  font-size: 1.0em;
+  font-style: italic;
+  color: #636363;
+}
+
+.bienvenido {
+  font-size: 1.0em;
+  color: #053c96;
+  font-family: "Consolas", "Courier New", monospace;
+}
+
+.error {
+  font-size: 1.0em;
+  color: #a90000;
+  font-family: "Consolas", "Courier New", monospace;
+  margin-bottom: 50px;
+}
+
+.link-error {
+  font-size: 1.0em;
+  font-weight:unset;
+  color: #a90000;
+  font-family: "Consolas", "Courier New", monospace;
+}
+
+.error1 {
+  margin-bottom: 30px;
+  box-sizing: border-box;
+  border: 1px solid #4d4d4d;
+  margin-bottom: 20px;
+  border-radius: 3px;
+  padding: 2px 12px;
+}
+
+/* FOOTER */
+
+
+
+
+
+.footer div.stats-container {
+  display: inline; /* Display in a single line */
+}
+
+.footer a,
+.footer a:visited {
+  color: #000;
+  text-decoration: none;
+}
+
+
+
+/* STATISTIKEN */
+
+.statistics-table {
+  border-collapse: collapse;
+  margin-top: 5px;
+  margin-bottom: 20px;
+  font-family: Arial, sans-serif;
+  font-size: 0.8em;
+  line-height: 1em;
+}
+
+.statistics-table .right-align {
+  text-align: right;
+}
+
+.statistics-table th, .statistics-table td {
+  border: 2px solid rgba(0,0,0,.06);
+  padding: 8px;
+  text-align: right;
+}
+
+.statistics-table th:first-child, .statistics-table td:first-child {
+  text-align: left;
+}
+
+.statistics-table th { 
+  background-color: #484f5a1c;
+}
+
+.statistics-table tbody tr:nth-child(even) {
+  background-color: #dddfe246;
+}
+
+.statistics-table tbody tr:hover {
+  background-color: #efede173;
+}
+
+
+
+/* ÜBERSICHT AUDIOS-TRANSKRIPTIONEN INKL. METADATEN */
+
+.header-container {
+  display: flex;
+  align-items: center;
+  margin-bottom: 40px;
+}
+
+.back-link, .back-link-txt, .back-link-csv, .back-link-xlsx {
+  font-family: Arial Narrow, Arial, sans-serif;
+  color: #414141;
+  background: #a9c9d0;
+  border-radius: 3px;
+  padding: 2px 4px 2px;
+  box-shadow: inset 0 0 0 1px rgba(0,0,0,.06);
+  font-size: 1.2em;
+  text-decoration: none;
+  cursor: pointer;
+  margin-right: 10px;
+}
+
+.back-link:hover, .back-link-txt:hover, .back-link-csv:hover, .back-link-xlsx:hover {
+  color: #053c96; /* Blau des Logos */
+  background-color: #efede1; 
+}
+
+
+/* Standard: größere Bildschirme */
+#audiofile-table {
+  font-family: Arial Narrow, Arial, sans-serif;
+  width: 900px;
+  max-width: 100%;
+  border-collapse: collapse;
+  margin-top: 5px;
+  margin-bottom: 20px;
+  font-size: 0.8em;
+  line-height: 1em;
+  table-layout: fixed;
+}
+
+/* Monitor zwischen 871px und 1000px */
+@media (max-width: 1000px) and (min-width: 871px) {
+  #audiofile-table {
+    width: 800px;
+  }
+}
+
+/* Monitor zwischen 731px und 870px */
+@media (max-width: 870px) and (min-width: 731px) {
+  #audiofile-table {
+    width: 680px;
+  }
+}
+
+/* Für Bildschirme zwischen 601px und 730px (Zwischengröße) */
+@media (max-width: 730px) and (min-width: 601px) {
+  #audiofile-table {
+    width: 500px;
+  }
+}
+
+/* Für Bildschirme 600px und schmaler */
+@media (max-width: 600px) {
+  #audiofile-table {
+    width: 400px;
+  }
+}
+
+  
+/* Breitenangaben für die Spalten */
+#audiofile-table th:nth-child(2), #audiofile-table td:nth-child(2) {
+  width: 15%;
+}
+
+#audiofile-table th:nth-child(3), #audiofile-table td:nth-child(3) {
+  width: 20%;
+}
+
+#audiofile-table th:nth-child(6), #audiofile-table td:nth-child(6) {
+  width: 6%;
+}
+
+/* Verbleibende Spalten gleichmäßig verteilen */
+#audiofile-table th:not(:nth-child(2)):not(:nth-child(3)):not(:nth-child(6)), 
+#audiofile-table td:not(:nth-child(2)):not(:nth-child(3)):not(:nth-child(6)) {
+  width: 8%; 
+}
+
+
+#audiofile-table .right-align {
+  text-align: right;
+}
+
+#audiofile-table th, #audiofile-table td {
+  border: 2px solid rgba(0,0,0,.06);
+  padding: 8px;
+  text-align: left;
+}
+
+#audiofile-table th { 
+  background-color: #484f5a1c;
+}
+
+#audiofile-table tbody tr:nth-child(even) {
+  background-color: #dddfe246;
+}
+
+#audiofile-table tbody tr:hover {
+  background-color: #efede173;
+}
+
+#dropdown-container select {
+  display: block;
+  
+}
+
+#citySelect {
+  color: #414141;
+  background: #a9c9d0;
+  border-radius: 3px;
+  padding: 2px 4px;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.06);
+  font-size: 1.0em;
+  font-family: Arial Narrow, Arial, sans-serif, "Consolas", Menlo, Monaco, "Lucida Console", "Liberation Mono", "DejaVu Sans Mono", "Bitstream Vera Sans Mono", "Courier New", monospace;
+  width: min-content;
+  box-sizing: border-box;
+  margin-top: 0px;
+  margin-bottom: 20px;
+}
+
+.searchModeSelect {
+  color: #414141;
+  background: #a9c9d0;
+  border-radius: 3px;
+  padding: 2px 4px;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.06);
+  font-family: Arial Narrow, Arial, sans-serif, "Consolas", Menlo, Monaco, "Lucida Console", "Liberation Mono", "DejaVu Sans Mono", "Bitstream Vera Sans Mono", "Courier New", monospace;
+  width: min-content;
+  box-sizing: border-box;
+  margin-top: 0px;
+}
+
+
+
+
+
+
+/* NAVIGATION ZU AUDIOS & DOKUMENTE */
+
+/* Stil für nav-Container */
+.nav-container {
+  font-family: Arial Narrow, Arial, sans-serif;
+  padding: 0px;
+  margin: 0;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+}
+
+
+.nav-container h1 {
+  margin-right: 10px; /* Füge etwas Abstand zwischen h1 und dem Link hinzu */
+}
+
+
+
+
+nav ul {
+  list-style-type: none;
+  padding: 0;
+  border-radius: 4px;
+  margin: 0;
+}
+
+
+nav a {
+  color: #000000;
+  border-radius: 4px;
+  text-decoration: none;
+  padding: 5px;
+}
+
+nav a:hover {
+  background-color: hsl(208, 27%, 60%);
+}
+
+
+
+
+
+/* PLAYER */
+/* PLAYER */
+/* PLAYER */
+
+/* ANORDNUNG DER METADATEN, TRANSKRIPTION, etc. */
+
+.speaker-turn {
+  display: flex;
+  align-items: flex-start;
+  margin-bottom: 1rem;
+}
+
+.speaker-name {
+  flex: 0 0 75px;
+  font-weight: bold;
+  color: #053c96;
+  margin-right: 1rem;
+  text-align: right;
+  cursor: pointer;
+  margin-top: 4px;
+  position: relative;
+}
+
+.speaker-content {
+  flex: 1;
+  font-family: "Consolas, Inconsolata", monospace;
+  margin-bottom: 10px; 
+  text-align: left;
+  line-height: 1.2;
+}
+
+.speaker-time {
+  font-size: 0.8em;
+  font-family: Arial Narrow, Arial, sans-serif;
+  color: rgb(91, 91, 91);
+  margin-right: 35px;
+  margin-bottom: 0.3rem;
+  line-height: 0px;
+}
+
+.speaker-text {
+  line-height: 1.4;
+}
+
+/* Stil für den Transkriptionstext */
+.transcription {
+  line-height: 1.3;
+  text-indent: 0px; /* Hier wird der Text eingerückt */
+  margin: 0 auto;
+  margin-bottom: 20px; /* Zum Beispiel 20px Abstand zwischen den einzelnen Redebeiträgen */
+  text-align: justify;
+}
+
+
+.word {
+  cursor: pointer; /* Mauszeiger als Hand */
+}
+
+
+#player-table {
+  width: auto;
+  border-collapse: collapse;
+}
+
+#player-table tr {
+  vertical-align: top; /* Inhalte oben ausrichten */
+}
+
+#sidebars {
+  position: fixed;
+  left: 78%;
+  width: auto;
+  z-index: 9990;
+}
+
+@media (min-width: 1400px) {
+  /* 78% von 1400px sind 1092px; der Container ist zentriert, also:
+     linker Rand = (Viewport-Breite - 1400px) / 2 */
+  #sidebars {
+    left: calc((100% - 1400px) / 2 + 1092px);
+  }
+}
+
+#sidebarContainer-meta {
+  font-size: 0.9em;
+  color: #414141;
+  margin-bottom: 10px;
+  margin-left: 0px !important;
+}
+
+#sidebarContainer {
+  font-size: 0.9em;
+  color: #414141;
+  margin-bottom: 10px;
+  margin-left: 0px !important;
+}
+
+
+#sidebarContainer a {
+  margin-right: 5px;
+}
+
+#sidebarContainer a:last-child {
+  margin-right: 0;
+}
+
+#transcriptionContainer {
+  margin-bottom: 100px;
+  width: 75%;
+}
+
+#capital-table {
+  margin-top: 20px;
+  border-collapse: collapse;
+}
+
+#capital-table tr {
+  vertical-align: top; /* Inhalte oben ausrichten */
+}
+
+#seconds {
+  position: relative;
+  display: inline-block;
+}
+
+#seconds > i {
+  vertical-align: middle;
+}
+
+#seconds > span {
+  position: absolute;
+  top: 60%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 0.7em;
+  font-weight: 700;
+  color: #053c96;
+  z-index: 1;
+}
+
+
+
+
+
+
+
+.speaker {
+  font-family: "Arial", monospace;
+  font-weight: bold;
+  color: #414141;
+  text-indent: 0px; /* Hier wird der Text um 40px eingerückt */
+  margin-right: 35px;
+  float: left; /* Sorgt dafür, dass der Sprechertitel links steht */
+  clear: left; /* Verhindert, dass andere Elemente auf der linken Seite einfließen */
+
+}
+
+
+
+
+
+/* Stil für unterstrichene Wörter */
+.transcription .word:hover {
+  background-color: hsl(66, 41%, 80%);
+  border-radius: 2px;
+  padding: 0px 0px 0px;
+  box-shadow: inset 0 0 0 1px rgba(0,0,0,.06);
+  cursor: pointer;
+}
+
+/* Stil für das aktuell abgespielte Wort */
+.word {
+  transition: background-color 0.5s ease, border-radius 0.5s ease, box-shadow 0.5s ease;
+}
+
+.word.playing:hover {
+  background-color: hsl(20, 52%, 78%); /* Ziel-Hintergrundfarbe im Hover-Zustand */
+}
+
+.word.playing {
+  background-color: hsl(66, 41%, 80%);
+  cursor: pointer;
+  border-radius: 2px;
+  padding: 0px 0px 0px;
+  box-shadow: inset 0 0 0 1px rgba(0,0,0,.06);
+}
+
+.word-token-id {
+  background-color: #d1b6b6;
+  cursor: pointer;
+  border-radius: 2px;
+  padding: 0px 0px 0px;
+  box-shadow: inset 0 0 0 1px rgba(0,0,0,.06);
+}
+
+/* Stil für aktiven Sprecher */
+.speaker.active {
+  color:hwb(214 4% 47%);
+  border-top: 0px solid hwb(0 36% 64%);
+  border-bottom: 0px solid hwb(0 36% 64%);
+  box-sizing: border-box; /* Fügt die Border zur Box hinzu, ohne die Größe zu ändern */
+}
+
+
+/* Stil für hover-Ereignis auf Sprecher */
+.speaker.hover {
+  text-decoration: underline;
+}
+
+.speaker {
+  cursor: pointer;
+}
+
+/* AUDIO-PLAYER */
+/* AUDIO-PLAYER */
+/* AUDIO-PLAYER */
+
+
+/* Stil für Audio-Container */
+#audioContainer {
+  font-family: Arial Narrow, Arial, sans-serif;
+  border: 0px solid #000;
+  padding: 5px;
+  margin: 0 auto;
+  margin-top: 20px; /* Abstand nach oben */
+  margin-bottom: 0px; /* Abstand nach unten */
+}
+
+.custom-audio-player {
+  position: fixed;
+  bottom: 23px;
+  /* Berechnet den linken Rand des Bodys:
+     1. Gesamtbreite des Viewports minus die Breite des Bodys ergibt den "Rest" an Breite.
+     2. Dieser Rest wird halbiert, da der Body zentriert ist.
+  */
+  left: calc((100% - clamp(300px, 95%, 1400px)) / 2);
+  /* 75 % der Breite des Bodys */
+  width: calc(clamp(300px, 95%, 1400px) * 0.74);
+  z-index: 1000;
+  background-color: #c7d5d8d7;
+  border-radius: 3px;
+  padding: 4px 6px;
+  box-shadow: inset 0 0 0 1px rgba(0,0,0,.06);
+}
+
+
+
+.player-controls {
+  display: flex;
+  flex-direction: column;
+}
+
+.player-controls-top {
+  display: flex;
+  align-items: center; /* Vertikale Zentrierung der Elemente */
+  justify-content: space-between; /* Sorgt für gleichmäßigen Abstand zwischen den Elementen */
+  }
+
+.player-controls-bottom {
+  display: flex;
+  align-items: center; /* Vertikale Zentrierung der Elemente */
+  justify-content:space-around; /* Sorgt für gleichmäßigen Abstand zwischen den Elementen */
+  margin-bottom: 10px;
+}
+
+.progress-bar {
+  flex-grow: 1;
+  margin-right: 10px; /* Abstand zwischen Fortschrittsanzeige und Lautstärkeregelung */
+}
+
+.volume-control-container {
+  display: flex;
+  align-items: center;
+  margin-left: 10px; /* Abstand zur Fortschrittsanzeige */
+}
+
+#muteBtn {
+  margin-right: 10px; /* Abstand zwischen Mute-Button und Volume Control Slider */
+}
+
+.volume-control {
+  width: 100px; /* Breite der Lautstärkeregelung */
+}
+
+.speed-control-container {
+  display: flex;
+  align-items: center;
+}
+
+.speed-control-container > * {
+  margin-right: 10px; /* Fügt einen rechten Abstand von 10px zu jedem Element im Container hinzu */
+}
+
+.speed-control-container > *:last-child {
+  margin-right: 0; /* Entfernt den rechten Abstand vom letzten Element im Container */
+}
+
+
+#speedControlSlider {
+  margin-right: 10px; /* Abstand zwischen Slider und Anzeige */
+  width: 100px;
+}
+
+#speedDisplay {
+  font-family: Arial Narrow, Arial, sans-serif;
+  font-weight: bold;
+  color: #414141;
+}
+
+.time-display {
+  font-family: Arial Narrow, Arial, sans-serif;
+  font-weight: bold;
+  color: #414141;
+}
+
+.playContainer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 0.5;
+}
+
+.playContainer > * {
+  margin-right: 30px; /* Fügt einen rechten Abstand von 20px zu jedem Element im Container hinzu */
+}
+
+.playContainer > *:last-child {
+  margin-right: 0; /* Entfernt den rechten Abstand vom letzten Element im Container */
+}
+
+
+
+
+/* Weitere Stile für Hover-Effekte, Ausblendung des alten Players usw. */
+.progress-bar:hover,
+.volume-control:hover {
+  cursor: pointer;
+}
+
+#speedControlSlider:hover {
+  cursor: pointer;
+}
+
+
+#audioPlayer {
+  display: none; /* Fügt diese Regel hinzu, um den alten Audioplayer zu verstecken */
+}
+
+.player-controls:hover {
+  cursor: pointer;
+}
+
+.player-controls-bottom {
+  margin-top: 10px; /* Abstand zwischen den Zeilen */
+}
+
+/* Progressbar */
+.progress-bar {
+  width: 100%;
+  height: 20px;
+}
+
+
+
+
+
+
+
+
+
+
+
+/* VARIA */
+
+.code {
+  color: #414141;
+  background: #a9c9d0;
+  border-radius: 3px;
+  padding: 2px 4px 2px;
+  box-shadow: inset 0 0 0 1px rgba(0,0,0,.06);
+  font-size: 0.8em;
+  font-family: Consolas,Menlo,Monaco,"Lucida Console","Liberation Mono","DejaVu Sans Mono","Bitstream Vera Sans Mono","Courier New",monospace;
+}
+
+.data {
+  color: #414141;
+  background: #a9c9d0;
+  border-radius: 3px;
+  padding: 0px 4px 0px;
+  box-shadow: inset 0 0 0 1px rgba(0,0,0,.06);
+  font-size: 1.0em;
+}
+
+.link, .link-txt, .link-csv, .link-xlsx {
+  font-family: Arial Narrow, Arial, sans-serif;
+  color: #414141;
+  background: #a9c9d0;
+  border-radius: 3px;
+  padding: 2px 4px 2px;
+  box-shadow: inset 0 0 0 1px rgba(0,0,0,.06);
+  font-size: 1.0em;
+  text-decoration: none;
+  cursor: pointer;
+  line-height: 2cap;
+}
+
+.link:hover, .link-txt:hover, .link-csv:hover, .link-xlsx:hover {
+  color: #053c96; /* Blau des Logos */
+  background-color: #efede1; 
+}
+
+/* Die Checkbox verstecken */
+.toggle-more {
+  display: none;
+}
+
+/* Standard: Textbereich ausgeblendet */
+.truncate-text {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 1.0s ease;
+}
+
+/* Wenn die Checkbox aktiviert ist, erweitere den Container */
+.toggle-more:checked ~ .truncate-text {
+  max-height: 2000px; /* Ein ausreichend hoher Wert */
+}
+
+.leer-button {
+  font-family: Arial Narrow, Arial, sans-serif;
+  color: #414141;
+  background: #a9c9d0;
+  border-radius: 3px;
+  padding: 2px 4px 2px;
+  box-shadow: inset 0 0 0 1px rgba(0,0,0,.06);
+  font-size: 1em;
+  text-decoration: none;
+  margin-top: 50px;
+  margin-bottom: 30px;
+  border-width: 0px;
+}
+
+.leer-button:hover {
+  color: #053c96; /* Blau des Logos */
+  background-color: #efede1; 
+  cursor: pointer;
+
+}
+
+/* MAPA AUDIOS */
+
+/* Grundregel für #map-container – zusätzlich nicht breiter als der Parent */
+#map-container {
+  width: 900px;
+  height: 600px;
+  max-width: 100%;
+}
+
+/* Monitor zwischen 871px und 1000px */
+@media (max-width: 1000px) and (min-width: 871px) {
+  #map-container {
+    width: 800px;
+    height: 600px;
+  }
+}
+
+/* Monitor zwischen 731px und 870px */
+@media (max-width: 870px) and (min-width: 731px) {
+  #map-container {
+    width: 680px;
+    height: 600px;
+  }
+}
+
+/* Für Bildschirme zwischen 601px und 730px (Zwischengröße) */
+@media (max-width: 730px) and (min-width: 601px) {
+  #map-container {
+    width: 500px;
+    height: 500px;
+  }
+}
+
+/* Für Bildschirme 600px und schmaler */
+@media (max-width: 600px) {
+  #map-container {
+    width: 400px;
+    height: 500px;
+  }
+}
+
+/* --- Spezifische Smartphone-Regeln (müssen danach stehen) --- */
+
+/* Für größere Smartphones im Landscape-Modus (≤430px) */
+@media (max-width: 430px) {
+  #map-container {
+    width: 400px !important;
+    height: 500px;
+  }
+}
+
+
+
+/* Für schmale Smartphones im Portrait-Modus (≤375px) */
+@media (max-width: 430px) {
+  #map-container {
+    width: 334px !important;
+    height: 500px;
+  }
+}
+
+
+
+
+#map {
+  width: 100%;
+  height: 100%;
+  border-radius: 8px;
+}
+
+#capitalLinksContainer {
+  width: 900px;
+  max-width: 100%;
+}
+
+@media (max-width: 1000px) and (min-width: 871px) {
+  #capitalLinksContainer {
+    width: 800px;
+  }
+}
+
+@media (max-width: 870px) and (min-width: 731px) {
+  #capitalLinksContainer {
+    width: 680px;
+  }
+}
+
+@media (max-width: 730px) and (min-width: 601px) {
+  #capitalLinksContainer {
+    width: 500px;
+  }
+}
+
+@media (max-width: 600px) {
+  #capitalLinksContainer {
+    width: 400px;
+  }
+}
+
+@media (max-width: 430px) and (orientation: landscape) {
+  #capitalLinksContainer {
+    width: 400px !important;
+  }
+}
+
+@media (min-width: 376px) and (max-width: 430px) and (orientation: portrait) {
+  #capitalLinksContainer {
+    width: 400px !important;
+  }
+}
+
+@media (max-width: 375px) and (orientation: portrait) {
+  #capitalLinksContainer {
+    width: 334px !important;
+  }
+}
+
+.custom-control {
+  color: #414141;
+  background: #a9c9d0;
+  font-weight: bold;
+  border-radius: 3px;
+  padding: 3px 6px 3px;
+  box-shadow: inset 0 0 0 1px rgba(0,0,0,.06);
+  position: absolute;
+  top: -72px;
+  left: 35%;
+  text-align: left;
+}
+
+
+/* MARCAR LETRAS */
+/* MARCAR LETRAS */
+/* MARCAR LETRAS */
+
+
+.tooltip-text {
+  visibility: hidden;
+  width: 200px;
+  line-height: 1.3;
+  font-size: 12px;
+  font-family: "Arial";
+  text-align: left;
+  font-weight: 100;
+  color: #414141;
+  border-radius: 6px;
+  position: absolute;
+  z-index: 1000;
+  background-color: #efede1f0;
+  padding: 4px 6px;
+  box-shadow: inset 0 0 0 1px rgba(0,0,0,.06);
+  pointer-events: none;
+}
+
+.tooltip-text.visible {
+  visibility: visible;
+}
+
+.tooltip-high {
+  color: #053c96; /* Blau des Logos */
+  font-weight: 700;
+}
+
+.tooltip-italic {
+  font-style: italic;
+}
+
+.tooltip-bold {
+  font-weight: 700;
+}
+
+.tooltip-token {
+  color: #414141;
+  background: #a9c9d0;
+  border-radius: 3px;
+  padding: 2px 4px 2px;
+  box-shadow: inset 0 0 0 1px rgba(0,0,0,.06);
+  font-family: Consolas,Menlo,Monaco,"Lucida Console","Liberation Mono","DejaVu Sans Mono","Bitstream Vera Sans Mono","Courier New",monospace;
+}
+
+.fa-circle-question:hover + .tooltip-text, .fa-solid.fa-circle-question:focus + .tooltip-text {
+  visibility: visible;
+}
+
+.fa-solid.fa-circle-question {
+  cursor: pointer;
+  font-size: 0.7em;
+  position: relative;
+  top: -0.4em;  /* passt den vertikalen Versatz an */
+}
+
+.fa-circle-user {
+  font-size: 0.8em;
+  vertical-align: text-top;
+}
+
+
+.fa-circle-user:hover + .tooltip-text,
+.fa-circle-user:focus + .tooltip-text {
+  visibility: visible;
+}
+
+
+
+/* Statt .transcription .word .highlight */
+.speaker-text .word .highlight,
+.word .highlight {
+  background-color: rgba(241, 206, 206, 0.888);
+}
+
+.speaker-text .word .highlight-1,
+.word .highlight-1 {
+  background-color: rgba(241, 206, 206, 0.888);
+}
+.speaker-text .word .highlight-2,
+.word .highlight-2 {
+  background-color: rgba(241, 239, 206, 0.888);
+}
+.speaker-text .word .highlight-3,
+.word .highlight-3 {
+  background-color: rgba(206, 228, 241, 0.888);
+}
+
+
+
+
+.entrar_letras {
+  color: #414141;
+  background: #a9c9d0;
+  border-radius: 3px;
+  padding: 4px 4px 4px;
+  box-shadow: inset 0 0 0 1px rgba(0,0,0,.06);
+  font-family: "Consolas, Inconsolata",monospace;
+}
+
+.collector-input {
+  color: #414141;
+  background: #a9c9d0;
+  border-radius: 3px;
+  padding: 2px 4px 2px;
+  box-shadow: inset 0 0 0 1px rgba(0,0,0,.06);
+  font-family: "Consolas, Inconsolata",monospace;
+}
+
+.token-icon-bar {
+  width: 100%;
+  display: flex;
+  justify-content: left;
+  gap: 6px;
+  margin-top: 2px;
+}
+
+.tooltip-text-pop {
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.6s ease;
+  position: absolute;
+  z-index: 9999;
+  background-color: #efede1f0;
+  color: #414141;
+  text-align: left;
+  font-size: 12px;
+  font-family: "Arial";
+  font-weight: 100;
+  padding: 4px 6px;
+  border-radius: 3px;
+  box-shadow: inset 0 0 0 1px rgba(0,0,0,.06);
+  white-space: nowrap;
+  width: max-content;
+  max-width: 300px;
+  pointer-events: none;
+}
+
+.tooltip-text-pop.visible {
+  opacity: 1;
+  transition: opacity 0.6s ease;
+  visibility: visible;
+}
+
+#markInput {
+  border-width: 0px;
+  border-style: none;
+  border-image:none;
+  display: inline;
+  font-family: 'Consolas', 'Courier New', Courier, monospace;
+  margin-bottom: 5px;
+  margin-right: 5px;
+}
+
+#markInput :focus-visible {
+  outline: -webkit-focus-ring-color auto 0px;
+}
+
+#query {
+  border-width: 0px;
+  border-style: none;
+  border-image: none;
+  display: inline;
+  font-family: 'Consolas', 'Courier New', Courier, monospace;
+  margin-bottom: 0px;
+  margin-right: 5px;
+}
+
+button {
+  color: buttontext;
+  letter-spacing: normal;
+  word-spacing: normal;
+  line-height: normal;
+  text-transform: none;
+  text-indent: 0px;
+  text-shadow: none;
+  display: inline-block;
+  text-align: center;
+  align-items: flex-start;
+  cursor: pointer;
+  box-sizing: border-box;
+  background-color: none;
+  margin: 0em;
+  padding-block: 1px;
+  padding-inline: 6px;
+  border-width: 1px;
+  border-style: inset;
+  border-color: none;
+  border-image: none;
+}
+
+.button {
+  font-family: Arial Narrow, Arial, sans-serif;
+  color: #414141;
+  background: #a9c9d0;
+  border-radius: 3px;
+  padding: 2px 4px 2px;
+  box-shadow: inset 0 0 0 1px rgba(0,0,0,.06);
+  border-width: 0;
+  font-size: 1.0em;
+  text-decoration: none;
+  margin-bottom: 5px;
+}
+
+.borrar {
+  font-family: Arial Narrow, Arial, sans-serif;
+  color: #414141;
+  background: #d0a9a9;
+  border-radius: 3px;
+  padding: 2px 4px 2px;
+  box-shadow: inset 0 0 0 1px rgba(0,0,0,.06);
+  border-width: 0;
+  font-size: 1.0em;
+  text-decoration: none;
+  margin-bottom: 5px;
+}
+
+.button:hover {
+  color: #053c96; /* Blau des Logos */
+  background-color: #efede1; 
+}
+
+.borrar {
+  font-family: Arial Narrow, Arial, sans-serif;
+  color: #414141;
+  background: #d0a9a9;
+  border-radius: 3px;
+  padding: 2px 4px 2px;
+  box-shadow: inset 0 0 0 1px rgba(0,0,0,.06);
+  border-width: 0;
+  font-size: 1.0em;
+  text-decoration: none;
+  margin-bottom: 5px;
+}
+
+
+.letra {
+  font-family: 'Consolas', 'Courier New', Courier, monospace;
+  color: #414141;
+  background: #d0a9a9;
+  border-radius: 3px;
+  padding: 2px 4px 2px;
+  box-shadow: inset 0 0 0 1px rgba(0,0,0,.06);
+  border-width: 0;
+  font-size: 0.8em;
+  text-decoration: none;
+  margin-right: 3px;
+  cursor: pointer;
+}
+
+.result-count {
+  font-size: 0.9em;
+}
+
+#buttonsContainer {
+  margin-top: 5px;
+  line-height: 1.0;
+}
+
+
+/* SEARCH */
+/* SEARCH */
+/* SEARCH */
+
+.buscar {
+  font-family: "Arial";
+  color: #414141;
+  background: #a9c9d0;
+  border-radius: 0px;
+  padding: 2px 4px 2px;
+  box-shadow: inset 0 0 0 1px rgba(0,0,0,.06);
+  font-size: 1.0em;
+  text-decoration: none; /* Verhindere die Standard-Unterstreichung für Links */
+}
+
+.sort {
+  color: #000;
+  text-decoration: none;
+}
+
+/* Container für die ganze Pagination */
+#pagination-box {
+  /* Rahmen, Padding etc. kannst du nach Wunsch einstellen: */
+  margin-top: 10px;
+  margin-bottom: 10px;
+  padding: 8px;
+  border: 1px solid rgba(0,0,0,.06);
+  box-shadow: inset 0 0 0 1px rgba(0,0,0,.06);
+  border-radius: 3px;
+  
+  /* Wichtig: Flex, wrap, space-between */
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px; /* Abstand zwischen dem linken und dem rechten Block */
+}
+
+/* Linker Block: "Página 4 de 5" und die Seitenlinks */
+.pagination-left {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px; 
+}
+
+/* Rechter Block: das Dropdown */
+.pagination-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Info: "Página X de Y" */
+.pagination-right {
+  margin: 0;
+  font-size: 0.9em;
+  color: #053c96; /* An dein Blau angepasst */
+}
+
+/* Container für Seitennummer-Links */
+.page-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+/* Paginierungs-Buttons (inkl. Anterior, 1,2,3..., Siguiente) */
+.pagination-button {
+  font-family: Arial Narrow, Arial, sans-serif;
+  color: #414141;
+  background: #a9c9d0;
+  border-radius: 3px;
+  padding: 1px 6px;
+  box-shadow: inset 0 0 0 1px rgba(0,0,0,.06);
+  font-size: 0.8em;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.pagination-button:hover {
+  background-color: #efede1;
+  color: #053c96;
+}
+
+.pagination-button.active {
+  font-weight: bold;
+  background-color: #efede1;
+  color: #053c96;
+}
+
+/* Dropdown für "Resultados por página" */
+.page-size-selector {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+#pageSizeSelect {
+  font-family: Arial Narrow, Arial, sans-serif;
+  color: #414141;
+  background: #a9c9d0;
+  border-radius: 3px;
+  padding: 2px 4px;
+  box-shadow: inset 0 0 0 1px rgba(0,0,0,.06);
+  font-size: 0.8em;
+  border: none;
+  cursor: pointer;
+}
+
+/* Spektogramm/Overlay */
+
+/* Der Hintergrund, der den gesamten Bildschirm abdunkelt */
+.spectrogram-overlay {
+  position: fixed;
+  z-index: 9999;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0,0,0,0.5);
+}
+
+/* Das verschiebbare Fenster, das das Bild und den Button enthält */
+.spectrogram-content {
+  position: absolute;
+
+  /* Anfangs in der Bildschirmmitte: */
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+
+  /* Damit sich die Breite am Inhalt orientiert: */
+  display: inline-block;
+
+  /* Stil wie bei deinen anderen Boxen: */
+  background: #efede1;
+  border: 1px solid #4d4d4d;
+  border-radius: 4px;
+  box-shadow: inset 0 0 0 1px rgba(0,0,0,.06);
+  padding: 10px;
+
+  /* Alle Kinder zentriert ausrichten (u.a. den Download-Button) */
+  text-align: center;
+
+  /* Zum Verschieben: */
+  cursor: grab;
+}
+.spectrogram-content.grabbing {
+  cursor: grabbing;
+}
+
+/* Schließen-Button (X) */
+.spectrogram-close {
+  position: absolute;
+  top: 4px;
+  right: 12px;
+  font-size: 1.2em;
+  cursor: pointer;
+}
+
+/* Download-Icon (mittig dank text-align: center im Eltern) */
+.spectrogram-play, .spectrogram-download {
+  display: inline-block;
+  margin-top: 0px;
+  font-size: 1em;
+  font-family: Arial Narrow, Arial, sans-serif;
+  color: #414141;
+  background: #a9c9d0;
+  border-radius: 3px;
+  padding: 2px 4px;
+  box-shadow: inset 0 0 0 1px rgba(0,0,0,.06);
+  text-decoration: none;
+}
+
+.spectrogram-download:hover,
+.spectrogram-play:hover {
+  background-color: #efede1;
+  color: #053c96;
+}
+
+#spectrogramImage {
+  display: block;
+  max-width: 600px;
+  margin: 20px auto 10px auto; 
+  border: 1px solid #ccc;
+  object-fit: contain;
+}
+
+/* Mobile Anpassungen */
+@media (max-width: 600px) {
+  .spectrogram-content {
+    width: 90%;
+    max-width: 100%;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    padding: 10px;
+  }
+  #spectrogramImage {
+    max-width: 100%;
+    height: auto;
+  }
+}
+
+
+/* Tabs */
+.search-tabs {
+  display: flex;
+  gap: 5px;
+  margin-bottom: 10px;
+}
+
+.tab-btn {
+  background: #a9c9d0;
+  color: #414141;
+  padding: 5px 10px;
+  border-radius: 3px;
+  cursor: pointer;
+  border: none;
+}
+
+.tab-btn.active, .tab-btn:hover {
+  background-color: #efede1;
+  color: #053c96;
+}
+
+/* Tab-Inhalte */
+.tab-content {
+  display: none;
+  padding: 10px;
+  border-radius: 3px;
+}
+
+.active-tab {
+  display: block;
+}
+
+.tab-content.active-tab {
+  display: block;
+}
+
+/* Filter */
+
+#simple-search-container {
+  border-top: 0px solid #053c96;
+  margin-top: 10px;
+  max-width: auto;
+  border-collapse: collapse;
+  table-layout: auto; /* Ändern Sie die table-layout Eigenschaft */
+  border-radius: 3px;
+  padding: 5px;
+  box-shadow: inset 0 0 0 1px rgba(0,0,0,.06);
+}
+
+#advanced-search-container {
+  border-top: 0px solid #053c96;
+  margin-top: 10px;
+  max-width: auto;
+  border-collapse: collapse;
+  table-layout: auto; /* Ändern Sie die table-layout Eigenschaft */
+  border-radius: 3px;
+  padding: 5px;
+  box-shadow: inset 0 0 0 1px rgba(0,0,0,.06);
+}
+
+#token-search-container {
+  border-top: 0px solid #053c96;
+  margin-top: 10px;
+  max-width: auto;
+  border-collapse: collapse;
+  table-layout: auto; /* Ändern Sie die table-layout Eigenschaft */
+  border-radius: 3px;
+  padding: 5px;
+  box-shadow: inset 0 0 0 1px rgba(0,0,0,.06);
+}
+
+.filter-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.filter-table td {
+  vertical-align: top;
+  padding: 5px;
+}
+
+/* Kategorie-Spalte (z. B. "País:") */
+.td-category {
+  width: 80px; /* Feste Breite für die Bezeichnung */
+  text-align: right; /* Rechtsbündig, optional */
+}
+
+/* Zweite Spalte: Enthält den Flex-Container */
+.filter-table td:last-child {
+  width: auto; /* Nimmt den restlichen Platz ein */
+}
+
+/* Flex-Container für Checkboxen */
+.filter-flex-container {
+  display: flex;
+  flex-wrap: wrap;    /* Checkboxen umbrechen, wenn zu breit */
+  gap: 5px;          /* Abstand zwischen den Checkboxen */
+  align-items: center; /* Vertikale Ausrichtung */
+}
+
+#category {
+  font-family: Arial Narrow, Arial, sans-serif;
+  color: #414141;
+  font-size: 1.0em;
+  text-decoration: none;
+  margin-bottom: 20px;
+  text-align: right;
+}
+
+#category1 {
+  font-family: Arial Narrow, Arial, sans-serif;
+  font-weight: bold;
+  color: #414141;
+  font-size: 1.0em;
+  text-decoration: none;
+  margin-bottom: 20px;
+  text-align: right;
+  vertical-align: top;
+}
+
+
+#filter td {
+  text-align: center;
+  width: auto; /* Ändern Sie die Breite auf "auto" */
+}
+
+#filter input[type="checkbox"] {
+  margin-right: 4px;
+}
+
+#filter label {
+  display: inline-block;
+  vertical-align: middle; /* Zentriert das Label vertikal im Kontrollspan */
+  margin-right: 4px;
+}
+
+
+#checkbox {
+  color: #414141;
+  background: #a9c9d0;
+  border-radius: 0;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.06);
+  font-size: 0.9em;
+  min-width: 50px;
+  max-width: 95px;
+  width: auto;
+  padding-right: 5px;
+}
+
+#checkbox-todos {
+  color: #414141;
+  background: #005c7169;
+  border-radius: 0;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.06);
+  font-size: 0.9em;
+  min-width: 50px;
+  max-width: 95px;
+  width: auto;
+  padding-right: 5px;
+}
+
+
+
+
+
+#filter-todos span {
+  display: inline-block; /* Macht das span-Element zu einem inline-block-Element */
+  width: 70px;            /* Setzt die Breite auf 100% der umgebenden Zelle */
+}
+
+#filter-countries span {
+  display: inline-block; /* Macht das span-Element zu einem inline-block-Element */
+  width: 80px;            /* Setzt die Breite auf 100% der umgebenden Zelle */
+}
+
+#filter-countries2 span {
+  display: inline-block; /* Macht das span-Element zu einem inline-block-Element */
+  width: 80px;            /* Setzt die Breite auf 100% der umgebenden Zelle */
+}
+
+#filter-otros span {
+  display: inline-block; /* Macht das span-Element zu einem inline-block-Element */
+  width: 100px;            /* Setzt die Breite auf 100% der umgebenden Zelle */
+}
+
+label {
+  margin-right: 0px; /* Fügt einen Abstand von 4px auf der rechten Seite hinzu */
+}
+
+input {
+  text-rendering: auto;
+  color: fieldtext;
+  letter-spacing: normal;
+  word-spacing: normal;
+  line-height: normal;
+  text-transform: none;
+  text-indent: 0px;
+  text-shadow: none;
+  display: inline-block;
+  text-align: start;
+  appearance: auto;
+  -webkit-rtl-ordering: logical;
+  cursor: text;
+  background-color: #a9c9d0;
+  border:#404040;
+  margin: 0em;
+  padding: 1px 0px;
+  border-width: 1px;
+  border-style: solid;
+  border-color:#404040;
+  border-image: initial;
+  padding-block: 3px;
+}
+
+input[type="checkbox" i] {
+  background-color: initial;
+  cursor: default;
+  appearance: auto;
+  box-sizing: border-box;
+  margin: 3px 3px 3px 4px;
+  padding: initial;
+  border: initial;
+}
+
+/* Filter Dropdown */
+
+/* Wrapper */
+.dropdown-select{position:relative;display:inline-block}
+
+/* geschlossene Box */
+.dropdown-select .select-box{
+  border:1px solid #999;
+  border-radius:3px;
+  padding:1px 8px;
+  min-width:content;
+  background:#a9c9d0;
+  color: #414141;
+  cursor:pointer;
+  font-size:.9em;
+  text-align:left;
+}
+
+/* Liste – vorher unsichtbar, aber schon im Layout vorhanden       */
+.dropdown-select .select-menu{
+  position:absolute;
+  top:100%;
+  left:0;
+  min-width:100px;
+  z-index:20;
+  background:#a9c9d0;
+  border:1px solid #ccc;
+  border-radius:3px;
+  padding:2px 4px;
+  box-shadow:0 2px 5px rgba(0,0,0,.15);
+  font-size:.9em;
+  color: #414141;
+
+
+  /* Animation */
+  opacity:0;transform:scaleY(0);transform-origin:top center;
+  transition:opacity .18s ease, transform .18s ease;
+  pointer-events:none;                      /* verhindert Klicks */
+}
+
+.dropdown-select .select-menu.open{
+  opacity:1;transform:scaleY(1);
+  pointer-events:auto;                      /* jetzt klickbar */
+}
+
+.dropdown-select .select-menu label{display:block;margin:2px 0}
+.dropdown-select .select-menu input{margin-right:6px}
+
+/* horizontale Anordnung der Dropdown-Komponenten */
+.filter-row{
+  display:flex;          /* nebeneinander */
+  gap:20px;              /* exakt 20 px Zwischenraum */
+  align-items:center;    /* vertikal auf eine Linie */
+}
+
+
+/* Results */
+
+#results {
+  width: auto; /* Nimmt die volle Breite des Viewports ein */
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch; /* Für flüssiges Scrollen auf iOS */
+}
+
+#results-container {
+  border-top: 0px solid #053c96;
+  margin-top: 10px;
+  border-collapse: collapse;
+  overflow-x: hidden; /* Verhindert, dass der Container selbst horizontal scrollt */
+  width: auto;
+  display: block;
+}
+
+.results-stats2 {
+  border-top: 0px solid #053c96;
+  margin-top: 10px;
+  margin-bottom: 10px;
+  width: auto;
+  border-collapse: collapse;
+  table-layout: auto; /* Ändern Sie die table-layout Eigenschaft */
+  border-radius: 3px;
+  padding: 5px;
+  box-shadow: inset 0 0 0 1px rgba(0,0,0,.06);
+}
+
+/* Results-Table */
+
+#results-table {
+  border-collapse: collapse;
+  width: 100%;
+  min-width: 600px;
+  overflow-x: hidden;
+
+  font-size: 0.8em;
+  line-height: 1.2em;
+  background-color: transparent;
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+/* Tabellenkopf */
+#results-table thead {
+  background-color: rgba(72, 79, 90, 0.11); /* leicht getöntes Grau */
+  color: #2d2d2d;
+}
+
+/* Kopf- und Inhaltszellen */
+#results-table th,
+#results-table td {
+  border: 1px solid rgba(0, 0, 0, 0.06);  /* nur 1px jetzt */
+  padding: 6px;
+  text-align: left;
+  vertical-align: top;
+}
+
+#results-table th {
+  white-space: nowrap;
+}
+
+/* Zebrastreifen */
+#results-table tbody tr:nth-child(even) {
+  background-color: rgba(221, 223, 226, 0.27);  /* leicht transparentes Hellgrau */
+}
+
+/* Hover-Effekt */
+#results-table tbody tr:hover {
+  background-color: rgba(239, 237, 225, 0.45);  /* leicht gelbstichiger Hover */
+}
+
+/* Ausrichtungen */
+#results-table .right-align {
+  text-align: right;
+}
+#results-table .center-align {
+  text-align: center;
+  white-space: nowrap;
+}
+
+#results-table .token-id {
+  font-size: 0.9em;
+  text-align: left;
+  white-space: nowrap;
+}
+
+#results-table th.filter-class,
+#results-table td.filter-class {
+  background-color: rgba(200, 180, 180, 0.334); /* leicht dunkler als der Rest */
+}
+
+#results-table th.filter-class {
+font-weight: bold;
+}
+
+#results-table tbody tr:hover td.filter-class {
+  background-color: rgba(180, 190, 200, 0.174);
+}
+
+
+
+
+
+
+
+
+.palabra-buscada {
+  color:#053c96;
+  font-weight: bold;
+  font-size: 1.1em;
+  font-family: "Consolas, Inconsolata", monospace;
+  cursor: pointer; /* Den Mauszeiger zu einem Zeiger ändern */
+}
+
+.contexto {
+  font-family: "Consolas, Inconsolata", monospace;
+  font-size: 1.1em;
+}
+
+.stats {
+  font-family: "Consolas, Inconsolata", monospace;
+  font-size: 1.0em;
+  color:#053c96;
+  padding-left: 10px;
+}
+
+
+
+
+.audio-button {
+  color: #414141;
+  background: #a9c9d0;
+  border-radius: 3px;
+  padding: 2px 4px 2px 8px;
+  box-shadow: inset 0 0 0 1px rgba(0,0,0,.06);
+  text-decoration: none;
+  border-width: 0px;
+}
+
+.player-button {
+  color: #414141;
+  background: #a9c9d0;
+  border-radius: 3px;
+  padding: 2px 14px 2px 14px;
+  box-shadow: inset 0 0 0 1px rgba(0,0,0,.06);
+  text-decoration: none;
+  border-width: 0px;
+}
+
+.player-button:hover {
+  background-color: #efede1; 
+  cursor: pointer;
+}
+
+.audio-button:hover {
+  background-color: #efede1; 
+  cursor: pointer;
+}
+
+.download-button {
+  color: #414141;
+  background: #a9c9d0;
+  border-radius: 3px;
+  padding: 2px 4px 2px 6px;
+  box-shadow: inset 0 0 0 1px rgba(0,0,0,.06);
+  text-decoration: none;
+  border-width: 0px;
+  margin-left: 5px;
+}
+
+.audio-context-button {
+  color: #414141;
+  background: #a9c9d0;
+  border-radius: 3px;
+  padding: 2px 9px 2px 14px;
+  box-shadow: inset 0 0 0 1px rgba(0,0,0,.06);
+  text-decoration: none;
+  border-width: 0px;
+}
+
+.download-context-button {
+  color: #414141;
+  background: #a9c9d0;
+  border-radius: 3px;
+  padding: 2px 14px 2px 14px;
+  box-shadow: inset 0 0 0 1px rgba(0,0,0,.06);
+  text-decoration: none;
+  border-width: 0px;
+  margin-left: 5px;
+}
+
+.audio-context-button:hover {
+  background-color: #efede1; 
+  cursor: pointer;
+}
+
+.download-context-button:hover {
+  background-color: #efede1; 
+  cursor: pointer;
+}
+
+.download-button:hover {
+  background-color: #efede1; 
+  cursor: pointer;
+}
+
+.download-link {
+  font-family: Arial Narrow, Arial, sans-serif;
+  color: #414141;
+  background: #a9c9d0;
+  border-radius: 3px;
+  padding: 0px 2px 0px;
+  box-shadow: inset 0 0 0 1px rgba(0,0,0,.06);
+  font-size: 1.4em;
+  text-decoration: none;
+  cursor: pointer;
+  display: inline-block;
+  width: 1.2em;
+  text-align: center;
+}
+
+.download-link:hover {
+  color: #053c96; /* Blau des Logos */
+  background-color: #efede1; 
+}
+
+.loading-logo-container {
+  display: block;
+  width: 200px;
+  margin: 0;
+
+  overflow: hidden;
+}
+
+.buscando-text {
+  font-weight: bold;
+  font-size: 1.2em;
+  color: #7e7e7e;
+  text-align: left;
+  margin-top: 25px;
+  display: inline-block;
+}
+.buscando-text span {
+  color: #7e7e7e;
+  transition: color 0.4s ease;
+}
+
+
+
+
+
+@media only screen and (max-width: 730px) {
+  #content-container {
+    max-width: 100% !important;
+    padding: 10px !important;
+    margin: 0 auto !important;
+  }
+
+  /* Tabelle und deren Zeilen/Zellen als flexibler Block */
+  #player-table {
+    display: flex !important;
+    flex-direction: column !important;
+    width: 100% !important;
+    border-collapse: collapse;
+    overflow: visible;
+  }
+  #player-table tr {
+    display: flex !important;
+    flex-direction: column;
+    width: 100% !important;
+  }
+  #player-table tr td {
+    display: block !important;
+    width: auto !important;
+    padding: 0 !important;
+    box-sizing: border-box;
+  }
+
+  /* Reihung ändern: Die Zelle mit den Sidebars (ID "sidebars") soll oberhalb des Transkriptionscontainers stehen */
+  #player-table tr td#sidebars {
+    order: -1;
+  }
+
+  /* Sidebars: Feste Positionierung entfernen und volle Breite nutzen */
+  #sidebars {
+    position: static !important;
+    top: auto !important;
+    right: auto !important;
+    width: 100% !important;
+    padding-left: 0 !important;
+    margin-bottom: 10px !important;
+    float: none !important;
+    clear: both !important;
+  }
+
+  /* Transkriptionscontainer: Volle Breite */
+  #transcriptionContainer {
+    width: auto !important;
+    margin-bottom: 20px !important;
+    float: none !important;
+    clear: both !important;
+  }
+  #transcriptionContainer > div {
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+
+
+
+/* Logo zentriert und mit etwas Abstand nach unten */
+#logoContainer {
+  width: 100%;
+  margin: 0 auto 10px auto;
+}
+
+#logoContainer img {
+  width: 250px;
+  height: auto;
+}
+
+
+/* Navigation: ganze Breite, aber unter dem Logo */
+#mainNavigation {
+  width: 100%;
+  margin: 0 auto;
+}
+/* Navigationsliste als Flex-Container: horizontal zentriert */
+#mainNavigation nav ul {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+/* Einzelne Listenelemente nebeneinander, mit etwas Abstand */
+#mainNavigation nav ul li {
+  display: inline-block;
+  margin: 0 2px;
+}
+
+.header-container {
+  display: flex;
+  align-items: center;
+  margin-bottom: 0px;
+}
+
+#mainNavigation a {
+  text-transform: none;
+  font-weight: normal;
+  font-size: 1.0em;
+  line-height: 3cap;
+}
+
+h1 {
+  font-family: Arial Narrow, Arial, sans-serif, Arial, sans-serif;
+  color: #053c96;
+  font-size: 1.0em;
+}
+
+/* Stil für Audio-Container */
+#audioContainer {
+  font-family: Arial Narrow, Arial, sans-serif;
+  border: 0px solid #000;
+  padding: 5px;
+  margin: 0 auto;
+  margin-top: 20px; /* Abstand nach oben */
+  margin-bottom: 0px; /* Abstand nach unten */
+}
+
+
+
+.custom-audio-player {
+  position: fixed;
+  bottom: 10px;
+  /* Berechnet den linken Rand des Bodys:
+     1. Gesamtbreite des Viewports minus die Breite des Bodys ergibt den "Rest" an Breite.
+     2. Dieser Rest wird halbiert, da der Body zentriert ist.
+  */
+  /* 75 % der Breite des Bodys */
+  left: calc((100% - clamp(300px, 95%, 1400px)) / 2);
+  width: 92%; /* 95% der Breite des Bodys */
+  z-index: 1000;
+  background-color: #c7d5d8d7;
+  border-radius: 3px;
+  padding: 4px 6px;
+  box-shadow: inset 0 0 0 1px rgba(0,0,0,.06);
+}
+
+/* Reduziere die Größe der enthaltenen <i>-Symbole und der Zeit-/Geschwindigkeitsanzeige um 50% */
+
+.custom-audio-player .time-display,
+.custom-audio-player #speedDisplay {
+  font-size: 90% !important;
+}
+
+.player-controls {
+  display: flex;
+  flex-direction: column;
+}
+
+.player-controls-top {
+  display: flex;
+  align-items: center; /* Vertikale Zentrierung der Elemente */
+  justify-content: space-between; /* Gleichmäßiger Abstand */
+}
+
+.player-controls-bottom {
+  display: flex;
+  align-items: center; /* Vertikale Zentrierung */
+  justify-content: space-around; /* Gleichmäßiger Abstand */
+  margin-bottom: 10px;
+}
+
+.progress-bar {
+  flex-grow: 1;
+  margin-right: 10px; /* Abstand zwischen Fortschrittsanzeige und Lautstärkeregelung */
+}
+
+.volume-control-container {
+  display: flex;
+  align-items: center;
+  margin-left: 10px; /* Abstand zur Fortschrittsanzeige */
+}
+
+#muteBtn {
+  margin-right: 10px; /* Abstand zwischen Mute-Button und Lautstärkeregler */
+}
+
+.volume-control {
+  width: 80px; /* Breite der Lautstärkeregelung verringert */
+}
+
+.speed-control-container {
+  display: flex;
+  align-items: center;
+}
+
+.speed-control-container > * {
+  margin-right: 10px; /* Abstand von 10px zu jedem Element */
+}
+
+.speed-control-container > *:last-child {
+  margin-right: 0; /* Kein Abstand beim letzten Element */
+}
+
+#speedControlSlider {
+  margin-right: 10px; /* Abstand zwischen Slider und Anzeige */
+  width: 80px; /* Breite des Sliders verringert */
+}
+
+#speedDisplay {
+  font-family: Arial Narrow, Arial, sans-serif;
+  font-weight: bold;
+  color: #414141;
+}
+
+.time-display {
+  font-family: Arial Narrow, Arial, sans-serif;
+  font-weight: bold;
+  color: #414141;
+}
+
+.playContainer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 0.5;
+}
+
+.playContainer > * {
+  margin-right: 15px; /* Reduzierter Abstand zwischen den Elementen */
+}
+
+.playContainer > *:last-child {
+  margin-right: 0; /* Kein Abstand beim letzten Element */
+}
+
+#capital-table {
+  margin-top: 20px;
+  border-collapse: collapse;
+}
+
+.dropdown-select {
+  position: relative;
+  display: inline-block;
+}
+
+.dropdown-select .select-box {
+  cursor: pointer;
+  background: #a9c9d0;
+  padding: 4px 8px;
+  border-radius: 3px;
+  border: 1px solid #ccc;
+}
+
+.dropdown-select .select-menu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  background: #a9c9d0;
+  padding: 4px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+  border-radius: 3px;
+  border: 1px solid #ccc;
+  z-index: 1000;
+
+  transform: scaleY(0);
+  transform-origin: top;
+  opacity: 0;
+  pointer-events: none;
+  transition: transform 0.25s ease, opacity 0.2s ease;
+}
+
+.dropdown-select .select-menu.open {
+  transform: scaleY(1);
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.dropdown-select label {
+  display: block;
+  padding: 4px 6px;
+  cursor: pointer;
+}
+.dropdown-select label:hover {
+  background-color: #efede1;
+}
+
+
+
+
+#sidebarContainer {
+  display: none;
+  width: min-content;
+}
+
+
+
+
+
+#sidebarContainer-meta {
+  font-size: 1.1em;
+  color: #414141;
+  margin-left: 0px !important;
+}
+
+#sidebarContainer {
+  font-size: 1.0em;
+  color: #414141;
+  margin-left: 40px !important;
+}
+
+h6 {
+  font-family: Arial Narrow, Arial, sans-serif, Arial, sans-serif;
+  color: #053c96; /* Blau des Logos */
+  font-size: 1.0em;
+  margin-top: 0.2em;
+  margin-bottom: 0.2em;
+  display: contents;
+}
+
+#sidebarContainer a {
+  margin-right: 5px;
+}
+
+#sidebarContainer a:last-child {
+  margin-right: 0;
+}
+
+#scrollToTopBtn {
+  font-family: Arial, sans-serif;
+  text-transform: uppercase;
+  font-weight: bolder;
+  font-size: 2em;
+  color: #053c96;
+  text-decoration: none;
+  position: fixed;
+  left: 10%;
+  top: 60%;
+  cursor: pointer;
+  display: none;
+  transform: translateY(0%);
+  width: 50px;
+  height: 50px;
+  background-color: #c7d5d8d7;
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 1px rgba(0,0,0,.06);
+  z-index: 9999; /* Hier den hohen z-index setzen */
+}
+
+.speaker-content {
+  flex: 1;
+  font-family: "Consolas, Inconsolata", monospace;
+  margin-bottom: 5px; 
+  text-align: left;
+}
+
+}

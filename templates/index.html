@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <!-- ===========================================================================
+       Meta & Head
+       =========================================================================== -->
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/x-icon" href="data:image/x-icon;,">
+    <title>CO.RA.PAN</title>
+    <link rel="icon" type="image/x-icon" href="static/img/favicon.ico">
+    <link rel="stylesheet" href="static/css/corapan_styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.2/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script defer src="{{ url_for('static', filename='js/index_script.js') }}"></script>
+  </head>
+
+  <body>
+
+    <!-- ===========================================================================
+         Header
+         =========================================================================== -->
+    <header>
+      <div id="logoContainer">
+        <a href="{{ url_for('index') }}"><img src="static/img/logo.jpg" alt="CO.RA.PAN"></a>
+      </div>
+      <div id="mainNavigation">
+        <nav>
+          <ul>
+            <li><a href="{{ url_for('index') }}" class="page-link active"><i class="bi bi-house"></i></a></li>
+            <li><a href="{{ url_for('proyecto') }}" class="page-link">Proyecto</a></li>
+            <li><a href="{{ url_for('atlas') }}" class="page-link">Atlas</a></li>
+            <li><a href="{{ url_for('corpus') }}" class="page-link">Corpus</a></li>
+            <li class="logout-item">
+              <a href="{{ url_for('logout') }}" class="logout-link"><i class="bi bi-box-arrow-right" alt="Logout"></i></a>
+            </li>
+          </ul>
+        </nav>
+      </div>
+    </header>
+
+    <!-- ===========================================================================
+         Content
+         =========================================================================== -->
+    <div id="content-container">
+
+      <!-- Titel, der immer angezeigt wird -->
+      <h1>CO.RA.PAN - Corpus Radiofónico Panhispánico</h1>
+
+      {% if not logged_in %}
+        <!-- Login-Formular -->
+        <div class="form-wrapper1">
+          <p>
+            El acceso a los datos está destinado exclusivamente a fines lingüísticos y didácticos (investigación y enseñanza),
+            <br>y puede ser proporcionado previa
+            <a href="mailto:felix.tacke@uni-marburg.de?subject=Solicitud%20acceso%20a%20CO.RA.PAN&body=Quisiera%20solicitar%20el%20acceso%20a%20la%20plataforma%20CO.RA.PAN%3A%0A%0ANombre%3A%20__________%0AApellido%3A%20__________%0AEstudiante%20o%20Docente%3A%20__________%0AUniversidad%2Finstitución%20educativa%3A%20__________%0APropósito%3A%20__________%0A%0A">
+              solicitud
+            </a>.
+          </p>
+        </div>
+
+        <h1>Acceso</h1>
+      {% endif %}
+
+      {% if logged_in %}
+        <!-- Begrüßungsnachricht -->
+        <div class="form-wrapper2">
+          <p>
+            <span class="bienvenido">
+              <i class="bi bi-unlock-fill"></i> Acceso autorizado. ¡Bienvenid@!
+            </span>
+          </p>
+        </div>
+      {% else %}
+        <!-- Formular für Benutzername und Passwort -->
+        <div class="form-wrapper1">
+          <form method="POST">
+            <label for="group"></label>
+            <input type="text" id="group" class="access" placeholder=" Usuario" name="group" required>
+
+            <label for="password"></label>
+            <input type="password" id="password" class="access" placeholder=" Palabra clave" name="password" required>
+
+            <!-- Bereich für Flash-Nachrichten -->
+            {% with messages = get_flashed_messages(with_categories=true) %}
+              {% if messages %}
+                <p class="error1">
+                  <span class="error">
+                    <i class="bi bi-lock-fill"></i>
+                    {% for category, message in messages %}
+                      {{ message }}
+                    {% endfor %}
+                  </span>
+                </p>
+              {% endif %}
+            {% endwith %}
+
+            <!-- Nutzungsbestätigung -->
+            <div id="terms">
+              <input type="checkbox" id="usage_confirm" name="usage_confirm" required>
+              <label for="usage_confirm">
+                <p>
+                  Con mi registro, me comprometo a utilizar los datos lingüísticos (archivos de audio, transcripciones, etc.)
+                  proporcionados en este sitio web exclusivamente con fines científicos y/o didácticos.
+                  No se permite su difusión ni puesta a disposición pública a terceros.
+                </p>
+                <p>
+                  <span class="grey">
+                    Mit meiner Anmeldung verpflichte ich mich, die auf dieser Website bereitgestellten sprachlichen Daten
+                    (Audiofiles, Transkripte) ausschließlich zu wissenschaftlichen und/oder didaktischen Zwecken zu nutzen.
+                    Eine Weitergabe oder öffentliche Zugänglichmachung an Dritte erfolgt nicht.
+                  </span>
+                </p>
+              </label>
+            </div>
+
+            <button type="submit" class="button">Entrar</button>
+          </form>
+        </div>
+      {% endif %}
+
+      {# Der Bereich für die Token-Anzeige wurde komplett entfernt. #}
+
+    </div>
+
+    <!-- ===========================================================================
+         Footer
+         =========================================================================== -->
+    <div class="footer">
+      <div class="footer-left">
+        &copy; <span id="currentYear">2025</span> |
+        <a href="https://uni-marburg.de/YW1KYG" target="_blank">Felix Tacke</a> |
+        Philipps-Universität Marburg |
+        <a href="{{ url_for('impressum') }}">Impressum</a> |
+        <a href="{{ url_for('datenschutz') }}">Datenschutz</a>
+      </div>
+      <div class="footer-right">
+        El corpus contiene
+        <span id="totalDuration">Duración/audios: 0:00:00</span> y
+        <span id="totalWordCount">Palabras: 0</span>.
+      </div>
+    </div>
+
+  </body>
+</html>
