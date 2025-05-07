@@ -1,4 +1,11 @@
-# Aus .line.json workspace.exclude übernommen
+# Sensible Dateien
+passwords.env
+.cline.json
+
+# Virtuelle Umgebung
+venv/
+
+# Datenbanken, temporäre und lokale Dateien
 db/
 db_public/
 grabaciones/
@@ -6,4 +13,11 @@ keys/
 LOKAL/
 split/
 temp-mp3/
-venv/
+
+# IDE / Editor
+.vscode/
+.idea/
+
+# Sonstiges
+*.pyc
+__pycache__/
