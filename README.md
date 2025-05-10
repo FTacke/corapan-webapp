@@ -46,9 +46,9 @@ Dieses Repository enthält **ausschließlich** den Quellcode der CO.RA.PAN Web-A
    `http://localhost:8080`
 
 ### DOIs & Links
-- Web-App (Code): https://doi.org/…
-- Full Corpus (Restricted): https://doi.org/…
-- Sample Corpus (Public): https://doi.org/…
+- Web-App (Code): https://doi.org/10.5281/zenodo.15359652
+- Full Corpus (Restricted): https://doi.org/10.5281/zenodo.15360942
+- Sample Corpus (Public): https://doi.org/10.5281/zenodo.15378479
 
 ---
 *Hinweis:* Dieses Repository enthält **keine** Korpus-Daten. Zur Nutzung der Daten bitte die oben genannten DOIs verwenden.
