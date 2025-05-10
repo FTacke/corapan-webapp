@@ -22,9 +22,11 @@
     <!-- ===========================================================================
          Header
          =========================================================================== -->
-    <header>
+    <header class="header-start">
       <div id="logoContainer">
-        <a href="{{ url_for('index') }}"><img src="static/img/logo.jpg" alt="CO.RA.PAN"></a>
+        <a href="{{ url_for('index') }}">
+          <img src="static/img/logo.jpg" alt="CO.RA.PAN">
+        </a>
       </div>
       <div id="mainNavigation">
         <nav>
@@ -46,84 +48,79 @@
          =========================================================================== -->
     <div id="content-container">
 
-      <!-- Titel, der immer angezeigt wird -->
-      <h1>CO.RA.PAN - Corpus Radiofónico Panhispánico</h1>
-
-      {% if not logged_in %}
-        <!-- Login-Formular -->
-        <div class="form-wrapper1">
-          <p>
-            El acceso a los datos está destinado exclusivamente a fines lingüísticos y didácticos (investigación y enseñanza),
-            <br>y puede ser proporcionado previa
-            <a href="mailto:felix.tacke@uni-marburg.de?subject=Solicitud%20acceso%20a%20CO.RA.PAN&body=Quisiera%20solicitar%20el%20acceso%20a%20la%20plataforma%20CO.RA.PAN%3A%0A%0ANombre%3A%20__________%0AApellido%3A%20__________%0AEstudiante%20o%20Docente%3A%20__________%0AUniversidad%2Finstitución%20educativa%3A%20__________%0APropósito%3A%20__________%0A%0A">
-              solicitud
-            </a>.
-          </p>
-        </div>
-
-        <h1>Acceso</h1>
-      {% endif %}
-
       {% if logged_in %}
-        <!-- Begrüßungsnachricht -->
-        <div class="form-wrapper2">
-          <p>
-            <span class="bienvenido">
-              <i class="bi bi-unlock-fill"></i> Acceso autorizado. ¡Bienvenid@!
-            </span>
-          </p>
+        <!-- Erfolgreiches Login in derselben Box -->
+        <div class="login-container">
+          <div class="login-form success">
+            <i class="bi bi-unlock-fill"></i>
+            <h2>Acceso autorizado</h2>
+            <p>¡Bienvenid@ a la plataforma CO.RA.PAN!</p>
+          </div>
         </div>
+
       {% else %}
-        <!-- Formular für Benutzername und Passwort -->
-        <div class="form-wrapper1">
-          <form method="POST">
-            <label for="group"></label>
-            <input type="text" id="group" class="access" placeholder=" Usuario" name="group" required>
+        <!-- Hinweis & Anfrage-Link inline -->
+        <div class="login-container">
+          <form method="POST" class="login-form">
+            <h1>Acceso</h1>
 
-            <label for="password"></label>
-            <input type="password" id="password" class="access" placeholder=" Palabra clave" name="password" required>
+            <p class="login-note">
+              El acceso a los datos está destinado a fines lingüísticos/didácticos y puede solicitarse previa
+              <a href="mailto:felix.tacke@uni-marburg.de?subject=Solicitud%20acceso%20a%20CO.RA.PAN&body=Quisiera%20solicitar%20el%20acceso%20a%20la%20plataforma%20CO.RA.PAN%3A%0A%0ANombre%3A%20__________%0AApellido%3A%20__________%0AEstudiante%20o%20Docente%3A%20__________%0AUniversidad%2Finstitución%20educativa%3A%20__________%0APropósito%3A%20__________%0A%0A">
+              solicitud</a> <a href="mailto:felix.tacke@uni-marburg.de?subject=Solicitud%20acceso%20a%20CO.RA.PAN&body=Quisiera%20solicitar%20el%20acceso%20a%20la%20plataforma%20CO.RA.PAN%3A%0A%0ANombre%3A%20__________%0AApellido%3A%20__________%0AEstudiante%20o%20Docente%3A%20__________%0AUniversidad%2Finstitución%20educativa%3A%20__________%0APropósito%3A%20__________%0A%0A"><i class="bi bi-envelope-fill"></i></a>
+              </a>.
+            </p>
 
-            <!-- Bereich für Flash-Nachrichten -->
             {% with messages = get_flashed_messages(with_categories=true) %}
               {% if messages %}
-                <p class="error1">
-                  <span class="error">
-                    <i class="bi bi-lock-fill"></i>
-                    {% for category, message in messages %}
-                      {{ message }}
-                    {% endfor %}
-                  </span>
+                <p class="error-msg">
+                  <i class="bi bi-exclamation-triangle-fill"></i>
+                  {% for _, msg in messages %}{{ msg }}{% endfor %}
                 </p>
               {% endif %}
             {% endwith %}
 
-            <!-- Nutzungsbestätigung -->
-            <div id="terms">
+            <div class="input-group">
+              <i class="bi bi-person-fill"></i>
+              <input type="text" name="group" placeholder="Usuario" required>
+            </div>
+
+            <div class="input-group">
+              <i class="bi bi-lock-fill"></i>
+              <input type="password" name="password" placeholder="Palabra clave" required>
+            </div>
+
+            <div class="checkbox-group">
               <input type="checkbox" id="usage_confirm" name="usage_confirm" required>
               <label for="usage_confirm">
-                <p>
-                  Con mi registro, me comprometo a utilizar los datos lingüísticos (archivos de audio, transcripciones, etc.)
-                  proporcionados en este sitio web exclusivamente con fines científicos y/o didácticos.
-                  No se permite su difusión ni puesta a disposición pública a terceros.
-                </p>
-                <p>
-                  <span class="grey">
-                    Mit meiner Anmeldung verpflichte ich mich, die auf dieser Website bereitgestellten sprachlichen Daten
-                    (Audiofiles, Transkripte) ausschließlich zu wissenschaftlichen und/oder didaktischen Zwecken zu nutzen.
-                    Eine Weitergabe oder öffentliche Zugänglichmachung an Dritte erfolgt nicht.
+                Acepto datos solo con fines científicos o didácticos.
+                <span class="tooltip"><i class="fa-solid fa-circle-info"></i>
+                  <span class="tooltip-text">
+                    <p>
+                      Con mi registro, me comprometo a utilizar los datos lingüísticos (archivos de audio, transcripciones, etc.)
+                      proporcionados en este sitio web exclusivamente con fines científicos y/o didácticos.
+                      No se permite su difusión ni puesta a disposición pública a terceros.
+                    </p>
+                    <p>
+                      <span class="grey">
+                        Mit meiner Anmeldung verpflichte ich mich, die auf dieser Website bereitgestellten sprachlichen Daten
+                        (Audiofiles, Transkripte) ausschließlich zu wissenschaftlichen und/oder didaktischen Zwecken zu nutzen.
+                        Eine Weitergabe oder öffentliche Zugänglichmachung an Dritte erfolgt nicht.
+                      </span>
+                    </p>
                   </span>
-                </p>
+                </span>
               </label>
             </div>
 
-            <button type="submit" class="button">Entrar</button>
+            <button type="submit" class="btn-login">
+              <i class="bi bi-box-arrow-in-right"></i> Entrar
+            </button>
           </form>
         </div>
       {% endif %}
-
-      {# Der Bereich für die Token-Anzeige wurde komplett entfernt. #}
-
     </div>
+
 
     <!-- ===========================================================================
          Footer

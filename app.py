@@ -519,10 +519,18 @@ def corpus():
     user = validate_jwt()
     if not isinstance(user, str):
         # Wenn kein gültiger Token vorhanden ist, wird eine Fehlermeldung an das Template übergeben.
-        error_message = ('<div class="form-wrapper2">'
-                         '<p><span class="error"><i class="bi bi-lock-fill"></i> '
-                         'Inicie <a href="/" class="link-error">sesión</a> para acceder a los datos.</span></p>'
-                         '</div>')
+        error_message = (
+            '<div class="login-container-atlas">'
+            '  <div class="login-form-atlas error">'
+            '    <p>'
+            '      <span class="error" style="display:inline-flex;align-items:center;gap:0.5rem;">'
+            '        <i class="bi bi-lock-fill"></i>'
+            '        Inicie <a href="/" class="link-error">sesión</a> para acceder a los datos.'
+            '      </span>'
+            '    </p>'
+            '  </div>'
+            '</div>'
+        )
         return render_template('corpus.html', 
                                query='',
                                selected_countries=['all'],

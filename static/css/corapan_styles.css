@@ -14,7 +14,7 @@ body {
 
 @media only screen and (max-width: 730px) {
   body {
-    font-size: 0.8em;
+    font-size: 1.0em;
   }
 }
 
@@ -34,9 +34,43 @@ header {
   }
 }
 
+@media only screen and (max-width: 730px) {
+  header.header-start {
+    display: block;
+    text-align: center;
+  }
+}
+
+/* Header, Logo & Navigation zentrieren */
+header.header-start {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+
+.header-start #mainNavigation {
+  margin: 20px auto 0;
+}
+
+header.header-start #mainNavigation nav ul {
+  display: flex;
+  justify-content: center;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+
 #logoContainer img {
   width: 300px;
   height: auto;
+}
+
+header.header-start #logoContainer img {
+  width: 400px; 
+  height: auto;
+  display: block;
 }
 
 .footer {
@@ -50,7 +84,7 @@ header {
   display: flex;
   justify-content: space-between;
   padding: 5px;
-  font-size: 0.8em;
+  font-size: 1.0em;
   flex-direction: row;
   align-items: center;
   z-index: 1000;
@@ -59,17 +93,17 @@ header {
 
 @media only screen and (max-width: 730px) {
   .footer {
-    position: static !important;  /* Kein fixed, sondern normaler Flow */
-    bottom: auto !important;      /* Keine feste Platzierung am unteren Rand */
-    left: auto !important;
+    position: fixed !important;  /* Kein fixed, sondern normaler Flow */
+    bottom: 0 !important;      /* Keine feste Platzierung am unteren Rand */
+    left: 0 !important;
     transform: none !important;
-    width: auto;                  /* Breite ggf. anpassen */
+    width: 100%;                  /* Breite ggf. anpassen */
     text-align: center;           /* Inhalt zentrieren */
     display: flex;
     justify-content: center;      /* Zentriert den Flexinhalt horizontal */
     align-items: center;          /* Zentriert den Inhalt vertikal */
     padding: 5px;
-    margin-top: 50px;
+    font-size: 0.7em;
   }
   
   /* Blende .footer-right komplett aus */
@@ -376,6 +410,209 @@ h6 {
 
 /* ACCESS-FORMULAR */
 
+/* ACCESS-FORMULAR – CO.RA.PAN-Farbwelt */
+
+/* Container */
+.login-container {
+  display: flex;
+  justify-content: center;
+  margin-top: 2rem;
+}
+
+.login-container-atlas {
+  display: flex;
+  justify-content: left;
+  margin-top: 0rem;
+}
+
+/* Formular-Box */
+.login-form {
+  background: #eaf3f5; /* sanftes Hellblau */
+  padding: 2rem;
+  border-radius: 12px;
+  box-shadow: 0 0 12px rgba(0,0,0,0.03);
+  max-width: 400px;
+  width: 100%;
+  border: 1px solid #2f5f73; /* dunkles Blau als Rahmen */
+}
+
+.login-form-atlas {
+  background: #eaf3f5; /* sanftes Hellblau */
+  padding: 1rem;
+  border-radius: 12px;
+  box-shadow: 0 0 12px rgba(0,0,0,0.03);
+  width: 100%;
+  border: 1px solid #2f5f73; /* dunkles Blau als Rahmen */
+  text-align: center;
+}
+
+/* Erfolg */
+.login-form.success {
+  text-align: center;
+}
+.login-form.success i {
+  font-size: 2.5rem;
+  color: #2f5f73;
+  margin-bottom: 0.5rem;
+}
+
+.login-form h1 {
+  text-align: center;
+  margin-top: 0em;
+  margin-bottom: 1.0em;
+  color: #244652;
+}
+
+/* Eingabefelder */
+.input-group {
+  display: flex;
+  align-items: center;
+  background: #d7e6eb;
+  padding: 0.5rem 1rem;
+  margin-bottom: 1rem;
+  border-radius: 8px;
+  border: 1px solid #2f5f73;
+}
+.input-group i {
+  margin-right: 0.5rem;
+  color: #2f5f73;
+}
+.input-group input {
+  border: none;
+  background: transparent;
+  outline: none;
+  width: 100%;
+  color: #244652;
+}
+
+/* Checkbox */
+.checkbox-group {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 1rem 0;
+  font-size: 0.9em;
+  line-height: 1.4;
+  color: #244652;
+}
+.checkbox-group label {
+  margin: 0;
+}
+
+/* Tooltip */
+.tooltip {
+  position: relative;
+  cursor: pointer;
+  display: inline-block;
+}
+.tooltip-text {
+  visibility: hidden;
+  width: 250px;
+  background-color: #2f5f73;
+  color: #fff;
+  text-align: left;
+  padding: 0.5rem;
+  border-radius: 6px;
+  position: absolute;
+  top: 120%;
+  left: 0;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+.tooltip:hover .tooltip-text {
+  visibility: visible;
+  opacity: 1;
+}
+
+/* Hinweis */
+.login-note {
+  font-size: 1.0rem;
+  color: #244652;
+  margin-bottom: 1rem;
+  line-height: 1.4;
+}
+.login-note a {
+  color: #2f5f73;
+  text-decoration: underline;
+}
+.login-note a:hover {
+  color: #1c3947;
+}
+
+/* E-Mail-Link */
+.email-link {
+  color: #2f5f73;
+  text-decoration: underline;
+}
+.email-link:hover {
+  color: #1c3947;
+}
+.email-link i {
+  margin-right: 0.25rem;
+}
+
+/* Button */
+.btn-login {
+  width: 100%;
+  padding: 0.75rem;
+  background-color: #0a5981;
+  border: none;
+  border-radius: 8px;
+  color: #fff;
+  font-weight: bold;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+.btn-login i {
+  margin-right: 0.5rem;
+}
+.btn-login:hover {
+  background-color: #1c3947;
+}
+
+
+/* Error-Variante der Login-Box */
+.login-form.error {
+  background: #eaf3f5;
+  border: 1px solid #2f5f73;
+}
+.login-form.error i {
+  font-size: 1.0rem;
+  color: #c24545;
+  display: block;
+  margin: 0 auto 0.5rem;
+}
+.error-title {
+  text-align: center;
+  color: #c24545;
+  margin-bottom: 1rem;
+}
+.link-error {
+  color: #c24545;
+  text-decoration: underline;
+}
+.link-error:hover {
+  color: #a52f2f;
+}
+
+.login-form.error .error {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem; /* optional: Abstand zwischen Icon und Text */
+}
+
+
+
+
+/* Fehlermeldung */
+.error-msg {
+  margin-bottom: 1rem;
+  color: #c24545;
+  text-align: center;
+}
+
+
 .form-wrapper1 {
   max-width: 400px;
   box-sizing: border-box;
@@ -426,21 +663,20 @@ h6 {
 .bienvenido {
   font-size: 1.0em;
   color: #053c96;
-  font-family: "Consolas", "Courier New", monospace;
+  font-family: Arial Narrow, Arial, sans-serif, "Consolas";
 }
 
 .error {
   font-size: 1.0em;
   color: #a90000;
-  font-family: "Consolas", "Courier New", monospace;
-  margin-bottom: 50px;
+  font-family: Arial Narrow, Arial, sans-serif, "Consolas";
 }
 
 .link-error {
   font-size: 1.0em;
   font-weight:unset;
   color: #a90000;
-  font-family: "Consolas", "Courier New", monospace;
+  font-family: Arial Narrow, Arial, sans-serif, "Consolas";
 }
 
 .error1 {
@@ -1823,6 +2059,7 @@ button {
 .filter-table {
   width: 100%;
   border-collapse: collapse;
+  font-size: 1.0em;
 }
 
 .filter-table td {
@@ -2347,11 +2584,38 @@ font-weight: bold;
   margin: 0 auto 10px auto;
 }
 
+
+
 #logoContainer img {
   width: 250px;
   height: auto;
 }
 
+.header-start #mainNavigation {
+  margin: 0px auto 0;
+}
+
+  header.header-start {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  /* Logo-Container zentriert halten */
+  header.header-start #logoContainer {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+    margin: 0 auto 14px;
+  }
+
+  /* Bild als Block und Margin auto, so dass es mittig ist */
+  header.header-start #logoContainer img {
+    display: block;
+    margin: 0 auto;
+    width: 250px; /* oder deine gewünschte Breite */
+    height: auto;
+  }
 
 /* Navigation: ganze Breite, aber unter dem Logo */
 #mainNavigation {
@@ -2384,13 +2648,20 @@ font-weight: bold;
   text-transform: none;
   font-weight: normal;
   font-size: 1.0em;
-  line-height: 3cap;
 }
 
 h1 {
   font-family: Arial Narrow, Arial, sans-serif, Arial, sans-serif;
   color: #053c96;
   font-size: 1.0em;
+}
+
+.login-form h1 {
+  text-align: center;
+  margin-top: 0em;
+  margin-bottom: 1.0em;
+  font-size: 1.2em;
+  color: #244652;
 }
 
 /* Stil für Audio-Container */

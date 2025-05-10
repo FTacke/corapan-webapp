@@ -288,12 +288,18 @@ document.addEventListener('DOMContentLoaded', function () {
       })
       .catch(error => {
         console.error('Error fetching metadata from the database:', error);
-        // Nur einmal den Fehlerhinweis anzeigen, falls kein Token vorhanden ist
         if (!authErrorDisplayed) {
-          container.innerHTML = `<div class="form-wrapper2"><p><span class="error"><i class="bi bi-lock-fill"></i> Inicie <a href="/" class="link-error">sesión</a> para acceder a los datos.</span></p></div>`;
+          container.innerHTML = `
+            <div class="login-container-atlas">
+              <div class="login-form-atlas error">
+                <p><span class="error"><i class="bi bi-lock-fill"></i> Inicie <a href="/" class="link-error">sesión</a> para acceder a los datos.</span></p>
+              </div>
+            </div>
+          `;
           authErrorDisplayed = true;
         }
       });
+
   }
 
   document.getElementById('citySelect').addEventListener('change', function () {
