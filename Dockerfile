@@ -7,6 +7,7 @@ WORKDIR /app
 # Installiere Systemabhängigkeiten und reinige den Cache
 RUN apt-get update && apt-get install -y --no-install-recommends \
     gcc \
+    sqlite3 \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
