@@ -22,6 +22,12 @@
 - Hintergrund-Task zum Löschen alter temporärer Dateien.
 - Audio-Split-Logik und Spektrogramm-Generierung.
 
+### Benutzerverwaltung
+- Benutzergruppen und Passwörter werden zentral in der Datei `passwords.env` im Root-Verzeichnis definiert.
+- Neue Benutzer und Passwörter werden über das Script `LOKAL/security/hash_passwords.py` hinzugefügt, das Klartext-Passwörter sicher hasht und in die `.env` schreibt.
+- Die Flask-App lädt beim Start automatisch alle Benutzer mit einem Passwort aus der `.env` und macht sie für die Authentifizierung verfügbar.
+- Änderungen an Benutzergruppen erfordern kein Ändern von `app.py` mehr, sondern nur das Aktualisieren der `.env` und ggf. Neustart des Containers.
+
 ### Templates
 - `index.html`: Startseite mit Login-Formular und Navigation.
 - `corpus.html`: Suchseite mit Filteroptionen, Ergebnisanzeige, Audio-Player und Exportfunktionen.
