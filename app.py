@@ -59,11 +59,8 @@ def validate_jwt():
     try:
         payload = jwt.decode(token, PUBLIC_KEY, algorithms=["RS256"])
         return payload["group"]
-    except jwt.ExpiredSignatureError:
-        flash("La sesión ha expirado. Por favor, vuelva a iniciar sesión.", "error")
-        return redirect(url_for("index"))
-    except jwt.InvalidTokenError:
-        flash("La sesión ha expirado. Por favor, vuelva a iniciar sesión.", "error")
+    except (jwt.ExpiredSignatureError, jwt.InvalidTokenError):
+        flash("La sesión ha expirado o es inválida. Por favor, vuelva a iniciar sesión.", "error")
         return redirect(url_for("index"))
 
 # ----------------------------------------------------------------

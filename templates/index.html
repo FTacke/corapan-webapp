@@ -17,7 +17,7 @@
     <script defer src="{{ url_for('static', filename='js/index_script.js') }}"></script>
   </head>
 
-  <body>
+  <body class="login-page">
 
     <!-- ===========================================================================
          Header
@@ -65,7 +65,7 @@
             <h1>Acceso</h1>
 
             <p class="login-note">
-              El acceso a los datos está destinado a fines lingüísticos/didácticos y puede solicitarse previa
+              El acceso con fines lingüísticos o didácticos está disponible previa
               <a href="mailto:felix.tacke@uni-marburg.de?subject=Solicitud%20acceso%20a%20CO.RA.PAN&body=Quisiera%20solicitar%20el%20acceso%20a%20la%20plataforma%20CO.RA.PAN%3A%0A%0ANombre%3A%20__________%0AApellido%3A%20__________%0AEstudiante%20o%20Docente%3A%20__________%0AUniversidad%2Finstitución%20educativa%3A%20__________%0APropósito%3A%20__________%0A%0A">
               solicitud</a> <a href="mailto:felix.tacke@uni-marburg.de?subject=Solicitud%20acceso%20a%20CO.RA.PAN&body=Quisiera%20solicitar%20el%20acceso%20a%20la%20plataforma%20CO.RA.PAN%3A%0A%0ANombre%3A%20__________%0AApellido%3A%20__________%0AEstudiante%20o%20Docente%3A%20__________%0AUniversidad%2Finstitución%20educativa%3A%20__________%0APropósito%3A%20__________%0A%0A"><i class="bi bi-envelope-fill"></i></a>
               </a>.
@@ -93,9 +93,9 @@
             <div class="checkbox-group">
               <input type="checkbox" id="usage_confirm" name="usage_confirm" required>
               <label for="usage_confirm">
-                Acepto datos solo con fines científicos o didácticos.
-                <span class="tooltip"><i class="fa-solid fa-circle-info"></i>
-                  <span class="tooltip-text">
+                Acepto los términos y condiciones de uso.
+                <i class="fa-solid fa-circle-info" onclick="toggleTooltip(event)"></i>
+                  <span id="loginTooltip" class="tooltip-text">
                     <p>
                       Con mi registro, me comprometo a utilizar los datos lingüísticos (archivos de audio, transcripciones, etc.)
                       proporcionados en este sitio web exclusivamente con fines científicos y/o didácticos.

@@ -23,3 +23,15 @@ document.addEventListener('DOMContentLoaded', function () {
     totalWordCountElement.innerHTML = `<span style="color: #053c96; font-weight: bold;">${totalWordCount.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.')}</span> palabras transcritas`;
   }
 });
+
+function toggleTooltip(e) {
+  const tip = e.target.nextElementSibling;
+  if (!tip) return;
+
+  // nur den zugehörigen Tooltip ein-/ausblenden
+  tip.classList.toggle('visible');
+
+  // alle anderen sichtbaren Tooltips einklappen
+  document.querySelectorAll('.tooltip-text.visible')
+          .forEach(el => { if (el !== tip) el.classList.remove('visible'); });
+}
