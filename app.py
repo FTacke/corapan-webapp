@@ -39,11 +39,13 @@ try:
 except Exception as e:
     raise Exception(f"Schlüsseldateien nicht gefunden: {e}")
 
-# Benutzergruppen und Passwörter (nur admin und guest)
-GROUPS = {
-    "admin": os.getenv("ADMIN_PASSWORD"),
-    "guest": os.getenv("GUEST_PASSWORD")
-}
+# Benutzergruppen und Passwörter (alle mit _PASSWORD in .env)
+GROUPS = {}
+for key, value in os.environ.items():
+    if key.endswith("_PASSWORD"):
+        group_name = key[:-9].lower()  # Entfernt '_PASSWORD' und macht Kleinbuchstaben
+        GROUPS[group_name] = value
+
 for group, password in GROUPS.items():
     if password is None:
         raise ValueError(f"Passwort für Gruppe '{group}' fehlt in der .env-Datei.")
