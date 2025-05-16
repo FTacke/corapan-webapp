@@ -211,7 +211,7 @@ td.empty-cell {
   color: #414141;
   background: #a9c9d0;
   border-radius: 3px;
-  padding: 4px 12px 4px;
+  padding: 4px 8px 4px;
   box-shadow: inset 0 0 0 1px rgba(0,0,0,.06);
   text-decoration: none;
   cursor: pointer;
@@ -438,6 +438,7 @@ h6 {
 .login-form {
   background: #eaf3f5; /* sanftes Hellblau */
   padding: 2rem;
+  padding-bottom: 1rem;
   border-radius: 12px;
   box-shadow: 0 0 12px rgba(0,0,0,0.03);
   max-width: 400px;
@@ -517,12 +518,32 @@ h6 {
   margin-bottom: 1rem;
   line-height: 1.4;
 }
+
 .login-note a {
   color: #2f5f73;
   text-decoration: underline;
 }
+
 .login-note a:hover {
   color: #1c3947;
+}
+
+.login-note2 {
+  text-align: center;
+  font-size: 0.9em;
+  color: #244652;
+  margin-top: 1.4rem;
+  margin-bottom: 0.0rem;
+  line-height: 1.2;
+}
+
+.login-note3 {
+  text-align: center;
+  font-size: 0.9em;
+  color: #244652;
+  margin-top: 4.0rem;
+  margin-bottom: 0.0rem;
+  line-height: 1.2;
 }
 
 /* E-Mail-Link */

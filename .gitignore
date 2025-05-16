@@ -21,3 +21,7 @@ temp-mp3/
 # Sonstiges
 *.pyc
 __pycache__/
+
+# Log- und Zählerdateien
+login.log
+counters.json

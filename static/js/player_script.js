@@ -74,6 +74,7 @@ import { formatMorphLeipzig } from './morph_formatter.js';
     if (!collectedTokenIds.includes(tokenId)) {
       collectedTokenIds.push(tokenId);
       updateTokenCollectorDisplay();
+      resetCopyIconToDefault();
     }
   }
 
@@ -91,8 +92,9 @@ import { formatMorphLeipzig } from './morph_formatter.js';
    * Setzt die Liste der Token-IDs zurück.
    */
   function resetTokenCollector() {
-    collectedTokenIds = [];
-    updateTokenCollectorDisplay();
+  collectedTokenIds = [];
+  updateTokenCollectorDisplay();
+  resetCopyIconToDefault();
   }
 
   /**
@@ -103,8 +105,29 @@ import { formatMorphLeipzig } from './morph_formatter.js';
     navigator.clipboard.writeText(input.value)
       .then(() => {
         showCopyTooltip('Copiado al portapapeles');
+        setCopyIconToCheck();
       })
       .catch(err => console.error('Fehler beim Kopieren:', err));
+  }
+
+  function setCopyIconToCheck() {
+    const icon = document.getElementById('copyTokenList');
+    if (icon) {
+      icon.classList.remove('fa-copy');
+      icon.classList.add('fa-check');
+      icon.classList.remove('fa-regular');
+      icon.classList.add('fa-solid');
+    }
+  }
+
+function resetCopyIconToDefault() {
+  const icon = document.getElementById('copyTokenList');
+  if (icon) {
+    icon.classList.remove('fa-check');
+    icon.classList.add('fa-copy');
+    icon.classList.remove('fa-solid');
+    icon.classList.add('fa-regular');
+  }
   }
 
   /**
@@ -833,6 +856,16 @@ import { formatMorphLeipzig } from './morph_formatter.js';
     loadTranscription(transcriptionFile, visualAudioPlayer);
 
     document.getElementById('resetMarkingsButton').addEventListener('click', resetMarkings);
+
+    // Event Listener für Token-Buttons hinzufügen
+    const copyTokenBtn = document.getElementById('copyTokenList');
+    if (copyTokenBtn) {
+      copyTokenBtn.addEventListener('click', copyTokenListToClipboard);
+    }
+    const resetTokenBtn = document.getElementById('resetTokenList');
+    if (resetTokenBtn) {
+      resetTokenBtn.addEventListener('click', resetTokenCollector);
+    }
 
     loadFooterStats();
 

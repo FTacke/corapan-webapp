@@ -86,6 +86,46 @@ os.makedirs(GRABACIONES_FOLDER, exist_ok=True)
 os.makedirs(DB_FOLDER, exist_ok=True)
 
 # ----------------------------------------------------------------
+# Counter-Funktion
+# ----------------------------------------------------------------
+
+import json
+
+COUNTERS_PATH = os.path.join(BASE_DIR, "counters.json")
+
+def load_counters():
+    if not os.path.exists(COUNTERS_PATH):
+        return {"total": {"overall": 0, "monthly": {}}, "groups": {}}
+    with open(COUNTERS_PATH, "r") as f:
+        return json.load(f)
+
+def save_counters(data):
+    with open(COUNTERS_PATH, "w") as f:
+        json.dump(data, f, indent=2)
+
+def increment_counters(group: str):
+    data = load_counters()
+    now   = datetime.utcnow()
+    month = f"{now.year}-{now.month:02d}"
+    day = now.strftime("%Y-%m-%d")
+
+    data["total"]["overall"] += 1
+    data["total"]["monthly"][month] = data["total"]["monthly"].get(month, 0) + 1
+    # Gesamt-Tage-Liste
+    if "days" not in data["total"]:
+        data["total"]["days"] = []
+    data["total"]["days"].append(day)
+
+    grp = data["groups"].setdefault(group, {"overall": 0, "monthly": {}})
+    if "days" not in grp:
+        grp["days"] = []
+    grp["overall"] += 1
+    grp["monthly"][month] = grp["monthly"].get(month, 0) + 1
+    grp["days"].append(day)
+
+    save_counters(data)
+
+# ----------------------------------------------------------------
 # Helper-Funktionen
 # ----------------------------------------------------------------
 def get_audio_context(filename):
@@ -331,6 +371,8 @@ scheduler.start()
 def index():
     if request.method == 'POST':
         group = request.form.get("group")
+        if group:
+            group = group.lower()
         password = request.form.get("password")
         if group not in GROUPS:
             flash("Error: Usuario no reconocido.", "error")
@@ -338,6 +380,10 @@ def index():
         if not check_password_hash(GROUPS[group], password):
             flash("Error: Contraseña incorrecta.", "error")
             return render_template("index.html", logged_in=False)
+
+        # Zähler inkrementieren
+        increment_counters(group)
+
         token = jwt.encode(
             {"group": group, "exp": datetime.utcnow() + timedelta(hours=3)},
             PRIVATE_KEY,

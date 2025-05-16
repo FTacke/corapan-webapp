@@ -2,6 +2,9 @@ split/
 grabaciones/
 db/
 db_public/
+keys/
 LOKAL/
 temp-mp3/
 passwords.env
+login.log
+counters.json
