@@ -91,16 +91,14 @@ os.makedirs(DB_FOLDER, exist_ok=True)
 
 import json
 
-COUNTERS_PATH = os.path.join(BASE_DIR, "counters.json")
-
 def load_counters():
-    if not os.path.exists(COUNTERS_PATH):
-        return {"total": {"overall": 0, "monthly": {}}, "groups": {}}
-    with open(COUNTERS_PATH, "r") as f:
+    if not os.path.exists("counters.json"):
+        return {"total": {"overall": 0, "monthly": {}, "days": []}, "groups": {}}
+    with open("counters.json", "r") as f:
         return json.load(f)
 
 def save_counters(data):
-    with open(COUNTERS_PATH, "w") as f:
+    with open("counters.json", "w") as f:
         json.dump(data, f, indent=2)
 
 def increment_counters(group: str):
