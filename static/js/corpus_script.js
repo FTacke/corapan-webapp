@@ -240,9 +240,13 @@ Países (total): ${uniqueCountries}
     let headerTitles = Array.from(headers).map(h => h.innerText);
 
     // (A) Audio-Spalte ausfindig machen und entfernen
-    const audioIndex = headerTitles.indexOf('Audio');
+    const audioIndex = headerTitles.indexOf('Audio/contexto');
     if (audioIndex > -1) {
-        headerTitles.splice(audioIndex, 1); 
+        headerTitles.splice(audioIndex, 1);
+    }
+    const audioIndex2 = headerTitles.indexOf('Audio/palabra');
+    if (audioIndex2 > -1) {
+        headerTitles.splice(audioIndex2, 1);
     }
 
     // (B) Spaltenbreiten berechnen
@@ -264,6 +268,9 @@ Países (total): ${uniqueCountries}
         if (audioIndex > -1 && rowCells.length > audioIndex) {
             rowCells.splice(audioIndex, 1);
         }
+        if (audioIndex2 > -1 && rowCells.length > audioIndex2) {
+            rowCells.splice(audioIndex2, 1);
+        }
         allRowData.push(rowCells);
 
         // Gleichzeitig aktualisieren wir columnWidths
@@ -279,7 +286,9 @@ Países (total): ${uniqueCountries}
 
     // 6) Datenzeilen
     allRowData.forEach(rowCells => {
-        let line = rowCells.map((txt, i) => txt.padEnd(columnWidths[i], ' ')).join('  ');
+        let line = rowCells
+            .map((txt, i) => txt.padEnd(columnWidths[i], ' '))
+            .join('  ');
         resultsContent += line + "\n";
     });
 
@@ -340,9 +349,13 @@ Países (total): ${uniqueCountries}
     let headerTitles = Array.from(headers).map(h => `"${h.innerText.replace(/"/g, '""')}"`);
 
     // Audio-Spalten entfernen
-    const skipColumns = ["Audio/contexto", "Audio/palabra"];
-        if (audioIndex > -1) {
+    const audioIndex = headerTitles.indexOf("Audio/contexto");
+    if (audioIndex > -1) {
         headerTitles.splice(audioIndex, 1);
+    }
+    const audioIndex2 = headerTitles.indexOf("Audio/palabra");
+    if (audioIndex2 > -1) {
+        headerTitles.splice(audioIndex2, 1);
     }
 
     // Erste Zeile in CSV
@@ -355,6 +368,13 @@ Países (total): ${uniqueCountries}
         let cellTexts = Array.from(cells).map(c => `"${c.innerText.replace(/"/g, '""')}"`);
         if (audioIndex > -1 && cellTexts.length > audioIndex) {
             cellTexts.splice(audioIndex, 1);
+        }
+        if (audioIndex2 > -1 && cellTexts.length > audioIndex2) {
+            cellTexts.splice(audioIndex2, 1);
+        }
+        // Korrektur: Spalte "palabra" aus row[10] statt row[9]
+        if (cellTexts.length > 3) {
+            cellTexts[3] = `"${row.querySelector('td:nth-child(4)').textContent.replace(/"/g, '""')}"`;
         }
         csvContent += cellTexts.join(",") + "\r\n";
     });
@@ -480,18 +500,150 @@ document.addEventListener('DOMContentLoaded', function() {
   });  
 
 
-// PAGINATION: Funktion zum Ändern der Seitegröße
-function changePageSize(newSize) {
-    const url = new URL(window.location.href);
-    url.searchParams.set('page', '1');
-    url.searchParams.set('page_size', newSize);
-  
-    const sel = document.getElementById('search_mode');
-    if (sel) url.searchParams.set('search_mode', sel.value);
-  
-    // URL aufrufen
-    window.location.href = url.toString();
-  }  
+/* ----------  Client-seitiges Paging  ---------- */
+const allResults   = JSON.parse(
+        document.getElementById('allResults').textContent);
+let pageSize    = +document.getElementById('pageSizeSelect').value;
+let currentPage = 1;
+// let totalPages  = Math.ceil(allResults.length / pageSize); // entfernt, da doppelt deklariert
+
+/* Hilfs-Renderer: schreibt Slice in <tbody id="results-table">  */
+function renderResults(page) {
+  currentPage = page;
+  const tbody = document
+        .querySelector('#results-table tbody');
+  tbody.innerHTML = '';
+
+  const start = (page - 1) * pageSize;
+  allResults
+      .slice(start, start + pageSize)
+      .forEach((row, i) => {
+        /* ⚠ Spalten an dein Layout anpassen! */
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td>${start + i + 1}</td>
+            <td class="right-align"><span class="contexto">${row[13]}</span></td>
+            <td class="center-align">
+              <span class="palabra-buscada" onclick="togglePlayButton(this, '${row[2]}', '${row[11]}', '${row[12]}', '', ${start + i + 1})">
+                ${row[10]}
+              </span>
+            </td>
+            <td class="rightcontext"><span class="contexto">${row[14]}</span></td>
+            <td style="display:none;">${row[11]}</td>
+            <td style="display:none;">${row[12]}</td>
+            <td class="center-align">
+              <a class="audio-context-button" onclick="togglePlayButton(this, '${row[2]}', '${row[15]}', '${row[16]}', '', ${start + i + 1})">
+                <i class="fa-solid fa-play"></i>
+                <i class="fa-solid fa-play fa-fade" style="display: none;"></i>
+              </a>
+              <a class="download-context-button" href="javascript:void(0);" onclick="downloadAudio(event.currentTarget, '${row[2]}', '${row[15]}', '${row[16]}', '', ${start + i + 1})">
+                <i class="fa-solid fa-download"></i>
+                <i class="fa-solid fa-download fa-bounce" style="display: none;"></i>
+              </a>
+            </td>
+            <td class="center-align">
+              <a class="audio-button" onclick="togglePlayButton(this, '${row[2]}', '${row[11]}', '${parseFloat(row[12]) + 0.1}', '', ${start + i + 1})">
+                <i class="fa-solid fa-play"></i>
+                <i class="fa-solid fa-play fa-fade" style="display: none;"></i>
+              </a>
+              <a class="download-button" href="javascript:void(0);" onclick="downloadAudio(event.currentTarget, '${row[2]}', '${row[11]}', '${parseFloat(row[12]) + 0.1}', '', ${start + i + 1})">
+                <i class="fa-solid fa-download"></i>
+                <i class="fa-solid fa-download fa-bounce" style="display: none;"></i>
+              </a>
+              <a class="download-button" href="javascript:void(0);" style="display:none;" onclick="showSpectrogramOverlay('${row[2]}', '${row[11]}', '${row[12]}', '', ${start + i + 1}, '${row[10]}')">
+                <i class="fa-solid fa-wave-square"></i>
+              </a>
+              <a class="download-button" href="javascript:void(0);" onclick="showSpectrogramOverlay('${row[2]}', '${row[11]}', '${row[12]}', '', ${start + i + 1}, '${row[10]}')" title="Spektrogramm anzeigen">
+                <i class="fa-solid fa-wave-square"></i>
+              </a>
+            </td>
+            <td class="filter-class" title="${row[3]}">
+              ${row[3]}
+            </td>
+            <td class="filter-class">${row[6]}</td>
+            <td class="filter-class">${row[7]}</td>
+            <td class="filter-class">${row[8]}</td>
+            <td class="filter-class">${row[9]}</td>
+            <td class="token-id">${row[1]}</td>
+            <td class="center-align">
+              <i class="fa-regular fa-file" title="${row[2]}"></i>
+            </td>
+            <td class="center-align">
+              <a href="#" title="Abrir player" class="player-button" onclick="openPlayerBusq('${row[2]}', '${row[1]}')">
+                <i class="fa-solid fa-arrow-up-right-from-square"></i>
+              </a>
+            </td>`;
+        tbody.appendChild(tr);
+      });
+  highlightActiveBtn();
+}
+
+let totalPages = Math.ceil(allResults.length / pageSize);
+
+function changePage(evt){
+  evt.preventDefault();
+  const el = evt.currentTarget;
+
+  /* Zahl angeklickt */
+  if (el.dataset.page){
+    const target = +el.dataset.page;
+    if (target>=1 && target<=totalPages) renderResults(target);
+    return;
+  }
+
+  /* Pfeil angeklickt */
+  if (el.dataset.direction){
+    const offset = +el.dataset.direction;          // -1 oder +1
+    const target = currentPage + offset;
+    if (target>=1 && target<=totalPages) renderResults(target);
+  }
+}
+
+/* aktive Seite optisch markieren */
+function highlightActiveBtn() {
+  const maxPage = Math.ceil(allResults.length / pageSize);
+  if (currentPage < 1) currentPage = 1;
+  if (currentPage > maxPage) currentPage = maxPage;
+
+  document
+    .querySelectorAll('.pagination-button[data-page], .pagination-button[data-direction]')
+    .forEach(btn => {
+      const btnPage = btn.hasAttribute('data-page') ? parseInt(btn.dataset.page, 10) : null;
+      const btnDirection = btn.hasAttribute('data-direction') ? parseInt(btn.dataset.direction, 10) : null;
+
+      if (btnPage !== null) {
+        btn.classList.toggle('active', btnPage === currentPage);
+        // Deaktiviere Buttons, die außerhalb gültiger Seiten liegen
+        if (btnPage < 1 || btnPage > maxPage) {
+          btn.classList.add('disabled');
+          btn.removeAttribute('onclick');
+        } else {
+          btn.classList.remove('disabled');
+          btn.setAttribute('onclick', 'changePage(event)');
+        }
+      } else if (btnDirection !== null) {
+        // Pfeile sind immer aktiv, aber ggf. deaktivieren wenn am Rand
+        if ((btnDirection === -1 && currentPage === 1) || (btnDirection === 1 && currentPage === maxPage)) {
+          btn.classList.add('disabled');
+          btn.removeAttribute('onclick');
+        } else {
+          btn.classList.remove('disabled');
+          btn.setAttribute('onclick', 'changePage(event)');
+        }
+      }
+    });
+}
+
+/* Änderung "Ergebnisse pro Seite" */
+document.getElementById('pageSizeSelect')
+        .addEventListener('change', e => {
+  pageSize = +e.target.value;
+  totalPages = Math.ceil(allResults.length / pageSize);
+  renderResults(1);
+});
+
+/* Erstes Rendering nach Laden */
+renderResults(1);
 
 // Globale Variable für Audio
 let overlayAudio = null;
@@ -740,4 +892,3 @@ document.addEventListener("DOMContentLoaded", function () {
       });
     }
   });
-  

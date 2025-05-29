@@ -501,53 +501,38 @@
                 {% for d in selected_discourses    %}{% set base_pagination = base_pagination ~ '&discourse='      ~ d %}{% endfor %}
                 {% set base_pagination = base_pagination ~ '&sort=' ~ current_sort ~ '&order=' ~ current_order %}                                       
 
-                <div class="page-links">
+            <div class="page-links">
 
-                  {% if page > 1 %}
-                  {% set new_args = request.args.to_dict() %}
-                  {% set _ = new_args.update({'page': p}) %}
-                  <a class="pagination-button"
-                     href="{{ request.path }}?{{ new_args|urlencode }}">
-                    <i class="bi bi-arrow-left"></i>
-                  </a>
-                  {% endif %}
+              <a class="pagination-button" href="javascript:void(0);" data-direction="-1" onclick="changePage(event)">
+                <i class="bi bi-arrow-left"></i>
+              </a>
 
-                  {% for p in display_pages %}
-                  {% if p == "…" %}
-                    <span class="pagination-button disabled">…</span>
-                  {% elif p == page %}
-                    <span class="pagination-button active">{{ p }}</span>
-                  {% else %}
-                  {% set new_args = request.args.to_dict() %}
-                  {% set _ = new_args.update({'page': p}) %}
-                    <a class="pagination-button"
-                       href="{{ request.path }}?{{ new_args|urlencode }}">{{ p }}</a>
-                  {% endif %}
-                  {% endfor %}                
+              {% for p in display_pages %}
+                {% if p == "…" %}
+                  <span class="pagination-button disabled">…</span>
+                {% else %}
+                  <a class="pagination-button" href="javascript:void(0);" data-page="{{ p }}" onclick="changePage(event)">{{ p }}</a>
+                {% endif %}
+              {% endfor %}
 
-                  {% if page < total_pages %}
-                  {% set new_args = request.args.to_dict() %}
-                  {% set _ = new_args.update({'page': p}) %}
-                  <a class="pagination-button"
-                    href="{{ request.path }}?{{ new_args|urlencode }}">
-                    <i class="bi bi-arrow-right"></i>
-                  </a>
-                  {% endif %}
+              <a class="pagination-button" href="javascript:void(0);" data-direction="1" onclick="changePage(event)">
+                <i class="bi bi-arrow-right"></i>
+              </a>
 
-                </div>
+            </div>
 
               </div>
 
               <!-- rechter Block: Ergebnisse pro Seite -->
               <div class="pagination-right">
-                <div class="page-size-selector">
-                  <label for="pageSizeSelect" class="pagination-right">Resultados&nbsp;por&nbsp;página:</label>
-                  <select id="pageSizeSelect" onchange="changePageSize(this.value)">
-                    {% for size in [10,20,30,40,50] %}
-                      <option value="{{ size }}" {% if page_size == size %}selected{% endif %}>{{ size }}</option>
-                    {% endfor %}
-                  </select>
-                </div>
+              <div class="page-size-selector">
+                <label for="pageSizeSelect" class="pagination-right">Resultados&nbsp;por&nbsp;página:</label>
+                <select id="pageSizeSelect" onchange="changePageSize(this.value)">
+                  {% for size in [10,20,30,40,50] %}
+                    <option value="{{ size }}" {% if page_size == size %}selected{% endif %}>{{ size }}</option>
+                  {% endfor %}
+                </select>
+              </div>
               </div>
 
             </div>
@@ -815,7 +800,7 @@
               <td>{{ loop.index }}</td>
               <td>{{ row[1] }}</td>
               <td>{{ row[13] }}</td>
-              <td>{{ row[9] }}</td>
+              <td>{{ row[10] }}</td>
               <td>{{ row[14] }}</td>
               <td>{{ row[2] }}</td>
               <td>{{ row[2] }}</td>
@@ -829,6 +814,11 @@
           {% endfor %}
         </tbody>
       </table>
+
+      <!-- vollständige Trefferliste für JS -->
+      <script id="allResults" type="application/json">
+        {{ all_results|tojson|safe }}
+      </script>
     </div>
   {% endif %}
 {% endif %}

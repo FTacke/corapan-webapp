@@ -185,6 +185,15 @@ td.empty-cell {
   width: 125%; /* Kompensation für die Skalierung */
 }
 
+#downloadMp3,
+#downloadJson {
+  display: none !important;
+  /* zur Sicherheit: */
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
+
+
 /* NAVIGATION */
 
 #mainNavigation {
@@ -1887,6 +1896,12 @@ button {
   color: #053c96;
 }
 
+.pagination-button.disabled{
+  pointer-events:none;
+  opacity:0.4;
+}
+
+
 /* Dropdown für "Resultados por página" */
 .page-size-selector {
   display: flex;
@@ -2591,8 +2606,6 @@ font-weight: bold;
     width: 100%;
     box-sizing: border-box;
   }
-
-
 
 
 /* Logo zentriert und mit etwas Abstand nach unten */
