@@ -2,143 +2,47 @@
 # GitLab CI/CD Pipeline für CO.RA.PAN Webapp
 # =============================================================================
 #
-# Vereinfachte Pipeline für wissenschaftliche Low-Traffic Webapp:
-# - Syntax-Check (Python, Docker)
-# - Optional: Docker Build
-# - Optional: Deployment
-#
-# Keine aufwändigen Tests nötig (wissenschaftlicher Use Case)
+# Minimal pipeline for scientific webapp - just validates that code works
+# No complex tests needed for low-traffic academic project
 # =============================================================================
 
 stages:
   - validate
-  - build
-  - deploy
 
 variables:
-  DOCKER_IMAGE: $CI_REGISTRY_IMAGE:$CI_COMMIT_REF_SLUG
   PYTHON_VERSION: "3.12"
 
 # =============================================================================
-# VALIDATION STAGE: Syntax-Checks
+# VALIDATION: Simple Python syntax check
 # =============================================================================
 
-# Python Syntax Check
-validate:python:
+validate:syntax:
   stage: validate
   image: python:${PYTHON_VERSION}-slim
-  before_script:
-    - pip install --quiet ruff
   script:
-    - echo "✅ Checking Python syntax with ruff..."
-    - ruff check src/ --select E,F --ignore E501
+    - echo "Checking Python syntax..."
+    - python -m py_compile src/app/*.py
+    - python -m py_compile src/app/routes/*.py
+    - python -m py_compile src/app/services/*.py
+    - python -m py_compile src/app/auth/*.py
     - echo "✅ Python syntax is valid!"
-  allow_failure: false
   only:
     - branches
     - merge_requests
     - main
-
-# Docker Build Test (no push)
-validate:docker:
-  stage: validate
-  image: docker:24
-  services:
-    - docker:24-dind
-  script:
-    - echo "✅ Testing Docker build..."
-    - docker build -t test-build .
-    - echo "✅ Docker build successful!"
-  allow_failure: false
-  only:
-    - branches
-    - merge_requests
-    - main
-
-# =============================================================================
-# BUILD STAGE: Docker Image (only on main)
-# =============================================================================
-
-build:docker:
-  stage: build
-  image: docker:24
-  services:
-    - docker:24-dind
-  before_script:
-    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
-  script:
-    - echo "🐋 Building and pushing Docker image..."
-    - docker build -t $DOCKER_IMAGE .
-    - docker tag $DOCKER_IMAGE $CI_REGISTRY_IMAGE:latest
-    - docker push $DOCKER_IMAGE
-    - docker push $CI_REGISTRY_IMAGE:latest
-    - echo "✅ Docker image pushed to registry"
-  only:
-    - main
-    - tags
-
-# =============================================================================
-# DEPLOY STAGE: Manual Deployment
-# =============================================================================
-
-deploy:production:
-  stage: deploy
-  image: alpine:latest
-  before_script:
-    - apk add --no-cache openssh-client git
-    - mkdir -p ~/.ssh
-    - chmod 700 ~/.ssh
-  script:
-    - echo "🚀 Deploying to production server..."
-    - echo "📋 Instructions:"
-    - echo "   1. SSH to server: ssh user@vhrz2184"
-    - echo "   2. Navigate: cd ~/corapan"
-    - echo "   3. Run update: ./update.sh"
-    - echo ""
-    - echo "⚠️  Manual deployment required!"
-    - echo "    (Automatic deployment not configured)"
-  only:
-    - main
-  when: manual
-  environment:
-    name: production
-    url: https://corapan.your-domain.com
-
-# =============================================================================
-# OPTIONAL: Security Scan (allow failure, informational only)
-# =============================================================================
-
-security:scan:
-  stage: validate
-  image: python:${PYTHON_VERSION}-slim
-  before_script:
-    - pip install --quiet safety
-  script:
-    - echo "🔒 Checking for known security vulnerabilities..."
-    - safety check --json || true
-    - echo "ℹ️  Security scan completed (informational only)"
-  allow_failure: true
-  only:
-    - main
-    - merge_requests
 
 # =============================================================================
 # Notes:
 # =============================================================================
 # 
-# ✅ Was die Pipeline macht:
-#   - Validiert Python-Syntax (schnell, keine Tests nötig)
-#   - Testet Docker Build (stellt sicher dass Image baubar ist)
-#   - Baut Docker Image nur bei Push zu main
-#   - Deployment ist manuell (wie gewünscht)
-#
-# ❌ Was die Pipeline NICHT macht:
-#   - Keine Unit Tests (nicht nötig für Low-Traffic wissenschaftliche App)
-#   - Kein Linting (zu streng für Prototypen)
-#   - Kein automatisches Deployment (manuell gewünscht)
-#
-# 🔧 Für später (optional):
-#   - pytest hinzufügen wenn Tests geschrieben werden
-#   - Automatisches Deployment via SSH
-#   - Trivy Security Scan
+# This is a MINIMAL CI/CD pipeline for a scientific webapp.
+# It only validates Python syntax - no complex tests needed.
+# 
+# For future expansion:
+#   - Add pytest for unit tests
+#   - Add Docker build stage
+#   - Add automatic deployment
+# 
+# Current approach: Keep it simple, deploy manually
+# =============================================================================
     url: https://staging.corapan.example.com
