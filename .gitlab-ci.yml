@@ -45,4 +45,3 @@ validate:syntax:
 # 
 # Current approach: Keep it simple, deploy manually
 # =============================================================================
-    url: https://staging.corapan.example.com
