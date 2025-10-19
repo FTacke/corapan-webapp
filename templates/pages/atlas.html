@@ -1,0 +1,46 @@
+﻿{% extends 'base.html' %}
+{% block page_title %}Atlas &middot; CO.RA.PAN{% endblock %}
+{% block extra_head %}
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" defer></script>
+{% endblock %}
+
+{% block content %}
+<article class="md3-atlas-page">
+  <!-- Hero Header -->
+  <header class="md3-atlas-hero">
+    <div class="md3-atlas-hero__container">
+      <p class="md3-label-large md3-atlas-hero__eyebrow">Atlas</p>
+      <h1 class="md3-display-small md3-atlas-hero__title">Atlas panhisp&aacute;nico</h1>
+      <p class="md3-body-large md3-atlas-hero__intro">
+        Explora la red de emisoras y muestras del corpus. Selecciona una capital para ver las grabaciones
+        correspondientes o recorre todas las ciudades para comparar duraciones y recuentos de palabras.
+      </p>
+    </div>
+  </header>
+
+  <!-- Map & Controls Layout -->
+  <section class="md3-atlas-layout">
+    <div class="md3-atlas-controls-row">
+      <div class="md3-atlas-controls">
+        <label class="md3-label-medium md3-atlas-label" for="citySelect">Capital o emisora</label>
+        <select id="citySelect" class="md3-atlas-select" data-element="atlas-select"></select>
+      </div>
+      <div class="md3-atlas-stats" data-element="atlas-overview">
+        <!-- Stats will be injected by JavaScript -->
+      </div>
+    </div>
+    
+    <div class="md3-atlas-map-container">
+      <div id="atlas-map" class="md3-atlas-map" role="region" aria-label="Mapa panhisp&aacute;nico"></div>
+    </div>
+  </section>
+
+  <!-- Files Section -->
+  <section class="md3-atlas-files" data-element="atlas-files"></section>
+</article>
+{% endblock %}
+
+{% block extra_scripts %}
+  <script type="module" src="{{ url_for('static', filename='js/modules/atlas/index.js') }}" defer></script>
+{% endblock %}

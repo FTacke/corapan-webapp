@@ -1,0 +1,407 @@
+/* Tailwind-inspiriertes Navigationsdesign angepasst an CO.RA.PAN Farben */
+
+.nav-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.5rem;
+  border: none;
+  font-family: var(--font-body);
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #6b7280;
+  text-decoration: none;
+  text-transform: none;
+  letter-spacing: normal;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.nav-link:hover {
+  background-color: rgba(47, 95, 115, 0.12);
+  color: #1f2937;
+}
+
+.nav-link:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+.nav-link--active {
+  background-color: rgba(5, 60, 150, 0.18);
+  color: #053c96;
+  font-weight: 600;
+}
+
+.mobile-link--active {
+  background-color: rgba(5, 60, 150, 0.18);
+  color: #053c96;
+  font-weight: 600;
+}
+
+/* Footer Links - gleiches Design */
+.footer-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.35rem 0.65rem;
+  border-radius: 0.5rem;
+  border: none;
+  font-family: var(--font-body);
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: #6b7280;
+  text-decoration: none;
+  text-transform: none;
+  letter-spacing: normal;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.footer-link:hover,
+.footer-link:focus-visible {
+  background-color: rgba(47, 95, 115, 0.12);
+  color: #1f2937;
+}
+
+.footer-link:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+/* Desktop submenu trigger - consistent with nav links */
+.md3-nav__trigger {
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.md3-nav__trigger-icon {
+  display: inline-block;
+  margin-left: 4px;
+  font-size: 0.8em;
+  transition: transform var(--md3-motion-duration-short-4) var(--md3-motion-easing-standard);
+}
+
+.md3-nav__trigger[aria-expanded="true"] .md3-nav__trigger-icon {
+  transform: rotate(180deg);
+}
+
+/* Desktop submenu surface */
+.md3-nav__submenu {
+  position: absolute;
+  margin-top: 0.5rem;
+  padding: var(--md3-space-3);
+  border-radius: var(--md3-radius-medium);
+  box-shadow: var(--md3-elevation-3);
+  background: var(--md3-color-surface-container-high);
+  border: 1px solid var(--md3-color-outline-variant);
+  min-width: 220px;
+  z-index: 60;
+}
+
+.md3-nav__link-with-menu { position: relative; display: inline-flex; align-items: center; }
+
+/* Ensure submenu anchors to parent container */
+.md3-nav__link-with-menu { position: relative; }
+.md3-nav__submenu { left: 0; top: calc(100% + 6px); }
+
+/* Mobile nested links: hidden on desktop, shown in mobile panel */
+.md3-mobile-sublinks { display: none; }
+.md3-mobile-sublinks a { display: block; padding-left: 1.25rem; margin: 0.25rem 0; }
+
+@media (max-width: 900px) {
+  .md3-mobile-sublinks { display: block; }
+  .md3-nav__link-with-menu > a { display: block; }
+}
+
+/* Mobile accordion */
+.md3-mobile-accordion { border-top: 1px solid rgba(0,0,0,0.04); }
+.md3-mobile-accordion__trigger {
+  width: 100%;
+  text-align: left;
+  padding: 12px 16px;
+  background: transparent;
+  border: none;
+  font-size: 1rem;
+}
+.md3-mobile-accordion__trigger[aria-expanded="true"] { font-weight: 600; }
+.md3-mobile-accordion__panel { padding: 8px 16px 12px 24px; }
+.md3-mobile-sublink { display: block; padding: 8px 0; }
+
+/* Bottom-sheet styles */
+.md3-bottomsheet { position: fixed; inset: 0; display: block; z-index: 110; }
+.md3-bottomsheet[hidden] { display: none; }
+.md3-bottomsheet__backdrop { position: absolute; inset: 0; background: rgba(0,0,0,0.4); }
+.md3-bottomsheet__panel { position: absolute; left: 0; right: 0; bottom: 0; background: var(--md3-surface, #fff); border-top-left-radius: 12px; border-top-right-radius: 12px; max-height: 70vh; overflow: auto; transform: translateY(100%); transition: transform 220ms cubic-bezier(.2,.8,.2,1); }
+.md3-bottomsheet:not([hidden]) .md3-bottomsheet__panel { transform: translateY(0); }
+.md3-bottomsheet__header { display:flex; align-items:center; justify-content:space-between; padding: 12px 16px; border-bottom: 1px solid rgba(0,0,0,0.06); }
+.md3-bottomsheet__content { padding: 12px 16px 24px 16px; }
+.md3-bottomsheet__link { display:block; padding:12px 0; border-bottom:1px solid rgba(0,0,0,0.04); text-decoration:none; color:var(--md3-on-surface,#111); }
+
+/* Subdrawer (left sliding panel for mobile nav children) */
+.md3-subdrawer { position: fixed; inset: 0; z-index: 1350; display: block; }
+.md3-subdrawer[hidden] { display: none; }
+.md3-subdrawer__backdrop { position: absolute; inset: 0; background: rgba(0,0,0,0.45); }
+.md3-subdrawer__panel { position: absolute; left: 0; top: 0; bottom: 0; width: min(320px, 80vw); background: var(--color-header); box-shadow: var(--md3-elevation-4); transform: translateX(-110%); transition: transform 220ms cubic-bezier(.2,.8,.2,1); display:flex; flex-direction:column; padding: var(--md3-space-5); max-height:100vh; overflow:auto; }
+.md3-subdrawer[aria-hidden="false"] .md3-subdrawer__panel, .md3-subdrawer:not([hidden]) .md3-subdrawer__panel { transform: translateX(0); }
+.md3-subdrawer__header { display:flex; align-items:center; gap:12px; padding-bottom: var(--md3-space-4); border-bottom: 1px solid var(--md3-color-outline-variant); }
+.md3-subdrawer__links { padding: 0; overflow:auto; display:flex; flex-direction:column; gap: var(--md3-space-2); }
+.md3-subdrawer__link { display:block; padding: var(--md3-space-3) var(--md3-space-4); border-radius: var(--md3-radius-small); color: var(--md3-color-on-surface); text-decoration:none; font-size: var(--md3-label-large); transition: background var(--md3-motion-duration-short-4) var(--md3-motion-easing-standard); }
+.md3-subdrawer__link:hover { background: var(--md3-color-surface-container-high); }
+.md3-subdrawer__link--active { background: var(--md3-color-primary-container); color: var(--md3-color-primary); font-weight:600; }
+.md3-subdrawer__back { margin-right: 8px; }
+
+/* Nested mobile subpanel (mkdocs-like) */
+.md3-mobile-menu__content-wrapper { 
+  position: relative; 
+  overflow: hidden; 
+  flex: 1;
+  min-height: 0;
+}
+
+.md3-mobile-menu__inner { 
+  transform: translateX(0); 
+  transition: transform var(--md3-mobile-menu-duration) var(--md3-motion-easing-emphasized),
+              opacity var(--md3-mobile-menu-duration) var(--md3-motion-easing-standard); 
+  height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+  opacity: 1;
+}
+
+.md3-mobile-subpanel { 
+  position: absolute; 
+  inset: 0; 
+  width: 100%; 
+  height: 100%;
+  background: var(--color-header); 
+  padding: var(--md3-space-5); 
+  transform: translateX(-100%); 
+  transition: transform var(--md3-mobile-menu-duration) var(--md3-motion-easing-emphasized), 
+              visibility 0s linear var(--md3-mobile-menu-duration); 
+  display: flex; 
+  flex-direction: column; 
+  gap: var(--md3-space-4); 
+  visibility: hidden; 
+  overflow-y: auto;
+  overflow-x: hidden;
+  box-shadow: var(--md3-elevation-4);
+  will-change: transform;
+}
+
+.md3-mobile-subpanel[aria-hidden="false"] { 
+  transform: translateX(0); 
+  visibility: visible; 
+  transition-delay: 0s; 
+}
+
+.md3-mobile-menu__panel.has-subpanel .md3-mobile-menu__inner { 
+  transform: translateX(0); 
+  opacity: 0;
+  pointer-events: none;
+}
+
+.md3-mobile-menu__panel.has-subpanel .md3-mobile-subpanel { 
+  transform: translateX(0); 
+  pointer-events: auto;
+}
+
+.md3-mobile-subpanel { 
+  z-index: 10000; 
+}
+
+/* Compact vs scroll behavior for subpanel: JS will add --compact when <=8 items */
+/* For compact panels, content should flow naturally without internal scrolling */
+.md3-mobile-subpanel--compact .md3-subpanel__links { 
+  overflow: visible !important; 
+  max-height: none !important; 
+  flex: 0 0 auto !important;
+}
+
+/* For scroll panels, the links container can scroll if needed */
+.md3-mobile-subpanel--scroll .md3-subpanel__links { 
+  overflow-y: auto !important; 
+  max-height: none !important;
+  flex: 1 1 auto !important;
+}
+
+/* Reduce header visual weight when compact */
+.md3-subpanel__header--compact { padding-bottom: 6px; }
+.md3-subpanel__header--compact .md3-subpanel__title { font-size: 0.95rem; font-weight: 600; }
+
+/* Ensure touch target minimum */
+.md3-subpanel__links a, .md3-mobile-subpanel .md3-mobile-link { min-height: 44px; display: flex; align-items: center; padding-left: 12px; padding-right: 12px; }
+
+/* Higher-specificity override for old global pointer-events rules (avoid !important) */
+body .md3-mobile-menu__panel .md3-mobile-subpanel { pointer-events: auto; z-index: 10000; }
+.md3-subpanel__header { display:flex; align-items:center; gap:12px; padding-bottom: var(--md3-space-4); border-bottom:1px solid var(--md3-color-outline-variant); }
+.md3-subpanel__back { margin-right: 8px; }
+
+/* Consolidated .md3-subpanel__links definition */
+.md3-subpanel__links { 
+  display: flex; 
+  flex-direction: column; 
+  gap: var(--md3-space-2);
+  overflow: visible; 
+  max-height: none;
+  flex: 0 0 auto;
+}
+
+.md3-mobile-subpanel .md3-mobile-link { padding: calc(var(--md3-space-3) - 2px) var(--md3-space-4); border-radius: var(--md3-radius-small); color: var(--md3-color-on-surface); }
+
+/* make sure submenu items don't get huge gaps and are visible */
+.md3-mobile-menu__links, .md3-subpanel__links { gap: var(--md3-space-3); }
+.md3-mobile-link { color: var(--md3-color-on-surface); }
+
+/* subpanel specific adjustments */
+.md3-subpanel__title { 
+  font-size: var(--md3-title-small);
+  font-weight: 500;
+  color: var(--md3-color-on-surface); 
+  margin-left: var(--md3-space-2);
+}
+
+.md3-mobile-subpanel { 
+  padding: var(--md3-space-5);
+  padding-top: var(--md3-space-4);
+}
+
+.md3-mobile-subpanel .md3-mobile-link { 
+  padding: var(--md3-space-3) var(--md3-space-4);
+  position: relative;
+}
+
+.md3-mobile-subpanel .md3-mobile-link::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: var(--md3-radius-small);
+  background: var(--md3-color-on-surface);
+  opacity: 0;
+  transition: opacity var(--md3-motion-duration-short-4) var(--md3-motion-easing-standard);
+}
+
+.md3-mobile-subpanel .md3-mobile-link:hover::before {
+  opacity: var(--md3-state-hover-opacity);
+}
+
+.md3-mobile-subpanel .md3-mobile-link.md3-mobile-link--active {
+  background: var(--md3-color-primary-container);
+  color: var(--md3-color-primary);
+  font-weight: 600;
+}
+
+/* Parent trigger (El proyecto) should be visually consistent with other links in the mobile menu */
+.md3-mobile-link.md3-mobile-subdrawer-trigger { 
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  text-align: left;
+  border: none;
+  background: transparent;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.md3-mobile-link.md3-mobile-subdrawer-trigger .md3-mobile-link__chev { 
+  font-size: 1rem;
+  opacity: 0.6;
+  transition: transform var(--md3-motion-duration-short-4) var(--md3-motion-easing-standard);
+}
+
+.md3-mobile-link.md3-mobile-subdrawer-trigger[aria-expanded="true"] .md3-mobile-link__chev {
+  transform: rotate(90deg);
+}
+
+/* Reduce header vertical space inside subpanel so items are visible sooner */
+.md3-subpanel__header { 
+  padding-bottom: var(--md3-space-3);
+  margin-bottom: var(--md3-space-2);
+  flex: 0 0 auto;
+}
+
+.md3-mobile-subpanel { 
+  padding: var(--md3-space-5);
+  padding-top: var(--md3-space-4);
+}
+
+.md3-subpanel__back {
+  min-width: 40px;
+  min-height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: transparent;
+  color: var(--md3-color-on-surface);
+  cursor: pointer;
+  border-radius: var(--md3-radius-full);
+  transition: background var(--md3-motion-duration-short-4) var(--md3-motion-easing-standard);
+  position: relative;
+}
+
+.md3-subpanel__back::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: var(--md3-radius-full);
+  background: var(--md3-color-on-surface);
+  opacity: 0;
+  transition: opacity var(--md3-motion-duration-short-4) var(--md3-motion-easing-standard);
+}
+
+.md3-subpanel__back:hover::before {
+  opacity: var(--md3-state-hover-opacity);
+}
+
+/* Ensure mobile trigger alignment matches other links (centered vertically with same padding) */
+.md3-mobile-menu__links .md3-mobile-link, .md3-subpanel__links .md3-mobile-link { display:block; padding: var(--md3-space-3) var(--md3-space-4); text-align: left; }
+
+/* Submenu list items spacing (MD3 recommended item padding) */
+.md3-nav__submenu ul { 
+  list-style: none; 
+  margin: 0; 
+  padding: 0; 
+  display: flex;
+  flex-direction: column;
+  gap: var(--md3-space-1);
+}
+
+.md3-nav__submenu li { 
+  padding: 0;
+}
+
+.md3-nav__submenu li a { 
+  display: block; 
+  padding: var(--md3-space-3) var(--md3-space-4); 
+  border-radius: var(--md3-radius-small); 
+  color: var(--md3-color-on-surface); 
+  text-decoration: none;
+  font-size: var(--md3-label-large);
+  transition: background var(--md3-motion-duration-short-4) var(--md3-motion-easing-standard);
+  position: relative;
+}
+
+.md3-nav__submenu li a::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: var(--md3-radius-small);
+  background: var(--md3-color-on-surface);
+  opacity: 0;
+  transition: opacity var(--md3-motion-duration-short-4) var(--md3-motion-easing-standard);
+}
+
+.md3-nav__submenu li a:hover::before,
+.md3-nav__submenu li a:focus::before { 
+  opacity: var(--md3-state-hover-opacity);
+}
+
+/* Desktop submenu active link */
+.md3-nav__submenu-link.md3-nav__link--active { 
+  background: var(--md3-color-primary-container); 
+  color: var(--md3-color-primary);
+  font-weight: 600;
+}

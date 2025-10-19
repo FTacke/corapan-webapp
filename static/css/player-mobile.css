@@ -1,0 +1,642 @@
+/**
+ * Mobile-Specific CSS for CO.RA.PAN Player
+ * Optimized for screens < 600px
+ * 
+ * Key requirements:
+ * - Sehr kleine Sprechernamen (0.7rem) links vom Text
+ * - Maximaler Platz für Transkription
+ * - Simplified Player (60px height, fixed bottom)
+ * - Sidebars versteckt, nur Metadaten oben
+ */
+
+/* ============================================================================
+   MOBILE BREAKPOINTS
+   ============================================================================ */
+
+/* Mobile Small (< 400px) */
+@media (max-width: 400px) {
+  :root {
+    /* Reduce spacing on very small screens */
+    --mobile-space-1: 4px;
+    --mobile-space-2: 8px;
+    --mobile-space-3: 12px;
+  }
+}
+
+/* Mobile Standard (< 600px) */
+@media (max-width: 600px) {
+  
+  /* ==========================================================================
+     CSS OVERRIDES (Desktop-Regeln überschreiben!)
+     ========================================================================== */
+  
+  /* WICHTIG: Desktop line-height überschreiben */
+  .speaker-turn,
+  .speaker-content,
+  .speaker-text,
+  .word {
+    line-height: 1.35 !important; /* Override desktop 1.3/1.7 etc */
+  }
+
+  /* WICHTIG: Desktop grid überschreiben */
+  .speaker-turn {
+    display: flex !important;
+    flex-direction: column !important;
+    grid-template-columns: unset !important;
+  }
+
+  /* WICHTIG: Desktop gaps überschreiben */
+  #transcriptionContainer {
+    gap: var(--md3-space-2) !important; /* Override desktop 1.5rem */
+  }
+  
+  /* ==========================================================================
+     LAYOUT
+     ========================================================================== */
+  
+  body.mobile-layout {
+    padding: 0;
+    margin: 0;
+  }
+
+  /* Player-Page: KEIN Padding auf Mobile! */
+  .mobile-layout .player-page {
+    padding: 0 !important;
+    margin: 0 !important;
+    max-width: 100% !important;
+  }
+
+  /* Player-Header: Minimales Padding */
+  .mobile-layout .player-header {
+    padding: 0.5rem 0.25rem !important;
+    margin-bottom: 0.5rem !important;
+  }
+
+  /* Hide sidebar SECTIONS on mobile (except metadata) */
+  .sidebar,
+  .mobile-hidden {
+    display: none !important;
+  }
+
+  /* Player-Sidebar: Metadata OBEN anzeigen, Rest verstecken */
+  .mobile-layout .player-sidebar {
+    display: block !important; /* Sidebar selbst sichtbar */
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    order: -1; /* OBEN in der Reihenfolge */
+  }
+
+  /* NUR die erste Sidebar-Section (Metadaten) anzeigen */
+  .mobile-layout .sidebar-section {
+    display: none !important; /* Alle versteckt */
+  }
+
+  .mobile-layout .sidebar-section:first-child {
+    display: block !important; /* NUR erste (Metadata) sichtbar */
+    padding: 0.5rem 0.25rem !important;
+    margin-bottom: 0.5rem !important;
+    background: var(--md3-color-surface-container-low);
+    border-radius: 0 !important;
+  }
+
+  /* Metadata-Styling kompakt */
+  .mobile-layout .sidebar-title {
+    font-size: 0.75rem !important;
+    margin-bottom: 0.25rem !important;
+    color: var(--md3-color-on-surface-variant);
+  }
+
+  .mobile-layout .sidebar-meta {
+    font-size: 0.7rem !important;
+    line-height: 1.3 !important;
+    margin: 0.125rem 0 !important;
+    color: var(--md3-color-on-surface);
+  }
+
+  /* Full-width transcription container mit Flexbox für Reordering */
+  .player-container {
+    display: flex !important; /* Flex statt Grid für order */
+    flex-direction: column !important;
+    padding: 0 !important; /* KEIN padding */
+    gap: 0 !important;
+    max-width: 100% !important;
+    width: 100% !important;
+    margin: 0 !important;
+    box-sizing: border-box !important;
+  }
+
+  /* Transcription takes full width */
+  .player-transcript {
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    box-sizing: border-box !important;
+    order: 1; /* Nach Sidebar */
+  }
+
+  #transcriptionContainer {
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 0 var(--md3-space-2) !important;
+    margin: 0 !important;
+    box-sizing: border-box !important;
+  }
+
+  /* ==========================================================================
+     METADATA HEADER (Compact)
+     ========================================================================== */
+  
+  .metadata-header {
+    padding: var(--md3-space-3);
+    background: var(--md3-color-surface-container-low);
+    border-bottom: 1px solid var(--md3-color-outline-variant);
+  }
+
+  .metadata-header h1 {
+    font-size: 1.125rem; /* Smaller title */
+    line-height: 1.3;
+    margin-bottom: var(--md3-space-2);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .metadata-info {
+    font-size: 0.75rem;
+    color: var(--md3-color-on-surface-variant);
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--md3-space-2);
+  }
+
+  /* ==========================================================================
+     SPEAKER NAMES (ÜBER dem Text, sehr klein!)
+     ========================================================================== */
+  
+  .speaker-name {
+    font-size: 0.65rem !important; /* Sehr klein! 10.4px */
+    font-weight: 500 !important;
+    color: var(--md3-color-on-surface-variant) !important;
+    margin: 0 !important;
+    margin-bottom: 0.25rem !important;
+    padding: 0.25rem 0.5rem !important;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    background: var(--md3-color-surface-container-highest);
+    border-radius: var(--md3-radius-small);
+    display: inline-block !important;
+    letter-spacing: 0.02em;
+  }
+
+  /* Speaker time: VERSTECKT auf Mobile */
+  .speaker-time {
+    display: none !important; /* Komplett ausblenden */
+  }
+
+  /* Speaker Turn: VERTICAL Stack (Name oben, Content unten) */
+  .speaker-turn {
+    display: flex !important;
+    flex-direction: column !important; /* Vertikal! */
+    gap: 0 !important; /* Kein Gap zwischen Name und Text */
+    margin-bottom: var(--md3-space-3) !important;
+    padding: 0 !important;
+    background: transparent !important;
+    border-radius: 0 !important;
+  }
+
+  /* Speaker content: Nur Text, kein time */
+  .speaker-content {
+    display: block !important; /* Block für full-width */
+    width: 100% !important;
+  }
+
+  /* ==========================================================================
+     TRANSCRIPTION TEXT (Kompakter Zeilenabstand!)
+     ========================================================================== */
+  
+  .transcript-text,
+  .speaker-text {
+    font-size: 1.125rem !important; /* 18px für Lesbarkeit */
+    line-height: 1.35 !important; /* KOMPAKT! Vorher 1.65, jetzt 1.35 */
+    color: var(--md3-color-on-surface) !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  .word {
+    font-size: 1.125rem !important;
+    line-height: 1.35 !important; /* KOMPAKT! Match parent */
+    padding: 0.15rem 0.1rem !important; /* MINIMAL padding */
+    margin: 0 !important;
+    display: inline !important; /* Inline, nicht flex */
+    cursor: pointer;
+    border-radius: var(--md3-radius-extra-small);
+  }
+
+  .word:active {
+    background: var(--md3-color-primary-container);
+    color: var(--md3-color-on-primary-container);
+  }
+
+  /* ==========================================================================
+     SIMPLIFIED MOBILE PLAYER (Full-Width, kein Lautstärke!)
+     ========================================================================== */
+  
+  /* ==========================================================================
+     MOBILE PLAYER: BRUTALER 100% BREITE OVERRIDE!
+     ========================================================================== */
+  
+  /* ALLE Player-Selektoren - NUCLEAR OPTION! */
+  .custom-audio-player,
+  .custom-audio-player.mobile-player,
+  .mobile-layout .custom-audio-player,
+  body.mobile-layout .custom-audio-player,
+  html .custom-audio-player {
+    /* POSITION: Fixed am Boden, EXAKT 100% */
+    position: fixed !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    top: auto !important;
+    
+    /* BREITE: ABSOLUTE 100vw, KEINE Limits! */
+    width: 100vw !important;
+    min-width: 100vw !important;
+    max-width: 100vw !important;
+    
+    /* MARGINS: ALLE auf 0! */
+    margin: 0 !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
+    
+    /* TRANSFORM: KEINE! (kann Breite beeinflussen) */
+    transform: none !important;
+    -webkit-transform: none !important;
+    
+    /* PADDING: Nur innen */
+    padding: 0.5rem !important;
+    padding-left: 0.5rem !important;
+    padding-right: 0.5rem !important;
+    
+    /* BOX-SIZING: Border-box für echte 100vw */
+    box-sizing: border-box !important;
+    -webkit-box-sizing: border-box !important;
+    
+    /* BACKGROUND: Solid, KEIN Glassmorphism */
+    background: var(--md3-color-surface-container) !important;
+    background-color: var(--md3-color-surface-container) !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    
+    /* BORDER: Nur oben, KEINE Radius */
+    border: none !important;
+    border-top: 2px solid var(--md3-color-primary) !important;
+    border-radius: 0 !important;
+    border-top-left-radius: 0 !important;
+    border-top-right-radius: 0 !important;
+    border-bottom-left-radius: 0 !important;
+    border-bottom-right-radius: 0 !important;
+    
+    /* Z-INDEX: MAXIMAL! */
+    z-index: 99999 !important;
+    
+    /* SHADOW: Stark für Sichtbarkeit */
+    box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.2) !important;
+    
+    /* HEIGHT: Auto, mindestens 100px (4 Zeilen!) */
+    min-height: 100px !important;
+    max-height: 200px !important;
+    height: auto !important;
+    
+    /* ISOLATION: Eigener Context */
+    isolation: isolate !important;
+    
+    /* DISPLAY: Flex */
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 0.5rem !important;
+  }
+
+  /* ==========================================================================
+     PLAYER CONTROLS: 4-ZEILEN LAYOUT (BRUTAL OVERRIDE!)
+     ========================================================================== */
+  
+  /* Player Controls Container: FLEX WRAP für 4 Zeilen */
+  .mobile-layout .player-controls,
+  body.mobile-layout .custom-audio-player .player-controls,
+  .custom-audio-player .player-controls {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    box-sizing: border-box !important;
+    
+    /* WICHTIG: Grid für 4 Zeilen! */
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    grid-template-rows: auto auto auto auto !important;
+    gap: 0.4rem !important;
+  }
+  
+  /* ZEILE 1: Fortschrittsbalken (player-controls-top) */
+  .mobile-layout .player-controls-top,
+  .custom-audio-player .player-controls-top {
+    grid-row: 1 !important; /* ERSTE Zeile */
+    width: 100% !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 0 !important;
+  }
+  
+  /* ZEILE 2-4: player-controls-bottom wird aufgeteilt! */
+  .mobile-layout .player-controls-bottom,
+  .custom-audio-player .player-controls-bottom {
+    /* Bottom wird KOMPLETT umgebaut */
+    grid-row: 2 / 5 !important; /* Zeilen 2, 3, 4 */
+    width: 100% !important;
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    grid-template-rows: auto auto auto !important;
+    gap: 0.4rem !important;
+  }
+  
+  /* ZEILE 2: Zeit (innerhalb von player-controls-bottom) */
+  .mobile-layout .time-display,
+  .custom-audio-player .time-display {
+    grid-row: 1 !important; /* Erste Zeile in Bottom = Gesamt Zeile 2 */
+    width: 100% !important;
+    text-align: center !important;
+    font-size: 0.7rem !important;
+    color: var(--md3-color-on-surface-variant) !important;
+    font-family: 'Consolas, Inconsolata', monospace !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+  
+  /* ZEILE 3: Play-Container (innerhalb von player-controls-bottom) */
+  .mobile-layout .play-container,
+  .custom-audio-player .play-container {
+    grid-row: 2 !important; /* Zweite Zeile in Bottom = Gesamt Zeile 3 */
+    width: 100% !important;
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    gap: 0.5rem !important;
+  }
+  
+  /* ZEILE 4: Speed-Control (innerhalb von player-controls-bottom) */
+  .mobile-layout .speed-control-container,
+  .custom-audio-player .speed-control-container {
+    grid-row: 3 !important; /* Dritte Zeile in Bottom = Gesamt Zeile 4 */
+    width: 100% !important;
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    gap: 0.5rem !important;
+  }
+
+  /* Play Container - zentriert */
+  .mobile-layout .play-container,
+  .custom-audio-player .play-container {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 0.5rem !important;
+  }
+  
+  /* Play button (kompakter) */
+  .mobile-layout .play-icon,
+  .custom-audio-player .play-icon {
+    font-size: 2em !important;
+    width: 40px !important;
+    height: 40px !important;
+    flex-shrink: 0 !important;
+    margin: 0 !important;
+  }
+
+  /* Progress bar container - 100% Breite */
+  .mobile-layout .progress-container,
+  .custom-audio-player .progress-container {
+    flex: 1 !important;
+    width: 100% !important;
+    height: 3px !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  .mobile-layout #progressBar,
+  .custom-audio-player #progressBar {
+    width: 100% !important;
+    height: 3px !important;
+    cursor: pointer !important;
+    margin: 0 !important;
+  }
+
+  /* Time display: ENTFERNT (jetzt in ZEILE 1 oben) */
+
+  /* Skip Controls (kompakter) */
+  .mobile-layout .skip-control,
+  .custom-audio-player .skip-control {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    gap: 0.15rem !important;
+    cursor: pointer !important;
+  }
+  
+  .mobile-layout .skip-icon,
+  .custom-audio-player .skip-icon {
+    font-size: 1.2rem !important;
+    color: var(--md3-color-primary) !important;
+  }
+  
+  .mobile-layout .skip-label,
+  .custom-audio-player .skip-label {
+    font-size: 0.65rem !important;
+    color: var(--md3-color-on-surface-variant) !important;
+  }
+
+  /* Volume Control: KOMPLETT AUSBLENDEN auf Mobile */
+  .mobile-layout .volume-control-container,
+  .custom-audio-player .volume-control-container {
+    display: none !important; /* NICHT SICHTBAR */
+  }
+
+  /* Speed Control Slider kompakter */
+  .mobile-layout .speed-control,
+  .mobile-layout #speedControlSlider,
+  .custom-audio-player #speedControlSlider {
+    flex: 1 !important;
+    max-width: 150px !important; /* Etwas breiter */
+  }
+
+  .mobile-layout .speed-display,
+  .custom-audio-player .speed-display {
+    font-size: 0.75rem !important;
+    min-width: 36px !important;
+    text-align: center !important;
+  }
+
+  .mobile-layout .speed-icon,
+  .custom-audio-player .speed-icon {
+    font-size: 0.875rem !important;
+    color: var(--md3-color-on-surface-variant) !important;
+  }
+
+  /* ==========================================================================
+     SPACING & PADDING (Kompakter!)
+     ========================================================================== */
+  
+  /* Add bottom padding to content to avoid player overlap */
+  .mobile-layout .player-transcript {
+    padding-bottom: 120px !important; /* 100px player + 20px gap */
+  }
+
+  /* Reduce overall padding for more space */
+  .mobile-layout .player-container {
+    padding: var(--md3-space-2) !important;
+    gap: 0 !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+  }
+
+  /* Speaker turn spacing: SEHR KOMPAKT */
+  .mobile-layout .speaker-turn {
+    margin-bottom: var(--md3-space-2) !important; /* Reduziert von space-4 auf space-2 */
+    padding: 0 !important;
+    background: transparent !important;
+    border-radius: 0 !important;
+  }
+
+  /* Transcription Container: MINIMAL padding */
+  .mobile-layout #transcriptionContainer {
+    padding: 0 0.25rem !important; /* MINIMAL: 4px links/rechts */
+    gap: var(--md3-space-2) !important; /* Kompakter Gap zwischen Turns */
+  }
+
+  /* Speaker-Turn: Auch minimaler Padding */
+  .mobile-layout .speaker-turn {
+    padding-left: 0.25rem !important;
+    padding-right: 0.25rem !important;
+  }
+
+  /* Reduce sidebar section padding */
+  .mobile-layout .sidebar-section {
+    padding: var(--md3-space-2) !important;
+  }
+
+  /* ==========================================================================
+     BUTTONS & CONTROLS
+     ========================================================================== */
+  
+  /* Larger touch targets for all buttons */
+  .mobile-layout button,
+  .mobile-layout .btn {
+    min-height: 44px !important;
+    min-width: 44px !important;
+    padding: var(--md3-space-2) var(--md3-space-3) !important;
+  }
+
+  /* Letter marking chips (compact) */
+  .mobile-layout .letra {
+    padding: 0.25rem 0.5rem !important;
+    font-size: 0.75rem !important;
+    min-height: 36px !important;
+  }
+
+  /* ==========================================================================
+     TOOLTIPS (Hide on mobile)
+     ========================================================================== */
+  
+  .mobile-layout .tooltip-text {
+    display: none !important; /* Tooltips don't work well on touch */
+  }
+
+  /* ==========================================================================
+     SCROLLING
+     ========================================================================== */
+  
+  /* Smooth scrolling */
+  html.mobile-layout {
+    scroll-behavior: smooth;
+  }
+
+  /* Hide scroll-to-top button on mobile (saves space) */
+  .mobile-layout #scrollToTopBtn {
+    bottom: 80px !important; /* Above player */
+    right: var(--md3-space-3) !important;
+    width: 44px !important;
+    height: 44px !important;
+  }
+}
+
+/* ==========================================================================
+   TABLET BREAKPOINT (601px - 900px)
+   ========================================================================== */
+
+@media (min-width: 601px) and (max-width: 900px) {
+  /* Hybrid layout: Collapsible sidebar */
+  
+  .sidebar {
+    max-width: 240px; /* Narrower on tablet */
+  }
+
+  .player-container {
+    grid-template-columns: 2.5fr 1fr; /* More space for transcript */
+  }
+
+  /* Speaker names slightly smaller */
+  .speaker-name {
+    font-size: 0.8rem;
+  }
+
+  /* Player optimizations */
+  .custom-audio-player {
+    max-width: 600px;
+  }
+}
+
+/* ==========================================================================
+   LANDSCAPE ORIENTATION (Mobile)
+   ========================================================================== */
+
+@media (max-width: 900px) and (orientation: landscape) {
+  /* In landscape, give even more space to transcription */
+  
+  .speaker-name {
+    font-size: 0.65rem !important;
+    max-width: 60px !important;
+  }
+
+  .custom-audio-player {
+    height: 50px !important;
+    padding: var(--md3-space-1) var(--md3-space-2) !important;
+  }
+
+  .play-icon {
+    font-size: 1.5em !important;
+  }
+}
+
+/* ==========================================================================
+   ACCESSIBILITY
+   ========================================================================== */
+
+/* Ensure touch targets meet MD3 minimum (44px) on all mobile screens */
+@media (max-width: 600px) {
+  *[onclick],
+  *[role="button"],
+  button,
+  a,
+  input[type="button"],
+  input[type="submit"] {
+    min-height: 44px;
+    min-width: 44px;
+  }
+}

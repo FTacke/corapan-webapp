@@ -1,0 +1,167 @@
+{% extends "base.html" %}
+
+{% block page_title %}Player - CO.RA.PAN{% endblock %}
+
+{% block extra_head %}
+<!-- New modular player -->
+<script type="module" src="{{ url_for('static', filename='js/player/player-main.js') }}"></script>
+{% endblock %}
+
+{% block content %}
+<div class="player-page">
+  <!-- Header mit Zurück-Button und Dokumenttitel -->
+  <div class="player-header">
+    <a href="javascript:history.back()" class="back-link">
+      <i class="bi bi-chevron-left"></i>
+    </a>
+    <h1 id="documentName" class="document-title"></h1>
+  </div>
+
+  <!-- Hauptcontainer: Transkript + Sidebar -->
+  <div class="player-container">
+    <!-- Linke Spalte: Transkript -->
+    <div class="player-transcript">
+      <div id="transcriptionContainer"></div>
+    </div>
+
+    <!-- Rechte Spalte: Sidebar -->
+    <aside class="player-sidebar">
+      <!-- Metadaten -->
+      <div class="sidebar-section">
+        <h5 class="sidebar-title">Metadatos</h5>
+        <p class="sidebar-meta" id="countryInfo"></p>
+        <p class="sidebar-meta" id="cityInfo"></p>
+        <p class="sidebar-meta" id="radioInfo"></p>
+        <p class="sidebar-meta" id="dateInfo"></p>
+        <p class="sidebar-meta" id="revisionInfo"></p>
+      </div>
+
+
+      <!-- Buchstabenmarkierung -->
+      <div class="sidebar-section">
+        <h5 class="sidebar-title">
+          Marcar letras
+          <i class="fa-solid fa-circle-question sidebar-help-icon" 
+             onmouseover="showTooltip(event)" 
+             onmouseout="hideTooltip(event)"></i>
+          <span class="tooltip-text">
+            <p>Pueden destacarse letras, secuencias de letras y palabras individuales en el texto, und se mostrará el número de resultados.</p>
+            <p>Al ingresar una letra mit "<span class="tooltip-high">_</span>" (p.ej., "<span class="tooltip-high">s_</span>"), solo se marcarán las ocurrencias al final de las palabras.</p>
+            <p>Al ingresar mit "<span class="tooltip-high">#</span>" (p.ej., "<span class="tooltip-high">s#</span>") solo se marcarán las ocurrencias antes de signos de puntuación (<span class="tooltip-high">.,?!</span>).</p>
+          </span>
+        </h5>
+        <input type="text" class="mark-input" id="markInput" placeholder="letra(s)">
+        <button class="btn-primary" id="markButton">Marcar</button>
+        <div id="buttonsContainer"></div>
+      </div>
+
+      <!-- Token Collector -->
+      <div class="sidebar-section">
+        <h5 class="sidebar-title">
+          Tokens seleccionados
+          <i class="fa-solid fa-circle-question sidebar-help-icon" 
+             onmouseover="showTooltip(event)" 
+             onmouseout="hideTooltip(event)"></i>
+          <span class="tooltip-text">
+            <p>Haz clic en una palabra en la transcripción para agregar su <span class="tooltip-high">token_id</span> aquí.</p>
+            <p>Los IDs seleccionados se muestran separados por comas. Puedes copiarlos al portapapeles con el ícono correspondiente.</p>
+            <p>Usa <span class="tooltip-high">Borrar</span> para limpiar la lista.</p>
+            <p>Los <span class="tooltip-high">token_id</span> pueden utilizarse para acceder al corpus y permiten descargar segmentos MP3 correspondientes.</p>
+          </span>
+        </h5>
+        <textarea id="tokenCollectorInput" class="token-collector-input" placeholder="Token IDs ..." readonly></textarea>
+        <div class="token-icon-bar">
+          <i id="copyTokenIdsBtn" class="fa-regular fa-copy token-icon" title="Copiar al portapapeles"></i>
+          <i id="resetTokenCollectorBtn" class="fa-regular fa-trash-can token-icon" title="Borrar lista de tokens"></i>
+        </div>
+      </div>
+
+      <!-- Shortcuts -->
+      <div class="sidebar-section">
+        <h5 class="sidebar-title">Shortcuts/Audio</h5>
+        <p class="shortcut-item"><span class="kbd">CTRL</span> + <span class="kbd">ESPACIO</span> = iniciar/pausar</p>
+        <p class="shortcut-item"><span class="kbd">CTRL</span> + <span class="kbd">,</span> = saltar -3s</p>
+        <p class="shortcut-item"><span class="kbd">CTRL</span> + <span class="kbd">.</span> = saltar +3s</p>
+        <p class="shortcut-item"><span class="kbd">Click</span> + <span class="kbd">CTRL</span> = desde palabra</p>
+        <p class="shortcut-item"><span class="kbd">Click</span> = solo palabra</p>
+      </div>
+
+      <!-- Export -->
+      <div class="sidebar-section">
+        <h5 class="sidebar-title">
+          Exportar
+          <i class="fa-solid fa-circle-question sidebar-help-icon" 
+             onmouseover="showTooltip(event)" 
+             onmouseout="hideTooltip(event)"></i>
+          <span class="tooltip-text">
+            <p>Aquí se pueden descargar los datos en bruto:</p>
+            <p>El archivo <span class="tooltip-high">mp3</span> tiene la calidad máxima disponible (generalmente 128 kBit/s).</p>
+            <p>El archivo <span class="tooltip-high">JSON</span> contiene toda la información junto con las marcas de tiempo de cada palabra individual.</p>
+            <p>El archivo <span class="tooltip-high">TXT</span> contiene los metadatos und la transcripción sin marcas tal como se presentan aquí.</p>
+          </span>
+        </h5>
+        <div class="export-links">
+          <a id="downloadMP3" class="download-link" title="Descargar MP3">
+            <i class="bi bi-filetype-mp3"></i>
+          </a>
+          <a id="downloadJSON" class="download-link" title="Descargar JSON">
+            <i class="bi bi-filetype-json"></i>
+          </a>
+          <a id="downloadTXT" class="download-link" title="Descargar TXT">
+            <i class="bi bi-filetype-txt"></i>
+          </a>
+        </div>
+      </div>
+    </aside>
+  </div>
+
+  <!-- Audio Player - Floating Compact Design -->
+  <div class="custom-audio-player">
+    <div class="player-controls">
+      <!-- Top Row: Progress Bar -->
+      <div class="player-controls-top">
+        <input type="range" id="progressBar" min="0" max="100" value="0" class="progress-bar" aria-label="Audio progress">
+        <div class="volume-control-container">
+          <i id="muteBtn" class="fa-solid fa-volume-high volume-icon" aria-label="Mute/Unmute"></i>
+          <input type="range" id="volumeControl" min="0" max="1" step="0.01" value="1.0" class="volume-control" aria-label="Volume">
+        </div>
+      </div>
+      
+      <!-- Middle Row: Main Controls -->
+      <div class="player-controls-bottom">
+        <div class="time-display" id="timeDisplay">0:00 / 0:00</div>
+        
+        <div class="play-container">
+          <div class="skip-control" id="rewindBtn" role="button" aria-label="Rewind 3 seconds">
+            <i class="fa-solid fa-rotate-left skip-icon"></i>
+            <span class="skip-label">-3s</span>
+          </div>
+          
+          <i id="playPauseBtn" class="bi bi-play-circle-fill play-icon" role="button" aria-label="Play/Pause"></i>
+          
+          <div class="skip-control" id="forwardBtn" role="button" aria-label="Forward 3 seconds">
+            <i class="fa-solid fa-rotate-right skip-icon"></i>
+            <span class="skip-label">+3s</span>
+          </div>
+        </div>
+        
+        <div class="speed-control-container">
+          <i class="bi bi-speedometer2 speed-icon" aria-label="Playback speed"></i>
+          <input type="range" id="speedControlSlider" min="0.5" max="2" step="0.1" value="1.0" class="speed-control" aria-label="Speed control">
+          <div id="speedDisplay" class="speed-display">1.0x</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Hidden audio element -->
+  <audio id="audioPlayer" preload="auto" style="display: none;">
+    Your browser does not support the audio element.
+  </audio>
+
+  <!-- Scroll to top button -->
+  <button id="scrollToTopBtn" class="scroll-to-top" style="display: none;">
+    <i class="bi bi-chevron-up"></i>
+  </button>
+</div>
+{% endblock %}

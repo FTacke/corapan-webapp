@@ -1,0 +1,169 @@
+"""Application factory for the modern CO.RA.PAN web app."""
+from __future__ import annotations
+
+import logging
+from datetime import datetime
+from logging.handlers import RotatingFileHandler
+from pathlib import Path
+
+from flask import Flask, flash, jsonify, redirect, render_template, request, url_for
+
+from .auth.loader import hydrate
+from .config import load_config
+from .extensions import register_extensions
+from .routes import register_blueprints
+
+
+def create_app(env_name: str | None = None) -> Flask:
+    """Create and configure the Flask application instance."""
+    project_root = Path(__file__).resolve().parents[2]
+    template_dir = project_root / 'templates'
+    static_dir = project_root / 'static'
+
+    app = Flask(
+        __name__,
+        instance_relative_config=True,
+        template_folder=str(template_dir),
+        static_folder=str(static_dir),
+    )
+    load_config(app, env_name)
+    hydrate()
+    register_extensions(app)
+    register_blueprints(app)
+    register_context_processors(app)
+    register_security_headers(app)
+    register_error_handlers(app)
+    setup_logging(app)
+    return app
+
+
+def register_context_processors(app: Flask) -> None:
+    """Expose helpers to the template engine."""
+    @app.context_processor
+    def inject_utilities():  # pragma: no cover - thin wrapper
+        return {
+            "now": datetime.utcnow,
+            "allow_public_temp_audio": app.config.get("ALLOW_PUBLIC_TEMP_AUDIO", False),
+        }
+
+
+def register_security_headers(app: Flask) -> None:
+    """Add security headers to all responses."""
+    @app.after_request
+    def set_security_headers(response):
+        """Set security headers on every response."""
+        # Prevent MIME type sniffing
+        response.headers['X-Content-Type-Options'] = 'nosniff'
+        
+        # Prevent clickjacking
+        response.headers['X-Frame-Options'] = 'DENY'
+        
+        # XSS Protection (legacy browsers)
+        response.headers['X-XSS-Protection'] = '1; mode=block'
+        
+        # HSTS - only in production
+        if not app.debug:
+            response.headers['Strict-Transport-Security'] = 'max-age=31536000; includeSubDomains'
+        
+        # Content Security Policy
+        # Note: 'unsafe-inline' needed for current jQuery/DataTables implementation
+        # TODO: Remove 'unsafe-inline' after jQuery migration
+        csp = (
+            "default-src 'self'; "
+            "script-src 'self' 'unsafe-inline' https://code.jquery.com https://cdn.jsdelivr.net "
+            "https://cdn.datatables.net https://cdnjs.cloudflare.com https://unpkg.com; "
+            "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdn.datatables.net "
+            "https://cdnjs.cloudflare.com https://unpkg.com; "
+            "img-src 'self' data: https: blob:; "
+            "font-src 'self' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net; "
+            "connect-src 'self'; "
+            "media-src 'self' blob:; "
+            "frame-ancestors 'none';"
+        )
+        response.headers['Content-Security-Policy'] = csp
+        
+        return response
+
+
+def register_error_handlers(app: Flask) -> None:
+    """Register custom error handlers for common HTTP errors."""
+    
+    @app.errorhandler(400)
+    def bad_request(error):
+        """Handle 400 Bad Request errors."""
+        app.logger.warning(f'Bad request: {error}')
+        if request.path.startswith('/api/') or request.path.startswith('/atlas/'):
+            return jsonify({'error': 'Bad request', 'message': str(error)}), 400
+        return render_template('errors/400.html', error=error), 400
+    
+    @app.errorhandler(401)
+    def unauthorized(error):
+        """Handle 401 Unauthorized errors - redirect to login for HTML requests."""
+        app.logger.warning(f'Unauthorized access attempt: {request.path} from {request.remote_addr}')
+        
+        # API requests get JSON response
+        if request.path.startswith('/api/') or request.path.startswith('/atlas/'):
+            return jsonify({'error': 'Unauthorized', 'message': str(error)}), 401
+        
+        # AJAX/fetch requests get JSON response (check Accept header)
+        if request.accept_mimetypes.best == 'application/json':
+            return jsonify({'error': 'Unauthorized', 'message': str(error)}), 401
+        
+        # HTML requests: save return URL and redirect to login
+        from .routes.auth import save_return_url
+        save_return_url()
+        
+        # Redirect to referrer (or home) with login dialog query parameter
+        # Using query param instead of hash to avoid automatic scroll-to-anchor
+        referrer = request.referrer or url_for("public.landing_page")
+        flash("Por favor inicia sesión para acceder a este contenido.", "info")
+        
+        # Add ?showlogin=1 to URL (preserves scroll position)
+        separator = '&' if '?' in referrer else '?'
+        return redirect(f"{referrer}{separator}showlogin=1")
+    
+    @app.errorhandler(403)
+    def forbidden(error):
+        """Handle 403 Forbidden errors."""
+        app.logger.warning(f'Forbidden access attempt: {request.path} from {request.remote_addr}')
+        if request.path.startswith('/api/') or request.path.startswith('/atlas/'):
+            return jsonify({'error': 'Forbidden', 'message': str(error)}), 403
+        return render_template('errors/403.html', error=error), 403
+    
+    @app.errorhandler(404)
+    def not_found(error):
+        """Handle 404 Not Found errors."""
+        if request.path.startswith('/api/') or request.path.startswith('/atlas/'):
+            return jsonify({'error': 'Not found', 'message': str(error)}), 404
+        return render_template('errors/404.html', error=error), 404
+    
+    @app.errorhandler(500)
+    def internal_error(error):
+        """Handle 500 Internal Server errors."""
+        app.logger.error(f'Server Error: {error}', exc_info=True)
+        if request.path.startswith('/api/') or request.path.startswith('/atlas/'):
+            return jsonify({'error': 'Internal server error'}), 500
+        return render_template('errors/500.html'), 500
+
+
+def setup_logging(app: Flask) -> None:
+    """Configure application logging."""
+    if not app.debug:
+        # Create logs directory
+        log_dir = Path(__file__).resolve().parents[2] / 'logs'
+        log_dir.mkdir(exist_ok=True)
+        
+        # Setup rotating file handler
+        file_handler = RotatingFileHandler(
+            log_dir / 'corapan.log',
+            maxBytes=10_000_000,  # 10MB
+            backupCount=5
+        )
+        file_handler.setFormatter(logging.Formatter(
+            '[%(asctime)s] %(levelname)s in %(module)s: %(message)s'
+        ))
+        file_handler.setLevel(logging.INFO)
+        
+        app.logger.addHandler(file_handler)
+        app.logger.setLevel(logging.INFO)
+        app.logger.info('CO.RA.PAN application startup')

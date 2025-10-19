@@ -1,0 +1,101 @@
+stages:
+  - test
+  - build
+  - deploy
+
+variables:
+  DOCKER_IMAGE: $CI_REGISTRY_IMAGE:$CI_COMMIT_REF_SLUG
+  PYTHON_VERSION: "3.12"
+
+# Python Tests
+test:python:
+  stage: test
+  image: python:${PYTHON_VERSION}-slim
+  before_script:
+    - apt-get update && apt-get install -y ffmpeg libsndfile1
+    - pip install -r requirements.txt
+    - pip install pytest pytest-cov
+  script:
+    - python -m pytest tests/ --cov=src --cov-report=term --cov-report=xml
+  coverage: '/TOTAL.*\s+(\d+%)$/'
+  artifacts:
+    reports:
+      coverage_report:
+        coverage_format: cobertura
+        path: coverage.xml
+  only:
+    - branches
+    - merge_requests
+
+# Linting
+lint:python:
+  stage: test
+  image: python:${PYTHON_VERSION}-slim
+  before_script:
+    - pip install flake8 black isort
+  script:
+    - flake8 src/ --max-line-length=120 --exclude=__pycache__
+    - black --check src/
+    - isort --check-only src/
+  allow_failure: true
+  only:
+    - branches
+    - merge_requests
+
+# Node.js Build
+test:frontend:
+  stage: test
+  image: node:20-slim
+  before_script:
+    - npm ci
+  script:
+    - npm run build
+  artifacts:
+    paths:
+      - static-build/
+    expire_in: 1 hour
+  only:
+    - branches
+    - merge_requests
+
+# Docker Build
+build:docker:
+  stage: build
+  image: docker:24
+  services:
+    - docker:24-dind
+  before_script:
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+  script:
+    - docker build -t $DOCKER_IMAGE .
+    - docker push $DOCKER_IMAGE
+  only:
+    - main
+    - tags
+
+# Security Scan (optional)
+security:trivy:
+  stage: test
+  image: aquasec/trivy:latest
+  script:
+    - trivy fs --exit-code 0 --severity HIGH,CRITICAL .
+  allow_failure: true
+  only:
+    - main
+    - merge_requests
+
+# Deploy to Staging (example)
+deploy:staging:
+  stage: deploy
+  image: alpine:latest
+  before_script:
+    - apk add --no-cache openssh-client
+  script:
+    - echo "Deploy to staging server"
+    # Add your deployment commands here
+  only:
+    - main
+  when: manual
+  environment:
+    name: staging
+    url: https://staging.corapan.example.com

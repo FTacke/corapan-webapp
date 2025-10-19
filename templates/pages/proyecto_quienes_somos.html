@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+{% from 'partials/page_navigation.html' import page_navigation %}
+{% block page_title %}Quiénes somos · CO.RA.PAN{% endblock %}
+{% block content %}
+<article class="md3-text-page">
+  <header class="md3-text-hero">
+    <div class="md3-text-hero__container">
+      <p class="md3-label-large md3-text-hero__eyebrow">Proyecto</p>
+      <h1 class="md3-display-small md3-text-hero__title">Quiénes somos</h1>
+    </div>
+  </header>
+
+  <div class="md3-text-content">
+    <section class="md3-text-section md3-text-section--divider">
+      <h2 class="md3-headline-small">Créditos</h2>
+      <dl class="md3-text-dl md3-body-medium">
+        <div class="md3-text-dl__item">
+          <dt class="md3-label-large">Responsable del proyecto y diseño</dt>
+          <dd>Felix Tacke</dd>
+        </div>
+        <div class="md3-text-dl__item">
+          <dt class="md3-label-large">Estudiantes colaboradores (clasificación y corrección)</dt>
+          <dd>Yannick Büchler, Carolin Grote</dd>
+        </div>
+        <div class="md3-text-dl__item">
+          <dt class="md3-label-large">Contribuyentes en fases previas</dt>
+          <dd>Ana Goís Pérez, Lisa Thomas</dd>
+        </div>
+        <div class="md3-text-dl__item">
+          <dt class="md3-label-large">Gestión y procesamiento de datos</dt>
+          <dd>Felix Tacke</dd>
+        </div>
+        <div class="md3-text-dl__item">
+          <dt class="md3-label-large">Diseño web y gráfico</dt>
+          <dd>Felix Tacke</dd>
+        </div>
+      </dl>
+    </section>
+  </div>
+</article>
+
+{{ page_navigation(prev_title="Estadísticas", prev_url=url_for('public.proyecto_estadisticas'), next_title="Referencias", next_url=url_for('public.proyecto_referencias')) }}
+{% endblock %}

@@ -1,0 +1,180 @@
+# =============================================================================
+# Python
+# =============================================================================
+__pycache__/
+*.py[cod]
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+*.whl
+
+# =============================================================================
+# Virtual Environments
+# =============================================================================
+venv/
+env/
+.venv/
+ENV/
+.python-version
+
+# =============================================================================
+# Environment Variables & Secrets (CRITICAL - NEVER COMMIT!)
+# =============================================================================
+.env
+.env.local
+.env.production
+passwords.env
+*.env.backup
+
+# JWT Keys (CRITICAL - NEVER COMMIT!)
+config/keys/
+*.key
+*.pem
+*.crt
+*.cer
+
+# =============================================================================
+# Node.js & Frontend Build
+# =============================================================================
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json.backup
+
+# =============================================================================
+# Build & Cache Directories
+# =============================================================================
+.static-cache/
+static-build/
+.pytest_cache/
+.coverage
+.ruff_cache/
+.mypy_cache/
+.tox/
+htmlcov/
+
+# =============================================================================
+# Logs (NEVER COMMIT - may contain sensitive data)
+# =============================================================================
+*.log
+logs/
+*.log.*
+
+# =============================================================================
+# IDEs & Editors
+# =============================================================================
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.project
+.settings/
+.classpath
+
+# =============================================================================
+# OS-specific
+# =============================================================================
+.DS_Store
+Thumbs.db
+desktop.ini
+.Spotlight-V100
+.Trashes
+
+# =============================================================================
+# Media Files (TOO LARGE for Git)
+# =============================================================================
+media/mp3-full/
+media/mp3-split/
+media/mp3-temp/
+media/transcripts/
+
+# Keep directory structure but ignore contents
+!media/.gitkeep
+!media/mp3-full/.gitkeep
+!media/mp3-split/.gitkeep
+!media/mp3-temp/.gitkeep
+!media/transcripts/.gitkeep
+
+# =============================================================================
+# Database Files (TOO LARGE for Git)
+# =============================================================================
+data/db/
+data/db_public/
+data/counters/
+*.sqlite
+*.sqlite3
+*.db
+
+# Keep directory structure but ignore contents
+!data/.gitkeep
+!data/db/.gitkeep
+!data/db_public/.gitkeep
+!data/counters/.gitkeep
+
+# =============================================================================
+# Backups (NEVER COMMIT)
+# =============================================================================
+backups/
+*.tar.gz
+*.zip
+*.bak
+*.backup
+*.old
+
+# =============================================================================
+# Local Development & Documentation (NOT for production)
+# =============================================================================
+LOKAL/
+corapan-webapp-old/
+design_backups/
+
+# =============================================================================
+# Legacy/Deprecated Files
+# =============================================================================
+templates/legacy/
+static/js/*.old
+static/js/*.bak
+
+# =============================================================================
+# Temporary Files
+# =============================================================================
+*.tmp
+tmp/
+temp/
+.cache/
+*.swp
+*.swo
+
+# =============================================================================
+# Testing
+# =============================================================================
+.pytest_cache/
+.coverage
+.coverage.*
+coverage.xml
+*.cover
+.hypothesis/
+
+# =============================================================================
+# NOTE: Files that SHOULD be in Git:
+# =============================================================================
+# ✅ .dockerignore (needed for Docker builds)
+# ✅ docker-compose.yml (deployment configuration)
+# ✅ Dockerfile (container build instructions)
+# ✅ update.sh (deployment script)
+# ✅ backup.sh (backup script)
+# ✅ requirements.txt (Python dependencies)
+# ✅ package.json (Node dependencies)
+# ✅ All source code in src/
+# ✅ All templates in templates/
+# ✅ All static assets in static/ (CSS, JS, images)
+# ✅ Documentation in docs/ (but NOT LOKAL/)
+
