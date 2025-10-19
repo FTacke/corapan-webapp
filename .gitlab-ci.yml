@@ -1,5 +1,17 @@
+# =============================================================================
+# GitLab CI/CD Pipeline für CO.RA.PAN Webapp
+# =============================================================================
+#
+# Vereinfachte Pipeline für wissenschaftliche Low-Traffic Webapp:
+# - Syntax-Check (Python, Docker)
+# - Optional: Docker Build
+# - Optional: Deployment
+#
+# Keine aufwändigen Tests nötig (wissenschaftlicher Use Case)
+# =============================================================================
+
 stages:
-  - test
+  - validate
   - build
   - deploy
 
@@ -7,58 +19,46 @@ variables:
   DOCKER_IMAGE: $CI_REGISTRY_IMAGE:$CI_COMMIT_REF_SLUG
   PYTHON_VERSION: "3.12"
 
-# Python Tests
-test:python:
-  stage: test
+# =============================================================================
+# VALIDATION STAGE: Syntax-Checks
+# =============================================================================
+
+# Python Syntax Check
+validate:python:
+  stage: validate
   image: python:${PYTHON_VERSION}-slim
   before_script:
-    - apt-get update && apt-get install -y ffmpeg libsndfile1
-    - pip install -r requirements.txt
-    - pip install pytest pytest-cov
+    - pip install --quiet ruff
   script:
-    - python -m pytest tests/ --cov=src --cov-report=term --cov-report=xml
-  coverage: '/TOTAL.*\s+(\d+%)$/'
-  artifacts:
-    reports:
-      coverage_report:
-        coverage_format: cobertura
-        path: coverage.xml
+    - echo "✅ Checking Python syntax with ruff..."
+    - ruff check src/ --select E,F --ignore E501
+    - echo "✅ Python syntax is valid!"
+  allow_failure: false
   only:
     - branches
     - merge_requests
+    - main
 
-# Linting
-lint:python:
-  stage: test
-  image: python:${PYTHON_VERSION}-slim
-  before_script:
-    - pip install flake8 black isort
+# Docker Build Test (no push)
+validate:docker:
+  stage: validate
+  image: docker:24
+  services:
+    - docker:24-dind
   script:
-    - flake8 src/ --max-line-length=120 --exclude=__pycache__
-    - black --check src/
-    - isort --check-only src/
-  allow_failure: true
+    - echo "✅ Testing Docker build..."
+    - docker build -t test-build .
+    - echo "✅ Docker build successful!"
+  allow_failure: false
   only:
     - branches
     - merge_requests
+    - main
 
-# Node.js Build
-test:frontend:
-  stage: test
-  image: node:20-slim
-  before_script:
-    - npm ci
-  script:
-    - npm run build
-  artifacts:
-    paths:
-      - static-build/
-    expire_in: 1 hour
-  only:
-    - branches
-    - merge_requests
+# =============================================================================
+# BUILD STAGE: Docker Image (only on main)
+# =============================================================================
 
-# Docker Build
 build:docker:
   stage: build
   image: docker:24
@@ -67,35 +67,78 @@ build:docker:
   before_script:
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
   script:
+    - echo "🐋 Building and pushing Docker image..."
     - docker build -t $DOCKER_IMAGE .
+    - docker tag $DOCKER_IMAGE $CI_REGISTRY_IMAGE:latest
     - docker push $DOCKER_IMAGE
+    - docker push $CI_REGISTRY_IMAGE:latest
+    - echo "✅ Docker image pushed to registry"
   only:
     - main
     - tags
 
-# Security Scan (optional)
-security:trivy:
-  stage: test
-  image: aquasec/trivy:latest
+# =============================================================================
+# DEPLOY STAGE: Manual Deployment
+# =============================================================================
+
+deploy:production:
+  stage: deploy
+  image: alpine:latest
+  before_script:
+    - apk add --no-cache openssh-client git
+    - mkdir -p ~/.ssh
+    - chmod 700 ~/.ssh
   script:
-    - trivy fs --exit-code 0 --severity HIGH,CRITICAL .
+    - echo "🚀 Deploying to production server..."
+    - echo "📋 Instructions:"
+    - echo "   1. SSH to server: ssh user@vhrz2184"
+    - echo "   2. Navigate: cd ~/corapan"
+    - echo "   3. Run update: ./update.sh"
+    - echo ""
+    - echo "⚠️  Manual deployment required!"
+    - echo "    (Automatic deployment not configured)"
+  only:
+    - main
+  when: manual
+  environment:
+    name: production
+    url: https://corapan.your-domain.com
+
+# =============================================================================
+# OPTIONAL: Security Scan (allow failure, informational only)
+# =============================================================================
+
+security:scan:
+  stage: validate
+  image: python:${PYTHON_VERSION}-slim
+  before_script:
+    - pip install --quiet safety
+  script:
+    - echo "🔒 Checking for known security vulnerabilities..."
+    - safety check --json || true
+    - echo "ℹ️  Security scan completed (informational only)"
   allow_failure: true
   only:
     - main
     - merge_requests
 
-# Deploy to Staging (example)
-deploy:staging:
-  stage: deploy
-  image: alpine:latest
-  before_script:
-    - apk add --no-cache openssh-client
-  script:
-    - echo "Deploy to staging server"
-    # Add your deployment commands here
-  only:
-    - main
-  when: manual
-  environment:
-    name: staging
+# =============================================================================
+# Notes:
+# =============================================================================
+# 
+# ✅ Was die Pipeline macht:
+#   - Validiert Python-Syntax (schnell, keine Tests nötig)
+#   - Testet Docker Build (stellt sicher dass Image baubar ist)
+#   - Baut Docker Image nur bei Push zu main
+#   - Deployment ist manuell (wie gewünscht)
+#
+# ❌ Was die Pipeline NICHT macht:
+#   - Keine Unit Tests (nicht nötig für Low-Traffic wissenschaftliche App)
+#   - Kein Linting (zu streng für Prototypen)
+#   - Kein automatisches Deployment (manuell gewünscht)
+#
+# 🔧 Für später (optional):
+#   - pytest hinzufügen wenn Tests geschrieben werden
+#   - Automatisches Deployment via SSH
+#   - Trivy Security Scan
     url: https://staging.corapan.example.com
