@@ -21,6 +21,8 @@ def extract_country_code(filename: str) -> Optional[str]:
     Examples:
         "2022-01-18_VEN_RCR.mp3" -> "VEN"
         "2023-08-10_ARG_Mitre.mp3" -> "ARG"
+        "2024-08-15_ESP_CadenaSer.mp3" -> "ESP"
+        "2024-01-10_ARG-CBA_LV3.mp3" -> "ARG-CBA"
         "VEN/2022-01-18_VEN_RCR.mp3" -> "VEN" (already has path)
     """
     # If filename already contains a path separator, extract from path
@@ -30,8 +32,11 @@ def extract_country_code(filename: str) -> Optional[str]:
             return path_parts[0]
     
     # Extract from filename pattern: YYYY-MM-DD_CODE_*
-    # Supports: ARG, VEN, ES-MAD, ARG-Cba, ARG-Cht, ARG-SdE (case-insensitive after hyphen)
-    match = re.match(r'\d{4}-\d{2}-\d{2}_([A-Z]{2,3}(?:-[A-Za-z]{3})?)', Path(filename).name)
+    # Supports all normalized ISO 3166-1 alpha-3 codes:
+    # - 3-letter codes: ARG, BOL, CHL, COL, CRI, CUB, DOM, ECU, ESP, GTM, HND, 
+    #                   MEX, NIC, PAN, PER, PRY, SLV, URY, VEN
+    # - Regional codes: ARG-CBA, ARG-CHU, ARG-SDE, ESP-CAN, ESP-SEV
+    match = re.match(r'\d{4}-\d{2}-\d{2}_([A-Z]{3}(?:-[A-Z]{3})?)', Path(filename).name)
     if match:
         return match.group(1)
     

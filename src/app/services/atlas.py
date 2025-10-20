@@ -14,14 +14,17 @@ def fetch_overview() -> dict[str, object]:
 
 
 def fetch_country_stats() -> list[dict[str, object]]:
+    from ..config.countries import code_to_name
+    
     with open_db("stats_country") as connection:
         cursor = connection.cursor()
         rows = cursor.execute(
-            "SELECT country, total_word_count, total_duration_country FROM stats_country ORDER BY country"
+            "SELECT country_code, total_word_count, total_duration_country FROM stats_country ORDER BY country_code"
         ).fetchall()
     return [
         {
-            "country": row["country"],
+            "country_code": row["country_code"],
+            "country_name": code_to_name(row["country_code"], fallback=row["country_code"]),
             "total_word_count": row["total_word_count"],
             "total_duration": row["total_duration_country"],
         }
@@ -34,7 +37,7 @@ def fetch_file_metadata() -> list[dict[str, object]]:
         cursor = connection.cursor()
         rows = cursor.execute(
             """
-            SELECT filename, country, radio, date, revision, word_count, duration
+            SELECT filename, country_code, radio, date, revision, word_count, duration
             FROM metadata
             ORDER BY date DESC
             """
@@ -42,7 +45,7 @@ def fetch_file_metadata() -> list[dict[str, object]]:
     return [
         {
             "filename": row["filename"],
-            "country": row["country"],
+            "country_code": row["country_code"],
             "radio": row["radio"],
             "date": row["date"],
             "revision": row["revision"],

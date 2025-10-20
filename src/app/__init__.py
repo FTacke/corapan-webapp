@@ -9,9 +9,11 @@ from pathlib import Path
 from flask import Flask, flash, jsonify, redirect, render_template, request, url_for
 
 from .auth.loader import hydrate
-from .config import load_config
 from .extensions import register_extensions
 from .routes import register_blueprints
+
+# Import load_config from the config.py module (bypassing the config package)
+from .config import load_config
 
 
 def create_app(env_name: str | None = None) -> Flask:

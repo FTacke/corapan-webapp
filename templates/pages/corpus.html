@@ -91,27 +91,28 @@
           <div class="md3-outlined-textfield">
             <select id="filter-country" name="country_code" multiple class="md3-outlined-textfield__input md3-outlined-textfield__input--select">
               <option value="ARG" {% if 'ARG' in request.args.getlist('country_code') %}selected{% endif %}>Argentina</option>
-              <option value="ARG-CHT" {% if 'ARG-CHT' in request.args.getlist('country_code') %}selected{% endif %}>Argentina / Chubut</option>
+              <option value="ARG-CHU" {% if 'ARG-CHU' in request.args.getlist('country_code') %}selected{% endif %}>Argentina / Chubut</option>
               <option value="ARG-CBA" {% if 'ARG-CBA' in request.args.getlist('country_code') %}selected{% endif %}>Argentina / Córdoba</option>
               <option value="ARG-SDE" {% if 'ARG-SDE' in request.args.getlist('country_code') %}selected{% endif %}>Argentina / Santiago del Estero</option>
               <option value="BOL" {% if 'BOL' in request.args.getlist('country_code') %}selected{% endif %}>Bolivia</option>
-              <option value="CHI" {% if 'CHI' in request.args.getlist('country_code') %}selected{% endif %}>Chile</option>
+              <option value="CHL" {% if 'CHL' in request.args.getlist('country_code') %}selected{% endif %}>Chile</option>
               <option value="COL" {% if 'COL' in request.args.getlist('country_code') %}selected{% endif %}>Colombia</option>
-              <option value="CR" {% if 'CR' in request.args.getlist('country_code') %}selected{% endif %}>Costa Rica</option>
+              <option value="CRI" {% if 'CRI' in request.args.getlist('country_code') %}selected{% endif %}>Costa Rica</option>
               <option value="CUB" {% if 'CUB' in request.args.getlist('country_code') %}selected{% endif %}>Cuba</option>
               <option value="ECU" {% if 'ECU' in request.args.getlist('country_code') %}selected{% endif %}>Ecuador</option>
-              <option value="ES-CAN" {% if 'ES-CAN' in request.args.getlist('country_code') %}selected{% endif %}>España / Canarias</option>
-              <option value="ES-MAD" {% if 'ES-MAD' in request.args.getlist('country_code') %}selected{% endif %}>España / Madrid</option>
-              <option value="ES-SEV" {% if 'ES-SEV' in request.args.getlist('country_code') %}selected{% endif %}>España / Sevilla</option>
-              <option value="GUA" {% if 'GUA' in request.args.getlist('country_code') %}selected{% endif %}>Guatemala</option>
-              <option value="HON" {% if 'HON' in request.args.getlist('country_code') %}selected{% endif %}>Honduras</option>
+              <option value="ESP-CAN" {% if 'ESP-CAN' in request.args.getlist('country_code') %}selected{% endif %}>España / Canarias</option>
+              <option value="ESP" {% if 'ESP' in request.args.getlist('country_code') %}selected{% endif %}>España / Madrid</option>
+              <option value="ESP-SEV" {% if 'ESP-SEV' in request.args.getlist('country_code') %}selected{% endif %}>España / Sevilla</option>
+              <option value="GTM" {% if 'GTM' in request.args.getlist('country_code') %}selected{% endif %}>Guatemala</option>
+              <option value="HND" {% if 'HND' in request.args.getlist('country_code') %}selected{% endif %}>Honduras</option>
               <option value="MEX" {% if 'MEX' in request.args.getlist('country_code') %}selected{% endif %}>México</option>
               <option value="NIC" {% if 'NIC' in request.args.getlist('country_code') %}selected{% endif %}>Nicaragua</option>
               <option value="PAN" {% if 'PAN' in request.args.getlist('country_code') %}selected{% endif %}>Panamá</option>
+              <option value="PRY" {% if 'PRY' in request.args.getlist('country_code') %}selected{% endif %}>Paraguay</option>
               <option value="PER" {% if 'PER' in request.args.getlist('country_code') %}selected{% endif %}>Perú</option>
-              <option value="RD" {% if 'RD' in request.args.getlist('country_code') %}selected{% endif %}>República Dominicana</option>
-              <option value="SAL" {% if 'SAL' in request.args.getlist('country_code') %}selected{% endif %}>El Salvador</option>
-              <option value="URU" {% if 'URU' in request.args.getlist('country_code') %}selected{% endif %}>Uruguay</option>
+              <option value="DOM" {% if 'DOM' in request.args.getlist('country_code') %}selected{% endif %}>República Dominicana</option>
+              <option value="SLV" {% if 'SLV' in request.args.getlist('country_code') %}selected{% endif %}>El Salvador</option>
+              <option value="URY" {% if 'URY' in request.args.getlist('country_code') %}selected{% endif %}>Uruguay</option>
               <option value="VEN" {% if 'VEN' in request.args.getlist('country_code') %}selected{% endif %}>Venezuela</option>
             </select>
             <label for="filter-country" class="md3-outlined-textfield__label md3-outlined-textfield__label--select">País</label>
