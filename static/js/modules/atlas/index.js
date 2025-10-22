@@ -1,36 +1,36 @@
 ﻿const MAP_CONTAINER = document.getElementById('atlas-map');
-const selectElement = document.querySelector('[data-element="atlas-select"]');
+const selectNationalElement = document.querySelector('[data-element="atlas-select-national"]');
+const selectRegionalElement = document.querySelector('[data-element="atlas-select-regional"]');
 const filesContainer = document.querySelector('[data-element="atlas-files"]');
-const overviewContainer = document.querySelector('[data-element="atlas-overview"]');
 const headerRoot = document.querySelector('.site-header');
 const loginSheet = document.querySelector('[data-element="login-sheet"]');
 const loginButtons = document.querySelectorAll('[data-action="open-login"]');
 
 const CITY_LIST = [
-  { code: 'ARG', label: 'Argentina: Buenos Aires', lat: -34.6118, lng: -58.4173, tier: 'primary' },
-  { code: 'ARG-CHU', label: 'Argentina: Trelew (Chubut)', lat: -43.2489, lng: -65.3051, tier: 'secondary' },
-  { code: 'ARG-CBA', label: 'Argentina: Cordoba (Cordoba)', lat: -31.4201, lng: -64.1888, tier: 'secondary' },
-  { code: 'ARG-SDE', label: 'Argentina: Santiago del Estero', lat: -27.7951, lng: -64.2615, tier: 'secondary' },
-  { code: 'BOL', label: 'Bolivia: La Paz', lat: -16.5, lng: -68.15, tier: 'primary' },
-  { code: 'CHL', label: 'Chile: Santiago', lat: -33.4489, lng: -70.6693, tier: 'primary' },
-  { code: 'COL', label: 'Colombia: Bogota', lat: 4.6097, lng: -74.0817, tier: 'primary' },
-  { code: 'CRI', label: 'Costa Rica: San Jose', lat: 9.9281, lng: -84.0907, tier: 'primary' },
-  { code: 'CUB', label: 'Cuba: La Habana', lat: 23.133, lng: -82.383, tier: 'primary' },
-  { code: 'ECU', label: 'Ecuador: Quito', lat: -0.23, lng: -78.52, tier: 'primary' },
-  { code: 'ESP-CAN', label: 'Espa\u00f1a: La Laguna (Canarias)', lat: 28.4874, lng: -16.3141, tier: 'secondary' },
-  { code: 'ESP-SEV', label: 'Espa\u00f1a: Sevilla (Andaluc\u00eda)', lat: 37.3886, lng: -5.9823, tier: 'secondary' },
-  { code: 'ESP', label: 'Espa\u00f1a: Madrid', lat: 40.4168, lng: -3.7038, tier: 'primary' },
-  { code: 'GTM', label: 'Guatemala: Ciudad de Guatemala', lat: 14.6349, lng: -90.5069, tier: 'primary' },
-  { code: 'HND', label: 'Honduras: Tegucigalpa', lat: 14.0723, lng: -87.1921, tier: 'primary' },
-  { code: 'MEX', label: 'M\u00e9xico: Ciudad de M\u00e9xico', lat: 19.4326, lng: -99.1332, tier: 'primary' },
-  { code: 'NIC', label: 'Nicaragua: Managua', lat: 12.1364, lng: -86.2514, tier: 'primary' },
-  { code: 'PAN', label: 'Panam\u00e1: Ciudad de Panam\u00e1', lat: 8.9824, lng: -79.5199, tier: 'primary' },
-  { code: 'PRY', label: 'Paraguay: Asunci\u00f3n', lat: -25.2637, lng: -57.5759, tier: 'primary' },
-  { code: 'PER', label: 'Per\u00fa: Lima', lat: -12.0464, lng: -77.0428, tier: 'primary' },
-  { code: 'DOM', label: 'Rep\u00fablica Dominicana: Santo Domingo', lat: 18.4663, lng: -69.9526, tier: 'primary' },
-  { code: 'SLV', label: 'El Salvador: San Salvador', lat: 13.6929, lng: -89.2182, tier: 'primary' },
-  { code: 'URY', label: 'Uruguay: Montevideo', lat: -34.9011, lng: -56.191, tier: 'primary' },
-  { code: 'VEN', label: 'Venezuela: Caracas', lat: 10.5, lng: -66.9333, tier: 'primary' }
+  { code: 'ARG', label: 'Argentina: Buenos Aires', lat: -34.6118, lng: -58.4173, tier: 'primary', type: 'national' },
+  { code: 'ARG-CHU', label: 'Argentina: Trelew (Chubut)', lat: -43.2489, lng: -65.3051, tier: 'secondary', type: 'regional' },
+  { code: 'ARG-CBA', label: 'Argentina: Cordoba (Cordoba)', lat: -31.4201, lng: -64.1888, tier: 'secondary', type: 'regional' },
+  { code: 'ARG-SDE', label: 'Argentina: Santiago del Estero', lat: -27.7951, lng: -64.2615, tier: 'secondary', type: 'regional' },
+  { code: 'BOL', label: 'Bolivia: La Paz', lat: -16.5, lng: -68.15, tier: 'primary', type: 'national' },
+  { code: 'CHL', label: 'Chile: Santiago', lat: -33.4489, lng: -70.6693, tier: 'primary', type: 'national' },
+  { code: 'COL', label: 'Colombia: Bogota', lat: 4.6097, lng: -74.0817, tier: 'primary', type: 'national' },
+  { code: 'CRI', label: 'Costa Rica: San Jose', lat: 9.9281, lng: -84.0907, tier: 'primary', type: 'national' },
+  { code: 'CUB', label: 'Cuba: La Habana', lat: 23.133, lng: -82.383, tier: 'primary', type: 'national' },
+  { code: 'ECU', label: 'Ecuador: Quito', lat: -0.23, lng: -78.52, tier: 'primary', type: 'national' },
+  { code: 'ESP-CAN', label: 'Espa\u00f1a: La Laguna (Canarias)', lat: 28.4874, lng: -16.3141, tier: 'secondary', type: 'regional' },
+  { code: 'ESP-SEV', label: 'Espa\u00f1a: Sevilla (Andaluc\u00eda)', lat: 37.3886, lng: -5.9823, tier: 'secondary', type: 'regional' },
+  { code: 'ESP', label: 'Espa\u00f1a: Madrid', lat: 40.4168, lng: -3.7038, tier: 'primary', type: 'national' },
+  { code: 'GTM', label: 'Guatemala: Ciudad de Guatemala', lat: 14.6349, lng: -90.5069, tier: 'primary', type: 'national' },
+  { code: 'HND', label: 'Honduras: Tegucigalpa', lat: 14.0723, lng: -87.1921, tier: 'primary', type: 'national' },
+  { code: 'MEX', label: 'M\u00e9xico: Ciudad de M\u00e9xico', lat: 19.4326, lng: -99.1332, tier: 'primary', type: 'national' },
+  { code: 'NIC', label: 'Nicaragua: Managua', lat: 12.1364, lng: -86.2514, tier: 'primary', type: 'national' },
+  { code: 'PAN', label: 'Panam\u00e1: Ciudad de Panam\u00e1', lat: 8.9824, lng: -79.5199, tier: 'primary', type: 'national' },
+  { code: 'PRY', label: 'Paraguay: Asunci\u00f3n', lat: -25.2637, lng: -57.5759, tier: 'primary', type: 'national' },
+  { code: 'PER', label: 'Per\u00fa: Lima', lat: -12.0464, lng: -77.0428, tier: 'primary', type: 'national' },
+  { code: 'DOM', label: 'Rep\u00fablica Dominicana: Santo Domingo', lat: 18.4663, lng: -69.9526, tier: 'primary', type: 'national' },
+  { code: 'SLV', label: 'El Salvador: San Salvador', lat: 13.6929, lng: -89.2182, tier: 'primary', type: 'national' },
+  { code: 'URY', label: 'Uruguay: Montevideo', lat: -34.9011, lng: -56.191, tier: 'primary', type: 'national' },
+  { code: 'VEN', label: 'Venezuela: Caracas', lat: 10.5, lng: -66.9333, tier: 'primary', type: 'national' }
 ];
 
 const MARKER_ICONS = {
@@ -131,50 +131,44 @@ function renderLoginPrompt() {
   `;
 }
 
-function renderOverview() {
-  if (!overviewContainer) return;
-  if (!overviewStats) {
-    overviewContainer.innerHTML = '<p class="md3-body-small" style="color: var(--md3-color-on-surface-variant); margin: 0;">Cargando...</p>';
-    return;
-  }
-  const totalHours = formatDuration(overviewStats.total_duration_all || 0);
-  const totalWords = formatNumber(overviewStats.total_word_count || 0);
-  
-  overviewContainer.innerHTML = `
-    <div class="md3-atlas-stat">
-      <span class="md3-atlas-stat__label">Horas:</span>
-      <span class="md3-atlas-stat__value">${totalHours}</span>
-    </div>
-    <div class="md3-atlas-stat">
-      <span class="md3-atlas-stat__label">Palabras:</span>
-      <span class="md3-atlas-stat__value">${totalWords}</span>
-    </div>
-  `;
-}
+// renderOverview function removed - stats element no longer needed
 
 function attachPlayerHandlers() {
-  if (!filesContainer) return;
-  const links = filesContainer.querySelectorAll('[data-action="open-player"]');
+  // Remove existing handler to avoid duplicate listeners
+  if (filesContainer) {
+    filesContainer.removeEventListener('click', handlePlayerLinkClick);
+    filesContainer.addEventListener('click', handlePlayerLinkClick);
+  }
+}
+
+function handlePlayerLinkClick(event) {
+  const link = event.target.closest('[data-action="open-player"]');
+  if (!link) return;
   
-  links.forEach((link) => {
-    link.addEventListener('click', (event) => {
-      event.preventDefault();
-      event.stopPropagation(); // Prevent event bubbling
-      
-      const filename = link.dataset.filename;
-      if (!filename) return;
-      
-      if (!isAuthenticated) {
-        openLoginSheet();
-        return;
-      }
-      
-      const baseName = filename.replace('.json', '');
-      const transcriptionPath = `/media/transcripts/${baseName}.json`;
-      const audioPath = `/media/full/${baseName}.mp3`;
-      window.location.href = `/player?transcription=${encodeURIComponent(transcriptionPath)}&audio=${encodeURIComponent(audioPath)}`;
-    }, { once: true });
-  });
+  event.preventDefault();
+  event.stopPropagation();
+  event.stopImmediatePropagation(); // Prevent other handlers
+  
+  const filename = link.dataset.filename;
+  if (!filename) return;
+  
+  const baseName = filename.replace('.json', '');
+  const transcriptionPath = `/media/transcripts/${baseName}.json`;
+  const audioPath = `/media/full/${baseName}.mp3`;
+  const playerUrl = `/player?transcription=${encodeURIComponent(transcriptionPath)}&audio=${encodeURIComponent(audioPath)}`;
+  
+  // Check auth status dynamically (in case user logged in)
+  const currentAuthStatus = headerRoot?.dataset.auth === 'true';
+  
+  if (!currentAuthStatus) {
+    // Save the intended destination in sessionStorage
+    sessionStorage.setItem('_player_redirect_after_login', playerUrl);
+    openLoginSheet();
+    return false; // Extra safety
+  }
+  
+  window.location.href = playerUrl;
+  return false; // Extra safety
 }
 
 function renderCityTables(code = 'ALL') {
@@ -194,7 +188,7 @@ function renderCityTables(code = 'ALL') {
         <tr>
           <td>${item.date}</td>
           <td>${item.radio}</td>
-          <td><a href="javascript:void(0)" data-action="open-player" data-filename="${item.filename}">${item.filename.replace('.json', '')}</a></td>
+          <td><button type="button" class="atlas-player-link" data-action="open-player" data-filename="${item.filename}">${item.filename.replace('.json', '')}</button></td>
           <td class="right-align">${formatDuration(item.duration)}</td>
           <td class="right-align">${formatNumber(item.word_count)}</td>
         </tr>
@@ -241,18 +235,37 @@ function renderCityTables(code = 'ALL') {
 }
 
 function populateDropdown() {
-  if (!selectElement) return;
-  selectElement.innerHTML = '';
-  const defaultOption = document.createElement('option');
-  defaultOption.value = 'ALL';
-  defaultOption.textContent = 'Todas las capitales';
-  selectElement.appendChild(defaultOption);
-  CITY_LIST.forEach((city) => {
-    const option = document.createElement('option');
-    option.value = city.code;
-    option.textContent = city.label;
-    selectElement.appendChild(option);
-  });
+  // Populate National Capital Dropdown
+  if (selectNationalElement) {
+    selectNationalElement.innerHTML = '';
+    const defaultOptionNational = document.createElement('option');
+    defaultOptionNational.value = 'ALL';
+    defaultOptionNational.textContent = 'Elige capital';
+    selectNationalElement.appendChild(defaultOptionNational);
+    
+    CITY_LIST.filter(city => city.type === 'national').forEach((city) => {
+      const option = document.createElement('option');
+      option.value = city.code;
+      option.textContent = city.label;
+      selectNationalElement.appendChild(option);
+    });
+  }
+  
+  // Populate Regional Capital Dropdown
+  if (selectRegionalElement) {
+    selectRegionalElement.innerHTML = '';
+    const defaultOptionRegional = document.createElement('option');
+    defaultOptionRegional.value = 'ALL';
+    defaultOptionRegional.textContent = 'Elige capital';
+    selectRegionalElement.appendChild(defaultOptionRegional);
+    
+    CITY_LIST.filter(city => city.type === 'regional').forEach((city) => {
+      const option = document.createElement('option');
+      option.value = city.code;
+      option.textContent = city.label;
+      selectRegionalElement.appendChild(option);
+    });
+  }
 }
 
 function focusCity(code) {
@@ -281,8 +294,13 @@ function addCityMarkers() {
     const marker = window.L.marker([city.lat, city.lng], { icon }).addTo(mapInstance);
     marker.bindPopup(city.label);
     marker.on('click', () => {
-      if (selectElement) {
-        selectElement.value = city.code;
+      // Update the appropriate select based on city type
+      if (city.type === 'national' && selectNationalElement) {
+        selectNationalElement.value = city.code;
+        if (selectRegionalElement) selectRegionalElement.value = 'ALL';
+      } else if (city.type === 'regional' && selectRegionalElement) {
+        selectRegionalElement.value = city.code;
+        if (selectNationalElement) selectNationalElement.value = 'ALL';
       }
       renderCityTables(city.code);
       focusCity(city.code);
@@ -307,7 +325,9 @@ function initMap() {
   window.addEventListener('resize', () => {
     setTimeout(() => {
       mapInstance.invalidateSize();
-      if (!selectElement || selectElement.value === 'ALL') {
+      const nationalIsAll = !selectNationalElement || selectNationalElement.value === 'ALL';
+      const regionalIsAll = !selectRegionalElement || selectRegionalElement.value === 'ALL';
+      if (nationalIsAll && regionalIsAll) {
         mapInstance.flyTo(getInitialCenter(), getInitialZoom());
       }
     }, 200);
@@ -352,13 +372,28 @@ async function bootstrap() {
   overviewStats = overviewRes || null;
   countryStats = countriesRes?.countries || [];
   fileMetadata = filesRes;
-  renderOverview();
   renderCityTables('ALL');
 }
 
-if (selectElement) {
-  selectElement.addEventListener('change', (event) => {
+if (selectNationalElement) {
+  selectNationalElement.addEventListener('change', (event) => {
     const code = event.target.value;
+    // Reset regional select
+    if (selectRegionalElement && code !== 'ALL') {
+      selectRegionalElement.value = 'ALL';
+    }
+    renderCityTables(code);
+    focusCity(code);
+  });
+}
+
+if (selectRegionalElement) {
+  selectRegionalElement.addEventListener('change', (event) => {
+    const code = event.target.value;
+    // Reset national select
+    if (selectNationalElement && code !== 'ALL') {
+      selectNationalElement.value = 'ALL';
+    }
     renderCityTables(code);
     focusCity(code);
   });

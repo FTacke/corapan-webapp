@@ -392,8 +392,8 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
   function updateTotalStats(totalWordCount, totalDuration) {
-    totalDurationElement.innerHTML = `<span style="color: #053c96; font-weight: bold;">${totalDuration}</span> horas de audio`;
-    totalWordCountElement.innerHTML = `<span style="color: #053c96; font-weight: bold;">${totalWordCount.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.')}</span> palabras transcritas`;
+    totalDurationElement.innerHTML = `<span class="meta-value meta-value--primary">${totalDuration}</span> horas de audio`;
+    totalWordCountElement.innerHTML = `<span class="meta-value meta-value--primary">${totalWordCount.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.')}</span> palabras transcritas`;
   }
 });
 

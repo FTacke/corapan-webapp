@@ -88,7 +88,11 @@ def login() -> Response:
         # Restore return URL for next login attempt
         if return_url and return_url != url_for("public.landing_page"):
             session[RETURN_URL_SESSION_KEY] = return_url
-        return redirect(return_url if not return_url or "?" not in return_url else return_url.split("?")[0])
+        # Strip ?showlogin=1 if present, but keep other query parameters
+        redirect_url = return_url
+        if redirect_url and '?showlogin=1' in redirect_url:
+            redirect_url = redirect_url.replace('?showlogin=1', '?').replace('&showlogin=1', '').rstrip('?')
+        return redirect(redirect_url)
     
     credential = CREDENTIALS[username]
     if not check_password_hash(credential.password_hash, password):
@@ -97,7 +101,11 @@ def login() -> Response:
         # Restore return URL for next login attempt
         if return_url and return_url != url_for("public.landing_page"):
             session[RETURN_URL_SESSION_KEY] = return_url
-        return redirect(return_url if not return_url or "?" not in return_url else return_url.split("?")[0])
+        # Strip ?showlogin=1 if present, but keep other query parameters
+        redirect_url = return_url
+        if redirect_url and '?showlogin=1' in redirect_url:
+            redirect_url = redirect_url.replace('?showlogin=1', '?').replace('&showlogin=1', '').rstrip('?')
+        return redirect(redirect_url)
     
     # Create access token (30 min) and refresh token (7 days)
     access_token = issue_token(username, credential.role)

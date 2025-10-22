@@ -57,7 +57,8 @@ function currentFormState() {
         };
     } else {
         filters = {
-            country_code: $('#filter-country').val() || [],
+            country_code: $('#filter-country-national').val() || [],
+            include_regional: $('#include-regional').is(':checked'),
             speaker_type: $('#filter-speaker').val() || [],
             sex: $('#filter-sex').val() || [],
             speech_mode: $('#filter-mode').val() || [],
@@ -231,7 +232,8 @@ function restoreFormState(snapshot) {
         $('#search_mode').val(form.search_mode || 'text');
 
         // Filter setzen
-        $('#filter-country').val(form.filters.country_code || []).trigger('change');
+        $('#filter-country-national').val(form.filters.country_code || []).trigger('change');
+        $('#include-regional').prop('checked', form.filters.include_regional || false).trigger('change');
         $('#filter-speaker').val(form.filters.speaker_type || []).trigger('change');
         $('#filter-sex').val(form.filters.sex || []).trigger('change');
         $('#filter-mode').val(form.filters.speech_mode || []).trigger('change');

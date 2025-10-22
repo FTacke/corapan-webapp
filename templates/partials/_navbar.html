@@ -215,6 +215,7 @@
   <div class="md3-login-backdrop" data-action="close-login"></div>
   <form class="md3-login-form md3-elevation-5" method="post" action="{{ url_for('auth.login') }}">
     <h2 class="md3-headline-small">Acceso CO.RA.PAN</h2>
+    <input type="hidden" name="referrer" value="{{ request.url }}">
     <label class="md3-textfield-outlined">
       <span class="md3-label-medium md3-textfield-outlined__label">Cuenta</span>
       <input type="text" name="username" autocomplete="username" required class="md3-body-large md3-textfield-outlined__input">

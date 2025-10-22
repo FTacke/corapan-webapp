@@ -34,6 +34,19 @@ def files():
     return jsonify({"files": fetch_file_metadata()})
 
 
+@blueprint.get("/locations")
+@cache.cached(timeout=3600)
+def locations():
+    """Return list of known locations (countries + regional capitals).
+
+    Uses the config.export_all_to_json helper to provide a compact
+    JSON-serializable representation suitable for client-side lookups.
+    """
+    from ..config import export_all_to_json
+
+    return jsonify({"locations": export_all_to_json()})
+
+
 # ========================================
 # Legacy Routes (Backwards Compatibility)
 # ========================================

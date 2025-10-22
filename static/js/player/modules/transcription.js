@@ -32,7 +32,8 @@ export class TranscriptionManager {
     try {
       const response = await fetch(transcriptionFile);
       this.transcriptionData = await response.json();
-      
+      // Prefer server-provided display name (field `country_display`). Do not
+      // attempt client-side lookup — rely on server augmentation.
       this._updateMetadata();
       this._renderSegments();
       
@@ -51,11 +52,50 @@ export class TranscriptionManager {
     const data = this.transcriptionData;
     
     this._setElementContent('documentName', data.filename);
-    this._setElementHTML('countryInfo', `País: <span style="color: #053c96;">${data.country || 'Unbekanntes Land'}</span>`);
-    this._setElementHTML('radioInfo', `Emisora: <span style="color: #053c96;">${data.radio || 'Unbekannter Radiosender'}</span>`);
-    this._setElementHTML('cityInfo', `Ciudad: <span style="color: #053c96;">${data.city || 'Unbekannte Stadt'}</span>`);
-    this._setElementHTML('revisionInfo', `Revisión: <span style="color: #053c96;">${data.revision || 'Unbekannte Revision'}</span>`);
-    this._setElementHTML('dateInfo', `Fecha: <span style="color: #053c96;">${data.date || 'Unbekanntes Datum'}</span>`);
+    // Only use server-provided human-readable label. If missing, show fallback.
+    const countryLabel = data.country_display || 'Unbekanntes Land';
+
+    this._setElementHTML('countryInfo', `País: <span class="meta-value meta-value--primary">${countryLabel}</span>`);
+    this._setElementHTML('radioInfo', `Emisora: <span class="meta-value">${data.radio || 'Unbekannter Radiosender'}</span>`);
+    this._setElementHTML('cityInfo', `Ciudad: <span class="meta-value">${data.city || 'Unbekannte Stadt'}</span>`);
+    this._setElementHTML('revisionInfo', `Revisión: <span class="meta-value">${data.revision || 'Unbekannte Revision'}</span>`);
+    this._setElementHTML('dateInfo', `Fecha: <span class="meta-value">${data.date || 'Unbekanntes Datum'}</span>`);
+  }
+
+  /**
+   * Ensure locations lookup map is available on this instance.
+   * Fetches /api/v1/atlas/locations and builds a code->name map.
+   * @private
+   */
+  async _ensureLocationsLookup() {
+    // Client-side lookup removed: rely on server augmentation `country_display`.
+    // Kept for compatibility if re-enabled in future.
+    return;
+  }
+
+  /**
+   * Convert a raw country field from the transcription JSON to a display label.
+   * Accepts full names, codes (ARG, ARG-CBA), or legacy codes.
+   * @private
+   */
+  _formatCountryLabel(raw) {
+    if (!raw) return 'Unbekanntes Land';
+
+    const asUpper = raw.toString().toUpperCase();
+
+    // If we have a direct mapping, prefer it
+    if (this._locationsLookup && this._locationsLookup[asUpper]) {
+      return this._locationsLookup[asUpper];
+    }
+
+    // Try splitting if input looks like a composite name (e.g., 'Argentina: Buenos Aires')
+    if (raw.includes(':')) return raw;
+
+    // If raw already looks like a human-readable name (contains letters and spaces), return as-is
+    if (/^[A-Za-zÀ-ÖØ-öø-ÿ\s\/\-]+$/.test(raw) && raw.length > 2) return raw;
+
+    // Fallback to raw value
+    return raw;
   }
 
   /**

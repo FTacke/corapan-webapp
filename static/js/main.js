@@ -277,8 +277,43 @@ loginSheet?.addEventListener('click', (event) => {
 });
 
 const loginForm = loginSheet?.querySelector('form');
-loginForm?.addEventListener('submit', () => {
-  closeLogin();
+loginForm?.addEventListener('submit', async (event) => {
+  // Check if there's a stored player redirect URL (from client-side navigation)
+  const clientRedirectUrl = sessionStorage.getItem('_player_redirect_after_login');
+  
+  if (clientRedirectUrl) {
+    // Prevent default form submission
+    event.preventDefault();
+    
+    // Get form data
+    const formData = new FormData(loginForm);
+    
+    try {
+      // Submit login via fetch
+      const response = await fetch(loginForm.action, {
+        method: 'POST',
+        body: formData,
+        credentials: 'same-origin'
+      });
+      
+      if (response.ok) {
+        // Login successful - clear storage and navigate to player
+        sessionStorage.removeItem('_player_redirect_after_login');
+        window.location.href = clientRedirectUrl;
+      } else {
+        // Login failed - reload page to show error message
+        window.location.reload();
+      }
+    } catch (error) {
+      // On error, reload page
+      console.error('Login error:', error);
+      window.location.reload();
+    }
+  } else {
+    // No client-side redirect URL - let form submit normally
+    // Backend will handle redirect to saved session URL or referrer
+    closeLogin();
+  }
 });
 
 function getCookie(name) {

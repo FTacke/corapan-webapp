@@ -4,6 +4,9 @@ from __future__ import annotations
 from pathlib import Path
 
 from flask import Blueprint, abort, current_app, g, jsonify, request, send_file
+import json
+
+from ..config import code_to_name
 from flask_jwt_extended import jwt_required
 
 from ..auth import Role
@@ -111,7 +114,37 @@ def fetch_transcript(filename: str):
     transcript = media_store.safe_transcript_path(filename)
     if transcript is None:
         abort(404)
-    return send_file(transcript, mimetype="application/json", as_attachment=False)
+
+    # Load and augment transcript JSON with a human-readable country display.
+    try:
+        with open(transcript, 'r', encoding='utf-8') as fh:
+            data = json.load(fh)
+    except Exception:
+        # Fall back to sending raw file if we cannot parse it
+        return send_file(transcript, mimetype="application/json", as_attachment=False)
+
+    # Look for several possible country fields and compute display name
+    raw_country = (
+        data.get('country') or
+        data.get('country_code') or
+        data.get('countryCode') or
+        data.get('country_name') or
+        data.get('countryName') or
+        data.get('location') or
+        data.get('location_code') or
+        data.get('locationCode') or
+        ''
+    )
+
+    if raw_country:
+        # code_to_name will normalize legacy codes and return a readable name
+        try:
+            display = code_to_name(str(raw_country), fallback=str(raw_country))
+        except Exception:
+            display = str(raw_country)
+        data['country_display'] = display
+
+    return jsonify(data)
 
 
 @blueprint.post("/toggle/temp")

@@ -34,7 +34,16 @@ $(document).ready(function() {
  * Select2 Multi-Select Dropdowns initialisieren
  */
 function initializeSelect2Filters() {
-    $('#filter-country, #filter-speaker, #filter-sex, #filter-mode, #filter-discourse').select2({
+    // Regional options (kept separate for logic)
+    const regionalOptions = [
+        { value: 'ARG-CHU', text: 'Argentina / Chubut', country: 'ARG' },
+        { value: 'ARG-CBA', text: 'Argentina / Córdoba', country: 'ARG' },
+        { value: 'ARG-SDE', text: 'Argentina / Santiago del Estero', country: 'ARG' },
+        { value: 'ESP-CAN', text: 'España / Canarias', country: 'ESP' },
+        { value: 'ESP-SEV', text: 'España / Sevilla', country: 'ESP' }
+    ];
+    
+    $('#filter-speaker, #filter-sex, #filter-mode, #filter-discourse').select2({
         placeholder: 'Seleccionar...',
         allowClear: true,
         closeOnSelect: false,
@@ -44,6 +53,51 @@ function initializeSelect2Filters() {
             }
         }
     });
+    
+    // Initialize country select
+    $('#filter-country-national').select2({
+        placeholder: 'Seleccionar...',
+        allowClear: true,
+        closeOnSelect: false,
+        language: {
+            noResults: function() {
+                return "No se encontraron resultados";
+            }
+        }
+    });
+    
+    // Checkbox toggles regional options in país dropdown
+    $('#include-regional').on('change', function() {
+        const isChecked = $(this).is(':checked');
+        const $countrySelect = $('#filter-country-national');
+        const currentValues = $countrySelect.val() || [];
+        
+        if (isChecked) {
+            // Add regional options to país dropdown
+            regionalOptions.forEach(opt => {
+                // Check if option doesn't already exist
+                if ($countrySelect.find(`option[value="${opt.value}"]`).length === 0) {
+                    const newOption = new Option(opt.text, opt.value, false, false);
+                    $countrySelect.append(newOption);
+                }
+            });
+        } else {
+            // Remove regional options from país dropdown
+            regionalOptions.forEach(opt => {
+                $countrySelect.find(`option[value="${opt.value}"]`).remove();
+            });
+            // Clear any selected regional values
+            const filteredValues = currentValues.filter(val => !regionalOptions.some(r => r.value === val));
+            $countrySelect.val(filteredValues);
+        }
+        
+        $countrySelect.trigger('change');
+    });
+    
+    // Check if checkbox is already checked on page load (e.g., from URL params)
+    if ($('#include-regional').is(':checked')) {
+        $('#include-regional').trigger('change');
+    }
 }
 
 /**
@@ -67,7 +121,8 @@ function initializeSearchForm() {
         params.append('search_mode', formData.get('search_mode'));
         
         // Multi-Select Werte
-        const countries = $('#filter-country').val();
+        const countries = $('#filter-country-national').val();
+        const includeRegional = $('#include-regional').is(':checked');
         const speakers = $('#filter-speaker').val();
         const sexes = $('#filter-sex').val();
         const modes = $('#filter-mode').val();
@@ -75,6 +130,9 @@ function initializeSearchForm() {
         
         if (countries && countries.length > 0) {
             countries.forEach(c => params.append('country_code', c));
+        }
+        if (includeRegional) {
+            params.append('include_regional', '1');
         }
         if (speakers && speakers.length > 0) {
             speakers.forEach(s => params.append('speaker_type', s));
@@ -103,8 +161,11 @@ function initializeResetButton() {
         $('#corpus-search-form')[0].reset();
         
         // Select2 zurücksetzen
-        $('#filter-country, #filter-speaker, #filter-sex, #filter-mode, #filter-discourse')
+        $('#filter-country-national, #filter-country-regional, #filter-speaker, #filter-sex, #filter-mode, #filter-discourse')
             .val(null).trigger('change');
+        
+        // Checkbox zurücksetzen
+        $('#include-regional').prop('checked', false).trigger('change');
         
         // Query-Feld leeren
         $('#query').val('');
@@ -138,6 +199,8 @@ function initializeDataTable() {
                 
                 // Add filters from URL
                 const countries = urlParams.getAll('country_code');
+                const regions = urlParams.getAll('region_code');
+                const includeRegional = urlParams.get('include_regional');
                 const speakers = urlParams.getAll('speaker_type');
                 const sexes = urlParams.getAll('sex');
                 const modes = urlParams.getAll('speech_mode');
@@ -145,6 +208,12 @@ function initializeDataTable() {
                 
                 if (countries.length > 0) {
                     d.country_code = countries;
+                }
+                if (regions.length > 0) {
+                    d.region_code = regions;
+                }
+                if (includeRegional) {
+                    d.include_regional = includeRegional;
                 }
                 if (speakers.length > 0) {
                     d.speaker_type = speakers;
@@ -402,8 +471,27 @@ function bindAudioEvents() {
 function bindPlayerLinks() {
     // Bind to any link that opens the player (both old and new style)
     $('a.player-link, a[href^="/player/"]').off('click').on('click', function(e) {
-        // Let default link behavior work (navigate to player page)
-        // Just clean up any playing audio
+        e.preventDefault();
+        
+        const playerUrl = $(this).attr('href');
+        
+        // Check if user is authenticated via the header/navbar
+        const headerRoot = document.querySelector('.site-header');
+        const isAuthenticated = headerRoot?.dataset.auth === 'true';
+        
+        if (!isAuthenticated) {
+            // Save the intended destination in sessionStorage
+            sessionStorage.setItem('_player_redirect_after_login', playerUrl);
+            
+            // Open login sheet
+            const openLoginBtn = document.querySelector('[data-action="open-login"]');
+            if (openLoginBtn) {
+                openLoginBtn.click();
+            }
+            return false;
+        }
+        
+        // User is authenticated - just clean up any playing audio and navigate
         if (currentAudio) {
             currentAudio.pause();
             currentAudio = null;
@@ -412,6 +500,10 @@ function bindPlayerLinks() {
             currentPlayButton.html('<i class="bi bi-play-fill"></i>');
             currentPlayButton = null;
         }
+        
+        // Navigate to player
+        window.location.href = playerUrl;
+        return false;
     });
 }
 

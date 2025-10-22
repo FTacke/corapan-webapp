@@ -83,11 +83,32 @@ def search() -> Response:
     search_mode_override = data_source.get("search_mode_override", "")
     search_mode = search_mode_override if search_mode_override else data_source.get("search_mode", "text")
     
+    # Handle country/region filtering
+    # Regional codes that should be excluded by default
+    regional_codes = ['ARG-CHU', 'ARG-CBA', 'ARG-SDE', 'ESP-CAN', 'ESP-SEV']
+    national_codes = ['ARG', 'BOL', 'CHL', 'COL', 'CRI', 'CUB', 'ECU', 'ESP', 'GTM', 
+                      'HND', 'MEX', 'NIC', 'PAN', 'PRY', 'PER', 'DOM', 'SLV', 'URY', 'VEN']
+    
+    countries = data_source.getlist("country_code")
+    include_regional = data_source.get("include_regional") == "1"
+    
+    # If nothing selected, use defaults based on include_regional
+    if not countries:
+        if include_regional:
+            # Include all: 19 national + 5 regional
+            countries = national_codes + regional_codes
+        else:
+            # Only national capitals
+            countries = national_codes
+    elif not include_regional:
+        # If user selected countries but checkbox is off, exclude any regional codes
+        countries = [c for c in countries if c not in regional_codes]
+    
     params = SearchParams(
         query=data_source.get("query", ""),
         search_mode=search_mode,
         token_ids=_parse_token_ids(),
-        countries=data_source.getlist("country_code"),
+        countries=countries if countries else None,
         speaker_types=data_source.getlist("speaker_type"),
         sexes=data_source.getlist("sex"),
         speech_modes=data_source.getlist("speech_mode"),
@@ -159,11 +180,29 @@ def search_datatables() -> Response:
     token_ids = _parse_token_ids()
     
     # Filter parameters
+    # Regional codes that should be excluded by default
+    regional_codes = ['ARG-CHU', 'ARG-CBA', 'ARG-SDE', 'ESP-CAN', 'ESP-SEV']
+    national_codes = ['ARG', 'BOL', 'CHL', 'COL', 'CRI', 'CUB', 'ECU', 'ESP', 'GTM', 
+                      'HND', 'MEX', 'NIC', 'PAN', 'PRY', 'PER', 'DOM', 'SLV', 'URY', 'VEN']
+    
     countries = request.args.getlist("country_code")
+    include_regional = request.args.get("include_regional") == "1"
     speaker_types = request.args.getlist("speaker_type")
     sexes = request.args.getlist("sex")
     speech_modes = request.args.getlist("speech_mode")
     discourses = request.args.getlist("discourse")
+    
+    # If nothing selected, use defaults based on include_regional
+    if not countries:
+        if include_regional:
+            # Include all: 19 national + 5 regional
+            countries = national_codes + regional_codes
+        else:
+            # Only national capitals
+            countries = national_codes
+    elif not include_regional:
+        # If user selected countries but checkbox is off, exclude any regional codes
+        countries = [c for c in countries if c not in regional_codes]
     
     # DataTables ordering
     order_col_index = _safe_int(request.args.get("order[0][column]"), 0)

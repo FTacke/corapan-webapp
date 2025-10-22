@@ -13,6 +13,10 @@ def player_page():
     """Player page - requires authentication."""
     # Check if user is authenticated
     if not getattr(g, "user", None):
+        # Save the intended player URL for redirect after login
+        from .auth import save_return_url
+        save_return_url()
+        
         # Redirect to referrer or home with query param to open login (avoids scroll)
         referrer = request.referrer or url_for("public.landing_page")
         separator = '&' if '?' in referrer else '?'

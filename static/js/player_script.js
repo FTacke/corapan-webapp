@@ -427,11 +427,11 @@ function resetCopyIconToDefault() {
       .then(transcriptionData => {
         // Metadaten aktualisieren
         document.getElementById('documentName').textContent = transcriptionData.filename;
-        countryElement.innerHTML = `País: <span style="color: #053c96;">${transcriptionData.country || 'Unbekanntes Land'}</span>`;
-        radioElement.innerHTML = `Emisora: <span style="color: #053c96;">${transcriptionData.radio || 'Unbekannter Radiosender'}</span>`;
-        cityElement.innerHTML = `Ciudad: <span style="color: #053c96;">${transcriptionData.city || 'Unbekannte Stadt'}</span>`;
-        revisionElement.innerHTML = `Revisión: <span style="color: #053c96;">${transcriptionData.revision || 'Unbekannte Revision'}</span>`;
-        dateElement.innerHTML = `Fecha: <span style="color: #053c96;">${transcriptionData.date || 'Unbekanntes Datum'}</span>`;
+  countryElement.innerHTML = `País: <span class="meta-value meta-value--primary">${transcriptionData.country || 'Unbekanntes Land'}</span>`;
+  radioElement.innerHTML = `Emisora: <span class="meta-value">${transcriptionData.radio || 'Unbekannter Radiosender'}</span>`;
+  cityElement.innerHTML = `Ciudad: <span class="meta-value">${transcriptionData.city || 'Unbekannte Stadt'}</span>`;
+  revisionElement.innerHTML = `Revisión: <span class="meta-value">${transcriptionData.revision || 'Unbekannte Revision'}</span>`;
+  dateElement.innerHTML = `Fecha: <span class="meta-value">${transcriptionData.date || 'Unbekanntes Datum'}</span>`;
 
         // Vorherigen Inhalt löschen
         transcriptionContainer.innerHTML = '';
@@ -882,8 +882,8 @@ function resetCopyIconToDefault() {
      * @param {string} totalDuration
      */
     function updateTotalStats(totalWordCount, totalDuration) {
-      totalDurationElement.innerHTML = `<span style="color: #053c96; font-weight: bold;">${totalDuration}</span> horas de audio`;
-      totalWordCountElement.innerHTML = `<span style="color: #053c96; font-weight: bold;">${formatNumber(totalWordCount)}</span> palabras transcritas`;
+  totalDurationElement.innerHTML = `<span class="meta-value meta-value--primary">${totalDuration}</span> horas de audio`;
+  totalWordCountElement.innerHTML = `<span class="meta-value meta-value--primary">${formatNumber(totalWordCount)}</span> palabras transcritas`;
     }
   }
 
