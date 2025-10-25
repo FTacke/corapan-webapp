@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+
+{% block page_title %}Editor - CO.RA.PAN{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/editor.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="editor-overview">
+  <div class="editor-header">
+    <h1><i class="bi bi-pencil-square"></i> Editor de Transcripciones</h1>
+    <p class="subtitle">Gestionar y editar archivos JSON del corpus</p>
+  </div>
+  
+  {% if files_by_country %}
+    <!-- Country Tabs -->
+    <div class="country-tabs" role="tablist">
+      {% for country in files_by_country.keys() %}
+        <button class="country-tab {{ 'active' if loop.first else '' }}" 
+                data-country="{{ country }}"
+                role="tab"
+                aria-selected="{{ 'true' if loop.first else 'false' }}"
+                aria-controls="table-{{ country }}">
+          {{ country }}
+        </button>
+      {% endfor %}
+    </div>
+    
+    <!-- Files Tables (one per country) -->
+    {% for country, files in files_by_country.items() %}
+      <div class="files-table-container {{ 'active' if loop.first else '' }}" 
+           id="table-{{ country }}"
+           role="tabpanel">
+        <table class="files-table">
+          <thead>
+            <tr>
+              <th>Filename</th>
+              <th>Duración</th>
+              <th>Palabras</th>
+              <th>Last Edited</th>
+              <th>Last Editor</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for file in files %}
+              <tr>
+                <td class="filename-cell">{{ file.filename }}</td>
+                <td>{{ file.duration }}</td>
+                <td>{{ "{:,}".format(file.word_count) }}</td>
+                <td>
+                  {% if file.last_edited %}
+                    <span class="status-edited" title="{{ file.last_edited }}">
+                      {{ file.last_edited[:10] }}
+                    </span>
+                  {% else %}
+                    <span class="status-unchanged">unchanged</span>
+                  {% endif %}
+                </td>
+                <td>
+                  {% if file.last_editor %}
+                    <span class="status-edited">{{ file.last_editor }}</span>
+                  {% else %}
+                    <span class="status-unchanged">-</span>
+                  {% endif %}
+                </td>
+                <td>
+                  <a href="{{ url_for('editor.edit_file', file=country + '/' + file.filename) }}" 
+                     class="edit-btn">
+                    <i class="bi bi-pencil-square"></i> Edit
+                  </a>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% endfor %}
+  {% else %}
+    <div class="empty-state">
+      <i class="bi bi-folder2-open"></i>
+      <p>No hay archivos de transcripción disponibles.</p>
+    </div>
+  {% endif %}
+</div>
+
+<script>
+  // Tab-Switching
+  document.querySelectorAll('.country-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      const country = tab.dataset.country;
+      
+      // Update active tab
+      document.querySelectorAll('.country-tab').forEach(t => {
+        t.classList.remove('active');
+        t.setAttribute('aria-selected', 'false');
+      });
+      tab.classList.add('active');
+      tab.setAttribute('aria-selected', 'true');
+      
+      // Show corresponding table
+      document.querySelectorAll('.files-table-container').forEach(container => {
+        container.classList.toggle('active', container.id === 'table-' + country);
+      });
+    });
+  });
+</script>
+{% endblock %}

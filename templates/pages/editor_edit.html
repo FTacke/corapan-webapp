@@ -1,0 +1,191 @@
+{% extends "base.html" %}
+
+{% block page_title %}Editor: {{ filename }} - CO.RA.PAN{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/editor.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="player-page">
+  <!-- Header with File Info -->
+  <div class="player-header">
+    <a href="{{ url_for('editor.overview') }}" class="back-link">
+      <i class="bi bi-chevron-left"></i>
+    </a>
+    <h1 class="document-title">{{ country }}/{{ filename }}</h1>
+    <span id="save-indicator" class="status-badge status-saved">
+      <i class="bi bi-check-circle"></i> Gespeichert
+    </span>
+  </div>
+
+  <!-- Main Container: Transcript + Sidebar -->
+  <div class="player-container">
+    <!-- Left Column: Transcript -->
+    <div class="player-transcript">
+      <div id="transcriptionContainer"></div>
+    </div>
+
+    <!-- Right Column: Sidebar -->
+    <aside class="player-sidebar">
+      <section class="editor-pane">
+        <div class="cards">
+          <!-- Bearbeitung Card -->
+          <div class="card">
+            <div class="card-header">
+              <i class="bi bi-pencil"></i>
+              <h2 class="title">Bearbeitung</h2>
+            </div>
+
+            <div class="metrics">
+              <span class="label">Geänderte Wörter</span>
+              <span id="modified-count" class="value">0</span>
+              <div class="actions-inline">
+                <button id="undo-btn" class="btn-icon" disabled title="Rückgängig (CTRL+Z)">
+                  <i class="bi bi-arrow-counterclockwise"></i>
+                </button>
+                <button id="redo-btn" class="btn-icon" disabled title="Wiederholen (CTRL+Y)">
+                  <i class="bi bi-arrow-clockwise"></i>
+                </button>
+              </div>
+            </div>
+
+            <div id="word-edit-info" class="edit-info hidden" style="margin: 12px 0; padding: 12px; background: rgba(0,0,0,0.04); border-radius: 8px;">
+              <p class="edit-label">Aktives Wort:</p>
+              <p id="current-word" class="current-word-display"></p>
+              <div class="edit-actions" style="margin-top: 8px;">
+                <button id="cancel-edit-btn" class="btn-sm" title="ESC">
+                  <i class="bi bi-x"></i> Abbrechen
+                </button>
+              </div>
+            </div>
+
+            <div id="speaker-selection" class="speaker-selection hidden" style="margin: 12px 0; padding: 12px; background: rgba(0,0,0,0.04); border-radius: 8px;">
+              <p class="edit-label">Speaker des Segments:</p>
+              <select id="speaker-select" class="form-control" style="margin: 8px 0;">
+                <option value="">– Wählen Sie einen Speaker –</option>
+              </select>
+              <div class="speaker-actions" style="display: flex; gap: 8px; margin-top: 8px;">
+                <button id="confirm-speaker-btn" class="btn-sm" style="flex: 1;">
+                  <i class="bi bi-check"></i> Speichern
+                </button>
+                <button id="cancel-speaker-btn" class="btn-sm" style="flex: 1;">
+                  <i class="bi bi-x"></i> Abbrechen
+                </button>
+              </div>
+            </div>
+
+            <div class="cta-row">
+              <button id="save-btn" class="btn-primary btn-block">
+                <i class="bi bi-save"></i> speichern
+              </button>
+              <button id="discard-btn" class="btn-error btn-block">
+                <i class="bi bi-trash"></i> verwerfen
+              </button>
+            </div>
+          </div>
+
+          <!-- Bookmarks Card -->
+          <div class="card">
+            <div class="card-header">
+              <i class="bi bi-bookmark-check"></i>
+              <h2 class="title">Bookmarks</h2>
+            </div>
+            <button id="bookmark-btn" class="btn-primary btn-block" title="Bookmark für aktuelles Segment">
+              <i class="bi bi-plus"></i> bookmark hinzufügen
+            </button>
+            <div id="bookmark-list" class="bookmark-list" style="margin-top: 12px;">
+              <!-- Bookmarks will be rendered here -->
+            </div>
+          </div>
+
+          <!-- History Card -->
+          <div class="card">
+            <div class="card-header">
+              <i class="bi bi-clock-history"></i>
+              <h2 class="title">Änderungshistorie</h2>
+            </div>
+            <div id="history-panel">
+              <!-- History timeline will be rendered here -->
+            </div>
+          </div>
+        </div>
+      </section>
+    </aside>
+  </div>
+
+  <!-- Audio Player - Same as player.html -->
+  <div class="custom-audio-player">
+    <div class="player-controls">
+      <!-- Top Row: Progress Bar -->
+      <div class="player-controls-top">
+        <input type="range" id="progressBar" min="0" max="100" value="0" class="progress-bar" aria-label="Audio progress">
+        <div class="volume-control-container">
+          <i id="muteBtn" class="fa-solid fa-volume-high volume-icon" aria-label="Mute/Unmute"></i>
+          <input type="range" id="volumeControl" min="0" max="1" step="0.01" value="1.0" class="volume-control" aria-label="Volume">
+        </div>
+      </div>
+      
+      <!-- Middle Row: Main Controls -->
+      <div class="player-controls-bottom">
+        <div class="time-display" id="timeDisplay">0:00 / 0:00</div>
+        
+        <div class="play-container">
+          <div class="skip-control" id="rewindBtn" role="button" aria-label="Rewind 3 seconds">
+            <i class="fa-solid fa-rotate-left skip-icon"></i>
+            <span class="skip-label">-3s</span>
+          </div>
+          
+          <i id="playPauseBtn" class="bi bi-play-circle-fill play-icon" role="button" aria-label="Play/Pause"></i>
+          
+          <div class="skip-control" id="forwardBtn" role="button" aria-label="Forward 3 seconds">
+            <i class="fa-solid fa-rotate-right skip-icon"></i>
+            <span class="skip-label">+3s</span>
+          </div>
+        </div>
+        
+        <div class="speed-control-container">
+          <i class="bi bi-speedometer2 speed-icon" aria-label="Playback speed"></i>
+          <input type="range" id="speedControlSlider" min="0.5" max="2" step="0.1" value="1.0" class="speed-control" aria-label="Speed control">
+          <div id="speedDisplay" class="speed-display">1.0x</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Hidden audio element -->
+  <audio id="audioPlayer" preload="auto" style="display: none;">
+    Your browser does not support the audio element.
+  </audio>
+</div>
+
+<!-- Configuration for JavaScript -->
+<script type="application/json" id="editor-config">
+{
+  "audioFile": "{{ audio_file }}",
+  "transcriptFile": "{{ transcript_file }}",
+  "country": "{{ country }}",
+  "filename": "{{ filename }}",
+  "apiBaseUrl": "/editor",
+  "apiEndpoints": {
+    "saveEdits": "{{ url_for('editor.save_edits') }}",
+    "addBookmark": "{{ url_for('editor.add_bookmark') }}",
+    "removeBookmark": "{{ url_for('editor.remove_bookmark') }}",
+    "getBookmarks": "{{ url_for('editor.get_bookmarks', country=country, filename=filename) }}",
+    "getHistory": "{{ url_for('editor.get_history', country=country, filename=filename) }}",
+    "undo": "{{ url_for('editor.undo_change') }}"
+  }
+}
+</script>
+
+<script type="module">
+  import { EditorPlayer } from '{{ url_for("static", filename="js/editor/editor-player.js") }}';
+  
+  // Initialize editor when DOM is ready
+  document.addEventListener('DOMContentLoaded', async () => {
+    const config = JSON.parse(document.getElementById('editor-config').textContent);
+    const editor = new EditorPlayer(config);
+    await editor.init();
+  });
+</script>
+{% endblock %}

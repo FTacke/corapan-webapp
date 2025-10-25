@@ -303,6 +303,18 @@ LOCATIONS: list[Location] = [
     ),
     
     # -------------------------------------------------------------------------
+    # USA / ESTADOS UNIDOS
+    # -------------------------------------------------------------------------
+    Location(
+        code='USA',
+        name_es='Estados Unidos: Miami',
+        type='national',
+        country_code='USA',
+        iso_code='USA',
+        coordinates=(25.7617, -80.1918)
+    ),
+    
+    # -------------------------------------------------------------------------
     # VENEZUELA
     # -------------------------------------------------------------------------
     Location(
@@ -369,6 +381,7 @@ NAME_TO_CODE_MAP: dict[str, str] = {
     'Perú': 'PER',
     'República Dominicana': 'DOM',
     'Uruguay': 'URY',
+    'Estados Unidos': 'USA',
     'Venezuela': 'VEN',
 }
 

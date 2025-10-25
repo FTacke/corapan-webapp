@@ -61,7 +61,7 @@ def download_full(filename: str):
 @jwt_required()
 def download_split(filename: str):
     path = _secure_path(media_store.MP3_SPLIT_DIR, filename)
-    return send_file(path, as_attachment=True)
+    return send_file(path, mimetype="audio/mpeg", as_attachment=False)
 
 
 @blueprint.get("/temp/<path:filename>")

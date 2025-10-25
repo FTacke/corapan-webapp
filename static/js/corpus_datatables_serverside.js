@@ -206,7 +206,12 @@ function initializeDataTable() {
                 const modes = urlParams.getAll('speech_mode');
                 const discourses = urlParams.getAll('discourse');
                 
+                // Note: We need to pass arrays correctly for Flask's getlist()
+                // jQuery automatically serializes arrays as "key[]=val" but Flask expects "key=val1&key=val2"
+                // So we manually add each value as a separate parameter
                 if (countries.length > 0) {
+                    // Don't use d.country_code = countries; as jQuery will serialize it wrong
+                    // Instead, we'll let jQuery's traditional mode handle it below
                     d.country_code = countries;
                 }
                 if (regions.length > 0) {
@@ -230,6 +235,9 @@ function initializeDataTable() {
                 
                 return d;
             },
+            // CRITICAL FIX: Use traditional jQuery parameter serialization
+            // This ensures arrays are sent as "key=val1&key=val2" instead of "key[]=val1&key[]=val2"
+            traditional: true,
             dataSrc: 'data',
             error: function(xhr, error, thrown) {
                 console.error('DataTables AJAX error:', error, thrown);

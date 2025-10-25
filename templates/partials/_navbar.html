@@ -40,6 +40,16 @@
   }
 ] %}
 
+{# Editor-Link für Admin und Editor #}
+{% if is_authenticated and role_value in ['admin', 'editor'] %}
+  {% set nav_links = nav_links + [{
+    'label': 'Editor',
+    'href': url_for('editor.overview'),
+    'match': ['editor.overview', 'editor.edit_file'],
+    'role_required': ['admin', 'editor']
+  }] %}
+{% endif %}
+
 <header class="site-header" data-auth="{{ 'true' if is_authenticated else 'false' }}" data-role="{{ role_value }}">
   <nav class="md3-nav" aria-label="Navegaci&oacute;n principal">
     <div class="md3-nav__inner">
@@ -143,48 +153,41 @@
   <!-- Mobile Menu -->
   <div class="md3-mobile-menu" data-mobile-menu hidden>
     <div class="md3-mobile-menu__backdrop" data-mobile-backdrop></div>
-    <div class="md3-mobile-menu__panel md3-elevation-4" role="dialog" aria-modal="true" aria-label="Men&uacute; m&oacute;vil">
+    <div class="md3-mobile-menu__panel md3-elevation-4" role="dialog" aria-modal="true" aria-label="Menú móvil">
       <div class="md3-mobile-menu__header">
         <!-- Logo removed for cleaner mobile menu per user request -->
         <div></div>
-        <button type="button" class="md3-icon-button" data-mobile-close aria-label="Men&uacute; cerrar">
+        <button type="button" class="md3-icon-button" data-mobile-close aria-label="Menú cerrar">
           <i class="fa-solid fa-xmark"></i>
         </button>
       </div>
       
-      <div class="md3-mobile-menu__content-wrapper">
-        <div class="md3-mobile-menu__inner">
-          <nav class="md3-mobile-menu__links" aria-label="Enlaces principales">
-            {% for item in nav_links %}
-                {% set is_active = active_endpoint in item.match %}
-                {% if item.children %}
-                  <!-- Trigger opens the nested subpanel inside the mobile menu -->
-                  <button class="md3-label-large md3-mobile-link md3-mobile-subdrawer-trigger" aria-controls="mobile-subpanel-{{ loop.index }}" aria-expanded="false">{{ item.label }} <span class="md3-mobile-link__chev" aria-hidden="true">▸</span><span class="sr-only">Abrir submenú</span></button>
-                {% else %}
-                  <a href="{{ item.href }}" class="md3-label-large md3-mobile-link {{ 'md3-mobile-link--active' if is_active else '' }}" aria-current="{{ 'page' if is_active else 'false' }}">{{ item.label }}</a>
-                {% endif %}
-              {% endfor %}
-          </nav>
-        </div>
-
-        {# Nested subpanels: slide in inside the mobile menu panel #}
+      <nav class="md3-mobile-menu__links" aria-label="Enlaces principales">
         {% for item in nav_links %}
+          {% set is_active = active_endpoint in item.match %}
           {% if item.children %}
-            <div id="mobile-subpanel-{{ loop.index }}" class="md3-mobile-subpanel" hidden aria-hidden="true">
-              <div class="md3-subpanel__header md3-subpanel__header--compact">
-                  <button class="md3-icon-button md3-subpanel__back" aria-label="Volver al menú">◂</button>
-                  <div class="md3-subpanel__title md3-label-medium">{{ item.label }}</div>
-                </div>
-              <nav class="md3-subpanel__links" aria-label="Subenlaces">
-                {% for child in item.children %}
-                  {% set child_is_active = (request.path == child.href) or (request.path.startswith(child.href + '/')) or (active_endpoint in (child.get('match', []) if child is mapping else [])) %}
-                  <a href="{{ child.href }}" class="md3-mobile-link {{ 'md3-mobile-link--active' if child_is_active else '' }}" aria-current="{{ 'page' if child_is_active else 'false' }}">{{ child.label }}</a>
-                {% endfor %}
-              </nav>
+            {# Collapsible menu item with children #}
+            <div class="md3-mobile-collapsible">
+              <button type="button" class="md3-label-large md3-mobile-link md3-mobile-collapsible__trigger" aria-expanded="false" aria-controls="mobile-collapse-{{ loop.index }}">
+                <span class="md3-mobile-link__text">{{ item.label }}</span>
+                <i class="md3-mobile-link__chevron fa-solid fa-chevron-down" aria-hidden="true"></i>
+              </button>
+              
+              <div id="mobile-collapse-{{ loop.index }}" class="md3-mobile-collapsible__content" hidden>
+                <nav class="md3-mobile-collapsible__items" aria-label="Subenlaces de {{ item.label }}">
+                  {% for child in item.children %}
+                    {% set child_is_active = (request.path == child.href) or (request.path.startswith(child.href + '/')) or (active_endpoint in (child.get('match', []) if child is mapping else [])) %}
+                    <a href="{{ child.href }}" class="md3-mobile-link md3-mobile-link--child {{ 'md3-mobile-link--active' if child_is_active else '' }}" aria-current="{{ 'page' if child_is_active else 'false' }}">{{ child.label }}</a>
+                  {% endfor %}
+                </nav>
+              </div>
             </div>
+          {% else %}
+            {# Simple link without children #}
+            <a href="{{ item.href }}" class="md3-label-large md3-mobile-link {{ 'md3-mobile-link--active' if is_active else '' }}" aria-current="{{ 'page' if is_active else 'false' }}">{{ item.label }}</a>
           {% endif %}
         {% endfor %}
-      </div>
+      </nav>
       
       <div class="md3-mobile-menu__footer">
         {% if is_authenticated %}
@@ -206,9 +209,6 @@
     </div>
   </div>
 </header>
-
-<!-- Mobile Subdrawers for nav children (slide in from left, mkdocs-like) -->
-{# Overlay subdrawers removed; nested subpanels inside mobile menu are used instead #}
 
 <!-- Login Sheet -->
 <div class="md3-login-sheet" hidden data-element="login-sheet">

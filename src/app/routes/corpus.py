@@ -87,7 +87,7 @@ def search() -> Response:
     # Regional codes that should be excluded by default
     regional_codes = ['ARG-CHU', 'ARG-CBA', 'ARG-SDE', 'ESP-CAN', 'ESP-SEV']
     national_codes = ['ARG', 'BOL', 'CHL', 'COL', 'CRI', 'CUB', 'ECU', 'ESP', 'GTM', 
-                      'HND', 'MEX', 'NIC', 'PAN', 'PRY', 'PER', 'DOM', 'SLV', 'URY', 'VEN']
+                      'HND', 'MEX', 'NIC', 'PAN', 'PRY', 'PER', 'DOM', 'SLV', 'URY', 'USA', 'VEN']
     
     countries = data_source.getlist("country_code")
     include_regional = data_source.get("include_regional") == "1"
@@ -183,7 +183,7 @@ def search_datatables() -> Response:
     # Regional codes that should be excluded by default
     regional_codes = ['ARG-CHU', 'ARG-CBA', 'ARG-SDE', 'ESP-CAN', 'ESP-SEV']
     national_codes = ['ARG', 'BOL', 'CHL', 'COL', 'CRI', 'CUB', 'ECU', 'ESP', 'GTM', 
-                      'HND', 'MEX', 'NIC', 'PAN', 'PRY', 'PER', 'DOM', 'SLV', 'URY', 'VEN']
+                      'HND', 'MEX', 'NIC', 'PAN', 'PRY', 'PER', 'DOM', 'SLV', 'URY', 'USA', 'VEN']
     
     countries = request.args.getlist("country_code")
     include_regional = request.args.get("include_regional") == "1"
@@ -191,6 +191,15 @@ def search_datatables() -> Response:
     sexes = request.args.getlist("sex")
     speech_modes = request.args.getlist("speech_mode")
     discourses = request.args.getlist("discourse")
+    
+    # DEBUG: Log received filters
+    print(f"DEBUG DataTables - Received filters:")
+    print(f"  countries: {countries}")
+    print(f"  include_regional: {include_regional}")
+    print(f"  speaker_types: {speaker_types}")
+    print(f"  sexes: {sexes}")
+    print(f"  speech_modes: {speech_modes}")
+    print(f"  discourses: {discourses}")
     
     # If nothing selected, use defaults based on include_regional
     if not countries:
@@ -203,6 +212,9 @@ def search_datatables() -> Response:
     elif not include_regional:
         # If user selected countries but checkbox is off, exclude any regional codes
         countries = [c for c in countries if c not in regional_codes]
+    
+    # DEBUG: Log processed countries
+    print(f"DEBUG DataTables - Processed countries: {countries}")
     
     # DataTables ordering
     order_col_index = _safe_int(request.args.get("order[0][column]"), 0)

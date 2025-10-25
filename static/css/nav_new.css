@@ -403,5 +403,5 @@ body .md3-mobile-menu__panel .md3-mobile-subpanel { pointer-events: auto; z-inde
 .md3-nav__submenu-link.md3-nav__link--active { 
   background: var(--md3-color-primary-container); 
   color: var(--md3-color-primary);
-  font-weight: 600;
+  font-weight: 400;
 }

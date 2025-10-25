@@ -95,6 +95,19 @@ function openMobileMenu() {
 
 function closeMobileMenu() {
   if (!mobileMenu || mobileMenu.hidden) return;
+  
+  // Close all expanded collapsibles before closing menu
+  const collapsibleTriggers = document.querySelectorAll('.md3-mobile-collapsible__trigger');
+  collapsibleTriggers.forEach(trigger => {
+    trigger.setAttribute('aria-expanded', 'false');
+    const contentId = trigger.getAttribute('aria-controls');
+    const content = document.getElementById(contentId);
+    if (content) {
+      content.classList.remove('is-expanded');
+      content.hidden = true;
+    }
+  });
+  
   if (mobileMenuTransitionHandler) {
     mobileMenu.removeEventListener('transitionend', mobileMenuTransitionHandler);
     mobileMenuTransitionHandler = null;
@@ -441,83 +454,53 @@ function initDesktopSubmenus() {
 // Initialize desktop submenus - wait for DOM to be fully loaded
 document.addEventListener('DOMContentLoaded', initDesktopSubmenus);
 
-// Mobile subpanel functionality
-function initMobileSubpanels() {
-  const mobileSubdrawerTriggers = document.querySelectorAll('.md3-mobile-subdrawer-trigger');
-  const mobileMenuPanel = document.querySelector('.md3-mobile-menu__panel');
-
-  mobileSubdrawerTriggers.forEach(trigger => {
+// Mobile collapsible functionality (replaces subpanel logic)
+function initMobileCollapsibles() {
+  const collapsibleTriggers = document.querySelectorAll('.md3-mobile-collapsible__trigger');
+  
+  collapsibleTriggers.forEach(trigger => {
+    const contentId = trigger.getAttribute('aria-controls');
+    const content = document.getElementById(contentId);
+    if (!content) return;
+    
+    // Auto-expand if any child link is active (Best Practice: show current location)
+    const hasActiveChild = content.querySelector('.md3-mobile-link--active');
+    if (hasActiveChild) {
+      trigger.setAttribute('aria-expanded', 'true');
+      content.removeAttribute('hidden');
+      content.classList.add('is-expanded');
+    }
+    
+    // Toggle on click
     trigger.addEventListener('click', (event) => {
       event.preventDefault();
-      const subpanelId = trigger.getAttribute('aria-controls');
-      const subpanel = document.getElementById(subpanelId);
-      if (!subpanel || !mobileMenuPanel) return;
       
-      // Open subpanel
-      mobileMenuPanel.classList.add('has-subpanel');
-      subpanel.hidden = false;
-      subpanel.setAttribute('aria-hidden', 'false');
-      trigger.setAttribute('aria-expanded', 'true');
+      const isExpanded = trigger.getAttribute('aria-expanded') === 'true';
       
-      // Focus first link in subpanel
-      const firstLink = subpanel.querySelector('a');
-      if (firstLink) {
-        setTimeout(() => firstLink.focus(), 50);
+      if (isExpanded) {
+        // Collapse with smooth animation
+        trigger.setAttribute('aria-expanded', 'false');
+        content.classList.remove('is-expanded');
+        // Set hidden after animation completes
+        setTimeout(() => {
+          if (!content.classList.contains('is-expanded')) {
+            content.hidden = true;
+          }
+        }, 400);
+      } else {
+        // Expand with smooth animation
+        trigger.setAttribute('aria-expanded', 'true');
+        content.removeAttribute('hidden');
+        // Trigger reflow for smooth animation
+        void content.offsetHeight;
+        content.classList.add('is-expanded');
       }
     });
   });
-
-  // Back buttons in subpanels
-  const subpanelBackButtons = document.querySelectorAll('.md3-subpanel__back');
-  subpanelBackButtons.forEach(backBtn => {
-    backBtn.addEventListener('click', () => {
-      if (!mobileMenuPanel) return;
-      
-      // Close all subpanels
-      const subpanels = document.querySelectorAll('.md3-mobile-subpanel');
-      subpanels.forEach(panel => {
-        panel.hidden = true;
-        panel.setAttribute('aria-hidden', 'true');
-      });
-      
-      mobileMenuPanel.classList.remove('has-subpanel');
-      
-      // Reset trigger states
-      mobileSubdrawerTriggers.forEach(trigger => {
-        trigger.setAttribute('aria-expanded', 'false');
-      });
-      
-      // Focus the trigger that opened this panel
-      const trigger = Array.from(mobileSubdrawerTriggers).find(t => 
-        t.getAttribute('aria-controls') === backBtn.closest('.md3-mobile-subpanel')?.id
-      );
-      if (trigger) {
-        setTimeout(() => trigger.focus(), 50);
-      }
-    });
-  });
-
-  // Close subpanels when mobile menu closes
-  const originalCloseMobileMenu = closeMobileMenu;
-  closeMobileMenu = function() {
-    // Close any open subpanels
-    if (mobileMenuPanel) {
-      const subpanels = document.querySelectorAll('.md3-mobile-subpanel');
-      subpanels.forEach(panel => {
-        panel.hidden = true;
-        panel.setAttribute('aria-hidden', 'true');
-      });
-      mobileMenuPanel.classList.remove('has-subpanel');
-      mobileSubdrawerTriggers.forEach(trigger => {
-        trigger.setAttribute('aria-expanded', 'false');
-      });
-    }
-    originalCloseMobileMenu();
-  };
 }
 
-// Initialize mobile subpanels - wait for DOM to be fully loaded
-document.addEventListener('DOMContentLoaded', initMobileSubpanels);
+// Initialize mobile collapsibles - wait for DOM to be fully loaded
+document.addEventListener('DOMContentLoaded', initMobileCollapsibles);
 
 // Run on page load - wait for DOM to be fully loaded
 document.addEventListener('DOMContentLoaded', markActiveNavLink);

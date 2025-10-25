@@ -17,9 +17,11 @@ const CITY_LIST = [
   { code: 'CRI', label: 'Costa Rica: San Jose', lat: 9.9281, lng: -84.0907, tier: 'primary', type: 'national' },
   { code: 'CUB', label: 'Cuba: La Habana', lat: 23.133, lng: -82.383, tier: 'primary', type: 'national' },
   { code: 'ECU', label: 'Ecuador: Quito', lat: -0.23, lng: -78.52, tier: 'primary', type: 'national' },
+  { code: 'SLV', label: 'El Salvador: San Salvador', lat: 13.6929, lng: -89.2182, tier: 'primary', type: 'national' },
+  { code: 'USA', label: 'Estados Unidos: Miami', lat: 25.7617, lng: -80.1918, tier: 'primary', type: 'national' },
+  { code: 'ESP', label: 'Espa\u00f1a: Madrid', lat: 40.4168, lng: -3.7038, tier: 'primary', type: 'national' },
   { code: 'ESP-CAN', label: 'Espa\u00f1a: La Laguna (Canarias)', lat: 28.4874, lng: -16.3141, tier: 'secondary', type: 'regional' },
   { code: 'ESP-SEV', label: 'Espa\u00f1a: Sevilla (Andaluc\u00eda)', lat: 37.3886, lng: -5.9823, tier: 'secondary', type: 'regional' },
-  { code: 'ESP', label: 'Espa\u00f1a: Madrid', lat: 40.4168, lng: -3.7038, tier: 'primary', type: 'national' },
   { code: 'GTM', label: 'Guatemala: Ciudad de Guatemala', lat: 14.6349, lng: -90.5069, tier: 'primary', type: 'national' },
   { code: 'HND', label: 'Honduras: Tegucigalpa', lat: 14.0723, lng: -87.1921, tier: 'primary', type: 'national' },
   { code: 'MEX', label: 'M\u00e9xico: Ciudad de M\u00e9xico', lat: 19.4326, lng: -99.1332, tier: 'primary', type: 'national' },
@@ -28,7 +30,6 @@ const CITY_LIST = [
   { code: 'PRY', label: 'Paraguay: Asunci\u00f3n', lat: -25.2637, lng: -57.5759, tier: 'primary', type: 'national' },
   { code: 'PER', label: 'Per\u00fa: Lima', lat: -12.0464, lng: -77.0428, tier: 'primary', type: 'national' },
   { code: 'DOM', label: 'Rep\u00fablica Dominicana: Santo Domingo', lat: 18.4663, lng: -69.9526, tier: 'primary', type: 'national' },
-  { code: 'SLV', label: 'El Salvador: San Salvador', lat: 13.6929, lng: -89.2182, tier: 'primary', type: 'national' },
   { code: 'URY', label: 'Uruguay: Montevideo', lat: -34.9011, lng: -56.191, tier: 'primary', type: 'national' },
   { code: 'VEN', label: 'Venezuela: Caracas', lat: 10.5, lng: -66.9333, tier: 'primary', type: 'national' }
 ];
@@ -97,7 +98,10 @@ function openLoginSheet() {
 
 function extractCode(filename) {
   const match = filename.match(/_(.+?)_/);
-  return match ? match[1] : '';
+  if (!match) return '';
+  const code = match[1];
+  // Special mapping: EEUU (Spanish) -> USA
+  return code === 'EEUU' ? 'USA' : code;
 }
 
 function formatDuration(value) {

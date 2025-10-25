@@ -45,6 +45,7 @@ document.addEventListener('DOMContentLoaded', function () {
     { name: 'Perú: Lima', code: 'PER' },
     { name: 'República Dominicana: Santo Domingo', code: 'RD' },
     { name: 'El Salvador: San Salvador', code: 'SAL' },
+    { name: 'Estados Unidos: Miami', code: 'USA' },
     { name: 'Uruguay: Montevideo', code: 'URU' },
     { name: 'Venezuela: Caracas', code: 'VEN' }
   ];
@@ -193,6 +194,7 @@ document.addEventListener('DOMContentLoaded', function () {
     addCityMarker(-12.0464, -77.0428, 'Lima, Perú', 'PER', 'primary');
     addCityMarker(18.4663, -69.9526, 'Santo Domingo, República Dominicana', 'RD', 'primary');
     addCityMarker(13.6929, -89.2182, 'San Salvador, El Salvador', 'SAL', 'primary');
+    addCityMarker(25.7617, -80.1918, 'Miami, Estados Unidos', 'USA', 'primary');
     addCityMarker(-34.9011, -56.1910, 'Montevideo, Uruguay', 'URU', 'primary');
     addCityMarker(10.5000, -66.9333, 'Caracas, Venezuela', 'VEN', 'primary');
   }
