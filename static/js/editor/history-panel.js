@@ -103,19 +103,37 @@ export class HistoryPanel {
     
     let changesHtml = '';
     changes.forEach(change => {
-      const segIdx = change.segment_index || '?';
-      const wordIdx = change.word_index || '?';
-      const oldVal = this._escapeHtml(change.old_value || '').substring(0, 15);
-      const newVal = this._escapeHtml(change.new_value || '').substring(0, 15);
-      
-      changesHtml += `
-        <div class="history-change-item">
-          <span class="badge">S${segIdx}W${wordIdx}</span>
-          <span class="old-value"><del>${oldVal}</del></span>
-          <span class="arrow">→</span>
-          <span class="new-value"><ins>${newVal}</ins></span>
-        </div>
-      `;
+      // Check if this is a speaker change or word change
+      if (change.type === 'speaker_change') {
+        const segIdx = change.segment_index || '?';
+        const oldVal = this._escapeHtml(change.old_value || '').substring(0, 15);
+        const newVal = this._escapeHtml(change.new_value || '').substring(0, 15);
+        
+        changesHtml += `
+          <div class="history-change-item history-speaker-change">
+            <span class="badge badge-speaker">S${segIdx}</span>
+            <span class="speaker-label">Speaker:</span>
+            <span class="old-value"><del>${oldVal}</del></span>
+            <span class="arrow">→</span>
+            <span class="new-value"><ins>${newVal}</ins></span>
+          </div>
+        `;
+      } else {
+        // Regular word change
+        const segIdx = change.segment_index || '?';
+        const wordIdx = change.word_index || '?';
+        const oldVal = this._escapeHtml(change.old_value || '').substring(0, 15);
+        const newVal = this._escapeHtml(change.new_value || '').substring(0, 15);
+        
+        changesHtml += `
+          <div class="history-change-item">
+            <span class="badge">S${segIdx}W${wordIdx}</span>
+            <span class="old-value"><del>${oldVal}</del></span>
+            <span class="arrow">→</span>
+            <span class="new-value"><ins>${newVal}</ins></span>
+          </div>
+        `;
+      }
     });
     
     return `

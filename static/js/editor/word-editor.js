@@ -343,6 +343,23 @@ export class WordEditor {
         new_value: change.modified
       }));
 
+      // Add speaker changes from undoStack
+      const speakerChanges = this.undoStack.filter(action => action.type === 'speaker_change');
+      speakerChanges.forEach(action => {
+        // Get speaker names from data
+        const oldSpeakerObj = this.data.speakers?.find(s => s.spkid === action.oldValue);
+        const newSpeakerObj = this.data.speakers?.find(s => s.spkid === action.newValue);
+        const oldSpeakerName = oldSpeakerObj?.name || action.oldValue;
+        const newSpeakerName = newSpeakerObj?.name || action.newValue;
+        
+        changes.push({
+          type: 'speaker_change',
+          segment_index: action.segmentIndex,
+          old_value: oldSpeakerName,
+          new_value: newSpeakerName
+        });
+      });
+
       const response = await fetch(this.config.apiEndpoints.saveEdits, {
         method: 'POST',
         headers: {
