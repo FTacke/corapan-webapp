@@ -1,6 +1,12 @@
 {% extends 'base.html' %}
 {% from 'partials/page_navigation.html' import page_navigation %}
 {% block page_title %}Estadísticas · CO.RA.PAN{% endblock %}
+{% block extra_head %}
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/md3/tokens.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/md3/typography.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/md3/components/stats.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/md3/components/text-pages.css') }}">
+{% endblock %}
 {% block content %}
 <article class="md3-text-page">
   <header class="md3-text-hero">
@@ -13,22 +19,22 @@
   <div class="md3-text-content">
     <section class="md3-text-section">
       <p class="md3-body-large">
-        Esta sección presenta <strong>datos cuantitativos</strong> sobre la composición del corpus CO.RA.PAN, la distribución de hablantes y la estructura de los materiales recopilados. Las estadísticas aquí expuestas reflejan el estado actual del corpus y permiten observar tanto las proporciones generales como las particularidades de cada variedad nacional.
+        Esta sección presenta datos cuantitativos sobre la composición del corpus CO.RA.PAN, la distribución de hablantes y la estructura de los materiales recopilados. Las estadísticas aquí expuestas reflejan el estado actual del corpus y permiten observar tanto las proporciones generales como las particularidades de cada variedad nacional.
       </p>
     </section>
 
     <section class="md3-text-section">
       <h2 class="md3-title-large md3-text-heading">Composición del corpus completo</h2>
       <p class="md3-body-large">
-        El corpus CO.RA.PAN se compone de material oral procedente de <strong>emisoras de radio nacionales y regionales</strong> de todos los países hispanohablantes. El criterio central de recopilación es la <strong>lengua estándar hablada</strong>, tal como se manifiesta en el discurso profesional de los medios de comunicación.
+        El corpus CO.RA.PAN se compone de material oral procedente de emisoras de radio nacionales y regionales de todos los países hispanohablantes. El criterio central de recopilación es la lengua estándar hablada, tal como se manifiesta en el discurso profesional de los medios de comunicación.
       </p>
       
       <p class="md3-body-large">
-        Dentro del corpus, los <strong>hablantes profesionales</strong> —presentadores, periodistas y locutores— constituyen el núcleo del material analizado, ya que su producción lingüística representa el uso público de referencia. Los <strong>hablantes no profesionales</strong> —entrevistados, oyentes o invitados ocasionales— forman parte del corpus como contexto comunicativo, pero quedan <strong>excluidos del análisis estadístico y de las búsquedas principales</strong>, dado que el objetivo del proyecto es describir la norma profesional y mediática del español contemporáneo. Por esta razón, todas las estadísticas y visualizaciones que se presentan a continuación se refieren exclusivamente a los <strong>profesionales de la comunicación</strong>.
+        Dentro del corpus, los hablantes profesionales —presentadores, periodistas y locutores— constituyen el núcleo del material analizado, ya que su producción lingüística representa el uso público de referencia. Los hablantes no profesionales —entrevistados, oyentes o invitados ocasionales— forman parte del corpus como contexto comunicativo, pero quedan excluidos del análisis estadístico y de las búsquedas principales, dado que el objetivo del proyecto es describir la norma profesional y mediática del español contemporáneo. Por esta razón, todas las estadísticas y visualizaciones que se presentan a continuación se refieren exclusivamente a los profesionales de la comunicación.
       </p>
 
       <p class="md3-body-large">
-        Los siguientes gráficos muestran la <strong>distribución general del corpus</strong> y la <strong>composición de los hablantes profesionales</strong> según género y modo de producción:
+        Los siguientes gráficos muestran la distribución general del corpus y la composición de los hablantes profesionales según sexo y modo de producción:
       </p>
 
       <div class="md3-stats-grid">
@@ -40,64 +46,67 @@
                  loading="lazy">
           </div>
           <figcaption class="md3-body-medium md3-stats-caption">
-            <strong>Composición total del corpus</strong> — Distribución entre hablantes profesionales y no profesionales.
+            <span class="md3-stats-caption__title">Composición total del corpus</span>
+            Distribución entre hablantes profesionales y no profesionales.
           </figcaption>
         </figure>
 
         <figure class="md3-stats-figure">
           <div class="md3-stats-image-container">
             <img src="{{ url_for('static', filename='img/statistics/viz_genero_profesionales.png') }}" 
-                 alt="Distribución por género" 
+                 alt="Distribución por sexo" 
                  class="md3-stats-image"
                  loading="lazy">
           </div>
           <figcaption class="md3-body-medium md3-stats-caption">
-            <strong>Distribución por género</strong> — Proporción de hablantes masculinos y femeninos entre los profesionales.
+            <span class="md3-stats-caption__title">Distribución por sexo</span>
+            Proporción de hablantes masculinos y femeninos entre los profesionales.
           </figcaption>
         </figure>
 
         <figure class="md3-stats-figure">
           <div class="md3-stats-image-container">
             <img src="{{ url_for('static', filename='img/statistics/viz_modo_genero_profesionales.png') }}" 
-                 alt="Modo de producción por género" 
+                 alt="Modo de producción por sexo" 
                  class="md3-stats-image"
                  loading="lazy">
           </div>
           <figcaption class="md3-body-medium md3-stats-caption">
-            <strong>Modo de producción por género</strong> — Distinción entre habla leída, libre y presentaciones (<em>pre</em>).
+            <span class="md3-stats-caption__title">Modo de producción por sexo</span>
+            Distinción entre habla leída, libre y presentaciones (pre).
           </figcaption>
         </figure>
       </div>
 
       <p class="md3-body-large">
-        Como se observa en la visualización central, los <strong>hablantes masculinos dominan claramente el corpus</strong>, representando aproximadamente dos tercios del material profesional. Esta distribución no es el resultado de una selección sesgada, sino que refleja la <strong>realidad de las emisoras de radio</strong> en la mayoría de los países hispanohablantes: en la mayor parte de las estaciones nacionales, los presentadores masculinos ocupan con mucha mayor frecuencia los espacios de mayor audiencia y formalidad.
+        Como se observa en la visualización central, los hablantes masculinos dominan claramente el corpus, representando aproximadamente dos tercios del material profesional. Esta distribución no es el resultado de una selección sesgada, sino que refleja la realidad de las emisoras de radio en la mayoría de los países hispanohablantes: en la mayor parte de las estaciones nacionales, los presentadores masculinos ocupan con mucha mayor frecuencia los espacios de mayor audiencia y formalidad.
       </p>
 
       <p class="md3-body-large">
-        Las grabaciones del proyecto se realizaron <strong>sin filtros de género</strong>, documentando la programación tal como se emitió. Aunque en algunos países las voces femeninas tienen una presencia similar o incluso superior, en la mayoría de los casos la proporción se inclina fuertemente hacia lo masculino. Para alcanzar una <strong>proporción equilibrada de 50:50</strong>, sería necesario aplicar una <strong>selección específica del material</strong>, lo cual no reflejaría la realidad del paisaje radiofónico. Dado que el corpus tiene como objetivo documentar el uso <strong>real</strong> de la lengua estándar en su contexto de emisión, esta asimetría de género se mantiene como parte de la representación fiel de los medios actuales.
+        Las grabaciones del proyecto se realizaron sin filtros de sexo, documentando la programación tal como se emitió. Aunque en algunos países las voces femeninas tienen una presencia similar o incluso superior, en la mayoría de los casos la proporción se inclina fuertemente hacia lo masculino. Para alcanzar una proporción equilibrada de 50:50, sería necesario aplicar una selección específica del material, lo cual no reflejaría la realidad del paisaje radiofónico. Dado que el corpus tiene como objetivo documentar el uso real de la lengua estándar en su contexto de emisión, esta asimetría de sexo se mantiene como parte de la representación fiel de los medios actuales.
       </p>
     </section>
 
     <section class="md3-text-section md3-stats-country-section">
       <h2 class="md3-title-large md3-text-heading">Estadísticas por país</h2>
       <p class="md3-body-large">
-        Las estadísticas nacionales permiten observar las particularidades de cada variedad en términos de <strong>volumen de grabaciones</strong>, <strong>distribución por género</strong> y <strong>proporción de modos de producción</strong>. Cada país presenta características específicas que reflejan tanto las condiciones de grabación como las prácticas comunicativas de las emisoras locales.
+        Las estadísticas nacionales permiten observar las particularidades de cada variedad en términos de volumen de grabaciones, distribución por sexo y proporción de modos de producción. Cada país presenta características específicas que reflejan tanto las condiciones de grabación como las prácticas comunicativas de las emisoras locales.
       </p>
 
       <p class="md3-body-large">
-        Las gráficas muestran la distribución de hablantes profesionales por género y el desglose por modo de producción (lectura, habla libre y presentaciones). Estos datos permiten comparar las variedades nacionales y observar en qué medida cada país se ajusta a las tendencias generales del corpus.
+        Las gráficas muestran la distribución de hablantes profesionales por sexo y el desglose por modo de producción (lectura, habla libre y presentaciones). Estos datos permiten comparar las variedades nacionales y observar en qué medida cada país se ajusta a las tendencias generales del corpus.
       </p>
 
       <p class="md3-body-large">
-        <strong>Seleccione un país en el menú desplegable para visualizar sus estadísticas.</strong>
+        <strong>Visualice las estadísticas por país:</strong>
       </p>
 
-      <div class="md3-stats-country-selector">
+      <div class="md3-stats-country-selector md3-form-field">
         <label for="countrySelect" class="md3-label-medium md3-stats-country-label">
-          País:
+          País
         </label>
-        <select id="countrySelect" class="md3-stats-country-select">
-          <option value="">-- Seleccionar país --</option>
+        <select id="countrySelect" class="md3-stats-country-select" name="country" aria-controls="countryStatsDisplay">
+          <option value="" selected>-- Seleccionar país --</option>
           <option value="ARG">Argentina</option>
           <option value="ARG-CBA">Argentina (Córdoba)</option>
           <option value="ARG-CHU">Argentina (Chubut)</option>

@@ -1,5 +1,12 @@
 {% extends 'base.html' %}
 {% from 'partials/page_navigation.html' import page_navigation %}
+{% block extra_head %}
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/md3/tokens.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/md3/typography.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/md3/components/text-pages.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/md3/components/cards.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/md3/components/como-citar.css') }}">
+{% endblock %}
 {% block page_title %}Cómo citar · CO.RA.PAN{% endblock %}
 {% block content %}
 <article class="md3-text-page">
@@ -17,52 +24,22 @@
       <div class="md3-text-citation md3-body-medium">
         <p class="md3-body-large">
           Tacke, F. (2025). <em>CO.RA.PAN &mdash; Corpus Radiof&oacute;nico Panhisp&aacute;nico</em> (versi&oacute;n 1.0) [Corpus]. Philipps-Universit&auml;t Marburg; Zenodo. 
-          <a href="https://doi.org/10.5281/zenodo.15359652" target="_blank" rel="noopener noreferrer">
-            <img src="https://img.shields.io/badge/DOI-10.5281%2Fzenodo.15359652-4287f5?style=flat-square&labelColor=f5f5f5" alt="DOI: 10.5281/zenodo.15359652" style="display: inline-block; vertical-align: middle;">
+          <a href="https://doi.org/10.5281/zenodo.15360942" target="_blank" rel="noopener noreferrer">
+            <img src="https://img.shields.io/badge/DOI-10.5281%2Fzenodo.15360942-4287f5?style=flat-square&labelColor=f5f5f5" alt="DOI: 10.5281/zenodo.15360942" class="doi-badge">
           </a>
         </p>
       </div>
-    </section>
 
-    <!-- Recomendación de cita -->
-    <section class="md3-text-section md3-text-section--divider">
-      <h2 class="md3-headline-small">Recomendaci&oacute;n de cita</h2>
-        <p class="md3-body-large">
-          Para cualquier uso acad&eacute;mico del corpus, cite la referencia anterior.
-          <br/>Cuando se mencionen resultados de b&uacute;squedas o ejemplos concretos, indique adem&aacute;s:
-        </p>
-        <ul class="md3-list">
-          <li class="md3-list-item">
-            <span class="md3-list-item__headline">la <strong>versi&oacute;n</strong> del corpus</span>
-            <span class="md3-list-item__supporting-text">(p. ej. v 1.0)</span>
-          </li>
-          <li class="md3-list-item">
-            <span class="md3-list-item__headline">la <strong>fecha de consulta</strong></span>
-          </li>
-          <li class="md3-list-item">
-            <span class="md3-list-item__headline">y la <strong>token_id</strong> del fragmento citado</span>
-            <span class="md3-list-item__supporting-text">que permite reproducir exactamente el contexto</span>
-          </li>
-        </ul>
-        <p class="md3-body-large">
-        Las listas de resultados pueden <strong>exportarse</strong> y son <strong>reproducibles</strong> mediante las <em>token_id</em> en cualquiera de estos recursos.
-        </p>
-    </section>
-
-    <!-- Ejemplo de cita de fragmento -->
-    <section class="md3-text-section md3-text-section--divider">
-      <h2 class="md3-headline-small">Ejemplo de cita de fragmento</h2>
-      <blockquote class="md3-body-large">
-        <div class="md3-text-citation md3-body-medium">
-        <p>
-          CO.RA.PAN v 1.0, token <span class="tooltip-token">CHLd7aaa</span> (consulta 26 oct 2025).
-        </p>
-        </div>
-      </blockquote>
-      
-      <p class="md3-body-large" style="margin-top: 1rem;">
-        Las <em>token_id</em> son identificadores permanentes que garantizan la trazabilidad y reproducibilidad de todos los datos y metadatos asociados (p. ej. <span class="tooltip-token">COL06f13</span>, <span class="tooltip-token">CHLd7aaa</span>, <span class="tooltip-token">BOL286ef</span>).
-      </p>
+      <div class="md3-code-block">
+        <h3 class="md3-title-large">Citas en bibtex</h3>
+        <pre class="highlight"><code id="bibtex-code" class="language-bibtex">@dataset{CO.RA.PAN,
+  author = {Tacke, Felix},
+  title = {CO.RA.PAN: Corpus Radiofónico Panhispánico},
+  year = {2025},
+  doi = {10.5281/zenodo.15360942},
+  url = {https://doi.org/10.5281/zenodo.15360942},
+}</code></pre>
+      </div>
     </section>
 
     <!-- Acceso a los datos -->
@@ -75,49 +52,68 @@
       <!-- DOI Resources Grid -->
       <div class="doi-resource-grid">
         <!-- Webapp -->
-        <div class="doi-resource-card">
-          <h3 class="md3-headline-small">Webapp &mdash; Corpus interactivo</h3>
-          <p class="md3-body-large">
-            Interfaz de b&uacute;squeda avanzada y reproductor de audio con transcripciones anotadas.
-          </p>
-          <p>
-          <a href="https://doi.org/10.5281/zenodo.15359652" target="_blank" rel="noopener noreferrer">
-            <img src="https://img.shields.io/badge/DOI-10.5281%2Fzenodo.15359652-4287f5?style=flat-square&labelColor=f5f5f5" alt="DOI: 10.5281/zenodo.15359652">
-          </a>
-          </p>
+        <div class="card card-tonal doi-resource-card">
+          <div class="card-body">
+            <h3 class="card-title">Webapp</h3>
+            <p class="md3-body-large">Corpus interactivo: Interfaz de b&uacute;squeda avanzada y reproductor de audio con transcripciones anotadas.</p>
+            <p>
+              <a href="https://doi.org/10.5281/zenodo.15359652" target="_blank" rel="noopener noreferrer">
+                <img src="https://img.shields.io/badge/DOI-10.5281%2Fzenodo.15359652-4287f5?style=flat-square&labelColor=f5f5f5" alt="DOI: 10.5281/zenodo.15359652">
+              </a>
+            </p>
+          </div>
         </div>
 
         <!-- Full Corpus -->
-        <div class="doi-resource-card">
-          <h3 class="md3-headline-small">Full Corpus &mdash; Acceso restringido</h3>
-          <p class="md3-body-large">
-            Corpus completo en acceso restringido, protegido por derechos de autor. Solo para proyectos de investigaci&oacute;n autorizados.
-          </p>
-          <p>
-          <a href="https://doi.org/10.5281/zenodo.15360942" target="_blank" rel="noopener noreferrer">
-            <img src="https://img.shields.io/badge/DOI-10.5281%2Fzenodo.15360942-4287f5?style=flat-square&labelColor=f5f5f5" alt="DOI: 10.5281/zenodo.15360942">
-          </a>
-          </p>
+        <div class="card card-tonal doi-resource-card">
+          <div class="card-body">
+            <h3 class="card-title">Full Corpus</h3>
+            <p class="md3-body-large">Corpus completo en acceso restringido, protegido por derechos de autor. Solo para proyectos de investigaci&oacute;n autorizados.</p>
+            <p>
+              <a href="https://doi.org/10.5281/zenodo.15360942" target="_blank" rel="noopener noreferrer">
+                <img src="https://img.shields.io/badge/DOI-10.5281%2Fzenodo.15360942-4287f5?style=flat-square&labelColor=f5f5f5" alt="DOI: 10.5281/zenodo.15360942">
+              </a>
+            </p>
+          </div>
         </div>
 
         <!-- Sample Corpus -->
-        <div class="doi-resource-card">
-          <h3 class="md3-headline-small">Sample Corpus &mdash; Muestra p&uacute;blica</h3>
-          <p class="md3-body-large">
-            Corpus de ejemplo con transcritos y estructura de datos, disponible p&uacute;blicamente para exploraci&oacute;n y estudio.
-          </p>
-          <p>
-          <a href="https://doi.org/10.5281/zenodo.15378479" target="_blank" rel="noopener noreferrer">
-            <img src="https://img.shields.io/badge/DOI-10.5281%2Fzenodo.15378479-4287f5?style=flat-square&labelColor=f5f5f5" alt="DOI: 10.5281/zenodo.15378479">
-          </a>
-          </p>
+        <div class="card card-tonal doi-resource-card">
+          <div class="card-body">
+            <h3 class="card-title">Sample Corpus</h3>
+            <p class="md3-body-large">Corpus de ejemplo con transcritos y estructura de datos, disponible p&uacute;blicamente para exploraci&oacute;n y estudio.</p>
+            <p>
+              <a href="https://doi.org/10.5281/zenodo.15378479" target="_blank" rel="noopener noreferrer">
+                <img src="https://img.shields.io/badge/DOI-10.5281%2Fzenodo.15378479-4287f5?style=flat-square&labelColor=f5f5f5" alt="DOI: 10.5281/zenodo.15378479">
+              </a>
+            </p>
+          </div>
         </div>
       </div>
+    </section>
 
-      <!-- Additional Info -->
-      <div class="doi-resource-footer">
-
-      </div>
+    <!-- Recomendación de cita -->
+    <section class="md3-text-section md3-text-section--divider">
+      <h2 class="md3-headline-small">Recomendaci&oacute;n de cita</h2>
+        <p class="md3-body-large">
+          Para cualquier uso acad&eacute;mico del corpus, cite la referencia anterior.
+          Cuando se mencionen resultados de b&uacute;squedas o ejemplos concretos, indique adem&aacute;s:
+        </p>
+        <ul class="md3-text-list md3-body-large">
+          <li>la <strong>versi&oacute;n</strong> del corpus (p. ej. v 1.0)</li>
+          <li>la <strong>fecha de consulta</strong></li>
+          <li>y la <strong>token_id</strong> del fragmento citado, que permite reproducir exactamente el contexto</li>
+        </ul>
+        <p class="md3-body-large">
+        Las <em>token_id</em> son identificadores permanentes que garantizan la trazabilidad y reproducibilidad de todos los datos y metadatos asociados (p. ej. <span class="tooltip-token">COL06f13</span>, <span class="tooltip-token">CHLd7aaa</span>, <span class="tooltip-token">BOL286ef</span>).
+        </p>
+        
+        <h3 class="md3-title-large" style="margin-top: var(--space-6);">Ejemplo de cita</h3>
+        <div class="md3-text-citation md3-body-medium">
+          <p class="md3-body-large">
+            CO.RA.PAN v 1.0, token <span class="tooltip-token">CHLd7aaa</span> (consulta 26 oct 2025).
+          </p>
+        </div>
     </section>
 
     <!-- Licencia y uso -->
@@ -128,30 +124,15 @@
         El corpus CO.RA.PAN est&aacute; disponible bajo licencia <strong>CC BY-NC-SA 4.0</strong> (Creative Commons Atribuci&oacute;n-NoComercial-CompartirIgual 4.0 Internacional).
       </p>
 
-      <h3 class="md3-headline-small">Restricciones</h3>
-      <ul class="md3-list">
-        <li class="md3-list-item md3-body-large">
-          <strong>Atribuci&oacute;n:</strong> Debes citar apropiadamente al creador del corpus y a los hablantes.
-        </li>
-        <li class="md3-list-item md3-body-large">
-          <strong>No comercial:</strong> No puedes utilizar este corpus para fines comerciales.
-        </li>
-        <li class="md3-list-item md3-body-large">
-          <strong>CompartirIgual:</strong> Si transformas o adaptas el corpus, debes compartir tu contribuci&oacute;n con la misma licencia.
-        </li>
+      <h3 class="md3-title-large">Restricciones</h3>
+      <ul class="md3-text-list md3-body-large">
+        <li><strong>Atribuci&oacute;n:</strong> Debes citar apropiadamente al creador del corpus y a los hablantes.</li>
+        <li><strong>No comercial:</strong> No puedes utilizar este corpus para fines comerciales.</li>
+        <li><strong>CompartirIgual:</strong> Si transformas o adaptas el corpus, debes compartir tu contribuci&oacute;n con la misma licencia.</li>
       </ul>
-
-      <h3 class="md3-headline-small">Citas en bibtex</h3>
-      <pre class="highlight"><code class="language-bibtex">@dataset{CO.RA.PAN,
-  author = {Tacke, Felix},
-  title = {CO.RA.PAN: Corpus de Referencia de Acentuaci&oacute;n del Espa&ntilde;ol en Am&eacute;rica Latina},
-  year = {2025},
-  doi = {10.5281/zenodo.15359652},
-  url = {https://doi.org/10.5281/zenodo.15359652},
-}</code></pre>
     </section>
   </div>
 </article>
 
-{{ page_navigation(prev_title="Referencias", prev_url=url_for('public.proyecto_referencias')) }}
+{{ page_navigation(prev_title="Quiénes somos", prev_url=url_for('public.proyecto_quienes_somos')) }}
 {% endblock %}

@@ -1,6 +1,13 @@
 ﻿{% extends 'base.html' %}
 {% block page_title %}CO.RA.PAN{% endblock %}
 
+{% block extra_head %}
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/md3/tokens.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/md3/typography.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/md3/components/cards.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/md3/components/index.css') }}">
+{% endblock %}
+
 {% block content %}
 <article class="md3-index-page">
   <section class="md3-index-logo">
@@ -8,22 +15,28 @@
   </section>
   
   <section class="md3-index-cards">
-    <article class="md3-index-card">
-      <h2 class="md3-title-large md3-index-card__title">Proyecto</h2>
-      <p class="md3-body-large md3-index-card__text">Conoce los objetivos, la metodolog&iacute;a y el equipo detr&aacute;s del corpus.</p>
-      <a href="{{ url_for('public.proyecto_page') }}" class="md3-body-medium md3-index-card__link">Ver proyecto →</a>
+    <article class="md3-index-card card card-tonal">
+      <div class="card-body">
+        <h2 class="md3-title-large md3-index-card__title">Proyecto</h2>
+        <p class="md3-body-large md3-index-card__text">Conoce los objetivos, la metodolog&iacute;a y el equipo detr&aacute;s del corpus.</p>
+        <a href="{{ url_for('public.proyecto_page') }}" class="md3-body-medium md3-index-card__link">Ver proyecto →</a>
+      </div>
     </article>
     
-    <article class="md3-index-card">
-      <h2 class="md3-title-large md3-index-card__title">Corpus</h2>
-      <p class="md3-body-large md3-index-card__text">Explora filtros y fragmentos de audio del corpus panhisp&aacute;nico.</p>
-      <a href="{{ url_for('corpus.corpus_home') }}" class="md3-body-medium md3-index-card__link">Abrir corpus →</a>
+    <article class="md3-index-card card card-tonal">
+      <div class="card-body">
+        <h2 class="md3-title-large md3-index-card__title">Corpus</h2>
+        <p class="md3-body-large md3-index-card__text">Explora filtros y fragmentos de audio del corpus panhisp&aacute;nico.</p>
+        <a href="{{ url_for('corpus.corpus_home') }}" class="md3-body-medium md3-index-card__link">Abrir corpus →</a>
+      </div>
     </article>
     
-    <article class="md3-index-card">
-      <h2 class="md3-title-large md3-index-card__title">Atlas</h2>
-      <p class="md3-body-large md3-index-card__text">Consulta la cobertura geogr&aacute;fica y datos comparables por pa&iacute;s.</p>
-      <a href="{{ url_for('public.atlas_page') }}" class="md3-body-medium md3-index-card__link">Explorar atlas →</a>
+    <article class="md3-index-card card card-tonal">
+      <div class="card-body">
+        <h2 class="md3-title-large md3-index-card__title">Atlas</h2>
+        <p class="md3-body-large md3-index-card__text">Consulta la cobertura geogr&aacute;fica y datos comparables por pa&iacute;s.</p>
+        <a href="{{ url_for('public.atlas_page') }}" class="md3-body-medium md3-index-card__link">Explorar atlas →</a>
+      </div>
     </article>
   </section>
 </article>

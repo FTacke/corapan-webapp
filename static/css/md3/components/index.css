@@ -1,0 +1,87 @@
+/* Index-Seite — MD3 Component Styles (Mobile-First) */
+
+/* Logo-Sektion */
+.md3-index-logo {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: var(--space-8) var(--space-4);
+  background: var(--md-sys-color-background);
+}
+
+.md3-index-logo__img {
+  width: 100%;
+  max-width: 700px; /* Größeres Logo */
+  height: auto;
+  display: block;
+  min-width: 300px; /* Nicht unter 300px schrumpfen */
+}
+
+/* Ab 600px: Logo nicht mehr schrumpfen */
+@media (min-width: 600px) {
+  .md3-index-logo__img {
+    width: 700px; /* Feste Breite, kein Schrumpfen mehr */
+  }
+}
+
+/* Cards-Container (Mobile-First Grid) */
+.md3-index-cards {
+  display: grid;
+  grid-template-columns: 1fr; /* Mobile: 1 Spalte */
+  gap: var(--space-4);
+  padding: var(--space-6) var(--space-4);
+  max-width: 1200px;
+  margin: 0 auto;
+  width: 100%;
+  box-sizing: border-box;
+  min-width: 300px; /* Nicht unter 300px schrumpfen */
+}
+
+/* Tablet: 2 Spalten ab 600px */
+@media (min-width: 600px) {
+  .md3-index-cards {
+    grid-template-columns: repeat(auto-fit, minmax(min(280px, 100%), 1fr));
+    gap: var(--space-5);
+    padding: var(--space-8) var(--space-6);
+  }
+}
+
+/* Desktop: 3 Spalten ab 900px */
+@media (min-width: 900px) {
+  .md3-index-cards {
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--space-6);
+  }
+}
+
+/* Index Card (erweitert die Standard-Card) */
+.md3-index-card {
+  display: flex;
+  flex-direction: column;
+  min-width: 0; /* Erlaubt Shrinking */
+}
+
+.md3-index-card__title {
+  margin: 0 0 var(--space-3) 0;
+  color: var(--md-sys-color-on-surface);
+}
+
+.md3-index-card__text {
+  margin: 0 0 var(--space-4) 0;
+  color: var(--md-sys-color-on-surface-variant);
+  flex-grow: 1; /* Nimmt verfügbaren Platz ein */
+}
+
+.md3-index-card__link {
+  color: var(--md-sys-color-primary);
+  text-decoration: none;
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  margin-top: auto; /* Drückt Link nach unten */
+}
+
+.md3-index-card__link:hover {
+  color: color-mix(in oklab, var(--md-sys-color-primary) 80%, black);
+  text-decoration: underline;
+}

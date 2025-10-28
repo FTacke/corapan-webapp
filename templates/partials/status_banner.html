@@ -1,31 +1,33 @@
 {% set user_name = g.get('user') %}
 {% set user_role = g.get('role') %}
 {% set is_authenticated = user_name is not none %}
-<div class="status-banner" data-auth="{{ 'true' if is_authenticated else 'false' }}" data-role="{{ user_role.value if user_role else '' }}">
-  <div class="status-message">
-    <span class="status-label">Estado</span>
-    {% if is_authenticated %}
-      <span class="status-dot status-dot--online" aria-hidden="true"></span>
-      Sesi&oacute;n iniciada como <strong>{{ user_name }}</strong>
-    {% else %}
-      <span class="status-dot status-dot--offline" aria-hidden="true"></span>
-      Est&aacute;s viendo la versi&oacute;n p&uacute;blica.
-    {% endif %}
-  </div>
-  <div class="status-actions">
-    {% if is_authenticated %}
-      <form method="post" action="{{ url_for('auth.logout') }}" data-element="logout-form">
-        <input type="hidden" name="referrer" value="{{ request.url }}">
-        <input type="hidden" name="csrf_token" value="" data-element="csrf-token">
-        <button type="submit" class="btn btn-inline">Cerrar sesi&oacute;n</button>
-      </form>
-    {% else %}
-      <button class="btn" data-action="open-login">Iniciar sesi&oacute;n</button>
-    {% endif %}
+<div class="md3-status-banner" data-auth="{{ 'true' if is_authenticated else 'false' }}" data-role="{{ user_role.value if user_role else '' }}">
+  <div class="md3-status-banner__container">
+    <div class="md3-status-banner__message">
+      <span class="md3-status-banner__label">Estado</span>
+      {% if is_authenticated %}
+        <span class="md3-status-banner__dot md3-status-banner__dot--online" aria-hidden="true"></span>
+        <span>Sesi&oacute;n iniciada como <strong>{{ user_name }}</strong></span>
+      {% else %}
+        <span class="md3-status-banner__dot md3-status-banner__dot--offline" aria-hidden="true"></span>
+        <span>Est&aacute;s viendo la versi&oacute;n p&uacute;blica.</span>
+      {% endif %}
+    </div>
+    <div class="md3-status-banner__actions">
+      {% if is_authenticated %}
+        <form method="post" action="{{ url_for('auth.logout') }}" data-element="logout-form">
+          <input type="hidden" name="referrer" value="{{ request.url }}">
+          <input type="hidden" name="csrf_token" value="" data-element="csrf-token">
+          <button type="submit" class="btn btn-text">Cerrar sesi&oacute;n</button>
+        </form>
+      {% else %}
+        <button class="btn btn-tonal" data-action="open-login">Iniciar sesi&oacute;n</button>
+      {% endif %}
+    </div>
   </div>
 </div>
-<div class="login-sheet" hidden data-element="login-sheet">
-  <form class="login-form" method="post" action="{{ url_for('auth.login') }}">
+<div class="md3-login-sheet" hidden data-element="login-sheet">
+  <form class="md3-login-form" method="post" action="{{ url_for('auth.login') }}">
     <h2>Acceso CO.RA.PAN</h2>
     <input type="hidden" name="referrer" value="{{ request.url }}">
     <label>
@@ -36,7 +38,7 @@
       <span>Contrase&ntilde;a</span>
       <input type="password" name="password" autocomplete="current-password" required>
     </label>
-    <button type="submit" class="btn">Continuar</button>
+    <button type="submit" class="btn btn-filled">Continuar</button>
   </form>
-  <button class="btn btn-inline" data-action="close-login">Cancelar</button>
+  <button class="btn btn-text" data-action="close-login">Cancelar</button>
 </div>

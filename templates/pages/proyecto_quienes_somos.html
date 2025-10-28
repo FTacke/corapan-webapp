@@ -1,6 +1,11 @@
 {% extends 'base.html' %}
 {% from 'partials/page_navigation.html' import page_navigation %}
 {% block page_title %}Quiénes somos · CO.RA.PAN{% endblock %}
+{% block extra_head %}
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/md3/tokens.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/md3/typography.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/md3/components/text-pages.css') }}">
+{% endblock %}
 {% block content %}
 <article class="md3-text-page">
   <header class="md3-text-hero">
@@ -11,33 +16,32 @@
   </header>
 
   <div class="md3-text-content">
-    <section class="md3-text-section md3-text-section--divider">
-      <h2 class="md3-headline-small">Créditos</h2>
+      <h2 class="md3-title-large md3-text-heading">Créditos</h2>
       <dl class="md3-text-dl md3-body-medium">
         <div class="md3-text-dl__item">
           <dt class="md3-label-large">Responsable del proyecto y diseño</dt>
-          <dd>Felix Tacke</dd>
+          <dd class="md3-body-large">Felix Tacke</dd>
         </div>
         <div class="md3-text-dl__item">
           <dt class="md3-label-large">Estudiantes colaboradores (clasificación y corrección)</dt>
-          <dd>Yannick Bächler, Carolin Grote</dd>
+          <dd class="md3-body-large">Yannick Bächler, Carolin Grote</dd>
         </div>
         <div class="md3-text-dl__item">
           <dt class="md3-label-large">Contribuyentes en fases previas</dt>
-          <dd>Ana Goás Pérez, Lisa Thomas</dd>
+          <dd class="md3-body-large">Ana Goás Pérez, Lisa Thomas</dd>
         </div>
         <div class="md3-text-dl__item">
           <dt class="md3-label-large">Gestión y procesamiento de datos</dt>
-          <dd>Felix Tacke</dd>
+          <dd class="md3-body-large">Felix Tacke</dd>
         </div>
         <div class="md3-text-dl__item">
           <dt class="md3-label-large">Diseño web y gráfico</dt>
-          <dd>Felix Tacke</dd>
+          <dd class="md3-body-large">Felix Tacke</dd>
         </div>
       </dl>
     </section>
   </div>
 </article>
 
-{{ page_navigation(prev_title="Estadísticas", prev_url=url_for('public.proyecto_estadisticas'), next_title="Referencias", next_url=url_for('public.proyecto_referencias')) }}
+{{ page_navigation(prev_title="Estadísticas", prev_url=url_for('public.proyecto_estadisticas'), next_title="Cómo citar", next_url=url_for('public.proyecto_como_citar')) }}
 {% endblock %}

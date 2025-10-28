@@ -56,12 +56,6 @@ def proyecto_estadisticas():
 def proyecto_quienes_somos():
     return render_template("pages/proyecto_quienes_somos.html")
 
-
-@blueprint.get("/proyecto/referencias")
-def proyecto_referencias():
-    return render_template("pages/proyecto_referencias.html")
-
-
 @blueprint.get("/proyecto/como-citar")
 def proyecto_como_citar():
     return render_template("pages/proyecto_como_citar.html")

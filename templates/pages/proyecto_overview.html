@@ -1,5 +1,10 @@
 {% extends 'base.html' %}
 {% from 'partials/page_navigation.html' import page_navigation %}
+{% block extra_head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/md3/tokens.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/md3/typography.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/md3/components/text-pages.css') }}">
+{% endblock %}
 {% block page_title %}CO.RA.PAN · El proyecto{% endblock %}
 {% block content %}
 <article class="md3-text-page">
@@ -13,54 +18,54 @@
   <div class="md3-text-content">
     <section class="md3-text-section">
       <p class="md3-body-large">
-        El <strong>Corpus Radiof&oacute;nico Panhisp&aacute;nico (CO.RA.PAN)</strong> parte de una constataci&oacute;n fundamental: a pesar de los avances en la descripci&oacute;n del espa&ntilde;ol pluric&eacute;ntrico, todav&iacute;a falta una <strong>base emp&iacute;rica sistem&aacute;tica y comparable</strong> que permita medir y describir las <strong>variedades nacionales del espa&ntilde;ol est&aacute;ndar</strong> en todo el &aacute;mbito hispanohablante. La mayor&iacute;a de los estudios existentes se concentran en la variaci&oacute;n comunitaria o en los niveles coloquiales, mientras que la <strong>lengua est&aacute;ndar hablada</strong>, es decir, aquella empleada por profesionales en contextos formales de comunicaci&oacute;n, sigue siendo un campo poco explorado.
+        El Corpus Radiof&oacute;nico Panhisp&aacute;nico (CO.RA.PAN) parte de una constataci&oacute;n fundamental: a pesar de los avances en la descripci&oacute;n del espa&ntilde;ol pluric&eacute;ntrico, todav&iacute;a falta una base emp&iacute;rica sistem&aacute;tica y comparable que permita medir y describir las variedades nacionales del espa&ntilde;ol est&aacute;ndar en todo el &aacute;mbito hispanohablante. La mayor&iacute;a de los estudios existentes se concentran en la variaci&oacute;n comunitaria o en los niveles coloquiales, mientras que la lengua est&aacute;ndar hablada, es decir, aquella empleada por profesionales en contextos formales de comunicaci&oacute;n, sigue siendo un campo poco explorado.
       </p>
       <p class="md3-body-large">
-        El proyecto CO.RA.PAN busca llenar esta laguna ofreciendo un <strong>corpus de habla aut&eacute;ntica, profesional y estandarizada</strong>, grabada en programas informativos y de actualidad de las principales emisoras de radio nacionales de los pa&iacute;ses hispanohablantes. En complemento con proyectos como <strong>PRESEEA</strong>, que se centra en la variaci&oacute;n socioling&uuml;&iacute;stica de la comunidad, CO.RA.PAN se dedica al nivel superior del continuo: la <strong>norma culta nacional</strong> y sus manifestaciones medi&aacute;ticas.
+        El proyecto CO.RA.PAN busca llenar esta laguna ofreciendo un corpus de habla aut&eacute;ntica, profesional y estandarizada, grabada en programas informativos y de actualidad de las principales emisoras de radio nacionales de los pa&iacute;ses hispanohablantes. En complemento con proyectos como PRESEEA, que se centra en la variaci&oacute;n socioling&uuml;&iacute;stica de la comunidad, CO.RA.PAN se dedica al nivel superior del continuo: la norma culta nacional y sus manifestaciones medi&aacute;ticas.
       </p>
     </section>
 
     <section class="md3-text-section">
       <h2 class="md3-title-large md3-text-heading">Marco conceptual</h2>
       <p class="md3-body-large">
-        El punto de partida es la idea de que la evoluci&oacute;n reciente del espa&ntilde;ol se caracteriza por procesos simult&aacute;neos de <strong>destandarizaci&oacute;n</strong> y <strong>restandarizaci&oacute;n</strong>. La destandarizaci&oacute;n implica una p&eacute;rdida de relevancia del modelo peninsular tradicional como &uacute;nica referencia normativa; la restandarizaci&oacute;n, por su parte, describe la <strong>emergencia de nuevos est&aacute;ndares nacionales</strong> o <strong>neoest&aacute;ndares</strong>, que surgen de la pr&aacute;ctica comunicativa moderna y responden mejor a las necesidades discursivas actuales.
+        El punto de partida es la idea de que la evoluci&oacute;n reciente del espa&ntilde;ol se caracteriza por procesos simult&aacute;neos de destandarizaci&oacute;n y restandarizaci&oacute;n. La destandarizaci&oacute;n implica una p&eacute;rdida de relevancia del modelo peninsular tradicional como &uacute;nica referencia normativa; la restandarizaci&oacute;n, por su parte, describe la emergencia de nuevos est&aacute;ndares nacionales o neoest&aacute;ndares, que surgen de la pr&aacute;ctica comunicativa moderna y responden mejor a las necesidades discursivas actuales.
       </p>
       <p class="md3-body-large">
-        En este contexto, la <strong>estandarizaci&oacute;n informal</strong> cobra especial importancia: las normas ya no se imponen &uacute;nicamente desde arriba (por academias o gram&aacute;ticas), sino que se <strong>consolidan desde el uso</strong>, en procesos <strong>bottom-up</strong> en los que la pr&aacute;ctica ling&uuml;&iacute;stica de ciertos grupos sociales —en particular, los profesionales de los medios de comunicaci&oacute;n— adquiere valor normativo.
+        En este contexto, la estandarizaci&oacute;n informal cobra especial importancia: las normas ya no se imponen &uacute;nicamente desde arriba (por academias o gram&aacute;ticas), sino que se consolidan desde el uso, en procesos bottom-up en los que la pr&aacute;ctica ling&uuml;&iacute;stica de ciertos grupos sociales —en particular, los profesionales de los medios de comunicaci&oacute;n— adquiere valor normativo.
       </p>
       <p class="md3-body-large">
-        CO.RA.PAN se basa, por tanto, en el <strong>modelo del hablante profesional</strong> (<em>model speaker approach</em>). Los presentadores y periodistas de radio que comunican a diario con audiencias nacionales constituyen el grupo de hablantes cuyo uso ling&uuml;&iacute;stico puede considerarse <strong>representativo de la norma nacional</strong>. Su lengua refleja tanto la estabilidad de las normas codificadas como las innovaciones que emergen en el registro p&uacute;blico de alta formalidad.
+        CO.RA.PAN se basa, por tanto, en el modelo del hablante profesional (model speaker approach). Los presentadores y periodistas de radio que comunican a diario con audiencias nacionales constituyen el grupo de hablantes cuyo uso ling&uuml;&iacute;stico puede considerarse representativo de la norma nacional. Su lengua refleja tanto la estabilidad de las normas codificadas como las innovaciones que emergen en el registro p&uacute;blico de alta formalidad.
       </p>
     </section>
 
     <section class="md3-text-section">
       <h2 class="md3-title-large md3-text-heading">Normas de uso y normas medi&aacute;ticas</h2>
       <p class="md3-body-large">
-        El proyecto parte de una visi&oacute;n funcional de la normatividad ling&uuml;&iacute;stica: las <strong>normas de uso</strong> describen lo que los hablantes realmente hacen en contextos socialmente prestigiosos, y las <strong>normas medi&aacute;ticas</strong> son la cristalizaci&oacute;n visible de esas pr&aacute;cticas en los medios de difusi&oacute;n masiva. La radio, por su alcance y regularidad, constituye un espacio privilegiado para observar c&oacute;mo se difunden y legitiman las variantes nacionales del espa&ntilde;ol.
+        El proyecto parte de una visi&oacute;n funcional de la normatividad ling&uuml;&iacute;stica: las normas de uso describen lo que los hablantes realmente hacen en contextos socialmente prestigiosos, y las normas medi&aacute;ticas son la cristalizaci&oacute;n visible de esas pr&aacute;cticas en los medios de difusi&oacute;n masiva. La radio, por su alcance y regularidad, constituye un espacio privilegiado para observar c&oacute;mo se difunden y legitiman las variantes nacionales del espa&ntilde;ol.
       </p>
       <p class="md3-body-large">
-        As&iacute;, el estudio de la lengua en los medios no busca un ideal abstracto, sino la <strong>observaci&oacute;n emp&iacute;rica de las normas en acci&oacute;n</strong>. Analizar c&oacute;mo hablan los profesionales de la comunicaci&oacute;n permite identificar los procesos de <strong>estandarizaci&oacute;n informal</strong>, los grados de <strong>endonormatividad</strong> y las din&aacute;micas de <strong>divergencia o convergencia</strong> entre los distintos pa&iacute;ses.
+        As&iacute;, el estudio de la lengua en los medios no busca un ideal abstracto, sino la observaci&oacute;n emp&iacute;rica de las normas en acci&oacute;n. Analizar c&oacute;mo hablan los profesionales de la comunicaci&oacute;n permite identificar los procesos de estandarizaci&oacute;n informal, los grados de endonormatividad y las din&aacute;micas de divergencia o convergencia entre los distintos pa&iacute;ses.
       </p>
     </section>
 
     <section class="md3-text-section">
       <h2 class="md3-title-large md3-text-heading">Dise&ntilde;o comparativo</h2>
       <p class="md3-body-large">
-        CO.RA.PAN re&uacute;ne material oral comparable procedente de <strong>todos los pa&iacute;ses hispanohablantes</strong>. En cada caso, se registran emisiones que representan <strong>diferentes grados de formalidad</strong>:
+        CO.RA.PAN re&uacute;ne material oral comparable procedente de todos los pa&iacute;ses hispanohablantes. En cada caso, se registran emisiones que representan diferentes grados de formalidad:
       </p>
       <ol class="md3-body-large md3-text-list">
-        <li><strong>Habla est&aacute;ndar</strong> — discursos le&iacute;dos o noticiarios, de car&aacute;cter m&aacute;s elaborado.</li>
-        <li><strong>Habla cuasiest&aacute;ndar o cercana al est&aacute;ndar</strong> — programas dialogados o de debate, m&aacute;s espont&aacute;neos pero igualmente profesionales.</li>
+        <li>Habla est&aacute;ndar — discursos le&iacute;dos o noticiarios, de car&aacute;cter m&aacute;s elaborado.</li>
+        <li>Habla cuasiest&aacute;ndar o cercana al est&aacute;ndar — programas dialogados o de debate, m&aacute;s espont&aacute;neos pero igualmente profesionales.</li>
       </ol>
       <p class="md3-body-large">
-        Esta distinci&oacute;n entre <strong>habla est&aacute;ndar</strong> y <strong>habla cercana al est&aacute;ndar</strong> permite analizar el continuo de formalidad y observar <strong>c&oacute;mo determinadas variantes atraviesan registros</strong>, pasando de usos espont&aacute;neos a formas aceptadas como est&aacute;ndar.
+        Esta distinci&oacute;n entre habla est&aacute;ndar y habla cercana al est&aacute;ndar permite analizar el continuo de formalidad y observar c&oacute;mo determinadas variantes atraviesan registros, pasando de usos espont&aacute;neos a formas aceptadas como est&aacute;ndar.
       </p>
       <p class="md3-body-large">
         Gracias a su dise&ntilde;o homog&eacute;neo y su cobertura completa del mundo hispanohablante, CO.RA.PAN posibilita dos tipos de an&aacute;lisis complementarios:
       </p>
       <ul class="md3-body-large md3-text-list">
-        <li><strong>Descriptivo nacional</strong>, que documenta las normas y particularidades del espa&ntilde;ol est&aacute;ndar en cada pa&iacute;s.</li>
-        <li><strong>Comparativo panhisp&aacute;nico</strong>, que mide las <strong>distancias y afinidades</strong> entre las variedades nacionales y permite observar la <strong>distribuci&oacute;n geogr&aacute;fica y funcional</strong> de las variantes que configuran el espa&ntilde;ol pluric&eacute;ntrico actual.</li>
+        <li>Descriptivo nacional, que documenta las normas y particularidades del espa&ntilde;ol est&aacute;ndar en cada pa&iacute;s.</li>
+        <li>Comparativo panhisp&aacute;nico, que mide las distancias y afinidades entre las variedades nacionales y permite observar la distribuci&oacute;n geogr&aacute;fica y funcional de las variantes que configuran el espa&ntilde;ol pluric&eacute;ntrico actual.</li>
       </ul>
     </section>
   </div>

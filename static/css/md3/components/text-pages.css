@@ -1,0 +1,126 @@
+/* Page-specific MD3 styles for text/editor pages */
+@import url("../tokens.css");
+
+.md3-text-page {
+  /* Use the project's body font when available, fall back to system fonts */
+  font-family: var(--font-body, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial);
+  color: var(--md-sys-color-on-surface);
+  background: var(--md-sys-color-background);
+  padding: 1rem 0;
+}
+
+.md3-text-content {
+  max-width: 800px;
+  margin: 0 auto;
+  width: 100%; /* Prevent overflow on small screens */
+  box-sizing: border-box; /* Include padding in width calculation */
+  /* keep canonical MD3 spacing so there's a visible gap under the hero */
+  padding: var(--md3-space-10) var(--md3-space-6) var(--md3-space-16);
+}
+
+/* Mobile: reduce horizontal padding */
+@media (max-width: 599px) {
+  .md3-text-content {
+    padding-left: var(--md3-space-4);
+    padding-right: var(--md3-space-4);
+  }
+}
+
+.md3-text-list {
+  /* Ensure a clear gap after lists so following paragraphs don't stick to them */
+  margin: 0 0 1rem 0;
+  padding-left: 1.25rem;
+}
+
+.md3-text-list li { margin-bottom: 0.5rem; }
+
+.editor-overview {
+  background: var(--md-sys-color-background);
+  color: var(--md-sys-color-on-surface);
+  padding: 1rem;
+}
+
+.editor-header h1 {
+  margin: 0 0 0.25rem 0;
+  color: var(--md-sys-color-on-surface);
+  font-weight: 600;
+}
+
+.editor-header .subtitle {
+  margin: 0;
+  color: var(--md-sys-color-on-surface-variant);
+  font-size: 0.95rem;
+}
+
+.country-tabs {
+  display: flex;
+  gap: 0.5rem;
+  margin: 1rem 0;
+  flex-wrap: wrap;
+}
+
+.country-tab {
+  background: var(--md-sys-color-surface-container);
+  color: var(--md-sys-color-on-surface);
+  border: 1px solid transparent;
+  padding: 0.5rem 0.75rem;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.country-tab.active {
+  border-color: var(--md-sys-color-primary);
+  box-shadow: 0 1px 0 rgba(0,0,0,0.02);
+}
+
+.files-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--md-sys-color-surface);
+  color: var(--md-sys-color-on-surface);
+}
+
+.files-table thead th {
+  text-align: left;
+  padding: 0.5rem;
+  border-bottom: 1px solid var(--md-sys-color-outline-variant);
+  background: var(--md-sys-color-surface-variant);
+}
+
+.files-table tbody td {
+  padding: 0.5rem;
+  border-bottom: 1px solid var(--md-sys-color-outline-variant);
+}
+
+.filename-cell {
+  font-weight: 500;
+}
+
+.status-edited {
+  color: var(--md-sys-color-primary);
+}
+
+.status-unchanged {
+  color: var(--md-sys-color-on-surface-variant);
+}
+
+/* MD3-style primary button (used for edit actions) */
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: var(--md-sys-color-primary);
+  color: var(--md-sys-color-on-primary);
+  padding: 0.4rem 0.6rem;
+  border-radius: 6px;
+  text-decoration: none;
+  font-size: 0.95rem;
+}
+
+.btn-primary i {
+  font-size: 1rem;
+}
+
+.files-table-container { margin-bottom: 1rem; }
+.files-table-container:not(.active) { display: none; }
+.files-table-container.active { display: block; }
