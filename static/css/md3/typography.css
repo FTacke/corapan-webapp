@@ -1,5 +1,22 @@
 /* MD3 Typography Scale */
 
+/* Base font-family applied universally */
+html,
+body {
+  font-family: 'Roboto', 'Noto Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+}
+
+/* Apply to all MD3 page containers to ensure font inheritance */
+.md3-text-page,
+.md3-atlas-page,
+.md3-corpus-page,
+.md3-admin-page,
+.md3-editor-page,
+.md3-index-page,
+.app-shell {
+  font-family: 'Roboto', 'Noto Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+}
+
 .md3-display-large { font-size: 57px; line-height: 64px; font-weight: 400; }
 .md3-display-medium { font-size: 45px; line-height: 52px; font-weight: 400; }
 .md3-display-small { font-size: 36px; line-height: 44px; font-weight: 400; }

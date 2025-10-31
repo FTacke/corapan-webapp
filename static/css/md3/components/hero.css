@@ -1,0 +1,220 @@
+/* ============================================================================
+   MD3 Page Heroes - Canonical Implementation
+   ============================================================================
+   Strict MD3 Hero/Header implementation per specification:
+   - 8dp grid spacing
+   - MD3 type roles only
+   - Single H1 per page
+   - Max 1 high-emphasis CTA
+   - Touch targets ≥48×48 dp
+   ============================================================================ */
+
+/* Base Hero Container */
+.md3-hero {
+  padding: 24px var(--space-4);
+  margin: var(--space-6) 0 0 0;
+  position: relative;
+}
+
+.md3-hero__container {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 0 var(--space-6);
+}
+
+/* Mobile: reduce horizontal padding */
+@media (max-width: 599px) {
+  .md3-hero__container {
+    padding: 0 var(--space-4);
+  }
+}
+
+/* Hero Eyebrow (Context Label) */
+.md3-hero__eyebrow {
+  font-size: var(--md-sys-typescale-label-large);
+  letter-spacing: 0.5px;
+  color: var(--md-sys-color-on-surface-variant);
+  margin-bottom: 8px;
+  display: block;
+  text-transform: uppercase;
+}
+
+/* Hero Title (H1) */
+.md3-hero__title {
+  font-size: var(--md-sys-typescale-display-small);
+  font-weight: 400;
+  line-height: 1.2;
+  color: var(--md-sys-color-primary);
+  margin: 0 0 16px 0;
+}
+
+.md3-hero__title--large {
+  font-size: var(--md-sys-typescale-display-small);
+  line-height: 1.2;
+}
+
+/* Hero Intro Text */
+.md3-hero__intro {
+  font-size: var(--md-sys-typescale-body-large);
+  letter-spacing: 0.25px;
+  line-height: 1.5;
+  color: var(--md-sys-color-on-surface);
+  margin: 0 0 24px 0;
+  max-width: 65ch;
+}
+
+/* Hero Actions (CTA Buttons) */
+.md3-hero__actions {
+  display: flex;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+
+.md3-hero__actions .btn {
+  min-height: 48px;
+  min-width: 48px;
+}
+
+/* Hero Chips (Optional Filters/Metadata) */
+.md3-hero__chips {
+  display: flex;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+  margin-top: 12px;
+}
+
+/* ============================================================================
+   Hero Variants
+   ============================================================================ */
+
+/* Variant A: Surface Hero (Elevated) */
+.md3-hero--surface {
+  background: var(--md-sys-color-surface);
+  border-bottom: 1px solid var(--md-sys-color-outline-variant);
+}
+
+/* Variant B: Container Hero (Tonal) */
+.md3-hero--container {
+  background: var(--md-sys-color-surface-container);
+  border-radius: var(--radius-lg);
+  max-width: 900px;
+  margin: var(--space-6) auto var(--space-8);
+  padding-bottom: 0;
+}
+
+/* Variant C: Primary Container Hero (Strong Accent) */
+.md3-hero--primary-container {
+  background: var(--md-sys-color-primary-container);
+  color: var(--md-sys-color-on-primary-container);
+}
+
+.md3-hero--primary-container .md3-hero__eyebrow {
+  color: var(--md-sys-color-on-primary-container);
+  opacity: 0.8;
+}
+
+.md3-hero--primary-container .md3-hero__title {
+  color: var(--md-sys-color-on-primary-container);
+}
+
+.md3-hero--primary-container .md3-hero__intro {
+  color: var(--md-sys-color-on-primary-container);
+  opacity: 0.9;
+}
+
+/* Variant D: Minimal Hero (Borderless) */
+.md3-hero--minimal {
+  background: transparent;
+  padding-top: 32px;
+  padding-bottom: 24px;
+}
+
+/* Variant E: Full-Width Hero */
+.md3-hero--full-width {
+  padding-left: 0;
+  padding-right: 0;
+}
+
+.md3-hero--full-width .md3-hero__container {
+  max-width: 900px;  /* Aligned with page content width */
+  padding: 0 var(--space-6);
+}
+
+/* Mobile: reduce horizontal padding */
+@media (max-width: 599px) {
+  .md3-hero--full-width .md3-hero__container {
+    padding: 0 var(--space-4);
+  }
+}
+
+/* ============================================================================
+   Responsive Breakpoints
+   ============================================================================ */
+
+/* Compact (Mobile) Adjustments */
+@media (max-width: 600px) {
+  .md3-hero {
+    padding: 20px var(--space-3) 24px;
+    margin-bottom: 24px;
+  }
+  
+  .md3-hero__title {
+    font-size: 1.75rem;
+  }
+  
+  .md3-hero__title--large {
+    font-size: 2rem;
+  }
+  
+  .md3-hero__intro {
+    font-size: 0.95rem;
+    margin-bottom: 20px;
+  }
+  
+  .md3-hero__actions {
+    margin-bottom: 12px;
+  }
+}
+
+/* Medium/Tablet Adjustments */
+@media (min-width: 601px) and (max-width: 1024px) {
+  .md3-hero {
+    padding: 28px var(--space-4) 32px;
+  }
+  
+  .md3-hero__title {
+    max-width: 90%;
+  }
+}
+
+/* Expanded (Desktop) */
+@media (min-width: 1025px) {
+  .md3-hero {
+    padding: 40px var(--space-6) 48px;
+  }
+  
+  .md3-hero__title {
+    max-width: 85%;
+  }
+  
+  .md3-hero__intro {
+    max-width: 70ch;
+  }
+}
+
+/* ============================================================================
+   Accessibility
+   ============================================================================ */
+
+.md3-hero__actions .btn:focus-visible {
+  outline: 2px solid var(--md-sys-color-primary);
+  outline-offset: 2px;
+}
+
+/* RTL Support */
+[dir="rtl"] .md3-hero__actions {
+  flex-direction: row-reverse;
+}
+
+

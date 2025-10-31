@@ -7,8 +7,8 @@
 .md3-stats-grid {
   display: flex;
   flex-direction: column;
-  gap: var(--md3-space-10);
-  margin: var(--md3-space-8) 0;
+  gap: var(--space-10);
+  margin: var(--space-8) 0;
   max-width: 100%;
 }
 
@@ -16,16 +16,16 @@
 .md3-stats-figure {
   display: flex;
   flex-direction: column;
-  gap: var(--md3-space-4);
-  background: var(--md3-color-surface);
-  border-radius: var(--md3-radius-large);
-  padding: var(--md3-space-6);
-  box-shadow: var(--md3-elevation-1);
-  transition: box-shadow var(--md3-motion-duration-short-4) var(--md3-motion-easing-standard);
+  gap: var(--space-4);
+  background: var(--md-sys-color-surface);
+  border-radius: var(--radius-lg);
+  padding: var(--space-6);
+  box-shadow: var(var(--elev-1));
+  transition: box-shadow 200ms cubic-bezier(0.2, 0, 0, 1);
 }
 
 .md3-stats-figure:hover {
-  box-shadow: var(--md3-elevation-2);
+  box-shadow: var(var(--elev-2));
 }
 
 /* Image Container with Fixed Aspect Ratio */
@@ -34,10 +34,10 @@
   width: 60%;
   margin: 0 auto;
   overflow: visible;
-  border-radius: var(--md3-radius-medium);
+  border-radius: var(--radius-md);
   background: transparent;
   cursor: zoom-in;
-  transition: transform var(--md3-motion-duration-short-4) var(--md3-motion-easing-standard);
+  transition: transform 200ms cubic-bezier(0.2, 0, 0, 1);
 }
 
 .md3-stats-image-container:hover {
@@ -50,45 +50,45 @@
   display: block;
   object-fit: contain;
   max-width: 100%;
-  border-radius: var(--md3-radius-medium);
+  border-radius: var(--radius-md);
 }
 
 /* Caption Styling */
 .md3-stats-caption {
   margin: 0;
-  color: var(--md3-color-on-surface-variant);
+  color: var(--md-sys-color-on-surface-variant);
   text-align: center;
-  line-height: var(--md3-lineheight-body);
+  line-height: 1.5;
 }
 
 /* Country Selector Section */
 .md3-stats-country-section {
-  margin-top: var(--md3-space-12);
-  padding-top: var(--md3-space-10);
-  border-top: 1px solid var(--md3-color-outline-variant);
+  margin-top: var(--space-12);
+  padding-top: var(--space-10);
+  border-top: 1px solid var(--md-sys-color-outline-variant);
 }
 
 .md3-stats-country-selector {
   max-width: 500px;
-  margin: var(--md3-space-6) auto;
+  margin: var(--space-6) auto;
   display: grid;
-  gap: var(--md3-space-3);
+  gap: var(--space-3);
 }
 
 .md3-stats-country-label {
-  color: var(--md3-color-on-surface-variant);
+  color: var(--md-sys-color-on-surface-variant);
   font-weight: 500;
-  letter-spacing: var(--md3-tracking-wide);
+  letter-spacing: 0.1px;
 }
 
 .md3-stats-country-select {
   width: 100%;
-  padding: var(--md3-space-3) var(--md3-space-4);
-  border: 1px solid var(--md3-color-outline);
-  border-radius: var(--md3-radius-extra-small);
-  background: var(--md3-color-surface);
-  color: var(--md3-color-on-surface);
-  font-size: var(--md3-body-large);
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--md-sys-color-outline-variant);
+  border-radius: var(--radius-sm);
+  background: var(--md-sys-color-surface);
+  color: var(--md-sys-color-on-surface);
+  font-size: 16px;
   font-family: inherit;
   cursor: pointer;
   appearance: none;
@@ -96,34 +96,34 @@
   /* arrow icon uses currentColor so it follows tokens (no hardcoded hex) */
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none'%3E%3Cpath d='M7 10l5 5 5-5z' fill='currentColor'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
-  background-position: right var(--md3-space-3) center;
-  padding-right: var(--md3-space-10);
-  transition: border-color var(--md3-motion-duration-short-4) var(--md3-motion-easing-standard),
-              border-width var(--md3-motion-duration-short-4) var(--md3-motion-easing-standard);
+  background-position: right var(--space-3) center;
+  padding-right: var(--space-10);
+  transition: border-color 200ms cubic-bezier(0.2, 0, 0, 1),
+              border-width 200ms cubic-bezier(0.2, 0, 0, 1);
 }
 
 .md3-stats-country-select:hover {
-  border-color: var(--md3-color-on-surface);
+  border-color: var(--md-sys-color-on-surface);
 }
 
 .md3-stats-country-select:focus {
   outline: none;
-  border-color: var(--md3-color-primary);
+  border-color: var(--md-sys-color-primary);
   border-width: 2px;
-  padding: calc(var(--md3-space-3) - 1px) calc(var(--md3-space-4) - 1px);
-  padding-right: calc(var(--md3-space-10) - 1px);
+  padding: calc(var(--space-3) - 1px) calc(var(--space-4) - 1px);
+  padding-right: calc(var(--space-10) - 1px);
 }
 
 .md3-stats-country-select option {
-  background: var(--md3-color-surface);
-  color: var(--md3-color-on-surface);
-  padding: var(--md3-space-3);
+  background: var(--md-sys-color-surface);
+  color: var(--md-sys-color-on-surface);
+  padding: var(--space-3);
 }
 
 /* Country Display Area */
 .md3-stats-country-display {
   max-width: 100%;
-  margin: var(--md3-space-8) 0;
+  margin: var(--space-8) 0;
   /* don't reserve vertical space while empty; when content is present we apply a min-height */
   min-height: 0;
   display: flex;
@@ -137,12 +137,12 @@
 
 /* Placeholder when no country selected */
 .md3-stats-placeholder {
-  padding: var(--md3-space-10);
+  padding: var(--space-10);
   text-align: center;
-  color: var(--md3-color-on-surface-variant);
-  background: var(--md3-color-surface-container-low);
-  border-radius: var(--md3-radius-large);
-  border: 2px dashed var(--md3-color-outline-variant);
+  color: var(--md-sys-color-on-surface-variant);
+  background: var(--md-sys-color-surface-container-low);
+  border-radius: var(--radius-lg);
+  border: 2px dashed var(--md-sys-color-outline-variant);
 }
 
 /* Country Figure with Fade Animation */
@@ -150,14 +150,14 @@
   width: 100%;
   display: flex;
   flex-direction: column;
-  gap: var(--md3-space-4);
-  background: var(--md3-color-surface);
-  border-radius: var(--md3-radius-large);
-  padding: var(--md3-space-6);
-  box-shadow: var(--md3-elevation-1);
+  gap: var(--space-4);
+  background: var(--md-sys-color-surface);
+  border-radius: var(--radius-lg);
+  padding: var(--space-6);
+  box-shadow: var(var(--elev-1));
   opacity: 0;
-  transition: opacity var(--md3-motion-duration-medium-2) var(--md3-motion-easing-emphasized),
-              box-shadow var(--md3-motion-duration-short-4) var(--md3-motion-easing-standard);
+  transition: opacity 300ms var(cubic-bezier(0.4, 0, 0.2, 1)),
+              box-shadow 200ms cubic-bezier(0.2, 0, 0, 1);
 }
 
 .md3-stats-country-figure.visible {
@@ -165,7 +165,7 @@
 }
 
 .md3-stats-country-figure:hover {
-  box-shadow: var(--md3-elevation-2);
+  box-shadow: var(var(--elev-2));
 }
 
 .md3-stats-country-image-container {
@@ -173,10 +173,10 @@
   width: 60%;
   margin: 0 auto;
   overflow: visible;
-  border-radius: var(--md3-radius-medium);
+  border-radius: var(--radius-md);
   background: transparent;
   cursor: zoom-in;
-  transition: transform var(--md3-motion-duration-short-4) var(--md3-motion-easing-standard);
+  transition: transform 200ms cubic-bezier(0.2, 0, 0, 1);
 }
 
 .md3-stats-country-image-container:hover {
@@ -189,14 +189,14 @@
   display: block;
   object-fit: contain;
   max-width: 100%;
-  border-radius: var(--md3-radius-large);
+  border-radius: var(--radius-lg);
 }
 
 /* Form field helper: stack label above control and keep spacing consistent */
 .md3-form-field {
   display: flex;
   flex-direction: column;
-  gap: var(--md3-space-2);
+  gap: var(--space-2);
   align-items: stretch;
 }
 
@@ -204,11 +204,15 @@
 .md3-stats-caption__title {
   display: block;
   font-weight: 600;
-  margin-bottom: calc(var(--md3-space-1) / 2);
-  color: var(--md3-color-on-surface);
+  margin-bottom: calc(var(--space-1) / 2);
+  color: var(--md-sys-color-on-surface);
 }
 
 /* Keep images stacked vertically (same presentation as before). We intentionally avoid
    switching to a multi-column grid so images remain one-per-row and centered.
    The .md3-stats-image-container width:60% is preserved for the visual look.
 */
+
+
+
+

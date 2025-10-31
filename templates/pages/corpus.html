@@ -3,6 +3,19 @@
 {% block page_title %}Corpus · CO.RA.PAN{% endblock %}
 
 {% block extra_head %}
+<!-- MD3 Core Styles -->
+<link rel="stylesheet" href="{{ url_for('static', filename='css/md3/tokens.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/md3/typography.css') }}">
+<!-- MD3 Components (Canonical - Transferred from legacy md3-components.css) -->
+<link rel="stylesheet" href="{{ url_for('static', filename='css/md3/components/hero.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/md3/components/buttons.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/md3/components/textfields.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/md3/components/tabs.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/md3/components/forms.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/md3/components/corpus-search-form.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/md3/components/select2-tagify.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/md3/components/datatables.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/md3/components/corpus.css') }}">
 <!-- DataTables CSS -->
 <link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/jquery.dataTables.min.css">
 <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.2/css/buttons.dataTables.min.css">
@@ -15,21 +28,16 @@
 
 {% block content %}
 <article class="md3-corpus-page">
-  <!-- Hero Header -->
-  <header class="md3-corpus-hero">
-    <div class="md3-corpus-hero__container">
-      <div class="md3-corpus-hero__content">
-        <p class="md3-label-large md3-corpus-hero__eyebrow">Corpus</p>
-        <h1 class="md3-display-small md3-corpus-hero__title">Buscar en el corpus</h1>
-        <p class="md3-body-large md3-corpus-hero__intro">
-          Busca palabras o secuencias de letras o palabras, filtra por país, hablante y registro.
-        </p>
-      </div>
-      <div class="md3-corpus-hero__stats" data-element="corpus-overview">
-        <!-- Stats placeholder - can be populated later if needed -->
-      </div>
+  <!-- Hero Header (Container Hero - Tonal) -->
+  <section class="md3-hero md3-hero--container" role="main" aria-label="Búsqueda en el corpus">
+    <div class="md3-hero__container">
+      <span class="md3-hero__eyebrow">Corpus</span>
+      <h1 class="md3-hero__title">Buscar en el corpus</h1>
+      <p class="md3-hero__intro">
+        Busca palabras o secuencias de letras o palabras, filtra por país, hablante y registro.
+      </p>
     </div>
-  </header>
+  </section>
 
   <!-- Content -->
   <section class="md3-corpus-content">

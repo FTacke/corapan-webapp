@@ -1,0 +1,435 @@
+/* ============================================
+   MD3 Navigation Drawer
+   ============================================
+   Modal (Compact/Medium) & Standard (Expanded)
+   Farbe: surface (wie md3_preview navigation)
+   ============================================ */
+
+/* ============================================
+   Common Drawer Styles
+   ============================================ */
+
+.md3-navigation-drawer {
+  display: flex;
+  flex-direction: column;
+  background: var(--md-sys-color-surface);
+  color: var(--md-sys-color-on-surface);
+  width: 280px; /* MD3 Standard Drawer Width */
+  height: 100vh; /* Full viewport height, NOT page height */
+  max-height: 100vh;
+  overflow-y: auto;
+  overflow-x: hidden;
+  position: relative; /* For proper stacking */
+}
+
+.md3-navigation-drawer__container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh; /* Full viewport height */
+  max-height: 100vh;
+  /* Background ZURÜCK auf Container - ist nötig für zusammenhängendes Aussehen */
+  background: var(--md-sys-color-surface);
+  color: var(--md-sys-color-on-surface);
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+/* ============================================
+   Header with Logo
+   ============================================ */
+
+.md3-navigation-drawer__header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-6) var(--space-4);
+  border-bottom: 1px solid var(--md-sys-color-outline-variant);
+}
+
+.md3-navigation-drawer__logo-link {
+  display: block;
+  text-decoration: none;
+}
+
+.md3-navigation-drawer__logo {
+  height: 48px;
+  width: auto;
+  display: block;
+}
+
+/* ============================================
+   Navigation Content
+   ============================================ */
+
+.md3-navigation-drawer__content {
+  flex: 1;
+  padding: var(--space-2) 0;
+  overflow-y: auto;
+}
+
+/* ============================================
+   Navigation Items
+   ============================================ */
+
+.md3-navigation-drawer__item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border: none;
+  background: transparent;
+  color: var(--md-sys-color-on-surface);
+  font-family: var(--font-body);
+  font-size: var(--md-sys-typescale-body-large);
+  font-weight: 500;
+  text-decoration: none;
+  text-align: left;
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  margin: var(--space-1) var(--space-3);
+  transition: background-color 0.2s ease, color 0.2s ease;
+  min-height: 48px; /* Touch target */
+}
+
+.md3-navigation-drawer__item:hover {
+  background: var(--md-sys-color-surface-container-high);
+}
+
+.md3-navigation-drawer__item:focus-visible {
+  outline: 2px solid var(--md-sys-color-primary);
+  outline-offset: -2px;
+}
+
+/* Active State */
+.md3-navigation-drawer__item--active {
+  color: var(--md-sys-color-primary);
+  background: color-mix(in oklab, var(--md-sys-color-primary) 10%, transparent);
+  font-weight: 600;
+}
+
+.md3-navigation-drawer__item--active:hover {
+  background: color-mix(in oklab, var(--md-sys-color-primary) 15%, transparent);
+}
+
+/* Icon */
+.md3-navigation-drawer__icon {
+  flex-shrink: 0;
+  font-size: 24px;
+  width: 24px;
+  height: 24px;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Chevron for collapsible items */
+.md3-navigation-drawer__chevron {
+  flex-shrink: 0;
+  font-size: 20px;
+  width: 20px;
+  height: 20px;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 200ms ease;
+}
+
+/* Label */
+.md3-navigation-drawer__label {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.md3-navigation-drawer__trigger[aria-expanded="true"] .md3-navigation-drawer__chevron {
+  transform: rotate(180deg);
+}
+
+/* Wenn Submenu-Item aktiv ist, Trigger im Hover-State anzeigen */
+.md3-navigation-drawer__item--active.md3-navigation-drawer__trigger {
+  background: var(--md-sys-color-surface-container-high);
+}
+
+/* ============================================
+   Collapsible Submenu
+   ============================================ */
+
+.md3-navigation-drawer__collapsible {
+  display: flex;
+  flex-direction: column;
+  width: 100%; /* Volle Breite des Drawers */
+  margin: 0;
+}
+
+/* Trigger button (Proyecto) erbt .md3-navigation-drawer__item Styles */
+/* margin: var(--space-1) var(--space-3) sorgt für korrekte Breite */
+
+.md3-navigation-drawer__submenu {
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  margin: 0;
+  padding-top: var(--space-1);
+  padding-bottom: var(--space-1);
+}
+
+.md3-navigation-drawer__subitem {
+  display: flex;
+  align-items: center;
+  padding: var(--space-2) var(--space-4); /* Rechts normales Padding */
+  padding-left: calc(var(--space-1) + var(--space-4)); /* Links eingerückt */
+  margin: var(--space-1) var(--space-3); /* Gleicher rechter Rand wie normale Items */
+  margin-left: calc(var(--space-3) + var(--space-6)); /* Extra Einrückung links */
+  color: var(--md-sys-color-on-surface-variant);
+  font-family: var(--font-body);
+  font-size: 0.95rem;
+  font-weight: 500;
+  text-decoration: none;
+  border-radius: var(--radius-sm);
+  transition: background-color 0.2s ease, color 0.2s ease;
+  min-height: 40px;
+}
+
+.md3-navigation-drawer__subitem:hover {
+  background: var(--md-sys-color-surface-container-high);
+  color: var(--md-sys-color-on-surface);
+  /* Einrückung bleibt beim Hover erhalten */
+}
+
+.md3-navigation-drawer__subitem--active {
+  color: var(--md-sys-color-primary);
+  background: color-mix(in oklab, var(--md-sys-color-primary) 10%, transparent);
+  font-weight: 600;
+}
+
+/* ============================================
+   Divider
+   ============================================ */
+
+.md3-navigation-drawer__divider {
+  height: 1px;
+  background: var(--md-sys-color-outline-variant);
+  margin: var(--space-2) var(--space-4);
+}
+
+/* ============================================
+   Footer Navigation (Login/Logout)
+   ============================================ */
+
+.md3-navigation-drawer__footer {
+  padding: var(--space-2) 0 var(--space-4) 0;
+  border-top: 1px solid var(--md-sys-color-outline-variant);
+  /* Wrapper wie bei Content */
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+/* Footer Items: KEINE speziellen Overrides - erben von .md3-navigation-drawer__item */
+/* Nur Logout bekommt rote Farbe */
+
+/* Logout Link - Spezielle Farbe (roter Text) */
+.md3-navigation-drawer__item--logout {
+  color: var(--md-sys-color-error);
+}
+
+.md3-navigation-drawer__item--logout:hover {
+  background: color-mix(in srgb, var(--md-sys-color-error) 12%, transparent);
+}
+
+/* Account Item with Avatar (falls benötigt) */
+.md3-navigation-drawer__item--account {
+  font-weight: 600;
+}
+
+.md3-navigation-drawer__avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--md-sys-color-primary);
+  color: var(--md-sys-color-on-primary);
+  font-size: 0.875rem;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+/* ============================================
+   Modal Drawer (Compact/Medium)
+   ============================================
+   HTML Struktur:
+   <aside class="md3-navigation-drawer--modal" hidden>
+     <div class="md3-navigation-drawer__scrim"></div>
+     <div class="md3-navigation-drawer__container">...</div>
+   </aside>
+   ============================================ */
+
+/* ============================================
+   Modal Drawer (Mobile <840px) - REINE CSS ANIMATION
+   Chrome 117+, Firefox 129+, Safari 17.4+
+   ============================================ */
+
+.md3-navigation-drawer--modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1001;
+}
+
+/* HTML [hidden] Attribut: Drawer komplett ausblenden */
+.md3-navigation-drawer--modal[hidden] {
+  display: none;
+}
+
+/* SCRIM: Backdrop - Fullscreen, klickbar, hinter Container */
+.md3-navigation-drawer__scrim {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.4);
+  z-index: 999;
+  cursor: pointer;
+  pointer-events: auto;
+  /* EXIT STATE: Unsichtbar */
+  opacity: 0;
+  /* Transition für opacity */
+  transition: opacity 250ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* CONTAINER: Der Drawer selbst (280px breit, über Scrim) */
+.md3-navigation-drawer--modal .md3-navigation-drawer__container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 280px;
+  z-index: 1000;
+  pointer-events: auto;
+  /* EXIT STATE: Off-screen links, KEINE Box-Shadow */
+  transform: translateX(-100%);
+  box-shadow: none;
+  /* Transition für transform UND box-shadow */
+  transition: transform 250ms cubic-bezier(0.4, 0, 0.2, 1),
+              box-shadow 0s 250ms; /* Box-shadow erscheint NACH Animation (250ms delay) */
+}
+
+/* OPEN STATE: Drawer sichtbar MIT Box-Shadow */
+.md3-navigation-drawer--modal.md3-navigation-drawer--open .md3-navigation-drawer__scrim {
+  opacity: 1;
+}
+
+.md3-navigation-drawer--modal.md3-navigation-drawer--open .md3-navigation-drawer__container {
+  transform: translateX(0);
+  box-shadow: var(--elev-2);
+  /* Box-shadow erscheint SOFORT wenn open */
+  transition: transform 250ms cubic-bezier(0.4, 0, 0.2, 1),
+              box-shadow 0s 0s;
+}
+
+/* BEFORE-OPEN STATE: @starting-style für Entry-Animation
+   Definiert wo die Animation STARTET (vor display:none → display:block) */
+@starting-style {
+  .md3-navigation-drawer--modal:not([hidden]) .md3-navigation-drawer__scrim {
+    opacity: 0;
+  }
+  
+  .md3-navigation-drawer--modal:not([hidden]) .md3-navigation-drawer__container {
+    transform: translateX(-100%);
+  }
+}
+
+/* ============================================
+   Standard Drawer (Expanded)
+   ============================================ */
+
+.md3-navigation-drawer--standard {
+  position: sticky;
+  top: 0; /* Stick to top of viewport, below app bar */
+  align-self: flex-start; /* Prevent stretching in grid */
+  height: 100vh; /* Full viewport height */
+  max-height: 100vh;
+  border-right: 1px solid var(--md-sys-color-outline-variant);
+  box-shadow: var(--elev-1);
+  /* WICHTIG: Keine Transitions - Standard Drawer animiert NICHT */
+  transition: none !important;
+}
+
+.md3-navigation-drawer--standard .md3-navigation-drawer__container {
+  /* WICHTIG: Keine Transitions auf Container im Standard Drawer */
+  transition: none !important;
+  transform: none !important;
+}
+
+/* Hide by default, show only on Expanded */
+.md3-navigation-drawer--standard {
+  display: none;
+}
+
+@media (min-width: 840px) {
+  .md3-navigation-drawer--standard {
+    display: flex;
+  }
+  
+  /* Hide modal drawer on Expanded */
+  .md3-navigation-drawer--modal {
+    display: none;
+  }
+}
+
+/* ============================================
+   Accessibility
+   ============================================ */
+
+/* Focus visible styles already defined above */
+
+/* Screen reader only class */
+.md3-navigation-drawer .sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ============================================
+   Dark Theme Support
+   ============================================ */
+
+.theme-dark .md3-navigation-drawer {
+  background: var(--md-sys-color-surface-container);
+}
+
+.theme-dark .md3-navigation-drawer__container {
+  background: var(--md-sys-color-surface-container);
+}
+
+/* ============================================
+   Animations & Transitions
+   ============================================ */
+
+/* Smooth open/close for collapsibles */
+.md3-navigation-drawer__submenu[hidden] {
+  display: none;
+}
+
+/* Custom properties for JS control */
+:root {
+  --drawer-width: 280px;
+  --drawer-transition-duration: 300ms;
+  --drawer-transition-easing: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+

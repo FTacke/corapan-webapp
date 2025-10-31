@@ -82,7 +82,7 @@ export class TokenCollector {
    */
   async copyToClipboard() {
     if (this.collectedTokenIds.length === 0) {
-      alert('Keine Token-IDs zum Kopieren vorhanden.');
+      this._showSnackbar('⚠️ Keine Token-IDs zum Kopieren vorhanden', 'warning');
       return;
     }
 
@@ -91,6 +91,7 @@ export class TokenCollector {
     try {
       await navigator.clipboard.writeText(text);
       this._showCopySuccess();
+      this._showSnackbar('✓ Token-IDs kopiert!', 'success');
     } catch (err) {
       console.error('[Tokens] Failed to copy:', err);
       
@@ -98,6 +99,7 @@ export class TokenCollector {
       this.inputElement.select();
       document.execCommand('copy');
       this._showCopySuccess();
+      this._showSnackbar('✓ Token-IDs kopiert!', 'success');
     }
   }
 
@@ -122,12 +124,7 @@ export class TokenCollector {
   _showCopySuccess() {
     if (!this.copyButton) return;
 
-    const icon = this.copyButton.querySelector('i');
-    if (!icon) return;
-
-    // Change to success icon
-    icon.classList.remove('fa-copy');
-    icon.classList.add('fa-check');
+    // Change icon to check
     this.copyButton.classList.add('copy-success');
 
     // Reset after delay
@@ -143,12 +140,50 @@ export class TokenCollector {
   _resetCopyIcon() {
     if (!this.copyButton) return;
 
-    const icon = this.copyButton.querySelector('i');
-    if (!icon) return;
-
-    icon.classList.remove('fa-check');
-    icon.classList.add('fa-copy');
     this.copyButton.classList.remove('copy-success');
+  }
+
+  /**
+   * Show snackbar notification
+   * @private
+   */
+  _showSnackbar(message, type = 'success') {
+    // Remove existing snackbar
+    const existingSnackbar = document.querySelector('.copy-snackbar');
+    if (existingSnackbar) {
+      existingSnackbar.remove();
+    }
+
+    // Create snackbar
+    const snackbar = document.createElement('div');
+    snackbar.className = 'copy-snackbar';
+    
+    const icon = document.createElement('i');
+    if (type === 'success') {
+      icon.className = 'bi bi-check-circle-fill';
+    } else if (type === 'warning') {
+      icon.className = 'bi bi-exclamation-circle-fill';
+    }
+    
+    const text = document.createElement('span');
+    text.textContent = message;
+    
+    snackbar.appendChild(icon);
+    snackbar.appendChild(text);
+    document.body.appendChild(snackbar);
+
+    // Show with animation
+    setTimeout(() => {
+      snackbar.classList.add('visible');
+    }, 10);
+
+    // Hide and remove after delay
+    setTimeout(() => {
+      snackbar.classList.remove('visible');
+      setTimeout(() => {
+        snackbar.remove();
+      }, 300);
+    }, PLAYER_CONFIG.COPY_FEEDBACK_DURATION);
   }
 
   /**

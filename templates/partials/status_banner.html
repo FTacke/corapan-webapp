@@ -1,44 +1,62 @@
 {% set user_name = g.get('user') %}
 {% set user_role = g.get('role') %}
 {% set is_authenticated = user_name is not none %}
-<div class="md3-status-banner" data-auth="{{ 'true' if is_authenticated else 'false' }}" data-role="{{ user_role.value if user_role else '' }}">
-  <div class="md3-status-banner__container">
-    <div class="md3-status-banner__message">
-      <span class="md3-status-banner__label">Estado</span>
-      {% if is_authenticated %}
-        <span class="md3-status-banner__dot md3-status-banner__dot--online" aria-hidden="true"></span>
-        <span>Sesi&oacute;n iniciada como <strong>{{ user_name }}</strong></span>
-      {% else %}
-        <span class="md3-status-banner__dot md3-status-banner__dot--offline" aria-hidden="true"></span>
-        <span>Est&aacute;s viendo la versi&oacute;n p&uacute;blica.</span>
-      {% endif %}
-    </div>
-    <div class="md3-status-banner__actions">
-      {% if is_authenticated %}
-        <form method="post" action="{{ url_for('auth.logout') }}" data-element="logout-form">
-          <input type="hidden" name="referrer" value="{{ request.url }}">
-          <input type="hidden" name="csrf_token" value="" data-element="csrf-token">
-          <button type="submit" class="btn btn-text">Cerrar sesi&oacute;n</button>
-        </form>
-      {% else %}
-        <button class="btn btn-tonal" data-action="open-login">Iniciar sesi&oacute;n</button>
-      {% endif %}
-    </div>
-  </div>
-</div>
+
+<!-- Login Sheet: Modal Bottom Sheet (Mobile) / Dialog (Desktop) -->
 <div class="md3-login-sheet" hidden data-element="login-sheet">
-  <form class="md3-login-form" method="post" action="{{ url_for('auth.login') }}">
-    <h2>Acceso CO.RA.PAN</h2>
-    <input type="hidden" name="referrer" value="{{ request.url }}">
-    <label>
-      <span>Cuenta</span>
-      <input type="text" name="username" autocomplete="username" required>
-    </label>
-    <label>
-      <span>Contrase&ntilde;a</span>
-      <input type="password" name="password" autocomplete="current-password" required>
-    </label>
-    <button type="submit" class="btn btn-filled">Continuar</button>
-  </form>
-  <button class="btn btn-text" data-action="close-login">Cancelar</button>
+  <!-- Backdrop (clickable to dismiss) -->
+  <div class="md3-login-backdrop" data-action="close-login"></div>
+  
+  <!-- Sheet Container -->
+  <div class="md3-login-sheet__container">
+    <!-- Form -->
+    <form class="md3-login-sheet__form" method="post" action="{{ url_for('auth.login') }}">
+      <!-- Title with Close Button -->
+      <div class="md3-login-sheet__header">
+        <h2 class="md3-login-sheet__title">Iniciar sesión</h2>
+        <button type="button" class="md3-login-sheet__close-button" data-action="close-login" aria-label="Cerrar">
+          <span class="material-symbols-rounded" aria-hidden="true">close</span>
+        </button>
+      </div>
+      
+      <!-- Referrer (for redirect after login) -->
+      <input type="hidden" name="referrer" value="{{ request.url }}">
+      
+      <!-- Username Field -->
+      <div class="md3-text-field">
+        <input 
+          type="text" 
+          class="md3-text-field__input" 
+          name="username" 
+          id="login-username"
+          placeholder=" "
+          autocomplete="username" 
+          required
+          aria-label="Nombre de usuario"
+        >
+        <label class="md3-text-field__label" for="login-username">Cuenta</label>
+      </div>
+      
+      <!-- Password Field -->
+      <div class="md3-text-field">
+        <input 
+          type="password" 
+          class="md3-text-field__input" 
+          name="password" 
+          id="login-password"
+          placeholder=" "
+          autocomplete="current-password" 
+          required
+          aria-label="Contraseña"
+        >
+        <label class="md3-text-field__label" for="login-password">Contraseña</label>
+      </div>
+      
+      <!-- Full-Width Submit Button -->
+      <button type="submit" class="md3-login-sheet__button">
+        <span class="material-symbols-rounded">login</span>
+        <span>Entrar</span>
+      </button>
+    </form>
+  </div>
 </div>

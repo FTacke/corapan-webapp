@@ -1,0 +1,263 @@
+{# MD3 Navigation Drawer - Modal (Compact/Medium) & Standard (Expanded) #}
+{% set user_name = g.get('user') %}
+{% set user_role = g.get('role') %}
+{% set is_authenticated = user_name is not none %}
+{% set role_value = user_role.value if user_role else '' %}
+{% set active_endpoint = request.endpoint %}
+
+{# Define navigation items with icons #}
+{% set main_nav_items = [
+  {
+    'label': 'Inicio',
+    'href': url_for('public.landing_page'),
+    'icon': 'home',
+    'match': ['public.landing_page']
+  },
+  {
+    'label': 'Corpus',
+    'href': url_for('corpus.corpus_home'),
+    'icon': 'search_insights',
+    'match': ['corpus.corpus_home', 'corpus.search']
+  },
+  {
+    'label': 'Atlas',
+    'href': url_for('public.atlas_page'),
+    'icon': 'globe_location_pin',
+    'match': ['public.atlas_page']
+  },
+  {
+    'label': 'Proyecto',
+    'href': url_for('public.proyecto_overview'),
+    'icon': 'assignment_globe',
+    'match': ['public.proyecto_overview', 'public.proyecto_page'],
+    'children': [
+      { 'label': 'El proyecto', 'href': url_for('public.proyecto_overview') },
+      { 'label': 'Diseño', 'href': url_for('public.proyecto_diseno') },
+      { 'label': 'Estadísticas', 'href': url_for('public.proyecto_estadisticas') },
+      { 'label': 'Quiénes somos', 'href': url_for('public.proyecto_quienes_somos') },
+      { 'label': 'Cómo citar', 'href': url_for('public.proyecto_como_citar') }
+    ]
+  }
+] %}
+
+{# Modal Navigation Drawer (Compact/Medium) #}
+<aside class="md3-navigation-drawer md3-navigation-drawer--modal" 
+       id="navigation-drawer-modal"
+       role="navigation" 
+       aria-label="Hauptnavigation"
+       hidden
+       data-element="nav-drawer-modal">
+  <div class="md3-navigation-drawer__scrim" data-action="close-drawer"></div>
+  <div class="md3-navigation-drawer__container">
+    {# Header with Logo #}
+    <div class="md3-navigation-drawer__header">
+      <a href="{{ url_for('public.landing_page') }}" class="md3-navigation-drawer__logo-link">
+        <img src="{{ url_for('static', filename='img/logo_transparent.png') }}" 
+             alt="CO.RA.PAN" 
+             class="md3-navigation-drawer__logo">
+      </a>
+    </div>
+
+    {# Main Navigation Items #}
+    <nav class="md3-navigation-drawer__content" aria-label="Hauptmenü">
+      {% for item in main_nav_items %}
+        {% set is_active = active_endpoint in item.match %}
+        
+        {% if item.children %}
+          {# Check if any child is active #}
+          {% set has_active_child = namespace(value=false) %}
+          {% for child in item.children %}
+            {% set child_is_active = (request.path == child.href) or (request.path.startswith(child.href + '/')) or (active_endpoint in (child.get('match', []) if child is mapping else [])) %}
+            {% if child_is_active %}
+              {% set has_active_child.value = true %}
+            {% endif %}
+          {% endfor %}
+          
+          {# Collapsible item with submenu #}
+          <div class="md3-navigation-drawer__collapsible">
+            <button type="button" 
+                    class="md3-navigation-drawer__item md3-navigation-drawer__trigger {{ 'md3-navigation-drawer__item--active' if (is_active or has_active_child.value) else '' }}"
+                    aria-expanded="{{ 'true' if has_active_child.value else 'false' }}"
+                    aria-controls="drawer-submenu-{{ loop.index }}">
+              <span class="material-symbols-rounded md3-navigation-drawer__icon">{{ item.icon }}</span>
+              <span class="md3-navigation-drawer__label">{{ item.label }}</span>
+              <span class="material-symbols-rounded md3-navigation-drawer__chevron">expand_more</span>
+            </button>
+            
+            <div id="drawer-submenu-{{ loop.index }}" 
+                 class="md3-navigation-drawer__submenu" 
+                 {{ 'hidden' if not has_active_child.value else '' }}>
+              {% for child in item.children %}
+                {% set child_is_active = (request.path == child.href) or (request.path.startswith(child.href + '/')) or (active_endpoint in (child.get('match', []) if child is mapping else [])) %}
+                <a href="{{ child.href }}" 
+                   class="md3-navigation-drawer__subitem {{ 'md3-navigation-drawer__subitem--active' if child_is_active else '' }}"
+                   aria-current="{{ 'page' if child_is_active else 'false' }}">
+                  {{ child.label }}
+                </a>
+              {% endfor %}
+            </div>
+          </div>
+        {% else %}
+          {# Simple navigation item #}
+          <a href="{{ item.href }}" 
+             class="md3-navigation-drawer__item {{ 'md3-navigation-drawer__item--active' if is_active else '' }}"
+             aria-current="{{ 'page' if is_active else 'false' }}">
+            <span class="material-symbols-rounded md3-navigation-drawer__icon">{{ item.icon }}</span>
+            <span class="md3-navigation-drawer__label">{{ item.label }}</span>
+          </a>
+        {% endif %}
+      {% endfor %}
+    </nav>
+
+    {# Divider #}
+
+    {# Footer Navigation #}
+    <nav class="md3-navigation-drawer__footer" aria-label="Weitere Links">
+      {% if is_authenticated %}
+        {# Editor Link (für EDITOR und ADMIN) #}
+        {% if role_value in ['editor', 'admin'] %}
+          <a href="{{ url_for('editor.overview') }}" 
+             class="md3-navigation-drawer__item">
+            <span class="material-symbols-rounded md3-navigation-drawer__icon">edit_document</span>
+            <span class="md3-navigation-drawer__label">Editor</span>
+          </a>
+        {% endif %}
+        
+        {# Admin Dashboard Link (nur für Admins) #}
+        {% if role_value == 'admin' %}
+          <a href="{{ url_for('admin.dashboard') }}" 
+             class="md3-navigation-drawer__item">
+            <span class="material-symbols-rounded md3-navigation-drawer__icon">dashboard</span>
+            <span class="md3-navigation-drawer__label">Dashboard</span>
+          </a>
+        {% endif %}
+        
+        {# Authenticated: Logout Link (sieht aus wie normaler Link) #}
+        <form method="POST" action="{{ url_for('auth.logout') }}" id="drawer-logout-form-modal" style="display: none;">
+        </form>
+        <a href="#" 
+           class="md3-navigation-drawer__item md3-navigation-drawer__item--logout"
+           onclick="event.preventDefault(); document.getElementById('drawer-logout-form-modal').submit();">
+          <span class="material-symbols-rounded md3-navigation-drawer__icon">logout</span>
+          <span class="md3-navigation-drawer__label">Cerrar sesión</span>
+        </a>
+      {% else %}
+        {# Unauthenticated: Login Button #}
+        <button type="button" 
+                class="md3-navigation-drawer__item"
+                data-action="open-login">
+          <span class="material-symbols-rounded md3-navigation-drawer__icon">account_circle</span>
+          <span class="md3-navigation-drawer__label">Iniciar sesión</span>
+        </button>
+      {% endif %}
+    </nav>
+  </div>
+</aside>
+
+{# Standard Navigation Drawer (Expanded) #}
+<aside class="md3-navigation-drawer md3-navigation-drawer--standard" 
+       id="navigation-drawer-standard"
+       role="navigation" 
+       aria-label="Hauptnavigation"
+       data-element="nav-drawer-standard">
+  {# Header with Logo #}
+  <div class="md3-navigation-drawer__header">
+    <a href="{{ url_for('public.landing_page') }}" class="md3-navigation-drawer__logo-link">
+      <img src="{{ url_for('static', filename='img/logo_transparent.png') }}" 
+           alt="CO.RA.PAN" 
+           class="md3-navigation-drawer__logo">
+    </a>
+  </div>
+
+  {# Main Navigation Items #}
+  <nav class="md3-navigation-drawer__content" aria-label="Hauptmenü">
+    {% for item in main_nav_items %}
+      {% set is_active = active_endpoint in item.match %}
+      
+      {% if item.children %}
+        {# Check if any child is active #}
+        {% set has_active_child = namespace(value=false) %}
+        {% for child in item.children %}
+          {% set child_is_active = (request.path == child.href) or (request.path.startswith(child.href + '/')) or (active_endpoint in (child.get('match', []) if child is mapping else [])) %}
+          {% if child_is_active %}
+            {% set has_active_child.value = true %}
+          {% endif %}
+        {% endfor %}
+        
+        {# Collapsible item with submenu #}
+        <div class="md3-navigation-drawer__collapsible">
+          <button type="button" 
+                  class="md3-navigation-drawer__item md3-navigation-drawer__trigger {{ 'md3-navigation-drawer__item--active' if (is_active or has_active_child.value) else '' }}"
+                  aria-expanded="{{ 'true' if has_active_child.value else 'false' }}"
+                  aria-controls="drawer-standard-submenu-{{ loop.index }}">
+            <span class="material-symbols-rounded md3-navigation-drawer__icon">{{ item.icon }}</span>
+            <span class="md3-navigation-drawer__label">{{ item.label }}</span>
+            <span class="material-symbols-rounded md3-navigation-drawer__chevron">expand_more</span>
+          </button>
+          
+          <div id="drawer-standard-submenu-{{ loop.index }}" 
+               class="md3-navigation-drawer__submenu" 
+               {{ 'hidden' if not has_active_child.value else '' }}>
+            {% for child in item.children %}
+              {% set child_is_active = (request.path == child.href) or (request.path.startswith(child.href + '/')) or (active_endpoint in (child.get('match', []) if child is mapping else [])) %}
+              <a href="{{ child.href }}" 
+                 class="md3-navigation-drawer__subitem {{ 'md3-navigation-drawer__subitem--active' if child_is_active else '' }}"
+                 aria-current="{{ 'page' if child_is_active else 'false' }}">
+                {{ child.label }}
+              </a>
+            {% endfor %}
+          </div>
+        </div>
+      {% else %}
+        {# Simple navigation item #}
+        <a href="{{ item.href }}" 
+           class="md3-navigation-drawer__item {{ 'md3-navigation-drawer__item--active' if is_active else '' }}"
+           aria-current="{{ 'page' if is_active else 'false' }}">
+          <span class="material-symbols-rounded md3-navigation-drawer__icon">{{ item.icon }}</span>
+          <span class="md3-navigation-drawer__label">{{ item.label }}</span>
+        </a>
+      {% endif %}
+    {% endfor %}
+  </nav>
+
+  {# Footer Navigation #}
+  <nav class="md3-navigation-drawer__footer" aria-label="Weitere Links">
+    {% if is_authenticated %}
+      {# Editor Link (für EDITOR und ADMIN) #}
+      {% if role_value in ['editor', 'admin'] %}
+        <a href="{{ url_for('editor.overview') }}" 
+           class="md3-navigation-drawer__item">
+          <span class="material-symbols-rounded md3-navigation-drawer__icon">edit_document</span>
+          <span class="md3-navigation-drawer__label">Editor</span>
+        </a>
+      {% endif %}
+      
+      {# Admin Dashboard Link (nur für Admins) #}
+      {% if role_value == 'admin' %}
+        <a href="{{ url_for('admin.dashboard') }}" 
+           class="md3-navigation-drawer__item">
+          <span class="material-symbols-rounded md3-navigation-drawer__icon">dashboard</span>
+          <span class="md3-navigation-drawer__label">Dashboard</span>
+        </a>
+      {% endif %}
+      
+      {# Authenticated: Logout Link (sieht aus wie normaler Link) #}
+      <form method="POST" action="{{ url_for('auth.logout') }}" id="drawer-logout-form-standard" style="display: none;">
+      </form>
+      <a href="#" 
+         class="md3-navigation-drawer__item md3-navigation-drawer__item--logout"
+         onclick="event.preventDefault(); document.getElementById('drawer-logout-form-standard').submit();">
+        <span class="material-symbols-rounded md3-navigation-drawer__icon">logout</span>
+        <span class="md3-navigation-drawer__label">Cerrar sesión</span>
+      </a>
+    {% else %}
+      {# Unauthenticated: Login Button #}
+      <button type="button" 
+              class="md3-navigation-drawer__item"
+              data-action="open-login">
+        <span class="material-symbols-rounded md3-navigation-drawer__icon">account_circle</span>
+        <span class="md3-navigation-drawer__label">Iniciar sesión</span>
+      </button>
+    {% endif %}
+  </nav>
+</aside>

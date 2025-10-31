@@ -1,14 +1,22 @@
 {% extends 'base.html' %}
 {% block page_title %}Datenschutz · CO.RA.PAN{% endblock %}
+
+{% block extra_head %}
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/md3/tokens.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/md3/typography.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/md3/components/hero.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/md3/components/text-pages.css') }}">
+{% endblock %}
+
 {% block content %}
 <article class="md3-text-page">
-  <!-- Hero Header -->
-  <header class="md3-text-hero">
-    <div class="md3-text-hero__container">
-      <p class="md3-label-large md3-text-hero__eyebrow">Rechtliche Informationen</p>
-      <h1 class="md3-display-small md3-text-hero__title">Datenschutzerklärung</h1>
+  <!-- Hero Header (Container Hero - Tonal) -->
+  <section class="md3-hero md3-hero--container" role="main" aria-label="Datenschutzerklärung">
+    <div class="md3-hero__container">
+      <span class="md3-hero__eyebrow">Rechtliche Informationen</span>
+      <h1 class="md3-hero__title">Datenschutzerklärung</h1>
     </div>
-  </header>
+  </section>
 
   <!-- Main Content -->
   <div class="md3-text-content">

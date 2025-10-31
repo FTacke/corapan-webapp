@@ -2,19 +2,20 @@
 {% from 'partials/page_navigation.html' import page_navigation %}
 {% block page_title %}Estadísticas · CO.RA.PAN{% endblock %}
 {% block extra_head %}
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/md3/tokens.css') }}">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/md3/typography.css') }}">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/md3/components/stats.css') }}">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/md3/components/text-pages.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/md3/tokens.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/md3/typography.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/md3/components/hero.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/md3/components/text-pages.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/md3/components/stats.css') }}">
 {% endblock %}
 {% block content %}
 <article class="md3-text-page">
-  <header class="md3-text-hero">
-    <div class="md3-text-hero__container">
-      <p class="md3-label-large md3-text-hero__eyebrow">Proyecto</p>
-      <h1 class="md3-display-small md3-text-hero__title">Estadísticas</h1>
+  <section class="md3-hero md3-hero--container" role="main" aria-label="Estadísticas del corpus">
+    <div class="md3-hero__container">
+      <span class="md3-hero__eyebrow">Proyecto</span>
+      <h1 class="md3-hero__title">Estadísticas</h1>
     </div>
-  </header>
+  </section>
 
   <div class="md3-text-content">
     <section class="md3-text-section">

@@ -379,10 +379,9 @@
   padding-bottom: 180px; /* Space for fixed player controls */
 }
 
-/* Sidebar */
+/* Sidebar - Migriert zu MD3 (siehe editor-edit.css) */
 .player-sidebar {
-  background: white;
-  border-left: 1px solid #e0e0e0;
+  /* background und border-left wurden zu MD3 migriert */
   overflow-y: auto;
   padding: 0;
   display: flex;

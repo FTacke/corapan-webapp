@@ -61,14 +61,14 @@ export class HistoryPanel {
     
     if (this.history.length === 0) {
       this.panel.innerHTML = `
-        <div class="history-empty">
+        <div class="md3-editor-history-empty">
           <p>Keine Änderungshistorie</p>
         </div>
       `;
       return;
     }
     
-    let html = '<div class="history-timeline">';
+    let html = '<div class="md3-editor-history-timeline">';
     
     this.history.forEach(entry => {
       const timestamp = new Date(entry.timestamp);
@@ -86,10 +86,13 @@ export class HistoryPanel {
     html += '</div>';
     this.panel.innerHTML = html;
     
-    // Add event listeners to undo buttons
-    this.panel.querySelectorAll('[data-undo-index]').forEach(btn => {
+    // Add event listeners to undo buttons for individual changes
+    this.panel.querySelectorAll('.md3-editor-history-change-undo-btn').forEach(btn => {
       btn.addEventListener('click', (e) => {
-        const undoIndex = parseInt(e.target.dataset.undoIndex);
+        e.stopPropagation();
+        const undoIndex = parseInt(btn.dataset.undoIndex);
+        const changeIndex = parseInt(btn.dataset.changeIndex);
+        // For now, undo the entire entry (backend doesn't support individual change undo yet)
         this.undoChange(undoIndex);
       });
     });
@@ -102,7 +105,7 @@ export class HistoryPanel {
     const changes = entry.changes || [];
     
     let changesHtml = '';
-    changes.forEach(change => {
+    changes.forEach((change, changeIndex) => {
       // Check if this is a speaker change or word change
       if (change.type === 'speaker_change') {
         const segIdx = change.segment_index || '?';
@@ -110,12 +113,17 @@ export class HistoryPanel {
         const newVal = this._escapeHtml(change.new_value || '').substring(0, 15);
         
         changesHtml += `
-          <div class="history-change-item history-speaker-change">
-            <span class="badge badge-speaker">S${segIdx}</span>
-            <span class="speaker-label">Speaker:</span>
-            <span class="old-value"><del>${oldVal}</del></span>
-            <span class="arrow">→</span>
-            <span class="new-value"><ins>${newVal}</ins></span>
+          <div class="md3-editor-history-change-item">
+            <span class="md3-editor-history-change-badge">S${segIdx}</span>
+            <span class="md3-editor-history-old-value">${oldVal}</span>
+            <span class="md3-editor-history-arrow">→</span>
+            <span class="md3-editor-history-new-value">${newVal}</span>
+            <button class="md3-editor-history-change-undo-btn" 
+                    data-undo-index="${entry.index}" 
+                    data-change-index="${changeIndex}"
+                    title="Diese Änderung rückgängig machen">
+              <i class="bi bi-arrow-counterclockwise"></i>
+            </button>
           </div>
         `;
       } else {
@@ -126,30 +134,31 @@ export class HistoryPanel {
         const newVal = this._escapeHtml(change.new_value || '').substring(0, 15);
         
         changesHtml += `
-          <div class="history-change-item">
-            <span class="badge">S${segIdx}W${wordIdx}</span>
-            <span class="old-value"><del>${oldVal}</del></span>
-            <span class="arrow">→</span>
-            <span class="new-value"><ins>${newVal}</ins></span>
+          <div class="md3-editor-history-change-item">
+            <span class="md3-editor-history-change-badge">S${segIdx}W${wordIdx}</span>
+            <span class="md3-editor-history-old-value">${oldVal}</span>
+            <span class="md3-editor-history-arrow">→</span>
+            <span class="md3-editor-history-new-value">${newVal}</span>
+            <button class="md3-editor-history-change-undo-btn" 
+                    data-undo-index="${entry.index}" 
+                    data-change-index="${changeIndex}"
+                    title="Diese Änderung rückgängig machen">
+              <i class="bi bi-arrow-counterclockwise"></i>
+            </button>
           </div>
         `;
       }
     });
     
     return `
-      <div class="history-entry">
-        <div class="history-header">
-          <span class="timestamp">${timeStr}</span>
-          <span class="user">${user}</span>
-          <span class="change-count">${changes.length}</span>
+      <div class="md3-editor-history-entry">
+        <div class="md3-editor-history-header">
+          <span class="md3-editor-history-timestamp">${timeStr}</span>
+          <span class="md3-editor-history-user">${user}</span>
+          <span class="md3-editor-history-badge">${changes.length}</span>
         </div>
-        <div class="history-changes">
+        <div class="md3-editor-history-changes">
           ${changesHtml}
-        </div>
-        <div class="history-actions">
-          <button class="btn-undo" data-undo-index="${entry.index}">
-            Undo
-          </button>
         </div>
       </div>
     `;
@@ -162,13 +171,15 @@ export class HistoryPanel {
     const reversedIdx = entry.reversed_index || '?';
     
     return `
-      <div class="history-entry history-undo">
-        <div class="history-header">
-          <span class="timestamp">${timeStr}</span>
-          <span class="user">${user}</span>
-          <span class="badge-undo">↶</span>
+      <div class="md3-editor-history-entry">
+        <div class="md3-editor-history-header">
+          <span class="md3-editor-history-timestamp">${timeStr}</span>
+          <span class="md3-editor-history-user">${user}</span>
+          <span class="md3-editor-history-badge md3-editor-history-badge-undo">↶</span>
         </div>
-        <div class="history-message">Undo #${reversedIdx}</div>
+        <div class="md3-editor-history-changes">
+          <p style="font-size: 0.75rem; color: var(--md-sys-color-on-surface-variant);">Undo #${reversedIdx}</p>
+        </div>
       </div>
     `;
   }

@@ -1,0 +1,1132 @@
+/* ============================================
+   CO.RA.PAN Editor Edit Page - MD3 Design System
+   Content-Breite: max 1400px (wie Corpus)
+   
+   Sidebar: Kompaktes, platzsparendes Design mit
+   konsistenter MD3-Typografie und Farbsystem
+   ============================================ */
+
+/* Main Content Container - wie Corpus */
+.md3-editor-edit-content {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* ============================================
+   SIDEBAR COMPONENTS - Kompaktes MD3-Design
+   ============================================ */
+
+/* Editor Pane (Sidebar Container) */
+.md3-editor-pane {
+  padding: var(--space-3);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  background: transparent; /* Kein weißer Hintergrund mehr */
+}
+
+/* Cards Container */
+.md3-editor-cards {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+/* Card Component - Kompakt mit surface-container Hintergrund */
+.md3-editor-card {
+  padding: var(--space-3);
+  border-radius: var(--radius-md);
+  background: var(--md-sys-color-surface-container);
+  box-shadow: var(--elev-1);
+  transition: box-shadow 0.2s cubic-bezier(0.2, 0, 0, 1);
+}
+
+/* Card Header - Kompakt */
+.md3-editor-card-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-3);
+  padding-bottom: var(--space-2);
+  border-bottom: 1px solid var(--md-sys-color-outline-variant);
+}
+
+.md3-editor-card-header i {
+  color: var(--md-sys-color-primary);
+  font-size: 1.125rem;
+  flex-shrink: 0;
+}
+
+.md3-editor-card-title {
+  margin: 0;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--md-sys-color-on-surface);
+  letter-spacing: 0.25px;
+  line-height: 1.2;
+}
+
+/* Metrics Section - Ultra-Kompakt */
+.md3-editor-metrics {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-3);
+}
+
+.md3-editor-metrics-info {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
+}
+
+.md3-editor-label {
+  color: var(--md-sys-color-on-surface-variant);
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.4px;
+  line-height: 1.2;
+}
+
+.md3-editor-value {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--md-sys-color-on-surface);
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Action Buttons Inline - Kompakt */
+.md3-editor-actions-inline {
+  display: flex;
+  gap: var(--space-1);
+}
+
+.md3-editor-btn-icon {
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border-radius: 50%;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--md-sys-color-on-surface-variant);
+  transition: all 0.2s cubic-bezier(0.2, 0, 0, 1);
+  font-size: 1rem;
+}
+
+.md3-editor-btn-icon:hover:not(:disabled) {
+  background: var(--md-sys-color-surface-container-highest);
+  color: var(--md-sys-color-primary);
+}
+
+.md3-editor-btn-icon:disabled {
+  color: var(--md-sys-color-on-surface);
+  opacity: 0.38;
+  cursor: not-allowed;
+}
+
+/* Edit Info Panel - Kompakt */
+.md3-editor-edit-info {
+  margin: 0 0 var(--space-3) 0;
+  padding: var(--space-2) var(--space-3);
+  background: var(--md-sys-color-secondary-container);
+  border-radius: var(--radius-sm);
+  border-left: 2px solid var(--md-sys-color-secondary);
+}
+
+.md3-editor-edit-info.hidden {
+  display: none;
+}
+
+.md3-editor-edit-label {
+  font-size: 0.6875rem;
+  color: var(--md-sys-color-on-secondary-container);
+  margin: 0 0 var(--space-1) 0;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  line-height: 1.2;
+}
+
+.md3-editor-current-word {
+  font-family: 'Courier New', 'Consolas', monospace;
+  font-weight: 600;
+  font-size: 1rem;
+  color: var(--md-sys-color-on-secondary-container);
+  margin: 0 0 var(--space-2) 0;
+  line-height: 1.2;
+  word-break: break-word;
+}
+
+.md3-editor-edit-actions {
+  display: flex;
+  gap: var(--space-2);
+}
+
+/* Speaker Selection Panel - Kompakt */
+.md3-editor-speaker-selection {
+  margin: 0 0 var(--space-3) 0;
+  padding: var(--space-2) var(--space-3);
+  background: var(--md-sys-color-tertiary-container);
+  border-radius: var(--radius-sm);
+  border-left: 2px solid var(--md-sys-color-tertiary);
+}
+
+.md3-editor-speaker-selection.hidden {
+  display: none;
+}
+
+.md3-editor-speaker-select {
+  width: 100%;
+  padding: var(--space-2);
+  border: 1px solid var(--md-sys-color-outline);
+  border-radius: var(--radius-sm);
+  background: var(--md-sys-color-surface);
+  color: var(--md-sys-color-on-surface);
+  font-size: 0.8125rem;
+  margin: var(--space-1) 0;
+  transition: border-color 0.2s cubic-bezier(0.2, 0, 0, 1);
+}
+
+.md3-editor-speaker-select:focus {
+  outline: none;
+  border-color: var(--md-sys-color-tertiary);
+  box-shadow: 0 0 0 1px var(--md-sys-color-tertiary);
+}
+
+.md3-editor-speaker-actions {
+  display: flex;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
+}
+
+/* Buttons - Kompakt aber touch-friendly */
+.md3-editor-btn {
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-sm);
+  border: none;
+  font-weight: 500;
+  font-size: 0.8125rem;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.2, 0, 0, 1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-1);
+  min-height: 36px;
+  white-space: nowrap;
+  letter-spacing: 0.5px;
+  line-height: 1.2;
+}
+
+.md3-editor-btn i {
+  font-size: 1rem;
+}
+
+.md3-editor-btn:disabled {
+  opacity: 0.38;
+  cursor: not-allowed;
+}
+
+.md3-editor-btn-primary {
+  background: var(--md-sys-color-primary);
+  color: var(--md-sys-color-on-primary);
+}
+
+.md3-editor-btn-primary:hover:not(:disabled) {
+  box-shadow: var(--elev-1);
+  transform: translateY(-1px);
+}
+
+.md3-editor-btn-error {
+  background: var(--md-sys-color-error);
+  color: var(--md-sys-color-on-error);
+}
+
+.md3-editor-btn-error:hover:not(:disabled) {
+  box-shadow: var(--elev-1);
+  transform: translateY(-1px);
+}
+
+.md3-editor-btn-tonal {
+  background: var(--md-sys-color-secondary-container);
+  color: var(--md-sys-color-on-secondary-container);
+}
+
+.md3-editor-btn-tonal:hover:not(:disabled) {
+  background: var(--md-sys-color-surface-container-highest);
+}
+
+.md3-editor-btn-sm {
+  padding: var(--space-1) var(--space-2);
+  font-size: 0.75rem;
+  min-height: 32px;
+  gap: var(--space-1);
+}
+
+.md3-editor-btn-sm i {
+  font-size: 0.875rem;
+}
+
+.md3-editor-btn-block {
+  width: 100%;
+}
+
+/* CTA Row - Kompakt */
+.md3-editor-cta-row {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin-top: var(--space-3);
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--md-sys-color-outline-variant);
+}
+
+/* Bookmarks Section - Icon-Button wie andere Buttons */
+.md3-editor-bookmark-btn {
+  width: 100%;
+  margin-bottom: var(--space-3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  border: none;
+  background: var(--md-sys-color-secondary-container);
+  color: var(--md-sys-color-on-secondary-container);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-weight: 500;
+  font-size: 0.8125rem;
+  transition: all 0.2s cubic-bezier(0.2, 0, 0, 1);
+  min-height: 36px;
+  letter-spacing: 0.5px;
+}
+
+.md3-editor-bookmark-btn i {
+  font-size: 1rem;
+}
+
+.md3-editor-bookmark-btn:hover:not(:disabled) {
+  background: var(--md-sys-color-surface-container-highest);
+  transform: translateY(-1px);
+  box-shadow: var(--elev-1);
+}
+
+.md3-editor-bookmark-btn.bookmarked {
+  background: var(--md-sys-color-tertiary-container);
+  color: var(--md-sys-color-on-tertiary-container);
+}
+
+.md3-editor-bookmark-btn.bookmarked i::before {
+  content: "\f26b"; /* bi-bookmark-fill */
+}
+
+.md3-editor-bookmark-btn:disabled {
+  opacity: 0.38;
+  cursor: not-allowed;
+}
+
+/* Bookmark List - Ultra-Kompakt */
+.md3-editor-bookmark-list {
+  background: transparent;
+  padding: 0;
+  max-height: 280px;
+  overflow-y: auto;
+}
+
+.md3-editor-bookmark-list ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.md3-editor-bookmark-list li {
+  margin: 0 0 var(--space-1) 0;
+  background: var(--md-sys-color-surface-container-low);
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: var(--space-2);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  font-size: 0.75rem;
+  color: var(--md-sys-color-on-surface);
+  transition: background-color 0.2s cubic-bezier(0.2, 0, 0, 1);
+  position: relative;
+}
+
+.md3-editor-bookmark-list li:hover {
+  background: var(--md-sys-color-surface-container);
+}
+
+.md3-editor-bookmark-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.md3-editor-bookmark-time {
+  font-family: 'Courier New', 'Consolas', monospace;
+  font-weight: 600;
+  color: var(--md-sys-color-primary);
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.md3-editor-bookmark-text {
+  color: var(--md-sys-color-on-surface-variant);
+  font-size: 0.6875rem;
+  line-height: 1.3;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.md3-editor-bookmark-remove-btn {
+  flex-shrink: 0;
+  background: transparent;
+  color: var(--md-sys-color-on-surface-variant);
+  border: none;
+  cursor: pointer;
+  padding: var(--space-1);
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s cubic-bezier(0.2, 0, 0, 1);
+  font-size: 0.875rem;
+}
+
+.md3-editor-bookmark-remove-btn:hover {
+  color: var(--md-sys-color-error);
+  background: var(--md-sys-color-error-container);
+}
+
+/* History Panel - Ultra-Kompakt */
+.md3-editor-history-panel {
+  margin-top: 0;
+  padding: 0;
+  background: transparent;
+  max-height: 450px;
+  overflow-y: auto;
+}
+
+.md3-editor-history-empty {
+  text-align: center;
+  padding: var(--space-4);
+  color: var(--md-sys-color-on-surface-variant);
+  font-size: 0.75rem;
+  font-style: italic;
+  line-height: 1.4;
+}
+
+.md3-editor-history-timeline {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.md3-editor-history-entry {
+  background: transparent;
+  border: none;
+  border-top: 1px solid var(--md-sys-color-outline-variant);
+  padding: var(--space-2) 0;
+  transition: background-color 0.15s cubic-bezier(0.2, 0, 0, 1);
+  font-size: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.md3-editor-history-entry:first-child {
+  border-top: none;
+}
+
+.md3-editor-history-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-wrap: nowrap;
+  line-height: 1.2;
+}
+
+.md3-editor-history-timestamp {
+  font-weight: 600;
+  color: var(--md-sys-color-on-surface);
+  font-size: 0.75rem;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.md3-editor-history-user {
+  color: var(--md-sys-color-on-surface-variant);
+  font-size: 0.6875rem;
+  white-space: nowrap;
+}
+
+.md3-editor-history-badge {
+  background: var(--md-sys-color-primary-container);
+  color: var(--md-sys-color-on-primary-container);
+  padding: 2px var(--space-1);
+  border-radius: var(--radius-sm);
+  font-size: 0.6875rem;
+  margin-left: auto;
+  flex-shrink: 0;
+  font-weight: 600;
+  line-height: 1;
+  min-width: 20px;
+  text-align: center;
+}
+
+.md3-editor-history-badge-undo {
+  background: var(--md-sys-color-error-container);
+  color: var(--md-sys-color-on-error-container);
+}
+
+.md3-editor-history-changes {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  margin-top: var(--space-1);
+}
+
+.md3-editor-history-change-item {
+  padding: var(--space-1) var(--space-2);
+  background: var(--md-sys-color-surface-container-low);
+  border-left: 2px solid var(--md-sys-color-primary);
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-size: 0.6875rem;
+  overflow: hidden;
+  line-height: 1.3;
+  position: relative;
+}
+
+.md3-editor-history-change-undo-btn {
+  margin-left: auto;
+  padding: 2px;
+  background: transparent;
+  border: none;
+  color: var(--md-sys-color-primary);
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s cubic-bezier(0.2, 0, 0, 1);
+  font-size: 0.75rem;
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  opacity: 0.7;
+}
+
+.md3-editor-history-change-undo-btn:hover {
+  background: var(--md-sys-color-primary-container);
+  color: var(--md-sys-color-on-primary-container);
+  opacity: 1;
+}
+
+.md3-editor-history-change-undo-btn:active {
+  transform: scale(0.9);
+}
+
+.md3-editor-history-change-badge {
+  background: var(--md-sys-color-primary);
+  color: var(--md-sys-color-on-primary);
+  padding: 1px 4px;
+  border-radius: 3px;
+  font-size: 0.625rem;
+  font-weight: 600;
+  white-space: nowrap;
+  flex-shrink: 0;
+  line-height: 1;
+  font-family: 'Courier New', 'Consolas', monospace;
+}
+
+.md3-editor-history-old-value {
+  color: var(--md-sys-color-error);
+  font-family: 'Courier New', 'Consolas', monospace;
+  font-size: 0.6875rem;
+  min-width: 0;
+  flex-shrink: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-decoration: line-through;
+  text-decoration-color: var(--md-sys-color-error);
+}
+
+.md3-editor-history-arrow {
+  color: var(--md-sys-color-on-surface-variant);
+  font-weight: normal;
+  flex-shrink: 0;
+  font-size: 0.625rem;
+}
+
+.md3-editor-history-new-value {
+  color: var(--md-sys-color-tertiary);
+  font-family: 'Courier New', 'Consolas', monospace;
+  font-size: 0.6875rem;
+  min-width: 0;
+  flex-shrink: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 600;
+}
+
+.md3-editor-history-actions {
+  display: flex;
+  gap: var(--space-2);
+  margin-top: var(--space-1);
+}
+
+.md3-editor-btn-undo {
+  padding: var(--space-1) var(--space-2);
+  background: var(--md-sys-color-error-container);
+  color: var(--md-sys-color-on-error-container);
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-size: 0.6875rem;
+  transition: all 0.15s cubic-bezier(0.2, 0, 0, 1);
+  font-weight: 500;
+  white-space: nowrap;
+  min-height: 28px;
+  letter-spacing: 0.4px;
+}
+
+.md3-editor-btn-undo:hover {
+  background: var(--md-sys-color-error);
+  color: var(--md-sys-color-on-error);
+  transform: translateY(-1px);
+}
+
+/* Status Badge als Chip mit Warning-State */
+.md3-editor-status-badge {
+  padding: var(--space-1) var(--space-3);
+  border-radius: var(--radius-lg); /* Rundere Ecken wie Chip */
+  font-size: 0.75rem;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  letter-spacing: 0.4px;
+  line-height: 1.2;
+  border: 1px solid transparent;
+  transition: all 0.2s ease;
+}
+
+.md3-editor-status-badge i {
+  font-size: 0.875rem;
+}
+
+.md3-editor-status-saved {
+  background: var(--md-sys-color-tertiary-container);
+  color: var(--md-sys-color-on-tertiary-container);
+  border-color: var(--md-sys-color-tertiary);
+}
+
+.md3-editor-status-unsaved {
+  background: var(--md-sys-color-error); /* Filled wie btn-danger */
+  color: var(--md-sys-color-on-error);
+  border-color: var(--md-sys-color-error);
+  animation: pulse-warning 2s ease-in-out infinite; /* Pulsierender Warning-Effekt */
+}
+
+.md3-editor-status-error {
+  background: var(--md-sys-color-error);
+  color: var(--md-sys-color-on-error);
+  border-color: var(--md-sys-color-error);
+}
+
+@keyframes pulse-warning {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+/* Scrollbar Styling für Listen */
+.md3-editor-bookmark-list::-webkit-scrollbar,
+.md3-editor-history-panel::-webkit-scrollbar {
+  width: 6px;
+}
+
+.md3-editor-bookmark-list::-webkit-scrollbar-track,
+.md3-editor-history-panel::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.md3-editor-bookmark-list::-webkit-scrollbar-thumb,
+.md3-editor-history-panel::-webkit-scrollbar-thumb {
+  background: var(--md-sys-color-outline-variant);
+  border-radius: 3px;
+}
+
+.md3-editor-bookmark-list::-webkit-scrollbar-thumb:hover,
+.md3-editor-history-panel::-webkit-scrollbar-thumb:hover {
+  background: var(--md-sys-color-outline);
+}
+
+/* Responsive Design - Mobile First */
+
+/* Desktop: >= 900px */
+@media (min-width: 900px) {
+  .md3-editor-edit-content {
+    padding: 0 var(--space-6);
+  }
+}
+
+/* Mobile: < 600px - Weitere Kompaktierung */
+@media (max-width: 599px) {
+  .md3-editor-pane {
+    padding: var(--space-2);
+  }
+
+  .md3-editor-cards {
+    gap: var(--space-2);
+  }
+
+  .md3-editor-card {
+    padding: var(--space-2);
+  }
+
+  .md3-editor-card-header {
+    margin-bottom: var(--space-2);
+    padding-bottom: var(--space-1);
+  }
+
+  .md3-editor-card-title {
+    font-size: 0.8125rem;
+  }
+
+  .md3-editor-value {
+    font-size: 1.25rem;
+  }
+
+  .md3-editor-btn {
+    font-size: 0.75rem;
+    padding: var(--space-1) var(--space-2);
+  }
+
+  .md3-editor-bookmark-list {
+    max-height: 200px;
+  }
+
+  .md3-editor-history-panel {
+    max-height: 250px;
+  }
+}
+
+/* ============================================
+   PLAYER PAGE LAYOUT - MD3 Migration
+   ============================================ */
+
+/* Player Page Container */
+.md3-player-page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--md-sys-color-background);
+}
+
+/* Player Header */
+.md3-player-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-4) var(--space-6);
+  background: var(--md-sys-color-surface-container);
+  border-bottom: 1px solid var(--md-sys-color-outline-variant);
+  position: sticky;
+  top: 0;
+  z-index: 50; /* Unter top-app-bar (100) */
+}
+
+.md3-player-header .back-link {
+  color: var(--md-sys-color-primary);
+  font-size: 1.5rem;
+  text-decoration: none;
+  transition: color 0.2s ease;
+  display: flex;
+  align-items: center;
+}
+
+.md3-player-header .back-link:hover {
+  color: var(--md-sys-color-on-surface);
+}
+
+.md3-player-header .document-title {
+  flex: 1;
+  font-size: 1.125rem;
+  font-weight: 500;
+  color: var(--md-sys-color-on-surface);
+  margin: 0;
+  font-family: 'Consolas', 'Courier New', monospace;
+  letter-spacing: 0.02em;
+}
+
+/* Player Container - Main Layout */
+.md3-player-container {
+  display: grid;
+  grid-template-columns: 1fr 360px;
+  gap: var(--space-4);
+  flex: 1;
+  overflow: hidden;
+  padding: var(--space-4);
+  max-width: 1600px;
+  margin: 0 auto;
+  width: 100%;
+  align-items: start; /* Sidebar startet oben */
+}
+
+/* Player Sidebar - Fixed beim Scrollen */
+.player-sidebar {
+  position: sticky;
+  top: 0; /* Oben bündig mit Transcript */
+  max-height: 100vh;
+  overflow-y: auto;
+  background: transparent; /* Kein weißer Hintergrund */
+  border: none; /* Keine Border */
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  align-self: start;
+}
+
+/* Player Transcript (Left Column) */
+.md3-player-transcript {
+  min-width: 0;
+  overflow-y: auto;
+  padding: var(--space-4);
+  background: transparent; /* Kein weißer Hintergrund */
+  border-radius: var(--radius-md);
+}
+
+#transcriptionContainer {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+}
+
+/* ============================================
+   SPEAKER TURNS - Neue MD3-Struktur
+   ============================================ */
+
+.md3-speaker-turn {
+  padding: var(--space-3);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--md-sys-color-outline-variant);
+  background: var(--md-sys-color-surface-container-low); /* Wie tonal-low Card */
+  transition: background 0.15s ease;
+}
+
+.md3-speaker-turn:hover {
+  background: var(--md-sys-color-surface-container);
+}
+
+/* Speaker Header - Zeile 1: Edit-Icon | Name | Time */
+.md3-speaker-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-2);
+  padding-bottom: var(--space-2);
+  border-bottom: 1px solid var(--md-sys-color-outline-variant);
+}
+
+/* Edit Icon (links) */
+.md3-speaker-edit-icon {
+  color: var(--md-sys-color-primary);
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: color 0.15s ease;
+  flex-shrink: 0;
+}
+
+.md3-speaker-edit-icon:hover {
+  color: var(--md-sys-color-on-surface);
+}
+
+/* Speaker Name */
+.md3-speaker-name {
+  font-size: 0.875rem;
+  font-weight: 600;
+  font-family: 'Arial Narrow', Arial, sans-serif;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--md-sys-color-primary);
+  cursor: pointer;
+  user-select: none;
+  transition: opacity 0.15s ease;
+  flex: 1;
+}
+
+.md3-speaker-name:hover {
+  opacity: 0.7;
+}
+
+/* Speaker Time (rechts) */
+.md3-speaker-time {
+  font-size: 0.75rem;
+  font-family: 'Consolas', 'Courier New', monospace;
+  color: var(--md-sys-color-on-surface-variant);
+  letter-spacing: 0.05em;
+  font-variant-numeric: tabular-nums;
+  flex-shrink: 0;
+  margin-left: auto;
+}
+
+/* Speaker Text - Zeile 2: Monospace Text mit Word-Highlighting */
+.md3-speaker-text {
+  font-family: 'Consolas', 'Courier New', monospace;
+  font-size: 1rem; /* Größer für Desktop/Tablet (war 0.875rem) */
+  line-height: 1.6;
+  color: var(--md-sys-color-on-surface);
+  word-wrap: break-word;
+}
+
+/* Word Elements - für Highlighting (UNVERÄNDERT) */
+.md3-speaker-text .word {
+  display: inline;
+  cursor: pointer;
+  padding: 0.1rem 0.2rem;
+  border-radius: 2px;
+  transition: background 0.2s ease-out, opacity 0.2s ease-out;
+}
+
+.md3-speaker-text .word:hover {
+  background: var(--md-sys-color-primary-container);
+}
+
+.md3-speaker-text .word.current-word {
+  background: var(--md-sys-color-primary);
+  color: var(--md-sys-color-on-primary);
+  font-weight: 700;
+  padding: 0.2rem 0.4rem;
+  border-radius: var(--radius-sm);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  transform: scale(1.05);
+  position: relative;
+  z-index: 1;
+}
+
+.md3-speaker-text .word.modified-word {
+  background: rgba(76, 175, 80, 0.2); /* Grüner Hintergrund für geänderte Wörter */
+  color: var(--md-sys-color-on-surface);
+  border-bottom: 2px solid rgba(76, 175, 80, 0.6); /* Grüne Unterstreichung */
+  font-weight: 500;
+}
+
+/* Bookmark Indicator - nur für Turn */
+.md3-speaker-turn.has-bookmark {
+  border-left: 4px solid var(--md-sys-color-tertiary);
+}
+
+/* Bookmark Indicator im Text - Gelbes auffälliges Icon */
+.bookmark-indicator {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #ffd600; /* Gelber Hintergrund */
+  color: #000000; /* Schwarzes Icon */
+  padding: 0.25rem 0.5rem;
+  border-radius: var(--radius-sm);
+  margin-right: var(--space-2);
+  font-size: 1rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+  animation: bookmark-pulse 2s ease-in-out infinite;
+}
+
+.bookmark-indicator i {
+  font-size: 1rem;
+}
+
+@keyframes bookmark-pulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+}
+
+/* Geänderter Speaker - Grüne Markierung */
+.md3-speaker-name.modified-speaker {
+  color: rgba(76, 175, 80, 1); /* Grüne Farbe */
+  font-weight: 700;
+  position: relative;
+}
+
+.md3-speaker-name.modified-speaker::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: rgba(76, 175, 80, 0.6);
+}
+
+/* ============================================
+   RESPONSIVE - Player Page
+   ============================================ */
+
+/* Tablet: Sidebar unter Transcript */
+@media (max-width: 899px) {
+  .md3-player-container {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto;
+  }
+
+  .md3-player-transcript {
+    order: 1;
+  }
+
+  .player-sidebar {
+    order: 2;
+    position: static; /* Kein Sticky auf Tablet */
+    max-height: none;
+  }
+}
+
+/* Mobile: Kompaktere Abstände + kleinere Schrift */
+@media (max-width: 599px) {
+  .md3-player-header {
+    padding: var(--space-3) var(--space-4);
+  }
+
+  .md3-player-header .document-title {
+    font-size: 0.875rem;
+  }
+
+  .md3-player-container {
+    padding: var(--space-3);
+    gap: var(--space-3);
+  }
+
+  .md3-player-transcript {
+    padding: var(--space-3);
+  }
+
+  #transcriptionContainer {
+    gap: var(--space-4);
+  }
+
+  .md3-speaker-turn {
+    padding: var(--space-2);
+  }
+
+  .md3-speaker-text {
+    font-size: 0.875rem; /* Kleiner auf Mobile */
+    line-height: 1.5;
+  }
+  
+  .player-sidebar {
+    position: static; /* Kein Sticky auf Mobile */
+    max-height: none;
+  }
+}
+
+/* ============================================
+   MD3 DIALOG SYSTEM
+   ============================================ */
+
+/* Dialog Overlay */
+.md3-dialog-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.md3-dialog-overlay.active {
+  opacity: 1;
+}
+
+/* Dialog Container */
+.md3-dialog__container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-4);
+  max-width: 90vw;
+  max-height: 90vh;
+}
+
+/* Dialog */
+.md3-dialog {
+  background: var(--md-sys-color-surface);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--elev-3);
+  min-width: 280px;
+  max-width: 560px;
+  display: flex;
+  flex-direction: column;
+  transform: scale(0.9);
+  transition: transform 0.2s ease;
+}
+
+.md3-dialog-overlay.active .md3-dialog {
+  transform: scale(1);
+}
+
+/* Dialog Title */
+.md3-dialog__title {
+  padding: var(--space-4) var(--space-4) var(--space-2);
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--md-sys-color-on-surface);
+  letter-spacing: 0.15px;
+}
+
+.md3-dialog--error .md3-dialog__title {
+  color: var(--md-sys-color-error);
+}
+
+/* Dialog Content */
+.md3-dialog__content {
+  padding: var(--space-2) var(--space-4) var(--space-4);
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: var(--md-sys-color-on-surface-variant);
+}
+
+/* Dialog Actions */
+.md3-dialog__actions {
+  padding: var(--space-3) var(--space-4);
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-2);
+  border-top: 1px solid var(--md-sys-color-outline-variant);
+}
+
+

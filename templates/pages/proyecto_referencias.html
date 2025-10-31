@@ -1,43 +1,49 @@
 {% extends 'base.html' %}
 {% from 'partials/page_navigation.html' import page_navigation %}
 {% block page_title %}Referencias · CO.RA.PAN{% endblock %}
+{% block extra_head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/md3/tokens.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/md3/typography.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/md3/components/hero.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/md3/components/text-pages.css') }}">
+{% endblock %}
 {% block content %}
 <article class="md3-text-page">
-  <header class="md3-text-hero">
-    <div class="md3-text-hero__container">
-      <p class="md3-label-large md3-text-hero__eyebrow">Proyecto</p>
-      <h1 class="md3-display-small md3-text-hero__title">Referencias bibliográficas</h1>
+  <section class="md3-hero md3-hero--container" role="main" aria-label="Referencias bibliográficas">
+    <div class="md3-hero__container">
+      <span class="md3-hero__eyebrow">Proyecto</span>
+      <h1 class="md3-hero__title">Referencias</h1>
     </div>
-  </header>
+  </section>
 
   <div class="md3-text-content">
     <section class="md3-text-section md3-text-section--divider">
       <h2 class="md3-headline-small">Referencias</h2>
       <ul class="md3-text-list md3-body-medium">
         <li>
-          &Aacute;vila, Ra&uacute;l (2003): &laquo;La pronunciaci&oacute;n del espa&ntilde;ol. Medios de difusi&oacute;n masiva y norma culta&raquo;,
-          <em>Nueva Revista de Filolog&iacute;a Hisp&aacute;nica</em> 51, 57&ndash;79.
+          Ávila, Raúl (2003): «La pronunciación del español. Medios de difusión masiva y norma culta»,
+          <em>Nueva Revista de Filología Hispánica</em> 51, 57–79.
         </li>
         <li>
-          &Aacute;vila, Ra&uacute;l (2016): &laquo;La pronunciaci&oacute;n del espa&ntilde;ol en la radio de veinte pa&iacute;ses hisp&aacute;nicos: comentarios deportivos
-          espont&aacute;neos&raquo;, <em>Nueva Revista de Filolog&iacute;a Hisp&aacute;nica</em> 64, 495&ndash;509.
+          Ávila, Raúl (2016): «La pronunciación del español en la radio de veinte países hispánicos: comentarios deportivos
+          espontáneos», <em>Nueva Revista de Filología Hispánica</em> 64, 495–509.
         </li>
         <li>
-          Real Academia Espa&ntilde;ola / Asociaci&oacute;n de Academias de la Lengua Espa&ntilde;ola (2005):
-          <em>Diccionario panhisp&aacute;nico de dudas</em>. Madrid: Santillana.
+          Real Academia Española / Asociación de Academias de la Lengua Española (2005):
+          <em>Diccionario panhispánico de dudas</em>. Madrid: Santillana.
         </li>
         <li>
-          Greu&szlig;lich, Sebastian (2015): &laquo;El pluricentrismo de la cultura ling&uuml;&iacute;stica hisp&aacute;nica: pol&iacute;tica ling&uuml;&iacute;stica, los est&aacute;ndares
-          regionales y la cuesti&oacute;n de su codificaci&oacute;n&raquo;, <em>Lexis</em> 39, 57&ndash;99.
+          Greußlich, Sebastian (2015): «El pluricentrismo de la cultura lingüística hispánica: política lingüística, los estándares
+          regionales y la cuestión de su codificación», <em>Lexis</em> 39, 57–99.
         </li>
         <li>
-          Lebsanft, Franz / Tacke, Felix (2020): &laquo;Romance Standardology: Roots and Traditions&raquo;, en: Lebsanft, Franz / Tacke, Felix (eds.):
-          <em>Manual of Standardization in the Romance Languages</em>. Berlin / Boston: De Gruyter, 3&ndash;59.
+          Lebsanft, Franz / Tacke, Felix (2020): «Romance Standardology: Roots and Traditions», en: Lebsanft, Franz / Tacke, Felix (eds.):
+          <em>Manual of Standardization in the Romance Languages</em>. Berlin / Boston: De Gruyter, 3–59.
         </li>
         <li>
-          Tacke, Felix (en prensa): &laquo;A corpus-driven approach to emerging national standard varieties in Spanish: The Corpus Radiof&oacute;nico
-          Panhisp&aacute;nico (CO.RA.PAN)&raquo;, en: Elspa&szlig;, Stephan et al. (eds.):
-          <em>Double Standards. Codified Norms and Norms of Usage in European Languages (1600&ndash;2020)</em>.
+          Tacke, Felix (en prensa): «A corpus-driven approach to emerging national standard varieties in Spanish: The Corpus Radiofónico
+          Panhispánico (CO.RA.PAN)», en: Elspaß, Stephan et al. (eds.):
+          <em>Double Standards. Codified Norms and Norms of Usage in European Languages (1600–2020)</em>.
           Frankfurt am Main: Lang.
         </li>
       </ul>

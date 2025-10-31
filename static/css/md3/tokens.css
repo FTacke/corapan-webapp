@@ -11,6 +11,12 @@
   --md-sys-color-secondary-container: #8c9aa9;
   --md-sys-color-on-secondary-container: #000000;
   
+  /* Tertiary role (für subtile Highlights) */
+  --md-sys-color-tertiary: #7d5260;
+  --md-sys-color-on-tertiary: #ffffff;
+  --md-sys-color-tertiary-container: #ffd9e3;
+  --md-sys-color-on-tertiary-container: #31101d;
+  
   /* Surface & background */
   --md-sys-color-surface: #ffffff;
   --md-sys-color-on-surface: #1c1b1f;
@@ -31,6 +37,10 @@
   --md-sys-color-error: #B3261E;
   --md-sys-color-on-error: #ffffff;
   
+  /* Inverse surface (für Tooltips) */
+  --md-sys-color-inverse-surface: #313033;
+  --md-sys-color-inverse-on-surface: #f4eff4;
+  
   /* Spacing tokens (from preview) */
   --space-1: 4px;
   --space-2: 8px;
@@ -48,6 +58,7 @@
   /* Elevation tokens (box-shadow) */
   --elev-1: 0 1px 2px rgb(0 0 0 / 6%), 0 1px 1px rgb(0 0 0 / 5%);
   --elev-2: 0 2px 6px rgb(0 0 0 / 10%), 0 1px 2px rgb(0 0 0 / 6%);
+  --elev-3: 0 4px 8px rgb(0 0 0 / 12%), 0 2px 4px rgb(0 0 0 / 8%);
   
   /* Typography scale */
   --md-sys-typescale-display-small: 2rem;

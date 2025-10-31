@@ -50,12 +50,12 @@
 {% endif %}
 
 <header class="site-header" data-auth="{{ 'true' if is_authenticated else 'false' }}" data-role="{{ role_value }}">
-  <nav class="md3-nav" aria-label="Navegaci&oacute;n principal">
+  <nav class="md3-nav" aria-label="Navegación principal">
     <div class="md3-nav__inner">
       <!-- Brand & Desktop Links -->
       <div class="md3-nav__brand">
         <!-- Mobile Menu Toggle -->
-        <button type="button" class="md3-icon-button md3-nav__mobile-toggle" data-mobile-toggle aria-controls="mobile-menu" aria-expanded="false" aria-label="Men&uacute; abrir">
+        <button type="button" class="md3-icon-button md3-nav__mobile-toggle" data-mobile-toggle aria-controls="mobile-menu" aria-expanded="false" aria-label="Menú abrir">
           <i class="fa-solid fa-bars"></i>
         </button>
         
@@ -102,7 +102,7 @@
         {% if is_authenticated %}
           <div class="md3-user-menu" data-user-menu-root>
             <button type="button" class="md3-icon-button md3-user-menu__toggle" data-user-menu-toggle aria-haspopup="true" aria-expanded="false">
-              <span class="sr-only">Abrir men&uacute; de usuario</span>
+              <span class="sr-only">Abrir menú de usuario</span>
               <span class="md3-user-avatar" aria-hidden="true">
                 {{ user_name[:1]|upper if user_name else 'U' }}
               </span>
@@ -133,7 +133,7 @@
                     <input type="hidden" name="csrf_token" value="" data-element="csrf-token">
                     <button type="submit" class="md3-body-medium md3-user-menu__link md3-user-menu__link--danger" role="menuitem">
                       <i class="fa-solid fa-right-from-bracket" aria-hidden="true"></i>
-                      <span>Cerrar sesi&oacute;n</span>
+                      <span>Cerrar sesión</span>
                     </button>
                   </form>
                 </li>
@@ -141,7 +141,7 @@
             </div>
           </div>
         {% else %}
-          <button type="button" class="md3-icon-button" data-action="open-login" aria-label="Iniciar sesi&oacute;n">
+          <button type="button" class="md3-icon-button" data-action="open-login" aria-label="Iniciar sesión">
             <i class="fa-regular fa-circle-user"></i>
           </button>
         {% endif %}
@@ -199,31 +199,15 @@
           {% endif %}
           <form method="post" action="{{ url_for('auth.logout') }}" data-element="logout-form-mobile">
             <input type="hidden" name="csrf_token" value="" data-element="csrf-token">
-            <button type="submit" class="md3-label-large md3-mobile-link md3-mobile-link--button">Cerrar sesi&oacute;n</button>
+            <button type="submit" class="md3-label-large md3-mobile-link md3-mobile-link--button">Cerrar sesión</button>
           </form>
         {% else %}
-          <button type="button" class="md3-label-large md3-mobile-link md3-mobile-link--button" data-action="open-login">Iniciar sesi&oacute;n</button>
+          <button type="button" class="md3-label-large md3-mobile-link md3-mobile-link--button" data-action="open-login">Iniciar sesión</button>
         {% endif %}
       </div>
     </div>
   </div>
 </header>
 
-<!-- Login Sheet -->
-<div class="md3-login-sheet" hidden data-element="login-sheet">
-  <div class="md3-login-backdrop" data-action="close-login"></div>
-  <form class="md3-login-form md3-elevation-5" method="post" action="{{ url_for('auth.login') }}">
-    <h2 class="md3-headline-small">Acceso CO.RA.PAN</h2>
-    <input type="hidden" name="referrer" value="{{ request.url }}">
-    <label class="md3-textfield-outlined">
-      <span class="md3-label-medium md3-textfield-outlined__label">Cuenta</span>
-      <input type="text" name="username" autocomplete="username" required class="md3-body-large md3-textfield-outlined__input">
-    </label>
-    <label class="md3-textfield-outlined">
-      <span class="md3-label-medium md3-textfield-outlined__label">Contrase&ntilde;a</span>
-      <input type="password" name="password" autocomplete="current-password" required class="md3-body-large md3-textfield-outlined__input">
-    </label>
-    <button type="submit" class="md3-button-filled">Continuar</button>
-    <button type="button" class="md3-button-text" data-action="close-login">Cancelar</button>
-  </form>
-</div>
+<!-- Login Sheet removed - now defined globally in status_banner.html -->
+<!-- This ensures a single, consistent login experience across the app -->

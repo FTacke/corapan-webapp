@@ -38,8 +38,8 @@ export class EditorPlayer {
       // Initialize transcription manager
       this.transcription = new TranscriptionManager(this.audio, null); // No token collector
       
-      // Disable click-to-play in editor mode BEFORE loading (before rendering)
-      this.transcription.disableClickPlay = true;
+      // In editor mode: disable only normal clicks, but keep Ctrl+Click and Shift+Click
+      this.transcription.disableNormalClick = true;
       
       // Connect audio playback events to word highlighting
       this.audio.onPlay = () => {
@@ -110,16 +110,13 @@ export class EditorPlayer {
       const wordSpan = e.target.closest('.word');
       if (!wordSpan) return;
 
-      // If CTRL is held, seek to timestamp (player behavior)
-      if (e.ctrlKey || e.metaKey) {
-        const start = parseFloat(wordSpan.dataset.start);
-        if (!isNaN(start)) {
-          this.audio.seek(start);
-        }
-        return;
+      // Ctrl+Click and Shift+Click are handled by transcription.js for audio playback
+      // Only handle normal clicks for editing here
+      if (e.ctrlKey || e.metaKey || e.shiftKey) {
+        return; // Let transcription.js handle these
       }
 
-      // Otherwise, start editing
+      // Normal click: start editing
       if (!wordSpan.classList.contains('editing')) {
         this.editor.startEditing(wordSpan);
       }
@@ -139,15 +136,26 @@ export class EditorPlayer {
     container.addEventListener('click', (e) => {
       // Check if an icon (user-pen or circle-user) was clicked
       const isIcon = e.target.classList.contains('fa-user-pen') || 
-                     e.target.classList.contains('fa-circle-user');
+                     e.target.classList.contains('fa-circle-user') ||
+                     e.target.classList.contains('md3-speaker-edit-icon');
       
       if (!isIcon) return;
       
-      // Get the parent speaker-name element
-      const speakerName = e.target.closest('.speaker-name');
-      if (!speakerName) return;
+      // Get segment index from icon's data attribute or closest speaker-turn
+      let segmentIndex = e.target.getAttribute('data-segment-index');
       
-      const segmentIndex = speakerName.getAttribute('data-segment-index');
+      if (!segmentIndex) {
+        // Fallback: get from parent .speaker-name (legacy) or .md3-speaker-turn
+        const speakerName = e.target.closest('.speaker-name');
+        const speakerTurn = e.target.closest('.md3-speaker-turn');
+        
+        if (speakerName) {
+          segmentIndex = speakerName.getAttribute('data-segment-index');
+        } else if (speakerTurn) {
+          segmentIndex = speakerTurn.getAttribute('data-segment-index');
+        }
+      }
+      
       const currentSpeaker = this.transcriptData.segments[segmentIndex]?.speaker;
       
       if (segmentIndex !== null && currentSpeaker) {
@@ -210,7 +218,7 @@ export class EditorPlayer {
         // After successful save, disable the warning temporarily
         const checkSaveComplete = setInterval(() => {
           const saveIndicator = document.getElementById('save-indicator');
-          if (saveIndicator && saveIndicator.classList.contains('status-saved')) {
+          if (saveIndicator && saveIndicator.classList.contains('md3-editor-status-saved')) {
             allowNavigation = true;
             clearInterval(checkSaveComplete);
           }

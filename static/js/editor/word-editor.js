@@ -225,8 +225,8 @@ export class WordEditor {
         wordObj.word = newValue;
       }
 
-      // Visual feedback
-      wordSpan.classList.add('modified');
+      // Visual feedback - grüne Markierung
+      wordSpan.classList.add('modified-word');
       
       console.log(`[Editor] Changed "${this.originalValue}" -> "${newValue}"`);
       
@@ -278,7 +278,7 @@ export class WordEditor {
       const wordSpan = document.querySelector(`[data-token-id="${tokenId}"]`);
       if (wordSpan) {
         wordSpan.textContent = change.original;
-        wordSpan.classList.remove('modified');
+        wordSpan.classList.remove('modified-word');
       }
 
       // Restore in data (JSON uses "text" not "word")
@@ -311,7 +311,7 @@ export class WordEditor {
     
     // Remove all modified classes
     document.querySelectorAll('.word.modified').forEach(el => {
-      el.classList.remove('modified');
+      el.classList.remove('modified-word');
     });
     document.querySelectorAll('.speaker-name.modified-speaker').forEach(el => {
       el.classList.remove('modified-speaker');
@@ -383,7 +383,7 @@ export class WordEditor {
       this.editHistory.forEach((change, tokenId) => {
         const wordSpan = document.querySelector(`[data-token-id="${tokenId}"]`);
         if (wordSpan) {
-          wordSpan.classList.remove('modified');
+          wordSpan.classList.remove('modified-word');
         }
       });
       
@@ -404,7 +404,7 @@ export class WordEditor {
       });
       
       this.saveIndicator.innerHTML = '<i class="bi bi-check-circle"></i> Gespeichert';
-      this.saveIndicator.className = 'status-badge status-saved';
+      this.saveIndicator.className = 'md3-editor-status-badge md3-editor-status-saved';
       
       console.log('[Editor] Changes saved:', result);
       
@@ -414,7 +414,7 @@ export class WordEditor {
       console.error('[Editor] Save failed:', error);
       
       this.saveIndicator.innerHTML = '<i class="bi bi-exclamation-triangle"></i> Fehler';
-      this.saveIndicator.className = 'status-badge status-error';
+      this.saveIndicator.className = 'md3-editor-status-badge md3-editor-status-error';
       
       alert(`Speichern fehlgeschlagen: ${error.message}`);
     } finally {
@@ -449,10 +449,10 @@ export class WordEditor {
     
     if (hasChanges) {
       this.saveIndicator.innerHTML = '<i class="bi bi-exclamation-circle"></i> Ungespeichert';
-      this.saveIndicator.className = 'status-badge status-unsaved';
+      this.saveIndicator.className = 'md3-editor-status-badge md3-editor-status-unsaved';
     } else {
       this.saveIndicator.innerHTML = '<i class="bi bi-check-circle"></i> Gespeichert';
-      this.saveIndicator.className = 'status-badge status-saved';
+      this.saveIndicator.className = 'md3-editor-status-badge md3-editor-status-saved';
     }
 
     this.updateUndoRedoButtons();
@@ -566,7 +566,7 @@ export class WordEditor {
       // If undoing and value matches original, remove from history
       if (valueToApply === action.originalValue) {
         this.editHistory.delete(tokenId);
-        wordSpan.classList.remove('modified');
+        wordSpan.classList.remove('modified-word');
       } else {
         // Update history entry
         const historyEntry = this.editHistory.get(tokenId);
@@ -588,7 +588,7 @@ export class WordEditor {
         wordSpan.classList.add('modified');
       } else {
         this.editHistory.delete(tokenId);
-        wordSpan.classList.remove('modified');
+        wordSpan.classList.remove('modified-word');
       }
     }
   }
@@ -767,58 +767,24 @@ export class WordEditor {
     const speakerObj = this.data.speakers?.find(s => s.spkid === newSpeaker);
     const speakerName = speakerObj?.name || newSpeaker;
 
-    // Find the speaker-name block
-    const speakerNameBlock = document.querySelector(`.speaker-name[data-segment-index="${segmentIndex}"]`);
-    if (!speakerNameBlock) {
-      console.warn(`[Editor] Could not find speaker-name block for segment ${segmentIndex}`);
+    // Find the speaker-name element (try both MD3 and legacy class names)
+    let speakerNameEl = document.querySelector(`.md3-speaker-name[data-segment-index="${segmentIndex}"]`);
+    if (!speakerNameEl) {
+      speakerNameEl = document.querySelector(`.speaker-name[data-segment-index="${segmentIndex}"]`);
+    }
+    
+    if (!speakerNameEl) {
+      console.warn(`[Editor] Could not find speaker-name element for segment ${segmentIndex}`);
       return;
     }
 
-    // Clear the speaker-name block
-    speakerNameBlock.innerHTML = '';
+    // Update text content
+    speakerNameEl.textContent = speakerName;
+    
+    // Add modified-speaker class to show it was changed
+    speakerNameEl.classList.add('modified-speaker');
 
-    // Re-create the speaker name span
-    const nameSpan = document.createElement('span');
-    nameSpan.textContent = speakerName;
-    nameSpan.style.cursor = 'pointer';
-    nameSpan.addEventListener('click', () => {
-      // Play audio segment (only if click-to-play enabled in transcription)
-      if (this.transcription && !this.transcription.disableClickPlay) {
-        const segment = this.data.segments[segmentIndex];
-        if (segment && segment.words && segment.words.length > 0) {
-          const startTime = segment.words[0].start;
-          const endTime = segment.words[segment.words.length - 1].end;
-          this.transcription.audioPlayer?.seekAndPlay(startTime, endTime);
-        }
-      }
-    });
-    speakerNameBlock.appendChild(nameSpan);
-
-    // Re-create the speaker icon - always fa-user-pen in editor mode
-    const userIcon = document.createElement('i');
-    userIcon.style.color = 'rgb(5, 60, 150)';
-    userIcon.style.cursor = 'pointer';
-    userIcon.style.marginTop = '0.25rem';
-    userIcon.title = 'Speaker ändern';
-    userIcon.classList.add('fa-solid', 'fa-user-pen'); // Always pen icon in editor
-
-    userIcon.addEventListener('click', (e) => {
-      e.stopPropagation();
-      this.openSpeakerSelection(segmentIndex, this.data.segments[segmentIndex].speaker);
-    });
-
-    speakerNameBlock.appendChild(userIcon);
-
-    // Add modified-speaker class if modified
-    const currentSpeaker = this.data.segments[segmentIndex].speaker;
-    const isModified = currentSpeaker !== this.originalSpeakers[segmentIndex];
-    if (isModified) {
-      speakerNameBlock.classList.add('modified-speaker');
-    } else {
-      speakerNameBlock.classList.remove('modified-speaker');
-    }
-
-    console.log(`[Editor] Speaker display updated for segment ${segmentIndex}: ${newSpeaker} (modified: ${isModified})`);
+    console.log(`[Editor] Updated speaker display for segment ${segmentIndex} to ${speakerName} (${newSpeaker})`);
   }
 
   /**

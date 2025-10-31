@@ -2,9 +2,15 @@
 const selectNationalElement = document.querySelector('[data-element="atlas-select-national"]');
 const selectRegionalElement = document.querySelector('[data-element="atlas-select-regional"]');
 const filesContainer = document.querySelector('[data-element="atlas-files"]');
-const headerRoot = document.querySelector('.site-header');
+const tabsContainer = document.querySelector('[data-element="atlas-country-tabs"]');
 const loginSheet = document.querySelector('[data-element="login-sheet"]');
 const loginButtons = document.querySelectorAll('[data-action="open-login"]');
+
+// Function to get current auth status (checks dynamically)
+function isUserAuthenticated() {
+  const headerRoot = document.querySelector('[data-element="top-app-bar"]');
+  return headerRoot?.dataset.auth === 'true';
+}
 
 const CITY_LIST = [
   { code: 'ARG', label: 'Argentina: Buenos Aires', lat: -34.6118, lng: -58.4173, tier: 'primary', type: 'national' },
@@ -49,7 +55,6 @@ const MARKER_ICONS = {
   },
 };
 
-let isAuthenticated = headerRoot?.dataset.auth === 'true';
 let mapInstance = null;
 const cityMarkers = new Map();
 let fileMetadata = [];
@@ -80,6 +85,7 @@ function openLoginSheet() {
     const scrollY = window.scrollY || window.pageYOffset;
     
     // Lock body scroll position using CSS variable (prevents jump when overflow:hidden is applied)
+    // On desktop (>=840px), we don't use position:fixed, so this is only relevant for mobile
     document.body.style.setProperty('--scroll-lock-offset', `-${scrollY}px`);
     
     loginSheet.hidden = false;
@@ -92,7 +98,7 @@ function openLoginSheet() {
     }
   } else if (loginButtons.length) {
     // Trigger the global open-login button (already has scroll handling)
-    loginButtons[0].dispatchEvent(new Event('click', { bubbles: true }));
+    loginButtons[0].click();
   }
 }
 
@@ -162,9 +168,7 @@ function handlePlayerLinkClick(event) {
   const playerUrl = `/player?transcription=${encodeURIComponent(transcriptionPath)}&audio=${encodeURIComponent(audioPath)}`;
   
   // Check auth status dynamically (in case user logged in)
-  const currentAuthStatus = headerRoot?.dataset.auth === 'true';
-  
-  if (!currentAuthStatus) {
+  if (!isUserAuthenticated()) {
     // Save the intended destination in sessionStorage
     sessionStorage.setItem('_player_redirect_after_login', playerUrl);
     openLoginSheet();
@@ -175,18 +179,113 @@ function handlePlayerLinkClick(event) {
   return false; // Extra safety
 }
 
+// Render country tabs (like editor_overview)
+function renderCountryTabs() {
+  if (!tabsContainer || !fileMetadata.length) return;
+  
+  // Get unique country codes from files and sort alphabetically
+  const countryCodes = [...new Set(fileMetadata.map(item => extractCode(item.filename)))].filter(Boolean).sort();
+  
+  if (!countryCodes.length) {
+    tabsContainer.innerHTML = '';
+    return;
+  }
+  
+  // Create tabs for each country (showing only country code)
+  const tabs = countryCodes.map((code, index) => {
+    return `
+      <button class="md3-atlas-country-tab ${index === 0 ? 'active' : ''}" 
+              data-country="${code}"
+              role="tab"
+              aria-selected="${index === 0 ? 'true' : 'false'}"
+              aria-controls="table-${code}">
+        ${code}
+      </button>
+    `;
+  }).join('');
+  
+  tabsContainer.innerHTML = tabs;
+  
+  // Attach tab click handlers
+  attachTabHandlers();
+}
+
+// Attach click handlers to tabs
+function attachTabHandlers() {
+  if (!tabsContainer) return;
+  
+  const tabs = tabsContainer.querySelectorAll('.md3-atlas-country-tab');
+  tabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      const code = tab.dataset.country;
+      activateTab(code);
+    });
+  });
+}
+
+// Activate a specific tab and show its content
+function activateTab(code) {
+  if (!tabsContainer) return;
+  
+  // Update active tab
+  const tabs = tabsContainer.querySelectorAll('.md3-atlas-country-tab');
+  tabs.forEach(t => {
+    const isActive = t.dataset.country === code;
+    t.classList.toggle('active', isActive);
+    t.setAttribute('aria-selected', isActive ? 'true' : 'false');
+  });
+  
+  // Show corresponding table
+  const containers = filesContainer.querySelectorAll('.md3-atlas-files-table-container');
+  containers.forEach(container => {
+    container.classList.toggle('active', container.id === `table-${code}`);
+  });
+  
+  // Update dropdowns (without triggering their change handlers)
+  const city = CITY_LIST.find(c => c.code === code);
+  if (city) {
+    if (city.type === 'national' && selectNationalElement) {
+      selectNationalElement.value = code;
+      if (selectRegionalElement) selectRegionalElement.value = 'ALL';
+    } else if (city.type === 'regional' && selectRegionalElement) {
+      selectRegionalElement.value = code;
+      if (selectNationalElement) selectNationalElement.value = 'ALL';
+    }
+  }
+  
+  // Focus map on city
+  focusCity(code);
+}
+
 function renderCityTables(code = 'ALL') {
   if (!filesContainer) return;
-  // Atlas data is public - no login prompt needed here
-  // Login will be required only when clicking on a player link
+  
   if (!fileMetadata.length) {
     filesContainer.innerHTML = '<p class="md3-atlas-empty">No hay registros disponibles en este momento.</p>';
+    tabsContainer.innerHTML = '';
     return;
   }
 
-  const renderForCity = (city) => {
-    const entries = fileMetadata.filter((item) => extractCode(item.filename) === city.code);
+  // Get unique country codes from files
+  const countryCodes = [...new Set(fileMetadata.map(item => extractCode(item.filename)))].filter(Boolean);
+  
+  if (!countryCodes.length) {
+    filesContainer.innerHTML = '<p class="md3-atlas-empty">No hay registros disponibles en este momento.</p>';
+    tabsContainer.innerHTML = '';
+    return;
+  }
+
+  // Render tabs
+  renderCountryTabs();
+
+  // Render all country tables (as hidden containers)
+  const allTables = countryCodes.map((countryCode, index) => {
+    const city = CITY_LIST.find(c => c.code === countryCode);
+    if (!city) return '';
+    
+    const entries = fileMetadata.filter((item) => extractCode(item.filename) === countryCode);
     if (!entries.length) return '';
+    
     const rows = entries
       .map((item) => `
         <tr>
@@ -198,44 +297,45 @@ function renderCityTables(code = 'ALL') {
         </tr>
       `)
       .join('');
+    
     return `
-      <article class="md3-atlas-city-block">
-        <h3 class="md3-atlas-city-block__title">${city.label}</h3>
-        <div class="md3-atlas-table-wrapper">
-          <table class="md3-atlas-table">
-            <thead>
-              <tr>
-                <th>Fecha</th>
-                <th>Emisora</th>
-                <th>Audio / Transcripci\u00f3n</th>
-                <th class="right-align">Duraci\u00f3n</th>
-                <th class="right-align">Palabras</th>
-              </tr>
-            </thead>
-            <tbody>${rows}</tbody>
-          </table>
-        </div>
-      </article>
+      <div class="md3-atlas-files-table-container ${index === 0 ? 'active' : ''}" 
+           id="table-${countryCode}"
+           role="tabpanel">
+        <article class="md3-atlas-city-block">
+          <h3 class="md3-atlas-city-block__title">${city.label}</h3>
+          <div class="md3-atlas-table-wrapper">
+            <table class="md3-atlas-table">
+              <thead>
+                <tr>
+                  <th>Fecha</th>
+                  <th>Emisora</th>
+                  <th>Audio / Transcripci\u00f3n</th>
+                  <th class="right-align">Duraci\u00f3n</th>
+                  <th class="right-align">Palabras</th>
+                </tr>
+              </thead>
+              <tbody>${rows}</tbody>
+            </table>
+          </div>
+        </article>
+      </div>
     `;
-  };
+  }).filter(Boolean).join('');
 
-  let markup = '';
-  if (code && code !== 'ALL') {
-    const selected = CITY_LIST.find((item) => item.code === code);
-    if (!selected) {
-      filesContainer.innerHTML = '<p class=\"md3-atlas-empty\">No se ha encontrado la capital solicitada.</p>';
-      return;
-    }
-    markup = renderForCity(selected) || '<p class="md3-atlas-empty">No hay registros disponibles para esta capital.</p>';
-  } else {
-    markup = CITY_LIST.map(renderForCity).filter(Boolean).join('');
-    if (!markup) {
-      markup = '<p class=\"md3-atlas-empty\">No hay registros disponibles en este momento.</p>';
-    }
+  if (!allTables) {
+    filesContainer.innerHTML = '<p class="md3-atlas-empty">No hay registros disponibles en este momento.</p>';
+    tabsContainer.innerHTML = '';
+    return;
   }
-  // Atlas data is public - display directly without login prompt
-  filesContainer.innerHTML = markup;
+
+  filesContainer.innerHTML = allTables;
   attachPlayerHandlers();
+  
+  // If a specific code was requested, activate that tab
+  if (code && code !== 'ALL') {
+    activateTab(code);
+  }
 }
 
 function populateDropdown() {
@@ -306,8 +406,7 @@ function addCityMarkers() {
         selectRegionalElement.value = city.code;
         if (selectNationalElement) selectNationalElement.value = 'ALL';
       }
-      renderCityTables(city.code);
-      focusCity(city.code);
+      activateTab(city.code);
     });
     cityMarkers.set(city.code, marker);
   });
@@ -342,7 +441,6 @@ async function loadFiles() {
   try {
     const response = await fetch('/api/v1/atlas/files', { credentials: 'same-origin' });
     if (response.status === 401) {
-      isAuthenticated = false;
       if (filesContainer) {
         filesContainer.innerHTML = renderLoginPrompt();
       }
@@ -352,7 +450,6 @@ async function loadFiles() {
       throw new Error('No se pudieron obtener los metadatos de audio.');
     }
     const data = await response.json();
-    isAuthenticated = true;
     return Array.isArray(data.files) ? data.files : [];
   } catch (error) {
     console.error('Error loading files:', error);
@@ -386,8 +483,10 @@ if (selectNationalElement) {
     if (selectRegionalElement && code !== 'ALL') {
       selectRegionalElement.value = 'ALL';
     }
-    renderCityTables(code);
-    focusCity(code);
+    
+    if (code !== 'ALL') {
+      activateTab(code);
+    }
   });
 }
 
@@ -398,8 +497,10 @@ if (selectRegionalElement) {
     if (selectNationalElement && code !== 'ALL') {
       selectNationalElement.value = 'ALL';
     }
-    renderCityTables(code);
-    focusCity(code);
+    
+    if (code !== 'ALL') {
+      activateTab(code);
+    }
   });
 }
 

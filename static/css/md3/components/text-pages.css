@@ -6,33 +6,83 @@
   font-family: var(--font-body, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial);
   color: var(--md-sys-color-on-surface);
   background: var(--md-sys-color-background);
-  padding: 1rem 0;
 }
 
 .md3-text-content {
-  max-width: 800px;
-  margin: 0 auto;
-  width: 100%; /* Prevent overflow on small screens */
-  box-sizing: border-box; /* Include padding in width calculation */
-  /* keep canonical MD3 spacing so there's a visible gap under the hero */
-  padding: var(--md3-space-10) var(--md3-space-6) var(--md3-space-16);
+  max-width: 900px;
+  margin: var(--space-8) auto 0;
+  width: 100%;
+  box-sizing: border-box;
+  /* Spacing: Hero has NO margin-bottom, so content needs margin-top */
+  padding: 0 0 var(--space-16);
+}
+
+.md3-text-section {
+  /* Horizontal padding on sections, not on container */
+  padding: 0 var(--space-6);
+}
+
+/* Section with divider before heading */
+.md3-text-section--divider {
+  border-top: 1px solid var(--md-sys-color-outline-variant);
+  padding-top: var(--space-8);
+  margin-top: var(--space-8);
+}
+
+/* Remove extra margin on first heading after divider */
+.md3-text-section--divider > h2:first-child,
+.md3-text-section--divider > .md3-text-heading:first-child {
+  margin-top: 0; /* Divider liefert schon genug Abstand */
 }
 
 /* Mobile: reduce horizontal padding */
 @media (max-width: 599px) {
-  .md3-text-content {
-    padding-left: var(--md3-space-4);
-    padding-right: var(--md3-space-4);
+  .md3-text-section {
+    padding-left: var(--space-4);
+    padding-right: var(--space-4);
   }
 }
 
 .md3-text-list {
   /* Ensure a clear gap after lists so following paragraphs don't stick to them */
   margin: 0 0 1rem 0;
-  padding-left: 1.25rem;
+  padding-left: 2rem; /* Erhöht von 1.25rem auf 2rem für bessere Sichtbarkeit */
+  list-style-position: outside; /* Standard: Marker außerhalb des Content-Box */
 }
 
-.md3-text-list li { margin-bottom: 0.5rem; }
+.md3-text-list li { 
+  margin-bottom: 0.5rem;
+  padding-left: 0.5rem; /* Zusätzlicher Abstand zwischen Marker und Text */
+}
+
+/* Definition List for Credits/Metadata */
+.md3-text-dl {
+  margin: 0;
+  display: grid;
+  gap: var(--space-5);
+}
+
+.md3-text-dl__item {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.md3-text-dl__item dt {
+  color: var(--md-sys-color-on-surface-variant);
+  text-transform: uppercase;
+}
+
+.md3-text-dl__item dd {
+  margin: 0;
+  padding-left: var(--space-4);
+  color: var(--md-sys-color-on-surface);
+}
+
+/* Text Heading Utility */
+.md3-text-heading {
+  color: var(--md-sys-color-primary);
+  margin: var(--space-8) 0 var(--space-4);
+}
 
 .editor-overview {
   background: var(--md-sys-color-background);
@@ -124,3 +174,5 @@
 .files-table-container { margin-bottom: 1rem; }
 .files-table-container:not(.active) { display: none; }
 .files-table-container.active { display: block; }
+
+

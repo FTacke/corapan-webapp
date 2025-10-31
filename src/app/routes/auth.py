@@ -128,9 +128,12 @@ def login() -> Response:
 @blueprint.post("/logout")
 @jwt_required(optional=True)
 def logout() -> Response:
-    referrer = request.form.get("referrer") or request.referrer or url_for("public.landing_page")
-    response = redirect(referrer)
+    """Logout endpoint - clears JWT cookies and redirects to landing page."""
+    # Always redirect to landing page after logout (standard behavior)
+    # This prevents showing JWT error when logging out from protected pages
+    response = redirect(url_for("public.landing_page"))
     unset_jwt_cookies(response)
+    current_app.logger.info(f'User logged out from {request.remote_addr}')
     return response
 
 

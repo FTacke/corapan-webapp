@@ -58,11 +58,27 @@ export class TranscriptionManager {
     // Only use server-provided human-readable label. If missing, show fallback.
     const countryLabel = data.country_display || 'Unbekanntes Land';
 
-    this._setElementHTML('countryInfo', `País: <span class="meta-value meta-value--primary">${countryLabel}</span>`);
-    this._setElementHTML('radioInfo', `Emisora: <span class="meta-value">${data.radio || 'Unbekannter Radiosender'}</span>`);
-    this._setElementHTML('cityInfo', `Ciudad: <span class="meta-value">${data.city || 'Unbekannte Stadt'}</span>`);
-    this._setElementHTML('revisionInfo', `Revisión: <span class="meta-value">${data.revision || 'Unbekannte Revision'}</span>`);
-    this._setElementHTML('dateInfo', `Fecha: <span class="meta-value">${data.date || 'Unbekanntes Datum'}</span>`);
+    // Update metadata items with MD3 structure
+    this._setMetadataItem('countryInfo', 'País:', countryLabel, true);
+    this._setMetadataItem('radioInfo', 'Emisora:', data.radio || 'Unbekannter Radiosender');
+    this._setMetadataItem('cityInfo', 'Ciudad:', data.city || 'Unbekannte Stadt');
+    this._setMetadataItem('revisionInfo', 'Revisión:', data.revision || 'Unbekannte Revision');
+    this._setMetadataItem('dateInfo', 'Fecha:', data.date || 'Unbekanntes Datum');
+  }
+
+  /**
+   * Set metadata item with label and value (MD3 structure)
+   * @private
+   */
+  _setMetadataItem(id, label, value, isPrimary = false) {
+    const element = document.getElementById(id);
+    if (!element) return;
+    
+    const valueClass = isPrimary ? 'md3-player-metadata-value md3-player-metadata-value--primary' : 'md3-player-metadata-value';
+    element.innerHTML = `
+      <span class="md3-player-metadata-label">${label}</span>
+      <span class="${valueClass}">${value}</span>
+    `;
   }
 
   /**
@@ -153,67 +169,93 @@ export class TranscriptionManager {
 
     // Main container
     const segmentContainer = document.createElement('div');
-    segmentContainer.classList.add('speaker-turn');
+    segmentContainer.classList.add('md3-speaker-turn');
     segmentContainer.setAttribute('data-segment-index', segmentIndex);
 
-    // Speaker name block (left column)
-    const speakerBlock = this._createSpeakerBlock(speakerId, words, segmentIndex);
-
-    // Content container (right column)
-    const contentContainer = document.createElement('div');
-    contentContainer.classList.add('speaker-content');
-
-    // Speaker time
-    const speakerTimeElement = this._createTimeElement(words);
-    contentContainer.appendChild(speakerTimeElement);
-
-    // Transcript text with words
+    // Speaker header (Zeile 1: Edit-Icon | Name | Time)
+    const headerContainer = this._createSpeakerHeader(speakerId, words, segmentIndex);
+    
+    // Transcript text (Zeile 2: Monospace Text mit Words)
     const transcriptBlock = this._createTranscriptBlock(words, segmentIndex);
-    contentContainer.appendChild(transcriptBlock);
 
-    segmentContainer.appendChild(speakerBlock);
-    segmentContainer.appendChild(contentContainer);
+    segmentContainer.appendChild(headerContainer);
+    segmentContainer.appendChild(transcriptBlock);
 
     return segmentContainer;
   }
 
   /**
-   * Create speaker name block with tooltip
+   * Create speaker header with edit icon, name, and time
    * @private
    */
-  _createSpeakerBlock(speakerId, words, segmentIndex = null) {
-    const speakerBlock = document.createElement('div');
-    speakerBlock.classList.add('speaker-name');
-    speakerBlock.style.position = 'relative';
-    speakerBlock.style.display = 'flex';
-    speakerBlock.style.flexDirection = 'column';
-    speakerBlock.style.alignItems = 'flex-start';
-    speakerBlock.style.gap = '0.5rem';
-    speakerBlock.style.alignSelf = 'flex-start'; // Align to top
+  _createSpeakerHeader(speakerId, words, segmentIndex) {
+    const headerContainer = document.createElement('div');
+    headerContainer.classList.add('md3-speaker-header');
+
+    // 1. Edit Icon (links)
+    const editIcon = document.createElement('i');
+    // Check both flags for editor mode (new: disableNormalClick, legacy: disableClickPlay)
+    const isEditorMode = this.disableNormalClick || this.disableClickPlay;
     
-    // Store segment index for editor mode
-    if (segmentIndex !== null) {
-      speakerBlock.setAttribute('data-segment-index', segmentIndex);
+    if (isEditorMode) {
+      // Editor mode: pen icon
+      editIcon.classList.add('fa-solid', 'fa-user-pen', 'md3-speaker-edit-icon');
+      editIcon.title = 'Speaker ändern';
+      editIcon.setAttribute('data-segment-index', segmentIndex);
+      headerContainer.appendChild(editIcon);
+    } else {
+      // Player mode: user icon with native tooltip
+      const speakerInfo = this.transcriptionData.speakers.find(s => s.spkid === speakerId);
+      const speakerName = speakerInfo ? speakerInfo.name : "otro";
+      
+      editIcon.classList.add('fa-solid', 'fa-user', 'md3-speaker-edit-icon');
+      
+      // Use native title attribute for tooltip (MD3-compliant)
+      const tooltipText = this._getTooltipContentPlainText(speakerName);
+      editIcon.title = tooltipText;
+      
+      headerContainer.appendChild(editIcon);
     }
 
+    // 2. Speaker Name (Mitte)
+    const speakerNameSpan = this._createSpeakerName(speakerId, words, segmentIndex);
+    headerContainer.appendChild(speakerNameSpan);
+
+    // 3. Speaker Time (rechts)
+    const timeElement = this._createTimeElement(words);
+    headerContainer.appendChild(timeElement);
+
+    return headerContainer;
+  }
+
+  /**
+   * Create speaker name element
+   * @private
+   */
+  _createSpeakerName(speakerId, words, segmentIndex) {
     const speakerInfo = this.transcriptionData.speakers.find(s => s.spkid === speakerId);
     const speakerName = speakerInfo ? speakerInfo.name : "otro";
     
-    // Speaker name text (clickable in player mode to play segment)
     const nameSpan = document.createElement('span');
+    nameSpan.classList.add('md3-speaker-name');
     nameSpan.textContent = speakerName;
-    nameSpan.style.cursor = this.disableClickPlay ? 'default' : 'pointer';
+    nameSpan.setAttribute('data-segment-index', segmentIndex); // Für Speaker-Änderungen
     
-    if (!this.disableClickPlay) {
-      nameSpan.addEventListener('click', () => {
-        this._playSegment(words[0].start, words[words.length - 1].end, true);
-        console.log(`Speaker: ${speakerName} Start: ${words[0].start} End: ${words[words.length - 1].end}`);
-      });
-    }
+    // Speaker name is always clickable to play segment audio (even in editor mode)
+    nameSpan.style.cursor = 'pointer';
+    nameSpan.addEventListener('click', () => {
+      this._playSegment(words[0].start, words[words.length - 1].end, true);
+      console.log(`Speaker: ${speakerName} Start: ${words[0].start} End: ${words[words.length - 1].end}`);
+    });
     
-    speakerBlock.appendChild(nameSpan);
+    return nameSpan;
+  }
 
-    // Speaker type mapping for tooltips - map speaker NAME (e.g., "pre-pf", "lib-pm") to details
+  /**
+   * Get tooltip content for speaker type
+   * @private
+   */
+  _getTooltipContent(speakerName) {
     const speakerTypeMapping = {
       "lib-pm": `<span class="tooltip-high">Modo: </span>habla libre<br>
                  <span class="tooltip-high">Hablante: </span>profesional<br>
@@ -256,42 +298,31 @@ export class TranscriptionManager {
                  <span class="tooltip-high">Sexo: </span>femenino<br>`
     };
 
-    // User icon or edit icon - different for player vs editor mode
-    const userIcon = document.createElement('i');
-    
-    if (this.disableClickPlay) {
-      // Editor mode: pen icon, no tooltip
-      userIcon.classList.add('fa-solid', 'fa-user-pen');
-      userIcon.title = 'Speaker ändern';
-    } else {
-      // Player mode: user icon with speaker type tooltip
-      userIcon.classList.add('fa-solid', 'fa-user');
-      userIcon.title = 'Speaker abspielen';
-      
-      // Create tooltip for player mode (with speaker type details from mapping)
-      // Use speaker's NAME (e.g., "pre-pf", "lec-pf") to look up tooltip content
-      const tooltipContent = speakerTypeMapping[speakerName] || `<span class="tooltip-high">Speaker: </span>${speakerName}<br>`;
-      const tooltip = document.createElement('span');
-      tooltip.classList.add('tooltip-text');
-      tooltip.innerHTML = tooltipContent;
-      
-      // Show/hide tooltip on icon hover (player mode only)
-      userIcon.addEventListener('mouseover', () => {
-        tooltip.classList.add('visible');
-      });
-      userIcon.addEventListener('mouseout', () => {
-        tooltip.classList.remove('visible');
-      });
-      
-      speakerBlock.appendChild(tooltip);
-    }
-    
-    userIcon.style.color = '#053c96';
-    userIcon.style.cursor = 'pointer';
+    return speakerTypeMapping[speakerName] || `<span class="tooltip-high">Speaker: </span>${speakerName}<br>`;
+  }
 
-    speakerBlock.appendChild(userIcon);
+  /**
+   * Get plain text tooltip content for speaker type (for native title attribute)
+   * @private
+   */
+  _getTooltipContentPlainText(speakerName) {
+    const speakerTypeMapping = {
+      "lib-pm": "Modo: habla libre | Hablante: profesional | Sexo: masculino",
+      "lib-pf": "Modo: habla libre | Hablante: profesional | Sexo: femenino",
+      "lib-om": "Modo: habla libre | Hablante: no profesional | Sexo: masculino",
+      "lib-of": "Modo: habla libre | Hablante: no profesional | Sexo: femenino",
+      "lec-pm": "Modo: lectura | Hablante: profesional | Sexo: masculino",
+      "lec-pf": "Modo: lectura | Hablante: profesional | Sexo: femenino",
+      "lec-om": "Modo: lectura | Hablante: no profesional | Sexo: masculino",
+      "pre-pm": "Modo: lectura pregrabada | Hablante: profesional | Sexo: masculino",
+      "pre-pf": "Modo: lectura pregrabada | Hablante: profesional | Sexo: femenino",
+      "tie-pm": "Discurso: pronóstico del tiempo | Hablante: profesional | Sexo: masculino",
+      "tie-pf": "Discurso: pronóstico del tiempo | Hablante: profesional | Sexo: femenino",
+      "traf-pm": "Discurso: informaciones de tránsito | Hablante: profesional | Sexo: masculino",
+      "traf-pf": "Discurso: informaciones de tránsito | Hablante: profesional | Sexo: femenino"
+    };
 
-    return speakerBlock;
+    return speakerTypeMapping[speakerName] || `Speaker: ${speakerName}`;
   }
 
   /**
@@ -300,7 +331,7 @@ export class TranscriptionManager {
    */
   _createTimeElement(words) {
     const timeElement = document.createElement('div');
-    timeElement.classList.add('speaker-time');
+    timeElement.classList.add('md3-speaker-time');
     
     const startTime = this._formatTime(words[0].start);
     const endTime = this._formatTime(words[words.length - 1].end);
@@ -315,6 +346,7 @@ export class TranscriptionManager {
    */
   _createTranscriptBlock(words, segmentIndex) {
     const transcriptBlock = document.createElement('div');
+    transcriptBlock.classList.add('md3-speaker-text');
     transcriptBlock.classList.add('speaker-text');
 
     // Group words based on pauses
@@ -405,7 +437,12 @@ export class TranscriptionManager {
 
     // Click handler
     wordElement.addEventListener('click', (event) => {
-      // Skip click handling if disabled (e.g., in editor mode)
+      // In editor mode: allow Ctrl+Click and Shift+Click, but block normal clicks
+      if (this.disableNormalClick && !event.ctrlKey && !event.shiftKey) {
+        return; // Block normal click in editor mode
+      }
+      
+      // Legacy: also check old disableClickPlay flag
       if (this.disableClickPlay) {
         return;
       }
@@ -414,12 +451,16 @@ export class TranscriptionManager {
       const endNext = idx < words.length - 1 ? parseFloat(words[idx + 2].end) : parseFloat(word.end);
 
       if (event.ctrlKey) {
-        // Ctrl+Click: Play without pause
-        const startCtrl = idx > 0 ? parseFloat(words[idx - 1].start) : parseFloat(word.start);
-        this._playSegment(startCtrl, endNext, false);
-        console.log(`Ctrl+Click: ${word.text} Start: ${startCtrl} End: ${endNext}`);
+        // Ctrl+Click: Play only this word
+        this._playSegment(parseFloat(word.start), parseFloat(word.end), false);
+        console.log(`Ctrl+Click: ${word.text} Start: ${word.start} End: ${word.end}`);
+      } else if (event.shiftKey) {
+        // Shift+Click: Play from this word to end of segment
+        const segmentEnd = parseFloat(words[words.length - 1].end);
+        this._playSegment(parseFloat(word.start), segmentEnd, false);
+        console.log(`Shift+Click: ${word.text} Start: ${word.start} End: ${segmentEnd}`);
       } else {
-        // Normal click: Play with pause
+        // Normal click: Play with context (word before and after)
         this._playSegment(startPrev, endNext, true);
         console.log(`Click: ${word.text} Start: ${startPrev} End: ${endNext}`);
       }
@@ -440,17 +481,40 @@ export class TranscriptionManager {
   _attachTooltipEvents(wordElement) {
     wordElement.addEventListener('mouseenter', (event) => {
       const tooltip = document.createElement('div');
-      tooltip.className = 'tooltip-text';
+      tooltip.className = 'tooltip-text word-tooltip';
       tooltip.innerHTML = event.target.dataset.tooltip;
       document.body.appendChild(tooltip);
 
+      // Position tooltip near word
       setTimeout(() => {
         const rect = event.target.getBoundingClientRect();
-        tooltip.style.position = 'absolute';
-        tooltip.style.top = `${rect.bottom + window.scrollY + 6}px`;
-        tooltip.style.left = `${rect.left + window.scrollX + rect.width / 2 - tooltip.offsetWidth / 2}px`;
+        const tooltipRect = tooltip.getBoundingClientRect();
+        
+        // Position below word, centered
+        let left = rect.left + window.scrollX + (rect.width / 2) - (tooltipRect.width / 2);
+        let top = rect.bottom + window.scrollY + 8;
+        
+        // Keep tooltip in viewport
+        if (left < 10) left = 10;
+        if (left + tooltipRect.width > window.innerWidth - 10) {
+          left = window.innerWidth - tooltipRect.width - 10;
+        }
+        
+        tooltip.style.position = 'fixed';
+        tooltip.style.left = `${rect.left + (rect.width / 2) - (tooltipRect.width / 2)}px`;
+        tooltip.style.top = `${rect.bottom + 8}px`;
+        
+        // Keep in viewport
+        const tooltipLeft = parseFloat(tooltip.style.left);
+        if (tooltipLeft < 10) {
+          tooltip.style.left = '10px';
+        }
+        if (tooltipLeft + tooltipRect.width > window.innerWidth - 10) {
+          tooltip.style.left = `${window.innerWidth - tooltipRect.width - 10}px`;
+        }
+        
         tooltip.classList.add('visible');
-      }, 0);
+      }, 10);
 
       event.target._tooltipElement = tooltip;
     });
@@ -458,7 +522,10 @@ export class TranscriptionManager {
     wordElement.addEventListener('mouseleave', (event) => {
       const tooltip = event.target._tooltipElement;
       if (tooltip) {
-        tooltip.remove();
+        tooltip.classList.remove('visible');
+        setTimeout(() => {
+          tooltip.remove();
+        }, 150);
         event.target._tooltipElement = null;
       }
     });

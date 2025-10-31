@@ -48,9 +48,9 @@ export class BookmarkManager {
             segIdx = parseInt(segmentIndex);
           }
           
-          // Fallback: get from parent .speaker-turn data-segment-index
+          // Fallback: get from parent .md3-speaker-turn data-segment-index
           if (segIdx === null) {
-            const speakerTurn = wordEl.closest('.speaker-turn');
+            const speakerTurn = wordEl.closest('.md3-speaker-turn');
             if (speakerTurn) {
               const segmentIndexAttr = speakerTurn.getAttribute('data-segment-index');
               if (segmentIndexAttr) {
@@ -315,12 +315,12 @@ export class BookmarkManager {
     const sorted = [...this.bookmarks].sort((a, b) => a.segment_index - b.segment_index);
 
     if (sorted.length === 0) {
-      this.bookmarkList.innerHTML = '<p style="color: #999; font-size: 0.9rem;">Keine Bookmarks</p>';
+      this.bookmarkList.innerHTML = '<p class="md3-editor-history-empty">Keine Bookmarks</p>';
       this._removeAllBookmarkIndicators();
       return;
     }
 
-    let html = '<ul style="list-style: none; padding: 0; margin: 0;">';
+    let html = '<ul>';
     
     sorted.forEach(bookmark => {
       const segmentIndex = bookmark.segment_index;
@@ -333,7 +333,7 @@ export class BookmarkManager {
       const speakerName = speaker?.name || segment.speaker;
 
       // Get first few words as preview
-      const words = segment.words?.slice(0, 5) || [];
+      const words = segment.words?.slice(0, 8) || [];
       const preview = words.map(w => w.text || w.word).join(' ');
 
       // Get time
@@ -341,26 +341,19 @@ export class BookmarkManager {
       const timeStr = this._formatTime(time);
 
       html += `
-        <li style="padding: 0.75rem; border-bottom: 1px solid #eee; cursor: pointer;">
-          <div style="display: flex; justify-content: space-between; align-items: center;">
-            <div style="flex: 1;" onclick="window.bookmarkManager?.jumpToSegment(${segmentIndex})">
-              <div style="font-weight: 500; color: #053c96;">
-                ${speakerName} <span style="color: #999; font-size: 0.85rem;">${timeStr}</span>
-              </div>
-              <div style="font-size: 0.85rem; color: #666; margin-top: 0.25rem; line-height: 1.4;">
-                ${preview}
-              </div>
-              ${bookmark.note ? `<div style="font-size: 0.8rem; color: #f39c12; font-style: italic; margin-top: 0.25rem;">Note: ${bookmark.note}</div>` : ''}
-            </div>
+        <li onclick="window.bookmarkManager?.jumpToSegment(${segmentIndex})">
+          <div class="md3-editor-bookmark-header">
+            <span class="md3-editor-bookmark-time">${speakerName} ${timeStr}</span>
             <button 
-              class="bookmark-remove-btn" 
-              onclick="window.bookmarkManager?.removeBookmark(${segmentIndex})"
-              style="background: none; border: none; color: #e74c3c; cursor: pointer; padding: 0.25rem; font-size: 1.2rem;"
+              class="md3-editor-bookmark-remove-btn" 
+              onclick="event.stopPropagation(); window.bookmarkManager?.removeBookmark(${segmentIndex})"
               title="Bookmark entfernen"
             >
-              ✕
+              <i class="bi bi-x"></i>
             </button>
           </div>
+          <div class="md3-editor-bookmark-text">${preview}</div>
+          ${bookmark.note ? `<div style="font-size: 0.6875rem; color: var(--md-sys-color-tertiary); font-style: italic; margin-top: var(--space-1);">Note: ${bookmark.note}</div>` : ''}
         </li>
       `;
     });
@@ -382,20 +375,18 @@ export class BookmarkManager {
 
     // Add indicator to bookmarked segments
     this.bookmarks.forEach(bookmark => {
-      const segmentEl = document.querySelector(`.speaker-turn[data-segment-index="${bookmark.segment_index}"]`);
+      const segmentEl = document.querySelector(`.md3-speaker-turn[data-segment-index="${bookmark.segment_index}"]`);
       if (segmentEl) {
         segmentEl.classList.add('has-bookmark');
         
-        // Add bookmark badge to speaker name
-        const speakerName = segmentEl.querySelector('.speaker-name');
-        if (speakerName && !speakerName.querySelector('.bookmark-badge')) {
-          const badge = document.createElement('span');
-          badge.className = 'bookmark-badge';
-          badge.innerHTML = '⭐';
-          badge.title = 'Mit Bookmark gekennzeichnet';
-          badge.style.marginLeft = '0.5rem';
-          badge.style.fontSize = '1rem';
-          speakerName.appendChild(badge);
+        // Add bookmark icon to speaker text (not speaker name)
+        const speakerText = segmentEl.querySelector('.md3-speaker-text, .speaker-text');
+        if (speakerText && !speakerText.querySelector('.bookmark-indicator')) {
+          const indicator = document.createElement('span');
+          indicator.className = 'bookmark-indicator';
+          indicator.innerHTML = '<i class="bi bi-bookmark-star-fill"></i>';
+          indicator.title = 'Bookmark';
+          speakerText.insertBefore(indicator, speakerText.firstChild);
         }
       }
     });
@@ -406,10 +397,10 @@ export class BookmarkManager {
    * @private
    */
   _removeAllBookmarkIndicators() {
-    document.querySelectorAll('.speaker-turn.has-bookmark').forEach(el => {
+    document.querySelectorAll('.md3-speaker-turn.has-bookmark').forEach(el => {
       el.classList.remove('has-bookmark');
     });
-    document.querySelectorAll('.bookmark-badge').forEach(el => {
+    document.querySelectorAll('.bookmark-indicator').forEach(el => {
       el.remove();
     });
   }
@@ -422,7 +413,7 @@ export class BookmarkManager {
     if (!segment || !segment.words || segment.words.length === 0) return;
 
     // Scroll to segment (center in viewport with padding)
-    const segmentEl = document.querySelector(`.speaker-turn[data-segment-index="${segmentIndex}"]`);
+    const segmentEl = document.querySelector(`.md3-speaker-turn[data-segment-index="${segmentIndex}"]`);
     if (segmentEl) {
       // Scroll to center of viewport with some top padding for context
       const container = document.getElementById('transcriptionContainer');
@@ -455,7 +446,7 @@ export class BookmarkManager {
    * @private
    */
   _highlightSegment(segmentIndex) {
-    const segmentEl = document.querySelector(`.speaker-turn[data-segment-index="${segmentIndex}"]`);
+    const segmentEl = document.querySelector(`.md3-speaker-turn[data-segment-index="${segmentIndex}"]`);
     if (!segmentEl) return;
 
     // Add highlight class

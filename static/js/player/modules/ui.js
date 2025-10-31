@@ -55,9 +55,10 @@ export class UIManager {
    * @private
    */
   _setupWindowTooltips() {
-    // Expose tooltip functions to window for HTML onclick/onmouseover
+    // Expose tooltip functions to window for HTML onmouseover/onmouseout
     window.showTooltip = (event) => {
-      const tooltipContainer = event.target.closest('.sidebar-title');
+      // Neue MD3-Struktur: .sidebar-help-wrapper
+      const tooltipContainer = event.target.closest('.sidebar-help-wrapper');
       if (!tooltipContainer) return;
 
       const tooltip = tooltipContainer.querySelector('.tooltip-text');
@@ -67,7 +68,8 @@ export class UIManager {
     };
 
     window.hideTooltip = (event) => {
-      const tooltipContainer = event.target.closest('.sidebar-title');
+      // Neue MD3-Struktur: .sidebar-help-wrapper
+      const tooltipContainer = event.target.closest('.sidebar-help-wrapper');
       if (!tooltipContainer) return;
 
       const tooltip = tooltipContainer.querySelector('.tooltip-text');
