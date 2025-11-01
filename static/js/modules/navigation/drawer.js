@@ -1,56 +1,23 @@
 // ============================================
-// Navigation Drawer Controller
+// Navigation Drawer Controller - Dialog-basiert
 // ============================================
 
 import { getWindowSize, WindowSize } from './window-size.js';
 
 /**
- * Focus trap utility (reused from existing mobile menu)
+ * Focusable element selector
  */
 const focusableSelectors = 'a[href], button:not([disabled]), textarea, input, select, [tabindex]:not([tabindex="-1"])';
 
-function trapFocus(container) {
-  const focusable = Array.from(container.querySelectorAll(focusableSelectors))
-    .filter(el => !el.hasAttribute('disabled') && el.tabIndex !== -1);
-  
-  if (!focusable.length) return () => {};
-  
-  const first = focusable[0];
-  const last = focusable[focusable.length - 1];
-  
-  function handleKeydown(event) {
-    if (event.key !== 'Tab') return;
-    
-    if (event.shiftKey) {
-      if (document.activeElement === first) {
-        event.preventDefault();
-        last.focus();
-      }
-    } else {
-      if (document.activeElement === last) {
-        event.preventDefault();
-        first.focus();
-      }
-    }
-  }
-  
-  container.addEventListener('keydown', handleKeydown);
-  return () => container.removeEventListener('keydown', handleKeydown);
-}
-
 /**
- * Navigation Drawer Manager
+ * Navigation Drawer Manager (Dialog-basiert)
  */
 export class NavigationDrawer {
   constructor() {
     this.modalDrawer = document.getElementById('navigation-drawer-modal');
     this.standardDrawer = document.getElementById('navigation-drawer-standard');
     this.openButton = document.querySelector('[data-action="open-drawer"]');
-    this.closeTargets = document.querySelectorAll('[data-action="close-drawer"]');
-    
-    this.isOpen = false;
-    this.releaseFocusTrap = null;
-    this.lastFocusedElement = null;
+    this.mediaQuery = window.matchMedia('(max-width: 839px)');
     
     if (!this.modalDrawer || !this.standardDrawer) {
       console.error('Navigation drawers not found');
@@ -66,14 +33,24 @@ export class NavigationDrawer {
       this.openButton.addEventListener('click', () => this.open());
     }
     
-    // Close button and scrim
-    this.closeTargets.forEach(target => {
-      target.addEventListener('click', () => this.close());
+    // Klick ins Backdrop → schließen (Light Dismiss)
+    this.modalDrawer.addEventListener('click', (e) => {
+      if (e.target === this.modalDrawer) {
+        this.close();
+      }
     });
     
-    // ESC key to close
-    document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape' && this.isOpen) {
+    // ESC wird von <dialog> automatisch gehandhabt via 'cancel' event
+    // Aber wir können es auch explizit handlen für bessere Kontrolle
+    this.modalDrawer.addEventListener('cancel', (e) => {
+      // Optional: preventDefault() wenn man custom Logik will
+      // e.preventDefault();
+      this.close();
+    });
+    
+    // Cleanup bei Resize: bei Expanded schließen
+    this.mediaQuery.addEventListener('change', (e) => {
+      if (!e.matches && this.modalDrawer.open) {
         this.close();
       }
     });
@@ -91,101 +68,96 @@ export class NavigationDrawer {
   }
   
   initCollapsibles(drawer) {
-    const triggers = drawer.querySelectorAll('.md3-navigation-drawer__trigger');
-    
-    triggers.forEach(trigger => {
-      trigger.addEventListener('click', (e) => {
-        e.preventDefault();
-        const submenuId = trigger.getAttribute('aria-controls');
-        const submenu = drawer.querySelector(`#${submenuId}`);
-        const isExpanded = trigger.getAttribute('aria-expanded') === 'true';
-        
-        // Close other open submenus
-        triggers.forEach(otherTrigger => {
-          if (otherTrigger !== trigger) {
-            const otherSubmenuId = otherTrigger.getAttribute('aria-controls');
-            const otherSubmenu = drawer.querySelector(`#${otherSubmenuId}`);
-            otherTrigger.setAttribute('aria-expanded', 'false');
-            if (otherSubmenu) otherSubmenu.hidden = true;
+    // Event Delegation: Ein Listener für alle Trigger
+    drawer.addEventListener('click', (e) => {
+      const trigger = e.target.closest('.md3-navigation-drawer__trigger');
+      if (!trigger) return;
+
+      const submenuId = trigger.getAttribute('aria-controls');
+      const submenu = drawer.querySelector(`#${submenuId}`);
+      if (!submenu) return;
+
+      const isExpanded = trigger.getAttribute('aria-expanded') === 'true';
+
+      // Optional: Nur ein Submenü gleichzeitig offen (Single-Open-Modus)
+      drawer.querySelectorAll('.md3-navigation-drawer__trigger[aria-expanded="true"]').forEach(otherTrigger => {
+        if (otherTrigger !== trigger) {
+          const otherSubmenuId = otherTrigger.getAttribute('aria-controls');
+          const otherSubmenu = drawer.querySelector(`#${otherSubmenuId}`);
+          
+          // Close other submenu with animation
+          otherTrigger.setAttribute('aria-expanded', 'false');
+          if (otherSubmenu) {
+            otherSubmenu.classList.add('closing');
+            // Nach Animation: Attributes aufräumen
+            setTimeout(() => {
+              otherSubmenu.removeAttribute('data-open');
+              otherSubmenu.setAttribute('aria-hidden', 'true');
+              otherSubmenu.classList.remove('closing');
+            }, 250); // Match CSS transition duration
           }
-        });
-        
-        // Toggle current submenu
-        trigger.setAttribute('aria-expanded', !isExpanded);
-        if (submenu) {
-          submenu.hidden = isExpanded;
         }
       });
+
+      // Toggle current submenu
+      trigger.setAttribute('aria-expanded', String(!isExpanded));
+      if (!isExpanded) {
+        // Open
+        submenu.classList.remove('closing');
+        submenu.setAttribute('data-open', '');
+        submenu.setAttribute('aria-hidden', 'false');
+      } else {
+        // Close with animation
+        submenu.classList.add('closing');
+        setTimeout(() => {
+          submenu.removeAttribute('data-open');
+          submenu.setAttribute('aria-hidden', 'true');
+          submenu.classList.remove('closing');
+        }, 250); // Match CSS transition duration
+      }
     });
   }
   
   open() {
-    if (this.isOpen) return;
-    
     // Only open modal drawer on Compact/Medium
-    const windowSize = getWindowSize();
-    if (windowSize === WindowSize.EXPANDED) return;
+    if (!this.mediaQuery.matches) return;
     
-    this.lastFocusedElement = document.activeElement;
-    
-    // Reine CSS-Animation mit @starting-style (Chrome 117+)
-    // Keine setTimeout nötig - Browser handled Entry-Animation automatisch
-    this.modalDrawer.hidden = false;
-    this.modalDrawer.classList.add('md3-navigation-drawer--open');
-    
-    document.body.classList.add('overflow-hidden');
-    
-    // Update ARIA
-    if (this.openButton) {
-      this.openButton.setAttribute('aria-expanded', 'true');
-    }
-    
-    // Setup focus trap
-    const container = this.modalDrawer.querySelector('.md3-navigation-drawer__container');
-    if (container) {
-      this.releaseFocusTrap = trapFocus(container);
+    // Native Dialog API: showModal() für Modalität + Fokus-Management
+    if (!this.modalDrawer.open) {
+      this.modalDrawer.showModal();
       
-      // Focus first focusable element
-      const firstFocusable = container.querySelector(focusableSelectors);
+      // Optional: Ersten Fokus setzen
+      const firstFocusable = this.modalDrawer.querySelector(focusableSelectors);
       if (firstFocusable) {
-        setTimeout(() => firstFocusable.focus(), 100);
+        // preventScroll: true verhindert Jump bei Fokus
+        setTimeout(() => firstFocusable.focus({ preventScroll: true }), 100);
       }
     }
     
-    this.isOpen = true;
+    // Update ARIA auf Open-Button
+    if (this.openButton) {
+      this.openButton.setAttribute('aria-expanded', 'true');
+    }
   }
   
   close() {
-    if (!this.isOpen) return;
+    // Native Dialog API: close() - aber mit Animation
+    if (this.modalDrawer.open) {
+      // Remove [open] attribute um Exit-Animation zu triggern
+      // Aber Dialog bleibt technisch "open" bis Animation fertig
+      this.modalDrawer.classList.add('closing');
+      
+      // Nach Animation: tatsächlich schließen
+      setTimeout(() => {
+        this.modalDrawer.close();
+        this.modalDrawer.classList.remove('closing');
+      }, 250); // Match CSS transition duration
+    }
     
-    // Remove open class to trigger close animation
-    this.modalDrawer.classList.remove('md3-navigation-drawer--open');
-    
-    // After animation, set hidden attribute
-    setTimeout(() => {
-      this.modalDrawer.hidden = true;
-    }, 250); // Match CSS transition duration
-    
-    document.body.classList.remove('overflow-hidden');
-    
-    // Update ARIA
+    // Update ARIA auf Open-Button
     if (this.openButton) {
       this.openButton.setAttribute('aria-expanded', 'false');
     }
-    
-    // Release focus trap
-    if (this.releaseFocusTrap) {
-      this.releaseFocusTrap();
-      this.releaseFocusTrap = null;
-    }
-    
-    // Restore focus
-    if (this.lastFocusedElement) {
-      this.lastFocusedElement.focus();
-      this.lastFocusedElement = null;
-    }
-    
-    this.isOpen = false;
   }
 }
 

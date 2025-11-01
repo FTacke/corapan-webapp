@@ -1,0 +1,62 @@
+{#
+  Audio Player Component Macro
+  
+  Shared custom audio player used by:
+  - player.html (main player page)
+  - editor_edit.html (editor with audio)
+  
+  CSS: static/css/md3/components/audio-player.css
+  
+  Features:
+  - Progress bar with volume control
+  - Play/Pause with skip controls (-3s/+3s)
+  - Playback speed control (0.5x - 2.0x)
+  - Time display
+  - Hidden audio element
+#}
+
+{% macro render_audio_player() %}
+<!-- Audio Player - Floating Compact Design -->
+<div class="custom-audio-player">
+  <div class="player-controls">
+    <!-- Top Row: Progress Bar -->
+    <div class="player-controls-top">
+      <input type="range" id="progressBar" min="0" max="100" value="0" class="progress-bar" aria-label="Audio progress">
+      <div class="volume-control-container">
+        <i id="muteBtn" class="fa-solid fa-volume-high volume-icon" aria-label="Mute/Unmute"></i>
+        <input type="range" id="volumeControl" min="0" max="1" step="0.01" value="1.0" class="volume-control" aria-label="Volume">
+      </div>
+    </div>
+    
+    <!-- Middle Row: Main Controls -->
+    <div class="player-controls-bottom">
+      <div class="time-display" id="timeDisplay">0:00 / 0:00</div>
+      
+      <div class="play-container">
+        <div class="skip-control" id="rewindBtn" role="button" aria-label="Rewind 3 seconds">
+          <i class="fa-solid fa-rotate-left skip-icon"></i>
+          <span class="skip-label">-3s</span>
+        </div>
+        
+        <i id="playPauseBtn" class="bi bi-play-circle-fill play-icon" role="button" aria-label="Play/Pause"></i>
+        
+        <div class="skip-control" id="forwardBtn" role="button" aria-label="Forward 3 seconds">
+          <i class="fa-solid fa-rotate-right skip-icon"></i>
+          <span class="skip-label">+3s</span>
+        </div>
+      </div>
+      
+      <div class="speed-control-container">
+        <i class="bi bi-speedometer2 speed-icon" aria-label="Playback speed"></i>
+        <input type="range" id="speedControlSlider" min="0.5" max="2" step="0.1" value="1.0" class="speed-control" aria-label="Speed control">
+        <div id="speedDisplay" class="speed-display">1.0x</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Hidden audio element -->
+<audio id="audioPlayer" preload="auto" style="display: none;">
+  Your browser does not support the audio element.
+</audio>
+{% endmacro %}

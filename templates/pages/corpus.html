@@ -327,9 +327,9 @@
   window.RESTORE_ACTIVE_TAB = '{{ active_tab if active_tab else "tab-simple" }}';
   window.RESTORE_TOKEN_IDS = '{{ token_ids if token_ids else "" }}';
 </script>
-<script src="{{ url_for('static', filename='js/corpus_datatables_serverside.js') }}"></script>
-<script src="{{ url_for('static', filename='js/corpus_token.js') }}"></script>
-<script src="{{ url_for('static', filename='js/corpus_snapshot.js') }}"></script>
+
+<!-- Corpus Module (ES6) -->
+<script type="module" src="{{ url_for('static', filename='js/modules/corpus/index.js') }}"></script>
 
 <!-- Tab Switching -->
 <script>

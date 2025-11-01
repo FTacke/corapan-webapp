@@ -154,35 +154,102 @@
 }
 
 /* ============================================
-   Collapsible Submenu
+   Collapsible Submenu - MD3 Accordion
+   ============================================
+   Grid-basiert (0fr → 1fr) + Opacity für smooth Animation
+   GPU-freundlich, keine Timer, kein max-height Hack
    ============================================ */
 
 .md3-navigation-drawer__collapsible {
   display: flex;
   flex-direction: column;
-  width: 100%; /* Volle Breite des Drawers */
+  width: 100%;
   margin: 0;
 }
 
-/* Trigger button (Proyecto) erbt .md3-navigation-drawer__item Styles */
-/* margin: var(--space-1) var(--space-3) sorgt für korrekte Breite */
+/* Trigger Button: Chevron rotiert (erbt .md3-navigation-drawer__item Styles) */
+.md3-navigation-drawer__chevron {
+  transition: rotate var(--dur, 250ms) var(--md-ease, cubic-bezier(0.4, 0, 0.2, 1));
+  rotate: 0deg;
+}
 
+.md3-navigation-drawer__trigger[aria-expanded="true"] .md3-navigation-drawer__chevron {
+  rotate: 180deg;
+}
+
+/* Submenu: Grid-Accordion (0fr → 1fr) */
 .md3-navigation-drawer__submenu {
-  display: flex;
-  flex-direction: column;
-  padding: 0;
+  display: grid;
+  grid-template-rows: 0fr; /* Collapsed State */
+  transition: grid-template-rows var(--dur, 250ms) var(--md-ease, cubic-bezier(0.4, 0, 0.2, 1)),
+              opacity var(--dur, 250ms) var(--md-ease, cubic-bezier(0.4, 0, 0.2, 1));
+  opacity: 0;
+  overflow: clip; /* Verhindert Bleeding und "Graukasten" */
+  will-change: grid-template-rows, opacity;
   margin: 0;
+  padding: 0;
+}
+
+/* Open State: via [data-open] Attribut */
+.md3-navigation-drawer__submenu[data-open] {
+  grid-template-rows: 1fr; /* Expanded State */
+  opacity: 1;
+}
+
+/* Closing State: Explizit für Exit-Animation */
+.md3-navigation-drawer__submenu.closing {
+  grid-template-rows: 0fr;
+  opacity: 0;
+}
+
+/* Inner Content Wrapper: nötig für 0fr-Kollaps + Slide-Animation */
+.md3-navigation-drawer__submenu-inner {
+  overflow: hidden;
+  min-height: 0; /* Important für Grid */
   padding-top: var(--space-1);
   padding-bottom: var(--space-1);
+  /* Slide-Up/Down Animation für Items */
+  transform: translateY(0);
+  transition: transform var(--dur, 250ms) var(--md-ease, cubic-bezier(0.4, 0, 0.2, 1));
+}
+
+/* Closed State: Items nach oben verschoben */
+.md3-navigation-drawer__submenu:not([data-open]) .md3-navigation-drawer__submenu-inner {
+  transform: translateY(-12px);
+}
+
+/* Closing State: Items nach oben verschoben */
+.md3-navigation-drawer__submenu.closing .md3-navigation-drawer__submenu-inner {
+  transform: translateY(-12px);
+}
+
+/* Entry Animation: @starting-style für smooth Fade-In */
+@starting-style {
+  .md3-navigation-drawer__submenu[data-open] {
+    grid-template-rows: 0fr;
+    opacity: 0;
+  }
+  
+  .md3-navigation-drawer__submenu[data-open] .md3-navigation-drawer__submenu-inner {
+    transform: translateY(-12px);
+  }
+}
+
+/* Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+  .md3-navigation-drawer__chevron,
+  .md3-navigation-drawer__submenu {
+    transition: none;
+  }
 }
 
 .md3-navigation-drawer__subitem {
   display: flex;
   align-items: center;
-  padding: var(--space-2) var(--space-4); /* Rechts normales Padding */
-  padding-left: calc(var(--space-1) + var(--space-4)); /* Links eingerückt */
-  margin: var(--space-1) var(--space-3); /* Gleicher rechter Rand wie normale Items */
-  margin-left: calc(var(--space-3) + var(--space-6)); /* Extra Einrückung links */
+  padding: var(--space-2) var(--space-4);
+  padding-left: calc(var(--space-1) + var(--space-4));
+  margin: var(--space-1) var(--space-3);
+  margin-left: calc(var(--space-3) + var(--space-6));
   color: var(--md-sys-color-on-surface-variant);
   font-family: var(--font-body);
   font-size: 0.95rem;
@@ -260,90 +327,123 @@
 }
 
 /* ============================================
-   Modal Drawer (Compact/Medium)
+   Modal Drawer (Compact/Medium) - <dialog>-basiert
    ============================================
-   HTML Struktur:
-   <aside class="md3-navigation-drawer--modal" hidden>
-     <div class="md3-navigation-drawer__scrim"></div>
-     <div class="md3-navigation-drawer__container">...</div>
-   </aside>
-   ============================================ */
-
-/* ============================================
-   Modal Drawer (Mobile <840px) - REINE CSS ANIMATION
+   Moderne Lösung mit nativer Dialog-API
    Chrome 117+, Firefox 129+, Safari 17.4+
    ============================================ */
 
-.md3-navigation-drawer--modal {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  z-index: 1001;
+/* MD3 Motion Tokens */
+:root {
+  --md-ease: cubic-bezier(0.4, 0, 0.2, 1);
+  --dur: 250ms;
 }
 
-/* HTML [hidden] Attribut: Drawer komplett ausblenden */
-.md3-navigation-drawer--modal[hidden] {
-  display: none;
+/* Dialog-Reset */
+.drawer {
+  border: 0;
+  padding: 0;
+  width: auto;
+  max-width: none;
+  background: transparent; /* Panel hat eigenen Hintergrund */
+  /* diskrete Sichtbarkeit, kein Flash */
+  transition: visibility var(--dur) var(--md-ease);
+  transition-behavior: allow-discrete;
+  visibility: hidden;
 }
 
-/* SCRIM: Backdrop - Fullscreen, klickbar, hinter Container */
-.md3-navigation-drawer__scrim {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.4);
-  z-index: 999;
-  cursor: pointer;
-  pointer-events: auto;
-  /* EXIT STATE: Unsichtbar */
+.drawer[open] {
+  visibility: visible;
+}
+
+/* Backdrop (Scrim) des Dialogs */
+.drawer::backdrop {
+  background: rgb(0 0 0 / 40%);
   opacity: 0;
-  /* Transition für opacity */
-  transition: opacity 250ms cubic-bezier(0.4, 0, 0.2, 1);
+  transition: opacity var(--dur) var(--md-ease);
+  will-change: opacity;
 }
 
-/* CONTAINER: Der Drawer selbst (280px breit, über Scrim) */
-.md3-navigation-drawer--modal .md3-navigation-drawer__container {
+/* Panel: links reinfahren */
+.drawer__panel {
   position: fixed;
   top: 0;
-  left: 0;
   bottom: 0;
+  left: 0;
   width: 280px;
-  z-index: 1000;
-  pointer-events: auto;
-  /* EXIT STATE: Off-screen links, KEINE Box-Shadow */
-  transform: translateX(-100%);
-  box-shadow: none;
-  /* Transition für transform UND box-shadow */
-  transition: transform 250ms cubic-bezier(0.4, 0, 0.2, 1),
-              box-shadow 0s 250ms; /* Box-shadow erscheint NACH Animation (250ms delay) */
+  background: var(--md-sys-color-surface, #fff);
+  color: var(--md-sys-color-on-surface);
+  translate: -100% 0; /* statt transform: klarer für Komposition */
+  transition: translate var(--dur) var(--md-ease);
+  will-change: translate;
+  contain: paint;
+  box-shadow: var(--elev-2, 0 8px 24px rgb(0 0 0 / 20%));
+  overflow-y: auto; /* eigener Scroll, kein Body-Lock nötig */
+  overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  max-height: 100vh;
 }
 
-/* OPEN STATE: Drawer sichtbar MIT Box-Shadow */
-.md3-navigation-drawer--modal.md3-navigation-drawer--open .md3-navigation-drawer__scrim {
+/* Offener Zustand */
+.drawer[open]::backdrop {
   opacity: 1;
 }
 
-.md3-navigation-drawer--modal.md3-navigation-drawer--open .md3-navigation-drawer__container {
-  transform: translateX(0);
-  box-shadow: var(--elev-2);
-  /* Box-shadow erscheint SOFORT wenn open */
-  transition: transform 250ms cubic-bezier(0.4, 0, 0.2, 1),
-              box-shadow 0s 0s;
+.drawer[open] .drawer__panel {
+  translate: 0 0;
 }
 
-/* BEFORE-OPEN STATE: @starting-style für Entry-Animation
-   Definiert wo die Animation STARTET (vor display:none → display:block) */
+/* Closing State: Exit-Animation */
+.drawer.closing::backdrop {
+  opacity: 0;
+}
+
+.drawer.closing .drawer__panel {
+  translate: -100% 0;
+}
+
+/* Erster Frame ohne JS-Timer */
 @starting-style {
-  .md3-navigation-drawer--modal:not([hidden]) .md3-navigation-drawer__scrim {
+  .drawer[open]::backdrop {
     opacity: 0;
   }
   
-  .md3-navigation-drawer--modal:not([hidden]) .md3-navigation-drawer__container {
-    transform: translateX(-100%);
+  .drawer[open] .drawer__panel {
+    translate: -100% 0;
+  }
+}
+
+/* MD3 Motion: Reduced Motion respektieren */
+@media (prefers-reduced-motion: reduce) {
+  .drawer::backdrop,
+  .drawer__panel {
+    transition: none;
+  }
+}
+
+/* Optional: RTL-Unterstützung */
+:root[dir="rtl"] .drawer__panel {
+  left: auto;
+  right: 0;
+  translate: 100% 0;
+}
+
+:root[dir="rtl"] .drawer[open] .drawer__panel {
+  translate: 0 0;
+}
+
+@starting-style {
+  :root[dir="rtl"] .drawer[open] .drawer__panel {
+    translate: 100% 0;
+  }
+}
+
+/* Nur auf < 840px anzeigen, sonst Drawer-Variante für Expanded verwenden */
+@media (min-width: 840px) {
+  .drawer {
+    display: none;
   }
 }
 
@@ -420,9 +520,11 @@
    Animations & Transitions
    ============================================ */
 
-/* Smooth open/close for collapsibles */
-.md3-navigation-drawer__submenu[hidden] {
-  display: none;
+/* Reduced Motion für Submenu */
+@media (prefers-reduced-motion: reduce) {
+  .md3-navigation-drawer__submenu {
+    transition: none;
+  }
 }
 
 /* Custom properties for JS control */

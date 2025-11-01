@@ -97,145 +97,10 @@
 }
 
 /* ============================================
-   SPEAKER TURNS - Neue MD3-Struktur
+   TRANSCRIPTION RENDERING
+   Note: Shared transcription styles moved to transcription-shared.css
+   This file now contains only player-specific sidebar components
    ============================================ */
-
-.md3-speaker-turn {
-  padding: var(--space-3);
-  border-radius: var(--radius-md);
-  border: 1px solid var(--md-sys-color-outline-variant);
-  background: var(--md-sys-color-surface-container-low); /* Wie tonal-low Card */
-  transition: background 0.15s ease;
-}
-
-.md3-speaker-turn:hover {
-  background: var(--md-sys-color-surface-container);
-}
-
-/* Speaker Header - Zeile 1: Edit-Icon | Name | Time */
-.md3-speaker-header {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  margin-bottom: var(--space-2);
-  padding-bottom: var(--space-2);
-  border-bottom: 1px solid var(--md-sys-color-outline-variant);
-}
-
-/* Edit Icon (links) */
-.md3-speaker-edit-icon {
-  color: var(--md-sys-color-primary);
-  font-size: 0.875rem;
-  cursor: pointer;
-  transition: color 0.15s ease;
-  flex-shrink: 0;
-  position: relative; /* Für Tooltip-Positionierung */
-}
-
-.md3-speaker-edit-icon:hover {
-  color: var(--md-sys-color-on-surface);
-}
-
-/* Speaker Name */
-.md3-speaker-name {
-  font-size: 0.875rem;
-  font-weight: 600;
-  font-family: 'Arial Narrow', Arial, sans-serif;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--md-sys-color-primary);
-  cursor: pointer;
-  user-select: none;
-  transition: opacity 0.15s ease;
-  flex: 1;
-}
-
-.md3-speaker-name:hover {
-  opacity: 0.7;
-}
-
-/* Speaker Time (rechts) */
-.md3-speaker-time {
-  font-size: 0.75rem;
-  font-family: 'Consolas', 'Courier New', monospace;
-  color: var(--md-sys-color-on-surface-variant);
-  letter-spacing: 0.05em;
-  font-variant-numeric: tabular-nums;
-  flex-shrink: 0;
-  margin-left: auto;
-}
-
-/* Speaker Text - Zeile 2: Monospace Text mit Word-Highlighting */
-.md3-speaker-text {
-  font-family: 'Consolas', 'Courier New', monospace;
-  font-size: 1rem; /* Größer für Desktop/Tablet */
-  line-height: 1.6;
-  color: var(--md-sys-color-on-surface);
-  word-wrap: break-word;
-}
-
-/* Word Elements - für Highlighting */
-.md3-speaker-text .word {
-  display: inline;
-  cursor: pointer;
-  padding: 0.1rem 0.2rem;
-  border-radius: 2px;
-  transition: background 0.2s ease-out, opacity 0.2s ease-out;
-  /* WICHTIG: Konstantes Padding für alle States, verhindert Text-Shift */
-  box-sizing: border-box;
-}
-
-.md3-speaker-text .word:hover {
-  background: var(--md-sys-color-primary-container);
-  /* KEIN zusätzliches Padding! */
-}
-
-/* Aktuell abgespieltes Wort - MD3 Highlight (auffälliger, ohne Border/Radius) */
-.md3-speaker-text .word.playing {
-  background: #ffeb3b; /* Material Yellow 500 - Auffälliges Gelb */
-  color: #000000;
-  font-weight: 700;
-  /* WICHTIG: Gleiches Padding wie .word, verhindert Layout-Shift */
-  padding: 0.1rem 0.2rem;
-  /* KEINE border-radius - scharfe Ecken */
-  border-radius: 0;
-  /* KEINE outline/border */
-  box-sizing: border-box;
-}
-
-/* Preview nächste Wort-Gruppe */
-.md3-speaker-text .word.playing-preview {
-  background: var(--md-sys-color-primary-container);
-  opacity: 0.7;
-  /* KEIN zusätzliches Padding! */
-}
-
-/* Target Token Highlight (URL-Parameter) */
-.md3-speaker-text .word.word-token-id {
-  background: #ffd600; /* Gelb */
-  color: #000000;
-  font-weight: 700;
-  padding: 0.2rem 0.4rem;
-  border-radius: var(--radius-sm);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
-  animation: token-pulse 2s ease-in-out infinite;
-}
-
-@keyframes token-pulse {
-  0%, 100% {
-    transform: scale(1);
-  }
-  50% {
-    transform: scale(1.05);
-  }
-}
-
-/* Buchstabenmarkierung */
-.md3-speaker-text .word .highlight {
-  background: rgba(255, 215, 0, 0.65); /* Gelb, halbtransparent */
-  padding: 0.1rem 0.2rem;
-  border-radius: 2px;
-}
 
 /* ============================================
    SIDEBAR COMPONENTS - Player-spezifisch
@@ -791,14 +656,7 @@
     gap: var(--space-4);
   }
 
-  .md3-speaker-turn {
-    padding: var(--space-2);
-  }
-
-  .md3-speaker-text {
-    font-size: 0.875rem; /* Kleiner auf Mobile */
-    line-height: 1.5;
-  }
+  /* Note: Speaker turn mobile styles now in transcription-shared.css */
 
   .player-sidebar {
     position: static; /* Kein Sticky auf Mobile */

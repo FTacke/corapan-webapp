@@ -40,15 +40,11 @@
   }
 ] %}
 
-{# Modal Navigation Drawer (Compact/Medium) #}
-<aside class="md3-navigation-drawer md3-navigation-drawer--modal" 
-       id="navigation-drawer-modal"
-       role="navigation" 
-       aria-label="Hauptnavigation"
-       hidden
-       data-element="nav-drawer-modal">
-  <div class="md3-navigation-drawer__scrim" data-action="close-drawer"></div>
-  <div class="md3-navigation-drawer__container">
+{# Modal Navigation Drawer (Compact/Medium) - Dialog-basiert #}
+<dialog id="navigation-drawer-modal" 
+        class="drawer" 
+        aria-label="Hauptnavigation">
+  <div class="drawer__panel">
     {# Header with Logo #}
     <div class="md3-navigation-drawer__header">
       <a href="{{ url_for('public.landing_page') }}" class="md3-navigation-drawer__logo-link">
@@ -75,7 +71,8 @@
           
           {# Collapsible item with submenu #}
           <div class="md3-navigation-drawer__collapsible">
-            <button type="button" 
+            <button type="button"
+                    id="drawer-trigger-{{ loop.index }}"
                     class="md3-navigation-drawer__item md3-navigation-drawer__trigger {{ 'md3-navigation-drawer__item--active' if (is_active or has_active_child.value) else '' }}"
                     aria-expanded="{{ 'true' if has_active_child.value else 'false' }}"
                     aria-controls="drawer-submenu-{{ loop.index }}">
@@ -85,16 +82,21 @@
             </button>
             
             <div id="drawer-submenu-{{ loop.index }}" 
-                 class="md3-navigation-drawer__submenu" 
-                 {{ 'hidden' if not has_active_child.value else '' }}>
-              {% for child in item.children %}
-                {% set child_is_active = (request.path == child.href) or (request.path.startswith(child.href + '/')) or (active_endpoint in (child.get('match', []) if child is mapping else [])) %}
-                <a href="{{ child.href }}" 
-                   class="md3-navigation-drawer__subitem {{ 'md3-navigation-drawer__subitem--active' if child_is_active else '' }}"
-                   aria-current="{{ 'page' if child_is_active else 'false' }}">
-                  {{ child.label }}
-                </a>
-              {% endfor %}
+                 class="md3-navigation-drawer__submenu"
+                 role="group"
+                 aria-labelledby="drawer-trigger-{{ loop.index }}"
+                 aria-hidden="{{ 'false' if has_active_child.value else 'true' }}"
+                 {{ 'data-open' if has_active_child.value else '' }}>
+              <div class="md3-navigation-drawer__submenu-inner">
+                {% for child in item.children %}
+                  {% set child_is_active = (request.path == child.href) or (request.path.startswith(child.href + '/')) or (active_endpoint in (child.get('match', []) if child is mapping else [])) %}
+                  <a href="{{ child.href }}" 
+                     class="md3-navigation-drawer__subitem {{ 'md3-navigation-drawer__subitem--active' if child_is_active else '' }}"
+                     aria-current="{{ 'page' if child_is_active else 'false' }}">
+                    {{ child.label }}
+                  </a>
+                {% endfor %}
+              </div>
             </div>
           </div>
         {% else %}
@@ -152,7 +154,7 @@
       {% endif %}
     </nav>
   </div>
-</aside>
+</dialog>
 
 {# Standard Navigation Drawer (Expanded) #}
 <aside class="md3-navigation-drawer md3-navigation-drawer--standard" 
@@ -186,7 +188,8 @@
         
         {# Collapsible item with submenu #}
         <div class="md3-navigation-drawer__collapsible">
-          <button type="button" 
+          <button type="button"
+                  id="drawer-standard-trigger-{{ loop.index }}"
                   class="md3-navigation-drawer__item md3-navigation-drawer__trigger {{ 'md3-navigation-drawer__item--active' if (is_active or has_active_child.value) else '' }}"
                   aria-expanded="{{ 'true' if has_active_child.value else 'false' }}"
                   aria-controls="drawer-standard-submenu-{{ loop.index }}">
@@ -195,17 +198,22 @@
             <span class="material-symbols-rounded md3-navigation-drawer__chevron">expand_more</span>
           </button>
           
-          <div id="drawer-standard-submenu-{{ loop.index }}" 
-               class="md3-navigation-drawer__submenu" 
-               {{ 'hidden' if not has_active_child.value else '' }}>
-            {% for child in item.children %}
-              {% set child_is_active = (request.path == child.href) or (request.path.startswith(child.href + '/')) or (active_endpoint in (child.get('match', []) if child is mapping else [])) %}
-              <a href="{{ child.href }}" 
-                 class="md3-navigation-drawer__subitem {{ 'md3-navigation-drawer__subitem--active' if child_is_active else '' }}"
-                 aria-current="{{ 'page' if child_is_active else 'false' }}">
-                {{ child.label }}
-              </a>
-            {% endfor %}
+          <div id="drawer-standard-submenu-{{ loop.index }}"
+               class="md3-navigation-drawer__submenu"
+               role="group"
+               aria-labelledby="drawer-standard-trigger-{{ loop.index }}"
+               aria-hidden="{{ 'false' if has_active_child.value else 'true' }}"
+               {{ 'data-open' if has_active_child.value else '' }}>
+            <div class="md3-navigation-drawer__submenu-inner">
+              {% for child in item.children %}
+                {% set child_is_active = (request.path == child.href) or (request.path.startswith(child.href + '/')) or (active_endpoint in (child.get('match', []) if child is mapping else [])) %}
+                <a href="{{ child.href }}" 
+                   class="md3-navigation-drawer__subitem {{ 'md3-navigation-drawer__subitem--active' if child_is_active else '' }}"
+                   aria-current="{{ 'page' if child_is_active else 'false' }}">
+                  {{ child.label }}
+                </a>
+              {% endfor %}
+            </div>
           </div>
         </div>
       {% else %}
