@@ -74,8 +74,8 @@
    Responsive Overrides (from corpus responsive section)
    ============================================================================ */
 
-/* TABLET: 601px - 900px */
-@media (max-width: 900px) {
+/* TABLET: 601px - 1120px (accounting for 280px drawer) */
+@media (max-width: 1120px) {
   .md3-tabs {
     gap: var(--space-1);
   }
@@ -86,8 +86,8 @@
   }
 }
 
-/* MOBILE STANDARD: ≤ 600px */
-@media (max-width: 600px) {
+/* MOBILE STANDARD: MD3 Compact (0-599px) */
+@media (max-width: 599px) {
   .md3-tabs {
     gap: var(--space-1);
     margin-bottom: var(--space-4);

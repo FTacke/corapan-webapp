@@ -14,6 +14,12 @@ const focusableSelectors = 'a[href], button:not([disabled]), textarea, input, se
  */
 export class NavigationDrawer {
   constructor() {
+    // Guard: Nur einmal initialisieren (für Turbo Drive)
+    if (window.__drawerInit) {
+      console.log('[Navigation Drawer] Already initialized, skipping');
+      return window.__drawerInstance;
+    }
+    
     this.modalDrawer = document.getElementById('navigation-drawer-modal');
     this.standardDrawer = document.getElementById('navigation-drawer-standard');
     this.openButton = document.querySelector('[data-action="open-drawer"]');
@@ -25,9 +31,17 @@ export class NavigationDrawer {
     }
     
     this.init();
+    
+    // Globale Referenz speichern
+    window.__drawerInit = true;
+    window.__drawerInstance = this;
   }
   
   init() {
+    // Initialize inert state für alle geschlossenen Submenus
+    this.initInertState(this.modalDrawer);
+    this.initInertState(this.standardDrawer);
+    
     // Open button
     if (this.openButton) {
       this.openButton.addEventListener('click', () => this.open());
@@ -67,6 +81,24 @@ export class NavigationDrawer {
     });
   }
   
+  /**
+   * Initialize inert state for closed submenus on page load
+   */
+  initInertState(drawer) {
+    if (!drawer) return;
+    
+    drawer.querySelectorAll('.md3-navigation-drawer__submenu').forEach(submenu => {
+      const isOpen = submenu.hasAttribute('data-open');
+      if (!isOpen) {
+        submenu.setAttribute('aria-hidden', 'true');
+        submenu.inert = true;
+      } else {
+        submenu.setAttribute('aria-hidden', 'false');
+        submenu.inert = false;
+      }
+    });
+  }
+  
   initCollapsibles(drawer) {
     // Event Delegation: Ein Listener für alle Trigger
     drawer.addEventListener('click', (e) => {
@@ -85,35 +117,41 @@ export class NavigationDrawer {
           const otherSubmenuId = otherTrigger.getAttribute('aria-controls');
           const otherSubmenu = drawer.querySelector(`#${otherSubmenuId}`);
           
-          // Close other submenu with animation
-          otherTrigger.setAttribute('aria-expanded', 'false');
-          if (otherSubmenu) {
-            otherSubmenu.classList.add('closing');
-            // Nach Animation: Attributes aufräumen
-            setTimeout(() => {
-              otherSubmenu.removeAttribute('data-open');
+          if (otherSubmenu && otherSubmenu.hasAttribute('data-open')) {
+            // Close other submenu
+            otherTrigger.setAttribute('aria-expanded', 'false');
+            otherSubmenu.removeAttribute('data-open');
+            
+            // Cleanup nach Animation mit transitionend
+            otherSubmenu.addEventListener('transitionend', function cleanup(e) {
+              if (e.target !== otherSubmenu) return; // Nur äußeres Element
               otherSubmenu.setAttribute('aria-hidden', 'true');
-              otherSubmenu.classList.remove('closing');
-            }, 250); // Match CSS transition duration
+              otherSubmenu.inert = true;
+              otherSubmenu.removeEventListener('transitionend', cleanup);
+            }, { once: true });
           }
         }
       });
 
       // Toggle current submenu
       trigger.setAttribute('aria-expanded', String(!isExpanded));
+      
       if (!isExpanded) {
-        // Open
-        submenu.classList.remove('closing');
+        // Öffnen: Sofort A11y aktivieren
         submenu.setAttribute('data-open', '');
         submenu.setAttribute('aria-hidden', 'false');
+        submenu.inert = false;
       } else {
-        // Close with animation
-        submenu.classList.add('closing');
-        setTimeout(() => {
-          submenu.removeAttribute('data-open');
+        // Schließen: Erst Animation, dann A11y-Cleanup
+        submenu.removeAttribute('data-open');
+        
+        // Cleanup nach Animation mit transitionend (KEIN setTimeout!)
+        submenu.addEventListener('transitionend', function cleanup(e) {
+          if (e.target !== submenu) return; // Nur äußeres Element
           submenu.setAttribute('aria-hidden', 'true');
-          submenu.classList.remove('closing');
-        }, 250); // Match CSS transition duration
+          submenu.inert = true;
+          submenu.removeEventListener('transitionend', cleanup);
+        }, { once: true });
       }
     });
   }

@@ -1,13 +1,6 @@
 {% extends 'base.html' %}
 {% from 'partials/page_navigation.html' import page_navigation %}
 {% block page_title %}Estadísticas · CO.RA.PAN{% endblock %}
-{% block extra_head %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/md3/tokens.css') }}">
-<link rel="stylesheet" href="{{ url_for('static', filename='css/md3/typography.css') }}">
-<link rel="stylesheet" href="{{ url_for('static', filename='css/md3/components/hero.css') }}">
-<link rel="stylesheet" href="{{ url_for('static', filename='css/md3/components/text-pages.css') }}">
-<link rel="stylesheet" href="{{ url_for('static', filename='css/md3/components/stats.css') }}">
-{% endblock %}
 {% block content %}
 <article class="md3-text-page">
   <section class="md3-hero md3-hero--container" role="main" aria-label="Estadísticas del corpus">

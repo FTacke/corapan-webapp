@@ -7,6 +7,7 @@ import { applyWindowSizeClass, getWindowSize, WindowSize } from './window-size.j
 import { initNavigationDrawer } from './drawer.js';
 import { initTopAppBar } from './app-bar.js';
 import { initMaterialSymbolsFallback } from './material-symbols-loader.js';
+import { initTurboIntegration } from './turbo-integration.js';
 
 /**
  * Initialize MD3 Navigation System
@@ -18,11 +19,14 @@ export function initMD3Navigation() {
   // Apply window size classes to body for CSS targeting
   const cleanup = applyWindowSizeClass(document.body, 'app');
   
-  // Initialize drawer
+  // Initialize drawer (nur einmal, bleibt persistent)
   const drawer = initNavigationDrawer();
   
   // Initialize top app bar
   const appBar = initTopAppBar();
+  
+  // Initialize Turbo integration for persistent navigation
+  initTurboIntegration();
   
   // Log current window size (dev only)
   if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {

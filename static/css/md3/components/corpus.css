@@ -18,20 +18,45 @@
 }
 
 /* ============================================================================
-   Content Section (no margin-top needed - Container Hero has bottom margin)
+   Corpus Page Layout
+   ============================================================================
+   
+   MD3 EDGE-PADDING STRATEGY:
+   - Page wrapper (.md3-corpus-page): Definiert Edge-Padding vom Bildschirmrand
+   - Mobile (0-599px): 16px Edge-Padding (MD3 Compact)
+   - Tablet (600-1199px): 24px Edge-Padding (MD3 Medium)  
+   - Desktop (≥1200px): 32px Edge-Padding (MD3 Expanded)
+   ============================================================================ */
+
+/* Page Wrapper - Defines Edge-Padding */
+.md3-corpus-page {
+  /* Mobile: 16px Edge-Padding (MD3 Compact) */
+  padding: 0 var(--space-4);
+}
+
+/* Tablet+: 24px Edge-Padding (MD3 Medium) */
+@media (min-width: 600px) {
+  .md3-corpus-page {
+    padding: 0 var(--space-6);
+  }
+}
+
+/* Desktop: 32px Edge-Padding (MD3 Expanded) */
+@media (min-width: 1200px) {
+  .md3-corpus-page {
+    padding: 0 var(--space-8);
+  }
+}
+
+/* ============================================================================
+   Content Section
    ============================================================================ */
 
 .md3-corpus-content {
   max-width: 1400px;
   margin: 0 auto;
-  padding: 0 var(--space-6);
-}
-
-/* Mobile: reduce padding */
-@media (max-width: 599px) {
-  .md3-corpus-content {
-    padding: 0 var(--space-4);
-  }
+  /* NO horizontal padding - Edge-Padding from page wrapper */
+  padding: 0;
 }
 
 /* ============================================================================
@@ -71,7 +96,7 @@
 }
 
 /* Responsive: Stack stats */
-@media (max-width: 900px) {
+@media (max-width: 1120px) {
   .md3-corpus-stats {
     grid-template-columns: repeat(3, 1fr);
     gap: var(--space-3);
@@ -79,9 +104,10 @@
   }
 }
 
-@media (max-width: 600px) {
+/* MD3 Compact (0-599px) */
+@media (max-width: 599px) {
   .md3-corpus-stats {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, 1fr);
     gap: var(--space-3);
     padding: var(--space-3);
     margin-bottom: var(--space-4);

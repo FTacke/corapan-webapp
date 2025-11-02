@@ -39,25 +39,30 @@ class PlayerController {
 
     try {
       // Parse URL parameters
+      console.log('[Player] Step 1: Parsing URL parameters');
       this._parseURLParameters();
 
       // Initialize mobile handler first (affects layout)
+      console.log('[Player] Step 2: Initializing mobile handler');
       this.mobile.init();
 
       // Initialize UI components
+      console.log('[Player] Step 3: Initializing UI components');
       this.ui.init();
       this.tokens.init();
       this.highlighting.init();
 
       // Initialize audio player
+      console.log('[Player] Step 4: Initializing audio player');
       if (this.audioFile) {
         console.log('[Player] Audio file (raw):', this.audioFile);
         this.audio.init(this.audioFile);
       } else {
-        console.warn('[Player] No audio file specified in URL');
+        console.warn('[Player] No audio file specified');
       }
 
       // Initialize transcription (depends on audio & tokens)
+      console.log('[Player] Step 5: Initializing transcription manager');
       this.transcription = new TranscriptionManager(this.audio, this.tokens);
       
       // Connect audio playback events to word highlighting
@@ -65,11 +70,12 @@ class PlayerController {
       this.audio.onPause = () => this.transcription.stopWordHighlighting();
       this.audio.onEnded = () => this.transcription.stopWordHighlighting();
       
+      console.log('[Player] Step 6: Loading transcription');
       if (this.transcriptionFile) {
-        console.log('[Player] Transcription file:', this.transcriptionFile);
+        console.log('[Player] Transcription file:', this.transcriptionFile, 'token_id:', this.targetTokenId);
         await this.transcription.load(this.transcriptionFile, this.targetTokenId);
       } else {
-        console.warn('[Player] No transcription file specified in URL');
+        console.warn('[Player] No transcription file specified');
       }
 
       // Initialize export (depends on transcription)
@@ -91,13 +97,28 @@ class PlayerController {
    * @private
    */
   _parseURLParameters() {
+    // First, try to get from template variables (most reliable)
+    if (window.PLAYER_CONFIG) {
+      this.transcriptionFile = window.PLAYER_CONFIG.transcription;
+      this.audioFile = window.PLAYER_CONFIG.audio;
+      this.targetTokenId = window.PLAYER_CONFIG.token_id;
+      
+      console.log('[Player] Config from template:', {
+        audio: this.audioFile,
+        transcription: this.transcriptionFile,
+        token_id: this.targetTokenId
+      });
+      return;
+    }
+    
+    // Fallback: Parse from URL parameters
     const params = new URLSearchParams(window.location.search);
     
     this.audioFile = params.get('audio');
     this.transcriptionFile = params.get('transcription');
     this.targetTokenId = params.get('token_id');
 
-    console.log('[Player] URL Parameters:', {
+    console.log('[Player] URL Parameters (fallback):', {
       audio: this.audioFile,
       transcription: this.transcriptionFile,
       token_id: this.targetTokenId
@@ -162,13 +183,35 @@ class PlayerController {
 }
 
 // Auto-initialize on DOMContentLoaded
+// Note: Authentication is now handled by /auth/ready intermediate page
+// which polls /auth/session until cookies are confirmed.
+// By the time this page loads, the user is guaranteed to be authenticated.
 document.addEventListener('DOMContentLoaded', () => {
-  console.log('[Player] DOM Content Loaded');
+  console.log('[Player] DOM Content Loaded - initializing player');
   
-  // Create global player instance
-  window.corapanPlayer = new PlayerController();
-  window.corapanPlayer.init();
+  try {
+    // Create global player instance
+    window.corapanPlayer = new PlayerController();
+    console.log('[Player] PlayerController created successfully');
+    window.corapanPlayer.init();
+  } catch (error) {
+    console.error('[Player] Initialization error:', error);
+    alert('Fehler beim Laden des Players: ' + error.message);
+  }
 });
+
+// Also try to initialize immediately if DOM is already loaded
+if (document.readyState === 'loading') {
+  console.log('[Player] Module loading, waiting for DOMContentLoaded');
+} else {
+  console.log('[Player] Module loaded after DOMContentLoaded, initializing now');
+  try {
+    window.corapanPlayer = new PlayerController();
+    window.corapanPlayer.init();
+  } catch (error) {
+    console.error('[Player] Immediate initialization error:', error);
+  }
+}
 
 // Export for potential manual initialization
 export default PlayerController;

@@ -61,7 +61,10 @@
               </a>
               <div class="md3-user-menu__divider" role="separator"></div>
             {% endif %}
-            <form method="POST" action="{{ url_for('auth.logout') }}" class="md3-user-menu__form">
+            <form method="POST" 
+                  action="{{ url_for('auth.logout') }}" 
+                  class="md3-user-menu__form"
+                  data-turbo="false">
               <input type="hidden" name="referrer" value="{{ request.url }}">
               <button type="submit" 
                       class="md3-user-menu__item" 

@@ -3,7 +3,7 @@
 
 .md3-page-navigation {
   width: 100%;
-  border-top: 1px solid var(--md-sys-color-outline-variant);
+  border-top: 0px solid var(--md-sys-color-outline-variant);
   padding: var(--space-8) 0;
   background: var(--md-sys-color-background);
   color: var(--md-sys-color-on-background);
@@ -40,6 +40,7 @@
   border: 1px solid var(--md-sys-color-outline-variant);
   min-height: 80px;
   align-items: center;
+  box-shadow: none;
 }
 
 .md3-page-navigation__prev {
@@ -73,13 +74,11 @@
   align-items: flex-end;
 }
 
-/* Hover State mit Elevation */
+/* Hover State mit Primary-Border und höherer Container-Ebene */
 .md3-page-navigation__prev:hover,
 .md3-page-navigation__next:hover {
   background: var(--md-sys-color-surface-container-high);
   border-color: var(--md-sys-color-primary);
-  box-shadow: var(--elev-1);
-  transform: translateY(-1px);
 }
 
 /* Focus State */

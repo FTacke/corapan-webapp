@@ -5,6 +5,9 @@
 
 import { MEDIA_ENDPOINT, allowTempMedia } from './config.js';
 
+// Global DataTable instance for external access
+let corpusTable = null;
+
 export class CorpusDatatablesManager {
     constructor() {
         this.table = null;
@@ -24,6 +27,15 @@ export class CorpusDatatablesManager {
             return;
         }
 
+        // Check if already initialized
+        if ($.fn.dataTable.isDataTable(this.tableElement)) {
+            console.log('[DataTable] Already initialized, adjusting columns...');
+            this.table = this.tableElement.DataTable();
+            corpusTable = this.table;
+            this.adjustColumns();
+            return;
+        }
+
         this.table = this.tableElement.DataTable({
             // SERVER-SIDE PROCESSING
             serverSide: true,
@@ -37,7 +49,8 @@ export class CorpusDatatablesManager {
                 traditional: true,  // CRITICAL: Use traditional parameter serialization for arrays
                 dataSrc: 'data',
                 error: (xhr, error, thrown) => {
-                    console.error('DataTables AJAX error:', error, thrown);
+                    console.error('DataTables AJAX error:', error, thrown, xhr);
+                    console.error('Response:', xhr.responseText);
                 }
             },
             
@@ -52,6 +65,8 @@ export class CorpusDatatablesManager {
                 processing: 'Cargando resultados...'
             },
             stateSave: false,  // Disable with server-side (conflicts)
+            searching: true,   // Enable searching (handled server-side)
+            ordering: true,    // Enable ordering (handled server-side)
             
             // Layout with Export Buttons
             dom: '<"top"pB<"ml-auto"lf>>rt<"bottom"ip>',
@@ -65,34 +80,88 @@ export class CorpusDatatablesManager {
             // Default Sorting
             order: [[0, 'asc']],
             
-            // Layout
+            // Layout - no horizontal scrolling, container handles overflow
             scrollX: false,
             scrollCollapse: false,
-            autoWidth: true,
+            autoWidth: false,  // Disable auto width to respect our column definitions
             
             // Callbacks
             initComplete: () => {
                 console.log('✅ DataTable (Server-Side) initialized');
-                this.table.columns.adjust();
+                corpusTable = this.table;
+                // Only adjust columns once on init
+                setTimeout(() => this.adjustColumns(), 100);
             },
             
             drawCallback: () => {
-                this.table.columns.adjust();
+                // Don't adjust columns on every draw to prevent pixel shifts
+                // this.adjustColumns();
             }
         });
 
+        corpusTable = this.table;
+
         // Resize handler
         $(window).on('resize', () => {
-            if (this.table) {
-                this.table.columns.adjust();
-            }
+            this.adjustColumns();
         });
+
+        console.log('[DataTable] Initialization complete');
+    }
+
+    /**
+     * Adjust DataTable columns (idempotent, safe to call repeatedly)
+     */
+    adjustColumns() {
+        if (this.table) {
+            requestAnimationFrame(() => {
+                try {
+                    this.table.columns.adjust();
+                    if (this.table.responsive) {
+                        this.table.responsive.recalc();
+                    }
+                    console.log('[DataTable] Columns adjusted');
+                } catch (e) {
+                    console.warn('[DataTable] Error adjusting columns:', e);
+                }
+            });
+        }
     }
 
     /**
      * Build AJAX data parameters from URL
      */
     buildAjaxData(d) {
+        // Debug: Log DataTables parameters
+        console.log('[DataTables AJAX] Request params:', {
+            draw: d.draw,
+            start: d.start,
+            length: d.length,
+            order: d.order,
+            order_details: d.order && d.order[0] ? d.order[0] : null,
+            search: d.search
+        });
+        
+        // Flatten order parameters for Flask (from array/object to query string format)
+        // DataTables sends: order: [{column: 5, dir: 'asc'}]
+        // Flask expects: order[0][column]=5&order[0][dir]=asc
+        if (d.order && d.order.length > 0) {
+            d['order[0][column]'] = d.order[0].column;
+            d['order[0][dir]'] = d.order[0].dir;
+            delete d.order; // Remove the array version
+        }
+        
+        // Flatten search parameter for Flask
+        // DataTables sends: search: {value: 'searchterm', regex: false}
+        // Flask expects: search[value]=searchterm
+        if (d.search && d.search.value) {
+            d['search[value]'] = d.search.value;
+        }
+        delete d.search; // Remove the object version
+        
+        // Flatten columns array (remove it to reduce payload size)
+        delete d.columns;
+        
         // Add search parameters
         d.query = this.query;
         d.search_mode = this.searchMode;
@@ -115,6 +184,7 @@ export class CorpusDatatablesManager {
         if (modes.length > 0) d.speech_mode = modes;
         if (discourses.length > 0) d.discourse = discourses;
         
+        console.log('[DataTables AJAX] Final params:', d);
         return d;
     }
 
@@ -213,7 +283,11 @@ export class CorpusDatatablesManager {
             { data: 7, width: '80px' },   // Sexo
             { data: 8, width: '80px' },   // Modo
             { data: 9, width: '80px' },   // Discurso
-            { data: 10, width: '100px' }, // Token-ID
+            { 
+                data: 10, 
+                width: '100px',
+                render: (data) => `<span class="token-id">${data || ''}</span>`
+            }, // Token-ID
             
             // 11: Archivo (File icon with player link)
             {
@@ -282,7 +356,12 @@ export class CorpusDatatablesManager {
         const base = filename.trim().replace(/\.mp3$/i, '');
         const transcriptionPath = `${MEDIA_ENDPOINT}/transcripts/${base}.json`;
         const audioPath = `${MEDIA_ENDPOINT}/full/${base}.mp3`;
-        const playerUrl = `/player?transcription=${encodeURIComponent(transcriptionPath)}&audio=${encodeURIComponent(audioPath)}&token_id=${encodeURIComponent(tokenId)}`;
+        
+        // Build URL with token_id only if it has a value
+        let playerUrl = `/player?transcription=${encodeURIComponent(transcriptionPath)}&audio=${encodeURIComponent(audioPath)}`;
+        if (tokenId && tokenId.trim()) {
+            playerUrl += `&token_id=${encodeURIComponent(tokenId)}`;
+        }
         
         return `
             <a href="${playerUrl}" 
@@ -298,7 +377,8 @@ export class CorpusDatatablesManager {
      */
     refresh() {
         if (this.table) {
-            this.table.ajax.reload();
+            this.table.ajax.reload(null, false); // Keep current page
+            this.adjustColumns();
         }
     }
 
@@ -309,6 +389,7 @@ export class CorpusDatatablesManager {
         if (this.table) {
             this.table.destroy();
             this.table = null;
+            corpusTable = null;
         }
     }
 
@@ -317,5 +398,25 @@ export class CorpusDatatablesManager {
      */
     getTable() {
         return this.table;
+    }
+}
+
+/**
+ * Global function to adjust DataTable columns
+ * Called by external events (accordion open, results updated, etc.)
+ */
+export function adjustCorpusTable() {
+    if (corpusTable) {
+        requestAnimationFrame(() => {
+            try {
+                corpusTable.columns.adjust();
+                if (corpusTable.responsive) {
+                    corpusTable.responsive.recalc();
+                }
+                console.log('[DataTable] Columns adjusted (external call)');
+            } catch (e) {
+                console.warn('[DataTable] Error adjusting columns:', e);
+            }
+        });
     }
 }

@@ -53,7 +53,14 @@ class BaseConfig:
     JWT_TOKEN_LOCATION = ["headers", "cookies"]
     JWT_COOKIE_SECURE = SESSION_COOKIE_SECURE
     JWT_COOKIE_CSRF_PROTECT = True
+    JWT_COOKIE_SAMESITE = "Lax"  # Allows cookies in redirects
     JWT_ACCESS_TOKEN_EXPIRES = 3600  # 1 hour
+    JWT_REFRESH_TOKEN_EXPIRES = 604800  # 7 days
+    # Ensure cookies are sent with all requests (not just /auth)
+    JWT_ACCESS_COOKIE_PATH = "/"
+    JWT_REFRESH_COOKIE_PATH = "/"
+    JWT_ACCESS_CSRF_COOKIE_PATH = "/"
+    JWT_REFRESH_CSRF_COOKIE_PATH = "/"
     
     # Database paths
     DB_DIR = PROJECT_ROOT / "data" / "db"

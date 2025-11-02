@@ -16,7 +16,7 @@ export class CorpusSearchManager {
      */
     initialize() {
         if (!this.form.length) {
-            console.warn('Search form not found');
+            // Silently skip if not on corpus page
             return;
         }
 

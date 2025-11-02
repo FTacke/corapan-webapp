@@ -759,8 +759,8 @@
   background: var(--md-sys-color-surface-container);
   border-bottom: 1px solid var(--md-sys-color-outline-variant);
   position: sticky;
-  top: 0;
-  z-index: 50; /* Unter top-app-bar (100) */
+  top: 0; /* Ganz oben, unter Top App Bar */
+  z-index: 998; /* Unter Dropdown (1001) und Avatar (1002), aber über restlichem Content */
 }
 
 .md3-player-header .back-link {

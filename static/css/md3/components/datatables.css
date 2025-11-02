@@ -21,29 +21,29 @@
 .md3-corpus-table-container,
 .table-container {
   width: 100%;
-  max-width: 1400px;
-  max-width: 100%;
-  overflow-x: auto;
+  max-width: 100%;  /* Match parent width, don't overflow */
+  overflow-x: auto;  /* Scroll if table is too wide */
   overflow-y: visible;
   border: 1px solid #dee2e6;
   border-radius: 0.5rem;
   background: white;
   -webkit-overflow-scrolling: touch;
+  position: relative;
 }
 
 #corpus-table_wrapper {
   width: 100%;
   max-width: 100%;
-  /* Allow wrapper to expand with table content */
-  min-width: fit-content;
+  overflow: visible;
 }
 
 #corpus-table {
   width: 100%;
-  min-width: 100%;
+  max-width: 100%;
   font-size: 0.875rem;
   background: white;
-  table-layout: auto;
+  table-layout: auto;  /* Auto layout for natural column widths */
+  margin: 0 !important;  /* Prevent margin expansion */
 }
 
 #corpus-table thead th {
@@ -138,8 +138,9 @@
 /* Cell content styling */
 .token-id {
   font-family: 'Consolas', 'Courier New', monospace;
-  font-size: 0.75rem;
+  font-size: 0.775rem;  /* Smaller like tooltip-token */
   color: var(--md-sys-color-on-surface-variant);
+  font-weight: 400;
 }
 
 .center-align {
@@ -181,8 +182,10 @@
   background: var(--md-sys-color-surface-container);
   border-radius: var(--radius-sm) var(--radius-sm) 0 0;
   font-size: 0.875rem;
-  /* Match table width to expand with content */
-  min-width: fit-content;
+  /* Match table container width */
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .dataTables_wrapper .dt-buttons {
@@ -218,8 +221,10 @@
   background: var(--md-sys-color-surface-container);
   border-radius: 0 0 var(--radius-sm) var(--radius-sm);
   font-size: 0.875rem;
-  /* Match table width to expand with content */
-  min-width: fit-content;
+  /* Match table container width */
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 /* First row: Info */
@@ -433,7 +438,8 @@
    Responsive Adjustments
    ============================================================================ */
 
-@media (max-width: 600px) {
+/* MD3 Compact (0-599px) */
+@media (max-width: 599px) {
   .md3-corpus-table-container {
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;

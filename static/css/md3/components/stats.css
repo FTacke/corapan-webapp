@@ -28,16 +28,20 @@
   box-shadow: var(var(--elev-2));
 }
 
-/* Image Container with Fixed Aspect Ratio */
+/* Image Container with Fixed Aspect Ratio - Responsive scaling */
 .md3-stats-image-container {
   position: relative;
-  width: 60%;
+  width: 100%;
+  max-width: 400px;
   margin: 0 auto;
   overflow: visible;
   border-radius: var(--radius-md);
   background: transparent;
   cursor: zoom-in;
   transition: transform 200ms cubic-bezier(0.2, 0, 0, 1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .md3-stats-image-container:hover {
@@ -51,6 +55,10 @@
   object-fit: contain;
   max-width: 100%;
   border-radius: var(--radius-md);
+  /* Responsive font scaling: The key is to scale down the image proportionally
+     so text sizes in the graphic remain readable while being smaller than original.
+     Using max-width constraints to ensure readable font sizes. */
+  font-size: clamp(12px, 2.5vw, 16px);
 }
 
 /* Caption Styling */
@@ -65,7 +73,7 @@
 .md3-stats-country-section {
   margin-top: var(--space-12);
   padding-top: var(--space-10);
-  border-top: 1px solid var(--md-sys-color-outline-variant);
+  border-top: 0px solid var(--md-sys-color-outline-variant);
 }
 
 .md3-stats-country-selector {
@@ -170,13 +178,17 @@
 
 .md3-stats-country-image-container {
   position: relative;
-  width: 60%;
+  width: 100%;
+  max-width: 450px;
   margin: 0 auto;
   overflow: visible;
   border-radius: var(--radius-md);
   background: transparent;
   cursor: zoom-in;
   transition: transform 200ms cubic-bezier(0.2, 0, 0, 1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .md3-stats-country-image-container:hover {
@@ -190,6 +202,7 @@
   object-fit: contain;
   max-width: 100%;
   border-radius: var(--radius-lg);
+  font-size: clamp(12px, 2.5vw, 16px);
 }
 
 /* Form field helper: stack label above control and keep spacing consistent */
@@ -212,6 +225,151 @@
    switching to a multi-column grid so images remain one-per-row and centered.
    The .md3-stats-image-container width:60% is preserved for the visual look.
 */
+
+/* ========== ZOOM MODAL ========== */
+/* Full-screen image zoom functionality with modern MD3 tokens */
+
+.md3-stats-zoom-modal {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.85);
+  z-index: 9999;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 300ms cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: zoom-out;
+  padding: var(--space-4);
+  box-sizing: border-box;
+}
+
+.md3-stats-zoom-modal.active {
+  display: flex;
+  opacity: 1;
+}
+
+.md3-stats-zoom-modal-content {
+  position: relative;
+  max-width: 95%;
+  max-height: 95vh;
+  background: var(--md-sys-color-surface);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--elev-5);
+  padding: var(--space-6);
+  transform: scale(0.92);
+  transition: transform 300ms cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: default;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.md3-stats-zoom-modal.active .md3-stats-zoom-modal-content {
+  transform: scale(1);
+}
+
+.md3-stats-zoom-modal-image {
+  display: block;
+  max-width: 100%;
+  max-height: 85vh;
+  width: auto;
+  height: auto;
+  border-radius: var(--radius-lg);
+  object-fit: contain;
+}
+
+.md3-stats-zoom-modal-close {
+  position: absolute;
+  top: var(--space-4);
+  right: var(--space-4);
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--md-sys-color-surface-container-highest);
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 200ms cubic-bezier(0.2, 0, 0, 1);
+  z-index: 10;
+  color: var(--md-sys-color-on-surface);
+  padding: 0;
+  min-width: 44px;
+  min-height: 44px;
+}
+
+.md3-stats-zoom-modal-close:hover {
+  background: var(--md-sys-color-primary-container);
+  transform: scale(1.08);
+}
+
+.md3-stats-zoom-modal-close:focus-visible {
+  outline: 2px solid var(--md-sys-color-primary);
+  outline-offset: 2px;
+}
+
+/* Close button X icon using pseudo-elements */
+.md3-stats-zoom-modal-close::before,
+.md3-stats-zoom-modal-close::after {
+  content: '';
+  position: absolute;
+  width: 20px;
+  height: 2px;
+  background: var(--md-sys-color-on-surface);
+  border-radius: 1px;
+  transition: background 200ms cubic-bezier(0.2, 0, 0, 1);
+}
+
+.md3-stats-zoom-modal-close::before {
+  transform: rotate(45deg);
+}
+
+.md3-stats-zoom-modal-close::after {
+  transform: rotate(-45deg);
+}
+
+.md3-stats-zoom-modal-close:hover::before,
+.md3-stats-zoom-modal-close:hover::after {
+  background: var(--md-sys-color-on-primary-container);
+}
+
+/* Responsive adjustments */
+@media (max-width: 600px) {
+  .md3-stats-zoom-modal {
+    padding: var(--space-2);
+  }
+
+  .md3-stats-zoom-modal-content {
+    max-width: 98%;
+    max-height: 98vh;
+    padding: var(--space-4);
+    border-radius: var(--radius-lg);
+  }
+
+  .md3-stats-zoom-modal-image {
+    max-height: 90vh;
+  }
+
+  .md3-stats-zoom-modal-close {
+    width: 40px;
+    height: 40px;
+    min-width: 40px;
+    min-height: 40px;
+    top: var(--space-3);
+    right: var(--space-3);
+  }
+
+  .md3-stats-zoom-modal-close::before,
+  .md3-stats-zoom-modal-close::after {
+    width: 18px;
+    height: 1.5px;
+  }
+}
 
 
 

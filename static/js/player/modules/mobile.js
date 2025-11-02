@@ -4,7 +4,7 @@
  * @module player/modules/mobile
  */
 
-import PLAYER_CONFIG from '../config.js';
+import { PLAYER_CONFIG } from '../config.js';
 
 export class MobileHandler {
   constructor() {

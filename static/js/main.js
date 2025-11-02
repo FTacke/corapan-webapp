@@ -7,6 +7,104 @@ import { setupTokenRefresh } from './modules/auth/token-refresh.js';
 setupTokenRefresh();
 
 // ============================================
+// Turbo Drive Integration
+// ============================================
+import { initTurboIntegration } from './modules/navigation/turbo-integration.js';
+
+// Initialize Turbo Drive navigation handling
+initTurboIntegration();
+
+// ============================================
+// Atlas Module - Lazy Loading
+// ============================================
+let atlasMap = null;
+let atlasModule = null;
+
+async function initAtlas() {
+  const mapEl = document.getElementById('atlas-map');
+  if (!mapEl) return;
+
+  console.log('[Atlas] Initializing...');
+
+  try {
+    // 1) Load external dependencies
+    ensureStyles('https://unpkg.com/leaflet@1.9.4/dist/leaflet.css');
+    ensureStyles('/static/css/md3/components/atlas.css');
+    await ensureScript('https://unpkg.com/leaflet@1.9.4/dist/leaflet.js');
+
+    // 2) Prevent double initialization
+    if (atlasMap) {
+      console.log('[Atlas] Map already exists, removing...');
+      try {
+        atlasMap.remove();
+      } catch (e) {
+        console.warn('[Atlas] Error removing map:', e);
+      }
+      atlasMap = null;
+    }
+
+    // 3) Wait for Leaflet to be available
+    if (!window.L) {
+      console.error('[Atlas] Leaflet not loaded');
+      return;
+    }
+
+    // 4) Dynamically import Atlas module
+    if (!atlasModule) {
+      atlasModule = await import('/static/js/modules/atlas/index.js');
+      console.log('[Atlas] Module loaded');
+    }
+
+    // 5) Initialize Atlas
+    if (atlasModule.init) {
+      atlasMap = atlasModule.init();
+      console.log('[Atlas] Initialized successfully');
+    }
+  } catch (error) {
+    console.error('[Atlas] Initialization failed:', error);
+  }
+}
+
+function teardownAtlas() {
+  if (atlasMap) {
+    console.log('[Atlas] Tearing down...');
+    try {
+      atlasMap.remove();
+    } catch (e) {
+      console.warn('[Atlas] Error during teardown:', e);
+    }
+    atlasMap = null;
+  }
+}
+
+function ensureStyles(href) {
+  if (!document.querySelector(`link[rel="stylesheet"][href="${href}"]`)) {
+    const link = document.createElement('link');
+    link.rel = 'stylesheet';
+    link.href = href;
+    link.setAttribute('data-turbo-track', 'dynamic');
+    document.head.appendChild(link);
+  }
+}
+
+async function ensureScript(src) {
+  if (document.querySelector(`script[src="${src}"]`)) return;
+  
+  return new Promise((resolve, reject) => {
+    const script = document.createElement('script');
+    script.src = src;
+    script.defer = true;
+    script.onload = resolve;
+    script.onerror = reject;
+    document.head.appendChild(script);
+  });
+}
+
+// Atlas Turbo Hooks
+document.addEventListener('turbo:load', initAtlas);
+document.addEventListener('turbo:before-cache', teardownAtlas);
+
+// ============================================
 // Mobile Navigation
 // ============================================
 const navbarRoot = document.querySelector('.site-header');
@@ -225,13 +323,12 @@ userMenu?.addEventListener('click', (event) => {
   }
 });
 
-const loginSheet = document.querySelector('[data-element="login-sheet"]');
-const openLoginButtons = document.querySelectorAll('[data-action="open-login"]');
-const closeLoginButtons = document.querySelectorAll('[data-action="close-login"]');
 let previouslyFocusedForLogin = null;
 let scrollPositionBeforeLogin = 0;
 
 function openLogin() {
+  // Get loginSheet dynamically each time (survives page reloads)
+  const loginSheet = document.querySelector('[data-element="login-sheet"]');
   if (!loginSheet) return;
   
   // Save current scroll position to restore later if needed
@@ -253,6 +350,8 @@ function openLogin() {
 }
 
 function closeLogin() {
+  // Get loginSheet dynamically each time (survives page reloads)
+  const loginSheet = document.querySelector('[data-element="login-sheet"]');
   if (!loginSheet) return;
   
   loginSheet.hidden = true;
@@ -269,63 +368,59 @@ function closeLogin() {
   }
 }
 
-openLoginButtons.forEach((button) => {
-  button.addEventListener('click', (event) => {
+// Use event delegation to handle login buttons (works after page reload)
+document.addEventListener('click', (event) => {
+  const target = event.target;
+  
+  // Check if clicked element or its parent is an open-login button
+  const openButton = target.closest('[data-action="open-login"]');
+  if (openButton) {
     event.preventDefault();
+    console.log('[Auth] Opening login sheet');
     openLogin();
-  });
-});
-
-closeLoginButtons.forEach((button) => {
-  button.addEventListener('click', (event) => {
+    return;
+  }
+  
+  // Check if clicked element or its parent is a close-login button
+  const closeButton = target.closest('[data-action="close-login"]');
+  if (closeButton) {
     event.preventDefault();
+    console.log('[Auth] Closing login sheet');
     closeLogin();
-  });
+    return;
+  }
 });
 
-loginSheet?.addEventListener('click', (event) => {
+// Close login sheet when clicking on backdrop (event delegation)
+document.addEventListener('click', (event) => {
+  const loginSheet = document.querySelector('[data-element="login-sheet"]');
   if (event.target === loginSheet) {
     closeLogin();
   }
 });
 
-const loginForm = loginSheet?.querySelector('form');
-loginForm?.addEventListener('submit', async (event) => {
-  // Check if there's a stored player redirect URL (from client-side navigation)
-  const clientRedirectUrl = sessionStorage.getItem('_player_redirect_after_login');
+// Login form submission handler (event delegation for page reload resilience)
+document.addEventListener('submit', (event) => {
+  // Check if this is the login form
+  const loginSheet = document.querySelector('[data-element="login-sheet"]');
+  const loginForm = loginSheet?.querySelector('form');
   
-  if (clientRedirectUrl) {
-    // Prevent default form submission
-    event.preventDefault();
+  if (event.target === loginForm) {
+    // Don't prevent default - let form submit naturally
+    // This ensures cookies are set correctly by the browser
     
-    // Get form data
-    const formData = new FormData(loginForm);
+    console.log('[Auth] Login form submitted');
     
-    try {
-      // Submit login via fetch
-      const response = await fetch(loginForm.action, {
-        method: 'POST',
-        body: formData,
-        credentials: 'same-origin'
-      });
-      
-      if (response.ok) {
-        // Login successful - clear storage and navigate to player
-        sessionStorage.removeItem('_player_redirect_after_login');
-        window.location.href = clientRedirectUrl;
-      } else {
-        // Login failed - reload page to show error message
-        window.location.reload();
-      }
-    } catch (error) {
-      // On error, reload page
-      console.error('Login error:', error);
-      window.location.reload();
+    // Clear sessionStorage for cleanup
+    sessionStorage.removeItem('_player_redirect_after_login');
+    
+    // Visual feedback - close login sheet
+    // Note: Sheet will be hidden by page navigation anyway
+    if (loginSheet && !loginSheet.hidden) {
+      loginSheet.style.opacity = '0';
     }
-  } else {
-    // No client-side redirect URL - let form submit normally
-    // Backend will handle redirect to saved session URL or referrer
-    closeLogin();
+    
+    // Form submits naturally - browser handles redirect with cookies
   }
 });
 

@@ -1,8 +1,7 @@
 ﻿"""Public routes."""
 from __future__ import annotations
 
-from flask import Blueprint, render_template, request, jsonify, abort, g
-
+from flask import Blueprint, make_response, render_template, request, jsonify
 from ..services.counters import counter_visits
 from flask_jwt_extended import jwt_required
 
@@ -63,7 +62,16 @@ def proyecto_como_citar():
 
 @blueprint.get("/atlas")
 def atlas_page():
-    return render_template("pages/atlas.html")
+    """Atlas page - auth status affects UI (login buttons visibility)."""
+    html = render_template("pages/atlas.html")
+    
+    # Prevent caching to ensure data-auth attribute is always current
+    response = make_response(html)
+    response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate'
+    response.headers['Pragma'] = 'no-cache'
+    response.headers['Vary'] = 'Cookie'
+    
+    return response
 
 
 @blueprint.get("/impressum")
@@ -78,13 +86,18 @@ def privacy_page():
 @blueprint.get("/get_stats_all_from_db")
 def get_stats_all_from_db():
     from ..services.atlas import fetch_overview
-    return jsonify(fetch_overview())
+    response = jsonify(fetch_overview())
+    response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate'
+    response.headers['Pragma'] = 'no-cache'
+    return response
 
 
 @blueprint.get("/get_stats_files_from_db")
-@jwt_required(optional=True)
+@jwt_required()
 def get_stats_files_from_db():
     from ..services.atlas import fetch_file_metadata
-    if getattr(g, "user", None) is None:
-        abort(401)
-    return jsonify({"metadata_list": fetch_file_metadata()})
+    response = jsonify({"metadata_list": fetch_file_metadata()})
+    response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, private'
+    response.headers['Pragma'] = 'no-cache'
+    response.headers['Vary'] = 'Cookie'
+    return response

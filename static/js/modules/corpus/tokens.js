@@ -21,7 +21,7 @@ export class CorpusTokenManager {
      */
     initialize() {
         if (!this.tokenInput || !window.Tagify) {
-            console.warn('Token input or Tagify not available');
+            // Silently skip if not on corpus page or Tagify not loaded
             return;
         }
 

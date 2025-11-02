@@ -4,6 +4,10 @@
    Compact/Medium (<840px): Burger links, Login/Account rechts
    Expanded (≥840px): KEIN Burger (permanenter Drawer), Login/Account rechts
    KEIN Titel/Branding in der Bar
+   
+   POSITION: fixed – scrollt oben mit
+   Z-INDEX: 10 – sitzt über Content, aber unter Dropdown/Modal
+   STRUKTUR: Aus CSS Grid entfernt, padding-top auf main kompensiert
    ============================================ */
 
 /* ============================================
@@ -11,9 +15,12 @@
    ============================================ */
 
 .md3-top-app-bar {
-  position: sticky;
+  position: fixed;
   top: 0;
-  z-index: 100;
+  left: 0;
+  right: 0;
+  width: 100%;
+  z-index: 1001; /* Avatar-Symbol muss obenauf liegen */
   background: transparent;
   color: var(--md-sys-color-on-surface);
   box-shadow: none; /* Elevation 0 im Ruhezustand */
@@ -195,10 +202,17 @@
 
 /* ============================================
    User Menu (Avatar mit Logout-Menü)
+   ============================================
+   Avatar ist Teil der sticky Top App Bar
+   – scrollt MIT der Bar mit (kein position: fixed)
+   – Dropdown hat höhere z-index um über Content zu liegen
    ============================================ */
 
 .md3-user-menu {
-  position: relative;
+  position: fixed;
+  top: 12px;
+  right: 12px;
+  z-index: 2000; /* Absolut obenauf! */
 }
 
 /* .md3-user-menu__toggle erbt md3-icon-button Styles */
@@ -219,14 +233,14 @@
 
 /* User Menu Dropdown (Dashboard + Logout) */
 .md3-user-menu__dropdown {
-  position: absolute;
-  top: calc(100% + var(--space-2));
-  right: 0;
-  min-width: 200px;
+  position: fixed;
+  top: 64px;
+  right: 12px;
+  width: 256px;
   background: var(--md-sys-color-surface-container-high);
   border-radius: var(--radius-md);
   padding: var(--space-2);
-  z-index: 110;
+  z-index: 1999; /* Unter Avatar (2000), aber obenauf */
   box-shadow: var(--elev-2);
   /* Animation */
   opacity: 0;

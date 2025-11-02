@@ -174,6 +174,9 @@ def search_datatables() -> Response:
     start = _safe_int(request.args.get("start"), 0)
     length = _safe_int(request.args.get("length"), 25)
     
+    # DataTables search parameter (search within results)
+    dt_search = request.args.get("search[value]", "").strip()
+    
     # Search parameters (from original search)
     query = request.args.get("query", "").strip()
     search_mode = request.args.get("search_mode", "text")
@@ -220,6 +223,9 @@ def search_datatables() -> Response:
     order_col_index = _safe_int(request.args.get("order[0][column]"), 0)
     order_dir = request.args.get("order[0][dir]", "asc")
     
+    # DEBUG: Log ordering
+    print(f"DEBUG DataTables - Ordering: column={order_col_index}, dir={order_dir}")
+    
     # Map DataTables column index to sort field
     # Order: #, Ctx.←, Palabra, Ctx.→, Audio, País, Hablante, Sexo, Modo, Discurso, Token-ID, Archivo
     column_map = {
@@ -238,6 +244,9 @@ def search_datatables() -> Response:
     }
     sort_field = column_map.get(order_col_index, "")
     
+    # DEBUG: Log sort field
+    print(f"DEBUG DataTables - Sort field: {sort_field} (from column {order_col_index})")
+    
     # Calculate page number
     page = (start // length) + 1 if length > 0 else 1
     
@@ -255,6 +264,7 @@ def search_datatables() -> Response:
         order=order_dir,
         page=page,
         page_size=length,
+        table_search=dt_search,  # Pass DataTables search
     )
     
     # Execute search

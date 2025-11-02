@@ -1,16 +1,5 @@
 ﻿{% extends 'base.html' %}
 {% block page_title %}Atlas · CO.RA.PAN{% endblock %}
-{% block extra_head %}
-  <!-- MD3 Design System -->
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/md3/tokens.css') }}">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/md3/typography.css') }}">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/md3/components/hero.css') }}">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/md3/components/atlas.css') }}">
-  
-  <!-- Leaflet Map Library -->
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" defer></script>
-{% endblock %}
 
 {% block content %}
 <article class="md3-atlas-page">
@@ -55,8 +44,4 @@
     <section class="md3-atlas-files" data-element="atlas-files"></section>
   </div>
 </article>
-{% endblock %}
-
-{% block extra_scripts %}
-  <script type="module" src="{{ url_for('static', filename='js/modules/atlas/index.js') }}" defer></script>
 {% endblock %}

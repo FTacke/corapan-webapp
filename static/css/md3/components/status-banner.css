@@ -158,6 +158,23 @@
   color: var(--md-sys-color-primary);
 }
 
+/* Autofill styling - prevent browser from changing background color */
+.md3-text-field__input:-webkit-autofill {
+  -webkit-box-shadow: 0 0 0 1000px var(--md-sys-color-surface-container) inset !important;
+  -webkit-text-fill-color: var(--md-sys-color-on-surface) !important;
+  caret-color: var(--md-sys-color-primary) !important;
+  transition: background-color 5000s ease-in-out 0s;
+}
+
+.md3-text-field__input:-webkit-autofill:hover {
+  -webkit-box-shadow: 0 0 0 1000px var(--md-sys-color-surface-container) inset !important;
+}
+
+.md3-text-field__input:-webkit-autofill:focus {
+  -webkit-box-shadow: 0 0 0 1000px var(--md-sys-color-surface-container) inset !important;
+  border-color: var(--md-sys-color-primary) !important;
+}
+
 /* Floating Label */
 .md3-text-field__label {
   position: absolute;

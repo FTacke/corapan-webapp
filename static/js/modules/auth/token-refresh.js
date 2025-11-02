@@ -2,18 +2,22 @@
  * JWT Token Auto-Refresh Module
  * 
  * Automatically refreshes access tokens when they expire (401 responses).
- * This runs in the background without user interaction.
+ * Shows MD3 Snackbar only when refresh token expires.
+ * Supports proactive refresh based on token expiration time.
  * 
  * Usage:
  *   import { setupTokenRefresh } from './modules/auth/token-refresh.js';
  *   setupTokenRefresh();
  */
 
+import { showAuthExpiredSnackbar } from './snackbar.js';
+
 // Store original fetch FIRST before we override it
 const originalFetch = window.fetch;
 
 let isRefreshing = false;
 let failedQueue = [];
+let proactiveRefreshTimer = null;
 
 /**
  * Process queued requests after token refresh
@@ -27,6 +31,17 @@ function processQueue(error, token = null) {
     }
   });
   failedQueue = [];
+}
+
+/**
+ * Update auth state in DOM
+ * @param {boolean} isAuthenticated
+ */
+function updateAuthState(isAuthenticated) {
+  const topAppBar = document.querySelector('[data-element="top-app-bar"]');
+  if (topAppBar) {
+    topAppBar.dataset.auth = isAuthenticated ? 'true' : 'false';
+  }
 }
 
 /**
@@ -45,14 +60,28 @@ async function refreshAccessToken() {
     });
 
     if (!response.ok) {
-      throw new Error('Token refresh failed');
+      const data = await response.json().catch(() => ({}));
+      
+      // Check if refresh token expired
+      if (data.code === 'refresh_expired') {
+        console.log('❌ Refresh token expired - user must login');
+        showAuthExpiredSnackbar();
+        updateAuthState(false);
+      } else {
+        console.error('❌ Token refresh failed:', data.code || response.status);
+      }
+      
+      return false;
     }
 
-    const data = await response.json();
     console.log('✅ Access token refreshed successfully');
+    
+    // Setup next proactive refresh
+    setupProactiveRefresh();
+    
     return true;
   } catch (error) {
-    console.error('❌ Token refresh failed:', error);
+    console.error('❌ Token refresh error:', error);
     return false;
   }
 }
@@ -75,7 +104,30 @@ async function fetchWithTokenRefresh(url, options = {}) {
     return response;
   }
 
-  console.log('🔄 Received 401, attempting token refresh...');
+  // Check error code to determine if refresh is needed
+  let shouldRefresh = false;
+  try {
+    const data = await response.clone().json();
+    if (data.code === 'access_expired') {
+      shouldRefresh = true;
+      console.log('🔄 Access token expired, attempting refresh...');
+    } else if (data.code === 'refresh_expired') {
+      console.log('❌ Refresh token expired - showing snackbar');
+      showAuthExpiredSnackbar();
+      updateAuthState(false);
+      return response;
+    } else {
+      console.log('❌ Unauthorized:', data.code);
+      return response;
+    }
+  } catch (e) {
+    // Response not JSON or already consumed - try refresh anyway
+    shouldRefresh = true;
+  }
+
+  if (!shouldRefresh) {
+    return response;
+  }
 
   // If already refreshing, queue this request
   if (isRefreshing) {
@@ -100,12 +152,6 @@ async function fetchWithTokenRefresh(url, options = {}) {
     if (!refreshSuccess) {
       processQueue(new Error('Token refresh failed'), null);
       isRefreshing = false;
-      
-      // Redirect to login if refresh fails
-      if (window.location.pathname !== '/') {
-        console.log('🔐 Redirecting to login...');
-        window.location.href = '/?message=session_expired';
-      }
       return response; // Return original 401 response
     }
 
@@ -122,6 +168,62 @@ async function fetchWithTokenRefresh(url, options = {}) {
     processQueue(error, null);
     isRefreshing = false;
     throw error;
+  }
+}
+
+/**
+ * Setup proactive token refresh based on expiration time
+ * Checks session endpoint for token expiration and sets timer
+ */
+async function setupProactiveRefresh() {
+  // Clear existing timer
+  if (proactiveRefreshTimer) {
+    clearTimeout(proactiveRefreshTimer);
+    proactiveRefreshTimer = null;
+  }
+
+  try {
+    const response = await originalFetch('/auth/session', {
+      credentials: 'same-origin',
+      cache: 'no-store'
+    });
+
+    // Defensive: Only proceed if response is OK
+    if (!response.ok) {
+      console.warn('[Auth] Session check returned non-OK status:', response.status);
+      return;
+    }
+
+    // Defensive: Check content-type before parsing JSON
+    const contentType = response.headers.get('content-type') || '';
+    if (!contentType.includes('application/json')) {
+      console.warn('[Auth] Session check returned non-JSON response');
+      return;
+    }
+
+    const data = await response.json();
+    
+    if (data.authenticated && data.exp) {
+      const now = Math.floor(Date.now() / 1000); // Unix timestamp in seconds
+      const expiresIn = data.exp - now;
+      
+      // Refresh 60 seconds before expiration
+      const refreshIn = Math.max(0, (expiresIn - 60) * 1000); // Convert to milliseconds
+      
+      if (refreshIn > 0) {
+        console.log(`[Auth] Will refresh token in ${Math.floor(refreshIn / 1000)}s`);
+        
+        proactiveRefreshTimer = setTimeout(async () => {
+          console.log('[Auth] Proactive token refresh triggered');
+          await refreshAccessToken();
+        }, refreshIn);
+      } else {
+        console.log('[Auth] Token already expired or expires soon');
+      }
+    }
+  } catch (error) {
+    // Silently handle errors - proactive refresh is a nice-to-have
+    console.warn('[Auth] Could not setup proactive refresh:', error);
   }
 }
 
@@ -153,6 +255,14 @@ export function setupTokenRefresh() {
   };
 
   console.log('✅ JWT Token auto-refresh enabled');
+  
+  // Setup proactive refresh
+  setupProactiveRefresh();
+  
+  // Re-setup on Turbo navigation
+  document.addEventListener('turbo:load', () => {
+    setupProactiveRefresh();
+  });
 }
 
 /**

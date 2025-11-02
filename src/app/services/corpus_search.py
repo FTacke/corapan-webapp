@@ -46,6 +46,7 @@ class SearchParams:
     page_size: int = DEFAULT_PAGE_SIZE
     sort: str | None = None
     order: str = "asc"
+    table_search: str = ""  # DataTables search within results
 
 
 def _normalise(values: Iterable[str] | None) -> list[str]:
@@ -145,6 +146,24 @@ def search_tokens(params: SearchParams) -> dict[str, object]:
     _append_in_clause(filters, filter_params, "sex", params.sexes)
     _append_in_clause(filters, filter_params, "mode", params.speech_modes)
     _append_in_clause(filters, filter_params, "discourse", params.discourses)
+    
+    # DataTables table search (search within all visible columns)
+    if params.table_search:
+        search_term = f"%{params.table_search}%"
+        table_search_conditions = [
+            "text LIKE ?",
+            "context_left LIKE ?",
+            "context_right LIKE ?",
+            "country_code LIKE ?",
+            "speaker_type LIKE ?",
+            "sex LIKE ?",
+            "mode LIKE ?",
+            "discourse LIKE ?",
+            "token_id LIKE ?",
+            "filename LIKE ?",
+        ]
+        filters.append(f"({' OR '.join(table_search_conditions)})")
+        filter_params.extend([search_term] * len(table_search_conditions))
 
     filter_clause = " AND ".join(filters)
     if filter_clause:

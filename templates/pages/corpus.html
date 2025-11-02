@@ -97,7 +97,8 @@
         <!-- Filter Grid -->
         <div class="md3-corpus-filter-grid">
           <div class="md3-outlined-textfield md3-outlined-textfield--compact">
-            <select id="filter-country-national" name="country_code" multiple class="md3-outlined-textfield__input md3-outlined-textfield__input--select">
+            <select id="filter-country-national" name="country_code" multiple class="md3-outlined-textfield__input md3-outlined-textfield__input--select" data-enhance="select2" data-placeholder="Seleccionar">
+              <option value=""></option>
               <option value="ARG" {% if 'ARG' in request.args.getlist('country_code') %}selected{% endif %}>Argentina</option>
               <option value="BOL" {% if 'BOL' in request.args.getlist('country_code') %}selected{% endif %}>Bolivia</option>
               <option value="CHL" {% if 'CHL' in request.args.getlist('country_code') %}selected{% endif %}>Chile</option>
@@ -128,7 +129,8 @@
           </div>
 
           <div class="md3-outlined-textfield md3-outlined-textfield--compact">
-            <select id="filter-speaker" name="speaker_type" multiple class="md3-outlined-textfield__input md3-outlined-textfield__input--select">
+            <select id="filter-speaker" name="speaker_type" multiple class="md3-outlined-textfield__input md3-outlined-textfield__input--select" data-enhance="select2" data-placeholder="Seleccionar">
+              <option value=""></option>
               <option value="pro" {% if 'pro' in request.args.getlist('speaker_type') %}selected{% endif %}>Profesional</option>
               <option value="otro" {% if 'otro' in request.args.getlist('speaker_type') %}selected{% endif %}>Otro</option>
             </select>
@@ -141,7 +143,8 @@
           </div>
 
           <div class="md3-outlined-textfield md3-outlined-textfield--compact">
-            <select id="filter-sex" name="sex" multiple class="md3-outlined-textfield__input md3-outlined-textfield__input--select">
+            <select id="filter-sex" name="sex" multiple class="md3-outlined-textfield__input md3-outlined-textfield__input--select" data-enhance="select2" data-placeholder="Seleccionar">
+              <option value=""></option>
               <option value="m" {% if 'm' in request.args.getlist('sex') %}selected{% endif %}>Masculino</option>
               <option value="f" {% if 'f' in request.args.getlist('sex') %}selected{% endif %}>Femenino</option>
             </select>
@@ -154,7 +157,8 @@
           </div>
 
           <div class="md3-outlined-textfield md3-outlined-textfield--compact">
-            <select id="filter-mode" name="speech_mode" multiple class="md3-outlined-textfield__input md3-outlined-textfield__input--select">
+            <select id="filter-mode" name="speech_mode" multiple class="md3-outlined-textfield__input md3-outlined-textfield__input--select" data-enhance="select2" data-placeholder="Seleccionar">
+              <option value=""></option>
               <option value="pre" {% if 'pre' in request.args.getlist('speech_mode') %}selected{% endif %}>Anuncio</option>
               <option value="lectura" {% if 'lectura' in request.args.getlist('speech_mode') %}selected{% endif %}>Lectura</option>
               <option value="libre" {% if 'libre' in request.args.getlist('speech_mode') %}selected{% endif %}>Habla libre</option>
@@ -168,7 +172,8 @@
           </div>
 
           <div class="md3-outlined-textfield md3-outlined-textfield--compact">
-            <select id="filter-discourse" name="discourse" multiple class="md3-outlined-textfield__input md3-outlined-textfield__input--select">
+            <select id="filter-discourse" name="discourse" multiple class="md3-outlined-textfield__input md3-outlined-textfield__input--select" data-enhance="select2" data-placeholder="Seleccionar">
+              <option value=""></option>
               <option value="general" {% if 'general' in request.args.getlist('discourse') %}selected{% endif %}>General</option>
               <option value="tiempo" {% if 'tiempo' in request.args.getlist('discourse') %}selected{% endif %}>Tiempo</option>
               <option value="tránsito" {% if 'tránsito' in request.args.getlist('discourse') %}selected{% endif %}>Tránsito</option>
@@ -319,7 +324,8 @@
 <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
 <!-- Custom Script -->
 <script>
-  const playerPath = '{{ url_for("player.player_page") }}';
+  // Use window properties to avoid "redeclaration of const" errors with Turbo Drive
+  window.PLAYER_PATH = '{{ url_for("player.player_page") }}';
   window.ALLOW_PUBLIC_TEMP_AUDIO = '{{ 'true' if allow_public_temp_audio else 'false' }}';
   window.IS_AUTHENTICATED = '{{ 'true' if is_authenticated else 'false' }}';
   
@@ -328,7 +334,7 @@
   window.RESTORE_TOKEN_IDS = '{{ token_ids if token_ids else "" }}';
 </script>
 
-<!-- Corpus Module (ES6) -->
+<!-- Corpus Module (ES6) - Main entry point -->
 <script type="module" src="{{ url_for('static', filename='js/modules/corpus/index.js') }}"></script>
 
 <!-- Tab Switching -->

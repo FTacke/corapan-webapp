@@ -36,67 +36,94 @@ def register_extensions(app: Flask) -> None:
 def register_jwt_handlers() -> None:
     """Register JWT error handlers for expired/invalid tokens.
     
-    CRITICAL: When @jwt_required(optional=True) is used, expired tokens
-    should be silently ignored (treated as unauthenticated) instead of
-    throwing errors. This prevents "Token has expired" errors for public
-    pages like /corpus when users have old tokens in localStorage.
+    CRITICAL: Flask-JWT-Extended calls these error handlers even for 
+    @jwt_required(optional=True) routes when expired tokens are present.
+    
+    SOLUTION: We treat /auth/ endpoints as API endpoints to ensure
+    they always return JSON (never HTML redirects). This is especially
+    important for /auth/session which must always return 200 JSON.
+    
+    Optional auth routes should handle their own token state without
+    triggering these error handlers.
     """
     
     @jwt.expired_token_loader
     def expired_token_callback(jwt_header, jwt_payload):
         """Handle expired JWT tokens.
         
-        For API endpoints: Return 401 with JSON error.
-        For HTML pages with optional auth: Return empty 200 (treated as no token).
-        
-        This allows @jwt_required(optional=True) routes to work correctly
-        even when users have expired tokens cached.
+        Returns machine-readable codes for client-side refresh logic:
+        - access_expired: Access token expired, try refresh
+        - refresh_expired: Refresh token expired, user must login again
         """
-        # API endpoints: Return JSON error
-        if request.path.startswith('/api/') or request.path.startswith('/atlas/'):
+        # Determine token type for appropriate error code
+        token_type = jwt_payload.get("type", "access")
+        error_code = "access_expired" if token_type == "access" else "refresh_expired"
+        
+        # API endpoints (including /auth/): Return JSON error with code
+        if (request.path.startswith('/api/') or 
+            request.path.startswith('/atlas/') or
+            request.path.startswith('/auth/')):
             return jsonify({
                 'error': 'token_expired',
+                'code': error_code,
                 'message': 'The token has expired'
             }), 401
         
-        # AJAX/fetch requests: Return JSON error
+        # AJAX/fetch requests: Return JSON error with code
         if request.accept_mimetypes.best == 'application/json':
             return jsonify({
                 'error': 'token_expired',
+                'code': error_code,
                 'message': 'The token has expired'
             }), 401
         
-        # HTML pages with optional auth: Return 401 so Flask's error handler
-        # can redirect to login (if needed) or just ignore it
-        # The @jwt_required(optional=True) decorator should not trigger this
-        # but if it does, we want graceful handling
-        from flask import abort
-        abort(401)
+        # HTML pages with mandatory auth: Redirect to login
+        from flask import current_app, flash, redirect, url_for
+        from ..routes.auth import save_return_url
+        
+        save_return_url()
+        referrer = request.referrer or url_for("public.landing_page")
+        flash("Tu sesión ha expirado. Por favor inicia sesión nuevamente.", "info")
+        
+        # Add ?showlogin=1 to URL (preserves scroll position)
+        separator = '&' if '?' in referrer else '?'
+        return redirect(f"{referrer}{separator}showlogin=1")
     
     @jwt.invalid_token_loader
     def invalid_token_callback(error_string):
         """Handle invalid JWT tokens (malformed, wrong signature, etc.).
         
-        Similar to expired tokens: API gets JSON error, HTML pages
-        redirect to login or ignore silently.
+        Returns machine-readable code for client-side handling.
         """
-        # API endpoints: Return JSON error
-        if request.path.startswith('/api/') or request.path.startswith('/atlas/'):
+        # API endpoints (including /auth/): Return JSON error with code
+        if (request.path.startswith('/api/') or 
+            request.path.startswith('/atlas/') or
+            request.path.startswith('/auth/')):
             return jsonify({
                 'error': 'invalid_token',
+                'code': 'invalid_token',
                 'message': error_string
             }), 401
         
-        # AJAX/fetch requests: Return JSON error
+        # AJAX/fetch requests: Return JSON error with code
         if request.accept_mimetypes.best == 'application/json':
             return jsonify({
                 'error': 'invalid_token',
+                'code': 'invalid_token',
                 'message': error_string
             }), 401
         
-        # HTML pages: Abort with 401 (let error handler deal with it)
-        from flask import abort
-        abort(401)
+        # HTML pages: Redirect to login with message
+        from flask import current_app, flash, redirect, url_for
+        from ..routes.auth import save_return_url
+        
+        save_return_url()
+        referrer = request.referrer or url_for("public.landing_page")
+        flash("Token inválido. Por favor inicia sesión nuevamente.", "info")
+        
+        # Add ?showlogin=1 to URL (preserves scroll position)
+        separator = '&' if '?' in referrer else '?'
+        return redirect(f"{referrer}{separator}showlogin=1")
     
     @jwt.unauthorized_loader
     def unauthorized_callback(error_string):
@@ -104,21 +131,43 @@ def register_jwt_handlers() -> None:
         
         Note: This is ONLY triggered by @jwt_required() (mandatory auth),
         NOT by @jwt_required(optional=True).
+        
+        Returns machine-readable code for client-side handling.
         """
-        # API endpoints: Return JSON error
-        if request.path.startswith('/api/') or request.path.startswith('/atlas/'):
+        # API endpoints (including /auth/): Return JSON error with code
+        if (request.path.startswith('/api/') or 
+            request.path.startswith('/atlas/') or
+            request.path.startswith('/auth/')):
             return jsonify({
                 'error': 'unauthorized',
+                'code': 'unauthorized',
                 'message': error_string
             }), 401
         
-        # AJAX/fetch requests: Return JSON error
+        # AJAX/fetch requests: Return JSON error with code
         if request.accept_mimetypes.best == 'application/json':
             return jsonify({
                 'error': 'unauthorized',
+                'code': 'unauthorized',
                 'message': error_string
             }), 401
         
-        # HTML pages: Redirect to login (handled by 401 error handler in __init__.py)
-        from flask import abort
-        abort(401)
+        # AJAX/fetch requests: Return JSON error with code
+        if request.accept_mimetypes.best == 'application/json':
+            return jsonify({
+                'error': 'unauthorized',
+                'code': 'unauthorized',
+                'message': error_string
+            }), 401
+        
+        # HTML pages: Save return URL and redirect to login
+        from flask import current_app, flash, redirect, url_for
+        from ..routes.auth import save_return_url
+        
+        save_return_url()
+        referrer = request.referrer or url_for("public.landing_page")
+        flash("Por favor inicia sesión para acceder a este contenido.", "info")
+        
+        # Add ?showlogin=1 to URL (preserves scroll position)
+        separator = '&' if '?' in referrer else '?'
+        return redirect(f"{referrer}{separator}showlogin=1")

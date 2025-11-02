@@ -1,10 +1,11 @@
-﻿const MAP_CONTAINER = document.getElementById('atlas-map');
-const selectNationalElement = document.querySelector('[data-element="atlas-select-national"]');
-const selectRegionalElement = document.querySelector('[data-element="atlas-select-regional"]');
-const filesContainer = document.querySelector('[data-element="atlas-files"]');
-const tabsContainer = document.querySelector('[data-element="atlas-country-tabs"]');
-const loginSheet = document.querySelector('[data-element="login-sheet"]');
-const loginButtons = document.querySelectorAll('[data-action="open-login"]');
+﻿// DOM elements - will be initialized in init()
+let MAP_CONTAINER = null;
+let selectNationalElement = null;
+let selectRegionalElement = null;
+let filesContainer = null;
+let tabsContainer = null;
+let loginSheet = null;
+let loginButtons = null;
 
 // Function to get current auth status (checks dynamically)
 function isUserAuthenticated() {
@@ -169,14 +170,28 @@ function handlePlayerLinkClick(event) {
   
   // Check auth status dynamically (in case user logged in)
   if (!isUserAuthenticated()) {
-    // Save the intended destination in sessionStorage
-    sessionStorage.setItem('_player_redirect_after_login', playerUrl);
-    openLoginSheet();
-    return false; // Extra safety
+    // Save the intended destination in server session (more reliable than sessionStorage)
+    fetch('/auth/save-redirect', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ url: playerUrl }),
+      credentials: 'same-origin'
+    }).then(() => {
+      // Open login sheet after saving redirect URL
+      openLoginSheet();
+    }).catch(error => {
+      console.error('Failed to save redirect URL:', error);
+      // Fallback: use sessionStorage
+      sessionStorage.setItem('_player_redirect_after_login', playerUrl);
+      openLoginSheet();
+    });
+    return false;
   }
   
   window.location.href = playerUrl;
-  return false; // Extra safety
+  return false;
 }
 
 // Render country tabs (like editor_overview)
@@ -476,34 +491,65 @@ async function bootstrap() {
   renderCityTables('ALL');
 }
 
-if (selectNationalElement) {
-  selectNationalElement.addEventListener('change', (event) => {
-    const code = event.target.value;
-    // Reset regional select
-    if (selectRegionalElement && code !== 'ALL') {
-      selectRegionalElement.value = 'ALL';
-    }
-    
-    if (code !== 'ALL') {
-      activateTab(code);
-    }
-  });
+function setupEventListeners() {
+  if (selectNationalElement) {
+    selectNationalElement.addEventListener('change', (event) => {
+      const code = event.target.value;
+      // Reset regional select
+      if (selectRegionalElement && code !== 'ALL') {
+        selectRegionalElement.value = 'ALL';
+      }
+      
+      if (code !== 'ALL') {
+        activateTab(code);
+      }
+    });
+  }
+
+  if (selectRegionalElement) {
+    selectRegionalElement.addEventListener('change', (event) => {
+      const code = event.target.value;
+      // Reset national select
+      if (selectNationalElement && code !== 'ALL') {
+        selectNationalElement.value = 'ALL';
+      }
+      
+      if (code !== 'ALL') {
+        activateTab(code);
+      }
+    });
+  }
 }
 
-if (selectRegionalElement) {
-  selectRegionalElement.addEventListener('change', (event) => {
-    const code = event.target.value;
-    // Reset national select
-    if (selectNationalElement && code !== 'ALL') {
-      selectNationalElement.value = 'ALL';
-    }
-    
-    if (code !== 'ALL') {
-      activateTab(code);
-    }
-  });
-}
-
-document.addEventListener('DOMContentLoaded', () => {
+/**
+ * Initialize Atlas module
+ * Called by app.js after Leaflet is loaded
+ * @returns {object} mapInstance for cleanup
+ */
+export function init() {
+  console.log('[Atlas Module] Initializing...');
+  
+  // Get DOM elements
+  MAP_CONTAINER = document.getElementById('atlas-map');
+  selectNationalElement = document.querySelector('[data-element="atlas-select-national"]');
+  selectRegionalElement = document.querySelector('[data-element="atlas-select-regional"]');
+  filesContainer = document.querySelector('[data-element="atlas-files"]');
+  tabsContainer = document.querySelector('[data-element="atlas-country-tabs"]');
+  loginSheet = document.querySelector('[data-element="login-sheet"]');
+  loginButtons = document.querySelectorAll('[data-action="open-login"]');
+  
+  // Check if we have the required elements
+  if (!MAP_CONTAINER) {
+    console.warn('[Atlas Module] Map container not found');
+    return null;
+  }
+  
+  // Setup event listeners
+  setupEventListeners();
+  
+  // Bootstrap the atlas
   bootstrap();
-});
+  
+  // Return map instance for cleanup
+  return mapInstance;
+}

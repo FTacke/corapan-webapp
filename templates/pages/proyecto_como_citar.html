@@ -1,13 +1,5 @@
 {% extends 'base.html' %}
 {% from 'partials/page_navigation.html' import page_navigation %}
-{% block extra_head %}
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/md3/tokens.css') }}">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/md3/typography.css') }}">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/md3/components/hero.css') }}">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/md3/components/text-pages.css') }}">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/md3/components/cards.css') }}">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/md3/components/como-citar.css') }}">
-{% endblock %}
 {% block page_title %}Cómo citar · CO.RA.PAN{% endblock %}
 {% block content %}
 <article class="md3-text-page">
@@ -25,7 +17,7 @@
       <div class="md3-text-citation md3-body-medium">
         <p class="md3-body-large">
           Tacke, F. (2025). <em>CO.RA.PAN — Corpus Radiofónico Panhispánico</em> (versión 1.0) [Corpus]. Philipps-Universität Marburg; Zenodo. 
-          <a href="https://doi.org/10.5281/zenodo.15360942" target="_blank" rel="noopener noreferrer">
+          <a href="https://doi.org/10.5281/zenodo.15360942" target="_blank" rel="noopener noreferrer" class="doi-link">
             <img src="https://img.shields.io/badge/DOI-10.5281%2Fzenodo.15360942-4287f5?style=flat-square&labelColor=f5f5f5" alt="DOI: 10.5281/zenodo.15360942" class="doi-badge">
           </a>
         </p>
@@ -58,8 +50,8 @@
             <h3 class="card-title">Webapp</h3>
             <p class="md3-body-large">Corpus interactivo: Interfaz de búsqueda avanzada y reproductor de audio con transcripciones anotadas.</p>
             <p>
-              <a href="https://doi.org/10.5281/zenodo.15359652" target="_blank" rel="noopener noreferrer">
-                <img src="https://img.shields.io/badge/DOI-10.5281%2Fzenodo.15359652-4287f5?style=flat-square&labelColor=f5f5f5" alt="DOI: 10.5281/zenodo.15359652">
+              <a href="https://doi.org/10.5281/zenodo.15359652" target="_blank" rel="noopener noreferrer" class="doi-link">
+                <img src="https://img.shields.io/badge/DOI-10.5281%2Fzenodo.15359652-4287f5?style=flat-square&labelColor=f5f5f5" alt="DOI: 10.5281/zenodo.15359652" class="doi-badge">
               </a>
             </p>
           </div>
@@ -71,8 +63,8 @@
             <h3 class="card-title">Full Corpus</h3>
             <p class="md3-body-large">Corpus completo en acceso restringido, protegido por derechos de autor. Solo para proyectos de investigación autorizados.</p>
             <p>
-              <a href="https://doi.org/10.5281/zenodo.15360942" target="_blank" rel="noopener noreferrer">
-                <img src="https://img.shields.io/badge/DOI-10.5281%2Fzenodo.15360942-4287f5?style=flat-square&labelColor=f5f5f5" alt="DOI: 10.5281/zenodo.15360942">
+              <a href="https://doi.org/10.5281/zenodo.15360942" target="_blank" rel="noopener noreferrer" class="doi-link">
+                <img src="https://img.shields.io/badge/DOI-10.5281%2Fzenodo.15360942-4287f5?style=flat-square&labelColor=f5f5f5" alt="DOI: 10.5281/zenodo.15360942" class="doi-badge">
               </a>
             </p>
           </div>
@@ -84,8 +76,8 @@
             <h3 class="card-title">Sample Corpus</h3>
             <p class="md3-body-large">Corpus de ejemplo con transcritos y estructura de datos, disponible públicamente para exploración y estudio.</p>
             <p>
-              <a href="https://doi.org/10.5281/zenodo.15378479" target="_blank" rel="noopener noreferrer">
-                <img src="https://img.shields.io/badge/DOI-10.5281%2Fzenodo.15378479-4287f5?style=flat-square&labelColor=f5f5f5" alt="DOI: 10.5281/zenodo.15378479">
+              <a href="https://doi.org/10.5281/zenodo.15378479" target="_blank" rel="noopener noreferrer" class="doi-link">
+                <img src="https://img.shields.io/badge/DOI-10.5281%2Fzenodo.15378479-4287f5?style=flat-square&labelColor=f5f5f5" alt="DOI: 10.5281/zenodo.15378479" class="doi-badge">
               </a>
             </p>
           </div>

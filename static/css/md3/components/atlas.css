@@ -16,7 +16,38 @@
 }
 
 /* ============================================================================
-   Content Wrapper - Spacing between Hero and Map/Controls
+   Atlas Page Layout
+   ============================================================================
+   
+   MD3 EDGE-PADDING STRATEGY:
+   - Page wrapper (.md3-atlas-page): Definiert Edge-Padding vom Bildschirmrand
+   - Mobile (0-599px): 16px Edge-Padding (MD3 Compact)
+   - Tablet (600-1199px): 24px Edge-Padding (MD3 Medium)
+   - Desktop (≥1200px): 32px Edge-Padding (MD3 Expanded)
+   ============================================================================ */
+
+/* Page Wrapper - Defines Edge-Padding */
+.md3-atlas-page {
+  /* Mobile: 16px Edge-Padding (MD3 Compact) */
+  padding: 0 var(--space-4);
+}
+
+/* Tablet+: 24px Edge-Padding (MD3 Medium) */
+@media (min-width: 600px) {
+  .md3-atlas-page {
+    padding: 0 var(--space-6);
+  }
+}
+
+/* Desktop: 32px Edge-Padding (MD3 Expanded) */
+@media (min-width: 1200px) {
+  .md3-atlas-page {
+    padding: 0 var(--space-8);
+  }
+}
+
+/* ============================================================================
+   Content Wrapper
    ============================================================================ */
 
 .md3-atlas-content {
@@ -24,7 +55,7 @@
   margin: 0 auto;
   width: 100%;
   box-sizing: border-box;
-  /* Spacing: Container Hero has margin-bottom, so NO margin-top needed here */
+  /* NO horizontal padding - Edge-Padding from page wrapper */
   padding: 0 0 var(--space-16);
 }
 
@@ -35,16 +66,7 @@
 .md3-atlas-layout {
   display: grid;
   gap: var(--space-5);
-  /* Horizontal padding to match text-sections */
-  padding: 0 var(--space-6);
-}
-
-/* Mobile: reduce horizontal padding */
-@media (max-width: 599px) {
-  .md3-atlas-layout {
-    padding-left: var(--space-4);
-    padding-right: var(--space-4);
-  }
+  /* NO horizontal padding - parent .md3-atlas-content has it */
 }
 
 /* ============================================================================
@@ -172,17 +194,10 @@
 .md3-atlas-files {
   display: grid;
   gap: var(--space-8);
+  /* NO horizontal padding - parent .md3-atlas-content has it */
   /* Spacing above files (gap to map) */
-  padding: var(--space-8) var(--space-6) 0;
+  padding-top: var(--space-8);
   border-top: 1px solid var(--md-sys-color-outline-variant);
-}
-
-/* Mobile: reduce horizontal padding */
-@media (max-width: 599px) {
-  .md3-atlas-files {
-    padding-left: var(--space-4);
-    padding-right: var(--space-4);
-  }
 }
 
 /* ============================================================================
@@ -192,7 +207,8 @@
 .md3-atlas-country-tabs {
   display: flex;
   gap: var(--space-2);
-  margin: var(--space-8) var(--space-6) 0;
+  margin-top: var(--space-8);
+  /* NO horizontal margin - parent has padding */
   flex-wrap: wrap;
   border-bottom: 1px solid var(--md-sys-color-outline-variant);
   padding-bottom: var(--space-2);

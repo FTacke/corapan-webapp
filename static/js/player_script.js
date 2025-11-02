@@ -181,14 +181,25 @@ function resetCopyIconToDefault() {
    * Erstellt und startet den Download einer Textdatei mit Metadaten und Transkript.
    */
   function downloadTxtFile() {
-    const metaInfo = document.getElementById('sidebarContainer-meta').innerText;
-    const transcriptionContent = document.getElementById('transcriptionContainer').innerText;
+    const metaContainer = document.getElementById('sidebarContainer-meta');
+    const transcriptionContainer = document.getElementById('transcriptionContainer');
+    
+    if (!metaContainer || !transcriptionContainer) {
+      console.warn('[Player] Cannot download TXT - required elements not found');
+      return;
+    }
+    
+    const metaInfo = metaContainer.innerText;
+    const transcriptionContent = transcriptionContainer.innerText;
     const fullText = metaInfo + "\n\n" + transcriptionContent;
 
-    const audioUrl = document.getElementById('visualAudioPlayer').src;
+    const audioPlayer = document.getElementById('visualAudioPlayer');
     let filename = 'export';
-    if (audioUrl) {
-      filename = audioUrl.split('/').pop().split('.').slice(0, -1).join('.');
+    if (audioPlayer) {
+      const audioUrl = audioPlayer.src;
+      if (audioUrl) {
+        filename = audioUrl.split('/').pop().split('.').slice(0, -1).join('.');
+      }
     }
 
     const textBlob = new Blob([fullText], { type: 'text/plain' });
@@ -908,14 +919,21 @@ function resetCopyIconToDefault() {
 
     createDownloadLink('downloadMp3', audioFile, 'mp3');
     createDownloadLink('downloadJson', transcriptionFile, 'json');
-    document.getElementById('downloadTxt').addEventListener('click', downloadTxtFile);
+    
+    // Only bind if elements exist
+    const downloadTxtBtn = document.getElementById('downloadTxt');
+    if (downloadTxtBtn) {
+      downloadTxtBtn.addEventListener('click', downloadTxtFile);
+    }
 
     const markInput = document.getElementById('markInput');
-    markInput.addEventListener('keyup', function (event) {
-      if (event.key === 'Enter') {
-        markLetters();
-      }
-    });
+    if (markInput) {
+      markInput.addEventListener('keyup', function (event) {
+        if (event.key === 'Enter') {
+          markLetters();
+        }
+      });
+    }
 
     const visualAudioPlayer = initAudioPlayer(audioFile);
 

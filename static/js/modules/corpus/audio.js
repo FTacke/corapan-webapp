@@ -8,7 +8,7 @@ import { MEDIA_ENDPOINT, allowTempMedia } from './config.js';
 export class CorpusAudioManager {
     constructor() {
         this.currentAudio = null;
-        this.currentPlayButton = null;
+        this.currentPlayButton = null; // Store the DOM element, not jQuery object
     }
 
     /**
@@ -27,11 +27,22 @@ export class CorpusAudioManager {
         $(document).off('click', '.audio-button').on('click', '.audio-button', (e) => {
             e.preventDefault();
             const $btn = $(e.currentTarget);
-            const filename = $btn.data('filename');
-            const start = parseFloat($btn.data('start'));
-            const end = parseFloat($btn.data('end'));
             
-            this.playAudioSegment(filename, start, end, $btn);
+            // Check if this button is currently playing (showing stop icon)
+            // Compare jQuery objects by their DOM element
+            const isPlaying = this.currentPlayButton && this.currentPlayButton[0] === $btn[0];
+            
+            if (isPlaying) {
+                // Stop the audio
+                this.stopCurrentAudio();
+            } else {
+                // Start playing audio
+                const filename = $btn.data('filename');
+                const start = parseFloat($btn.data('start'));
+                const end = parseFloat($btn.data('end'));
+                
+                this.playAudioSegment(filename, start, end, $btn);
+            }
         });
     }
 
@@ -39,33 +50,54 @@ export class CorpusAudioManager {
      * Bind player link events (with auth check)
      */
     bindPlayerLinks() {
-        // Use event delegation
-        $(document).off('click', 'a.player-link, a[href^="/player/"]').on('click', 'a.player-link, a[href^="/player/"]', (e) => {
+        // Use event delegation for player links
+        $(document).off('click', '.player-link').on('click', '.player-link', async (e) => {
             e.preventDefault();
+            const $link = $(e.currentTarget);
+            const playerUrl = $link.attr('href');
             
-            const playerUrl = $(e.currentTarget).attr('href');
+            // Extract transcription URL from player URL to test access
+            const url = new URL(playerUrl, window.location.origin);
+            const transcriptionPath = url.searchParams.get('transcription');
             
-            // Check if user is authenticated
-            const headerRoot = document.querySelector('.site-header');
-            const isAuthenticated = headerRoot?.dataset.auth === 'true';
-            
-            if (!isAuthenticated) {
-                // Save intended destination
-                sessionStorage.setItem('_player_redirect_after_login', playerUrl);
-                
-                // Open login sheet
-                const openLoginBtn = document.querySelector('[data-action="open-login"]');
-                if (openLoginBtn) {
-                    openLoginBtn.click();
-                }
-                return false;
+            if (!transcriptionPath) {
+                console.error('[Corpus Audio] No transcription path found');
+                return;
             }
             
-            // User is authenticated - cleanup and navigate
-            this.stopCurrentAudio();
-            window.location.href = playerUrl;
-            return false;
+            // Test if user has access to transcription (auth check)
+            try {
+                const response = await fetch(transcriptionPath, {
+                    method: 'HEAD',
+                    credentials: 'same-origin'
+                });
+                
+                if (response.status === 401) {
+                    // Not authenticated - show system message
+                    this.showAuthRequiredMessage();
+                    return;
+                }
+                
+                if (!response.ok) {
+                    console.error('[Corpus Audio] Failed to access transcription:', response.status);
+                    return;
+                }
+                
+                // User has access - navigate to player
+                window.location.href = playerUrl;
+            } catch (error) {
+                console.error('[Corpus Audio] Error checking auth:', error);
+            }
         });
+        
+        console.log('[Corpus Audio] Player links bound with auth check');
+    }
+
+    /**
+     * Show authentication required message (same as play button)
+     */
+    showAuthRequiredMessage() {
+        alert('Autenticación requerida. Por favor inicia sesión para acceder al reproductor.');
     }
 
     /**

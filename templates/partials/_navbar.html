@@ -129,7 +129,12 @@
                   </li>
                 {% endif %}
                 <li role="none">
-                  <form method="post" action="{{ url_for('auth.logout') }}" data-element="logout-form-menu" role="none" class="md3-user-menu__form">
+                  <form method="post" 
+                        action="{{ url_for('auth.logout') }}" 
+                        data-element="logout-form-menu" 
+                        role="none" 
+                        class="md3-user-menu__form"
+                        data-turbo="false">
                     <input type="hidden" name="csrf_token" value="" data-element="csrf-token">
                     <button type="submit" class="md3-body-medium md3-user-menu__link md3-user-menu__link--danger" role="menuitem">
                       <i class="fa-solid fa-right-from-bracket" aria-hidden="true"></i>
@@ -197,7 +202,10 @@
           {% if role_value == 'admin' %}
             <a href="{{ url_for('admin.dashboard') }}" class="md3-label-large md3-mobile-link" aria-label="Panel administrativo">Panel admin</a>
           {% endif %}
-          <form method="post" action="{{ url_for('auth.logout') }}" data-element="logout-form-mobile">
+          <form method="post" 
+                action="{{ url_for('auth.logout') }}" 
+                data-element="logout-form-mobile"
+                data-turbo="false">
             <input type="hidden" name="csrf_token" value="" data-element="csrf-token">
             <button type="submit" class="md3-label-large md3-mobile-link md3-mobile-link--button">Cerrar sesión</button>
           </form>

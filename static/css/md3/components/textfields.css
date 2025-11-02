@@ -40,8 +40,8 @@
 
 /* === RESPONSIVE SELECT OPTIMIZATION === */
 
-/* TABLET: 601px - 900px */
-@media (max-width: 900px) {
+/* TABLET: 601px - 1120px (accounting for 280px drawer) */
+@media (max-width: 1120px) {
   .md3-corpus-search-row .md3-outlined-textfield__input--select {
     font-size: 14px;
     padding: var(--space-2) var(--space-3);
@@ -49,8 +49,8 @@
   }
 }
 
-/* MOBILE STANDARD: ≤ 600px */
-@media (max-width: 600px) {
+/* MOBILE STANDARD: MD3 Compact (0-599px) */
+@media (max-width: 599px) {
   .md3-corpus-search-row .md3-outlined-textfield__input--select {
     font-size: 12px;
     padding: var(--space-1) var(--space-2);
@@ -228,16 +228,16 @@
   background: var(--md-sys-color-on-surface-variant);
 }
 
-/* Tablet responsive */
-@media (max-width: 900px) {
+/* Tablet responsive (drawer-aware: 840px + 280px = 1120px) */
+@media (max-width: 1120px) {
   .md3-outlined-textfield--compact .md3-outlined-textfield__input {
     padding: var(--space-2) var(--space-3);
     font-size: 14px;
   }
 }
 
-/* Mobile responsive */
-@media (max-width: 600px) {
+/* Mobile responsive: MD3 Compact (0-599px) */
+@media (max-width: 599px) {
   .md3-outlined-textfield--compact {
     min-height: 44px;
   }

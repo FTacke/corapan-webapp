@@ -14,18 +14,6 @@
     'match': ['public.landing_page']
   },
   {
-    'label': 'Corpus',
-    'href': url_for('corpus.corpus_home'),
-    'icon': 'search_insights',
-    'match': ['corpus.corpus_home', 'corpus.search']
-  },
-  {
-    'label': 'Atlas',
-    'href': url_for('public.atlas_page'),
-    'icon': 'globe_location_pin',
-    'match': ['public.atlas_page']
-  },
-  {
     'label': 'Proyecto',
     'href': url_for('public.proyecto_overview'),
     'icon': 'assignment_globe',
@@ -37,6 +25,18 @@
       { 'label': 'Quiénes somos', 'href': url_for('public.proyecto_quienes_somos') },
       { 'label': 'Cómo citar', 'href': url_for('public.proyecto_como_citar') }
     ]
+  },
+  {
+    'label': 'Corpus',
+    'href': url_for('corpus.corpus_home'),
+    'icon': 'search_insights',
+    'match': ['corpus.corpus_home', 'corpus.search']
+  },
+    {
+    'label': 'Atlas',
+    'href': url_for('public.atlas_page'),
+    'icon': 'globe_location_pin',
+    'match': ['public.atlas_page']
   }
 ] %}
 
@@ -75,7 +75,8 @@
                     id="drawer-trigger-{{ loop.index }}"
                     class="md3-navigation-drawer__item md3-navigation-drawer__trigger {{ 'md3-navigation-drawer__item--active' if (is_active or has_active_child.value) else '' }}"
                     aria-expanded="{{ 'true' if has_active_child.value else 'false' }}"
-                    aria-controls="drawer-submenu-{{ loop.index }}">
+                    aria-controls="drawer-submenu-{{ loop.index }}"
+                    data-section="{{ item.label|lower }}">
               <span class="material-symbols-rounded md3-navigation-drawer__icon">{{ item.icon }}</span>
               <span class="md3-navigation-drawer__label">{{ item.label }}</span>
               <span class="material-symbols-rounded md3-navigation-drawer__chevron">expand_more</span>
@@ -101,9 +102,12 @@
           </div>
         {% else %}
           {# Simple navigation item #}
+          {# Only Corpus needs full reload due to heavy external dependencies (DataTables, Select2, Tagify) #}
+          {% set disable_turbo = item.label in ['Corpus'] %}
           <a href="{{ item.href }}" 
              class="md3-navigation-drawer__item {{ 'md3-navigation-drawer__item--active' if is_active else '' }}"
-             aria-current="{{ 'page' if is_active else 'false' }}">
+             aria-current="{{ 'page' if is_active else 'false' }}"
+             {{ 'data-turbo="false"' if disable_turbo else '' }}>
             <span class="material-symbols-rounded md3-navigation-drawer__icon">{{ item.icon }}</span>
             <span class="md3-navigation-drawer__label">{{ item.label }}</span>
           </a>
@@ -135,7 +139,11 @@
         {% endif %}
         
         {# Authenticated: Logout Link (sieht aus wie normaler Link) #}
-        <form method="POST" action="{{ url_for('auth.logout') }}" id="drawer-logout-form-modal" style="display: none;">
+        <form method="POST" 
+              action="{{ url_for('auth.logout') }}" 
+              id="drawer-logout-form-modal" 
+              style="display: none;"
+              data-turbo="false">
         </form>
         <a href="#" 
            class="md3-navigation-drawer__item md3-navigation-drawer__item--logout"
@@ -192,7 +200,8 @@
                   id="drawer-standard-trigger-{{ loop.index }}"
                   class="md3-navigation-drawer__item md3-navigation-drawer__trigger {{ 'md3-navigation-drawer__item--active' if (is_active or has_active_child.value) else '' }}"
                   aria-expanded="{{ 'true' if has_active_child.value else 'false' }}"
-                  aria-controls="drawer-standard-submenu-{{ loop.index }}">
+                  aria-controls="drawer-standard-submenu-{{ loop.index }}"
+                  data-section="{{ item.label|lower }}">
             <span class="material-symbols-rounded md3-navigation-drawer__icon">{{ item.icon }}</span>
             <span class="md3-navigation-drawer__label">{{ item.label }}</span>
             <span class="material-symbols-rounded md3-navigation-drawer__chevron">expand_more</span>
@@ -218,9 +227,12 @@
         </div>
       {% else %}
         {# Simple navigation item #}
+        {# Only Corpus needs full reload due to heavy external dependencies (DataTables, Select2, Tagify) #}
+        {% set disable_turbo = item.label in ['Corpus'] %}
         <a href="{{ item.href }}" 
            class="md3-navigation-drawer__item {{ 'md3-navigation-drawer__item--active' if is_active else '' }}"
-           aria-current="{{ 'page' if is_active else 'false' }}">
+           aria-current="{{ 'page' if is_active else 'false' }}"
+           {{ 'data-turbo="false"' if disable_turbo else '' }}>
           <span class="material-symbols-rounded md3-navigation-drawer__icon">{{ item.icon }}</span>
           <span class="md3-navigation-drawer__label">{{ item.label }}</span>
         </a>
@@ -250,7 +262,11 @@
       {% endif %}
       
       {# Authenticated: Logout Link (sieht aus wie normaler Link) #}
-      <form method="POST" action="{{ url_for('auth.logout') }}" id="drawer-logout-form-standard" style="display: none;">
+      <form method="POST" 
+            action="{{ url_for('auth.logout') }}" 
+            id="drawer-logout-form-standard" 
+            style="display: none;"
+            data-turbo="false">
       </form>
       <a href="#" 
          class="md3-navigation-drawer__item md3-navigation-drawer__item--logout"

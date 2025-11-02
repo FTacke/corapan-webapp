@@ -20,6 +20,7 @@
   overflow-y: auto;
   overflow-x: hidden;
   position: relative; /* For proper stacking */
+  box-shadow: var(--elev-2);
 }
 
 .md3-navigation-drawer__container {
@@ -100,16 +101,19 @@
   outline-offset: -2px;
 }
 
-/* Active State */
+/* Active State - ARIA-first mit Fallback-Klasse */
+.md3-navigation-drawer__item[aria-current="page"],
 .md3-navigation-drawer__item--active {
   color: var(--md-sys-color-primary);
   background: color-mix(in oklab, var(--md-sys-color-primary) 10%, transparent);
   font-weight: 600;
 }
 
+.md3-navigation-drawer__item[aria-current="page"]:hover,
 .md3-navigation-drawer__item--active:hover {
   background: color-mix(in oklab, var(--md-sys-color-primary) 15%, transparent);
 }
+
 
 /* Icon */
 .md3-navigation-drawer__icon {
@@ -165,6 +169,8 @@
   flex-direction: column;
   width: 100%;
   margin: 0;
+  padding: 0; /* Kein zusätzlicher Spacing */
+  gap: 0; /* Kein Gap zwischen Trigger und Submenu */
 }
 
 /* Trigger Button: Chevron rotiert (erbt .md3-navigation-drawer__item Styles) */
@@ -177,14 +183,14 @@
   rotate: 180deg;
 }
 
-/* Submenu: Grid-Accordion (0fr → 1fr) */
+/* Submenu: Grid-Accordion (0fr → 1fr) - Ohne .closing Klasse */
 .md3-navigation-drawer__submenu {
   display: grid;
   grid-template-rows: 0fr; /* Collapsed State */
   transition: grid-template-rows var(--dur, 250ms) var(--md-ease, cubic-bezier(0.4, 0, 0.2, 1)),
               opacity var(--dur, 250ms) var(--md-ease, cubic-bezier(0.4, 0, 0.2, 1));
   opacity: 0;
-  overflow: clip; /* Verhindert Bleeding und "Graukasten" */
+  overflow: clip; /* Verhindert Bleeding ohne Scroll-Container */
   will-change: grid-template-rows, opacity;
   margin: 0;
   padding: 0;
@@ -196,31 +202,19 @@
   opacity: 1;
 }
 
-/* Closing State: Explizit für Exit-Animation */
-.md3-navigation-drawer__submenu.closing {
-  grid-template-rows: 0fr;
-  opacity: 0;
-}
-
-/* Inner Content Wrapper: nötig für 0fr-Kollaps + Slide-Animation */
+/* Inner Content Wrapper: nötig für 0fr-Kollaps */
 .md3-navigation-drawer__submenu-inner {
   overflow: hidden;
-  min-height: 0; /* Important für Grid */
+  min-height: 0; /* Wichtig für Grid-Kollaps */
+  padding-top: 0;
+  padding-bottom: 0;
+  transition: padding var(--dur, 250ms) var(--md-ease, cubic-bezier(0.4, 0, 0.2, 1));
+}
+
+/* Padding nur im geöffneten Zustand */
+.md3-navigation-drawer__submenu[data-open] .md3-navigation-drawer__submenu-inner {
   padding-top: var(--space-1);
   padding-bottom: var(--space-1);
-  /* Slide-Up/Down Animation für Items */
-  transform: translateY(0);
-  transition: transform var(--dur, 250ms) var(--md-ease, cubic-bezier(0.4, 0, 0.2, 1));
-}
-
-/* Closed State: Items nach oben verschoben */
-.md3-navigation-drawer__submenu:not([data-open]) .md3-navigation-drawer__submenu-inner {
-  transform: translateY(-12px);
-}
-
-/* Closing State: Items nach oben verschoben */
-.md3-navigation-drawer__submenu.closing .md3-navigation-drawer__submenu-inner {
-  transform: translateY(-12px);
 }
 
 /* Entry Animation: @starting-style für smooth Fade-In */
@@ -228,10 +222,6 @@
   .md3-navigation-drawer__submenu[data-open] {
     grid-template-rows: 0fr;
     opacity: 0;
-  }
-  
-  .md3-navigation-drawer__submenu[data-open] .md3-navigation-drawer__submenu-inner {
-    transform: translateY(-12px);
   }
 }
 
@@ -242,6 +232,36 @@
     transition: none;
   }
 }
+
+/* ============================================
+   Turbo Drive: Instant State Changes
+   ============================================
+   Verhindert Accordion-Animationen bei Route-Changes
+   ============================================ */
+
+/* Hydration Guard: Während Turbo-Render keine Transitions */
+#navigation-drawer[data-hydrating] .md3-navigation-drawer__submenu,
+#navigation-drawer[data-hydrating] .md3-navigation-drawer__submenu-inner,
+#navigation-drawer[data-hydrating] .md3-navigation-drawer__chevron {
+  transition: none !important;
+}
+
+/* Legacy: Globale Bremse für alle Accordion-Übergänge (falls noch genutzt) */
+#navigation-drawer.no-anim .md3-navigation-drawer__submenu,
+#navigation-drawer.no-anim .md3-navigation-drawer__submenu-inner,
+#navigation-drawer.no-anim .md3-navigation-drawer__chevron {
+  transition: none !important;
+}
+
+/* Einzelelement instant öffnen (granular) */
+.md3-navigation-drawer__submenu[data-instant] {
+  transition: none !important;
+}
+
+.md3-navigation-drawer__submenu[data-instant] .md3-navigation-drawer__submenu-inner {
+  transition: none !important;
+}
+
 
 .md3-navigation-drawer__subitem {
   display: flex;
@@ -266,6 +286,8 @@
   /* Einrückung bleibt beim Hover erhalten */
 }
 
+/* Subitem Active State - ARIA-first mit Fallback-Klasse */
+.md3-navigation-drawer__subitem[aria-current="page"],
 .md3-navigation-drawer__subitem--active {
   color: var(--md-sys-color-primary);
   background: color-mix(in oklab, var(--md-sys-color-primary) 10%, transparent);
@@ -298,13 +320,27 @@
 /* Footer Items: KEINE speziellen Overrides - erben von .md3-navigation-drawer__item */
 /* Nur Logout bekommt rote Farbe */
 
-/* Logout Link - Spezielle Farbe (roter Text) */
+/* Logout Link - Spezielle Farbe (roter Text) - höhere Spezifizität */
 .md3-navigation-drawer__item--logout {
   color: var(--md-sys-color-error);
 }
 
 .md3-navigation-drawer__item--logout:hover {
   background: color-mix(in srgb, var(--md-sys-color-error) 12%, transparent);
+  color: var(--md-sys-color-error);
+}
+
+/* Logout überschreibt auch Active-State */
+.md3-navigation-drawer__item--logout[aria-current="page"],
+.md3-navigation-drawer__item--logout.md3-navigation-drawer__item--active {
+  color: var(--md-sys-color-error);
+  background: color-mix(in srgb, var(--md-sys-color-error) 12%, transparent);
+  font-weight: 600;
+}
+
+.md3-navigation-drawer__item--logout[aria-current="page"]:hover,
+.md3-navigation-drawer__item--logout.md3-navigation-drawer__item--active:hover {
+  background: color-mix(in srgb, var(--md-sys-color-error) 20%, transparent);
 }
 
 /* Account Item with Avatar (falls benötigt) */
@@ -448,12 +484,12 @@
 }
 
 /* ============================================
-   Standard Drawer (Expanded)
+   Standard Drawer (Expanded - Desktop ≥840px)
    ============================================ */
 
 .md3-navigation-drawer--standard {
   position: sticky;
-  top: 0; /* Stick to top of viewport, below app bar */
+  top: 0; /* Sticky kleben bei top:0 */
   align-self: flex-start; /* Prevent stretching in grid */
   height: 100vh; /* Full viewport height */
   max-height: 100vh;

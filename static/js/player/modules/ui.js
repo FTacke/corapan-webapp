@@ -4,7 +4,7 @@
  * @module player/modules/ui
  */
 
-import PLAYER_CONFIG from '../config.js';
+import { PLAYER_CONFIG } from '../config.js';
 
 export class UIManager {
   constructor() {

@@ -32,18 +32,40 @@ export class TranscriptionManager {
   async load(transcriptionFile, targetTokenId = null) {
     this.targetTokenId = targetTokenId;
 
+    console.log('[Transcription] Loading with:', {
+      transcriptionFile,
+      targetTokenId,
+      origin: location.origin
+    });
+
     try {
-      const response = await fetch(transcriptionFile);
+      // Ensure relative URL for same-origin requests (avoids CORS issues)
+      const url = new URL(transcriptionFile, location.origin);
+      console.log('[Transcription] Resolved URL:', url.toString());
+      
+      const response = await fetch(url, {
+        credentials: 'same-origin',
+        cache: 'no-store'
+      });
+      
+      console.log('[Transcription] Fetch response status:', response.status, response.statusText);
+      
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+      
       this.transcriptionData = await response.json();
+      console.log('[Transcription] JSON parsed successfully, segments:', this.transcriptionData.segments?.length || 'unknown');
+      
       // Prefer server-provided display name (field `country_display`). Do not
       // attempt client-side lookup — rely on server augmentation.
       this._updateMetadata();
       this._renderSegments();
       
-      console.log('[Transcription] Loaded successfully');
+      console.log('[Transcription] Loaded successfully with targetTokenId:', this.targetTokenId);
     } catch (error) {
       console.error('[Transcription] Failed to load:', error);
-      alert('Fehler beim Laden der Transkription.');
+      alert('Fehler beim Laden der Transkription: ' + error.message);
     }
   }
 
@@ -410,13 +432,16 @@ export class TranscriptionManager {
 
     // Highlight target token
     if (this.targetTokenId && word.token_id === this.targetTokenId) {
+      console.log('[Transcription] MATCH! Found target token_id:', this.targetTokenId, 'in word:', word);
       wordElement.classList.add('word-token-id');
       
       setTimeout(() => {
+        console.log('[Transcription] Scrolling to token and setting audio time');
         wordElement.scrollIntoView({ behavior: "smooth", block: "center" });
         const startTime = parseFloat(word.start) - 0.25;
         if (!isNaN(startTime)) {
           this.audioPlayer.audioElement.currentTime = Math.max(0, startTime);
+          console.log('[Transcription] Audio time set to:', startTime);
         }
       }, 300);
     }
