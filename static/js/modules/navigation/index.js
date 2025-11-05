@@ -9,6 +9,13 @@ import { initTopAppBar } from './app-bar.js';
 import { initMaterialSymbolsFallback } from './material-symbols-loader.js';
 import { initTurboIntegration } from './turbo-integration.js';
 
+// Import viewport and scroll state detection
+import './viewport.js';
+import './scroll-state.js';
+
+// Import page title controller
+import './page-title.js';
+
 /**
  * Initialize MD3 Navigation System
  */

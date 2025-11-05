@@ -3,6 +3,7 @@
 // ============================================
 
 import { getWindowSize, WindowSize } from './window-size.js';
+import { initSwipeGestures } from './swipe-gestures.js';
 
 /**
  * Focusable element selector
@@ -31,6 +32,9 @@ export class NavigationDrawer {
     }
     
     this.init();
+    
+    // Initialize swipe gestures for mobile
+    this.swipeHandler = initSwipeGestures(this.modalDrawer, this.mediaQuery);
     
     // Globale Referenz speichern
     window.__drawerInit = true;
@@ -164,6 +168,12 @@ export class NavigationDrawer {
     if (!this.modalDrawer.open) {
       this.modalDrawer.showModal();
       
+      // Set main content inert (blocks all interactions)
+      const mainContent = document.querySelector('main');
+      if (mainContent) {
+        mainContent.inert = true;
+      }
+      
       // Optional: Ersten Fokus setzen
       const firstFocusable = this.modalDrawer.querySelector(focusableSelectors);
       if (firstFocusable) {
@@ -184,6 +194,12 @@ export class NavigationDrawer {
       // Remove [open] attribute um Exit-Animation zu triggern
       // Aber Dialog bleibt technisch "open" bis Animation fertig
       this.modalDrawer.classList.add('closing');
+      
+      // Remove inert from main content
+      const mainContent = document.querySelector('main');
+      if (mainContent) {
+        mainContent.inert = false;
+      }
       
       // Nach Animation: tatsächlich schließen
       setTimeout(() => {

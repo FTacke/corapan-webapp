@@ -1,5 +1,11 @@
 <div class="md3-footer" data-element="site-footer">
   <div class="md3-footer__content">
+    <!-- Logo as Border Marker -->
+    <img src="{{ url_for('static', filename='img/corapan_basic.png') }}"
+         alt="CO.RA.PAN Logo"
+         class="md3-footer__logo-marker"
+         width="40" height="40" decoding="async" />
+
     <!-- Brand/Badge First -->
     <a href="https://hispanistica.online.uni-marburg.de"
        class="md3-footer__brand"
@@ -20,7 +26,7 @@
 
     <!-- Copyright -->
     <p class="md3-footer__copy md3-body-small">
-      © {{ now().year }} Philipps-Universität Marburg
+      © {{ now().year }} Philipps-Universität Marburg · Felix Tacke
     </p>
   </div>
 </div>

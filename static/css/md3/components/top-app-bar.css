@@ -1,17 +1,17 @@
 /* ============================================
-   MD3 Top App Bar - "Unsichtbar" (Transparent, Elevation 0)
+   MD3 Top App Bar - Adaptive Opazität
    ============================================
-   Compact/Medium (<840px): Burger links, Login/Account rechts
-   Expanded (≥840px): KEIN Burger (permanenter Drawer), Login/Account rechts
+   Compact/Medium (<840px): OPAK mit Elevation - Burger links, Login/Account rechts
+   Expanded (≥840px): TRANSPARENT - KEIN Burger (permanenter Drawer), Login/Account rechts
    KEIN Titel/Branding in der Bar
    
    POSITION: fixed – scrollt oben mit
-   Z-INDEX: 10 – sitzt über Content, aber unter Dropdown/Modal
+   Z-INDEX: 1001 – sitzt über Content, aber unter Dropdown/Modal
    STRUKTUR: Aus CSS Grid entfernt, padding-top auf main kompensiert
    ============================================ */
 
 /* ============================================
-   Base Styles - Transparent
+   Base Styles - OPAK für Compact/Medium (Default)
    ============================================ */
 
 .md3-top-app-bar {
@@ -20,31 +20,53 @@
   left: 0;
   right: 0;
   width: 100%;
-  z-index: 1001; /* Avatar-Symbol muss obenauf liegen */
-  background: transparent;
-  color: var(--md-sys-color-on-surface);
-  box-shadow: none; /* Elevation 0 im Ruhezustand */
-  transition: box-shadow 300ms cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-/* Optional: Leichte Elevation beim Scrollen */
-.md3-top-app-bar--scrolled {
-  box-shadow: var(--elev-1);
+  z-index: 1200; /* MUSS über Leaflet Controls (1000) liegen! */
+  
+  /* Default: Opak für Compact/Medium (<840px) */
   background: var(--md-sys-color-surface);
+  color: var(--md-sys-color-on-surface);
+  box-shadow: var(--elev-2); /* Elevation 2 im Ruhezustand */
+  
+  transition: box-shadow 300ms cubic-bezier(0.4, 0, 0.2, 1),
+              background 300ms cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.md3-top-app-bar--transparent {
-  background: transparent;
-  box-shadow: none;
+/* ============================================
+   Expanded (≥840px): Transparent mit permanentem Drawer
+   ============================================ */
+
+@media (min-width: 840px) {
+  .md3-top-app-bar {
+    background: transparent;
+    box-shadow: none; /* Keine Elevation auf großen Screens */
+  }
+}
+
+/* ============================================
+   Scroll Elevation (nur für Compact/Medium)
+   ============================================ */
+
+body[data-scrolled="true"] .md3-top-app-bar {
+  box-shadow: var(--elev-3); /* Erhöhte Elevation beim Scrollen */
+}
+
+/* Auf Expanded: Keine Scroll-Elevation */
+@media (min-width: 840px) {
+  body[data-scrolled="true"] .md3-top-app-bar {
+    box-shadow: none;
+  }
 }
 
 .md3-top-app-bar__row {
   display: flex;
   align-items: center;
   gap: var(--space-3);
-  padding: 0 var(--space-4);
   height: 64px; /* MD3 Small Top App Bar */
   max-width: 100%;
+  
+  /* Safe Area Insets für Notches, Dynamic Island, etc. */
+  padding-left: max(var(--space-4), env(safe-area-inset-left));
+  padding-right: max(var(--space-4), env(safe-area-inset-right));
 }
 
 /* ============================================
@@ -70,7 +92,104 @@
 .md3-top-app-bar__title {
   flex: 1;
   margin: 0;
-  /* Leer, kein Content */
+  position: relative;
+  min-width: 0; /* Ermöglicht Text-Overflow */
+  overflow: hidden;
+  height: 24px; /* Verhindert Layout-Shifts */
+}
+
+/* ============================================
+   Adaptive Titles: Site → Page beim Scrollen
+   ============================================ */
+
+/* Base Styles: Beide Titel übereinander */
+.md3-top-app-bar__title-site,
+.md3-top-app-bar__title-page {
+  position: absolute;
+  left: 0;
+  top: 50%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: calc(100vw - 200px); /* Platz für Burger + Actions */
+  will-change: opacity, transform;
+}
+
+/* Site Title: Sichtbar im Idle-State */
+.md3-top-app-bar__title-site {
+  font-size: 1.125rem; /* 18px */
+  font-weight: 700;
+  letter-spacing: 0.2px;
+  line-height: 1.2;
+  color: var(--md-sys-color-primary); /* Primary Color */
+  opacity: 1;
+  transform: translateY(-50%) translateX(0);
+}
+
+/* Page Title: Versteckt im Idle-State */
+.md3-top-app-bar__title-page {
+  font-size: 1rem; /* 16px */
+  font-weight: 500;
+  letter-spacing: 0.1px;
+  line-height: 1.2;
+  color: var(--md-sys-color-primary); /* Primary Color */
+  opacity: 0;
+  transform: translateY(-50%) translateX(24px); /* Startet rechts-versetzt */
+}
+
+/* ============================================
+   Scroll Transition: Site raus, Page rein
+   ============================================ */
+
+body[data-scrolled="true"] .md3-top-app-bar__title-site {
+  opacity: 0;
+  transform: translateY(-50%) translateX(-24px); /* Gleitet nach links raus */
+}
+
+body[data-scrolled="true"] .md3-top-app-bar__title-page {
+  opacity: 1;
+  transform: translateY(-50%) translateX(0); /* Gleitet von rechts rein */
+}
+
+/* ============================================
+   Motion Preference: Respektiert prefers-reduced-motion
+   ============================================ */
+
+/* Standard: Smooth Transitions */
+@media (prefers-reduced-motion: no-preference) {
+  .md3-top-app-bar__title-site,
+  .md3-top-app-bar__title-page {
+    transition: opacity 180ms cubic-bezier(0.4, 0, 0.2, 1),
+                transform 180ms cubic-bezier(0.4, 0, 0.2, 1);
+  }
+}
+
+/* Reduced Motion: Keine Animationen */
+@media (prefers-reduced-motion: reduce) {
+  .md3-top-app-bar__title-site,
+  .md3-top-app-bar__title-page {
+    transition: none !important;
+  }
+}
+
+/* ============================================
+   Responsive: Max-Width Anpassung
+   ============================================ */
+
+/* Auf sehr kleinen Screens: Mehr Platz für Titel */
+@media (max-width: 400px) {
+  .md3-top-app-bar__title-site,
+  .md3-top-app-bar__title-page {
+    max-width: calc(100vw - 140px);
+  }
+}
+
+/* Auf Expanded: Titel ausblenden (Logo ist im Drawer) */
+@media (min-width: 840px) {
+  .md3-top-app-bar__title {
+    opacity: 0;
+    visibility: hidden;
+  }
 }
 
 /* ============================================
@@ -93,8 +212,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 48px;
-  height: 48px;
+  width: 40px;
+  height: 40px;
   padding: 0;
   border: none;
   background: transparent;
@@ -209,10 +328,9 @@
    ============================================ */
 
 .md3-user-menu {
-  position: fixed;
-  top: 12px;
-  right: 12px;
-  z-index: 2000; /* Absolut obenauf! */
+  position: relative; /* In Flexbox-Flow bleiben */
+  flex-shrink: 0; /* Nicht komprimieren */
+  z-index: 1; /* Dropdown braucht höheren z-index */
 }
 
 /* .md3-user-menu__toggle erbt md3-icon-button Styles */
@@ -221,13 +339,13 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 32px;
-  height: 32px;
+  width: 40px;  /* Gleiche Größe wie Icon-Buttons */
+  height: 40px;
   border-radius: 50%;
   background: var(--md-sys-color-primary);
   color: var(--md-sys-color-on-primary);
   font-weight: 600;
-  font-size: 0.875rem;
+  font-size: 1rem;
   line-height: 1;
 }
 
@@ -240,7 +358,7 @@
   background: var(--md-sys-color-surface-container-high);
   border-radius: var(--radius-md);
   padding: var(--space-2);
-  z-index: 1999; /* Unter Avatar (2000), aber obenauf */
+  z-index: 2000; /* Über allem */
   box-shadow: var(--elev-2);
   /* Animation */
   opacity: 0;
@@ -345,8 +463,94 @@
    Dark Theme Support
    ============================================ */
 
-.theme-dark .md3-top-app-bar {
+/* Dark Mode: Automatische Farbanpassung via CSS-Tokens */
+/* Tokens (surface, on-surface) passen sich automatisch an data-theme an */
+/* Keine zusätzlichen Regeln nötig - Media Queries oben gelten für beide Themes */
+
+/* Expanded: Bleibt transparent auch im Dark Mode */
+@media (min-width: 840px) {
+  :root[data-theme="dark"] .md3-top-app-bar,
+  .theme-dark .md3-top-app-bar {
+    background: transparent;
+    box-shadow: none;
+  }
+}
+
+/* ============================================
+   Theme Toggle Button
+   ============================================ */
+
+.md3-theme-toggle {
+  /* Filled Tonal Variant für bessere Sichtbarkeit über transparentem Hintergrund */
+  background: var(--md-sys-color-surface-container-high);
+  border: 1px solid var(--md-sys-color-outline-variant);
+  color: var(--md-sys-color-on-surface);
+  transition: all 200ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.md3-theme-toggle:hover {
+  background: var(--md-sys-color-surface-container-highest);
+  border-color: var(--md-sys-color-outline);
+}
+
+.md3-theme-toggle:active {
   background: var(--md-sys-color-surface-container);
+}
+
+.md3-theme-toggle[aria-pressed="true"] {
+  background: var(--md-sys-color-primary-container);
+  color: var(--md-sys-color-on-primary-container);
+  border-color: var(--md-sys-color-primary);
+}
+
+.md3-theme-toggle[aria-pressed="true"]:hover {
+  background: color-mix(in srgb, var(--md-sys-color-primary-container) 90%, var(--md-sys-color-primary) 10%);
+}
+
+/* Icon-Sizing für Theme Toggle */
+.md3-theme-toggle .material-symbols-rounded {
+  font-size: 22px;
+  line-height: 1;
+  font-variation-settings: 
+    'FILL' 0,
+    'wght' 400,
+    'GRAD' 0,
+    'opsz' 22;
+}
+
+.md3-theme-toggle[aria-pressed="true"] .material-symbols-rounded {
+  font-variation-settings: 
+    'FILL' 1,
+    'wght' 500,
+    'GRAD' 0,
+    'opsz' 22;
+}
+
+/* ============================================
+   Pointer-Events-Optimierung (nur auf Expanded)
+   ============================================ */
+
+/* Bar ist nur auf Expanded transparent mit pointer-events: none */
+@media (min-width: 840px) {
+  .md3-top-app-bar {
+    pointer-events: none;
+  }
+
+  /* Nur interaktive Elemente fangen Pointer-Events ab */
+  .md3-top-app-bar__navigation-icon,
+  .md3-top-app-bar__actions,
+  .md3-icon-button,
+  .md3-user-menu,
+  .md3-user-menu__dropdown {
+    pointer-events: auto;
+  }
+}
+
+/* Auf Compact/Medium: Gesamte Bar interaktiv */
+@media (max-width: 839px) {
+  .md3-top-app-bar {
+    pointer-events: auto;
+  }
 }
 
 /* ============================================
@@ -360,6 +564,5 @@
   --app-bar-transition-duration: 300ms;
   --app-bar-transition-easing: cubic-bezier(0.4, 0, 0.2, 1);
 }
-
 
 

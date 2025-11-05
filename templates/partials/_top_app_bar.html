@@ -1,6 +1,6 @@
-{# MD3 Top App Bar - "Unsichtbar" (transparent, elevation 0) #}
-{# Expanded (≥840px): Kein Burger, kein Titel (permanenter Drawer sichtbar) #}
-{# Compact/Medium (<840px): Burger links, kein Titel (modaler Drawer) #}
+{# MD3 Top App Bar - Adaptive Opazität via CSS Media Queries #}
+{# Expanded (≥840px): Transparent, kein Burger, kein Titel (permanenter Drawer sichtbar) #}
+{# Compact/Medium (<840px): Opak mit Elevation, Burger links, kein Titel (modaler Drawer) #}
 {# Rechts: Login-Button ODER Avatar mit Logout-Menü #}
 
 {% set user_name = g.get('user') %}
@@ -8,7 +8,7 @@
 {% set is_authenticated = user_name is not none %}
 {% set role_value = user_role.value if user_role else '' %}
 
-<header class="md3-top-app-bar md3-top-app-bar--transparent" 
+<header class="md3-top-app-bar" 
         role="banner" 
         data-element="top-app-bar"
         data-size="small"
@@ -24,11 +24,24 @@
       <span class="material-symbols-rounded">menu</span>
     </button>
 
-    {# Center: Leer (kein Titel, keine Branding) #}
-    <div class="md3-top-app-bar__title" aria-hidden="true"></div>
+    {# Center: Adaptive Title (Site → Page beim Scrollen) #}
+    <div class="md3-top-app-bar__title" aria-live="polite" aria-atomic="true">
+      <span class="md3-top-app-bar__title-site" id="siteTitle">CO.RA.PAN</span>
+      <span class="md3-top-app-bar__title-page" id="pageTitle"></span>
+    </div>
 
     {# Right: Login/Account Actions #}
     <div class="md3-top-app-bar__actions">
+      {# Theme Toggle (Light/Dark) - erscheint immer #}
+      <button id="themeToggle"
+              type="button"
+              class="md3-icon-button md3-theme-toggle" 
+              aria-label="Darstellung umschalten"
+              aria-pressed="false"
+              title="Darstellung: Hell">
+        <span id="themeIcon" class="material-symbols-rounded" aria-hidden="true">light_mode</span>
+      </button>
+
       {% if is_authenticated %}
         {# Authenticated: Avatar mit Logout-Menü (nur "Abmelden") #}
         <div class="md3-user-menu" data-user-menu-root>

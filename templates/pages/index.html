@@ -12,7 +12,13 @@
 {% block content %}
 <article class="md3-index-page">
   <section class="md3-index-logo">
-    <img src="{{ url_for('static', filename='img/logo.png') }}" alt="CO.RA.PAN" class="md3-index-logo__img" loading="lazy">
+    <img id="indexLogo"
+         src="{{ url_for('static', filename='img/logo.png') }}" 
+         alt="CO.RA.PAN" 
+         class="md3-index-logo__img" 
+         loading="lazy"
+         data-logo-light="{{ url_for('static', filename='img/logo.png') }}"
+         data-logo-dark="{{ url_for('static', filename='img/logo_darkmode.png') }}">
   </section>
   
   <section class="md3-index-cards">

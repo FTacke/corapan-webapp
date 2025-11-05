@@ -31,7 +31,7 @@ def overview():
     """
     Editor overview page: Liste aller Transcript-Files mit Metadata.
     
-    Zeigt pro Land:
+    Zeigt pro Land/Region:
     - Filename
     - Duración (aus stats_all.db)
     - Palabras (aus stats_all.db)
@@ -39,9 +39,11 @@ def overview():
     - Last Editor (aus edit_log.jsonl)
     - Edit-Button
     """
-    # Liste aller Länder
-    countries = ["ARG", "BOL", "CHL", "COL", "CRI", "ECU", "ESP", 
-                 "GTM", "MEX", "PAN", "PER", "PRY", "URY", "USA", "VEN"]
+    # Dynamische Liste: Alle Länder und Regionen im TRANSCRIPTS_DIR
+    countries = sorted([
+        d.name for d in TRANSCRIPTS_DIR.iterdir() 
+        if d.is_dir() and d.name != '.gitkeep'
+    ])
     
     files_by_country = {}
     

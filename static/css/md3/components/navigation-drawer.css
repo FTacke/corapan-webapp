@@ -494,7 +494,7 @@
   height: 100vh; /* Full viewport height */
   max-height: 100vh;
   border-right: 1px solid var(--md-sys-color-outline-variant);
-  box-shadow: var(--elev-1);
+  box-shadow: var(--elev-3);
   /* WICHTIG: Keine Transitions - Standard Drawer animiert NICHT */
   transition: none !important;
 }

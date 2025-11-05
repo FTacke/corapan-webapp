@@ -639,13 +639,13 @@
 }
 
 .md3-editor-status-saved {
-  background: var(--md-sys-color-tertiary-container);
-  color: var(--md-sys-color-on-tertiary-container);
-  border-color: var(--md-sys-color-tertiary);
+  background: #1b5e20; /* Grün – deutlich als "OK/Gespeichert" */
+  color: #ffffff;
+  border-color: #1b5e20;
 }
 
 .md3-editor-status-unsaved {
-  background: var(--md-sys-color-error); /* Filled wie btn-danger */
+  background: var(--md-sys-color-error); /* Rot – Warnung */
   color: var(--md-sys-color-on-error);
   border-color: var(--md-sys-color-error);
   animation: pulse-warning 2s ease-in-out infinite; /* Pulsierender Warning-Effekt */

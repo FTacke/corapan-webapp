@@ -22,6 +22,8 @@
   --md-sys-color-on-surface: #1c1b1f;
   --md-sys-color-surface-variant: #f3edf7;
   --md-sys-color-on-surface-variant: color-mix(in oklab, var(--md-sys-color-on-surface) 60%, transparent);
+  --_on-surface-variant-static: #4A4F55; /* Fallback für Browser ohne OKLab/color-mix */
+  --md-sys-color-outline: #79747E; /* Standard-Divider */
   --md-sys-color-outline-variant: #cac4d0;
   --md-sys-color-background: #c7d5d8;
   --md-sys-color-on-background: #000000;
@@ -32,6 +34,7 @@
   --md-sys-color-surface-container-mid: color-mix(in oklab, var(--md-sys-color-surface) 94%, var(--md-sys-color-primary) 6%);
   --md-sys-color-surface-container: color-mix(in oklab, var(--md-sys-color-surface) 88%, var(--md-sys-color-primary) 12%);
   --md-sys-color-surface-container-high: color-mix(in oklab, var(--md-sys-color-surface) 80%, var(--md-sys-color-primary) 20%);
+  --md-sys-color-surface-container-highest: color-mix(in oklab, var(--md-sys-color-surface) 72%, var(--md-sys-color-primary) 28%);
   
   /* Error */
   --md-sys-color-error: #B3261E;
@@ -73,19 +76,71 @@
   --md-typography-heading-accent: var(--md-sys-color-primary);
 }
 
-.theme-dark {
-  --md-sys-color-primary: #aab5c1;
-  --md-sys-color-on-primary: #000000;
-  --md-sys-color-primary-container: #bfc7cf;
-  --md-sys-color-on-primary-container: #000000;
-  --md-sys-color-surface: #14141a;
-  --md-sys-color-on-surface: #ffffff;
-  --md-sys-color-surface-container-low: #535354;
-  --md-sys-color-surface-container: #6b6b6c;
-  --md-sys-color-surface-container-high: #7d7d7e;
-  --md-sys-color-surface-container-highest: #8d8d8d;
-  --md-sys-color-background: #0b0b0e;
-  --md-sys-color-on-background: #ffffff;
-  --md-sys-color-error: #B3261E;
-  --md-sys-color-on-error: #ffffff;
+/* Fallback für Browser ohne OKLab/color-mix Unterstützung */
+@supports not (color: oklab(0 0 0)) {
+  :root { 
+    --md-sys-color-on-surface-variant: var(--_on-surface-variant-static);
+  }
+}
+
+/* ========================================
+   GLOBAL DARK MODE (MD3-konform)
+   ======================================== */
+
+:root {
+  color-scheme: light dark;
+}
+
+:root[data-theme="light"] { 
+  color-scheme: light; 
+}
+
+:root[data-theme="dark"] { 
+  color-scheme: dark; 
+}
+
+:root[data-theme="dark"],
+:root[data-theme="auto"][data-system-dark="true"] {
+  /* Core color roles (dark theme) */
+  --md-sys-color-primary: #9BB9FF;
+  --md-sys-color-on-primary: #0B1220;
+  --md-sys-color-primary-container: color-mix(in oklab, #9BB9FF 24%, #14141A 76%);
+  --md-sys-color-on-primary-container: #DDE6FF;
+  
+  --md-sys-color-secondary: #97B3CB;
+  --md-sys-color-on-secondary: #0E141A;
+  --md-sys-color-secondary-container: color-mix(in oklab, #97B3CB 24%, #14141A 76%);
+  --md-sys-color-on-secondary-container: #D8E3F0;
+  
+  /* Tertiary role (dark) */
+  --md-sys-color-tertiary: #EFB8C8;
+  --md-sys-color-on-tertiary: #4A2532;
+  --md-sys-color-tertiary-container: #633B48;
+  --md-sys-color-on-tertiary-container: #FFD9E3;
+  
+  /* Background & Surface */
+  --md-sys-color-background: #0B0B0E;
+  --md-sys-color-on-background: #E7E7EA;
+  --md-sys-color-surface: #14141A;
+  --md-sys-color-on-surface: #E6E1E5;
+  --md-sys-color-surface-variant: #2A2A30;
+  --md-sys-color-on-surface-variant: #C6C6CA;
+  --_on-surface-variant-static: #C6C6CA;
+  --md-sys-color-outline: #79747E;
+  --md-sys-color-outline-variant: #3A3A40;
+  
+  /* Surface container hierarchy (dark) */
+  --md-sys-color-surface-container-lowest: #0E0E13;
+  --md-sys-color-surface-container-low:    #17171D;
+  --md-sys-color-surface-container:        #1B1B22;
+  --md-sys-color-surface-container-high:   #1F1F27;
+  --md-sys-color-surface-container-highest:#23232C;
+  
+  /* Error (dark) */
+  --md-sys-color-error: #F2B8B5;
+  --md-sys-color-on-error: #601410;
+  
+  /* Inverse surface (dark → light) */
+  --md-sys-color-inverse-surface: #F4EFF4;
+  --md-sys-color-inverse-on-surface: #313033;
 }

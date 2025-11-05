@@ -1,0 +1,146 @@
+/* ============================================================================
+   DataTables Theme Lock - Erzwingt Light-Mode-Farben permanent
+   ============================================================================
+   Diese Datei sichert, dass DataTables IMMER in Light-Mode-Farben bleiben,
+   unabhängig vom globalen Theme-Setting (data-theme="dark" oder "auto").
+   
+   Alle Styles nutzen !important um globale Theme-Tokens zu überschreiben.
+   ============================================================================ */
+
+/* Force Light Theme für alle DataTable-Komponenten */
+.md3-corpus-table-container,
+.table-container,
+#corpus-table_wrapper {
+  background: white !important;
+  border-color: #dee2e6 !important;
+  color: #1c1b1f !important;
+}
+
+#corpus-table {
+  background: white !important;
+  color: #1c1b1f !important;
+}
+
+#corpus-table thead th {
+  background: #f8f9fa !important;
+  color: #495057 !important;
+  border-color: #dee2e6 !important;
+}
+
+#corpus-table tbody td {
+  color: #1c1b1f !important;
+  border-color: #f0f0f0 !important;
+}
+
+#corpus-table tbody tr:nth-child(even) {
+  background: #fafafa !important;
+}
+
+#corpus-table tbody tr:hover {
+  background: rgba(0, 105, 92, 0.08) !important;
+}
+
+/* DataTables UI Elements */
+.dataTables_wrapper,
+.dataTables_wrapper * {
+  color: #1c1b1f !important;
+}
+
+.dataTables_wrapper .dataTables_length select,
+.dataTables_wrapper .dataTables_filter input {
+  background: white !important;
+  color: #1c1b1f !important;
+  border-color: #dee2e6 !important;
+}
+
+.dataTables_wrapper .dataTables_paginate .paginate_button {
+  background: white !important;
+  color: #0a5981 !important;
+  border-color: #dee2e6 !important;
+}
+
+.dataTables_wrapper .dataTables_paginate .paginate_button:hover {
+  background: #f0f1f2 !important;
+  border-color: #0a5981 !important;
+}
+
+.dataTables_wrapper .dataTables_paginate .paginate_button.current {
+  background: #0a5981 !important;
+  color: white !important;
+}
+
+.dataTables_wrapper .dataTables_paginate .paginate_button.disabled {
+  background: #f8f9fa !important;
+  color: #cac4d0 !important;
+}
+
+/* Export Buttons */
+.dt-buttons .dt-button {
+  background: white !important;
+  color: #0a5981 !important;
+  border-color: #dee2e6 !important;
+}
+
+.dt-buttons .dt-button:hover {
+  background: #f0f1f2 !important;
+  border-color: #0a5981 !important;
+}
+
+/* Audio Buttons in Tabelle */
+.audio-cell .audio-button,
+.audio-cell .download-button {
+  background: #f8f9fa !important;
+  color: #0a5981 !important;
+  border-color: #dee2e6 !important;
+}
+
+.audio-cell .audio-button:hover,
+.audio-cell .download-button:hover {
+  background: #e9ecef !important;
+}
+
+/* Expliziter Dark-Mode Override */
+:root[data-theme="dark"] .md3-corpus-table-container,
+:root[data-theme="dark"] #corpus-table_wrapper,
+:root[data-theme="auto"][data-system-dark="true"] .md3-corpus-table-container,
+:root[data-theme="auto"][data-system-dark="true"] #corpus-table_wrapper {
+  background: white !important;
+  color: #1c1b1f !important;
+}
+
+:root[data-theme="dark"] #corpus-table,
+:root[data-theme="auto"][data-system-dark="true"] #corpus-table {
+  background: white !important;
+  color: #1c1b1f !important;
+}
+
+:root[data-theme="dark"] #corpus-table thead th,
+:root[data-theme="auto"][data-system-dark="true"] #corpus-table thead th {
+  background: #f8f9fa !important;
+  color: #495057 !important;
+}
+
+:root[data-theme="dark"] #corpus-table tbody td,
+:root[data-theme="auto"][data-system-dark="true"] #corpus-table tbody td {
+  color: #1c1b1f !important;
+}
+
+:root[data-theme="dark"] #corpus-table tbody tr:nth-child(even),
+:root[data-theme="auto"][data-system-dark="true"] #corpus-table tbody tr:nth-child(even) {
+  background: #fafafa !important;
+}
+
+/* Prevent Media Query Overrides */
+@media (prefers-color-scheme: dark) {
+  .md3-corpus-table-container,
+  #corpus-table_wrapper,
+  #corpus-table {
+    background: white !important;
+    color: #1c1b1f !important;
+  }
+  
+  #corpus-table thead th {
+    background: #f8f9fa !important;
+    color: #495057 !important;
+  }
+}

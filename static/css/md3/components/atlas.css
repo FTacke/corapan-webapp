@@ -180,11 +180,17 @@
   height: 100%;
 }
 
-/* Leaflet Controls z-index (below fixed nav) */
+/* Leaflet Controls z-index (MUSS niedrig sein, unter Top App Bar) */
 .md3-atlas-map .leaflet-top,
 .md3-atlas-map .leaflet-bottom,
-.md3-atlas-map .leaflet-control {
-  z-index: 600;
+.md3-atlas-map .leaflet-control,
+.md3-atlas-map .leaflet-control-container {
+  z-index: 1 !important; /* Niedrig halten, Top App Bar ist bei 1200 */
+}
+
+/* Leaflet Panes auch begrenzen */
+.md3-atlas-map .leaflet-pane {
+  z-index: auto !important;
 }
 
 /* ============================================================================

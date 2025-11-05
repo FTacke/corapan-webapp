@@ -1,12 +1,12 @@
 <!DOCTYPE html>
-<html lang="en" class="no-js">
+<html lang="en" class="no-js" data-theme="auto">
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{% block page_title %}CO.RA.PAN{% endblock %}</title>
     <!-- Theme color for consistent appearance during Turbo navigation (prevents blue flash) -->
     <meta name="theme-color" media="(prefers-color-scheme: light)" content="#ffffff">
-    <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#121212">
+    <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#14141A">
     <!-- Critical inline CSS: Prevent flash during page load and Turbo navigation -->
     <style>
       /* Base colors - prevent flash during Turbo navigation */
@@ -20,7 +20,7 @@
       }
       @media (prefers-color-scheme: dark) {
         html, body {
-          background: #121212;
+          background: #14141A;
         }
       }
       
@@ -103,6 +103,10 @@
         allowPublicTempAudio: {{ 'true' if allow_public_temp_audio else 'false' }},
       };
     </script>
+    <!-- Global Theme Controller - muss vor allen anderen Scripts laden -->
+    <script src="{{ url_for('static', filename='js/theme.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/theme-toggle.js') }}" defer></script>
+    <script src="{{ url_for('static', filename='js/drawer-logo.js') }}" defer></script>
     <!-- Turbo for persistent navigation (SSR + Frame-based navigation) -->
     <script type="module" src="{{ url_for('static', filename='js/turbo.esm.js') }}"></script>
     {% block extra_head %}{% endblock %}

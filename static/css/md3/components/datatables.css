@@ -5,6 +5,11 @@
    
    STATUS: ⚠️ Uses legacy MD3 tokens (--md3-*), needs migration to --md-sys-*
    
+   ⚠️ THEME BEHAVIOR: DataTables bleiben IMMER im Light-Mode!
+   - Siehe datatables-theme-lock.css für Theme-Lock-Implementierung
+   - Tables behalten Light-Farben auch im globalen Dark-Mode
+   - Grund: Bessere Lesbarkeit, CDN-Kompatibilität
+   
    Contains:
    - Corpus table structure (#corpus-table)
    - DataTables wrapper customization
