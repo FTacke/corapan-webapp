@@ -98,6 +98,18 @@ media/transcripts/
 
 # Keep directory structure but ignore contents
 !media/.gitkeep
+
+# =============================================================================
+# Data Files (Database & Statistics Cache)
+# =============================================================================
+data/db/
+data/db_public/
+data/counters/
+data/stats_temp/
+
+# Keep directory structure
+!data/.gitkeep
+!data/stats_temp/.gitkeep
 !media/mp3-full/.gitkeep
 !media/mp3-split/.gitkeep
 !media/mp3-temp/.gitkeep

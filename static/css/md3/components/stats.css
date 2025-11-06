@@ -371,6 +371,186 @@
   }
 }
 
+/* ========== INTERACTIVE CHARTS (Corpus Search Results) ========== */
+/* Stats section with tabs and ECharts visualizations */
+
+/* Stats Section Container */
+.md3-stats-section {
+  margin-top: var(--space-6);
+}
+
+/* Stats Header */
+.md3-stats-header {
+  margin-bottom: var(--space-4);
+}
+
+.md3-stats-title {
+  margin: 0 0 var(--space-2) 0;
+  color: var(--md-sys-color-on-surface);
+}
+
+/* Country Filter */
+.md3-stats-filter {
+  margin-bottom: var(--space-4);
+}
+
+.md3-stats-filter-label {
+  display: block;
+  margin-bottom: var(--space-2);
+  color: var(--md-sys-color-on-surface-variant);
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.md3-stats-filter-select {
+  width: 100%;
+  max-width: 300px;
+  padding: var(--space-2) var(--space-3);
+  background: var(--md-sys-color-surface-container);
+  color: var(--md-sys-color-on-surface);
+  border: 1px solid var(--md-sys-color-outline);
+  border-radius: var(--radius-sm);
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.md3-stats-filter-select:hover {
+  background: var(--md-sys-color-surface-container-highest);
+}
+
+.md3-stats-filter-select:focus {
+  outline: 2px solid var(--md-sys-color-primary);
+  outline-offset: 2px;
+}
+
+/* MD3 Stats Sub-Tabs (Resultados | Estadísticas) */
+.md3-stats-tabs {
+  display: flex;
+  gap: 0;
+  background: transparent;
+  border-bottom: 1px solid var(--md-sys-color-outline-variant);
+  margin-bottom: var(--space-6);
+}
+
+.md3-stats-tab {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  border: none;
+  background: transparent;
+  color: var(--md-sys-color-on-surface-variant);
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  position: relative;
+  transition: all 0.2s ease;
+  border-bottom: 3px solid transparent;
+}
+
+.md3-stats-tab:hover {
+  background: var(--md-sys-color-surface-container);
+}
+
+.md3-stats-tab:focus-visible {
+  outline: 2px solid var(--md-sys-color-primary);
+  outline-offset: -2px;
+}
+
+.md3-stats-tab--active {
+  color: var(--md-sys-color-primary);
+  border-bottom-color: var(--md-sys-color-primary);
+}
+
+.md3-stats-tab .material-symbols-rounded {
+  font-size: 1.25rem;
+}
+
+/* Stats Charts Grid */
+.md3-stats-charts-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-4);
+  width: 100%;
+}
+
+@media (min-width: 600px) {
+  .md3-stats-charts-grid {
+    grid-template-columns: repeat(auto-fit, minmax(min(350px, 100%), 1fr));
+  }
+}
+
+/* Stats Chart Card */
+.md3-stats-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+}
+
+.md3-stats-card-title-wrapper {
+  flex: 1;
+}
+
+.md3-stats-card-title {
+  margin: 0;
+  color: var(--md-sys-color-on-surface);
+}
+
+/* MD3 Segmented Buttons (Toggle n/%) */
+.md3-segmented {
+  display: inline-flex;
+  border: 1px solid var(--md-sys-color-outline);
+  border-radius: 20px;
+  overflow: hidden;
+}
+
+.md3-segmented-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem 0.75rem;
+  min-width: 48px;
+  min-height: 40px;
+  border: none;
+  background: transparent;
+  color: var(--md-sys-color-on-surface);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.md3-segmented-btn:not(:last-child) {
+  border-right: 1px solid var(--md-sys-color-outline);
+}
+
+.md3-segmented-btn:hover:not(.is-selected) {
+  background: var(--md-sys-color-surface-container-highest);
+}
+
+.md3-segmented-btn:focus-visible {
+  outline: 2px solid var(--md-sys-color-primary);
+  outline-offset: -2px;
+  z-index: 1;
+}
+
+.md3-segmented-btn.is-selected {
+  background: var(--md-sys-color-secondary-container);
+  color: var(--md-sys-color-on-secondary-container);
+}
+
+.md3-segmented-btn .material-symbols-rounded {
+  font-size: 1.125rem;
+}
+
+/* Chart Host Container */
+.chart-host {
+  width: 100%;
+  height: 300px;
+  min-height: 300px;
+}
+
 
 
 

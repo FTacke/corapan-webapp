@@ -91,7 +91,7 @@ body.turbo-loading::before {
 
 /* Kompensation für fixed Top App Bar */
 .md3-content-wrapper {
-  margin-top: 64px; /* Height of small app bar - applies to all content */
+  margin-top: 100px; /* Height of small app bar - applies to all content */
 }
 
 /* MD3 Navigation - Standard Drawer (Expanded only) */

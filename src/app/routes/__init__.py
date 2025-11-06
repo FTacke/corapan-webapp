@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from flask import Flask
 
-from . import admin, auth, corpus, media, public, atlas, player, editor
+from . import admin, auth, corpus, media, public, atlas, player, editor, stats
 
 
 BLUEPRINTS = [
@@ -16,6 +16,7 @@ BLUEPRINTS = [
     atlas.legacy_blueprint,  # Legacy redirects: /atlas/* -> /api/v1/atlas/*
     player.blueprint,
     editor.blueprint,  # Editor for Admin/Editor roles
+    stats.blueprint,  # Stats API: /api/stats (public read-only)
 ]
 
 
