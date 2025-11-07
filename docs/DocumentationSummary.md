@@ -342,21 +342,22 @@ git check-ignore config/keys/
 ## 📖 WEITERE DOKUMENTATION
 
 ### Im Root-Verzeichnis
-- **README.md** - Projekt-Übersicht und Quick-Start
-- **DEPLOYMENT.md** - Detaillierter Deployment-Guide
-- **GIT_SECURITY_CHECKLIST.md** - Security-Best-Practices
-- **startme.md** - Quick-Start für lokale Entwicklung
+- **README.md** - Projekt-Übersicht und Feature-Liste
+- **startme.md** - Quick-Start-Commands für lokale Entwicklung (LOKAL, nicht in Git)
 
 ### In docs/
 - **architecture.md** - Technische Architektur
 - **auth-flow.md** - Authentifizierungs-Flow
 - **database_maintenance.md** - DB-Wartung und Optimierung
+- **deployment.md** - Detaillierter Deployment-Guide (versetzt aus Root)
 - **design-system.md** - Design-Tokens und Komponenten
+- **git-security-checklist.md** - Security-Best-Practices für Git (versetzt aus Root)
 - **gitlab-setup.md** - CI/CD und Repository-Konfiguration
 - **media-folder-structure.md** - Media-Verwaltung
 - **mobile-speaker-layout.md** - Mobile-Optimierung
 - **roadmap.md** - Entwicklungs-Roadmap
 - **stats-interactive-features.md** - Stats-Feature Dokumentation
+- **token-input-multi-paste.md** - Token-Input Feature Dokumentation
 - **troubleshooting.md** - Fehlerdiagnose und Lösungen
 
 ### In LOKAL/

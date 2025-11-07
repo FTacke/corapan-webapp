@@ -38,6 +38,16 @@ FLASK_SECRET_KEY=change-me python -m src.app.main
 
 See `docs/architecture.md`, `docs/design-system.md`, and `docs/roadmap.md` for detailed plans and next steps.
 
+### Key Resources
+- **[Deployment Guide](docs/deployment.md)** - Production server setup and update workflow
+- **[Git Security](docs/git-security-checklist.md)** - Security best practices for Git
+- **[Architecture](docs/architecture.md)** - Technical architecture overview
+- **[Design System](docs/design-system.md)** - Design tokens and components
+- **[Database Maintenance](docs/database_maintenance.md)** - Database updates and optimization
+- **[Documentation Summary](docs/DocumentationSummary.md)** - Complete documentation index
+
+For all documentation, see the `docs/` directory.
+
 ## Features
 
 - **Corpus Search**: Token-based search with morphological filters
