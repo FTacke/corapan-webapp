@@ -58,7 +58,7 @@ Dokumentiert alle wesentlichen Änderungen an der CO.RA.PAN-Dokumentation.
 #### 📋 New Documentation
 - **`docs/index.md`**: Master navigation index
 - **`decisions/ADR-0001-docs-reorganization.md`**: Architecture Decision Record
-- **`CHANGELOG-DOCS.md`**: This file
+- **`docs/CHANGELOG.md`**: This file
 
 #### 🗄️ Archived Planning Documents
 - `PLAN.md` → `docs/archived/PLAN.md`

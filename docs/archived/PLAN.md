@@ -424,7 +424,7 @@ See docs/decisions/ADR-0001-2025-11-07-modular-docs-structure.md for details."
 1. **Review this plan** - Approve or request changes
 2. **Execute DRY_RUN=false** - Apply changes
 3. **Validate results** - Run quality checks
-4. **Create CHANGELOG-DOCS.md** - Document all changes
+4. **Create docs/CHANGELOG.md** - Document all changes
 5. **Update external references** - If any exist
 
 ---

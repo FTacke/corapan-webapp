@@ -370,7 +370,7 @@ docs/
    - [ ] Confirm git history preserved (`git log --follow docs/operations/deployment.md`)
 
 4. **Post-Execution:**
-   - Create CHANGELOG-DOCS.md (as per PLAN)
+   - Create docs/CHANGELOG.md (as per PLAN)
    - Update this quality report with "Post-Execution Validation"
    - Consider announcing change to team (if collaborative project)
 

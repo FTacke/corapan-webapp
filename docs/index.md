@@ -126,6 +126,8 @@ Abgeschlossene Analysen, obsolete Dokumentation.
 
 ## 📝 Documentation Conventions
 
+> **For Contributors:** See **[CONTRIBUTING.md](CONTRIBUTING.md)** for detailed guidelines on writing, structuring, and maintaining documentation.
+
 ### Front-Matter Metadata
 
 Alle aktiven Dokumente verwenden YAML-Front-Matter:

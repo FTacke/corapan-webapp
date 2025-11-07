@@ -172,7 +172,7 @@ links:
 
 ---
 
-#### CHANGELOG-DOCS.md
+#### docs/CHANGELOG.md
 
 **Purpose:** Track documentation changes over time
 
@@ -292,7 +292,7 @@ See: docs/decisions/ADR-0001-docs-reorganization.md
 - [x] README.md updated with new structure
 - [x] Master index (`docs/index.md`) complete
 - [x] ADR-0001 documents rationale
-- [x] CHANGELOG-DOCS.md created
+- [x] docs/CHANGELOG.md created
 - [x] Planning docs archived (PLAN.md, QUALITY_REPORT.md)
 - [x] Git commit successful (`3a1cbb0`)
 
@@ -308,7 +308,7 @@ No blockers or critical issues identified.
 
 ### Future Enhancements (Optional)
 
-**From CHANGELOG-DOCS.md roadmap:**
+**From docs/CHANGELOG.md roadmap:**
 
 1. **Auto-generated API docs** (Sphinx/pdoc3 for Python docstrings)
 2. **Link checker CI** (Validate internal links on every commit)

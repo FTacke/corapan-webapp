@@ -198,6 +198,7 @@ We chose the **Divio Documentation System** (modified):
 - **Divio Documentation System**: https://documentation.divio.com/
 - **GitLab Docs Structure**: https://docs.gitlab.com/ee/development/documentation/structure.html
 - **ADR Template**: https://github.com/joelparkerhenderson/architecture-decision-record
+- **Contributing Guidelines**: [../CONTRIBUTING.md](../CONTRIBUTING.md)
 
 ---
 
