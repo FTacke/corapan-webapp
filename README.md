@@ -36,17 +36,23 @@ FLASK_SECRET_KEY=change-me python -m src.app.main
 
 ## Documentation
 
-See `docs/architecture.md`, `docs/design-system.md`, and `docs/roadmap.md` for detailed plans and next steps.
+**📚 [Start here: Documentation Index](docs/index.md)**
 
-### Key Resources
-- **[Deployment Guide](docs/deployment.md)** - Production server setup and update workflow
-- **[Git Security](docs/git-security-checklist.md)** - Security best practices for Git
-- **[Architecture](docs/architecture.md)** - Technical architecture overview
-- **[Design System](docs/design-system.md)** - Design tokens and components
-- **[Database Maintenance](docs/database_maintenance.md)** - Database updates and optimization
-- **[Documentation Summary](docs/DocumentationSummary.md)** - Complete documentation index
+The documentation follows "Docs as Code" principles with a clear 8-category taxonomy:
 
-For all documentation, see the `docs/` directory.
+- **[Concepts](docs/concepts/)** - Architecture, authentication flow
+- **[How-To Guides](docs/how-to/)** - Step-by-step tutorials
+- **[Reference](docs/reference/)** - API docs, database schema, technical specs
+- **[Operations](docs/operations/)** - Deployment, CI/CD, security
+- **[Design](docs/design/)** - Design system, tokens, accessibility
+- **[Decisions](docs/decisions/)** - ADRs, roadmap
+- **[Troubleshooting](docs/troubleshooting/)** - Common problems & solutions
+
+### Quick Links
+- **[Deployment Guide](docs/operations/deployment.md)** - Production server setup
+- **[Architecture Overview](docs/concepts/architecture.md)** - Technical architecture
+- **[Database Maintenance](docs/reference/database-maintenance.md)** - DB operations
+- **[Troubleshooting](docs/troubleshooting/)** - Problem solutions by domain
 
 ## Features
 

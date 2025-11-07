@@ -1,3 +1,14 @@
+---
+title: "Architecture Overview"
+status: active
+owner: backend-team
+updated: "2025-11-07"
+tags: [architecture, flask, blueprint, overview]
+links:
+  - authentication-flow.md
+  - ../reference/database-maintenance.md
+---
+
 # Architecture Overview
 
 ## Backend
