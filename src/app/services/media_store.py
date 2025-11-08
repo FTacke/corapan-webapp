@@ -23,7 +23,7 @@ def extract_country_code(filename: str) -> Optional[str]:
         "2023-08-10_ARG_Mitre.mp3" -> "ARG"
         "2024-08-15_ESP_CadenaSer.mp3" -> "ESP"
         "2024-01-10_ARG-CBA_LV3.mp3" -> "ARG-CBA"
-        "2025-02-28_EEUU_Univision.mp3" -> "USA" (special mapping)
+        "2025-02-28_USA_Univision.mp3" -> "USA"
         "VEN/2022-01-18_VEN_RCR.mp3" -> "VEN" (already has path)
     """
     # If filename already contains a path separator, extract from path
@@ -31,10 +31,6 @@ def extract_country_code(filename: str) -> Optional[str]:
         path_parts = Path(filename).parts
         if len(path_parts) > 1:
             return path_parts[0]
-    
-    # Special case: EEUU (Spanish abbreviation) -> USA
-    if '_EEUU_' in filename:
-        return 'USA'
     
     # Extract from filename pattern: YYYY-MM-DD_CODE_*
     # Supports all normalized ISO 3166-1 alpha-3 codes:

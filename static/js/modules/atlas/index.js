@@ -107,8 +107,7 @@ function extractCode(filename) {
   const match = filename.match(/_(.+?)_/);
   if (!match) return '';
   const code = match[1];
-  // Special mapping: EEUU (Spanish) -> USA
-  return code === 'EEUU' ? 'USA' : code;
+  return code;
 }
 
 function formatDuration(value) {

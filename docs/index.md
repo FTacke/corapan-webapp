@@ -2,6 +2,8 @@
 
 Willkommen zur CO.RA.PAN Dokumentation. Diese Übersicht hilft dir, die richtige Dokumentation für deine Aufgabe zu finden.
 
+> **📌 Neu (2025-11-08):** 97 Dokumentationen aus `LOKAL/records/` nach `docs/` migriert. Siehe [archived/](archived/) für historische Dokumentationen.
+
 ---
 
 ## 📚 Documentation by Category
