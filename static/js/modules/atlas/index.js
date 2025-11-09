@@ -162,7 +162,12 @@ function handlePlayerLinkClick(event) {
   const filename = link.dataset.filename;
   if (!filename) return;
   
-  const baseName = filename.replace('.json', '');
+  // Remove .json extension, then ensure no duplicate .mp3
+  let baseName = filename.replace('.json', '');
+  // If baseName already ends with .mp3, remove it (to avoid .mp3.mp3)
+  if (baseName.endsWith('.mp3')) {
+    baseName = baseName.slice(0, -4);
+  }
   const transcriptionPath = `/media/transcripts/${baseName}.json`;
   const audioPath = `/media/full/${baseName}.mp3`;
   const playerUrl = `/player?transcription=${encodeURIComponent(transcriptionPath)}&audio=${encodeURIComponent(audioPath)}`;

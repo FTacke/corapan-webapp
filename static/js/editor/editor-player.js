@@ -66,10 +66,8 @@ export class EditorPlayer {
       this.editor = new WordEditor(this.transcriptData, this.config);
       this.editor.attachToTranscription(this.transcription);
       
-      // Initialize speaker selection (if speakers available)
-      if (this.transcriptData.speakers && this.transcriptData.speakers.length > 0) {
-        this.editor.initializeSpeakerSelection(this.transcriptData.speakers);
-      }
+      // Initialize speaker selection (no longer requires speakers array)
+      this.editor.initializeSpeakerSelection();
 
       // Initialize bookmark manager
       this.bookmarks = new BookmarkManager(this.transcriptData, this.config);
@@ -156,7 +154,8 @@ export class EditorPlayer {
         }
       }
       
-      const currentSpeaker = this.transcriptData.segments[segmentIndex]?.speaker;
+      const currentSpeaker = this.transcriptData.segments[segmentIndex]?.speaker_code || 
+                           this.transcriptData.segments[segmentIndex]?.speaker;
       
       if (segmentIndex !== null && currentSpeaker) {
         this.editor.openSpeakerSelection(parseInt(segmentIndex), currentSpeaker);

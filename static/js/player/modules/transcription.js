@@ -168,10 +168,10 @@ export class TranscriptionManager {
     container.innerHTML = '';
 
     this.transcriptionData.segments.forEach((segment, segmentIndex) => {
-      const speakerId = segment.speaker;
+      const speakerCode = segment.speaker_code;
       const words = segment.words;
 
-      if (!speakerId || !words || words.length === 0) {
+      if (!speakerCode || !words || words.length === 0) {
         console.warn(`Segment ${segmentIndex} wird übersprungen (fehlende Sprecher- oder Wortdaten).`);
         return;
       }
@@ -186,7 +186,7 @@ export class TranscriptionManager {
    * @private
    */
   _createSegmentElement(segment, segmentIndex) {
-    const speakerId = segment.speaker;
+    const speakerCode = segment.speaker_code || segment.speaker || "otro";
     const words = segment.words;
 
     // Main container
@@ -195,7 +195,7 @@ export class TranscriptionManager {
     segmentContainer.setAttribute('data-segment-index', segmentIndex);
 
     // Speaker header (Zeile 1: Edit-Icon | Name | Time)
-    const headerContainer = this._createSpeakerHeader(speakerId, words, segmentIndex);
+    const headerContainer = this._createSpeakerHeader(speakerCode, words, segmentIndex);
     
     // Transcript text (Zeile 2: Monospace Text mit Words)
     const transcriptBlock = this._createTranscriptBlock(words, segmentIndex);
@@ -210,7 +210,7 @@ export class TranscriptionManager {
    * Create speaker header with edit icon, name, and time
    * @private
    */
-  _createSpeakerHeader(speakerId, words, segmentIndex) {
+  _createSpeakerHeader(speakerCode, words, segmentIndex) {
     const headerContainer = document.createElement('div');
     headerContainer.classList.add('md3-speaker-header');
 
@@ -227,20 +227,17 @@ export class TranscriptionManager {
       headerContainer.appendChild(editIcon);
     } else {
       // Player mode: user icon with native tooltip
-      const speakerInfo = this.transcriptionData.speakers.find(s => s.spkid === speakerId);
-      const speakerName = speakerInfo ? speakerInfo.name : "otro";
-      
       editIcon.classList.add('fa-solid', 'fa-user', 'md3-speaker-edit-icon');
       
       // Use native title attribute for tooltip (MD3-compliant)
-      const tooltipText = this._getTooltipContentPlainText(speakerName);
+      const tooltipText = this._getTooltipContentPlainText(speakerCode);
       editIcon.title = tooltipText;
       
       headerContainer.appendChild(editIcon);
     }
 
     // 2. Speaker Name (Mitte)
-    const speakerNameSpan = this._createSpeakerName(speakerId, words, segmentIndex);
+    const speakerNameSpan = this._createSpeakerName(speakerCode, words, segmentIndex);
     headerContainer.appendChild(speakerNameSpan);
 
     // 3. Speaker Time (rechts)
@@ -254,20 +251,17 @@ export class TranscriptionManager {
    * Create speaker name element
    * @private
    */
-  _createSpeakerName(speakerId, words, segmentIndex) {
-    const speakerInfo = this.transcriptionData.speakers.find(s => s.spkid === speakerId);
-    const speakerName = speakerInfo ? speakerInfo.name : "otro";
-    
+  _createSpeakerName(speakerCode, words, segmentIndex) {
     const nameSpan = document.createElement('span');
     nameSpan.classList.add('md3-speaker-name');
-    nameSpan.textContent = speakerName;
+    nameSpan.textContent = speakerCode;
     nameSpan.setAttribute('data-segment-index', segmentIndex); // Für Speaker-Änderungen
     
     // Speaker name is always clickable to play segment audio (even in editor mode)
     nameSpan.style.cursor = 'pointer';
     nameSpan.addEventListener('click', () => {
       this._playSegment(words[0].start, words[words.length - 1].end, true);
-      console.log(`Speaker: ${speakerName} Start: ${words[0].start} End: ${words[words.length - 1].end}`);
+      console.log(`Speaker: ${speakerCode} Start: ${words[0].start} End: ${words[words.length - 1].end}`);
     });
     
     return nameSpan;
@@ -300,6 +294,9 @@ export class TranscriptionManager {
       "lec-om": `<span class="tooltip-high">Modo: </span>lectura<br>
                  <span class="tooltip-high">Hablante: </span>no profesional<br>
                  <span class="tooltip-high">Sexo: </span>masculino<br>`,
+      "lec-of": `<span class="tooltip-high">Modo: </span>lectura<br>
+                 <span class="tooltip-high">Hablante: </span>no profesional<br>
+                 <span class="tooltip-high">Sexo: </span>femenino<br>`,
       "pre-pm": `<span class="tooltip-high">Modo: </span>lectura pregrabada<br>
                  <span class="tooltip-high">Hablante: </span>profesional<br>
                  <span class="tooltip-high">Sexo: </span>masculino<br>`,
@@ -317,7 +314,8 @@ export class TranscriptionManager {
                  <span class="tooltip-high">Sexo: </span>masculino<br>`,
       "traf-pf": `<span class="tooltip-high">Discurso: </span>informaciones de tránsito<br>
                  <span class="tooltip-high">Hablante: </span>profesional<br>
-                 <span class="tooltip-high">Sexo: </span>femenino<br>`
+                 <span class="tooltip-high">Sexo: </span>femenino<br>`,
+      "rev": `<span class="tooltip-high">Rol: </span>revisor/revisora<br>`
     };
 
     return speakerTypeMapping[speakerName] || `<span class="tooltip-high">Speaker: </span>${speakerName}<br>`;
@@ -336,12 +334,14 @@ export class TranscriptionManager {
       "lec-pm": "Modo: lectura | Hablante: profesional | Sexo: masculino",
       "lec-pf": "Modo: lectura | Hablante: profesional | Sexo: femenino",
       "lec-om": "Modo: lectura | Hablante: no profesional | Sexo: masculino",
+      "lec-of": "Modo: lectura | Hablante: no profesional | Sexo: femenino",
       "pre-pm": "Modo: lectura pregrabada | Hablante: profesional | Sexo: masculino",
       "pre-pf": "Modo: lectura pregrabada | Hablante: profesional | Sexo: femenino",
       "tie-pm": "Discurso: pronóstico del tiempo | Hablante: profesional | Sexo: masculino",
       "tie-pf": "Discurso: pronóstico del tiempo | Hablante: profesional | Sexo: femenino",
       "traf-pm": "Discurso: informaciones de tránsito | Hablante: profesional | Sexo: masculino",
-      "traf-pf": "Discurso: informaciones de tránsito | Hablante: profesional | Sexo: femenino"
+      "traf-pf": "Discurso: informaciones de tránsito | Hablante: profesional | Sexo: femenino",
+      "rev": "Revisor / Revisora"
     };
 
     return speakerTypeMapping[speakerName] || `Speaker: ${speakerName}`;
@@ -515,28 +515,25 @@ export class TranscriptionManager {
         const rect = event.target.getBoundingClientRect();
         const tooltipRect = tooltip.getBoundingClientRect();
         
-        // Position below word, centered
-        let left = rect.left + window.scrollX + (rect.width / 2) - (tooltipRect.width / 2);
-        let top = rect.bottom + window.scrollY + 8;
+        // Position below word, centered horizontally
+        let left = rect.left + (rect.width / 2) - (tooltipRect.width / 2);
+        let top = rect.bottom + 8;
         
-        // Keep tooltip in viewport
-        if (left < 10) left = 10;
-        if (left + tooltipRect.width > window.innerWidth - 10) {
+        // Keep tooltip in viewport (horizontal)
+        if (left < 10) {
+          left = 10;
+        } else if (left + tooltipRect.width > window.innerWidth - 10) {
           left = window.innerWidth - tooltipRect.width - 10;
         }
         
-        tooltip.style.position = 'fixed';
-        tooltip.style.left = `${rect.left + (rect.width / 2) - (tooltipRect.width / 2)}px`;
-        tooltip.style.top = `${rect.bottom + 8}px`;
+        // Check if tooltip goes below viewport, if so position above
+        if (top + tooltipRect.height > window.innerHeight - 10) {
+          top = rect.top - tooltipRect.height - 8;
+        }
         
-        // Keep in viewport
-        const tooltipLeft = parseFloat(tooltip.style.left);
-        if (tooltipLeft < 10) {
-          tooltip.style.left = '10px';
-        }
-        if (tooltipLeft + tooltipRect.width > window.innerWidth - 10) {
-          tooltip.style.left = `${window.innerWidth - tooltipRect.width - 10}px`;
-        }
+        tooltip.style.position = 'fixed';
+        tooltip.style.left = `${left}px`;
+        tooltip.style.top = `${top}px`;
         
         tooltip.classList.add('visible');
       }, 10);

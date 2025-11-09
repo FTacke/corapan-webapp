@@ -1,3 +1,14 @@
+---
+title: "EEUU to USA Country Code Standardization"
+status: active
+owner: backend-team
+updated: "2025-11-09"
+tags: [migration, country-codes, standardization, usa]
+links:
+  - ../reference/country-code-normalization.md
+  - ../CHANGELOG.md
+---
+
 # Standardisierung EEUU → USA - Abschlussbericht
 
 **Datum:** 8. November 2025  

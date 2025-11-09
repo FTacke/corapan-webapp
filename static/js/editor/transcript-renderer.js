@@ -12,7 +12,6 @@ export class TranscriptRenderer {
   constructor(transcriptData) {
     this.data = transcriptData;
     this.segments = transcriptData.segments || [];
-    this.speakers = transcriptData.speakers || [];
     this.currentWordElement = null;
     this.activeSegmentIndex = null;
   }
@@ -53,12 +52,12 @@ export class TranscriptRenderer {
     segmentEl.className = 'transcript-segment';
     segmentEl.dataset.segmentIndex = segmentIndex;
 
-    // Speaker label
-    const speakerName = this.getSpeakerName(segment.speaker);
+    // Speaker label (use speaker_code directly)
+    const speakerCode = segment.speaker_code || segment.speaker || 'Unknown';
     const speakerEl = document.createElement('div');
     speakerEl.className = 'speaker-label';
     speakerEl.innerHTML = `
-      <span class="speaker-name">${speakerName}</span>
+      <span class="speaker-name">${speakerCode}</span>
       <span class="segment-index">#${segmentIndex + 1}</span>
     `;
     segmentEl.appendChild(speakerEl);
@@ -106,14 +105,6 @@ export class TranscriptRenderer {
     span.title = `${wordText} (${this.formatTime(wordData.start)} - ${this.formatTime(wordData.end)})`;
     
     return span;
-  }
-
-  /**
-   * Get speaker name from speaker ID
-   */
-  getSpeakerName(speakerId) {
-    const speaker = this.speakers.find(s => s.spkid === speakerId);
-    return speaker ? speaker.name : speakerId || 'Unknown';
   }
 
   /**

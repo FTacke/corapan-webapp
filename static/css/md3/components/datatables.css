@@ -95,10 +95,22 @@
 }
 
 .audio-label {
-  font-size: 0.75rem;
+  font-size: 0.625rem;
   font-weight: 600;
   color: var(--md-sys-color-on-surface-variant);
   min-width: 28px;
+  font-family: 'Courier New', monospace;
+  letter-spacing: -0.5px;
+}
+
+/* MD3 Audio Label for corpus results */
+.md3-corpus-audio-label {
+  font-size: 0.8rem;
+  font-weight: 400;
+  color: var(--md-sys-color-on-surface-variant);
+  letter-spacing: -0.5px;
+  display: inline-block;
+  min-width: 30px;
 }
 
 .audio-button,

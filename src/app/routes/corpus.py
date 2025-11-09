@@ -107,6 +107,7 @@ def search() -> Response:
     params = SearchParams(
         query=data_source.get("query", ""),
         search_mode=search_mode,
+        sensitive=_safe_int(data_source.get("sensitive", 1), 1),
         token_ids=_parse_token_ids(),
         countries=countries if countries else None,
         speaker_types=data_source.getlist("speaker_type"),
@@ -254,6 +255,7 @@ def search_datatables() -> Response:
     params = SearchParams(
         query=query,
         search_mode=search_mode,
+        sensitive=_safe_int(request.args.get("sensitive", 1), 1),
         token_ids=token_ids,
         countries=countries if countries else None,
         speaker_types=speaker_types if speaker_types else None,
@@ -271,29 +273,39 @@ def search_datatables() -> Response:
     counter_search.increment()
     service_result = search_tokens(params)
     
-    # Format for DataTables
-    # Order must match HTML table columns: #, Ctx.←, Palabra, Ctx.→, Audio, País, Hablante, Sexo, Modo, Discurso, Token-ID, Arch., Emis.
+    # Format for DataTables - NOW WITH OBJECT MODE
+    # DataTables kann sowohl Arrays als auch Objekte verarbeiten.
+    # Objekt-Mode ist robuster gegen Spaltenreihenfolge-Änderungen.
+    from ..services.corpus_search import CANON_COLS
+    
     data = []
     for idx, item in enumerate(service_result["items"], start=start + 1):
-        data.append([
-            idx,                                    # 0: Row number (#)
-            item.get("context_left", ""),           # 1: Ctx.← 
-            item.get("text", ""),                   # 2: Palabra
-            item.get("context_right", ""),          # 3: Ctx.→
-            item.get("audio_available", False),     # 4: Audio (boolean for rendering)
-            item.get("country_code", ""),           # 5: País
-            item.get("speaker_type", ""),           # 6: Hablante
-            item.get("sex", ""),                    # 7: Sexo
-            item.get("mode", ""),                   # 8: Modo
-            item.get("discourse", ""),              # 9: Discurso
-            item.get("token_id", ""),               # 10: Token-ID
-            item.get("filename", ""),               # 11: Arch. (filename for icon)
-            # Hidden fields for audio/player functionality:
-            item.get("start", 0),                   # 12: word start time
-            item.get("end", 0),                     # 13: word end time
-            item.get("context_start", 0),           # 14: context start time
-            item.get("context_end", 0),             # 15: context end time
-        ])
+        # Nutze die stabilen Keys aus CANON_COLS + zusätzliche Helper-Felder
+        row_obj = {
+            # Aus CANON_COLS
+            "row_number": idx,                      # Helper: Zeilennummer
+            "token_id": item.get("token_id", ""),
+            "filename": item.get("filename", ""),
+            "country_code": item.get("country_code", ""),
+            "radio": item.get("radio", ""),
+            "date": item.get("date", ""),
+            "speaker_type": item.get("speaker_type", ""),
+            "sex": item.get("sex", ""),
+            "mode": item.get("mode", ""),
+            "discourse": item.get("discourse", ""),
+            "text": item.get("text", ""),            # Suchresultat (evt. Multi-Word)
+            "start": item.get("start", 0),
+            "end": item.get("end", 0),
+            "context_left": item.get("context_left", ""),
+            "context_right": item.get("context_right", ""),
+            "context_start": item.get("context_start", 0),
+            "context_end": item.get("context_end", 0),
+            "lemma": item.get("lemma", ""),
+            # Zusätzliche Helper-Felder
+            "audio_available": item.get("audio_available", False),
+            "word_count": item.get("word_count", 1),
+        }
+        data.append(row_obj)
     
     return jsonify({
         "draw": draw,
@@ -306,33 +318,36 @@ def search_datatables() -> Response:
 @blueprint.get("/tokens")
 @jwt_required(optional=True)
 def token_lookup() -> Response:
+    """Lookup Tokens by IDs - returns objects with CANON_COLS keys."""
+    import sqlite3
+    from ..services.corpus_search import CANON_COLS, _get_select_columns
+    
     token_ids_param = request.args.get("token_ids", "")
     token_ids = [token.strip() for token in token_ids_param.split(",") if token.strip()]
     if not token_ids:
         return jsonify([])
+    
     placeholders = ",".join(["?"] * len(token_ids))
     with open_db("transcription") as connection:
+        # AKTIVIERE Row-Factory
+        connection.row_factory = sqlite3.Row
         cursor = connection.cursor()
-        cursor.execute(
-            f"SELECT * FROM tokens WHERE token_id IN ({placeholders})",
-            token_ids,
-        )
+        
+        # EXPLIZITE Spaltenliste statt SELECT *
+        select_cols = _get_select_columns()
+        sql = f"SELECT {select_cols} FROM tokens WHERE token_id IN ({placeholders})"
+        cursor.execute(sql, token_ids)
         rows = cursor.fetchall()
+    
+    # Konvertiere zu Objekten mit stabilen Keys
     payload = []
     for row in rows:
-        payload.append(
-            {
-                "token_id": row[1],
-                "filename": row[2],
-                "country": row[3],
-                "sex": row[7],
-                "speaker": row[6],
-                "mode": row[8],
-                "word": row[10],
-                "context_left": row[13],
-                "context_right": row[14],
-                "start": row[15],
-                "end": row[16],
-            }
-        )
+        obj = {}
+        for col in CANON_COLS:
+            try:
+                obj[col] = row[col]
+            except (IndexError, KeyError):
+                obj[col] = None
+        payload.append(obj)
+    
     return jsonify(payload)

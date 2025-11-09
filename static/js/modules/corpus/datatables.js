@@ -184,6 +184,12 @@ export class CorpusDatatablesManager {
         if (modes.length > 0) d.speech_mode = modes;
         if (discourses.length > 0) d.discourse = discourses;
         
+        // Add sensitive parameter (case/accent sensitivity)
+        const sensitiveCheckbox = document.getElementById('sensitive-search');
+        if (sensitiveCheckbox) {
+            d.sensitive = sensitiveCheckbox.checked ? 1 : 0;
+        }
+        
         console.log('[DataTables AJAX] Final params:', d);
         return d;
     }
@@ -230,46 +236,49 @@ export class CorpusDatatablesManager {
 
     /**
      * Build Column Definitions
+     * Switched to OBJECT MODE for robustness against DB column reordering
      */
     buildColumns() {
         return [
-            // 0: # (Row number)
-            { data: 0, width: '40px', className: 'center-align' },
+            // Row number (computed)
+            { 
+                data: 'row_number', 
+                width: '40px', 
+                className: 'center-align',
+                render: (data) => data || ''
+            },
             
-            // 1: Ctx.← (Left context)
+            // Left context
             {
-                data: 1,
+                data: 'context_left',
                 width: '200px',
                 className: 'right-align',
                 render: (data) => `<span class="md3-corpus-context">${data || ''}</span>`
             },
             
-            // 2: Palabra (Keyword with styling and data attributes)
+            // Result (keyword with styling - can be multi-word)
             {
-                data: 2,
-                width: '100px',
+                data: 'text',
+                width: '150px',
                 className: 'center-align',
                 render: (data, type, row) => {
-                    const filename = row[11];
-                    const start = row[12];
-                    const end = row[13];
                     return `<span class="md3-corpus-keyword" 
-                                  data-filename="${filename}" 
-                                  data-start="${start}" 
-                                  data-end="${end}">${data || ''}</span>`;
+                                  data-filename="${row.filename}" 
+                                  data-start="${row.start}" 
+                                  data-end="${row.end}">${data || ''}</span>`;
                 }
             },
             
-            // 3: Ctx.→ (Right context)
+            // Right context
             {
-                data: 3,
+                data: 'context_right',
                 width: '200px',
                 render: (data) => `<span class="md3-corpus-context">${data || ''}</span>`
             },
             
-            // 4: Audio Player (Pal + Ctx buttons)
+            // Audio Player (Pal + Ctx buttons)
             {
-                data: 4,
+                data: 'audio_available',
                 orderable: false,
                 searchable: false,
                 className: 'center-align',
@@ -277,21 +286,21 @@ export class CorpusDatatablesManager {
                 render: (data, type, row) => this.renderAudioButtons(row)
             },
             
-            // 5-10: Metadata columns
-            { data: 5, width: '80px' },   // País
-            { data: 6, width: '80px' },   // Hablante
-            { data: 7, width: '80px' },   // Sexo
-            { data: 8, width: '80px' },   // Modo
-            { data: 9, width: '80px' },   // Discurso
+            // Metadata columns (using object keys)
+            { data: 'country_code', width: '80px' },   // País
+            { data: 'speaker_type', width: '80px' },   // Hablante
+            { data: 'sex', width: '80px' },            // Sexo
+            { data: 'mode', width: '80px' },           // Modo
+            { data: 'discourse', width: '80px' },      // Discurso
             { 
-                data: 10, 
+                data: 'token_id', 
                 width: '100px',
                 render: (data) => `<span class="token-id">${data || ''}</span>`
-            }, // Token-ID
+            },
             
-            // 11: Archivo (File icon with player link)
+            // Archivo (File icon with player link)
             {
-                data: 11,
+                data: 'filename',
                 width: '80px',
                 className: 'center-align',
                 orderable: true,
@@ -302,15 +311,16 @@ export class CorpusDatatablesManager {
 
     /**
      * Render Audio Buttons (Pal + Ctx)
+     * Uses object keys instead of array indices
      */
     renderAudioButtons(row) {
-        const audioAvailable = row[4];
-        const filename = row[11];
-        const tokenId = row[10];
-        const wordStart = row[12];
-        const wordEnd = row[13];
-        const ctxStart = row[14];
-        const ctxEnd = row[15];
+        const audioAvailable = row.audio_available;
+        const filename = row.filename; // DB enthält jetzt MP3-Filenames direkt
+        const tokenId = row.token_id;
+        const wordStart = row.start;
+        const wordEnd = row.end;
+        const ctxStart = row.context_start;
+        const ctxEnd = row.context_end;
         
         if (!audioAvailable) {
             return '<span class="text-muted">-</span>';
@@ -319,7 +329,7 @@ export class CorpusDatatablesManager {
         return `
             <div class="md3-corpus-audio-buttons">
               <div class="md3-corpus-audio-row">
-                <span class="md3-corpus-audio-label">Pal:</span>
+                <span class="md3-corpus-audio-label">Res.:</span>
                 <a class="audio-button" data-filename="${filename}" data-start="${wordStart}" data-end="${wordEnd + 0.1}" data-token-id="${tokenId}" data-type="pal">
                   <i class="fa-solid fa-play"></i>
                 </a>
@@ -342,10 +352,11 @@ export class CorpusDatatablesManager {
 
     /**
      * Render File Link (Player icon)
+     * Uses object keys instead of array indices
      */
     renderFileLink(data, type, row) {
-        const filename = row[11];
-        const tokenId = row[10];
+        const filename = row.filename;
+        const tokenId = row.token_id;
         
         // For sorting, return just the filename
         if (type === 'sort' || type === 'type') {

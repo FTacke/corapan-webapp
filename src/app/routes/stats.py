@@ -25,11 +25,30 @@ def _ensure_cache_dir() -> None:
 
 def _normalize_params(args: dict) -> dict:
     """Normalize query parameters for consistent caching."""
+    # Regional codes that should be excluded by default
+    regional_codes = ['ARG-CHU', 'ARG-CBA', 'ARG-SDE', 'ESP-CAN', 'ESP-SEV']
+    national_codes = ['ARG', 'BOL', 'CHL', 'COL', 'CRI', 'CUB', 'ECU', 'ESP', 'GTM', 
+                      'HND', 'MEX', 'NIC', 'PAN', 'PRY', 'PER', 'DOM', 'SLV', 'URY', 'USA', 'VEN']
+    
+    countries = args.getlist("pais") if "pais" in args else []
+    include_regional = args.get("include_regional") == "1"
+    
+    # Apply same logic as in corpus.search()
+    if not countries:
+        if include_regional:
+            countries = national_codes + regional_codes
+        else:
+            countries = national_codes
+    elif not include_regional:
+        # If user selected countries but checkbox is off, exclude any regional codes
+        countries = [c for c in countries if c not in regional_codes]
+    
     normalized = {
         "query": args.get("q", "").strip(),
         "search_mode": args.get("mode", "text"),
         "token_ids": sorted(args.getlist("token_ids")) if "token_ids" in args else [],
-        "countries": sorted(args.getlist("pais")) if "pais" in args else [],
+        "countries": sorted(countries),  # Apply regional filter logic
+        "include_regional": include_regional,  # Store for cache key
         "speaker_types": sorted(args.getlist("speaker")) if "speaker" in args else [],
         "sexes": sorted(args.getlist("sexo")) if "sexo" in args else [],
         "speech_modes": sorted(args.getlist("modo")) if "modo" in args else [],

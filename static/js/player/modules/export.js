@@ -150,18 +150,15 @@ export class ExportManager {
 
     // Segments
     data.segments.forEach((segment, index) => {
-      const speakerId = segment.speaker;
+      const speakerCode = segment.speaker_code || segment.speaker || "otro";
       const words = segment.words;
 
-      if (!speakerId || !words || words.length === 0) return;
-
-      const speakerInfo = data.speakers.find(s => s.spkid === speakerId);
-      const speakerName = speakerInfo ? speakerInfo.name : "otro";
+      if (!speakerCode || !words || words.length === 0) return;
 
       const startTime = this._formatTime(words[0].start);
       const endTime = this._formatTime(words[words.length - 1].end);
 
-      content += `[${speakerName}] ${startTime} - ${endTime}\n`;
+      content += `[${speakerCode}] ${startTime} - ${endTime}\n`;
       content += words.map(w => w.text).join(' ') + '\n\n';
     });
 

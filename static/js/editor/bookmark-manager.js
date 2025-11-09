@@ -328,9 +328,8 @@ export class BookmarkManager {
       
       if (!segment) return;
 
-      // Get speaker name
-      const speaker = this.data.speakers?.find(s => s.spkid === segment.speaker);
-      const speakerName = speaker?.name || segment.speaker;
+      // Get speaker code (use speaker_code directly)
+      const speakerCode = segment.speaker_code || segment.speaker || 'Unknown';
 
       // Get first few words as preview
       const words = segment.words?.slice(0, 8) || [];
@@ -343,7 +342,7 @@ export class BookmarkManager {
       html += `
         <li onclick="window.bookmarkManager?.jumpToSegment(${segmentIndex})">
           <div class="md3-editor-bookmark-header">
-            <span class="md3-editor-bookmark-time">${speakerName} ${timeStr}</span>
+            <span class="md3-editor-bookmark-time">${speakerCode} ${timeStr}</span>
             <button 
               class="md3-editor-bookmark-remove-btn" 
               onclick="event.stopPropagation(); window.bookmarkManager?.removeBookmark(${segmentIndex})"

@@ -21,10 +21,10 @@ export class WordEditor {
     this.originalValue = null;
     this.transcription = null;
     
-    // Store original speaker IDs for change detection
+    // Store original speaker codes for change detection
     this.originalSpeakers = {};
     this.data.segments?.forEach((seg, idx) => {
-      this.originalSpeakers[idx] = seg.speaker;
+      this.originalSpeakers[idx] = seg.speaker_code || seg.speaker;
     });
     
     this.initializeUI();
@@ -290,11 +290,15 @@ export class WordEditor {
       }
     });
 
-    // Restore original speaker values
+    // Restore original speaker codes
     this.undoStack.forEach(action => {
       if (action.type === 'speaker_change') {
         const { segmentIndex, oldValue } = action;
-        this.data.segments[segmentIndex].speaker = oldValue;
+        this.data.segments[segmentIndex].speaker_code = oldValue;
+        // Remove old speaker field if it exists
+        if ('speaker' in this.data.segments[segmentIndex]) {
+          delete this.data.segments[segmentIndex].speaker;
+        }
         
         // Restore original speakers map
         this.originalSpeakers[segmentIndex] = oldValue;
@@ -343,20 +347,14 @@ export class WordEditor {
         new_value: change.modified
       }));
 
-      // Add speaker changes from undoStack
+      // Add speaker changes from undoStack (speaker_code is used directly)
       const speakerChanges = this.undoStack.filter(action => action.type === 'speaker_change');
       speakerChanges.forEach(action => {
-        // Get speaker names from data
-        const oldSpeakerObj = this.data.speakers?.find(s => s.spkid === action.oldValue);
-        const newSpeakerObj = this.data.speakers?.find(s => s.spkid === action.newValue);
-        const oldSpeakerName = oldSpeakerObj?.name || action.oldValue;
-        const newSpeakerName = newSpeakerObj?.name || action.newValue;
-        
         changes.push({
           type: 'speaker_change',
           segment_index: action.segmentIndex,
-          old_value: oldSpeakerName,
-          new_value: newSpeakerName
+          old_value: action.oldValue,
+          new_value: action.newValue
         });
       });
 
@@ -395,7 +393,7 @@ export class WordEditor {
       
       // Reset original speakers to current state
       this.data.segments?.forEach((seg, idx) => {
-        this.originalSpeakers[idx] = seg.speaker;
+        this.originalSpeakers[idx] = seg.speaker_code || seg.speaker;
       });
       
       // Remove modified-speaker classes
@@ -529,8 +527,12 @@ export class WordEditor {
       const { segmentIndex, oldValue, newValue } = action;
       const valueToApply = isUndo ? oldValue : newValue;
 
-      // Update data
-      this.data.segments[segmentIndex].speaker = valueToApply;
+      // Update data (use speaker_code)
+      this.data.segments[segmentIndex].speaker_code = valueToApply;
+      // Remove old speaker field if it exists
+      if ('speaker' in this.data.segments[segmentIndex]) {
+        delete this.data.segments[segmentIndex].speaker;
+      }
 
       // Update UI
       this._updateSpeakerDisplay(segmentIndex, valueToApply);
@@ -641,17 +643,27 @@ export class WordEditor {
 
   /**
    * Initialize speaker selection UI
-   * @param {Array} speakers - List of available speakers from transcript
+   * Uses standardized speaker codes directly (no speakers array needed)
    */
-  initializeSpeakerSelection(speakers) {
+  initializeSpeakerSelection() {
     const speakerSelect = document.getElementById('speaker-select');
     if (!speakerSelect) return;
 
+    // Valid speaker codes (standardized)
+    const VALID_SPEAKER_CODES = [
+      'lib-pm', 'lib-pf', 'lib-om', 'lib-of',
+      'lec-pm', 'lec-pf', 'lec-om', 'lec-of',
+      'pre-pm', 'pre-pf',
+      'tie-pm', 'tie-pf',
+      'traf-pm', 'traf-pf',
+      'rev'
+    ];
+
     // Populate speaker options
-    speakers.forEach(speaker => {
+    VALID_SPEAKER_CODES.forEach(code => {
       const option = document.createElement('option');
-      option.value = speaker.spkid;
-      option.textContent = speaker.name || speaker.spkid;
+      option.value = code;
+      option.textContent = code;
       speakerSelect.appendChild(option);
     });
 
@@ -664,28 +676,28 @@ export class WordEditor {
       this.cancelSpeakerChange();
     });
 
-    console.log('[Editor] Speaker selection initialized');
+    console.log('[Editor] Speaker selection initialized with', VALID_SPEAKER_CODES.length, 'codes');
   }
 
   /**
    * Open speaker selection for a segment
    * @param {number} segmentIndex - The segment to change speaker for
-   * @param {string} currentSpeaker - Current speaker ID
+   * @param {string} currentSpeakerCode - Current speaker code
    */
-  openSpeakerSelection(segmentIndex, currentSpeaker) {
+  openSpeakerSelection(segmentIndex, currentSpeakerCode) {
     this.currentSpeakerSegment = segmentIndex;
-    this.currentSpeakerValue = currentSpeaker;
+    this.currentSpeakerValue = currentSpeakerCode;
 
     const speakerSelect = document.getElementById('speaker-select');
     const speakerSelection = document.getElementById('speaker-selection');
 
     if (speakerSelect && speakerSelection) {
-      speakerSelect.value = currentSpeaker;
+      speakerSelect.value = currentSpeakerCode;
       speakerSelection.classList.remove('hidden');
       speakerSelect.focus();
     }
 
-    console.log(`[Editor] Speaker selection opened for segment ${segmentIndex}`);
+    console.log(`[Editor] Speaker selection opened for segment ${segmentIndex}, current: ${currentSpeakerCode}`);
   }
 
   /**
@@ -693,35 +705,40 @@ export class WordEditor {
    */
   confirmSpeakerChange() {
     const speakerSelect = document.getElementById('speaker-select');
-    const newSpeaker = speakerSelect?.value;
+    const newSpeakerCode = speakerSelect?.value;
 
-    if (!newSpeaker || this.currentSpeakerSegment === undefined) {
+    if (!newSpeakerCode || this.currentSpeakerSegment === undefined) {
       return;
     }
 
     const segment = this.data.segments[this.currentSpeakerSegment];
     if (!segment) return;
 
-    const oldSpeaker = segment.speaker;
-    if (newSpeaker === oldSpeaker) {
+    // Use speaker_code (new) or fallback to speaker (legacy)
+    const oldSpeakerCode = segment.speaker_code || segment.speaker;
+    if (newSpeakerCode === oldSpeakerCode) {
       this.cancelSpeakerChange();
       return;
     }
 
     // Record the change
-    this._recordSpeakerChange(this.currentSpeakerSegment, oldSpeaker, newSpeaker);
+    this._recordSpeakerChange(this.currentSpeakerSegment, oldSpeakerCode, newSpeakerCode);
 
-    // Update data
-    segment.speaker = newSpeaker;
+    // Update data (set speaker_code, not speaker)
+    segment.speaker_code = newSpeakerCode;
+    // Remove old speaker field if it exists
+    if ('speaker' in segment) {
+      delete segment.speaker;
+    }
 
     // Update UI
-    this._updateSpeakerDisplay(this.currentSpeakerSegment, newSpeaker);
+    this._updateSpeakerDisplay(this.currentSpeakerSegment, newSpeakerCode);
 
     // Close selection
     this.cancelSpeakerChange();
     this.updateUI();
 
-    console.log(`[Editor] Speaker changed from ${oldSpeaker} to ${newSpeaker} for segment ${this.currentSpeakerSegment}`);
+    console.log(`[Editor] Speaker changed from ${oldSpeakerCode} to ${newSpeakerCode} for segment ${this.currentSpeakerSegment}`);
   }
 
   /**
@@ -762,11 +779,7 @@ export class WordEditor {
    * Update speaker display in UI - completely re-render the speaker block
    * @private
    */
-  _updateSpeakerDisplay(segmentIndex, newSpeaker) {
-    // Find speaker name from data
-    const speakerObj = this.data.speakers?.find(s => s.spkid === newSpeaker);
-    const speakerName = speakerObj?.name || newSpeaker;
-
+  _updateSpeakerDisplay(segmentIndex, newSpeakerCode) {
     // Find the speaker-name element (try both MD3 and legacy class names)
     let speakerNameEl = document.querySelector(`.md3-speaker-name[data-segment-index="${segmentIndex}"]`);
     if (!speakerNameEl) {
@@ -778,13 +791,13 @@ export class WordEditor {
       return;
     }
 
-    // Update text content
-    speakerNameEl.textContent = speakerName;
+    // Update text content (speaker_code is displayed directly)
+    speakerNameEl.textContent = newSpeakerCode;
     
     // Add modified-speaker class to show it was changed
     speakerNameEl.classList.add('modified-speaker');
 
-    console.log(`[Editor] Updated speaker display for segment ${segmentIndex} to ${speakerName} (${newSpeaker})`);
+    console.log(`[Editor] Updated speaker display for segment ${segmentIndex} to ${newSpeakerCode}`);
   }
 
   /**
@@ -797,9 +810,10 @@ export class WordEditor {
       return true;
     }
 
-    // Check if any speakers have been modified
+    // Check if any speakers have been modified (use speaker_code)
     for (let segIdx in this.originalSpeakers) {
-      if (this.data.segments[segIdx].speaker !== this.originalSpeakers[segIdx]) {
+      const currentSpeaker = this.data.segments[segIdx].speaker_code || this.data.segments[segIdx].speaker;
+      if (currentSpeaker !== this.originalSpeakers[segIdx]) {
         return true;
       }
     }

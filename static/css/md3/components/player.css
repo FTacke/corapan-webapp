@@ -233,54 +233,10 @@
   margin-bottom: 0;
 }
 
-/* Highlighted text in tooltips - besserer Kontrast */
-.tooltip-high {
-  color: #ffd54f; /* Material Amber 300 - gut lesbar auf dunklem Hintergrund */
-  font-weight: 500; /* MD3: medium weight */
-}
+/* Tooltip styling zentral in transcription-shared.css */
 
-/* Word-Annotation-Tooltips (dynamisch erstellt) */
-.tooltip-text.word-tooltip {
-  position: fixed; /* Fixed für bessere Kontrolle */
-  background: var(--md-sys-color-inverse-surface);
-  color: var(--md-sys-color-inverse-on-surface);
-  padding: var(--space-2) var(--space-3);
-  border-radius: var(--radius-sm);
-  font-size: 0.75rem;
-  line-height: 1.4;
-  max-width: 320px;
-  box-shadow: var(--elev-3);
-  z-index: 1001;
-  opacity: 0;
-  visibility: hidden;
-  pointer-events: none;
-  transition: opacity 0.15s ease, visibility 0.15s ease;
-  white-space: normal;
-}
-
-.tooltip-text.word-tooltip.visible {
-  opacity: 1;
-  visibility: visible;
-}
-
-/* Tooltip-Styling für bessere Lesbarkeit */
-.tooltip-bold {
-  font-weight: 600;
-  color: var(--md-sys-color-inverse-on-surface);
-}
-
-.tooltip-italic {
-  font-style: italic;
-  color: var(--md-sys-color-inverse-on-surface);
-  opacity: 0.9;
-}
-
-.tooltip-token {
-  font-family: 'Consolas', 'Courier New', monospace;
-  font-size: 0.6875rem;
-  color: var(--md-sys-color-tertiary);
-  font-weight: 600;
-}
+/* Word-Annotation-Tooltips sind jetzt in transcription-shared.css definiert */
+/* Hier nur Überschreibungen falls nötig */
 
 /* ============================================
    METADATEN CARD

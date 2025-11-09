@@ -148,6 +148,119 @@
 }
 
 /* ============================================
+   TEXT SELECTION & EDITOR STATES
+   ============================================ */
+
+/* Custom text selection color (remove white line issue) */
+.md3-speaker-text ::selection {
+  background: var(--md-sys-color-primary-container);
+  color: var(--md-sys-color-on-primary-container);
+}
+
+.md3-speaker-text ::-moz-selection {
+  background: var(--md-sys-color-primary-container);
+  color: var(--md-sys-color-on-primary-container);
+}
+
+/* Word in Edit Mode */
+.md3-speaker-text .word.editing {
+  background: #ffeb3b !important;
+  color: #000000;
+  font-weight: 700;
+  padding: 0.2rem 0.4rem;
+  border-radius: var(--radius-sm);
+  border: 2px solid #f57f17;
+  outline: none;
+  box-sizing: border-box;
+}
+
+/* Word Modified (Changed by Editor) */
+.md3-speaker-text .word.modified-word {
+  background: #81c784 !important; /* Green highlight for changes */
+  color: #000000;
+  font-weight: 600;
+  padding: 0.1rem 0.2rem;
+  border-radius: 2px;
+  box-sizing: border-box;
+}
+
+/* Word Modified with ::before indicator */
+.md3-speaker-text .word.modified-word::before {
+  content: '';
+  display: inline-block;
+  width: 3px;
+  height: 100%;
+  background: #2e7d32;
+  margin-right: 2px;
+  border-radius: 0;
+  vertical-align: text-bottom;
+}
+
+/* ============================================
+   WORD TOOLTIPS - Linguistic Information
+   ============================================ */
+
+/* Tooltip Container - Unified Style (Player + Editor) - Hell wie im Editor */
+.tooltip-text {
+  position: fixed;
+  background: var(--md-sys-color-surface-container-high);
+  border: 1px solid var(--md-sys-color-outline-variant);
+  color: var(--md-sys-color-on-surface);
+  border-radius: var(--radius-md);
+  padding: var(--space-2) var(--space-3);
+  font-size: 0.75rem;
+  z-index: 1000;
+  box-shadow: var(--elev-2);
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.15s cubic-bezier(0.2, 0, 0, 1),
+              visibility 0.15s cubic-bezier(0.2, 0, 0, 1);
+  line-height: 1.4;
+  max-width: 320px;
+  word-wrap: break-word;
+}
+
+.tooltip-text.visible {
+  opacity: 1;
+  visibility: visible;
+}
+
+.tooltip-text.word-tooltip {
+  font-family: 'Roboto Mono', 'Consolas', 'Courier New', monospace;
+}
+
+/* Tooltip Content Styling */
+.tooltip-high {
+  font-weight: 600;
+  color: var(--md-sys-color-primary);
+  font-size: 0.6875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.tooltip-bold {
+  font-weight: 700;
+  color: var(--md-sys-color-on-surface);
+}
+
+.tooltip-italic {
+  font-style: italic;
+  color: var(--md-sys-color-on-surface-variant);
+  opacity: 0.9;
+}
+
+.tooltip-token {
+  font-family: 'Courier New', 'Consolas', monospace;
+  background: var(--md-sys-color-surface-container-lowest);
+  padding: 1px 4px;
+  border-radius: 2px;
+  color: var(--md-sys-color-primary);
+  font-weight: 500;
+  font-size: 0.65rem;
+}
+
+/* ============================================
    MOBILE RESPONSIVE - Shared
    ============================================ */
 

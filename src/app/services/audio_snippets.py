@@ -71,10 +71,21 @@ def find_split_file(filename: str, start: float, end: float) -> Optional[Tuple[P
 
 
 def _cache_filename(filename: str, start: float, end: float, token_id: str | None = None, snippet_type: str | None = None) -> str:
-    """Generate cache filename. Uses token_id if available, otherwise falls back to hash."""
+    """
+    Generate cache filename with token_id-based naming.
+    
+    Format:
+    - Palabra/Resultado (type='pal'): corapan_{token_id}.mp3
+    - Contexto (type='ctx'): corapan_{token_id}_contexto.mp3
+    """
     if token_id and snippet_type:
-        # Format: {token_id}_pal.mp3 oder {token_id}_ctx.mp3
-        return f"{token_id}_{snippet_type}.mp3"
+        # Build filename based on snippet type
+        if snippet_type == "ctx":
+            # Contexto: corapan_{token_id}_contexto.mp3
+            return f"corapan_{token_id}_contexto.mp3"
+        else:
+            # Palabra/Resultado (default): corapan_{token_id}.mp3
+            return f"corapan_{token_id}.mp3"
     else:
         # Fallback: Hash-basiert für Abwärtskompatibilität
         digest = hashlib.sha256(f"{filename}:{start}:{end}".encode()).hexdigest()

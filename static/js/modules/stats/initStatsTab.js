@@ -68,6 +68,12 @@ function buildStatsUrl() {
     });
   }
   
+  // Regional checkbox (WICHTIG: Gleiche Logik wie bei Corpus-Suche)
+  const includeRegional = formData.get('include_regional');
+  if (includeRegional === '1') {
+    params.append('include_regional', '1');
+  }
+  
   // Country detail filter (adds additional country constraint)
   if (currentCountryFilter) {
     params.append('country_detail', currentCountryFilter);

@@ -87,7 +87,7 @@
               <option value="text_exact" {% if request.args.get('search_mode') == 'text_exact' %}selected{% endif %}>Forma exacta</option>
               <option value="lemma_exact" {% if request.args.get('search_mode') == 'lemma_exact' %}selected{% endif %}>Lema</option>
             </select>
-            <label for="search_mode" class="md3-outlined-textfield__label md3-outlined-textfield__label--select">Modo</label>
+            <label for="search_mode" class="md3-outlined-textfield__label md3-outlined-textfield__label--select">Forma/lema</label>
             <div class="md3-outlined-textfield__outline">
               <div class="md3-outlined-textfield__outline-start"></div>
               <div class="md3-outlined-textfield__outline-notch"></div>
@@ -189,7 +189,7 @@
           </div>
         </div>
 
-        <!-- Regional Filter Checkbox (below grid) -->
+        <!-- Filter Checkboxes (below grid) -->
         <div class="md3-regional-filter-section">
           <label class="md3-checkbox-container">
             <input type="checkbox" id="include-regional" name="include_regional" value="1" {% if request.args.get('include_regional') %}checked{% endif %}>
@@ -199,6 +199,15 @@
               </svg>
             </span>
             <span class="md3-checkbox__label">Incluir emisoras regionales</span>
+          </label>
+          <label class="md3-checkbox-container">
+            <input type="checkbox" id="sensitive-search" name="sensitive" value="1" {% if request.args.get('sensitive', '1') == '1' %}checked{% endif %}>
+            <span class="md3-checkbox">
+              <svg class="md3-checkbox__checkmark" viewBox="0 0 18 18">
+                <path class="md3-checkbox__checkmark-path" fill="none" stroke="white" d="M1.73,9.29 l4.75,4.75 l10.04,-10.04"/>
+              </svg>
+            </span>
+            <span class="md3-checkbox__label">Sensibilidad a mayúsculas y acentos</span>
           </label>
         </div>
 
@@ -292,7 +301,7 @@
             <tr>
               <th>#</th>
               <th>Ctx.←</th>
-              <th>Palabra</th>
+              <th>Resultado</th>
               <th>Ctx.→</th>
               <th>Audio</th>
               <th>País</th>
@@ -582,6 +591,25 @@ document.getElementById('reset-filters').addEventListener('click', () => {
   document.getElementById('corpus-search-form').reset();
   document.querySelectorAll('select[multiple]').forEach(select => {
     select.selectedIndex = -1;
+  });
+  // Reset checkboxes to defaults
+  document.getElementById('include-regional').checked = false;
+  document.getElementById('sensitive-search').checked = true;
+});
+
+// Sensitive checkbox persistence
+document.addEventListener('DOMContentLoaded', () => {
+  const sensitiveCheckbox = document.getElementById('sensitive-search');
+  
+  // Load from localStorage if available
+  const savedValue = localStorage.getItem('corapan_sensitive');
+  if (savedValue !== null) {
+    sensitiveCheckbox.checked = savedValue === '1';
+  }
+  
+  // Save to localStorage on change
+  sensitiveCheckbox.addEventListener('change', () => {
+    localStorage.setItem('corapan_sensitive', sensitiveCheckbox.checked ? '1' : '0');
   });
 });
 

@@ -40,8 +40,10 @@ export class CorpusAudioManager {
                 const filename = $btn.data('filename');
                 const start = parseFloat($btn.data('start'));
                 const end = parseFloat($btn.data('end'));
+                const tokenId = $btn.data('token-id');
+                const snippetType = $btn.data('type');
                 
-                this.playAudioSegment(filename, start, end, $btn);
+                this.playAudioSegment(filename, start, end, $btn, tokenId, snippetType);
             }
         });
     }
@@ -103,7 +105,7 @@ export class CorpusAudioManager {
     /**
      * Play audio segment (word or context)
      */
-    playAudioSegment(filename, start, end, $button) {
+    playAudioSegment(filename, start, end, $button, tokenId, snippetType) {
         // Check if audio playback is allowed
         if (!allowTempMedia()) {
             alert('Audio-Wiedergabe erfordert Authentifizierung');
@@ -115,7 +117,15 @@ export class CorpusAudioManager {
         
         // Build audio URL (backend handles segment extraction)
         const timestamp = Date.now();
-        const audioUrl = `${MEDIA_ENDPOINT}/play_audio/${filename}?start=${start}&end=${end}&t=${timestamp}`;
+        let audioUrl = `${MEDIA_ENDPOINT}/play_audio/${filename}?start=${start}&end=${end}&t=${timestamp}`;
+        
+        // Add token_id and type if available
+        if (tokenId) {
+            audioUrl += `&token_id=${encodeURIComponent(tokenId)}`;
+        }
+        if (snippetType) {
+            audioUrl += `&type=${encodeURIComponent(snippetType)}`;
+        }
         
         // Create new audio instance
         this.currentAudio = new Audio(audioUrl);
