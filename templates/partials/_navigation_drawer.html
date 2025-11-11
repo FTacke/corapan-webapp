@@ -105,12 +105,12 @@
           </div>
         {% else %}
           {# Simple navigation item #}
-          {# Only Corpus needs full reload due to heavy external dependencies (DataTables, Select2, Tagify) #}
-          {% set disable_turbo = item.label in ['Corpus'] %}
+          {# Corpus needs full reload due to heavy external dependencies (DataTables, Select2, Tagify) #}
+          {% set disable_boost = item.label in ['Corpus'] %}
           <a href="{{ item.href }}" 
              class="md3-navigation-drawer__item {{ 'md3-navigation-drawer__item--active' if is_active else '' }}"
              aria-current="{{ 'page' if is_active else 'false' }}"
-             {{ 'data-turbo="false"' if disable_turbo else '' }}>
+             {{ 'hx-boost="false"' if disable_boost else '' }}>
             <span class="material-symbols-rounded md3-navigation-drawer__icon">{{ item.icon }}</span>
             <span class="md3-navigation-drawer__label">{{ item.label }}</span>
           </a>
@@ -141,27 +141,21 @@
           </a>
         {% endif %}
         
-        {# Authenticated: Logout Link (sieht aus wie normaler Link) #}
-        <form method="POST" 
-              action="{{ url_for('auth.logout') }}" 
-              id="drawer-logout-form-modal" 
-              style="display: none;"
-              data-turbo="false">
-        </form>
-        <a href="#" 
-           class="md3-navigation-drawer__item md3-navigation-drawer__item--logout"
-           onclick="event.preventDefault(); document.getElementById('drawer-logout-form-modal').submit();">
+        {# Authenticated: Logout Link (GET, no CSRF) #}
+        <a href="{{ url_for('auth.logout_any') }}" 
+           class="md3-navigation-drawer__item md3-navigation-drawer__item--logout">
           <span class="material-symbols-rounded md3-navigation-drawer__icon">logout</span>
           <span class="md3-navigation-drawer__label">Cerrar sesión</span>
         </a>
       {% else %}
-        {# Unauthenticated: Login Button #}
-        <button type="button" 
-                class="md3-navigation-drawer__item"
-                data-action="open-login">
+        {# Unauthenticated: Login Button - htmx powered to open sheet #}
+        <a hx-get="{{ url_for('auth.login_sheet', next=request.path) }}"
+           hx-target="body"
+           hx-swap="beforeend"
+           class="md3-navigation-drawer__item">
           <span class="material-symbols-rounded md3-navigation-drawer__icon">account_circle</span>
           <span class="md3-navigation-drawer__label">Iniciar sesión</span>
-        </button>
+        </a>
       {% endif %}
     </nav>
   </div>
@@ -233,12 +227,12 @@
         </div>
       {% else %}
         {# Simple navigation item #}
-        {# Only Corpus needs full reload due to heavy external dependencies (DataTables, Select2, Tagify) #}
-        {% set disable_turbo = item.label in ['Corpus'] %}
+        {# Corpus needs full reload due to heavy external dependencies (DataTables, Select2, Tagify) #}
+        {% set disable_boost = item.label in ['Corpus'] %}
         <a href="{{ item.href }}" 
            class="md3-navigation-drawer__item {{ 'md3-navigation-drawer__item--active' if is_active else '' }}"
            aria-current="{{ 'page' if is_active else 'false' }}"
-           {{ 'data-turbo="false"' if disable_turbo else '' }}>
+           {{ 'hx-boost="false"' if disable_boost else '' }}>
           <span class="material-symbols-rounded md3-navigation-drawer__icon">{{ item.icon }}</span>
           <span class="md3-navigation-drawer__label">{{ item.label }}</span>
         </a>
@@ -267,27 +261,22 @@
         </a>
       {% endif %}
       
-      {# Authenticated: Logout Link (sieht aus wie normaler Link) #}
-      <form method="POST" 
-            action="{{ url_for('auth.logout') }}" 
-            id="drawer-logout-form-standard" 
-            style="display: none;"
-            data-turbo="false">
-      </form>
-      <a href="#" 
-         class="md3-navigation-drawer__item md3-navigation-drawer__item--logout"
-         onclick="event.preventDefault(); document.getElementById('drawer-logout-form-standard').submit();">
+      {# Authenticated: Logout Link (GET, no CSRF) #}
+      <a href="{{ url_for('auth.logout_any') }}" 
+         class="md3-navigation-drawer__item md3-navigation-drawer__item--logout">
         <span class="material-symbols-rounded md3-navigation-drawer__icon">logout</span>
         <span class="md3-navigation-drawer__label">Cerrar sesión</span>
       </a>
     {% else %}
-      {# Unauthenticated: Login Button #}
-      <button type="button" 
-              class="md3-navigation-drawer__item"
-              data-action="open-login">
+      {# Unauthenticated: Login Button - htmx powered to open sheet #}
+      <a hx-get="{{ url_for('auth.login_sheet', next=request.path) }}"
+         hx-target="body"
+         hx-swap="beforeend"
+         class="md3-navigation-drawer__item">
         <span class="material-symbols-rounded md3-navigation-drawer__icon">account_circle</span>
         <span class="md3-navigation-drawer__label">Iniciar sesión</span>
-      </button>
+      </a>
     {% endif %}
   </nav>
 </aside>
+

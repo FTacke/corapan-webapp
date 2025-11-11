@@ -134,7 +134,7 @@
 
 /* Separator dots between list items */
 .md3-footer__list > li + li::before {
-  content: "·";
+  content: "";
   margin-inline: 0.25rem 0.5rem;
   color: var(--md-sys-color-outline-variant);
 }

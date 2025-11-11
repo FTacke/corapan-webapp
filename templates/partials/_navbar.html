@@ -1,4 +1,4 @@
-﻿{% set user_name = g.get('user') %}
+{% set user_name = g.get('user') %}
 {% set user_role = g.get('role') %}
 {% set is_authenticated = user_name is not none %}
 {% set role_value = user_role.value if user_role else '' %}
@@ -21,10 +21,10 @@
     'match': ['public.proyecto_overview', 'public.proyecto_page'],
     'children': [
       { 'label': 'El proyecto', 'href': url_for('public.proyecto_overview') },
-      { 'label': 'Diseño', 'href': url_for('public.proyecto_diseno') },
-      { 'label': 'Estadísticas', 'href': url_for('public.proyecto_estadisticas') },
-      { 'label': 'Quiénes somos', 'href': url_for('public.proyecto_quienes_somos') },
-      { 'label': 'Cómo citar', 'href': url_for('public.proyecto_como_citar') }
+      { 'label': 'Dise�o', 'href': url_for('public.proyecto_diseno') },
+      { 'label': 'Estad�sticas', 'href': url_for('public.proyecto_estadisticas') },
+      { 'label': 'Qui�nes somos', 'href': url_for('public.proyecto_quienes_somos') },
+      { 'label': 'C�mo citar', 'href': url_for('public.proyecto_como_citar') }
     ]
   },
   {
@@ -39,7 +39,7 @@
   }
 ] %}
 
-{# Editor-Link für Admin und Editor #}
+{# Editor-Link f�r Admin und Editor #}
 {% if is_authenticated and role_value in ['admin', 'editor'] %}
   {% set nav_links = nav_links + [{
     'label': 'Editor',
@@ -50,12 +50,12 @@
 {% endif %}
 
 <header class="site-header" data-auth="{{ 'true' if is_authenticated else 'false' }}" data-role="{{ role_value }}">
-  <nav class="md3-nav" aria-label="Navegación principal">
+  <nav class="md3-nav" aria-label="Navegaci�n principal">
     <div class="md3-nav__inner">
       <!-- Brand & Desktop Links -->
       <div class="md3-nav__brand">
         <!-- Mobile Menu Toggle -->
-        <button type="button" class="md3-icon-button md3-nav__mobile-toggle" data-mobile-toggle aria-controls="mobile-menu" aria-expanded="false" aria-label="Menú abrir">
+        <button type="button" class="md3-icon-button md3-nav__mobile-toggle" data-mobile-toggle aria-controls="mobile-menu" aria-expanded="false" aria-label="Men� abrir">
           <i class="fa-solid fa-bars"></i>
         </button>
         
@@ -79,7 +79,7 @@
             {% if item.children %}
               <div class="md3-nav__link-with-menu">
                 <!-- Make the entire label a single trigger button per MD3: it opens the menu instead of navigating immediately -->
-                <button type="button" class="md3-label-large md3-nav__link md3-nav__trigger" aria-haspopup="menu" aria-expanded="false" aria-controls="nav-submenu-{{ loop.index }}">{{ item.label }} <span class="md3-nav__trigger-icon">▾</span></button>
+                <button type="button" class="md3-label-large md3-nav__link md3-nav__trigger" aria-haspopup="menu" aria-expanded="false" aria-controls="nav-submenu-{{ loop.index }}">{{ item.label }} <span class="md3-nav__trigger-icon">?</span></button>
 
                 <div id="nav-submenu-{{ loop.index }}" class="md3-nav__submenu" role="menu" hidden>
                   <ul>
@@ -102,7 +102,7 @@
         {% if is_authenticated %}
           <div class="md3-user-menu" data-user-menu-root>
             <button type="button" class="md3-icon-button md3-user-menu__toggle" data-user-menu-toggle aria-haspopup="true" aria-expanded="false">
-              <span class="sr-only">Abrir menú de usuario</span>
+              <span class="sr-only">Abrir men� de usuario</span>
               <span class="md3-user-avatar" aria-hidden="true">
                 {{ user_name[:1]|upper if user_name else 'U' }}
               </span>
@@ -129,26 +129,23 @@
                   </li>
                 {% endif %}
                 <li role="none">
-                  <form method="post" 
-                        action="{{ url_for('auth.logout') }}" 
-                        data-element="logout-form-menu" 
-                        role="none" 
-                        class="md3-user-menu__form"
-                        data-turbo="false">
-                    <input type="hidden" name="csrf_token" value="" data-element="csrf-token">
-                    <button type="submit" class="md3-body-medium md3-user-menu__link md3-user-menu__link--danger" role="menuitem">
-                      <i class="fa-solid fa-right-from-bracket" aria-hidden="true"></i>
-                      <span>Cerrar sesión</span>
-                    </button>
-                  </form>
+                  {# Logout via GET (no CSRF, idempotent) #}
+                  <a href="{{ url_for('auth.logout_any') }}" class="md3-body-medium md3-user-menu__link md3-user-menu__link--danger" role="menuitem">
+                    <i class="fa-solid fa-right-from-bracket" aria-hidden="true"></i>
+                    <span>Cerrar sesi�n</span>
+                  </a>
                 </li>
               </ul>
             </div>
           </div>
         {% else %}
-          <button type="button" class="md3-icon-button" data-action="open-login" aria-label="Iniciar sesión">
+          <a hx-get="{{ url_for('auth.login_sheet', next=request.path) }}"
+             hx-target="body"
+             hx-swap="beforeend"
+             class="md3-icon-button" 
+             aria-label="Iniciar sesión">
             <i class="fa-regular fa-circle-user"></i>
-          </button>
+          </a>
         {% endif %}
       </div>
     </div>
@@ -157,11 +154,11 @@
   <!-- Mobile Menu -->
   <div class="md3-mobile-menu" data-mobile-menu hidden>
     <div class="md3-mobile-menu__backdrop" data-mobile-backdrop></div>
-    <div class="md3-mobile-menu__panel md3-elevation-4" role="dialog" aria-modal="true" aria-label="Menú móvil">
+    <div class="md3-mobile-menu__panel md3-elevation-4" role="dialog" aria-modal="true" aria-label="Men� m�vil">
       <div class="md3-mobile-menu__header">
         <!-- Logo removed for cleaner mobile menu per user request -->
         <div></div>
-        <button type="button" class="md3-icon-button" data-mobile-close aria-label="Menú cerrar">
+        <button type="button" class="md3-icon-button" data-mobile-close aria-label="Men� cerrar">
           <i class="fa-solid fa-xmark"></i>
         </button>
       </div>
@@ -202,15 +199,15 @@
           {% if role_value == 'admin' %}
             <a href="{{ url_for('admin.dashboard') }}" class="md3-label-large md3-mobile-link" aria-label="Panel administrativo">Panel admin</a>
           {% endif %}
-          <form method="post" 
-                action="{{ url_for('auth.logout') }}" 
-                data-element="logout-form-mobile"
-                data-turbo="false">
-            <input type="hidden" name="csrf_token" value="" data-element="csrf-token">
-            <button type="submit" class="md3-label-large md3-mobile-link md3-mobile-link--button">Cerrar sesión</button>
-          </form>
+          {# Logout via GET (no CSRF, idempotent) #}
+          <a href="{{ url_for('auth.logout_any') }}" class="md3-label-large md3-mobile-link">Cerrar sesi�n</a>
         {% else %}
-          <button type="button" class="md3-label-large md3-mobile-link md3-mobile-link--button" data-action="open-login">Iniciar sesión</button>
+          <a hx-get="{{ url_for('auth.login_sheet', next=request.path) }}"
+             hx-target="body"
+             hx-swap="beforeend"
+             class="md3-label-large md3-mobile-link md3-mobile-link--button">
+            Iniciar sesión
+          </a>
         {% endif %}
       </div>
     </div>
@@ -219,3 +216,4 @@
 
 <!-- Login Sheet removed - now defined globally in status_banner.html -->
 <!-- This ensures a single, consistent login experience across the app -->
+

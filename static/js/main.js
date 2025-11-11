@@ -3,16 +3,34 @@
 // ============================================
 import { setupTokenRefresh } from './modules/auth/token-refresh.js';
 
+// ============================================
+// Navigation Drawer Handler
+// ============================================
+import { NavigationDrawer } from './modules/navigation/drawer.js';
+
+// ============================================
+// Navigation Accordion Handler
+// ============================================
+import { initAccordion } from './modules/navigation/accordion.js';
+
+// ============================================
+// Top App Bar User Menu Handler
+// ============================================
+import { initUserMenu } from './modules/navigation/app-bar.js';
+
 // Setup automatic token refresh on app initialization
 setupTokenRefresh();
 
-// ============================================
-// Turbo Drive Integration
-// ============================================
-import { initTurboIntegration } from './modules/navigation/turbo-integration.js';
+// Initialize navigation drawer (modal + standard)
+new NavigationDrawer();
 
-// Initialize Turbo Drive navigation handling
-initTurboIntegration();
+// Initialize drawer accordion handler (delegated, runs once)
+initAccordion();
+
+// Initialize user menu handler (delegated, runs once)
+document.addEventListener('DOMContentLoaded', () => {
+  initUserMenu();
+});
 
 // ============================================
 // Atlas Module - Lazy Loading

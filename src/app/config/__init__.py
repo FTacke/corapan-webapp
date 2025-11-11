@@ -88,6 +88,10 @@ class DevConfig(BaseConfig):
     SESSION_COOKIE_SECURE = False
     JWT_COOKIE_SECURE = False
     JWT_COOKIE_CSRF_PROTECT = False
+    
+    # Template auto-reload for development
+    TEMPLATES_AUTO_RELOAD = True
+    SEND_FILE_MAX_AGE_DEFAULT = 0
 
 
 CONFIG_MAPPING = {

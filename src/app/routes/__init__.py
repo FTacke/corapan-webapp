@@ -3,7 +3,8 @@ from __future__ import annotations
 
 from flask import Flask
 
-from . import admin, auth, corpus, media, public, atlas, player, editor, stats
+from . import admin, auth, corpus, media, public, atlas, player, editor, stats, bls_proxy
+from ..search import advanced, advanced_api
 
 
 BLUEPRINTS = [
@@ -17,6 +18,9 @@ BLUEPRINTS = [
     player.blueprint,
     editor.blueprint,  # Editor for Admin/Editor roles
     stats.blueprint,  # Stats API: /api/stats (public read-only)
+    bls_proxy.bp,  # BlackLab Server proxy: /bls/**
+    advanced.bp,  # Advanced search UI: /search/advanced
+    advanced_api.bp,  # Advanced search API: /search/advanced/data, /search/advanced/export
 ]
 
 

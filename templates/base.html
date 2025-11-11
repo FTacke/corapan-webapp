@@ -4,12 +4,12 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{% block page_title %}CO.RA.PAN{% endblock %}</title>
-    <!-- Theme color for consistent appearance during Turbo navigation (prevents blue flash) -->
+    <!-- Theme color for consistent appearance -->
     <meta name="theme-color" media="(prefers-color-scheme: light)" content="#ffffff">
     <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#14141A">
-    <!-- Critical inline CSS: Prevent flash during page load and Turbo navigation -->
+    <!-- Critical inline CSS: Prevent flash during page load -->
     <style>
-      /* Base colors - prevent flash during Turbo navigation */
+      /* Base colors - prevent flash during navigation */
       html, body {
         background: #fff;
         color-scheme: light dark;
@@ -24,26 +24,7 @@
         }
       }
       
-      /* Turbo Progress Bar - correct styling to prevent fullscreen blue */
-      turbo-progress-bar {
-        position: fixed !important;
-        top: 0 !important;
-        left: 0 !important;
-        right: auto !important;
-        bottom: auto !important;
-        height: 2px !important;
-        width: 0 !important;
-        max-width: 100vw !important;
-        background: var(--md-sys-color-primary, #1976d2) !important;
-        z-index: 9999 !important;
-        display: block !important;
-        /* Prevent any fullscreen or overlay behavior */
-        inset: unset !important;
-        /* TEMPORARY DEBUG: Uncomment next line to hide progress bar completely to test if it causes flash */
-        /* visibility: hidden !important; */
-      }
-      
-      /* Hide selects during Turbo hydration to prevent options flash */
+      /* Hide selects during hydration to prevent options flash */
       .corpus-hydrating .md3-corpus-filter-grid select[data-enhance]:not([data-enhanced]),
       .md3-corpus-filter-grid select[data-enhance][data-enhance-pending] {
         visibility: hidden;
@@ -64,6 +45,14 @@
       @font-face {
         font-display: swap;
       }
+      
+      /* htmx request indicator (optional) */
+      .htmx-indicator {
+        display: none;
+      }
+      .htmx-request .htmx-indicator {
+        display: block;
+      }
     </style>
     <!-- Remove no-js class immediately if JavaScript is enabled -->
     <script>document.documentElement.classList.remove('no-js');</script>
@@ -71,7 +60,7 @@
     <link rel="preload" href="{{ url_for('static', filename='css/layout.css') }}" as="style">
     <link rel="preload" href="{{ url_for('static', filename='css/md3/tokens.css') }}" as="style">
     <!-- Stylesheets -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/layout.css') }}" data-turbo-track="reload">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/layout.css') }}">
     <!-- Font Awesome 6.7.1 (fixes glyph bbox warnings) - async loaded -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.1/css/all.min.css" integrity="sha512-5Hs3dF2AEPkpNAR7UiOHba+lRSJNeM2ECkwxUIxC1Q/FLycGTbNapWXB4tP889k5T5Ju8fs4b1P5z/iB4nMfSQ==" crossorigin="anonymous" referrerpolicy="no-referrer" media="print" onload="this.media='all'; this.onload=null;">
     <noscript><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.1/css/all.min.css"></noscript>
@@ -80,24 +69,24 @@
     <noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.2/font/bootstrap-icons.min.css"></noscript>
     <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='img/favicon.ico') }}">
     <!-- MD3 Design System Foundation -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/md3/tokens.css') }}" data-turbo-track="reload">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/md3/typography.css') }}" data-turbo-track="reload">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/md3/tokens.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/md3/typography.css') }}">
     <!-- MD3 Components for Navigation/Footer -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/md3/components/buttons.css') }}" data-turbo-track="reload">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/md3/components/navbar.css') }}" data-turbo-track="reload">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/md3/components/navigation-drawer.css') }}?v=2" data-turbo-track="reload">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/md3/components/top-app-bar.css') }}?v=2" data-turbo-track="reload">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/md3/components/material-symbols-fallback.css') }}?v=2" data-turbo-track="reload">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/md3/components/status-banner.css') }}" data-turbo-track="reload">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/md3/components/footer.css') }}" data-turbo-track="reload">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/md3/components/page-navigation.css') }}" data-turbo-track="reload">
-    <!-- MD3 Common Components (für Turbo Frame-Navigation) -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/md3/components/hero.css') }}" data-turbo-track="reload">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/md3/components/text-pages.css') }}" data-turbo-track="reload">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/md3/components/cards.css') }}" data-turbo-track="reload">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/md3/components/stats.css') }}" data-turbo-track="reload">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/md3/components/como-citar.css') }}" data-turbo-track="reload">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/player-mobile.css') }}" data-turbo-track="reload">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/md3/components/buttons.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/md3/components/navbar.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/md3/components/navigation-drawer.css') }}?v=2">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/md3/components/top-app-bar.css') }}?v=2">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/md3/components/material-symbols-fallback.css') }}?v=2">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/md3/components/status-banner.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/md3/components/footer.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/md3/components/page-navigation.css') }}">
+    <!-- MD3 Common Components -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/md3/components/hero.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/md3/components/text-pages.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/md3/components/cards.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/md3/components/stats.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/md3/components/como-citar.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/player-mobile.css') }}">
     <script>
       window.__CORAPAN__ = {
         allowPublicTempAudio: {{ 'true' if allow_public_temp_audio else 'false' }},
@@ -107,34 +96,166 @@
     <script src="{{ url_for('static', filename='js/theme.js') }}"></script>
     <script src="{{ url_for('static', filename='js/theme-toggle.js') }}" defer></script>
     <script src="{{ url_for('static', filename='js/drawer-logo.js') }}" defer></script>
-    <!-- Turbo for persistent navigation (SSR + Frame-based navigation) -->
-    <script type="module" src="{{ url_for('static', filename='js/turbo.esm.js') }}"></script>
+    <!-- htmx for progressive enhancement -->
+    <script src="{{ url_for('static', filename='vendor/htmx.min.js') }}" defer></script>
+    <!-- CSRF Token Hook for htmx mutations -->
+    <script>
+      (function(){
+        /**
+         * CSRF Protection for HTMX Requests (2025-11-11)
+         * 
+         * Flask-JWT-Extended sets two CSRF tokens:
+         * - csrf_access_token: Used when access_token is present
+         * - csrf_refresh_token: Used when refresh_token is present
+         * 
+         * This hook injects the appropriate CSRF token into all HTMX POST/PUT/DELETE requests.
+         * GET requests are exempt from CSRF protection (by design).
+         */
+        function getCookie(name) {
+          const cookies = document.cookie.split("; ");
+          const cookie = cookies.find(c => c.startsWith(name + "="));
+          return cookie ? cookie.split("=")[1] : null;
+        }
+        
+        document.addEventListener("DOMContentLoaded", function(){
+          document.body.addEventListener("htmx:configRequest", function(evt){
+            // Only add CSRF token for mutating requests (POST/PUT/DELETE/PATCH)
+            const method = evt.detail.verb?.toUpperCase();
+            if (!method || method === 'GET' || method === 'HEAD' || method === 'OPTIONS') {
+              return; // Skip GET requests
+            }
+            
+            // Try csrf_access_token first, then csrf_refresh_token as fallback
+            const csrf = getCookie("csrf_access_token") || getCookie("csrf_refresh_token");
+            if (csrf) {
+              evt.detail.headers["X-CSRF-TOKEN"] = csrf;
+              console.debug('[CSRF] Injected token for', method, evt.detail.path);
+            } else {
+              console.warn('[CSRF] No CSRF token found for', method, evt.detail.path);
+            }
+          });
+        });
+      })();
+    </script>
+    <!-- 401 Handler: Open Login Sheet on Authentication Errors -->
+    <script>
+      document.addEventListener("DOMContentLoaded", function(){
+        document.body.addEventListener("htmx:responseError", function(evt){
+          if (evt.detail.xhr && evt.detail.xhr.status === 401) {
+            // Fetch login sheet and inject into modal-root
+            htmx.ajax("GET", "/auth/login?sheet=1", {
+              target: "#modal-root",
+              swap: "innerHTML"
+            });
+          }
+        });
+
+        // Open login sheet on page load if ?login=1 is present (from 401 redirect)
+        const params = new URLSearchParams(location.search);
+        if (params.get("login") === "1") {
+          htmx.ajax("GET", "/auth/login?sheet=1", {
+            target: "#modal-root",
+            swap: "innerHTML"
+          });
+          // Remove ?login=1 from URL (clean history)
+          history.replaceState({}, "", location.pathname + location.hash);
+        }
+      });
+    </script>
     {% block extra_head %}{% endblock %}
   </head>
-  <body class="app-shell bg-page text-ink">
-    {# MD3 Navigation System - Persistent (nicht neu laden bei Page-Wechsel) #}
+  <body class="app-shell bg-page text-ink" {% if page_name %}data-page="{{ page_name }}"{% endif %}>
+    {# MD3 Navigation System #}
     {% include 'partials/status_banner.html' %}
     
-    <header id="top-app-bar" data-turbo-permanent>
+    <header id="top-app-bar">
       {% include 'partials/_top_app_bar.html' %}
     </header>
     
-    <aside id="navigation-drawer" data-turbo-permanent>
+    <aside id="navigation-drawer">
       {% include 'partials/_navigation_drawer.html' %}
     </aside>
     
-    {# Main Content - Turbo Drive lädt diese Sektion neu #}
+    {# Main Content - Standard MPA (no hx-boost by default) #}
+    {# Individual pages can opt-in to htmx enhancement as needed #}
     <main id="main-content" class="site-main">
       <div class="md3-content-wrapper">
         {% block content %}{% endblock %}
       </div>
     </main>
     
-    <footer id="site-footer" class="md3-footer" data-turbo-permanent>
+    {# Modal Root for Login Sheet and other overlays #}
+    <div id="modal-root" aria-live="polite"></div>
+    
+    <footer id="site-footer" class="md3-footer">
       {% include 'partials/footer.html' %}
     </footer>
     <script type="module" src="{{ url_for('static', filename='js/main.js') }}" defer></script>
-    <script type="module" src="{{ url_for('static', filename='js/modules/navigation/index.js') }}?v=3" defer></script>
+    
+    {# Global Page Router: Initialize page-specific modules on load #}
+    <script type="module">
+      /**
+       * Page Router: Dynamically initialize page-specific modules
+       * based on data-page attribute on <body> tag.
+       * 
+       * Pages can define async init() functions in static/js/pages/{name}.js
+       * Example: 
+       *   <body data-page="atlas">
+       *   → Loads /static/js/pages/atlas.js and calls init()
+       */
+      const pageInits = {
+        atlas: async () => {
+          try {
+            const mod = await import('{{ url_for("static", filename="js/pages/atlas.js") }}');
+            if (mod?.init) {
+              await mod.init();
+              console.log('[page-router] Atlas initialized');
+            }
+          } catch (err) {
+            console.error('[page-router] Failed to initialize atlas:', err);
+          }
+        }
+        // Register additional page initializers here
+      };
+
+      // Run on DOM ready
+      document.addEventListener('DOMContentLoaded', () => {
+        const page = document.body.dataset.page;
+        if (!page) return;
+        
+        const init = pageInits[page];
+        if (init) {
+          console.log('[page-router] Initializing page:', page);
+          init();
+        }
+      });
+    </script>
+    
+    {# Preload Guard: Disable transitions on initial render, re-enable after first paint #}
+    <script>
+      document.body.classList.add('preload');
+      requestAnimationFrame(() => {
+        document.body.classList.remove('preload');
+        document.documentElement.setAttribute('data-anim-ready', '1');
+      });
+      // Also enable on first user interaction (fallback for slow browsers)
+      window.addEventListener('pointerdown', () => {
+        document.documentElement.setAttribute('data-anim-ready', '1');
+      }, { once: true });
+    </script>
+    
+    {# Auto-trigger login sheet if ?login=1 is set #}
+    <script>
+      (function(){
+        const p = new URLSearchParams(location.search);
+        if (p.get("login") === "1" && window.htmx) {
+          const next = p.get("next") || "";
+          const url = "/auth/login_sheet" + (next ? "?next=" + encodeURIComponent(next) : "");
+          htmx.ajax('GET', url, { target: 'body', swap: 'beforeend' });
+        }
+      })();
+    </script>
+    
     {% block extra_scripts %}
     {% endblock %}
   </body>

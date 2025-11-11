@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from flask import Blueprint, Response, current_app, g, jsonify, render_template, request
-from flask_jwt_extended import jwt_required
 
 from ..services.corpus_search import SearchParams, search_tokens
 from ..services.counters import counter_search
@@ -63,17 +62,23 @@ def _render_corpus(context: dict[str, object]) -> Response:
 
 
 @blueprint.get("/")
-@jwt_required(optional=True)
 def corpus_home() -> Response:
-    """Corpus-Startseite mit DataTables (neue Version)"""
+    """Corpus-Startseite mit DataTables (neue Version)
+    
+    PUBLIC ROUTE: No authentication required.
+    User info available via g.user (set by load_user_dimensions if logged in).
+    """
     context = _default_context()
     return render_template("pages/corpus.html", **context)
 
 
 @blueprint.route("/search", methods=["GET", "POST"])
-@jwt_required(optional=True)
 def search() -> Response:
-    """Suchendpoint für Corpus-Seite (GET & POST)"""
+    """Suchendpoint für Corpus-Seite (GET & POST)
+    
+    PUBLIC ROUTE: No authentication required.
+    CSRF: Required for POST method (via JWT-CSRF).
+    """
     counter_search.increment()
     
     # Parameter aus GET oder POST lesen
@@ -163,9 +168,10 @@ def search() -> Response:
 
 
 @blueprint.get("/search/datatables")
-@jwt_required(optional=True)
 def search_datatables() -> Response:
     """Server-side DataTables endpoint for corpus search.
+    
+    PUBLIC ROUTE: No authentication required.
     
     Handles DataTables AJAX requests with server-side processing.
     Expects DataTables parameters: start, length, search, order, etc.
@@ -316,9 +322,11 @@ def search_datatables() -> Response:
 
 
 @blueprint.get("/tokens")
-@jwt_required(optional=True)
 def token_lookup() -> Response:
-    """Lookup Tokens by IDs - returns objects with CANON_COLS keys."""
+    """Lookup Tokens by IDs - returns objects with CANON_COLS keys.
+    
+    PUBLIC ROUTE: No authentication required.
+    """
     import sqlite3
     from ..services.corpus_search import CANON_COLS, _get_select_columns
     

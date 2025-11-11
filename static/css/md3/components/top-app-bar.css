@@ -366,13 +366,23 @@ body[data-scrolled="true"] .md3-top-app-bar__title-page {
   transition: opacity 200ms cubic-bezier(0.4, 0, 0.2, 1),
               transform 200ms cubic-bezier(0.4, 0, 0.2, 1);
   pointer-events: none;
+  display: none;
 }
 
+/* Hidden state (legacy: [hidden] attribute) */
 .md3-user-menu__dropdown[hidden] {
   display: none;
 }
 
-/* Show state */
+/* Open state: data-open attribute */
+.md3-user-menu__dropdown[data-open] {
+  display: block;
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+/* Show state (legacy: :not([hidden]) selector) */
 .md3-user-menu__dropdown:not([hidden]) {
   opacity: 1;
   transform: translateY(0);

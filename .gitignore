@@ -68,6 +68,27 @@ logs/
 *.log.*
 
 # =============================================================================
+# Data & Media (NEVER COMMIT - generated data, databases, media files)
+# =============================================================================
+# Entire directories are ignored but structure is preserved with .gitkeep
+# This keeps the directory structure for Docker volume mounts while excluding:
+#   • data/db/                    (SQLite databases)
+#   • data/counters/              (Search counter cache)
+#   • data/stats_temp/            (Temporary statistics)
+#   • data/blacklab_index/        (Generated BlackLab index, can be very large)
+#   • data/exports/               (Generated export files)
+#   • media/mp3-full/             (Full MP3 audio files)
+#   • media/mp3-split/            (Split MP3 segments)
+#   • media/mp3-temp/             (Temporary MP3 processing)
+#   • media/transcripts/          (Transcript files)
+data/
+media/
+
+# Keep directory structure for deployment
+!data/.gitkeep
+!media/.gitkeep
+
+# =============================================================================
 # IDEs & Editors
 # =============================================================================
 .vscode/
@@ -89,49 +110,6 @@ desktop.ini
 .Trashes
 
 # =============================================================================
-# Media Files (TOO LARGE for Git)
-# =============================================================================
-media/mp3-full/
-media/mp3-split/
-media/mp3-temp/
-media/transcripts/
-
-# Keep directory structure but ignore contents
-!media/.gitkeep
-
-# =============================================================================
-# Data Files (Database & Statistics Cache)
-# =============================================================================
-data/db/
-data/db_public/
-data/counters/
-data/stats_temp/
-
-# Keep directory structure
-!data/.gitkeep
-!data/stats_temp/.gitkeep
-!media/mp3-full/.gitkeep
-!media/mp3-split/.gitkeep
-!media/mp3-temp/.gitkeep
-!media/transcripts/.gitkeep
-
-# =============================================================================
-# Database Files (TOO LARGE for Git)
-# =============================================================================
-data/db/
-data/db_public/
-data/counters/
-*.sqlite
-*.sqlite3
-*.db
-
-# Keep directory structure but ignore contents
-!data/.gitkeep
-!data/db/.gitkeep
-!data/db_public/.gitkeep
-!data/counters/.gitkeep
-
-# =============================================================================
 # Backups (NEVER COMMIT)
 # =============================================================================
 backups/
@@ -148,6 +126,7 @@ LOKAL/
 corapan-webapp-old/
 design_backups/
 startme.md
+CLEAN_UP.md
 
 # =============================================================================
 # Legacy/Deprecated Files
@@ -177,17 +156,32 @@ coverage.xml
 .hypothesis/
 
 # =============================================================================
-# NOTE: Files that SHOULD be in Git:
+# NOTE: Files that SHOULD be in Git (Commit these!)
 # =============================================================================
-# ✅ .dockerignore (needed for Docker builds)
-# ✅ docker-compose.yml (deployment configuration)
-# ✅ Dockerfile (container build instructions)
-# ✅ update.sh (deployment script)
-# ✅ backup.sh (backup script)
-# ✅ requirements.txt (Python dependencies)
-# ✅ package.json (Node dependencies)
-# ✅ All source code in src/
-# ✅ All templates in templates/
-# ✅ All static assets in static/ (CSS, JS, images)
-# ✅ Documentation in docs/ (but NOT LOKAL/)
+# ✅ BUILD & DEPLOYMENT:
+#    - .dockerignore, docker-compose.yml, Dockerfile
+#    - update.sh, backup.sh, Makefile
+#    - requirements.txt, pyproject.toml, package.json
+#    - tailwind.config.js, vite.config.js
+#
+# ✅ CONFIGURATION (Templates & Formats):
+#    - config/blacklab/*.blf.yaml (BlackLab format configs)
+#    - passwords.env.template (setup template)
+#
+# ✅ SOURCE CODE:
+#    - src/ (Python backend)
+#    - templates/ (Jinja2 templates)
+#    - static/ (CSS, JS, images - except build outputs)
+#
+# ✅ OPERATIONS:
+#    - ops/*.service (systemd services)
+#    - scripts/*.py, scripts/*.sh, scripts/*.ps1 (automation)
+#
+# ✅ DOCUMENTATION:
+#    - docs/ (all subdirectories)
+#    - README.md, CONTRIBUTING.md
+#
+# ✅ DIRECTORY STRUCTURE (Keep empty dirs):
+#    - data/.gitkeep, media/.gitkeep (placeholder files)
+
 

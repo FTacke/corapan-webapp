@@ -205,6 +205,50 @@
 }
 
 /* ============================================================================
+   Hero with Icon - Decorative Icon in eyebrow/top area
+   ============================================================================ */
+
+.md3-hero--with-icon {
+  position: relative;
+}
+
+.md3-hero--with-icon .md3-hero__container {
+  display: flex;
+  gap: var(--space-4);
+  align-items: flex-start;
+}
+
+.md3-hero__icon {
+  flex-shrink: 0;
+  font-size: 40px;
+  color: var(--md-sys-color-primary);
+  opacity: 0.85;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  margin-top: 24px;
+}
+
+.md3-hero__content {
+  flex: 1;
+  min-width: 0;
+}
+
+@media (max-width: 599px) {
+  .md3-hero--with-icon .md3-hero__container {
+    flex-direction: column;
+    gap: var(--space-3);
+  }
+  
+  .md3-hero__icon {
+    font-size: 48px;
+    width: 48px;
+    height: 48px;
+  }
+}
+
+/* ============================================================================
    Accessibility
    ============================================================================ */
 

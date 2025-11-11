@@ -11,9 +11,9 @@
        class="md3-footer__brand"
        target="_blank" rel="noopener noreferrer"
        aria-label="Hispanistica – @ Marburg">
-      <img src="https://img.shields.io/badge/Hispanistica-@ Marburg-4287f5?style=flat"
-           alt=""
-           width="130" height="20" decoding="async" />
+      <img src="{{ url_for('static', filename='img/hispanistica_badge.png') }}"
+           alt="Hispanistica Badge"
+           width="85" height="20" decoding="async" />
     </a>
 
     <!-- Navigation -->
@@ -28,5 +28,8 @@
     <p class="md3-footer__copy md3-body-small">
       © {{ now().year }} Philipps-Universität Marburg · Felix Tacke
     </p>
+    
+    <!-- Build ID for deployment verification -->
+    <!-- BUILD {{ config.get('APP_BUILD_ID', 'dev') }} -->
   </div>
 </div>

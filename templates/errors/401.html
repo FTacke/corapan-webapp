@@ -26,7 +26,10 @@
     </div>
     
     <div class="md3-error-actions">
-      <a href="{{ url_for('auth.login') }}" class="md3-button-filled">
+      <a hx-get="{{ url_for('auth.login_sheet', next=request.url) }}"
+         hx-target="body"
+         hx-swap="beforeend"
+         class="md3-button-filled">
         <i class="bi bi-box-arrow-in-right"></i>
         <span>Iniciar sesión</span>
       </a>

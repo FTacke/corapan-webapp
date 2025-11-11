@@ -1,0 +1,92 @@
+{% set user_name = g.get('user') %}
+{% set user_role = g.get('role') %}
+
+<!-- Login Sheet: Rendered as htmx fragment (GET /auth/login_sheet) -->
+<div id="login-sheet" class="md3-login-sheet" role="dialog" aria-modal="true">
+  <!-- Backdrop (clickable to dismiss) -->
+  <div class="md3-login-backdrop" 
+       onclick="document.getElementById('login-sheet').remove()"></div>
+  
+  <!-- Sheet Container -->
+  <div class="md3-login-sheet__container">
+    <!-- Form with HTMX boost for seamless redirect -->
+    <form id="login-form" 
+          class="md3-login-sheet__form" 
+          method="post" 
+          action="{{ url_for('auth.login_post') }}"
+          hx-boost="true">
+      
+      <!-- Title with Close Button -->
+      <div class="md3-login-sheet__header">
+        <h2 class="md3-login-sheet__title">Iniciar sesión</h2>
+        <button type="button" 
+                class="md3-login-sheet__close-button" 
+                onclick="document.getElementById('login-sheet').remove()" 
+                aria-label="Cerrar">
+          <span class="material-symbols-rounded" aria-hidden="true">close</span>
+        </button>
+      </div>
+      
+      <!-- Error Messages (if any) -->
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          <div class="md3-login-sheet__errors" role="alert">
+            {% for category, message in messages %}
+              <p class="error-message error-message--{{ category }}">{{ message }}</p>
+            {% endfor %}
+          </div>
+        {% endif %}
+      {% endwith %}
+      
+      <!-- Username Field -->
+      <div class="md3-text-field">
+        <input 
+          type="text" 
+          class="md3-text-field__input" 
+          name="username" 
+          id="login-username"
+          placeholder=" "
+          autocomplete="username" 
+          required
+          autofocus
+          aria-label="Nombre de usuario"
+        >
+        <label class="md3-text-field__label" for="login-username">Cuenta</label>
+      </div>
+      
+      <!-- Password Field -->
+      <div class="md3-text-field">
+        <input 
+          type="password" 
+          class="md3-text-field__input" 
+          name="password" 
+          id="login-password"
+          placeholder=" "
+          autocomplete="current-password" 
+          required
+          aria-label="Contraseña"
+        >
+        <label class="md3-text-field__label" for="login-password">Contraseña</label>
+      </div>
+      
+      <!-- Hidden next URL for intended redirect -->
+      <input type="hidden" name="next" value="{{ next|urlencode }}">
+      
+      <!-- Full-Width Submit Button -->
+      <button type="submit" class="md3-login-sheet__button">
+        <span class="material-symbols-rounded">login</span>
+        <span>Entrar</span>
+      </button>
+    </form>
+  </div>
+</div>
+
+<script>
+// Auto-close sheet on successful login (HX-Redirect triggers page reload)
+document.body.addEventListener('htmx:beforeSwap', function(evt) {
+  if (evt.detail.xhr.status === 204 && evt.detail.xhr.getResponseHeader('HX-Redirect')) {
+    const sheet = document.getElementById('login-sheet');
+    if (sheet) sheet.remove();
+  }
+});
+</script>

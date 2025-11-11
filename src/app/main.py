@@ -19,5 +19,7 @@ app = create_app(_resolve_env())
 
 
 if __name__ == "__main__":
-    debug_mode = _resolve_env() == "development"
-    app.run(host="0.0.0.0", port=8000, debug=debug_mode)
+    # Check FLASK_DEBUG env var explicitly to override
+    # If not set, default to False to avoid auto-reload issues
+    explicit_debug = os.getenv("FLASK_DEBUG", "0").lower() in ("1", "true", "yes")
+    app.run(host="0.0.0.0", port=8000, debug=explicit_debug, use_reloader=False)

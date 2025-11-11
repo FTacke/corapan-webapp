@@ -2,8 +2,8 @@
 title: "Documentation Contributing Guidelines"
 status: active
 owner: documentation
-updated: "2025-11-07"
-tags: [contributing, guidelines, conventions, workflow]
+updated: "2025-11-10"
+tags: [contributing, guidelines, conventions, workflow, documentation]
 links:
   - decisions/ADR-0001-docs-reorganization.md
   - CHANGELOG.md
@@ -662,6 +662,98 @@ EOF
 
 ---
 
+## Fallstudie: BlackLab-Integration (2025-11-10)
+
+Praktisches Beispiel für den DISCOVER → PLAN → APPLY-Workflow bei komplexer Systemintegration.
+
+### Kontext
+
+Implementierung einer **3-stufigen Pipeline** zur Volltext-Indexierung des CO.RA.PAN-Corpus mit BlackLab Server:
+1. **Stage 1 (Export):** JSON v2 → TSV + docmeta.jsonl
+2. **Stage 2 (Index):** TSV → Lucene-Index (atomar)
+3. **Stage 3 (Proxy):** Flask `/bls/**` → BlackLab Server
+
+### DISCOVER (Dateien sammeln)
+
+**Neue Dateien:**
+- Exporter-Skript: `src/scripts/blacklab_index_creation.py`
+- Build-Skript: `scripts/build_blacklab_index.sh`
+- Proxy-Komponente: `src/app/routes/bls_proxy.py`
+- Config: `config/blacklab/corapan-tsv.blf.yaml`
+- 6 Dokumentations-Dateien (Konzept, How-To, Referenz, Troubleshooting)
+
+**Zu ändern:**
+- `src/app/routes/__init__.py` (Blueprint registrieren)
+- `docs/index.md` (BlackLab-Links hinzufügen)
+
+### PLAN
+
+| Datei (neu) | Typ | Grund |
+|------------|-----|-------|
+| `src/scripts/blacklab_index_creation.py` | create | Exporter (JSON→TSV, 650 Zeilen) |
+| `scripts/build_blacklab_index.sh` | create | Index-Builder + atomare Switch |
+| `src/app/routes/bls_proxy.py` | create | HTTP-Proxy Blueprint |
+| `config/blacklab/corapan-tsv.blf.yaml` | create | Index-Schema (TSV-only) |
+| `docs/concepts/blacklab-indexing.md` | create | Architektur-Konzept |
+| `docs/how-to/build-blacklab-index.md` | create | Schritt-für-Schritt |
+| `docs/reference/blacklab-api-proxy.md` | create | CQL-Syntax + Endpoints |
+| `docs/reference/blf-yaml-schema.md` | create | Config-Referenz |
+| `docs/troubleshooting/blacklab-issues.md` | create | 9 Problem-Lösungen |
+| `README_dev.md` | create | Dev-Setup-Guide |
+| `src/app/routes/__init__.py` | modify | Blueprint-Import |
+| `docs/index.md` | modify | 5 BlackLab-Links hinzufügen |
+
+### LINT (Validierung)
+
+✅ Alle neuen Markdown-Dateien:
+- Front-Matter: `title`, `status`, `owner`, `updated`, `tags` vorhanden
+- Kategorie: `docs/{concepts|how-to|reference|troubleshooting}/`
+- Dateinamen: kebab-case, ASCII-only
+- Größe: <1200 Wörter pro Datei
+- Links: Relativ (`../../../`), nicht absolut
+
+✅ Code-Dateien:
+- Python: Syntax validiert, keine Imports fehlen
+- Shell: Bash-Syntax (`set -euo pipefail`), Error-Handling
+
+### APPLY (Umsetzung)
+
+**Stage 1: Export (2025-11-10 14:37)**
+```bash
+python -m src.scripts.blacklab_index_creation \
+  --in media/transcripts \
+  --out data/blacklab_index/tsv \
+  --docmeta data/blacklab_index/docmeta.jsonl \
+  --format tsv \
+  --workers 4
+```
+**Resultat:** 146 JSON-Dateien → 146 TSV-Dateien, 1,487,120 Tokens
+
+**Stage 2: Index-Build (pending)**
+```bash
+bash scripts/build_blacklab_index.sh tsv 4
+# Erstellt: data/blacklab_index/ (Lucene-Index)
+```
+*Hängt ab von: Java + BlackLab Server Installation*
+
+**Stage 3: Proxy-Start (pending)**
+```bash
+bash scripts/run_bls.sh 8081 2g 512m
+curl http://localhost:8000/bls/  # Proxy-Test
+```
+
+### Wichtige Entscheidungen
+
+| Problem | Lösung | Grund |
+|---------|--------|-------|
+| WPL vs TSV? | **TSV-only** | Einfacher, kein XML-Escaping |
+| Absolute Pfade? | **Relativ (data/)** | Cross-Plattform (Windows/Linux) |
+| Idempotenz? | **Content-Hash** | Verhindert Re-Exporte |
+| Index-Switch? | **Atomar (.new → current)** | Zero-Downtime, Fallback möglich |
+| Flask + BLS? | **HTTP-Proxy** | Keine direkten Abhängigkeiten |
+
+---
+
 ## Aufgabe (Template für Anfragen)
 
 **Template:**
@@ -692,4 +784,5 @@ Starte mit PLAN (DRY RUN). Nach Freigabe: APPLY und REPORT.
 - [ADR-0001: Docs Reorganization](decisions/ADR-0001-docs-reorganization.md) - Rationale für diese Guidelines
 - [Documentation Index](index.md) - Master-Navigation
 - [CHANGELOG](CHANGELOG.md) - Dokumentations-Änderungen
+- [Advanced Search UI Finalization](how-to/advanced-search-ui-finalization.md) - Frontend Implementation Example (2025-11-11)
 - [Divio Documentation System](https://documentation.divio.com/) - Externe Referenz

@@ -10,7 +10,7 @@
   <!-- Sheet Container -->
   <div class="md3-login-sheet__container">
     <!-- Form -->
-    <form class="md3-login-sheet__form" method="post" action="{{ url_for('auth.login') }}">
+    <form class="md3-login-sheet__form" method="post" action="{{ url_for('auth.login_post') }}" hx-boost="true">
       <!-- Title with Close Button -->
       <div class="md3-login-sheet__header">
         <h2 class="md3-login-sheet__title">Iniciar sesión</h2>

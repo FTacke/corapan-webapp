@@ -1,17 +1,21 @@
 ﻿{% extends 'base.html' %}
+{% set page_name = 'atlas' %}
 {% block page_title %}Atlas · CO.RA.PAN{% endblock %}
 
 {% block content %}
 <article class="md3-atlas-page">
-  <!-- Hero Header (Container Hero - Tonal) -->
-  <section class="md3-hero md3-hero--container" role="main" aria-label="Atlas panhispánico">
+  <!-- Hero Header (Container Hero - Tonal with Icon) -->
+  <section class="md3-hero md3-hero--container md3-hero--with-icon" role="main" aria-label="Atlas panhispánico">
     <div class="md3-hero__container">
-      <span class="md3-hero__eyebrow">Atlas</span>
-      <h1 class="md3-hero__title">Atlas panhispánico</h1>
-      <p class="md3-hero__intro">
-        Explora la red de emisoras y muestras del corpus. Selecciona una capital para ver las grabaciones
-        correspondientes o recorre todas las ciudades para comparar duraciones y recuentos de palabras.
-      </p>
+      <span class="material-symbols-rounded md3-hero__icon" aria-hidden="true">globe_location_pin</span>
+      <div class="md3-hero__content">
+        <span class="md3-hero__eyebrow">Atlas</span>
+        <h1 class="md3-hero__title">Atlas panhispánico</h1>
+        <p class="md3-hero__intro">
+          Explora la red de emisoras y muestras del corpus. Selecciona una capital para ver las grabaciones
+          correspondientes o recorre todas las ciudades para comparar duraciones y recuentos de palabras.
+        </p>
+      </div>
     </div>
   </section>
 

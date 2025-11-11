@@ -8,6 +8,7 @@ from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 
 jwt = JWTManager()
+
 limiter = Limiter(
     key_func=get_remote_address,
     default_limits=["1000 per day", "200 per hour"],
@@ -28,6 +29,10 @@ def register_extensions(app: Flask) -> None:
     jwt.init_app(app)
     limiter.init_app(app)
     cache.init_app(app)
+    
+    # Disable rate limiting in debug mode for easier testing
+    if app.debug:
+        limiter.enabled = False
     
     # Register JWT error handlers
     register_jwt_handlers()
@@ -51,10 +56,22 @@ def register_jwt_handlers() -> None:
     def expired_token_callback(jwt_header, jwt_payload):
         """Handle expired JWT tokens.
         
+        CRITICAL FIX (2025-11-11): Public routes should NEVER reach this handler.
+        Early-return in load_user_dimensions() prevents JWT processing on public routes.
+        
+        This handler only triggers for PROTECTED routes with expired tokens.
+        
         Returns machine-readable codes for client-side refresh logic:
         - access_expired: Access token expired, try refresh
         - refresh_expired: Refresh token expired, user must login again
         """
+        # Safety check: Public routes should never reach here (handled by early-return)
+        PUBLIC_PREFIXES = ('/corpus', '/search/advanced', '/bls/', '/atlas/', '/static/', 
+                           '/media/transcripts', '/media/temp', '/media/full')
+        if request.path.startswith(PUBLIC_PREFIXES):
+            # Fallback: return 200 for public routes (should not happen)
+            return jsonify({'authenticated': False}), 200
+        
         # Determine token type for appropriate error code
         token_type = jwt_payload.get("type", "access")
         error_code = "access_expired" if token_type == "access" else "refresh_expired"
@@ -93,8 +110,17 @@ def register_jwt_handlers() -> None:
     def invalid_token_callback(error_string):
         """Handle invalid JWT tokens (malformed, wrong signature, etc.).
         
+        CRITICAL FIX (2025-11-11): Public routes should NEVER reach this handler.
+        
         Returns machine-readable code for client-side handling.
         """
+        # Safety check: Public routes should never reach here (handled by early-return)
+        PUBLIC_PREFIXES = ('/corpus', '/search/advanced', '/bls/', '/atlas/', '/static/', 
+                           '/media/transcripts', '/media/temp', '/media/full')
+        if request.path.startswith(PUBLIC_PREFIXES):
+            # Fallback: return 200 for public routes (should not happen)
+            return jsonify({'authenticated': False}), 200
+        
         # API endpoints (including /auth/): Return JSON error with code
         if (request.path.startswith('/api/') or 
             request.path.startswith('/atlas/') or
@@ -132,20 +158,21 @@ def register_jwt_handlers() -> None:
         Note: This is ONLY triggered by @jwt_required() (mandatory auth),
         NOT by @jwt_required(optional=True).
         
+        CRITICAL FIX (2025-11-11): Public routes should NEVER have @jwt_required().
+        
         Returns machine-readable code for client-side handling.
         """
+        # Safety check: Public routes should never reach here
+        PUBLIC_PREFIXES = ('/corpus', '/search/advanced', '/bls/', '/atlas/', '/static/', 
+                           '/media/transcripts', '/media/temp', '/media/full')
+        if request.path.startswith(PUBLIC_PREFIXES):
+            # Fallback: return 200 for public routes (should not happen)
+            return jsonify({'authenticated': False}), 200
+        
         # API endpoints (including /auth/): Return JSON error with code
         if (request.path.startswith('/api/') or 
             request.path.startswith('/atlas/') or
             request.path.startswith('/auth/')):
-            return jsonify({
-                'error': 'unauthorized',
-                'code': 'unauthorized',
-                'message': error_string
-            }), 401
-        
-        # AJAX/fetch requests: Return JSON error with code
-        if request.accept_mimetypes.best == 'application/json':
             return jsonify({
                 'error': 'unauthorized',
                 'code': 'unauthorized',

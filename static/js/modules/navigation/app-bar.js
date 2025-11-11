@@ -1,9 +1,72 @@
 // ============================================
-// Top App Bar Controller
+// Top App Bar Controller - User Menu Handler
 // ============================================
 
 /**
- * Top App Bar Manager
+ * Initialize User Menu Toggle
+ * 
+ * Handles opening/closing of avatar dropdown menu.
+ * Uses delegated event listeners to work on every page load.
+ * Binds on DOMContentLoaded to ensure DOM is ready.
+ */
+function initUserMenu() {
+  // Delegate: Find elements whenever they exist (after any page reload)
+  const btn = document.querySelector('[data-user-menu-toggle]');
+  const menu = document.querySelector('[data-user-menu]');
+  
+  if (!btn || !menu) {
+    console.log('[TopAppBar] User menu not found on this page');
+    return;
+  }
+
+  // Open/Close on button click
+  btn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const isOpen = menu.hasAttribute('data-open');
+    
+    if (isOpen) {
+      closeUserMenu(btn, menu);
+    } else {
+      openUserMenu(btn, menu);
+    }
+  });
+
+  // Close on outside click
+  document.addEventListener('click', (e) => {
+    if (!btn.contains(e.target) && !menu.contains(e.target)) {
+      closeUserMenu(btn, menu);
+    }
+  });
+
+  // Close on Escape
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && menu.hasAttribute('data-open')) {
+      closeUserMenu(btn, menu);
+      btn.focus();
+    }
+  });
+
+  console.log('[TopAppBar] User menu initialized');
+}
+
+function openUserMenu(btn, menu) {
+  menu.setAttribute('data-open', '1');
+  btn.setAttribute('aria-expanded', 'true');
+  
+  // Focus first menu item
+  const firstItem = menu.querySelector('[role="menuitem"]');
+  if (firstItem) {
+    setTimeout(() => firstItem.focus(), 50);
+  }
+}
+
+function closeUserMenu(btn, menu) {
+  menu.removeAttribute('data-open');
+  btn.setAttribute('aria-expanded', 'false');
+}
+
+/**
+ * Top App Bar Manager (Legacy - kept for compatibility)
  * - Transparent, Elevation 0
  * - Burger links (nur Compact/Medium)
  * - Login/Avatar rechts
@@ -161,3 +224,6 @@ export class TopAppBar {
 export function initTopAppBar() {
   return new TopAppBar();
 }
+
+// Export delegated user menu initializer
+export { initUserMenu };

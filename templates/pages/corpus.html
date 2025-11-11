@@ -30,14 +30,17 @@
 
 {% block content %}
 <article class="md3-corpus-page">
-  <!-- Hero Header (Container Hero - Tonal) -->
-  <section class="md3-hero md3-hero--container" role="main" aria-label="Búsqueda en el corpus">
+  <!-- Hero Header (Container Hero - Tonal with Icon) -->
+  <section class="md3-hero md3-hero--container md3-hero--with-icon" role="main" aria-label="Búsqueda en el corpus">
     <div class="md3-hero__container">
-      <span class="md3-hero__eyebrow">Corpus</span>
-      <h1 class="md3-hero__title">Buscar en el corpus</h1>
-      <p class="md3-hero__intro">
-        Busca palabras o secuencias de letras o palabras, filtra por país, hablante y registro.
-      </p>
+      <span class="material-symbols-rounded md3-hero__icon" aria-hidden="true">search_insights</span>
+      <div class="md3-hero__content">
+        <span class="md3-hero__eyebrow">Corpus</span>
+        <h1 class="md3-hero__title">Buscar en el corpus</h1>
+        <p class="md3-hero__intro">
+          Busca palabras o secuencias de letras o palabras, filtra por país, hablante y registro.
+        </p>
+      </div>
     </div>
   </section>
 
@@ -46,7 +49,7 @@
     <!-- Tab Navigation -->
     <nav class="md3-tabs">
       <button type="button" class="md3-tab {% if active_tab == 'tab-simple' or not active_tab %}md3-tab--active{% endif %}" data-tab="simple">Búsqueda simple</button>
-      <button type="button" class="md3-tab" data-tab="advanced" disabled>Búsqueda avanzada</button>
+      <a href="{{ url_for('advanced_search.index') }}" class="md3-tab" role="button">Búsqueda avanzada</a>
       <button type="button" class="md3-tab {% if active_tab == 'tab-token' %}md3-tab--active{% endif %}" data-tab="token">Token</button>
     </nav>
     

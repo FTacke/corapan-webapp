@@ -29,10 +29,16 @@ def create_app(env_name: str | None = None) -> Flask:
         static_folder=str(static_dir),
     )
     load_config(app, env_name)
+    
+    # Add build ID for cache busting and deployment verification
+    import time
+    app.config["APP_BUILD_ID"] = time.strftime("%Y%m%d%H%M%S")
+    
     hydrate()
     register_extensions(app)
     register_blueprints(app)
     register_context_processors(app)
+    register_auth_context(app)
     register_security_headers(app)
     register_error_handlers(app)
     setup_logging(app)
@@ -93,6 +99,63 @@ def register_context_processors(app: Flask) -> None:
         }
 
 
+def register_auth_context(app: Flask) -> None:
+    """Register before_request hook and context processor for authentication state.
+    
+    This enables server-side rendering of Login/Logout in Navbar/Drawer.
+    Every request checks JWT cookies and exposes:
+    - g.user: username (string) or None
+    - g.role: Role enum or None
+    - is_authenticated: bool (True if valid JWT present)
+    - current_user: username string or None
+    """
+    from flask import g
+    from flask_jwt_extended import verify_jwt_in_request, get_jwt_identity, get_jwt
+    from .auth import Role
+    
+    @app.before_request
+    def _set_auth_context():
+        """Load auth state into g context for all requests."""
+        # Public routes - skip JWT processing entirely
+        PUBLIC_PREFIXES = (
+            '/static/', '/favicon', '/robots.txt', '/health',
+        )
+        
+        path = request.path
+        
+        # Skip JWT processing for static assets
+        if any(path.startswith(p) for p in PUBLIC_PREFIXES):
+            g.user = None
+            g.role = None
+            return
+        
+        # Try to verify JWT (optional - don't fail if no token)
+        try:
+            verify_jwt_in_request(optional=True, locations=["cookies"])
+            identity = get_jwt_identity()
+            token = get_jwt() or {}
+            
+            g.user = identity
+            role_value = token.get("role")
+            try:
+                g.role = Role(role_value) if role_value else None
+            except (ValueError, KeyError):
+                g.role = None
+        except Exception:  # noqa: BLE001
+            # Token error - treat as no authentication
+            g.user = None
+            g.role = None
+    
+    @app.context_processor
+    def _inject_auth_context():
+        """Expose auth state to templates."""
+        user = getattr(g, 'user', None)
+        return {
+            "is_authenticated": bool(user),
+            "current_user": user,
+        }
+
+
 def register_security_headers(app: Flask) -> None:
     """Add security headers to all responses."""
     @app.after_request
@@ -128,6 +191,12 @@ def register_security_headers(app: Flask) -> None:
             "frame-ancestors 'none';"
         )
         response.headers['Content-Security-Policy'] = csp
+        
+        # Auth-specific caching rules for htmx compatibility
+        if request.path.startswith("/auth/"):
+            # Prevent caching of auth endpoints (login sheet, session check, etc.)
+            response.headers["Cache-Control"] = "no-store, private"
+            response.headers["Vary"] = "Cookie"
         
         return response
 

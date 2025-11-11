@@ -74,28 +74,25 @@
               </a>
               <div class="md3-user-menu__divider" role="separator"></div>
             {% endif %}
-            <form method="POST" 
-                  action="{{ url_for('auth.logout') }}" 
-                  class="md3-user-menu__form"
-                  data-turbo="false">
-              <input type="hidden" name="referrer" value="{{ request.url }}">
-              <button type="submit" 
-                      class="md3-user-menu__item" 
-                      role="menuitem">
-                <span class="material-symbols-rounded md3-user-menu__icon">logout</span>
-                <span class="md3-user-menu__label">Cerrar sesión</span>
-              </button>
-            </form>
+            {# Logout via GET (no CSRF, idempotent) #}
+            <a href="{{ url_for('auth.logout_any') }}" 
+               class="md3-user-menu__item" 
+               role="menuitem">
+              <span class="material-symbols-rounded md3-user-menu__icon">logout</span>
+              <span class="md3-user-menu__label">Cerrar sesión</span>
+            </a>
           </div>
         </div>
       {% else %}
-        {# Unauthenticated: Login Button (Icon: account_circle) #}
-        <button type="button" 
-                class="md3-icon-button" 
-                aria-label="Iniciar sesión"
-                data-action="open-login">
+        {# Unauthenticated: Login Button (Icon: account_circle) - HTMX Sheet #}
+        <a hx-get="{{ url_for('auth.login_sheet', next=request.full_path|default(request.path)) }}"
+           hx-target="body"
+           hx-swap="beforeend"
+           class="md3-icon-button" 
+           aria-label="Iniciar sesión"
+           title="Iniciar sesión">
           <span class="material-symbols-rounded">account_circle</span>
-        </button>
+        </a>
       {% endif %}
     </div>
   </div>
@@ -103,3 +100,4 @@
 
 {# Login Sheet removed - now defined globally in status_banner.html #}
 {# This ensures a single, consistent login experience across the app #}
+

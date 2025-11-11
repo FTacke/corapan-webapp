@@ -29,10 +29,11 @@ def _temp_access_allowed() -> bool:
 
 
 @blueprint.get("/full/<path:filename>")
-@jwt_required(optional=True)
 def download_full(filename: str):
     """
     Serve full MP3 files with intelligent country subfolder detection.
+    
+    PUBLIC ROUTE (conditionally): No decorator needed.
     - For authenticated users: Always allowed
     - For unauthenticated: Only if public access is enabled
     """
@@ -65,8 +66,8 @@ def download_split(filename: str):
 
 
 @blueprint.get("/temp/<path:filename>")
-@jwt_required(optional=True)
 def download_temp(filename: str):
+    """PUBLIC ROUTE (conditionally): Access controlled by ALLOW_PUBLIC_TEMP_AUDIO config."""
     if not _temp_access_allowed():
         abort(401)
     path = _secure_path(media_store.MP3_TEMP_DIR, filename)
@@ -74,8 +75,11 @@ def download_temp(filename: str):
 
 
 @blueprint.post("/snippet")
-@jwt_required(optional=True)
 def create_snippet():
+    """PUBLIC ROUTE (conditionally): Access controlled by ALLOW_PUBLIC_TEMP_AUDIO config.
+    
+    CSRF: Required for POST (via JWT-CSRF if user logged in).
+    """
     if not _temp_access_allowed():
         abort(401)
     payload = request.get_json(silent=True) or {}
@@ -100,10 +104,11 @@ def create_snippet():
 
 
 @blueprint.get("/transcripts/<path:filename>")
-@jwt_required(optional=True)
 def fetch_transcript(filename: str):
     """
     Serve transcript JSON files.
+    
+    PUBLIC ROUTE (conditionally): No decorator needed.
     - For authenticated users: Always allowed
     - For unauthenticated: Only if public access is enabled
     """
@@ -159,8 +164,11 @@ def toggle_temp_access():
 
 
 @blueprint.get("/play_audio/<path:filename>")
-@jwt_required(optional=True)
 def play_audio(filename: str):
+    """PUBLIC ROUTE (conditionally): Access controlled by ALLOW_PUBLIC_TEMP_AUDIO config.
+    
+    Legacy endpoint for audio playback with snippet generation.
+    """
     start = request.args.get("start", type=float)
     end = request.args.get("end", type=float)
     token_id = request.args.get("token_id")

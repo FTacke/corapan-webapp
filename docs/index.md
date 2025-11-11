@@ -14,6 +14,8 @@ Konzeptuelle Übersichten und Architektur-Entscheidungen.
 
 - **[Architecture Overview](concepts/architecture.md)** - Backend/Frontend Architektur, Blueprints
 - **[Authentication Flow](concepts/authentication-flow.md)** - JWT, Cookie-Auth, Login-Szenarien
+- **[BlackLab Indexing Architecture](concepts/blacklab-indexing.md)** - Corpus Search Engine, Export→Index→Proxy Pipeline
+- **[Advanced Search Architecture](concepts/advanced-search-architecture.md)** - Security hardening, streaming design, performance (NEW)
 
 ---
 
@@ -22,6 +24,8 @@ Konzeptuelle Übersichten und Architektur-Entscheidungen.
 Schritt-für-Schritt-Anleitungen für häufige Aufgaben.
 
 - **[Token Input Usage](how-to/token-input-usage.md)** - Multi-Paste-Feature für Corpus-Tokens
+- **[Build BlackLab Index](how-to/build-blacklab-index.md)** - Index-Build, CLI-Optionen, Validierung
+- **[Execute BlackLab Stage 2-3](how-to/execute-blacklab-stage-2-3.md)** - Index-Build ausführen, Tests durchführen (NEW)
 
 ---
 
@@ -30,8 +34,13 @@ Schritt-für-Schritt-Anleitungen für häufige Aufgaben.
 API-Dokumentation, Datenbank-Schema, technische Spezifikationen.
 
 - **[API Auth Endpoints](reference/api-auth-endpoints.md)** - JWT-Endpoints, Decorators, Error-Handler
+- **[Auth Access Matrix](reference/auth-access-matrix.md)** - Route Inventory, CSRF, Public/Protected Routes (NEW 2025-11-11)
 - **[Database Maintenance](reference/database-maintenance.md)** - Schema, Indizes, Wartung, Performance
 - **[Media Folder Structure](reference/media-folder-structure.md)** - MP3/Transcript-Organisation
+- **[BlackLab API Proxy](reference/blacklab-api-proxy.md)** - /bls/** Proxy, CQL-Queries, Endpoints
+- **[BLF YAML Schema](reference/blf-yaml-schema.md)** - Index-Konfiguration, Annotations, Metadata
+- **[CQL Escaping Rules](reference/cql-escaping-rules.md)** - CQL security, escaping, injection prevention (NEW)
+- **[Advanced Export Streaming](reference/advanced-export-streaming.md)** - Export endpoint spec, streaming, performance (NEW)
 
 ---
 
@@ -39,9 +48,16 @@ API-Dokumentation, Datenbank-Schema, technische Spezifikationen.
 
 Deployment, CI/CD, Server-Konfiguration, Security.
 
+- **[BlackLab Integration Status](operations/blacklab-integration-status.md)** - Current implementation status
+- **[BlackLab Stage 2-3 Report](operations/blacklab-stage-2-3-implementation.md)** - Stage 2-3 complete, index built & tested (NEW)
+- **[BlackLab Minimalplan](operations/blacklab-minimalplan.md)** - Setup-Anleitung: Java → Index → BLS → Proxy
+- **[BlackLab Quick Reference](operations/blacklab-quick-reference.md)** - Quick start commands and troubleshooting
+- **[Development Setup](operations/development-setup.md)** - Local dev environment setup with Make targets
 - **[Deployment Guide](operations/deployment.md)** - Production-Server-Setup, Docker, Updates
 - **[GitLab CI/CD Setup](operations/gitlab-setup.md)** - Pipeline-Konfiguration
 - **[Git Security Checklist](operations/git-security-checklist.md)** - Security Best Practices
+- **[Rate Limiting Strategy](operations/rate-limiting-strategy.md)** - Advanced Search API rate limits (NEW)
+- **[Advanced Search Monitoring](operations/advanced-search-monitoring.md)** - Logging, metrics, observability (NEW)
 
 ---
 
@@ -83,10 +99,20 @@ Häufige Probleme und deren Lösungen.
 - **[Database Issues](troubleshooting/database-issues.md)** - Performance, Indizes, SQLite
 - **[Docker Issues](troubleshooting/docker-issues.md)** - Server, Deployment, Health-Checks
 - **[Frontend Issues](troubleshooting/frontend-issues.md)** - DataTables, Audio, Player
+- **[BlackLab Issues](troubleshooting/blacklab-issues.md)** - Server, Indexing, Proxy, Search Errors
 
 ---
 
-### 📦 Archived - Historische Dokumente
+### � Reports - Implementation Reports
+
+Fix-Reports, Change-Logs, Rollout-Dokumentation.
+
+- **[Auth Public Access Fix (2025-11-11)](reports/2025-11-11-auth-public-access-fix.md)** - Public Corpus Access, JWT Hook, CSRF Protection
+- **[Auth & Logout V3 Final Fix (2025-11-11)](reports/2025-11-11-auth-logout-v3-fix.md)** - GET Logout, Tab Navigation, CSRF Exemption (NEW)
+
+---
+
+### �📦 Archived - Historische Dokumente
 
 Abgeschlossene Analysen, obsolete Dokumentation.
 

@@ -234,6 +234,22 @@
 }
 
 /* ============================================
+   Preload Guard: Keine Transitions beim Page-Load
+   ============================================
+   Verhindert Accordion-Animationen beim initialen Render
+   ============================================ */
+
+/* Initial kein Transition-Jump beim Page-Load */
+body.preload .md3-navigation-drawer__submenu,
+body.preload .md3-navigation-drawer__submenu-inner,
+body.preload .md3-navigation-drawer__chevron,
+html:not([data-anim-ready="1"]) .md3-navigation-drawer__submenu,
+html:not([data-anim-ready="1"]) .md3-navigation-drawer__submenu-inner,
+html:not([data-anim-ready="1"]) .md3-navigation-drawer__chevron {
+  transition: none !important;
+}
+
+/* ============================================
    Turbo Drive: Instant State Changes
    ============================================
    Verhindert Accordion-Animationen bei Route-Changes
