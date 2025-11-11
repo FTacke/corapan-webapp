@@ -56,17 +56,75 @@ The documentation follows "Docs as Code" principles with a clear 8-category taxo
 
 ## Features
 
-- **Corpus Search**: Token-based search with morphological filters
-- **Atlas**: Interactive geolinguistic map with Leaflet
+### Core Search Capabilities
+- **Basic Corpus Search**: Token-based search with morphological filters (form, lemma, POS)
+  - Multi-token query support with wildcards
+  - Country/region filtering with national/regional toggle
+  - Speaker metadata filtering (type, sex, mode, discourse)
+  - Results with context (left/match/right) and audio snippet links
+  
+- **Advanced Search** (BlackLab Integration): 
+  - CQL (Corpus Query Language) support for complex queries
+  - Pattern-based search (exact, lemma-based)
+  - Server-side DataTables with pagination and filtering
+  - CSV/TSV export with streaming (up to 50,000 rows)
+  - Rate limiting and security hardening
+
+### Audio & Visualization
 - **Audio Player**: Segment playback with transcript synchronization
-- **Authentication**: JWT-based auth with role-based access control
-- **Admin Dashboard**: User and content management
+  - Full audio and split segment playback
+  - Interactive transcript with time-synchronized highlighting
+  - Temporary snippet generation for search results
+  
+- **Atlas**: Interactive geolinguistic map with Leaflet
+  - Country/region markers with metadata
+  - File counts and speaker statistics per location
+  - Integrated with corpus data
 
-## Styling
+- **Statistics Dashboard**: Data visualization with ECharts
+  - Speaker distribution by country, sex, type
+  - Word frequency analysis
+  - Interactive charts with filtering
 
-- Tailwind CDN in `templates/base.html` (build setup via `tailwind.config.js`)
-- Custom utility classes: `card`, `badge`, `muted-link`, `font-condensed`
-- Responsive navbar in `templates/partials/_navbar.html`
+### Content Management
+- **Editor Interface** (Editor/Admin roles):
+  - JSON transcript editing with live preview
+  - Version tracking and edit history
+  - File management per country/region
+  
+- **Admin Dashboard** (Admin role):
+  - User management and role assignment
+  - Content moderation capabilities
+
+### Authentication & Security
+- **JWT-based Authentication**: Cookie-based JWT tokens with CSRF protection
+- **Role-Based Access Control**: Three tiers (user, editor, admin)
+- **Public Access Mode**: Configurable public/private audio snippet access
+- **Security Features**: Rate limiting, CQL injection prevention, input validation
+
+## Technology Stack
+
+### Backend
+- **Flask 3.x** with application factory pattern
+- **SQLite** databases for corpus data and statistics
+- **BlackLab Server** for advanced corpus search (Java-based)
+- **FFmpeg** and **libsndfile** for audio processing
+- **JWT** for authentication with cookie-based tokens
+
+### Frontend
+- **Vite** for asset bundling and build process
+- **Material Design 3** principles with custom CSS architecture
+- **DataTables** for interactive result tables
+- **ECharts** for data visualization
+- **Leaflet** for geolinguistic mapping
+- **HTMX** for dynamic UI interactions
+
+### Styling
+- Material Design 3 design system with custom tokens
+- BEM naming convention for CSS classes
+- Design tokens in `static/css/md3/tokens.css`
+- Responsive, mobile-first layouts
+- WCAG 2.1 AA accessibility compliance
 
 ## Development
 
@@ -93,8 +151,26 @@ python -m src.app.main
 - `JWT_SECRET` - JWT signing key
 - `ALLOW_PUBLIC_TEMP_AUDIO` - Allow anonymous audio snippet access (default: false)
 
-## Documentation
+## Current Status (November 2025)
 
-- `docs/architecture.md` - Technical architecture
-- `docs/design-system.md` - Design tokens and components
-- `docs/roadmap.md` - Development roadmap
+### ✅ Production-Ready Features
+- **Basic Corpus Search**: Fully operational with token-based queries
+- **Advanced Search**: BlackLab integration complete (Stage 1-3), UI deployed
+- **Authentication System**: JWT-based auth with GET/POST logout support
+- **Audio Player**: Full playback with transcript synchronization
+- **Atlas**: Interactive map with country/region data
+- **Statistics**: ECharts-based visualization dashboard
+- **Editor**: JSON transcript editing interface for authorized roles
+- **Security**: CSRF protection, rate limiting, CQL injection prevention
+
+### 🔧 Configuration
+- **Database**: SQLite (`data/transcription.db`, `data/stats_all.db`)
+- **Media Files**: Organized by country in `media/` directory
+- **BlackLab Index**: 146 documents, 1.49M tokens, 15.89 MB index
+- **Access Control**: Public access configurable via `ALLOW_PUBLIC_TEMP_AUDIO`
+
+### 📊 System Metrics
+- **Corpus Size**: 146 JSON documents across 20+ countries/regions
+- **Total Tokens**: ~1.5 million indexed tokens
+- **Search Performance**: <100ms for basic queries, <1s for complex CQL
+- **Export Capability**: Up to 50,000 rows with streaming

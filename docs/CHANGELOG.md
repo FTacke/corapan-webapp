@@ -4,6 +4,74 @@ Dokumentiert alle wesentlichen Änderungen an der CO.RA.PAN-Dokumentation.
 
 ---
 
+## [2.8.0] - 2025-11-11: Massive Documentation Cleanup - Obsolete Files Removed
+
+### Removed
+- **107 obsolete documentation files** from archived/ and troubleshooting/
+  - 47 October migration docs (2025-10-26__migration__*)
+  - 13 October roadmap docs (2025-10-26__roadmaps__*)
+  - 9 October admin/design docs (2025-10-26__admin/design__*)
+  - 6 November feature implementation docs
+  - 8 meta-documentation files about doc reorganization
+  - 5 old planning documents (PLAN.md, QUALITY_REPORT.md, etc.)
+  - 7 recent completion reports (info preserved in CHANGELOG)
+  - 8 old November reports (superseded by active docs)
+  - 2 duplicate corpus search docs
+  - 2 duplicate stats implementation docs
+  - 1 old test verification file
+
+### Kept (2 valuable historical references)
+- `archived/2025-11-01__responsive-padding-drawer-analysis.md` - Detailed CSS refactoring analysis
+- `archived/2025-11-06__stats-feature-implementation.md` - Stats feature implementation notes
+
+### Result
+- **Before**: 99 archived files
+- **After**: 2 archived files  
+- **Removed**: 97 obsolete files (98% reduction)
+- All critical information preserved in CHANGELOG.md and active documentation
+
+### Rationale
+All removed documentation was either:
+- Superseded by active documentation in concepts/, reference/, operations/
+- Temporary implementation/planning notes for completed work
+- Meta-documentation about completed doc reorganization
+- Duplicate content already covered elsewhere
+
+---
+
+## [2.7.0] - 2025-11-11: Documentation Cleanup & Status Update
+
+### Changed
+- **README.md**: Umfassende Aktualisierung mit aktuellem Stand der Webapp
+  - Erweiterte Features-Sektion mit Untersektionen (Core Search, Audio & Visualization, Content Management, Authentication & Security)
+  - Neue Technology Stack Sektion mit Backend/Frontend Details
+  - Neue "Current Status" Sektion mit Production-Ready Features und System-Metriken
+  - Aktualisierte Styling-Sektion für MD3 Design System
+
+- **docs/index.md**: Status-Update und Reorganisation
+  - Quick Start Sektion für neue Nutzer hinzugefügt
+  - Status-Hinweis aktualisiert ("produktionsreif mit allen Hauptfeatures")
+  - Reports-Sektion kategorisiert (Authentication & Security, Advanced Search)
+  - Migration-Sektion erweitert mit Links zu abgeschlossenen Migrationen
+  - Versionsnummer auf 2.1 erhöht, Last Updated auf 2025-11-11
+
+### Removed (Moved to archived/)
+- **design/**: 6 veraltete Dateien mit Datums-Präfixen in archived/ verschoben
+  - `2025-10-26__design__archived-doc__*.md` (5 Dateien) - Duplikate von aktiven Dokumenten
+  - `2025-11-01__responsive-padding-drawer-analysis.md` - Ersetzt durch neuere Version ohne Datum
+  
+- **reference/**: 2 Implementierungs-Summaries in archived/ verschoben
+  - `2025-11-06__stats-feature-implementation.md` - Implementierungs-Report
+  - `IMPLEMENTATION_SUMMARY_STATS.md` - Duplikat zu archived/ verschoben
+  - `README_stats.md` bleibt als aktive API-Referenz
+
+### Documentation Status
+- **Aktive Dokumentation**: Aufgeräumt, keine Datums-Präfixe außer in reports/ und archived/
+- **Archiv**: Jetzt 97 Dokumente (zuvor 89) mit historischen Implementierungs-Reports
+- **Reports**: 12 aktuelle Reports aus November 2025 mit Auth- und Advanced-Search-Fixes
+
+---
+
 ## [2.6.0] - 2025-11-11: Auth & Logout Overhaul (V3 Final Fix)
 
 ### Fixed

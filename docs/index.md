@@ -2,7 +2,14 @@
 
 Willkommen zur CO.RA.PAN Dokumentation. Diese Übersicht hilft dir, die richtige Dokumentation für deine Aufgabe zu finden.
 
-> **📌 Neu (2025-11-08):** 97 Dokumentationen aus `LOKAL/records/` nach `docs/` migriert. Siehe [archived/](archived/) für historische Dokumentationen.
+> **🎯 Status (November 2025):** Webapp ist produktionsreif mit allen Hauptfeatures vollständig implementiert. Dokumentation wurde reorganisiert und aktualisiert.
+
+## 🚀 Quick Start
+
+**Neu hier?** Starte mit diesen Dokumenten:
+1. **[Architecture Overview](concepts/architecture.md)** - Verstehe die Systemarchitektur
+2. **[Development Setup](operations/development-setup.md)** - Entwicklungsumgebung einrichten
+3. **[Authentication Flow](concepts/authentication-flow.md)** - Wie Auth funktioniert
 
 ---
 
@@ -12,10 +19,11 @@ Willkommen zur CO.RA.PAN Dokumentation. Diese Übersicht hilft dir, die richtige
 
 Konzeptuelle Übersichten und Architektur-Entscheidungen.
 
+- **[Webapp Status Overview](concepts/webapp-status.md)** - Vollständiger Status aller Features, Metriken, Production-Readiness ⭐ NEU
 - **[Architecture Overview](concepts/architecture.md)** - Backend/Frontend Architektur, Blueprints
 - **[Authentication Flow](concepts/authentication-flow.md)** - JWT, Cookie-Auth, Login-Szenarien
 - **[BlackLab Indexing Architecture](concepts/blacklab-indexing.md)** - Corpus Search Engine, Export→Index→Proxy Pipeline
-- **[Advanced Search Architecture](concepts/advanced-search-architecture.md)** - Security hardening, streaming design, performance (NEW)
+- **[Advanced Search Architecture](concepts/advanced-search-architecture.md)** - Security hardening, streaming design, performance
 
 ---
 
@@ -85,9 +93,13 @@ Dokumentierte Architektur-Entscheidungen (ADRs).
 
 ### 🔄 Migration - Migrations & Upgrades
 
-Historische Migrations-Guides (meist in `LOKAL/records/archived_docs/migration/`).
+Abgeschlossene Migrations-Dokumentation für historische Referenz.
 
-- **Keine aktiven Migration-Guides** - Alle Migrationen abgeschlossen
+- **[JSON Annotation V2 Implementation](migration/json-annotation-v2-implementation.md)** - Token-ID-System Migration
+- **[Speaker Code Standardization](migration/speaker-code-standardization.md)** - Sprechercode-Normalisierung
+- **[EEUU to USA Standardization](migration/eeuu-to-usa-standardization.md)** - Ländercode-Vereinheitlichung
+- **[Turbo to HTMX Migration](migration/turbo-to-htmx-migration-report.md)** - Frontend Framework Wechsel
+- **Status**: Alle Hauptmigrationen abgeschlossen ✅
 
 ---
 
@@ -103,12 +115,21 @@ Häufige Probleme und deren Lösungen.
 
 ---
 
-### � Reports - Implementation Reports
+### 📊 Reports - Recent Implementation Reports
 
-Fix-Reports, Change-Logs, Rollout-Dokumentation.
+Aktuelle Fix-Reports und Rollout-Dokumentation (November 2025).
 
-- **[Auth Public Access Fix (2025-11-11)](reports/2025-11-11-auth-public-access-fix.md)** - Public Corpus Access, JWT Hook, CSRF Protection
-- **[Auth & Logout V3 Final Fix (2025-11-11)](reports/2025-11-11-auth-logout-v3-fix.md)** - GET Logout, Tab Navigation, CSRF Exemption (NEW)
+**Authentication & Security:**
+- **[Auth & Logout V3 Final Fix (2025-11-11)](reports/2025-11-11-auth-logout-v3-fix.md)** - GET Logout, CSRF Exemption
+- **[Auth Public Access Fix (2025-11-11)](reports/2025-11-11-auth-public-access-fix.md)** - Public Corpus Access
+- **[Auth Navigation Hardening (2025-11-11)](reports/auth-navigation-hardening-2025-11-11.md)** - Navigation Security
+
+**Advanced Search:**
+- **[Advanced Search Finalization (2025-11-11)](reports/2025-11-11-advanced-search-finalization.md)** - UI Completion
+- **[Advanced Search Fixes (2025-11-11)](reports/2025-11-11-advanced-search-fixes.md)** - Bug Fixes
+- **[CSS Audit Summary (2025-11-11)](reports/2025-11-11-audit-summary.md)** - CSS Compliance
+
+> **Hinweis:** Ältere Reports befinden sich in [archived/](archived/)
 
 ---
 
@@ -202,5 +223,5 @@ Nicht absolute Pfade oder Root-Pfade (`/docs/...`).
 
 ---
 
-**Last Updated:** 2025-11-07  
-**Documentation Version:** 2.0 (Post-Reorganization)
+**Last Updated:** 2025-11-11  
+**Documentation Version:** 2.1 (Current Status Update)
