@@ -4,6 +4,39 @@ Dokumentiert alle wesentlichen Änderungen an der CO.RA.PAN-Dokumentation.
 
 ---
 
+## [2.7.0] - 2025-11-11: Documentation Cleanup & Status Update
+
+### Changed
+- **README.md**: Umfassende Aktualisierung mit aktuellem Stand der Webapp
+  - Erweiterte Features-Sektion mit Untersektionen (Core Search, Audio & Visualization, Content Management, Authentication & Security)
+  - Neue Technology Stack Sektion mit Backend/Frontend Details
+  - Neue "Current Status" Sektion mit Production-Ready Features und System-Metriken
+  - Aktualisierte Styling-Sektion für MD3 Design System
+
+- **docs/index.md**: Status-Update und Reorganisation
+  - Quick Start Sektion für neue Nutzer hinzugefügt
+  - Status-Hinweis aktualisiert ("produktionsreif mit allen Hauptfeatures")
+  - Reports-Sektion kategorisiert (Authentication & Security, Advanced Search)
+  - Migration-Sektion erweitert mit Links zu abgeschlossenen Migrationen
+  - Versionsnummer auf 2.1 erhöht, Last Updated auf 2025-11-11
+
+### Removed (Moved to archived/)
+- **design/**: 6 veraltete Dateien mit Datums-Präfixen in archived/ verschoben
+  - `2025-10-26__design__archived-doc__*.md` (5 Dateien) - Duplikate von aktiven Dokumenten
+  - `2025-11-01__responsive-padding-drawer-analysis.md` - Ersetzt durch neuere Version ohne Datum
+  
+- **reference/**: 2 Implementierungs-Summaries in archived/ verschoben
+  - `2025-11-06__stats-feature-implementation.md` - Implementierungs-Report
+  - `IMPLEMENTATION_SUMMARY_STATS.md` - Duplikat zu archived/ verschoben
+  - `README_stats.md` bleibt als aktive API-Referenz
+
+### Documentation Status
+- **Aktive Dokumentation**: Aufgeräumt, keine Datums-Präfixe außer in reports/ und archived/
+- **Archiv**: Jetzt 97 Dokumente (zuvor 89) mit historischen Implementierungs-Reports
+- **Reports**: 12 aktuelle Reports aus November 2025 mit Auth- und Advanced-Search-Fixes
+
+---
+
 ## [2.6.0] - 2025-11-11: Auth & Logout Overhaul (V3 Final Fix)
 
 ### Fixed
