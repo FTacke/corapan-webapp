@@ -1,0 +1,111 @@
+/* Index-Seite — MD3 Component Styles (Mobile-First) */
+
+/* Logo-Sektion */
+.md3-index-logo {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: var(--space-4);
+  background: var(--md-sys-color-background);
+}
+
+.md3-index-logo__img {
+  width: 100%;
+  max-width: 600px; /* Reduziert auf 600px statt 700px */
+  height: auto;
+  display: block;
+}
+
+/* Ab 600px: Logo kann auf bis zu 700px wachsen */
+@media (min-width: 600px) {
+  .md3-index-logo__img {
+    max-width: 700px;
+  }
+}
+
+/* Cards-Container (Mobile-First Grid) */
+.md3-index-cards {
+  display: grid;
+  grid-template-columns: 1fr; /* Mobile: 1 Spalte */
+  gap: var(--space-4);
+  padding: var(--space-4);
+  max-width: 1200px;
+  margin: 0 auto;
+  width: 100%;
+  box-sizing: border-box;
+  min-width: 300px; /* Nicht unter 300px schrumpfen */
+}
+
+/* Tablet: 2 Spalten ab 600px (MD3 breakpoint 600px–839px)
+   Drawer ist noch MODAL (nicht permanent), volle Breite verfügbar */
+@media (min-width: 600px) and (max-width: 839px) {
+  .md3-index-cards {
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-4);
+    padding: var(--space-4);
+  }
+}
+
+/* Desktop: 2 Spalten ab 840px bis ~1100px (Drawer wird PERMANENT 280px)
+   Available space: 840px - 280px = 560px (tight für 3 Spalten)
+   2 Spalten bei 840px–1099px */
+@media (min-width: 840px) and (max-width: 1099px) {
+  .md3-index-cards {
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-6);
+    padding: var(--space-6);
+  }
+}
+
+/* Large Desktop: 3 Spalten ab 1100px (max-width MD3 = 1440px)
+   Available space: 1100px - 280px = 820px (gut für 3 Spalten) */
+@media (min-width: 1100px) {
+  .md3-index-cards {
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--space-6);
+    padding: var(--space-6);
+  }
+}
+
+/* Index Card (erweitert die Standard-Card) */
+.md3-index-card {
+  display: flex;
+  flex-direction: column;
+  min-width: 0; /* Erlaubt Shrinking */
+}
+
+.md3-index-card .card-body {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+/* Icon styling */
+.md3-index-card__icon {
+  font-size: 2rem;
+  color: var(--md-sys-color-primary);
+  margin-bottom: var(--space-3);
+  display: block;
+}
+
+/* Title styling */
+.md3-index-card__title {
+  margin: var(--space-2) 0;
+  color: var(--md-sys-color-primary);
+  font-size: var(--md-sys-typescale-title-large);
+}
+
+.md3-index-card__text {
+  margin: 0 0 var(--space-4) 0;
+  color: var(--md-sys-color-on-surface-variant);
+  flex-grow: 1; /* Nimmt verfügbaren Platz ein */
+}
+
+/* Button container - push to bottom right */
+.md3-index-card__button-container {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: auto;
+}
+
+

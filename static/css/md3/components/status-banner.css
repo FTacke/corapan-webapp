@@ -1,0 +1,312 @@
+/* ============================================
+   Login Sheet - MD3 Component
+   ============================================
+   Purpose: Authentication modal with floating label inputs
+   Dependencies: tokens.css, typography.css, buttons.css
+   ============================================ */
+
+/* ============================================
+   Login Sheet: Modal Bottom Sheet (Mobile) / Dialog (Desktop)
+   ============================================ */
+
+.md3-login-sheet {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 3000;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: var(--space-4);
+}
+
+.md3-login-sheet[hidden] {
+  display: none;
+}
+
+/* Login Sheet Backdrop (scrim) */
+.md3-login-backdrop {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  cursor: pointer;
+  animation: fade-in 200ms ease;
+}
+
+/* Login Sheet Container (Bottom Sheet on mobile) */
+.md3-login-sheet__container {
+  position: relative;
+  z-index: 1;
+  background: var(--md-sys-color-surface-container);
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  padding: 0;
+  max-width: 100%;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  animation: slide-up 300ms cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: var(--elev-2);
+  display: flex;
+  flex-direction: column;
+}
+
+/* Sheet Header (now contains title + close button inline) */
+.md3-login-sheet__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  margin-bottom: var(--space-6);
+}
+
+/* Form Title (inside header) */
+.md3-login-sheet__title {
+  margin: 0;
+  font-size: var(--md-sys-typescale-title-large);
+  font-weight: 500;
+  color: var(--md-sys-color-primary);
+  line-height: 1.2;
+  flex-grow: 1;
+}
+
+/* Close Button in Header */
+.md3-login-sheet__close-button {
+  min-width: auto;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+  flex-shrink: 0;
+  background: transparent;
+  color: var(--md-sys-color-on-surface-variant);
+  border: none;
+  cursor: pointer;
+  border-radius: 50%;
+  transition: all 200ms ease;
+}
+
+.md3-login-sheet__close-button:hover {
+  background: color-mix(in srgb, var(--md-sys-color-on-surface) 8%, transparent);
+  color: var(--md-sys-color-on-surface);
+}
+
+.md3-login-sheet__close-button:focus-visible {
+  outline: 2px solid var(--md-sys-color-primary);
+  outline-offset: 2px;
+}
+
+.md3-login-sheet__close-button:active {
+  background: color-mix(in srgb, var(--md-sys-color-on-surface) 12%, transparent);
+}
+
+/* Form Container */
+.md3-login-sheet__form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  padding: var(--space-6);
+  flex-grow: 1;
+}
+
+/* ============================================
+   Text Field: MD3 Outlined Style (with floating label)
+   ============================================ */
+
+.md3-text-field {
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+.md3-text-field__input {
+  padding: var(--space-4);
+  border: 1px solid var(--md-sys-color-outline-variant);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--md-sys-color-on-surface);
+  font-family: var(--md-ref-typeface, inherit);
+  font-size: 1rem;
+  line-height: 1.5;
+  transition: border-color 200ms ease;
+  min-height: 56px;
+}
+
+.md3-text-field__input::placeholder {
+  color: transparent;
+}
+
+.md3-text-field__input:hover {
+  border-color: var(--md-sys-color-on-surface);
+}
+
+.md3-text-field__input:focus {
+  outline: none;
+  border-color: var(--md-sys-color-primary);
+  border-width: 2px;
+  padding: calc(var(--space-4) - 1px);
+}
+
+.md3-text-field__input:focus + .md3-text-field__label {
+  color: var(--md-sys-color-primary);
+}
+
+/* Autofill styling - prevent browser from changing background color */
+.md3-text-field__input:-webkit-autofill {
+  -webkit-box-shadow: 0 0 0 1000px var(--md-sys-color-surface-container) inset !important;
+  -webkit-text-fill-color: var(--md-sys-color-on-surface) !important;
+  caret-color: var(--md-sys-color-primary) !important;
+  transition: background-color 5000s ease-in-out 0s;
+}
+
+.md3-text-field__input:-webkit-autofill:hover {
+  -webkit-box-shadow: 0 0 0 1000px var(--md-sys-color-surface-container) inset !important;
+}
+
+.md3-text-field__input:-webkit-autofill:focus {
+  -webkit-box-shadow: 0 0 0 1000px var(--md-sys-color-surface-container) inset !important;
+  border-color: var(--md-sys-color-primary) !important;
+}
+
+/* Floating Label */
+.md3-text-field__label {
+  position: absolute;
+  top: 50%;
+  left: var(--space-4);
+  transform: translateY(-50%);
+  background: var(--md-sys-color-surface-container);
+  padding: 0 var(--space-1);
+  color: var(--md-sys-color-on-surface-variant);
+  font-size: 1rem;
+  line-height: 1;
+  pointer-events: none;
+  transition: all 200ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Floating label state (focused or has value) */
+.md3-text-field__input:focus + .md3-text-field__label,
+.md3-text-field__input:not(:placeholder-shown) + .md3-text-field__label {
+  top: 0;
+  left: var(--space-3);
+  transform: translateY(-50%);
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+/* ============================================
+   Sheet Actions
+   ============================================ */
+
+.md3-login-sheet__button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+  width: 100%;
+  height: auto;
+  padding: var(--space-4) var(--space-6);
+  background: var(--md-sys-color-primary);
+  color: var(--md-sys-color-on-primary);
+  border: none;
+  border-radius: var(--radius-sm);
+  font-size: var(--md-sys-typescale-label-large);
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 200ms ease;
+  margin-top: var(--space-2);
+}
+
+.md3-login-sheet__button:hover {
+  background: color-mix(in srgb, var(--md-sys-color-primary) 92%, black);
+  box-shadow: var(--elev-2);
+}
+
+.md3-login-sheet__button:focus-visible {
+  outline: 2px solid var(--md-sys-color-primary);
+  outline-offset: 2px;
+}
+
+.md3-login-sheet__button:active {
+  background: color-mix(in srgb, var(--md-sys-color-primary) 84%, black);
+}
+
+.md3-login-sheet__button .material-symbols-rounded {
+  font-size: 1.25rem;
+}
+
+.md3-login-sheet__actions {
+  display: flex;
+  gap: var(--space-3);
+  justify-content: flex-end;
+  padding-top: var(--space-4);
+}
+
+/* ============================================
+   Animations
+   ============================================ */
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slide-up {
+  from {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes scale-up {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* ============================================
+   Responsive: Tablet & Desktop (600px+)
+   ============================================ */
+
+@media (min-width: 600px) {
+  .md3-login-sheet {
+    align-items: center;
+    padding: var(--space-6);
+  }
+  
+  .md3-login-sheet__container {
+    border-radius: var(--radius-lg);
+    max-width: 420px;
+    max-height: 80vh;
+    animation: scale-up 200ms cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  .md3-login-sheet__form {
+    padding: var(--space-8) var(--space-6) var(--space-6);
+  }
+}
+
+/* ============================================
+   Mobile Responsive
+   ============================================ */
+
+

@@ -1,0 +1,70 @@
+﻿{% extends 'base.html' %}
+{% block page_title %}CO.RA.PAN{% endblock %}
+
+{% block extra_head %}
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/md3/tokens.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/md3/typography.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/md3/components/cards.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/md3/components/buttons.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/md3/components/index.css') }}">
+{% endblock %}
+
+{% block content %}
+<article class="md3-index-page">
+  <section class="md3-index-logo">
+    <img id="indexLogo"
+         src="{{ url_for('static', filename='img/corapan_logo_lightmode.png') }}" 
+         alt="CO.RA.PAN" 
+         class="md3-index-logo__img" 
+         loading="lazy"
+         data-logo-light="{{ url_for('static', filename='img/corapan_logo_lightmode.png') }}"
+         data-logo-dark="{{ url_for('static', filename='img/corapan_logo_darkmode.png') }}">
+  </section>
+  
+  <section class="md3-index-cards">
+
+    <article class="md3-index-card card card-tonal">
+      <div class="card-body">
+        <span class="material-symbols-rounded md3-index-card__icon">assignment_globe</span>
+        <h2 class="md3-title-large md3-index-card__title">Proyecto</h2>
+        <p class="md3-body-large md3-index-card__text">Conoce los objetivos, la metodolog&iacute;a y el equipo detr&aacute;s del corpus.</p>
+        <div class="md3-index-card__button-container">
+          <a href="{{ url_for('public.proyecto_page') }}" class="btn md3-button-filled">
+            <span class="material-symbols-rounded" style="font-size: 0.9rem;">arrow_forward</span>
+            Saber más
+          </a>
+        </div>
+      </div>
+    </article>
+
+    <article class="md3-index-card card card-tonal">
+      <div class="card-body">
+        <span class="material-symbols-rounded md3-index-card__icon">search_insights</span>
+        <h2 class="md3-title-large md3-index-card__title">Corpus</h2>
+        <p class="md3-body-large md3-index-card__text">Explora filtros y fragmentos de audio del corpus panhisp&aacute;nico.</p>
+        <div class="md3-index-card__button-container">
+          <a href="{{ url_for('corpus.corpus_home') }}" class="btn md3-button-filled">
+            <span class="material-symbols-rounded" style="font-size: 0.9rem;">arrow_forward</span>
+            Abrir corpus
+          </a>
+        </div>
+      </div>
+    </article>
+    
+    <article class="md3-index-card card card-tonal">
+      <div class="card-body">
+        <span class="material-symbols-rounded md3-index-card__icon">globe_location_pin</span>
+        <h2 class="md3-title-large md3-index-card__title">Atlas</h2>
+        <p class="md3-body-large md3-index-card__text">Consulta la cobertura geogr&aacute;fica y datos comparables por pa&iacute;s.</p>
+        <div class="md3-index-card__button-container">
+          <a href="{{ url_for('public.atlas_page') }}" class="btn md3-button-filled">
+            <span class="material-symbols-rounded" style="font-size: 0.9rem;">arrow_forward</span>
+            Explorar atlas
+          </a>
+        </div>
+      </div>
+    </article>
+    
+  </section>
+</article>
+{% endblock %}

@@ -1,0 +1,578 @@
+/* ============================================
+   MD3 Top App Bar - Adaptive Opazität
+   ============================================
+   Compact/Medium (<840px): OPAK mit Elevation - Burger links, Login/Account rechts
+   Expanded (≥840px): TRANSPARENT - KEIN Burger (permanenter Drawer), Login/Account rechts
+   KEIN Titel/Branding in der Bar
+   
+   POSITION: fixed – scrollt oben mit
+   Z-INDEX: 1001 – sitzt über Content, aber unter Dropdown/Modal
+   STRUKTUR: Aus CSS Grid entfernt, padding-top auf main kompensiert
+   ============================================ */
+
+/* ============================================
+   Base Styles - OPAK für Compact/Medium (Default)
+   ============================================ */
+
+.md3-top-app-bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  width: 100%;
+  z-index: 1200; /* MUSS über Leaflet Controls (1000) liegen! */
+  
+  /* Default: Opak für Compact/Medium (<840px) */
+  background: var(--md-sys-color-surface);
+  color: var(--md-sys-color-on-surface);
+  box-shadow: var(--elev-2); /* Elevation 2 im Ruhezustand */
+  
+  transition: box-shadow 300ms cubic-bezier(0.4, 0, 0.2, 1),
+              background 300ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ============================================
+   Expanded (≥840px): Transparent mit permanentem Drawer
+   ============================================ */
+
+@media (min-width: 840px) {
+  .md3-top-app-bar {
+    background: transparent;
+    box-shadow: none; /* Keine Elevation auf großen Screens */
+  }
+}
+
+/* ============================================
+   Scroll Elevation (nur für Compact/Medium)
+   ============================================ */
+
+body[data-scrolled="true"] .md3-top-app-bar {
+  box-shadow: var(--elev-3); /* Erhöhte Elevation beim Scrollen */
+}
+
+/* Auf Expanded: Keine Scroll-Elevation */
+@media (min-width: 840px) {
+  body[data-scrolled="true"] .md3-top-app-bar {
+    box-shadow: none;
+  }
+}
+
+.md3-top-app-bar__row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  height: 64px; /* MD3 Small Top App Bar */
+  max-width: 100%;
+  
+  /* Safe Area Insets für Notches, Dynamic Island, etc. */
+  padding-left: max(var(--space-4), env(safe-area-inset-left));
+  padding-right: max(var(--space-4), env(safe-area-inset-right));
+}
+
+/* ============================================
+   Navigation Icon (Burger)
+   ============================================ */
+
+.md3-top-app-bar__navigation-icon {
+  flex-shrink: 0;
+  margin-left: calc(-1 * var(--space-2)); /* Optical alignment */
+}
+
+/* ❌ Hide burger on Expanded (≥840px) - permanenter Drawer sichtbar */
+@media (min-width: 840px) {
+  .md3-top-app-bar__navigation-icon {
+    display: none !important;
+  }
+}
+
+/* ============================================
+   Title (leer, kein Branding)
+   ============================================ */
+
+.md3-top-app-bar__title {
+  flex: 1;
+  margin: 0;
+  position: relative;
+  min-width: 0; /* Ermöglicht Text-Overflow */
+  overflow: hidden;
+  height: 24px; /* Verhindert Layout-Shifts */
+}
+
+/* ============================================
+   Adaptive Titles: Site → Page beim Scrollen
+   ============================================ */
+
+/* Base Styles: Beide Titel übereinander */
+.md3-top-app-bar__title-site,
+.md3-top-app-bar__title-page {
+  position: absolute;
+  left: 0;
+  top: 50%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: calc(100vw - 200px); /* Platz für Burger + Actions */
+  will-change: opacity, transform;
+}
+
+/* Site Title: Sichtbar im Idle-State */
+.md3-top-app-bar__title-site {
+  font-size: 1.125rem; /* 18px */
+  font-weight: 700;
+  letter-spacing: 0.2px;
+  line-height: 1.2;
+  color: var(--md-sys-color-primary); /* Primary Color */
+  opacity: 1;
+  transform: translateY(-50%) translateX(0);
+}
+
+/* Page Title: Versteckt im Idle-State */
+.md3-top-app-bar__title-page {
+  font-size: 1rem; /* 16px */
+  font-weight: 500;
+  letter-spacing: 0.1px;
+  line-height: 1.2;
+  color: var(--md-sys-color-primary); /* Primary Color */
+  opacity: 0;
+  transform: translateY(-50%) translateX(24px); /* Startet rechts-versetzt */
+}
+
+/* ============================================
+   Scroll Transition: Site raus, Page rein
+   ============================================ */
+
+body[data-scrolled="true"] .md3-top-app-bar__title-site {
+  opacity: 0;
+  transform: translateY(-50%) translateX(-24px); /* Gleitet nach links raus */
+}
+
+body[data-scrolled="true"] .md3-top-app-bar__title-page {
+  opacity: 1;
+  transform: translateY(-50%) translateX(0); /* Gleitet von rechts rein */
+}
+
+/* ============================================
+   Motion Preference: Respektiert prefers-reduced-motion
+   ============================================ */
+
+/* Standard: Smooth Transitions */
+@media (prefers-reduced-motion: no-preference) {
+  .md3-top-app-bar__title-site,
+  .md3-top-app-bar__title-page {
+    transition: opacity 180ms cubic-bezier(0.4, 0, 0.2, 1),
+                transform 180ms cubic-bezier(0.4, 0, 0.2, 1);
+  }
+}
+
+/* Reduced Motion: Keine Animationen */
+@media (prefers-reduced-motion: reduce) {
+  .md3-top-app-bar__title-site,
+  .md3-top-app-bar__title-page {
+    transition: none !important;
+  }
+}
+
+/* ============================================
+   Responsive: Max-Width Anpassung
+   ============================================ */
+
+/* Auf sehr kleinen Screens: Mehr Platz für Titel */
+@media (max-width: 400px) {
+  .md3-top-app-bar__title-site,
+  .md3-top-app-bar__title-page {
+    max-width: calc(100vw - 140px);
+  }
+}
+
+/* Auf Expanded: Titel ausblenden (Logo ist im Drawer) */
+@media (min-width: 840px) {
+  .md3-top-app-bar__title {
+    opacity: 0;
+    visibility: hidden;
+  }
+}
+
+/* ============================================
+   Actions
+   ============================================ */
+
+.md3-top-app-bar__actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-shrink: 0;
+  margin-right: calc(-1 * var(--space-2)); /* Optical alignment */
+}
+
+/* ============================================
+   Icon Button
+   ============================================ */
+
+.md3-icon-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: var(--md-sys-color-on-surface);
+  border-radius: 50%;
+  cursor: pointer;
+  transition: background-color 200ms ease;
+  flex-shrink: 0;
+}
+
+.md3-icon-button:hover {
+  background: color-mix(in srgb, var(--md-sys-color-on-surface) 8%, transparent);
+}
+
+.md3-icon-button:focus-visible {
+  outline: 2px solid var(--md-sys-color-primary);
+  outline-offset: 2px;
+}
+
+.md3-icon-button .material-symbols-rounded {
+  font-size: 24px;
+  width: 24px;
+  height: 24px;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ============================================
+   Small App Bar (Default)
+   ============================================ */
+
+.md3-top-app-bar--small {
+  height: 64px;
+}
+
+.md3-top-app-bar--small .md3-top-app-bar__headline-row {
+  display: none;
+}
+
+/* ============================================
+   Medium App Bar
+   ============================================ */
+
+.md3-top-app-bar--medium {
+  height: 112px;
+}
+
+.md3-top-app-bar--medium .md3-top-app-bar__title {
+  font-size: 1rem; /* Smaller in top row when medium */
+}
+
+.md3-top-app-bar__headline-row {
+  display: flex;
+  align-items: flex-end;
+  padding: 0 var(--space-4) var(--space-4) var(--space-4);
+  height: 48px;
+}
+
+.md3-top-app-bar__headline {
+  font-size: 1.75rem;
+  font-weight: 500;
+  line-height: 1.2;
+  margin: 0;
+  color: var(--md-sys-color-on-surface);
+}
+
+/* ============================================
+   Large App Bar
+   ============================================ */
+
+.md3-top-app-bar--large {
+  height: 152px;
+}
+
+.md3-top-app-bar--large .md3-top-app-bar__title {
+  font-size: 1rem; /* Smaller in top row when large */
+}
+
+.md3-top-app-bar--large .md3-top-app-bar__headline-row {
+  height: 88px;
+}
+
+.md3-top-app-bar--large .md3-top-app-bar__headline {
+  font-size: 2rem;
+}
+
+/* ============================================
+   Scroll Collapse (Medium/Large → Small)
+   ============================================ */
+
+.md3-top-app-bar--collapsed {
+  height: 64px !important;
+}
+
+.md3-top-app-bar--collapsed .md3-top-app-bar__title {
+  font-size: 1.375rem !important;
+}
+
+.md3-top-app-bar--collapsed .md3-top-app-bar__headline-row {
+  display: none !important;
+  opacity: 0;
+}
+
+/* ============================================
+   User Menu (Avatar mit Logout-Menü)
+   ============================================
+   Avatar ist Teil der sticky Top App Bar
+   – scrollt MIT der Bar mit (kein position: fixed)
+   – Dropdown hat höhere z-index um über Content zu liegen
+   ============================================ */
+
+.md3-user-menu {
+  position: relative; /* In Flexbox-Flow bleiben */
+  flex-shrink: 0; /* Nicht komprimieren */
+  z-index: 1; /* Dropdown braucht höheren z-index */
+}
+
+/* .md3-user-menu__toggle erbt md3-icon-button Styles */
+
+.md3-user-menu__avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;  /* Gleiche Größe wie Icon-Buttons */
+  height: 40px;
+  border-radius: 50%;
+  background: var(--md-sys-color-primary);
+  color: var(--md-sys-color-on-primary);
+  font-weight: 600;
+  font-size: 1rem;
+  line-height: 1;
+}
+
+/* User Menu Dropdown (Dashboard + Logout) */
+.md3-user-menu__dropdown {
+  position: fixed;
+  top: 64px;
+  right: 12px;
+  width: 256px;
+  background: var(--md-sys-color-surface-container-high);
+  border-radius: var(--radius-md);
+  padding: var(--space-2);
+  z-index: 2000; /* Über allem */
+  box-shadow: var(--elev-2);
+  /* Animation */
+  opacity: 0;
+  transform: translateY(-8px);
+  transition: opacity 200ms cubic-bezier(0.4, 0, 0.2, 1),
+              transform 200ms cubic-bezier(0.4, 0, 0.2, 1);
+  pointer-events: none;
+  display: none;
+}
+
+/* Hidden state (legacy: [hidden] attribute) */
+.md3-user-menu__dropdown[hidden] {
+  display: none;
+}
+
+/* Open state: data-open attribute */
+.md3-user-menu__dropdown[data-open] {
+  display: block;
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+/* Show state (legacy: :not([hidden]) selector) */
+.md3-user-menu__dropdown:not([hidden]) {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+.md3-user-menu__form {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+}
+
+.md3-user-menu__item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  width: 100%;
+  padding: var(--space-3) var(--space-4);
+  border: none;
+  background: transparent;
+  color: var(--md-sys-color-on-surface);
+  text-align: left;
+  text-decoration: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: background-color 200ms ease;
+  font-family: var(--font-body);
+  font-size: 0.875rem;
+  font-weight: 500;
+  line-height: 1.5;
+  min-height: 48px; /* Touch target */
+  white-space: nowrap;
+}
+
+.md3-user-menu__item:hover {
+  background: color-mix(in srgb, var(--md-sys-color-on-surface) 8%, transparent);
+}
+
+.md3-user-menu__item:focus-visible {
+  outline: 2px solid var(--md-sys-color-primary);
+  outline-offset: -2px;
+}
+
+.md3-user-menu__icon {
+  font-size: 20px;
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+}
+
+.md3-user-menu__label {
+  flex: 1;
+}
+
+.md3-user-menu__divider {
+  height: 1px;
+  margin: var(--space-2) 0;
+  background: var(--md-sys-color-outline-variant);
+}
+
+/* ============================================
+   Login Sheet Styles
+   ============================================
+   MOVED TO: static/css/md3/components/status-banner.css
+   (Loaded BEFORE this file to ensure proper cascade)
+   ============================================ */
+
+/* ============================================
+   Responsive Adjustments
+   ============================================ */
+
+/* Compact (Mobile) */
+@media (max-width: 599px) {
+  .md3-top-app-bar__title {
+    font-size: 1.125rem;
+  }
+  
+  .md3-top-app-bar--medium .md3-top-app-bar__headline {
+    font-size: 1.5rem;
+  }
+  
+  .md3-top-app-bar--large .md3-top-app-bar__headline {
+    font-size: 1.75rem;
+  }
+}
+
+/* ============================================
+   Dark Theme Support
+   ============================================ */
+
+/* Dark Mode: Automatische Farbanpassung via CSS-Tokens */
+/* Tokens (surface, on-surface) passen sich automatisch an data-theme an */
+/* Keine zusätzlichen Regeln nötig - Media Queries oben gelten für beide Themes */
+
+/* Expanded: Bleibt transparent auch im Dark Mode */
+@media (min-width: 840px) {
+  :root[data-theme="dark"] .md3-top-app-bar,
+  .theme-dark .md3-top-app-bar {
+    background: transparent;
+    box-shadow: none;
+  }
+}
+
+/* ============================================
+   Theme Toggle Button
+   ============================================ */
+
+.md3-theme-toggle {
+  /* Filled Tonal Variant für bessere Sichtbarkeit über transparentem Hintergrund */
+  background: var(--md-sys-color-surface-container-high);
+  border: 1px solid var(--md-sys-color-outline-variant);
+  color: var(--md-sys-color-on-surface);
+  transition: all 200ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.md3-theme-toggle:hover {
+  background: var(--md-sys-color-surface-container-highest);
+  border-color: var(--md-sys-color-outline);
+}
+
+.md3-theme-toggle:active {
+  background: var(--md-sys-color-surface-container);
+}
+
+.md3-theme-toggle[aria-pressed="true"] {
+  background: var(--md-sys-color-primary-container);
+  color: var(--md-sys-color-on-primary-container);
+  border-color: var(--md-sys-color-primary);
+}
+
+.md3-theme-toggle[aria-pressed="true"]:hover {
+  background: color-mix(in srgb, var(--md-sys-color-primary-container) 90%, var(--md-sys-color-primary) 10%);
+}
+
+/* Icon-Sizing für Theme Toggle */
+.md3-theme-toggle .material-symbols-rounded {
+  font-size: 22px;
+  line-height: 1;
+  font-variation-settings: 
+    'FILL' 0,
+    'wght' 400,
+    'GRAD' 0,
+    'opsz' 22;
+}
+
+.md3-theme-toggle[aria-pressed="true"] .material-symbols-rounded {
+  font-variation-settings: 
+    'FILL' 1,
+    'wght' 500,
+    'GRAD' 0,
+    'opsz' 22;
+}
+
+/* ============================================
+   Pointer-Events-Optimierung (nur auf Expanded)
+   ============================================ */
+
+/* Bar ist nur auf Expanded transparent mit pointer-events: none */
+@media (min-width: 840px) {
+  .md3-top-app-bar {
+    pointer-events: none;
+  }
+
+  /* Nur interaktive Elemente fangen Pointer-Events ab */
+  .md3-top-app-bar__navigation-icon,
+  .md3-top-app-bar__actions,
+  .md3-icon-button,
+  .md3-user-menu,
+  .md3-user-menu__dropdown {
+    pointer-events: auto;
+  }
+}
+
+/* Auf Compact/Medium: Gesamte Bar interaktiv */
+@media (max-width: 839px) {
+  .md3-top-app-bar {
+    pointer-events: auto;
+  }
+}
+
+/* ============================================
+   Custom Properties for JS
+   ============================================ */
+
+:root {
+  --app-bar-height-small: 64px;
+  --app-bar-height-medium: 112px;
+  --app-bar-height-large: 152px;
+  --app-bar-transition-duration: 300ms;
+  --app-bar-transition-easing: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+

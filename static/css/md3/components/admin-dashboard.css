@@ -1,0 +1,297 @@
+/* ============================================
+   MD3 ADMIN DASHBOARD LAYOUT
+   ============================================
+   Mobile-First Layout für Admin Dashboard
+   Hero: Nutzt standard hero.css (md3-hero--container)
+   ============================================ */
+
+/* ============================================
+   Admin Page Container
+   ============================================ */
+
+.md3-admin-page {
+  min-height: 100vh;
+}
+
+/* ============================================
+   Main Content
+   ============================================ */
+
+.md3-admin-content {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: var(--space-10) var(--space-6);
+  display: grid;
+  gap: var(--space-8);
+}
+
+/* Admin Cards */
+.md3-admin-card {
+  background: var(--md-sys-color-surface-container-low);
+  border: 1px solid var(--md-sys-color-outline-variant);
+  border-radius: var(--radius-lg);
+  padding: var(--space-6);
+  box-shadow: var(--elev-1);
+  transition: box-shadow 200ms ease;
+}
+
+.md3-admin-card:hover {
+  box-shadow: var(--elev-2);
+}
+
+.md3-admin-card__header {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-4);
+  margin-bottom: var(--space-5);
+}
+
+.md3-admin-card__icon {
+  font-size: 1.5rem;
+  color: var(--md-sys-color-primary);
+  flex-shrink: 0;
+}
+
+.md3-admin-card__title {
+  margin: 0;
+  color: var(--md-sys-color-on-surface);
+  font-weight: 500;
+  line-height: 1.3;
+}
+
+.md3-admin-card__subtitle {
+  margin: var(--space-2) 0 0 0;
+  color: var(--md-sys-color-on-surface-variant);
+  line-height: 1.5;
+}
+
+.md3-admin-card__body {
+  color: var(--md-sys-color-on-surface-variant);
+}
+
+/* ============================================
+   MD3 Switch Component
+   ============================================ */
+
+.md3-switch {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-3) var(--space-4);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  border-radius: var(--radius-full);
+  transition: background-color 200ms ease;
+}
+
+.md3-switch:hover {
+  background: var(--md-sys-color-surface-container);
+}
+
+.md3-switch:disabled {
+  opacity: 0.38;
+  cursor: not-allowed;
+}
+
+.md3-switch__track {
+  position: relative;
+  display: inline-block;
+  width: 52px;
+  height: 32px;
+  background: var(--md-sys-color-surface-container-highest);
+  border: 2px solid var(--md-sys-color-outline);
+  border-radius: var(--radius-full);
+  transition: all 200ms ease;
+}
+
+.md3-switch__thumb {
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  width: 16px;
+  height: 16px;
+  background: var(--md-sys-color-outline);
+  border-radius: 50%;
+  transition: all 200ms ease;
+}
+
+.md3-switch[aria-checked="true"] .md3-switch__track {
+  background: var(--md-sys-color-primary);
+  border-color: var(--md-sys-color-primary);
+}
+
+.md3-switch[aria-checked="true"] .md3-switch__thumb {
+  background: var(--md-sys-color-on-primary);
+  left: 26px;
+  width: 20px;
+  height: 20px;
+  top: 2px;
+}
+
+.md3-switch__label {
+  color: var(--md-sys-color-on-surface);
+  font-weight: 500;
+}
+
+/* ============================================
+   Metrics Grid (Mobile-First)
+   ============================================ */
+
+.md3-admin-metrics {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-6);
+}
+
+@media (min-width: 600px) {
+  .md3-admin-metrics {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 900px) {
+  .md3-admin-metrics {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+/* ============================================
+   Metric Cards
+   ============================================ */
+
+.md3-metric-card {
+  background: var(--md-sys-color-surface-container-low);
+  border: 1px solid var(--md-sys-color-outline-variant);
+  border-radius: var(--radius-lg);
+  padding: var(--space-6);
+  display: flex;
+  gap: var(--space-5);
+  align-items: flex-start;
+  box-shadow: var(--elev-1);
+  transition: all 200ms ease;
+}
+
+.md3-metric-card:hover {
+  box-shadow: var(--elev-2);
+  transform: translateY(-2px);
+}
+
+.md3-metric-card__icon {
+  font-size: 2.5rem;
+  color: var(--md-sys-color-primary);
+  flex-shrink: 0;
+}
+
+.md3-metric-card__content {
+  flex: 1;
+  min-width: 0;
+}
+
+.md3-metric-card__label {
+  margin: 0 0 var(--space-2) 0;
+  color: var(--md-sys-color-on-surface-variant);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.md3-metric-card__value {
+  margin: 0 0 var(--space-2) 0;
+  color: var(--md-sys-color-on-surface);
+  font-weight: 400;
+  line-height: 1;
+}
+
+.md3-metric-card__delta {
+  margin: 0;
+  color: var(--md-sys-color-on-surface-variant);
+}
+
+/* ============================================
+   Admin List (Info Card)
+   ============================================ */
+
+.md3-admin-list {
+  margin: 0;
+  padding-left: var(--space-6);
+  list-style: none;
+  display: grid;
+  gap: var(--space-3);
+}
+
+.md3-admin-list li {
+  position: relative;
+  color: var(--md-sys-color-on-surface-variant);
+  line-height: 1.5;
+}
+
+.md3-admin-list li::before {
+  content: "—";
+  position: absolute;
+  left: calc(-1 * var(--space-5));
+  color: var(--md-sys-color-primary);
+}
+
+.md3-admin-list code {
+  padding: 2px 6px;
+  background: var(--md-sys-color-surface-container);
+  border: 1px solid var(--md-sys-color-outline-variant);
+  border-radius: var(--radius-xs);
+  font-size: 0.875em;
+  color: var(--md-sys-color-primary);
+  font-family: 'Courier New', monospace;
+}
+
+/* ============================================
+   Responsive Design
+   ============================================ */
+
+@media (max-width: 899px) {
+  .md3-admin-content {
+    padding: var(--space-8) var(--space-5);
+    gap: var(--space-6);
+  }
+}
+
+@media (max-width: 599px) {
+  .md3-admin-content {
+    padding: var(--space-6) var(--space-4);
+  }
+  
+  .md3-admin-card {
+    padding: var(--space-5);
+  }
+  
+  .md3-metric-card {
+    flex-direction: column;
+    text-align: center;
+  }
+  
+  .md3-metric-card__icon {
+    font-size: 2rem;
+  }
+  
+  .md3-switch {
+    flex-direction: column;
+    text-align: center;
+  }
+}
+
+/* ============================================
+   Error State
+   ============================================ */
+
+.md3-admin-metrics.is-error .md3-metric-card {
+  border-color: var(--md-sys-color-error);
+  background: color-mix(in srgb, var(--md-sys-color-error) 5%, var(--md-sys-color-surface-container-low));
+}
+
+.md3-admin-metrics.is-error .md3-metric-card__icon {
+  color: var(--md-sys-color-error);
+}
+
+.md3-admin-metrics.is-error .md3-metric-card__delta {
+  color: var(--md-sys-color-error);
+}
+
+

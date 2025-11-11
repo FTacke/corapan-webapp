@@ -1,0 +1,248 @@
+{% extends 'base.html' %}
+{% from 'partials/page_navigation.html' import page_navigation %}
+{% block page_title %}Estadísticas · CO.RA.PAN{% endblock %}
+{% block content %}
+<article class="md3-text-page">
+  <section class="md3-hero md3-hero--container md3-hero--with-icon" role="main" aria-label="Estadísticas del corpus">
+    <div class="md3-hero__container">
+      <span class="material-symbols-rounded md3-hero__icon" aria-hidden="true">assignment_globe</span>
+      <div class="md3-hero__content">
+        <span class="md3-hero__eyebrow">Proyecto</span>
+        <h1 class="md3-hero__title">Estadísticas</h1>
+      </div>
+    </div>
+  </section>
+
+  <div class="md3-text-content">
+    <section class="md3-text-section">
+      <p class="md3-body-large">
+        Esta sección presenta datos cuantitativos sobre la composición del corpus CO.RA.PAN, la distribución de hablantes y la estructura de los materiales recopilados. Las estadísticas aquí expuestas reflejan el estado actual del corpus y permiten observar tanto las proporciones generales como las particularidades de cada variedad nacional.
+      </p>
+    </section>
+
+    <section class="md3-text-section">
+      <h2 class="md3-title-large md3-text-heading">Composición del corpus completo</h2>
+      <p class="md3-body-large">
+        El corpus CO.RA.PAN se compone de material oral procedente de emisoras de radio nacionales y regionales de todos los países hispanohablantes. El criterio central de recopilación es la lengua estándar hablada, tal como se manifiesta en el discurso profesional de los medios de comunicación.
+      </p>
+      
+      <p class="md3-body-large">
+        Dentro del corpus, los hablantes profesionales —presentadores, periodistas y locutores— constituyen el núcleo del material analizado, ya que su producción lingüística representa el uso público de referencia. Los hablantes no profesionales —entrevistados, oyentes o invitados ocasionales— forman parte del corpus como contexto comunicativo, pero quedan excluidos del análisis estadístico y de las búsquedas principales, dado que el objetivo del proyecto es describir la norma profesional y mediática del español contemporáneo. Por esta razón, todas las estadísticas y visualizaciones que se presentan a continuación se refieren exclusivamente a los profesionales de la comunicación.
+      </p>
+
+      <p class="md3-body-large">
+        Los siguientes gráficos muestran la distribución general del corpus y la composición de los hablantes profesionales según sexo y modo de producción:
+      </p>
+
+      <div class="md3-stats-grid">
+        <figure class="md3-stats-figure">
+          <div class="md3-stats-image-container">
+            <img src="{{ url_for('static', filename='img/statistics/viz_total_corpus.png') }}" 
+                 alt="Composición total del corpus" 
+                 class="md3-stats-image"
+                 loading="lazy">
+          </div>
+          <figcaption class="md3-body-medium md3-stats-caption">
+            <span class="md3-stats-caption__title">Composición total del corpus</span>
+            Distribución entre hablantes profesionales y no profesionales.
+          </figcaption>
+        </figure>
+
+        <figure class="md3-stats-figure">
+          <div class="md3-stats-image-container">
+            <img src="{{ url_for('static', filename='img/statistics/viz_genero_profesionales.png') }}" 
+                 alt="Distribución por sexo" 
+                 class="md3-stats-image"
+                 loading="lazy">
+          </div>
+          <figcaption class="md3-body-medium md3-stats-caption">
+            <span class="md3-stats-caption__title">Distribución por sexo</span>
+            Proporción de hablantes masculinos y femeninos entre los profesionales.
+          </figcaption>
+        </figure>
+
+        <figure class="md3-stats-figure">
+          <div class="md3-stats-image-container">
+            <img src="{{ url_for('static', filename='img/statistics/viz_modo_genero_profesionales.png') }}" 
+                 alt="Modo de producción por sexo" 
+                 class="md3-stats-image"
+                 loading="lazy">
+          </div>
+          <figcaption class="md3-body-medium md3-stats-caption">
+            <span class="md3-stats-caption__title">Modo de producción por sexo</span>
+            Distinción entre habla leída, libre y presentaciones (pre).
+          </figcaption>
+        </figure>
+      </div>
+
+      <p class="md3-body-large">
+        Como se observa en la visualización central, los hablantes masculinos dominan claramente el corpus, representando aproximadamente dos tercios del material profesional. Esta distribución no es el resultado de una selección sesgada, sino que refleja la realidad de las emisoras de radio en la mayoría de los países hispanohablantes: en la mayor parte de las estaciones nacionales, los presentadores masculinos ocupan con mucha mayor frecuencia los espacios de mayor audiencia y formalidad.
+      </p>
+
+      <p class="md3-body-large">
+        Las grabaciones del proyecto se realizaron sin filtros de sexo, documentando la programación tal como se emitió. Aunque en algunos países las voces femeninas tienen una presencia similar o incluso superior, en la mayoría de los casos la proporción se inclina fuertemente hacia lo masculino. Para alcanzar una proporción equilibrada de 50:50, sería necesario aplicar una selección específica del material, lo cual no reflejaría la realidad del paisaje radiofónico. Dado que el corpus tiene como objetivo documentar el uso real de la lengua estándar en su contexto de emisión, esta asimetría de sexo se mantiene como parte de la representación fiel de los medios actuales.
+      </p>
+    </section>
+
+    <section class="md3-text-section md3-stats-country-section">
+      <h2 class="md3-title-large md3-text-heading">Estadísticas por país</h2>
+      <p class="md3-body-large">
+        Las estadísticas nacionales permiten observar las particularidades de cada variedad en términos de volumen de grabaciones, distribución por sexo y proporción de modos de producción. Cada país presenta características específicas que reflejan tanto las condiciones de grabación como las prácticas comunicativas de las emisoras locales.
+      </p>
+
+      <p class="md3-body-large">
+        Las gráficas muestran la distribución de hablantes profesionales por sexo y el desglose por modo de producción (lectura, habla libre y presentaciones). Estos datos permiten comparar las variedades nacionales y observar en qué medida cada país se ajusta a las tendencias generales del corpus.
+      </p>
+
+      <p class="md3-body-large">
+        <strong>Visualice las estadísticas por país:</strong>
+      </p>
+
+      <div class="md3-stats-country-selector md3-form-field">
+        <label for="countrySelect" class="md3-label-medium md3-stats-country-label">
+          País
+        </label>
+        <select id="countrySelect" class="md3-stats-country-select" name="country" aria-controls="countryStatsDisplay">
+          <option value="" selected>-- Seleccionar país --</option>
+          <option value="ARG">Argentina</option>
+          <option value="ARG-CBA">Argentina (Córdoba)</option>
+          <option value="ARG-CHU">Argentina (Chubut)</option>
+          <option value="ARG-SDE">Argentina (Santiago del Estero)</option>
+          <option value="BOL">Bolivia</option>
+          <option value="CHL">Chile</option>
+          <option value="COL">Colombia</option>
+          <option value="CRI">Costa Rica</option>
+          <option value="CUB">Cuba</option>
+          <option value="DOM">República Dominicana</option>
+          <option value="ECU">Ecuador</option>
+          <option value="ESP">España</option>
+          <option value="ESP-CAN">España (Canarias)</option>
+          <option value="ESP-SEV">España (Sevilla)</option>
+          <option value="GTM">Guatemala</option>
+          <option value="HND">Honduras</option>
+          <option value="MEX">México</option>
+          <option value="NIC">Nicaragua</option>
+          <option value="PAN">Panamá</option>
+          <option value="PER">Perú</option>
+          <option value="PRY">Paraguay</option>
+          <option value="SLV">El Salvador</option>
+          <option value="URY">Uruguay</option>
+          <option value="USA">Estados Unidos</option>
+          <option value="VEN">Venezuela</option>
+        </select>
+      </div>
+
+      <div id="countryStatsDisplay" class="md3-stats-country-display"></div>
+    </section>
+  </div>
+</article>
+
+{{ page_navigation(prev_title="Diseño", prev_url=url_for('public.proyecto_diseno'), next_title="Quiénes somos", next_url=url_for('public.proyecto_quienes_somos')) }}
+
+<!-- Image Zoom Modal -->
+<div id="statsZoomModal" class="md3-stats-zoom-modal">
+  <div class="md3-stats-zoom-modal-content">
+    <button class="md3-stats-zoom-modal-close" aria-label="Cerrar"></button>
+    <img id="statsZoomImage" class="md3-stats-zoom-modal-image" alt="">
+  </div>
+</div>
+
+{% endblock %}
+
+{% block extra_scripts %}
+<script type="module">
+  // Image zoom modal functionality
+  const modal = document.getElementById('statsZoomModal');
+  const modalImage = document.getElementById('statsZoomImage');
+  const allImages = document.querySelectorAll('.md3-stats-image, .md3-stats-country-image');
+  
+  // Add click handlers to all statistics images
+  allImages.forEach(img => {
+    img.closest('.md3-stats-image-container, .md3-stats-country-image-container').addEventListener('click', function(e) {
+      e.preventDefault();
+      modalImage.src = img.src;
+      modalImage.alt = img.alt;
+      modal.classList.add('active');
+      document.body.style.overflow = 'hidden';
+    });
+  });
+  
+  // Close modal on click
+  modal.addEventListener('click', function(e) {
+    if (e.target === modal || e.target.closest('.md3-stats-zoom-modal-close')) {
+      modal.classList.remove('active');
+      document.body.style.overflow = '';
+    }
+  });
+  
+  // Close modal with Escape key
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape' && modal.classList.contains('active')) {
+      modal.classList.remove('active');
+      document.body.style.overflow = '';
+    }
+  });
+
+  // Country statistics image display
+  const countrySelect = document.getElementById('countrySelect');
+  const displayArea = document.getElementById('countryStatsDisplay');
+  
+  if (countrySelect && displayArea) {
+    countrySelect.addEventListener('change', function() {
+      const countryCode = this.value;
+      
+      if (!countryCode) {
+        // Clear display area
+        displayArea.innerHTML = '';
+        return;
+      }
+      
+      // Create figure element
+      const figure = document.createElement('figure');
+      figure.className = 'md3-stats-country-figure';
+      
+      const imageContainer = document.createElement('div');
+      imageContainer.className = 'md3-stats-country-image-container';
+      
+      const img = document.createElement('img');
+      img.className = 'md3-stats-country-image';
+      img.alt = `Estadísticas de ${this.options[this.selectedIndex].text}`;
+      img.loading = 'lazy';
+      
+      // Build image path
+      const imagePath = `/static/img/statistics/viz_${countryCode}_resumen.png`;
+      
+      // Handle image load
+      img.onload = function() {
+        requestAnimationFrame(() => {
+          figure.classList.add('visible');
+          // Add click handler for zoom
+          imageContainer.addEventListener('click', function(e) {
+            e.preventDefault();
+            modalImage.src = img.src;
+            modalImage.alt = img.alt;
+            modal.classList.add('active');
+            document.body.style.overflow = 'hidden';
+          });
+        });
+      };
+      
+      img.onerror = function() {
+        displayArea.innerHTML = `
+          <div class="md3-stats-placeholder md3-body-large">
+            <p><strong>Error:</strong> No se pudo cargar la imagen para este país.</p>
+          </div>
+        `;
+      };
+      
+      img.src = imagePath;
+      imageContainer.appendChild(img);
+      figure.appendChild(imageContainer);
+      
+      // Replace content with fade effect
+      displayArea.innerHTML = '';
+      displayArea.appendChild(figure);
+    });
+  }
+</script>
+{% endblock %}

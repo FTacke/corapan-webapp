@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+{% from 'partials/page_navigation.html' import page_navigation %}
+{% block page_title %}Quiénes somos · CO.RA.PAN{% endblock %}
+{% block content %}
+<article class="md3-text-page">
+  <section class="md3-hero md3-hero--container md3-hero--with-icon" role="main" aria-label="Quiénes somos">
+    <div class="md3-hero__container">
+      <span class="material-symbols-rounded md3-hero__icon" aria-hidden="true">assignment_globe</span>
+      <div class="md3-hero__content">
+        <span class="md3-hero__eyebrow">Proyecto</span>
+        <h1 class="md3-hero__title">Quiénes somos</h1>
+      </div>
+    </div>
+  </section>
+
+  <div class="md3-text-content">
+      <h2 class="md3-title-large md3-text-heading">Créditos</h2>
+      <dl class="md3-text-dl md3-body-medium">
+        <div class="md3-text-dl__item">
+          <dt class="md3-label-large">Responsable del proyecto y diseño</dt>
+          <dd class="md3-body-large">Felix Tacke</dd>
+        </div>
+        <div class="md3-text-dl__item">
+          <dt class="md3-label-large">Estudiantes colaboradores (clasificación y corrección)</dt>
+          <dd class="md3-body-large">Yannick Bächler, Carolin Grote</dd>
+        </div>
+        <div class="md3-text-dl__item">
+          <dt class="md3-label-large">Contribuyentes en fases previas</dt>
+          <dd class="md3-body-large">Ana Goás Pérez, Lisa Thomas</dd>
+        </div>
+        <div class="md3-text-dl__item">
+          <dt class="md3-label-large">Gestión y procesamiento de datos</dt>
+          <dd class="md3-body-large">Felix Tacke</dd>
+        </div>
+        <div class="md3-text-dl__item">
+          <dt class="md3-label-large">Diseño web y gráfico</dt>
+          <dd class="md3-body-large">Felix Tacke</dd>
+        </div>
+      </dl>
+    </section>
+  </div>
+</article>
+
+{{ page_navigation(prev_title="Estadísticas", prev_url=url_for('public.proyecto_estadisticas'), next_title="Cómo citar", next_url=url_for('public.proyecto_como_citar')) }}
+{% endblock %}

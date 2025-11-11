@@ -1,0 +1,28 @@
+/* Material Design 3 Progress Component
+   Placeholder to prevent 404 errors.
+   Use md3-linear-progress for loading indicators.
+*/
+
+.md3-linear-progress {
+    height: 4px;
+    background: linear-gradient(90deg, #6366f1, #8b5cf6);
+    width: 100%;
+    position: relative;
+    overflow: hidden;
+}
+
+.md3-linear-progress::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    background: currentColor;
+    animation: progress-animation 1.5s ease-in-out infinite;
+}
+
+@keyframes progress-animation {
+    0% { left: -100%; }
+    50% { left: 100%; }
+    100% { left: 100%; }
+}

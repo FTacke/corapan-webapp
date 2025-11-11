@@ -1,0 +1,159 @@
+# BlackLab Format Configuration for CO.RA.PAN Corpus (TSV-only)
+# Supports TSV format with external docmeta.jsonl
+# Version: 2.0 (CO.RA.PAN JSON v2 Schema, TSV export)
+
+fileType: tabular
+fileTypeOptions:
+  type: tsv
+  columnNames: true
+
+annotatedFields:
+  contents:
+    displayName: "Annotated Contents"
+    description: "Corpus text with linguistic annotations"
+
+    # Main annotation layer (17 columns in TSV)
+    annotations:
+      - name: word
+        displayName: "Word Form"
+        description: "Original word form as transcribed"
+        valuePath: word
+        sensitivity: INSENSITIVE_DIACRITICS
+
+      - name: norm
+        displayName: "Normalized Form"
+        description: "Normalized word form"
+        valuePath: norm
+        sensitivity: INSENSITIVE_DIACRITICS
+
+      - name: lemma
+        displayName: "Lemma"
+        description: "Lemma / dictionary form"
+        valuePath: lemma
+        sensitivity: INSENSITIVE_DIACRITICS
+
+      - name: pos
+        displayName: "Part-of-Speech"
+        description: "Universal POS tag"
+        valuePath: pos
+
+      - name: past_type
+        displayName: "Past Tense Type"
+        description: "Aspectual class (simple/perfect/habitual/etc.)"
+        valuePath: past_type
+        optional: true
+
+      - name: future_type
+        displayName: "Future Tense Type"
+        description: "Future aspectual class"
+        valuePath: future_type
+        optional: true
+
+      - name: tense
+        displayName: "Tense"
+        description: "Tense value (past/present/future)"
+        valuePath: tense
+        optional: true
+
+      - name: mood
+        displayName: "Mood"
+        description: "Mood (indicative/subjunctive/etc.)"
+        valuePath: mood
+        optional: true
+
+      - name: person
+        displayName: "Person"
+        description: "Grammatical person (1/2/3)"
+        valuePath: person
+        optional: true
+
+      - name: number
+        displayName: "Number"
+        description: "Grammatical number (sg/pl)"
+        valuePath: number
+        optional: true
+
+      - name: aspect
+        displayName: "Aspect"
+        description: "Verbal aspect"
+        valuePath: aspect
+        optional: true
+
+      - name: tokid
+        displayName: "Token ID"
+        description: "Unique token identifier"
+        valuePath: tokid
+
+      - name: start_ms
+        displayName: "Start Time (ms)"
+        description: "Token start time in milliseconds"
+        valuePath: start_ms
+
+      - name: end_ms
+        displayName: "End Time (ms)"
+        description: "Token end time in milliseconds"
+        valuePath: end_ms
+
+      - name: sentence_id
+        displayName: "Sentence ID"
+        description: "Sentence identifier"
+        valuePath: sentence_id
+
+      - name: utterance_id
+        displayName: "Utterance ID"
+        description: "Utterance identifier"
+        valuePath: utterance_id
+
+      - name: speaker_code
+        displayName: "Speaker Code"
+        description: "Speaker identifier"
+        valuePath: speaker_code
+        optional: true
+
+# Metadata fields (from docmeta.jsonl)
+metadataFields:
+  - name: file_id
+    displayName: "Document ID"
+    description: "Unique identifier (filename without extension)"
+    type: text
+    value: doc
+
+  - name: country_code
+    displayName: "Country Code"
+    description: "ISO 3-letter country code"
+    type: text
+    value: country_code
+
+  - name: date
+    displayName: "Broadcast Date"
+    description: "Date of broadcast (YYYY-MM-DD)"
+    type: text
+    value: date
+
+  - name: radio
+    displayName: "Radio Station"
+    description: "Radio station name"
+    type: text
+    value: radio
+
+  - name: city
+    displayName: "City"
+    description: "Broadcasting city"
+    type: text
+    value: city
+
+  - name: audio_path
+    displayName: "Audio Path"
+    description: "Path to source audio file"
+    type: text
+    value: audio_path
+
+# Global settings
+displayOrder:
+  - word
+  - lemma
+  - pos
+  - tense
+  - mood
+
+locale: es_ES

@@ -1,0 +1,62 @@
+{% set user_name = g.get('user') %}
+{% set user_role = g.get('role') %}
+{% set is_authenticated = user_name is not none %}
+
+<!-- Login Sheet: Modal Bottom Sheet (Mobile) / Dialog (Desktop) -->
+<div class="md3-login-sheet" hidden data-element="login-sheet">
+  <!-- Backdrop (clickable to dismiss) -->
+  <div class="md3-login-backdrop" data-action="close-login"></div>
+  
+  <!-- Sheet Container -->
+  <div class="md3-login-sheet__container">
+    <!-- Form -->
+    <form class="md3-login-sheet__form" method="post" action="{{ url_for('auth.login_post') }}" hx-boost="true">
+      <!-- Title with Close Button -->
+      <div class="md3-login-sheet__header">
+        <h2 class="md3-login-sheet__title">Iniciar sesión</h2>
+        <button type="button" class="md3-login-sheet__close-button" data-action="close-login" aria-label="Cerrar">
+          <span class="material-symbols-rounded" aria-hidden="true">close</span>
+        </button>
+      </div>
+      
+      <!-- Referrer (for redirect after login) -->
+      <input type="hidden" name="referrer" value="{{ request.url }}">
+      
+      <!-- Username Field -->
+      <div class="md3-text-field">
+        <input 
+          type="text" 
+          class="md3-text-field__input" 
+          name="username" 
+          id="login-username"
+          placeholder=" "
+          autocomplete="username" 
+          required
+          aria-label="Nombre de usuario"
+        >
+        <label class="md3-text-field__label" for="login-username">Cuenta</label>
+      </div>
+      
+      <!-- Password Field -->
+      <div class="md3-text-field">
+        <input 
+          type="password" 
+          class="md3-text-field__input" 
+          name="password" 
+          id="login-password"
+          placeholder=" "
+          autocomplete="current-password" 
+          required
+          aria-label="Contraseña"
+        >
+        <label class="md3-text-field__label" for="login-password">Contraseña</label>
+      </div>
+      
+      <!-- Full-Width Submit Button -->
+      <button type="submit" class="md3-login-sheet__button">
+        <span class="material-symbols-rounded">login</span>
+        <span>Entrar</span>
+      </button>
+    </form>
+  </div>
+</div>

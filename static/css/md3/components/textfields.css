@@ -1,0 +1,257 @@
+/* ============================================================================
+   MD3 Outlined Textfield - From Legacy md3-components.css
+   ============================================================================
+   TRANSFERRED FROM: static/css/md3-components.css (Lines 1298-1470)
+   STATUS: ⚠️ Uses legacy MD3 tokens (--md3-*), needs migration to --md-sys-*
+   CUSTOM FEATURES: Select dropdown styling, responsive optimization
+   ============================================================================ */
+
+.md3-outlined-textfield {
+  position: relative;
+  display: inline-block;
+  min-width: 200px;
+}
+
+.md3-outlined-textfield--flex {
+  flex: 1;
+}
+
+.md3-outlined-textfield__input {
+  width: 100%;
+  padding: var(--space-4);
+  border: none;
+  background: transparent;
+  color: var(--md-sys-color-on-surface);
+  font-size: 16px;
+  font-family: inherit;
+  outline: none;
+  position: relative;
+  z-index: 1;
+}
+
+.md3-outlined-textfield__input--select {
+  appearance: none;
+  cursor: pointer;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none'%3E%3Cpath d='M7 10l5 5 5-5z' fill='%230a5981'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 8px center;
+  padding-right: 40px;
+}
+
+/* === RESPONSIVE SELECT OPTIMIZATION === */
+
+/* TABLET: 601px - 1120px (accounting for 280px drawer) */
+@media (max-width: 1120px) {
+  .md3-corpus-search-row .md3-outlined-textfield__input--select {
+    font-size: 14px;
+    padding: var(--space-2) var(--space-3);
+    padding-right: var(--space-9);
+  }
+}
+
+/* MOBILE STANDARD: MD3 Compact (0-599px) */
+@media (max-width: 599px) {
+  .md3-corpus-search-row .md3-outlined-textfield__input--select {
+    font-size: 12px;
+    padding: var(--space-1) var(--space-2);
+    padding-right: var(--space-8);
+    min-height: 40px;
+  }
+  
+  .md3-corpus-search-row .md3-outlined-textfield__label--select {
+    font-size: 0.75rem;
+  }
+}
+
+/* MOBILE SMALL: ≤ 400px */
+@media (max-width: 400px) {
+  .md3-corpus-search-row .md3-outlined-textfield__input--select {
+    font-size: 0.75rem;
+    padding: var(--space-1) var(--space-2);
+    padding-right: var(--space-7);
+    min-height: 36px;
+  }
+  
+  .md3-corpus-search-row .md3-outlined-textfield__label--select {
+    font-size: 0.7rem;
+  }
+}
+
+.md3-outlined-textfield__input:focus {
+  outline: none;
+}
+
+.md3-outlined-textfield__label {
+  position: absolute;
+  left: var(--space-4);
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--md-sys-color-on-surface-variant);
+  font-size: 16px;
+  background: var(--md-sys-color-surface-container);
+  padding: 0 var(--space-2);
+  pointer-events: none;
+  transition: all 200ms cubic-bezier(0.2, 0, 0, 1);
+  z-index: 2;
+}
+
+.md3-outlined-textfield__label--select {
+  top: -10px;
+  font-size: 12px;
+  color: var(--md-sys-color-on-surface-variant);
+  transform: translateY(0);
+  background: var(--md-sys-color-surface-container);
+}
+
+.md3-outlined-textfield__input:focus ~ .md3-outlined-textfield__label,
+.md3-outlined-textfield__input:not(:placeholder-shown) ~ .md3-outlined-textfield__label {
+  top: -10px;
+  font-size: 12px;
+  color: var(--md-sys-color-on-surface-variant);
+  transform: translateY(0);
+  background: var(--md-sys-color-surface-container);
+  padding: 0 var(--space-2);
+}
+
+.md3-outlined-textfield__input:focus ~ .md3-outlined-textfield__label {
+  color: var(--md-sys-color-primary);
+}
+
+/* Select always has label up */
+.md3-outlined-textfield__input--select ~ .md3-outlined-textfield__label {
+  top: -10px;
+  font-size: 12px;
+  transform: translateY(0);
+  background: var(--md-sys-color-surface-container);
+  padding: 0 var(--space-2);
+}
+
+.md3-outlined-textfield__outline {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  display: flex;
+  z-index: 0;
+}
+
+.md3-outlined-textfield__outline-start {
+  border: 1px solid var(--md-sys-color-outline-variant);
+  border-right: none;
+  border-radius: var(--radius-sm) 0 0 var(--radius-sm);
+  width: var(--space-3);
+  transition: border-color 200ms cubic-bezier(0.2, 0, 0, 1),
+              border-width 200ms cubic-bezier(0.2, 0, 0, 1);
+}
+
+.md3-outlined-textfield__outline-notch {
+  border-top: 1px solid var(--md-sys-color-outline-variant);
+  border-bottom: 1px solid var(--md-sys-color-outline-variant);
+  min-width: 8px;
+  transition: border-color 200ms cubic-bezier(0.2, 0, 0, 1),
+              border-width 200ms cubic-bezier(0.2, 0, 0, 1);
+}
+
+.md3-outlined-textfield__outline-end {
+  border: 1px solid var(--md-sys-color-outline-variant);
+  border-left: none;
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  flex: 1;
+  transition: border-color 200ms cubic-bezier(0.2, 0, 0, 1),
+              border-width 200ms cubic-bezier(0.2, 0, 0, 1);
+}
+
+.md3-outlined-textfield__input:hover ~ .md3-outlined-textfield__outline .md3-outlined-textfield__outline-start,
+.md3-outlined-textfield__input:hover ~ .md3-outlined-textfield__outline .md3-outlined-textfield__outline-notch,
+.md3-outlined-textfield__input:hover ~ .md3-outlined-textfield__outline .md3-outlined-textfield__outline-end {
+  border-color: var(--md-sys-color-on-surface);
+}
+
+.md3-outlined-textfield__input:focus ~ .md3-outlined-textfield__outline .md3-outlined-textfield__outline-start,
+.md3-outlined-textfield__input:focus ~ .md3-outlined-textfield__outline .md3-outlined-textfield__outline-end {
+  border-color: var(--md-sys-color-primary);
+  border-width: 2px;
+}
+
+.md3-outlined-textfield__input:focus ~ .md3-outlined-textfield__outline .md3-outlined-textfield__outline-notch {
+  border-color: var(--md-sys-color-primary);
+  border-top-width: 2px;
+  border-bottom-width: 2px;
+}
+
+/* ============================================================================
+   Compact Variant (Corpus-specific)
+   ============================================================================ */
+
+.md3-outlined-textfield--compact {
+  min-height: 48px;
+}
+
+.md3-outlined-textfield--compact .md3-outlined-textfield__input {
+  min-height: 48px;
+  font-size: 14px;
+  padding: 12px 16px;
+}
+
+.md3-outlined-textfield--compact .md3-outlined-textfield__label {
+  font-size: 14px;
+}
+
+.md3-outlined-textfield--compact .md3-outlined-textfield__input--select[multiple] {
+  min-height: 48px;
+  max-height: 120px;
+  padding-top: 8px;
+  padding-bottom: 8px;
+}
+
+/* Multi-select styling */
+.md3-outlined-textfield__input--select[multiple] {
+  min-height: 56px;
+  padding-top: var(--space-2);
+  padding-bottom: var(--space-2);
+}
+
+/* Scrollbar styling for multi-select */
+.md3-outlined-textfield__input--select[multiple]::-webkit-scrollbar {
+  width: 8px;
+}
+
+.md3-outlined-textfield__input--select[multiple]::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.md3-outlined-textfield__input--select[multiple]::-webkit-scrollbar-thumb {
+  background: var(--md-sys-color-outline-variant);
+  border-radius: 4px;
+}
+
+.md3-outlined-textfield__input--select[multiple]::-webkit-scrollbar-thumb:hover {
+  background: var(--md-sys-color-on-surface-variant);
+}
+
+/* Tablet responsive (drawer-aware: 840px + 280px = 1120px) */
+@media (max-width: 1120px) {
+  .md3-outlined-textfield--compact .md3-outlined-textfield__input {
+    padding: var(--space-2) var(--space-3);
+    font-size: 14px;
+  }
+}
+
+/* Mobile responsive: MD3 Compact (0-599px) */
+@media (max-width: 599px) {
+  .md3-outlined-textfield--compact {
+    min-height: 44px;
+  }
+  
+  .md3-outlined-textfield--compact .md3-outlined-textfield__input {
+    padding: var(--space-2) var(--space-3);
+    font-size: 14px;
+  }
+  
+  .md3-outlined-textfield--compact .md3-outlined-textfield__label {
+    font-size: 11px;
+  }
+}
+
+
+
+

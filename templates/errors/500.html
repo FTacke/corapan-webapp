@@ -1,0 +1,158 @@
+{% extends "base.html" %}
+
+{% block page_title %}500 - Error Interno | CO.RA.PAN{% endblock %}
+
+{% block content %}
+<div class="md3-error-page">
+  <div class="md3-error-container">
+    <div class="md3-error-icon">
+      <i class="bi bi-exclamation-octagon"></i>
+    </div>
+    
+    <h1 class="md3-error-code md3-display-large">500</h1>
+    <h2 class="md3-error-title md3-headline-medium">Error Interno del Servidor</h2>
+    
+    <p class="md3-error-message md3-body-large">
+      Ocurrió un error inesperado. El equipo técnico ha sido notificado.
+    </p>
+    
+    <div class="md3-error-suggestions">
+      <p class="md3-title-medium">Qué puedes hacer:</p>
+      <ul class="md3-body-medium">
+        <li>Intenta recargar la página en unos momentos</li>
+        <li>Verifica tu conexión a internet</li>
+        <li>Si el problema persiste, contacta al administrador</li>
+      </ul>
+    </div>
+    
+    <div class="md3-error-actions">
+      <a href="{{ url_for('public.landing_page') }}" class="md3-button-filled">
+        <i class="bi bi-house-door"></i>
+        <span>Volver al inicio</span>
+      </a>
+      <a href="javascript:location.reload()" class="md3-button-outlined">
+        <i class="bi bi-arrow-clockwise"></i>
+        <span>Recargar página</span>
+      </a>
+    </div>
+  </div>
+</div>
+
+<style>
+/* MD3 Error Page Layout */
+.md3-error-page {
+  min-height: 70vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--md3-space-8) var(--md3-space-4);
+}
+
+.md3-error-container {
+  max-width: 580px;
+  width: 100%;
+  padding: var(--md3-space-12) var(--md3-space-8);
+  background: var(--md3-color-surface-container-low);
+  border: 1px solid var(--md3-color-outline-variant);
+  border-radius: var(--md3-radius-large);
+  box-shadow: var(--md3-elevation-1);
+  text-align: center;
+}
+
+.md3-error-icon {
+  margin-bottom: var(--md3-space-4);
+  font-size: 4rem;
+  color: var(--md3-color-error);
+}
+
+.md3-error-code {
+  margin: 0 0 var(--md3-space-2) 0;
+  color: var(--md3-color-primary);
+  font-weight: 400;
+  line-height: var(--md3-lineheight-display);
+}
+
+.md3-error-title {
+  margin: 0 0 var(--md3-space-5) 0;
+  color: var(--md3-color-on-surface);
+  font-weight: 400;
+  line-height: var(--md3-lineheight-headline);
+}
+
+.md3-error-message {
+  margin: 0 0 var(--md3-space-8) 0;
+  color: var(--md3-color-on-surface-variant);
+  line-height: var(--md3-lineheight-body);
+}
+
+.md3-error-suggestions {
+  margin: var(--md3-space-8) 0;
+  padding: var(--md3-space-6);
+  background: var(--md3-color-surface-container);
+  border-radius: var(--md3-radius-medium);
+  border: 1px solid var(--md3-color-outline-variant);
+  text-align: left;
+}
+
+.md3-error-suggestions p {
+  margin: 0 0 var(--md3-space-4) 0;
+  color: var(--md3-color-on-surface);
+}
+
+.md3-error-suggestions ul {
+  margin: 0;
+  padding-left: var(--md3-space-6);
+  list-style: none;
+}
+
+.md3-error-suggestions li {
+  margin-bottom: var(--md3-space-3);
+  color: var(--md3-color-on-surface-variant);
+  position: relative;
+  line-height: var(--md3-lineheight-body);
+}
+
+.md3-error-suggestions li::before {
+  content: "—";
+  position: absolute;
+  left: calc(-1 * var(--md3-space-5));
+  color: var(--md3-color-primary);
+}
+
+.md3-error-suggestions li:last-child {
+  margin-bottom: 0;
+}
+
+.md3-error-actions {
+  display: flex;
+  gap: var(--md3-space-4);
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-top: var(--md3-space-8);
+}
+
+@media (max-width: 599px) {
+  .md3-error-page {
+    padding: var(--md3-space-6) var(--md3-space-4);
+  }
+  
+  .md3-error-container {
+    padding: var(--md3-space-8) var(--md3-space-6);
+  }
+  
+  .md3-error-icon {
+    font-size: 3rem;
+  }
+  
+  .md3-error-actions {
+    flex-direction: column;
+    width: 100%;
+  }
+  
+  .md3-error-actions a {
+    width: 100%;
+    justify-content: center;
+  }
+}
+</style>
+{% endblock %}

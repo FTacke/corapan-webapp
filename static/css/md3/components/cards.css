@@ -1,0 +1,126 @@
+/* MD3 Card Components — canonical styles from md3_preview.css */
+
+/* Base card class */
+.card {
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+  box-sizing: border-box; /* Include padding in width calculation */
+  width: 100%; /* Ensure cards don't overflow container */
+}
+
+.card .card-title { 
+  font-size: var(--md-sys-typescale-title-medium); 
+  margin: 0 0 var(--space-2) 0; 
+}
+
+.card .card-actions { 
+  display: flex; 
+  gap: var(--space-2); 
+  margin-top: var(--space-3); 
+}
+
+/* Card Variants */
+.card-elevated {
+  background: var(--md-sys-color-surface);
+  border: none;
+  box-shadow: var(--elev-1);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+}
+
+.card-outlined {
+  background: var(--md-sys-color-surface-container-low);
+  border: 1px solid var(--md-sys-color-outline-variant);
+  box-shadow: none;
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+}
+
+.card-filled {
+  background: var(--md-sys-color-surface-container);
+  border: none;
+  box-shadow: none;
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+}
+
+/* Tonal Card Variants (different background tones) */
+.card-tonal-lowest {
+  background: var(--md-sys-color-surface-container-lowest);
+  border: none;
+  box-shadow: var(--elev-1);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+}
+
+.card-tonal-low {
+  background: var(--md-sys-color-surface-container-low);
+  border: none;
+  box-shadow: var(--elev-1);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+}
+
+.card-tonal {
+  background: var(--md-sys-color-surface-container);
+  border: none;
+  box-shadow: var(--elev-1);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+}
+
+.card-tonal-mid {
+  background: var(--md-sys-color-surface-container-mid);
+  border: none;
+  box-shadow: var(--elev-1);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+}
+
+.card-tonal-high {
+  background: var(--md-sys-color-surface-container-high);
+  border: none;
+  box-shadow: var(--elev-1);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+}
+
+/* Code blocks with tonal styling */
+pre.highlight {
+  background: var(--md-sys-color-surface-container-low);
+  border: none;
+  box-shadow: var(--elev-1);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+  margin: var(--space-4) 0;
+  overflow-x: auto; /* Horizontal scroll for long code lines */
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: var(--md-sys-color-on-surface);
+  /* Prevent overflow on small screens */
+  max-width: 100%;
+  width: 100%;
+  box-sizing: border-box;
+  white-space: pre-wrap; /* Allow line breaks on mobile */
+  word-wrap: break-word; /* Break long words if needed */
+  overflow-wrap: break-word; /* Modern alternative to word-wrap */
+}
+
+/* Mobile: smaller font size for better readability */
+@media (max-width: 599px) {
+  pre.highlight {
+    font-size: 0.75rem; /* Smaller code on mobile */
+    padding: var(--space-3); /* Less padding on mobile */
+  }
+}
+
+pre.highlight code { 
+  background: none; 
+  padding: 0; 
+  color: inherit;
+  white-space: pre-wrap; /* Inherit wrapping behavior */
+  word-wrap: break-word;
+}
+
+

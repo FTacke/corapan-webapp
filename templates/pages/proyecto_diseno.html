@@ -1,0 +1,73 @@
+{% extends 'base.html' %}
+{% from 'partials/page_navigation.html' import page_navigation %}
+{% block page_title %}Diseño · CO.RA.PAN{% endblock %}
+{% block content %}
+<article class="md3-text-page">
+  <section class="md3-hero md3-hero--container md3-hero--with-icon" role="main" aria-label="Diseño del proyecto">
+    <div class="md3-hero__container">
+      <span class="material-symbols-rounded md3-hero__icon" aria-hidden="true">assignment_globe</span>
+      <div class="md3-hero__content">
+        <span class="md3-hero__eyebrow">Proyecto</span>
+        <h1 class="md3-hero__title">Diseño</h1>
+      </div>
+    </div>
+  </section>
+
+  <div class="md3-text-content">
+    <section class="md3-text-section">
+      <p class="md3-body-large">El diseño técnico de CO.RA.PAN convierte los principios conceptuales del proyecto en una infraestructura empírica rigurosa, curada y comparable. Su objetivo es reunir y procesar de manera homogénea material de habla profesional procedente de emisoras nacionales de todos los países hispanohablantes, garantizando la coherencia metodológica necesaria para el análisis comparativo de las variedades estándar y cuasiestándar.</p>
+    </section>
+
+    <section class="md3-text-section">
+      <h2 class="md3-title-large md3-text-heading">Obtención y preparación de los datos</h2>
+      <p class="md3-body-large">La recopilación del corpus se basa en la grabación de programas informativos y de actualidad de emisoras nacionales de radio. Estos espacios representan el nivel de formalidad y difusión necesario para estudiar la lengua estándar hablada.</p>
+      
+      <p class="md3-body-large">En una fase posterior, las grabaciones se depuran de elementos no lingüísticos, como música, pausas, anuncios comerciales, señales horarias o jingles, con el fin de conservar únicamente el discurso hablado relevante para el análisis lingüístico.</p>
+      
+      <p class="md3-body-large">La transcripción se realiza de manera automática mediante reconocimiento de voz basado en inteligencia artificial (ASR). El texto resultante es luego revisado por miembros del equipo, quienes controlan la calidad del reconocimiento y segmentan el material según los turnos de palabra y el modo de producción. Esta revisión también permite clasificar cada fragmento de acuerdo con los parámetros analíticos del proyecto.</p>
+    </section>
+
+    <section class="md3-text-section">
+      <h2 class="md3-title-large md3-text-heading">Clasificación y anotación lingüística</h2>
+      <p class="md3-body-large">Cada fragmento del corpus se clasifica y anota según una serie de categorías básicas que reflejan las dimensiones relevantes del habla pública profesional:</p>
+      
+      <ul class="md3-body-large md3-text-list">
+        <li>Tipo de hablante: profesional / no profesional.</li>
+        <li>Modo de producción: leído / libre.</li>
+        <li>Género comunicativo: general (en contraposición a tránsito o tiempo).</li>
+        <li>País y emisora: metadatos mínimos de procedencia.</li>
+      </ul>
+
+      <p class="md3-body-large">El texto resultante se almacena en formato JSON estructurado, preparado para búsquedas y análisis estadístico.<br>
+      Sobre esta base, se aplica una anotación lingüística automática mediante la librería spaCy y el modelo <code>es_dep_news_trf</code>, que realiza tokenización, segmentación oracional, etiquetado morfosintáctico (POS), lematización, análisis de dependencias sintácticas y reconocimiento de entidades cuando corresponde.</p>
+      
+      <p class="md3-body-large">Estas capas de información permiten realizar búsquedas léxicas, morfosintácticas y sintácticas, y proporcionan una base sólida para estudios de frecuencia, variación y comparación entre países y registros. A medio plazo se prevé incorporar protocolos de control de calidad sistemáticos, como la doble revisión y la medición de concordancia entre anotadores, para garantizar la fiabilidad del corpus.</p>
+    </section>
+
+    <section class="md3-text-section">
+      <h2 class="md3-title-large md3-text-heading">Base de datos, acceso y marco jurídico</h2>
+      <p class="md3-body-large">Las transcripciones y sus metadatos forman una base de datos relacional que permite filtrar y consultar los materiales según país, tipo de hablante, modo de producción o variable lingüística. Esta base de datos se conecta con la webapp de CO.RA.PAN, donde el público puede realizar consultas y visualizar ejemplos de resultados.</p>
+      
+      <p class="md3-body-large">Por motivos de derechos de autor y de emisión, el acceso completo a las transcripciones y al audio original está reservado al equipo del proyecto. Sin embargo, la base de datos de consulta es públicamente accesible, de modo que los usuarios pueden buscar y examinar fragmentos breves de audio acompañados de su transcripción sincronizada, junto con resúmenes estadísticos y resultados agregados.</p>
+      
+      <p class="md3-body-large">Esta forma de acceso se ajusta al derecho de cita científica reconocido en el artículo 5(3)(d) de la Directiva 2001/29/CE y en el § 51 de la Ley alemana de derechos de autor (UrhG), que permite la utilización de extractos con indicación de fuente y en la medida justificada por fines científicos. Además, el tratamiento automatizado de los datos con fines de investigación se acoge a las excepciones de minería de textos y datos (TDM) establecidas en la Directiva (UE) 2019/790, transpuestas al derecho alemán en los § 60d y § 44b UrhG, que autorizan el uso de materiales a los que se tenga acceso lícito para fines de investigación y análisis automatizado.</p>
+      
+      <p class="md3-body-large">De este modo, CO.RA.PAN cumple plenamente con la legislación europea y alemana en materia de propiedad intelectual, ofreciendo acceso abierto controlado: suficiente para la verificación y la investigación científica, pero respetuoso con los derechos de los productores de contenido.</p>
+      
+      <p class="md3-body-large">En conjunto, el diseño técnico del proyecto garantiza un corpus curado, reproducible y jurídicamente sostenible, concebido como una infraestructura abierta que documenta con precisión las normas de uso oral del español contemporáneo y su variación panhispánica.</p>
+    </section>
+
+    <section class="md3-text-section">
+      <h2 class="md3-title-large md3-text-heading">La webapp: Corpus y Atlas</h2>
+      <p class="md3-body-large">La infraestructura digital de CO.RA.PAN se articula en torno a dos módulos complementarios que permiten explorar el corpus desde perspectivas analíticas diferentes: el Corpus y el Atlas.</p>
+      
+      <p class="md3-body-large">El módulo Corpus ofrece un sistema de búsqueda flexible que permite localizar y analizar formas lingüísticas concretas en su contexto de aparición. Los usuarios pueden realizar consultas por palabra, lema o etiqueta morfosintáctica, aplicando filtros según país, tipo de hablante (profesional / no profesional), modo de producción (leído / libre) y género comunicativo. Los resultados se presentan en formato de concordancias, con fragmentos de texto acompañados de su contexto inmediato, y en todos los casos se incluye el audio sincronizado que permite escuchar el fragmento correspondiente. Esta funcionalidad facilita tanto el análisis cualitativo de variantes específicas como el estudio cuantitativo de su distribución geográfica y estilística.</p>
+      
+      <p class="md3-body-large">El módulo Atlas ofrece una visualización geográfica que documenta la composición y alcance del corpus. El mapa interactivo muestra los países y emisoras que forman parte del proyecto, con especial atención a las capitales nacionales y, en algunos casos, a capitales regionales donde se han realizado grabaciones. Al seleccionar un país o una emisora, se despliegan metadatos detallados sobre las grabaciones: fechas de registro, identificación de los programas y emisoras, y el volumen de material recopilado, tanto en duración de audio como en extensión de las transcripciones. Esta funcionalidad ofrece una visión panorámica de la infraestructura del corpus, permitiendo conocer la representación geográfica del proyecto y la cantidad de datos disponibles para cada variedad nacional.</p>
+    </section>
+  </div>
+</article>
+
+
+{{ page_navigation(prev_title="El proyecto", prev_url=url_for('public.proyecto_overview'), next_title="Estadísticas", next_url=url_for('public.proyecto_estadisticas')) }}
+{% endblock %}

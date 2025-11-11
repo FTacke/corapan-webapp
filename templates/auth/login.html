@@ -1,0 +1,251 @@
+{% extends "base.html" %}
+
+{% block title %}Iniciar sesión - CO.RA.PAN{% endblock %}
+
+{% block content %}
+<div class="md3-login-page">
+  <!-- Wrapper for centered login card -->
+  <div class="md3-login-page__wrapper">
+    
+    <!-- Login Card -->
+    <div class="md3-login-card">
+      <!-- Header -->
+      <div class="md3-login-card__header">
+        <h1 class="md3-login-card__title">Iniciar sesión</h1>
+        <p class="md3-login-card__subtitle">Ingresa tu nombre de usuario y contraseña</p>
+      </div>
+
+      <!-- Error Messages (if any) -->
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          <div class="md3-login-card__errors" role="alert">
+            {% for category, message in messages %}
+              <div class="error-message error-message--{{ category }}">
+                <span class="material-symbols-rounded">error</span>
+                {{ message }}
+              </div>
+            {% endfor %}
+          </div>
+        {% endif %}
+      {% endwith %}
+
+      <!-- Login Form - Standard HTML POST (no HTMX) -->
+      <form id="login-form" 
+            class="md3-login-card__form" 
+            method="post" 
+            action="{{ url_for('auth.login_post') }}"
+            novalidate>
+        
+        <!-- Username Field -->
+        <div class="md3-text-field">
+          <input 
+            type="text" 
+            class="md3-text-field__input" 
+            name="username" 
+            id="login-username"
+            placeholder=" "
+            autocomplete="username" 
+            required
+            aria-label="Nombre de usuario"
+            minlength="1"
+            maxlength="50">
+          <label class="md3-text-field__label" for="login-username">Nombre de usuario</label>
+          <div class="md3-text-field__underline"></div>
+        </div>
+
+        <!-- Password Field -->
+        <div class="md3-text-field">
+          <input 
+            type="password" 
+            class="md3-text-field__input" 
+            name="password" 
+            id="login-password"
+            placeholder=" "
+            autocomplete="current-password" 
+            required
+            aria-label="Contraseña"
+            minlength="1">
+          <label class="md3-text-field__label" for="login-password">Contraseña</label>
+          <div class="md3-text-field__underline"></div>
+        </div>
+
+        <!-- Hidden next URL (for redirect after login) -->
+        {% if next %}
+          <input type="hidden" name="next" value="{{ next }}">
+        {% endif %}
+
+        <!-- Submit Button -->
+        <button type="submit" class="md3-button md3-button--contained">
+          Iniciar sesión
+        </button>
+      </form>
+
+      <!-- Footer -->
+      <div class="md3-login-card__footer">
+        <p class="md3-login-card__footer-text">
+          ¿Problemas al iniciar sesión? Contáctanos en 
+          <a href="mailto:support@corapan.de" class="md3-link">support@corapan.de</a>
+        </p>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Minimal styles for login page (can be moved to CSS file if needed) -->
+<style>
+.md3-login-page {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 1rem;
+}
+
+.md3-login-page__wrapper {
+  width: 100%;
+  max-width: 400px;
+}
+
+.md3-login-card {
+  background: white;
+  border-radius: 12px;
+  padding: 3rem 2rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.md3-login-card__header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.md3-login-card__title {
+  font-size: 1.75rem;
+  font-weight: 500;
+  margin: 0 0 0.5rem 0;
+  color: #1a1a1a;
+}
+
+.md3-login-card__subtitle {
+  font-size: 0.95rem;
+  color: #666;
+  margin: 0;
+}
+
+.md3-login-card__errors {
+  margin-bottom: 1.5rem;
+  padding: 1rem;
+  background: #fee;
+  border-radius: 8px;
+  border-left: 4px solid #f44336;
+}
+
+.error-message {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  color: #c62828;
+  font-size: 0.9rem;
+  margin: 0;
+}
+
+.error-message .material-symbols-rounded {
+  font-size: 1.25rem;
+  flex-shrink: 0;
+}
+
+.md3-login-card__form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.md3-text-field {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+.md3-text-field__label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #666;
+  margin-bottom: 0.5rem;
+}
+
+.md3-text-field__input {
+  padding: 0.75rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 1rem;
+  font-family: inherit;
+  transition: border-color 0.2s;
+}
+
+.md3-text-field__input:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.md3-button {
+  padding: 0.75rem 1.5rem;
+  font-size: 1rem;
+  font-weight: 500;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: inherit;
+}
+
+.md3-button--contained {
+  background: #667eea;
+  color: white;
+}
+
+.md3-button--contained:hover {
+  background: #5568d3;
+  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+}
+
+.md3-button--contained:active {
+  background: #445db7;
+}
+
+.md3-link {
+  color: #667eea;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.md3-link:hover {
+  color: #5568d3;
+  text-decoration: underline;
+}
+
+.md3-login-card__footer {
+  text-align: center;
+  padding-top: 1.5rem;
+  border-top: 1px solid #eee;
+}
+
+.md3-login-card__footer-text {
+  font-size: 0.875rem;
+  color: #666;
+  margin: 0;
+}
+
+@media (max-width: 600px) {
+  .md3-login-card {
+    padding: 2rem 1.5rem;
+  }
+  
+  .md3-login-card__title {
+    font-size: 1.5rem;
+  }
+}
+</style>
+{% endblock %}

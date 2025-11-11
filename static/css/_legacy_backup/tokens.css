@@ -1,0 +1,45 @@
+﻿/**
+ * Legacy Design Tokens
+ * Harmoniert mit MD3-Tokens für Rückwärtskompatibilität
+ */
+:root {
+  /* Fonts */
+  --font-sans: "Arial Narrow", "Helvetica Neue Condensed", Arial, sans-serif;
+  --font-body: Arial, sans-serif;
+  --font-mono: "JetBrains Mono", "Fira Mono", monospace;
+
+  /* Farben - Gemappt auf MD3-Tokens */
+  --color-bg: #c7d5d8;
+  --color-header: var(--md3-color-surface-container); /* #eaf3f5 */
+  --color-surface: var(--md3-color-surface-container); /* #eaf3f5 */
+  --color-surface-alt: var(--md3-color-surface-container-high); /* #e4edf0 */
+  --color-border: var(--md3-color-outline); /* #2f5f73 */
+  --color-accent: var(--md3-color-primary); /* #0a5981 */
+  --color-accent-soft: var(--md3-color-primary-container); /* #c8e6f5 */
+  --color-text: var(--md3-color-on-surface-variant); /* #2f5f73 */
+  --color-text-muted: var(--md3-color-secondary); /* #2f5f73 */
+  --color-success: var(--md3-color-secondary); /* #2f5f73 */
+  --color-warning: #efede1;
+  --color-error: var(--md3-color-error); /* #ba1a1a */
+
+  /* Radius */
+  --radius-sm: var(--md3-radius-small); /* 0.5rem */
+  --radius-md: var(--md3-radius-large); /* 1rem */
+  
+  /* Shadows */
+  --shadow-sm: var(--md3-elevation-1);
+  --shadow-md: var(--md3-elevation-2);
+  --shadow-elevated: var(--md3-elevation-3);
+
+  /* Tailwind Compatibility */
+  --tw-ring-offset-shadow: 0 0 0 0 rgba(0, 0, 0, 0);
+  --tw-ring-shadow: 0 0 0 0 rgba(0, 0, 0, 0);
+  --tw-shadow: 0 0 0 0 rgba(0, 0, 0, 0);
+
+  /* Spacing */
+  --space-xs: var(--md3-space-2); /* 0.5rem */
+  --space-sm: var(--md3-space-3); /* 0.75rem */
+  --space-md: var(--md3-space-6); /* 1.5rem */
+  --space-lg: var(--md3-space-10); /* 2.5rem */
+  --space-xl: var(--md3-space-16); /* 4rem */
+}

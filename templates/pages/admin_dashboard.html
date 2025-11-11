@@ -1,0 +1,121 @@
+{% extends 'base.html' %}
+{% block page_title %}Panel Administrativo &middot; CO.RA.PAN{% endblock %}
+
+{% block extra_head %}
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/md3/tokens.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/md3/typography.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/md3/components/hero.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/md3/components/admin-dashboard.css') }}">
+{% endblock %}
+
+{% block content %}
+<!-- MD3 Admin Dashboard -->
+<article class="md3-admin-page">
+  
+  <!-- Hero Header (Container Hero - Tonal) -->
+  <section class="md3-hero md3-hero--container" role="main" aria-label="Panel Administrativo">
+    <div class="md3-hero__container">
+      <span class="md3-hero__eyebrow">Panel Administrativo</span>
+      <h1 class="md3-hero__title">Métricas y Configuración</h1>
+      <p class="md3-hero__intro">
+        Monitoriza accesos, visitas y búsquedas en la plataforma. Los datos se actualizan automáticamente.
+      </p>
+    </div>
+  </section>
+
+  <!-- Main Content -->
+  <div class="md3-admin-content">
+    
+    <!-- Toggle Control Card -->
+    <div class="md3-admin-card md3-admin-card--control">
+      <div class="md3-admin-card__header">
+        <i class="bi bi-headphones md3-admin-card__icon"></i>
+        <div>
+          <h2 class="md3-admin-card__title md3-title-large">Acceso Público Temporal</h2>
+          <p class="md3-admin-card__subtitle md3-body-medium">
+            Controla si los visitantes anónimos pueden reproducir fragmentos temporales del corpus
+          </p>
+        </div>
+      </div>
+      <div class="md3-admin-card__body">
+        <button 
+          type="button" 
+          class="md3-switch" 
+          role="switch"
+          data-element="toggle-temp" 
+          aria-checked="false"
+          aria-label="Alternar acceso público temporal">
+          <span class="md3-switch__track">
+            <span class="md3-switch__thumb"></span>
+          </span>
+          <span class="md3-switch__label md3-body-large" data-element="toggle-temp-label">
+            Acceso público desactivado
+          </span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Metrics Grid -->
+    <div class="md3-admin-metrics" data-element="metrics-grid">
+      
+      <!-- Access Card -->
+      <div class="md3-metric-card" data-metric="access">
+        <div class="md3-metric-card__icon">
+          <i class="bi bi-wave-square"></i>
+        </div>
+        <div class="md3-metric-card__content">
+          <p class="md3-metric-card__label md3-label-large">Accesos al Corpus</p>
+          <h3 class="md3-metric-card__value md3-display-medium">-</h3>
+          <p class="md3-metric-card__delta md3-body-small">Sin datos disponibles</p>
+        </div>
+      </div>
+
+      <!-- Visits Card -->
+      <div class="md3-metric-card" data-metric="visits">
+        <div class="md3-metric-card__icon">
+          <i class="bi bi-globe-americas"></i>
+        </div>
+        <div class="md3-metric-card__content">
+          <p class="md3-metric-card__label md3-label-large">Visitas a la Plataforma</p>
+          <h3 class="md3-metric-card__value md3-display-medium">-</h3>
+          <p class="md3-metric-card__delta md3-body-small">Sin datos disponibles</p>
+        </div>
+      </div>
+
+      <!-- Search Card -->
+      <div class="md3-metric-card" data-metric="search">
+        <div class="md3-metric-card__icon">
+          <i class="bi bi-search"></i>
+        </div>
+        <div class="md3-metric-card__content">
+          <p class="md3-metric-card__label md3-label-large">Búsquedas Realizadas</p>
+          <h3 class="md3-metric-card__value md3-display-medium">-</h3>
+          <p class="md3-metric-card__delta md3-body-small">Sin datos disponibles</p>
+        </div>
+      </div>
+      
+    </div>
+
+    <!-- Info Card -->
+    <div class="md3-admin-card md3-admin-card--info">
+      <div class="md3-admin-card__header">
+        <i class="bi bi-info-circle md3-admin-card__icon"></i>
+        <h2 class="md3-admin-card__title md3-title-large">Notas Operativas</h2>
+      </div>
+      <div class="md3-admin-card__body">
+        <ul class="md3-admin-list md3-body-medium">
+          <li>El conteo de accesos se desglosa por rol y se recalcula mensualmente</li>
+          <li>El interruptor actualiza <code>ALLOW_PUBLIC_TEMP_AUDIO</code> en caliente</li>
+          <li>Los datos se almacenan en <code>data/counters/</code> y pueden sincronizarse con el backend</li>
+          <li>Los logs del sistema se encuentran en <code>logs/corapan.log</code></li>
+        </ul>
+      </div>
+    </div>
+
+  </div>
+</article>
+{% endblock %}
+
+{% block extra_scripts %}
+  <script type="module" src="{{ url_for('static', filename='js/modules/admin/dashboard.js') }}" defer></script>
+{% endblock %}

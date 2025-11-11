@@ -1,0 +1,635 @@
+{% extends 'base.html' %}
+
+{% block page_title %}Corpus · CO.RA.PAN{% endblock %}
+
+{% block extra_head %}
+<!-- MD3 Core Styles -->
+<link rel="stylesheet" href="{{ url_for('static', filename='css/md3/tokens.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/md3/typography.css') }}">
+<!-- MD3 Components (Canonical - Transferred from legacy md3-components.css) -->
+<link rel="stylesheet" href="{{ url_for('static', filename='css/md3/components/hero.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/md3/components/buttons.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/md3/components/textfields.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/md3/components/tabs.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/md3/components/forms.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/md3/components/corpus-search-form.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/md3/components/select2-tagify.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/md3/components/datatables.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/md3/components/datatables-theme-lock.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/md3/components/corpus.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/md3/components/stats.css') }}">
+<!-- DataTables CSS -->
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/jquery.dataTables.min.css">
+<link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.2/css/buttons.dataTables.min.css">
+<link rel="stylesheet" href="https://cdn.datatables.net/select/1.7.0/css/select.dataTables.min.css">
+<!-- Select2 CSS -->
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<!-- Tagify für Token-Input -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@yaireo/tagify/dist/tagify.css">
+{% endblock %}
+
+{% block content %}
+<article class="md3-corpus-page">
+  <!-- Hero Header (Container Hero - Tonal with Icon) -->
+  <section class="md3-hero md3-hero--container md3-hero--with-icon" role="main" aria-label="Búsqueda en el corpus">
+    <div class="md3-hero__container">
+      <span class="material-symbols-rounded md3-hero__icon" aria-hidden="true">search_insights</span>
+      <div class="md3-hero__content">
+        <span class="md3-hero__eyebrow">Corpus</span>
+        <h1 class="md3-hero__title">Buscar en el corpus</h1>
+        <p class="md3-hero__intro">
+          Busca palabras o secuencias de letras o palabras, filtra por país, hablante y registro.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Content -->
+  <section class="md3-corpus-content">
+    <!-- Tab Navigation -->
+    <nav class="md3-tabs">
+      <button type="button" class="md3-tab {% if active_tab == 'tab-simple' or not active_tab %}md3-tab--active{% endif %}" data-tab="simple">Búsqueda simple</button>
+      <a href="{{ url_for('advanced_search.index') }}" class="md3-tab" role="button">Búsqueda avanzada</a>
+      <button type="button" class="md3-tab {% if active_tab == 'tab-token' %}md3-tab--active{% endif %}" data-tab="token">Token</button>
+    </nav>
+    
+    <!-- Search Form -->
+    <form id="corpus-search-form" action="{{ url_for('corpus.search') }}" method="get" class="md3-corpus-form">
+      <!-- Hidden fields -->
+      <input type="hidden" id="active_tab" name="active_tab" value="{{ request.values.get('active_tab', 'tab-simple') }}">
+      <input type="hidden" id="token_ids_hidden" name="token_ids" value="{{ token_ids if token_ids else '' }}">
+      <input type="hidden" id="search_mode_override" name="search_mode_override" value="">
+      
+      <!-- Tab Simple -->
+      <div id="tab-simple" class="md3-tab-content {% if active_tab == 'tab-simple' or not active_tab %}md3-tab-content--active{% endif %}">
+        <!-- Search Row -->
+        <div class="md3-corpus-search-row">
+          <div class="md3-outlined-textfield md3-outlined-textfield--flex">
+            <input 
+              type="text" 
+              id="query" 
+              name="query" 
+              class="md3-outlined-textfield__input" 
+              placeholder=" "
+              value="{{ request.args.get('query', '') }}"
+              required>
+            <label for="query" class="md3-outlined-textfield__label">Búsqueda</label>
+            <div class="md3-outlined-textfield__outline">
+              <div class="md3-outlined-textfield__outline-start"></div>
+              <div class="md3-outlined-textfield__outline-notch"></div>
+              <div class="md3-outlined-textfield__outline-end"></div>
+            </div>
+          </div>
+
+          <div class="md3-outlined-textfield">
+            <select 
+              name="search_mode" 
+              id="search_mode" 
+              class="md3-outlined-textfield__input md3-outlined-textfield__input--select">
+              <option value="text" {% if request.args.get('search_mode', 'text') == 'text' %}selected{% endif %}>Forma</option>
+              <option value="text_exact" {% if request.args.get('search_mode') == 'text_exact' %}selected{% endif %}>Forma exacta</option>
+              <option value="lemma_exact" {% if request.args.get('search_mode') == 'lemma_exact' %}selected{% endif %}>Lema</option>
+            </select>
+            <label for="search_mode" class="md3-outlined-textfield__label md3-outlined-textfield__label--select">Forma/lema</label>
+            <div class="md3-outlined-textfield__outline">
+              <div class="md3-outlined-textfield__outline-start"></div>
+              <div class="md3-outlined-textfield__outline-notch"></div>
+              <div class="md3-outlined-textfield__outline-end"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Filter Grid -->
+        <div class="md3-corpus-filter-grid">
+          <div class="md3-outlined-textfield md3-outlined-textfield--compact">
+            <select id="filter-country-national" name="country_code" multiple class="md3-outlined-textfield__input md3-outlined-textfield__input--select" data-enhance="select2" data-placeholder="Seleccionar">
+              <option value=""></option>
+              <option value="ARG" {% if 'ARG' in request.args.getlist('country_code') %}selected{% endif %}>Argentina</option>
+              <option value="BOL" {% if 'BOL' in request.args.getlist('country_code') %}selected{% endif %}>Bolivia</option>
+              <option value="CHL" {% if 'CHL' in request.args.getlist('country_code') %}selected{% endif %}>Chile</option>
+              <option value="COL" {% if 'COL' in request.args.getlist('country_code') %}selected{% endif %}>Colombia</option>
+              <option value="CRI" {% if 'CRI' in request.args.getlist('country_code') %}selected{% endif %}>Costa Rica</option>
+              <option value="CUB" {% if 'CUB' in request.args.getlist('country_code') %}selected{% endif %}>Cuba</option>
+              <option value="ECU" {% if 'ECU' in request.args.getlist('country_code') %}selected{% endif %}>Ecuador</option>
+              <option value="ESP" {% if 'ESP' in request.args.getlist('country_code') %}selected{% endif %}>España</option>
+              <option value="USA" {% if 'USA' in request.args.getlist('country_code') %}selected{% endif %}>Estados Unidos</option>
+              <option value="GTM" {% if 'GTM' in request.args.getlist('country_code') %}selected{% endif %}>Guatemala</option>
+              <option value="HND" {% if 'HND' in request.args.getlist('country_code') %}selected{% endif %}>Honduras</option>
+              <option value="MEX" {% if 'MEX' in request.args.getlist('country_code') %}selected{% endif %}>México</option>
+              <option value="NIC" {% if 'NIC' in request.args.getlist('country_code') %}selected{% endif %}>Nicaragua</option>
+              <option value="PAN" {% if 'PAN' in request.args.getlist('country_code') %}selected{% endif %}>Panamá</option>
+              <option value="PRY" {% if 'PRY' in request.args.getlist('country_code') %}selected{% endif %}>Paraguay</option>
+              <option value="PER" {% if 'PER' in request.args.getlist('country_code') %}selected{% endif %}>Perú</option>
+              <option value="DOM" {% if 'DOM' in request.args.getlist('country_code') %}selected{% endif %}>República Dominicana</option>
+              <option value="SLV" {% if 'SLV' in request.args.getlist('country_code') %}selected{% endif %}>El Salvador</option>
+              <option value="URY" {% if 'URY' in request.args.getlist('country_code') %}selected{% endif %}>Uruguay</option>
+              <option value="VEN" {% if 'VEN' in request.args.getlist('country_code') %}selected{% endif %}>Venezuela</option>
+            </select>
+            <label for="filter-country-national" class="md3-outlined-textfield__label md3-outlined-textfield__label--select">País (emisora nacional)</label>
+            <div class="md3-outlined-textfield__outline">
+              <div class="md3-outlined-textfield__outline-start"></div>
+              <div class="md3-outlined-textfield__outline-notch"></div>
+              <div class="md3-outlined-textfield__outline-end"></div>
+            </div>
+          </div>
+
+          <div class="md3-outlined-textfield md3-outlined-textfield--compact">
+            <select id="filter-speaker" name="speaker_type" multiple class="md3-outlined-textfield__input md3-outlined-textfield__input--select" data-enhance="select2" data-placeholder="Seleccionar">
+              <option value=""></option>
+              <option value="pro" {% if 'pro' in request.args.getlist('speaker_type') %}selected{% endif %}>Profesional</option>
+              <option value="otro" {% if 'otro' in request.args.getlist('speaker_type') %}selected{% endif %}>Otro</option>
+            </select>
+            <label for="filter-speaker" class="md3-outlined-textfield__label md3-outlined-textfield__label--select">Hablante</label>
+            <div class="md3-outlined-textfield__outline">
+              <div class="md3-outlined-textfield__outline-start"></div>
+              <div class="md3-outlined-textfield__outline-notch"></div>
+              <div class="md3-outlined-textfield__outline-end"></div>
+            </div>
+          </div>
+
+          <div class="md3-outlined-textfield md3-outlined-textfield--compact">
+            <select id="filter-sex" name="sex" multiple class="md3-outlined-textfield__input md3-outlined-textfield__input--select" data-enhance="select2" data-placeholder="Seleccionar">
+              <option value=""></option>
+              <option value="m" {% if 'm' in request.args.getlist('sex') %}selected{% endif %}>Masculino</option>
+              <option value="f" {% if 'f' in request.args.getlist('sex') %}selected{% endif %}>Femenino</option>
+            </select>
+            <label for="filter-sex" class="md3-outlined-textfield__label md3-outlined-textfield__label--select">Sexo</label>
+            <div class="md3-outlined-textfield__outline">
+              <div class="md3-outlined-textfield__outline-start"></div>
+              <div class="md3-outlined-textfield__outline-notch"></div>
+              <div class="md3-outlined-textfield__outline-end"></div>
+            </div>
+          </div>
+
+          <div class="md3-outlined-textfield md3-outlined-textfield--compact">
+            <select id="filter-mode" name="speech_mode" multiple class="md3-outlined-textfield__input md3-outlined-textfield__input--select" data-enhance="select2" data-placeholder="Seleccionar">
+              <option value=""></option>
+              <option value="pre" {% if 'pre' in request.args.getlist('speech_mode') %}selected{% endif %}>Anuncio</option>
+              <option value="lectura" {% if 'lectura' in request.args.getlist('speech_mode') %}selected{% endif %}>Lectura</option>
+              <option value="libre" {% if 'libre' in request.args.getlist('speech_mode') %}selected{% endif %}>Habla libre</option>
+            </select>
+            <label for="filter-mode" class="md3-outlined-textfield__label md3-outlined-textfield__label--select">Modo</label>
+            <div class="md3-outlined-textfield__outline">
+              <div class="md3-outlined-textfield__outline-start"></div>
+              <div class="md3-outlined-textfield__outline-notch"></div>
+              <div class="md3-outlined-textfield__outline-end"></div>
+            </div>
+          </div>
+
+          <div class="md3-outlined-textfield md3-outlined-textfield--compact">
+            <select id="filter-discourse" name="discourse" multiple class="md3-outlined-textfield__input md3-outlined-textfield__input--select" data-enhance="select2" data-placeholder="Seleccionar">
+              <option value=""></option>
+              <option value="general" {% if 'general' in request.args.getlist('discourse') %}selected{% endif %}>General</option>
+              <option value="tiempo" {% if 'tiempo' in request.args.getlist('discourse') %}selected{% endif %}>Tiempo</option>
+              <option value="tránsito" {% if 'tránsito' in request.args.getlist('discourse') %}selected{% endif %}>Tránsito</option>
+            </select>
+            <label for="filter-discourse" class="md3-outlined-textfield__label md3-outlined-textfield__label--select">Discurso</label>
+            <div class="md3-outlined-textfield__outline">
+              <div class="md3-outlined-textfield__outline-start"></div>
+              <div class="md3-outlined-textfield__outline-notch"></div>
+              <div class="md3-outlined-textfield__outline-end"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Filter Checkboxes (below grid) -->
+        <div class="md3-regional-filter-section">
+          <label class="md3-checkbox-container">
+            <input type="checkbox" id="include-regional" name="include_regional" value="1" {% if request.args.get('include_regional') %}checked{% endif %}>
+            <span class="md3-checkbox">
+              <svg class="md3-checkbox__checkmark" viewBox="0 0 18 18">
+                <path class="md3-checkbox__checkmark-path" fill="none" stroke="white" d="M1.73,9.29 l4.75,4.75 l10.04,-10.04"/>
+              </svg>
+            </span>
+            <span class="md3-checkbox__label">Incluir emisoras regionales</span>
+          </label>
+          <label class="md3-checkbox-container">
+            <input type="checkbox" id="sensitive-search" name="sensitive" value="1" {% if request.args.get('sensitive', '1') == '1' %}checked{% endif %}>
+            <span class="md3-checkbox">
+              <svg class="md3-checkbox__checkmark" viewBox="0 0 18 18">
+                <path class="md3-checkbox__checkmark-path" fill="none" stroke="white" d="M1.73,9.29 l4.75,4.75 l10.04,-10.04"/>
+              </svg>
+            </span>
+            <span class="md3-checkbox__label">Sensibilidad a mayúsculas y acentos</span>
+          </label>
+        </div>
+
+        <!-- Actions -->
+        <div class="md3-corpus-actions">
+          <button type="submit" class="md3-button-filled" id="search-simple">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <span>Buscar</span>
+          </button>
+          <button type="button" class="md3-button-outlined" id="reset-filters">
+            <i class="fa-solid fa-rotate-left"></i>
+            <span>Restablecer</span>
+          </button>
+        </div>
+      </div>
+      
+      <!-- Tab Token -->
+      <div id="tab-token" class="md3-tab-content {% if active_tab == 'tab-token' %}md3-tab-content--active{% endif %}">
+        <!-- Search Row -->
+        <div class="md3-corpus-search-row">
+          <div class="md3-outlined-textfield md3-outlined-textfield--flex">
+            <input 
+              type="text" 
+              id="token-input" 
+              name="token_ids_input"
+              class="md3-outlined-textfield__input tagify-input"
+              placeholder=" ">
+            <label for="token-input" class="md3-outlined-textfield__label">Token-IDs (separados por coma)</label>
+            <div class="md3-outlined-textfield__outline">
+              <div class="md3-outlined-textfield__outline-start"></div>
+              <div class="md3-outlined-textfield__outline-notch"></div>
+              <div class="md3-outlined-textfield__outline-end"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="md3-corpus-actions">
+          <button type="button" class="md3-button-filled" id="token-apply">
+            <i class="fa-solid fa-search"></i>
+            <span>Buscar</span>
+          </button>
+          <button type="button" class="md3-button-outlined" id="clear-tokens">
+            <i class="fa-solid fa-eraser"></i>
+            <span>Borrar</span>
+          </button>
+        </div>
+      </div>
+    </form>
+
+    <!-- Sub-Tabs for Simple Search: Resultados | Estadísticas -->
+    <div id="simple-sub-tabs" role="tablist" class="md3-stats-tabs" style="margin-top: 1.5rem; display: {% if active_tab == 'tab-simple' or not active_tab %}flex{% else %}none{% endif %};">
+      <button type="button" role="tab" id="tab-resultados" class="md3-stats-tab md3-stats-tab--active" data-view="results" aria-controls="panel-resultados" aria-selected="true">
+        <span class="material-symbols-rounded" aria-hidden="true">table</span>
+        <span>Resultados</span>
+      </button>
+      <button type="button" role="tab" id="tab-estadisticas" class="md3-stats-tab" data-view="stats" aria-controls="panel-estadisticas" aria-selected="false">
+        <span class="material-symbols-rounded" aria-hidden="true">bar_chart</span>
+        <span>Estadísticas</span>
+      </button>
+    </div>
+
+    <!-- Results View -->
+    <section id="panel-resultados" role="tabpanel" aria-labelledby="tab-resultados" class="md3-view-content md3-view-content--active">
+      {% if results %}
+      <section class="md3-corpus-results">
+      <!-- Stats -->
+      <div class="md3-corpus-stats">
+        <div class="md3-corpus-stat">
+          <span class="md3-label-small md3-corpus-stat__label">Buscado</span>
+          <span class="md3-title-medium md3-corpus-stat__value">"{{ query }}"</span>
+        </div>
+        <div class="md3-corpus-stat">
+          <span class="md3-label-small md3-corpus-stat__label">Resultados</span>
+          <span class="md3-title-medium md3-corpus-stat__value">{{ total_results }}</span>
+        </div>
+        <div class="md3-corpus-stat">
+          <span class="md3-label-small md3-corpus-stat__label">Grabaciones</span>
+          <span class="md3-title-medium md3-corpus-stat__value">{{ unique_filenames }}</span>
+        </div>
+        <div class="md3-corpus-stat">
+          <span class="md3-label-small md3-corpus-stat__label">Países</span>
+          <span class="md3-title-medium md3-corpus-stat__value">{{ unique_countries }}</span>
+        </div>
+      </div>
+
+      <!-- DataTable -->
+      <div class="md3-corpus-table-container">
+        <table id="corpus-table" class="md3-corpus-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Ctx.←</th>
+              <th>Resultado</th>
+              <th>Ctx.→</th>
+              <th>Audio</th>
+              <th>País</th>
+              <th>Hablante</th>
+              <th>Sexo</th>
+              <th>Modo</th>
+              <th>Discurso</th>
+              <th>Token‑ID</th>
+              <th>Archivo</th>
+            </tr>
+          </thead>
+          <tbody>
+            <!-- DataTables (Server-Side) will populate this dynamically -->
+          </tbody>
+        </table>
+      </div>
+    </section>
+      {% elif error_message %}
+      <div class="md3-corpus-alert">{{ error_message | safe }}</div>
+      {% endif %}
+    </section>
+
+    <!-- Statistics View -->
+    <section id="panel-estadisticas" role="tabpanel" aria-labelledby="tab-estadisticas" class="md3-view-content" hidden>
+      <header class="md3-stats-header">
+        <h2 class="md3-headline-small md3-stats-title">Estadísticas de los resultados</h2>
+        <div class="md3-stats-filter">
+          <label for="stats-country-filter" class="md3-stats-filter-label">Filtrar por país:</label>
+          <select id="stats-country-filter" class="md3-stats-filter-select">
+            <option value="">Todos los países</option>
+          </select>
+        </div>
+        <p id="stats-total" class="md3-body-medium" style="margin: 0.5rem 0 0 0; color: var(--md-sys-color-on-surface-variant);">
+          Tokens coincidentes: <strong style="color: var(--md-sys-color-primary);">—</strong>
+        </p>
+      </header>
+
+      <div id="stats-grid" class="md3-stats-charts-grid">
+        <!-- País -->
+        <article class="card card-elevated" data-chart="by_country">
+          <div class="md3-stats-card-header">
+            <div class="md3-stats-card-title-wrapper">
+              <h3 class="md3-title-medium md3-stats-card-title">País</h3>
+            </div>
+            <div class="md3-segmented" data-chart-id="country">
+              <button class="md3-segmented-btn is-selected" data-mode="count" aria-pressed="true" aria-label="Mostrar números absolutos">
+                <span class="material-symbols-rounded" aria-hidden="true">format_list_numbered</span>
+              </button>
+              <button class="md3-segmented-btn" data-mode="percent" aria-pressed="false" aria-label="Mostrar porcentajes">
+                <span class="material-symbols-rounded" aria-hidden="true">percent</span>
+              </button>
+            </div>
+          </div>
+          <div class="card-content">
+            <div class="chart-host" id="chart-country" aria-label="Distribución por país"></div>
+          </div>
+        </article>
+
+        <!-- Tipo de hablante -->
+        <article class="card card-elevated" data-chart="by_speaker_type">
+          <div class="md3-stats-card-header">
+            <div class="md3-stats-card-title-wrapper">
+              <h3 class="md3-title-medium md3-stats-card-title">Tipo de hablante</h3>
+            </div>
+            <div class="md3-segmented" data-chart-id="speaker">
+              <button class="md3-segmented-btn is-selected" data-mode="count" aria-pressed="true" aria-label="Mostrar números absolutos">
+                <span class="material-symbols-rounded" aria-hidden="true">format_list_numbered</span>
+              </button>
+              <button class="md3-segmented-btn" data-mode="percent" aria-pressed="false" aria-label="Mostrar porcentajes">
+                <span class="material-symbols-rounded" aria-hidden="true">percent</span>
+              </button>
+            </div>
+          </div>
+          <div class="card-content">
+            <div class="chart-host" id="chart-speaker" aria-label="Distribución por tipo de hablante"></div>
+          </div>
+        </article>
+
+        <!-- Sexo -->
+        <article class="card card-elevated" data-chart="by_sexo">
+          <div class="md3-stats-card-header">
+            <div class="md3-stats-card-title-wrapper">
+              <h3 class="md3-title-medium md3-stats-card-title">Sexo</h3>
+            </div>
+            <div class="md3-segmented" data-chart-id="sexo">
+              <button class="md3-segmented-btn is-selected" data-mode="count" aria-pressed="true" aria-label="Mostrar números absolutos">
+                <span class="material-symbols-rounded" aria-hidden="true">format_list_numbered</span>
+              </button>
+              <button class="md3-segmented-btn" data-mode="percent" aria-pressed="false" aria-label="Mostrar porcentajes">
+                <span class="material-symbols-rounded" aria-hidden="true">percent</span>
+              </button>
+            </div>
+          </div>
+          <div class="card-content">
+            <div class="chart-host" id="chart-sexo" aria-label="Distribución por sexo"></div>
+          </div>
+        </article>
+
+        <!-- Registro -->
+        <article class="card card-elevated" data-chart="by_modo">
+          <div class="md3-stats-card-header">
+            <div class="md3-stats-card-title-wrapper">
+              <h3 class="md3-title-medium md3-stats-card-title">Registro</h3>
+            </div>
+            <div class="md3-segmented" data-chart-id="modo">
+              <button class="md3-segmented-btn is-selected" data-mode="count" aria-pressed="true" aria-label="Mostrar números absolutos">
+                <span class="material-symbols-rounded" aria-hidden="true">format_list_numbered</span>
+              </button>
+              <button class="md3-segmented-btn" data-mode="percent" aria-pressed="false" aria-label="Mostrar porcentajes">
+                <span class="material-symbols-rounded" aria-hidden="true">percent</span>
+              </button>
+            </div>
+          </div>
+          <div class="card-content">
+            <div class="chart-host" id="chart-modo" aria-label="Distribución por registro"></div>
+          </div>
+        </article>
+
+        <!-- Discurso -->
+        <article class="card card-elevated" data-chart="by_discourse">
+          <div class="md3-stats-card-header">
+            <div class="md3-stats-card-title-wrapper">
+              <h3 class="md3-title-medium md3-stats-card-title">Discurso</h3>
+            </div>
+            <div class="md3-segmented" data-chart-id="discourse">
+              <button class="md3-segmented-btn is-selected" data-mode="count" aria-pressed="true" aria-label="Mostrar números absolutos">
+                <span class="material-symbols-rounded" aria-hidden="true">format_list_numbered</span>
+              </button>
+              <button class="md3-segmented-btn" data-mode="percent" aria-pressed="false" aria-label="Mostrar porcentajes">
+                <span class="material-symbols-rounded" aria-hidden="true">percent</span>
+              </button>
+            </div>
+          </div>
+          <div class="card-content">
+            <div class="chart-host" id="chart-discourse" aria-label="Distribución por tipo de discurso"></div>
+          </div>
+        </article>
+      </div>
+    </section>
+  </section>
+</article>
+
+<!-- Loading Overlay -->
+<div id="loading-overlay" class="md3-corpus-loading" hidden>
+  <div class="md3-corpus-loading__spinner">
+    <span class="md3-title-large">Buscando...</span>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<!-- jQuery -->
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<!-- Select2 -->
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<!-- DataTables -->
+<script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.4.2/js/dataTables.buttons.min.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.html5.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<!-- Tagify -->
+<script src="https://cdn.jsdelivr.net/npm/@yaireo/tagify"></script>
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+<!-- Custom Script -->
+<script>
+  // Use window properties to avoid "redeclaration of const" errors with Turbo Drive
+  window.PLAYER_PATH = '{{ url_for("player.player_page") }}';
+  window.ALLOW_PUBLIC_TEMP_AUDIO = '{{ 'true' if allow_public_temp_audio else 'false' }}';
+  window.IS_AUTHENTICATED = '{{ 'true' if is_authenticated else 'false' }}';
+  
+  // Store values for later restoration
+  window.RESTORE_ACTIVE_TAB = '{{ active_tab if active_tab else "tab-simple" }}';
+  window.RESTORE_TOKEN_IDS = '{{ token_ids if token_ids else "" }}';
+</script>
+
+<!-- Corpus Module (ES6) - Main entry point -->
+<script type="module" src="{{ url_for('static', filename='js/modules/corpus/index.js') }}"></script>
+
+<!-- ECharts CDN for Statistics Charts -->
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.5.1/dist/echarts.min.js"></script>
+
+<!-- Stats Module (ES6) - For statistics tab -->
+<script type="module">
+  import { initStatsTab, loadStats } from '{{ url_for('static', filename='js/modules/stats/initStatsTab.js') }}';
+  
+  // Initialize stats tab
+  document.addEventListener('DOMContentLoaded', () => {
+    initStatsTab();
+  });
+  
+  // Make loadStats globally available for sub-tab switching
+  window.loadStats = loadStats;
+</script>
+
+<!-- Tab Switching -->
+<script>
+// Main tabs (Simple, Advanced, Token)
+document.querySelectorAll('.md3-tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    if (tab.disabled) return;
+    const targetTab = tab.dataset.tab;
+    
+    // Update tabs
+    document.querySelectorAll('.md3-tab').forEach(t => t.classList.remove('md3-tab--active'));
+    tab.classList.add('md3-tab--active');
+    
+    // Update content
+    document.querySelectorAll('.md3-tab-content').forEach(c => c.classList.remove('md3-tab-content--active'));
+    document.getElementById(`tab-${targetTab}`).classList.add('md3-tab-content--active');
+    
+    // Show/hide sub-tabs for simple search
+    const subTabs = document.getElementById('simple-sub-tabs');
+    if (subTabs) {
+      subTabs.style.display = (targetTab === 'simple') ? 'flex' : 'none';
+    }
+    
+    // Update hidden field
+    document.getElementById('active_tab').value = `tab-${targetTab}`;
+  });
+});
+
+// Sub-tabs (Resultados | Estadísticas) - MD3 Stats Tabs
+document.querySelectorAll('.md3-stats-tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    const targetView = tab.dataset.view;
+    
+    // Update tabs (ARIA + CSS)
+    document.querySelectorAll('.md3-stats-tab').forEach(t => {
+      t.classList.remove('md3-stats-tab--active');
+      t.setAttribute('aria-selected', 'false');
+    });
+    tab.classList.add('md3-stats-tab--active');
+    tab.setAttribute('aria-selected', 'true');
+    
+    // Update panels
+    const resultsPanel = document.getElementById('panel-resultados');
+    const statsPanel = document.getElementById('panel-estadisticas');
+    
+    if (targetView === 'results') {
+      resultsPanel.classList.add('md3-view-content--active');
+      resultsPanel.removeAttribute('hidden');
+      statsPanel.classList.remove('md3-view-content--active');
+      statsPanel.setAttribute('hidden', '');
+      
+      // Update URL
+      const url = new URL(window.location);
+      url.searchParams.delete('view');
+      window.history.replaceState({}, '', url);
+    } else if (targetView === 'stats') {
+      statsPanel.classList.add('md3-view-content--active');
+      statsPanel.removeAttribute('hidden');
+      resultsPanel.classList.remove('md3-view-content--active');
+      resultsPanel.setAttribute('hidden', '');
+      
+      // Load stats if needed
+      if (window.loadStats) {
+        window.loadStats();
+      }
+      
+      // Update URL
+      const url = new URL(window.location);
+      url.searchParams.set('view', 'stats');
+      window.history.replaceState({}, '', url);
+      
+      // Dispatch event for stats module
+      document.dispatchEvent(new Event('statsTabActivated'));
+    }
+  });
+});
+
+// Initialize view on page load
+document.addEventListener('DOMContentLoaded', () => {
+  const params = new URLSearchParams(window.location.search);
+  const view = params.get('view');
+  
+  if (view === 'stats') {
+    // Activate stats sub-tab
+    const statsSubTab = document.querySelector('[data-view="stats"]');
+    if (statsSubTab) {
+      statsSubTab.click();
+    }
+  }
+});
+
+// Reset filters
+document.getElementById('reset-filters').addEventListener('click', () => {
+  document.getElementById('corpus-search-form').reset();
+  document.querySelectorAll('select[multiple]').forEach(select => {
+    select.selectedIndex = -1;
+  });
+  // Reset checkboxes to defaults
+  document.getElementById('include-regional').checked = false;
+  document.getElementById('sensitive-search').checked = true;
+});
+
+// Sensitive checkbox persistence
+document.addEventListener('DOMContentLoaded', () => {
+  const sensitiveCheckbox = document.getElementById('sensitive-search');
+  
+  // Load from localStorage if available
+  const savedValue = localStorage.getItem('corapan_sensitive');
+  if (savedValue !== null) {
+    sensitiveCheckbox.checked = savedValue === '1';
+  }
+  
+  // Save to localStorage on change
+  sensitiveCheckbox.addEventListener('change', () => {
+    localStorage.setItem('corapan_sensitive', sensitiveCheckbox.checked ? '1' : '0');
+  });
+});
+
+// Restore token IDs after all scripts loaded (tabs are already set server-side)
+window.addEventListener('load', function() {
+  setTimeout(function() {
+    const tokenIds = window.RESTORE_TOKEN_IDS || '';
+    
+    // Restore token IDs in Tagify
+    if (tokenIds && window.setTokenTabState) {
+      console.log('Restoring token IDs:', tokenIds);
+      const tokenArray = tokenIds.split(',').map(t => t.trim()).filter(t => t);
+      window.setTokenTabState(tokenArray);
+    } else if (tokenIds) {
+      console.warn('setTokenTabState not available, tokens:', tokenIds);
+    }
+  }, 500);
+});
+</script>
+{% endblock %}

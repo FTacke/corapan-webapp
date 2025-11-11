@@ -1,0 +1,51 @@
+﻿{% extends 'base.html' %}
+{% set page_name = 'atlas' %}
+{% block page_title %}Atlas · CO.RA.PAN{% endblock %}
+
+{% block content %}
+<article class="md3-atlas-page">
+  <!-- Hero Header (Container Hero - Tonal with Icon) -->
+  <section class="md3-hero md3-hero--container md3-hero--with-icon" role="main" aria-label="Atlas panhispánico">
+    <div class="md3-hero__container">
+      <span class="material-symbols-rounded md3-hero__icon" aria-hidden="true">globe_location_pin</span>
+      <div class="md3-hero__content">
+        <span class="md3-hero__eyebrow">Atlas</span>
+        <h1 class="md3-hero__title">Atlas panhispánico</h1>
+        <p class="md3-hero__intro">
+          Explora la red de emisoras y muestras del corpus. Selecciona una capital para ver las grabaciones
+          correspondientes o recorre todas las ciudades para comparar duraciones y recuentos de palabras.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Content Area with spacing -->
+  <div class="md3-atlas-content">
+    <!-- Map & Controls Layout -->
+    <section class="md3-atlas-layout">
+      <div class="md3-atlas-controls-row">
+        <div class="md3-atlas-controls">
+          <label class="md3-label-medium md3-atlas-label" for="citySelectNational">Capitales/emisoras nacionales</label>
+          <select id="citySelectNational" class="md3-atlas-select" data-element="atlas-select-national"></select>
+        </div>
+        <div class="md3-atlas-controls">
+          <label class="md3-label-medium md3-atlas-label" for="citySelectRegional">Capitales/emisoras regionales</label>
+          <select id="citySelectRegional" class="md3-atlas-select" data-element="atlas-select-regional"></select>
+        </div>
+      </div>
+      
+      <div class="md3-atlas-map-container">
+        <div id="atlas-map" class="md3-atlas-map" role="region" aria-label="Mapa panhispánico"></div>
+      </div>
+    </section>
+
+    <!-- Country Tabs -->
+    <div class="md3-atlas-country-tabs" role="tablist" data-element="atlas-country-tabs">
+      <!-- Tabs werden dynamisch von JavaScript generiert -->
+    </div>
+
+    <!-- Files Section (Tabbed) -->
+    <section class="md3-atlas-files" data-element="atlas-files"></section>
+  </div>
+</article>
+{% endblock %}

@@ -1,0 +1,453 @@
+/* ============================================================================
+   Atlas Page Components - MD3 Migration
+   ============================================================================
+   Mobile-First responsive layout für Atlas-Seite
+   - City Selects (Controls)
+   - Leaflet Map Container
+   - Files Grid
+   
+   Note: Hero styles are in hero.css (canonical component)
+   ============================================================================ */
+
+/* Base Page Container */
+.md3-atlas-page {
+  width: 100%;
+  max-width: 100%;
+}
+
+/* ============================================================================
+   Atlas Page Layout
+   ============================================================================
+   
+   MD3 EDGE-PADDING STRATEGY:
+   - Page wrapper (.md3-atlas-page): Definiert Edge-Padding vom Bildschirmrand
+   - Mobile (0-599px): 16px Edge-Padding (MD3 Compact)
+   - Tablet (600-1199px): 24px Edge-Padding (MD3 Medium)
+   - Desktop (≥1200px): 32px Edge-Padding (MD3 Expanded)
+   ============================================================================ */
+
+/* Page Wrapper - Defines Edge-Padding */
+.md3-atlas-page {
+  /* Mobile: 16px Edge-Padding (MD3 Compact) */
+  padding: 0 var(--space-4);
+}
+
+/* Tablet+: 24px Edge-Padding (MD3 Medium) */
+@media (min-width: 600px) {
+  .md3-atlas-page {
+    padding: 0 var(--space-6);
+  }
+}
+
+/* Desktop: 32px Edge-Padding (MD3 Expanded) */
+@media (min-width: 1200px) {
+  .md3-atlas-page {
+    padding: 0 var(--space-8);
+  }
+}
+
+/* ============================================================================
+   Content Wrapper
+   ============================================================================ */
+
+.md3-atlas-content {
+  max-width: 900px;
+  margin: 0 auto;
+  width: 100%;
+  box-sizing: border-box;
+  /* NO horizontal padding - Edge-Padding from page wrapper */
+  padding: 0 0 var(--space-16);
+}
+
+/* ============================================================================
+   Main Layout (Controls + Map)
+   ============================================================================ */
+
+.md3-atlas-layout {
+  display: grid;
+  gap: var(--space-5);
+  /* NO horizontal padding - parent .md3-atlas-content has it */
+}
+
+/* ============================================================================
+   Controls Row (City Selects)
+   ============================================================================ */
+
+/* Mobile First: Stack vertically */
+.md3-atlas-controls-row {
+  display: grid;
+  gap: var(--space-4);
+  width: 100%;
+}
+
+/* Tablet+: Side by side */
+@media (min-width: 600px) {
+  .md3-atlas-controls-row {
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-6);
+  }
+}
+
+.md3-atlas-controls {
+  display: grid;
+  gap: var(--space-2);
+  min-width: 0; /* Allow shrinking */
+}
+
+.md3-atlas-label {
+  color: var(--md-sys-color-on-surface-variant);
+  font-weight: 500;
+  letter-spacing: 0.5px;
+}
+
+/* ============================================================================
+   Select Inputs
+   ============================================================================ */
+
+.md3-atlas-select {
+  width: 100%;
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--md-sys-color-outline);
+  border-radius: var(--radius-xs);
+  background: var(--md-sys-color-surface);
+  color: var(--md-sys-color-on-surface);
+  font-size: 1rem;
+  font-family: inherit;
+  cursor: pointer;
+  appearance: none;
+  min-height: 44px;
+  box-sizing: border-box;
+  
+  /* Dropdown Arrow SVG */
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none'%3E%3Cpath d='M7 10l5 5 5-5z' fill='%230a5981'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right var(--space-3) center;
+  padding-right: var(--space-10);
+  
+  transition: border-color 200ms cubic-bezier(0.2, 0, 0, 1),
+              border-width 200ms cubic-bezier(0.2, 0, 0, 1);
+}
+
+.md3-atlas-select:hover {
+  border-color: var(--md-sys-color-on-surface);
+}
+
+.md3-atlas-select:focus {
+  outline: none;
+  border-color: var(--md-sys-color-primary);
+  border-width: 2px;
+  padding: calc(var(--space-3) - 1px) calc(var(--space-4) - 1px);
+  padding-right: calc(var(--space-10) - 1px);
+}
+
+.md3-atlas-select option {
+  background: var(--md-sys-color-surface);
+  color: var(--md-sys-color-on-surface);
+  padding: var(--space-3);
+}
+
+/* ============================================================================
+   Map Container (Leaflet Integration)
+   ============================================================================ */
+
+/* Mobile First: Smaller height */
+.md3-atlas-map-container {
+  width: 100%;
+  height: 400px;
+  border: 1px solid var(--md-sys-color-outline-variant);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  background: var(--md-sys-color-surface-container);
+  box-sizing: border-box;
+}
+
+/* Tablet+ */
+@media (min-width: 600px) {
+  .md3-atlas-map-container {
+    height: 500px;
+  }
+}
+
+/* Desktop */
+@media (min-width: 900px) {
+  .md3-atlas-map-container {
+    height: 600px;
+  }
+}
+
+.md3-atlas-map {
+  width: 100%;
+  height: 100%;
+}
+
+/* Leaflet Controls z-index (MUSS niedrig sein, unter Top App Bar) */
+.md3-atlas-map .leaflet-top,
+.md3-atlas-map .leaflet-bottom,
+.md3-atlas-map .leaflet-control,
+.md3-atlas-map .leaflet-control-container {
+  z-index: 1 !important; /* Niedrig halten, Top App Bar ist bei 1200 */
+}
+
+/* Leaflet Panes auch begrenzen */
+.md3-atlas-map .leaflet-pane {
+  z-index: auto !important;
+}
+
+/* ============================================================================
+   Files Section (dynamically populated by JS)
+   ============================================================================ */
+
+.md3-atlas-files {
+  display: grid;
+  gap: var(--space-8);
+  /* NO horizontal padding - parent .md3-atlas-content has it */
+  /* Spacing above files (gap to map) */
+  padding-top: var(--space-8);
+  border-top: 1px solid var(--md-sys-color-outline-variant);
+}
+
+/* ============================================================================
+   Country Tabs (similar to editor-overview)
+   ============================================================================ */
+
+.md3-atlas-country-tabs {
+  display: flex;
+  gap: var(--space-2);
+  margin-top: var(--space-8);
+  /* NO horizontal margin - parent has padding */
+  flex-wrap: wrap;
+  border-bottom: 1px solid var(--md-sys-color-outline-variant);
+  padding-bottom: var(--space-2);
+  overflow-x: auto;
+}
+
+/* Mobile: reduce horizontal margin */
+@media (max-width: 599px) {
+  .md3-atlas-country-tabs {
+    margin-left: var(--space-4);
+    margin-right: var(--space-4);
+  }
+}
+
+.md3-atlas-country-tab {
+  padding: var(--space-2) var(--space-4);
+  border: none;
+  background: transparent;
+  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.2, 0, 0, 1);
+  font-weight: 500;
+  font-size: 0.875rem;
+  color: var(--md-sys-color-on-surface-variant);
+  position: relative;
+  white-space: nowrap;
+}
+
+.md3-atlas-country-tab::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--md-sys-color-primary);
+  opacity: 0;
+  transition: opacity 0.2s cubic-bezier(0.2, 0, 0, 1);
+}
+
+.md3-atlas-country-tab:hover {
+  background: var(--md-sys-color-surface-container-highest);
+  color: var(--md-sys-color-on-surface);
+}
+
+.md3-atlas-country-tab.active {
+  color: var(--md-sys-color-primary);
+  background: var(--md-sys-color-surface-container-high);
+}
+
+.md3-atlas-country-tab.active::after {
+  opacity: 1;
+}
+
+/* ============================================================================
+   Files Table Container (Tabbed)
+   ============================================================================ */
+
+.md3-atlas-files-table-container {
+  display: none;
+  animation: fadeIn 0.3s cubic-bezier(0.2, 0, 0, 1);
+}
+
+.md3-atlas-files-table-container.active {
+  display: block;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ============================================================================
+   City Block (JS-generated)
+   ============================================================================ */
+
+.md3-atlas-city-block {
+  display: grid;
+  gap: var(--space-5);
+}
+
+.md3-atlas-city-block__title {
+  margin: 0;
+  padding-bottom: var(--space-2);
+  border-bottom: 2px solid var(--md-sys-color-primary);
+  color: var(--md-sys-color-primary);
+  font-weight: 400;
+}
+
+/* ============================================================================
+   Table Styles (JS-generated)
+   ============================================================================ */
+
+.md3-atlas-table-wrapper {
+  overflow-x: auto;
+  border-radius: var(--radius-sm);
+  background: var(--md-sys-color-surface);
+  box-sizing: border-box;
+}
+
+.md3-atlas-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 600px;
+}
+
+.md3-atlas-table th,
+.md3-atlas-table td {
+  padding: var(--space-4);
+  text-align: left;
+}
+
+.md3-atlas-table thead {
+  background: var(--md-sys-color-surface-container-low);
+  border-bottom: 2px solid var(--md-sys-color-outline-variant);
+}
+
+.md3-atlas-table th {
+  font-weight: 500;
+  color: var(--md-sys-color-on-surface-variant);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding-top: var(--space-3);
+  padding-bottom: var(--space-3);
+}
+
+.md3-atlas-table tbody tr {
+  border-bottom: 1px solid var(--md-sys-color-outline-variant);
+  transition: background-color 200ms cubic-bezier(0.2, 0, 0, 1);
+}
+
+.md3-atlas-table tbody tr:last-child {
+  border-bottom: none;
+}
+
+.md3-atlas-table tbody tr:hover {
+  background: var(--md-sys-color-surface-container-lowest);
+}
+
+.md3-atlas-table td {
+  color: var(--md-sys-color-on-surface);
+}
+
+/* Table Links */
+.md3-atlas-table a {
+  color: var(--md-sys-color-primary);
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 200ms cubic-bezier(0.2, 0, 0, 1);
+}
+
+.md3-atlas-table a:hover {
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 2px;
+}
+
+.md3-atlas-table a:focus {
+  outline: 2px solid var(--md-sys-color-primary);
+  outline-offset: 2px;
+  border-radius: var(--radius-xs);
+}
+
+/* Player Link (Button styled as link) */
+.md3-atlas-table .atlas-player-link {
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  color: var(--md-sys-color-primary);
+  text-decoration: none;
+  font-weight: 500;
+  font-size: inherit;
+  font-family: inherit;
+  cursor: pointer;
+  transition: color 200ms cubic-bezier(0.2, 0, 0, 1);
+}
+
+.md3-atlas-table .atlas-player-link:hover {
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 2px;
+}
+
+.md3-atlas-table .atlas-player-link:focus {
+  outline: 2px solid var(--md-sys-color-primary);
+  outline-offset: 2px;
+  border-radius: var(--radius-xs);
+}
+
+/* Table Alignment Utilities */
+.md3-atlas-table .right-align {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.md3-atlas-table .center-align {
+  text-align: center;
+}
+
+/* Mobile: Smaller table padding */
+@media (max-width: 599px) {
+  .md3-atlas-table th,
+  .md3-atlas-table td {
+    padding: var(--space-2);
+    font-size: 0.875rem;
+  }
+}
+
+/* ============================================================================
+   Empty State & Login Prompt (JS-generated)
+   ============================================================================ */
+
+.md3-atlas-empty {
+  padding: var(--space-8);
+  text-align: center;
+  color: var(--md-sys-color-on-surface-variant);
+}
+
+.md3-atlas-login-prompt {
+  padding: var(--space-6);
+  background: var(--md-sys-color-surface-container-low);
+  border: 1px dashed var(--md-sys-color-outline);
+  border-radius: var(--radius-sm);
+  color: var(--md-sys-color-on-surface);
+  text-align: center;
+}
+
+
+

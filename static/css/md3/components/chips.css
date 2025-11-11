@@ -1,0 +1,31 @@
+/* Material Design 3 Chips Component
+   Placeholder to prevent 404 errors.
+   Use .md3-chip for selectable chip components.
+*/
+
+.md3-chip {
+    display: inline-flex;
+    align-items: center;
+    padding: 8px 16px;
+    border-radius: 8px;
+    background: #e0e0e0;
+    color: #000;
+    font-size: 14px;
+    cursor: pointer;
+    border: 1px solid transparent;
+    transition: all 0.2s ease;
+}
+
+.md3-chip:hover {
+    background: #d0d0d0;
+}
+
+.md3-chip--selected {
+    background: #6366f1;
+    color: #fff;
+}
+
+.md3-chip__icon {
+    margin-right: 8px;
+    font-size: 18px;
+}
