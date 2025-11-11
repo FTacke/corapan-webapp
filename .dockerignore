@@ -25,12 +25,12 @@ venv/
 env/
 ENV/
 
-# Node/Frontend Build
-node_modules/
-npm-debug.log*
-yarn-error.log
-static-build/
-.static-cache/
+# Node/Frontend Build (not used, but keeping for reference)
+# node_modules/
+# npm-debug.log*
+# yarn-error.log
+# static-build/
+# .static-cache/
 
 # Data & Media (werden via Volume gemountet, nicht im Image)
 media/mp3-full/

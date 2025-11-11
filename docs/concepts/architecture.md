@@ -25,7 +25,8 @@ links:
 - Base layout (`templates/base.html`) shares navigation, login banner, and footer across all pages.
 - Templates organized under `templates/pages` with partials for navigation, footer, and status banner; legacy pages (corpus/player) currently live in `templates/legacy` while the UI is being modernized.
 - CSS split into design tokens, layout scaffolding, and component styles (`static/css`).
-- JavaScript uses ES modules grouped by feature (`static/js/modules/*`) and bundled via Vite.
+- JavaScript uses ES modules grouped by feature (`static/js/modules/*`).
+- External libraries loaded via CDN (Tailwind CSS, ECharts).
 - Burger navigation and login sheet provide a consistent experience on mobile and desktop.
 - Corpus UI consumes the JSON API, highlights matches, and disables snippet/transcript actions when access is restricted.
 - Atlas module reads country/file metadata from dedicated REST endpoints and renders summaries alongside the Leaflet map.
@@ -33,5 +34,5 @@ links:
 ## Deployment
 - Dockerfile targets Python 3.12 slim with FFmpeg and libsndfile installed for audio processing.
 - `media` and `data` directories act as bind mounts in production deployments.
-- Static assets compiled through Vite (`npm run build`) into `static-build/` during image build.
+- Static assets served directly from `static/` directory (no build step required).
 

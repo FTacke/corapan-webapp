@@ -40,19 +40,19 @@ config/keys/
 *.cer
 
 # =============================================================================
-# Node.js & Frontend Build
+# Node.js & Frontend Build (not used, but keeping for reference)
 # =============================================================================
-node_modules/
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-package-lock.json.backup
+# node_modules/
+# npm-debug.log*
+# yarn-debug.log*
+# yarn-error.log*
+# package-lock.json.backup
 
 # =============================================================================
 # Build & Cache Directories
 # =============================================================================
-.static-cache/
-static-build/
+# .static-cache/  # Not used
+# static-build/   # Not used
 .pytest_cache/
 .coverage
 .ruff_cache/
