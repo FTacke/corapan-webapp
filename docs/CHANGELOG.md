@@ -4,6 +4,41 @@ Dokumentiert alle wesentlichen Änderungen an der CO.RA.PAN-Dokumentation.
 
 ---
 
+## [2.8.0] - 2025-11-11: Massive Documentation Cleanup - Obsolete Files Removed
+
+### Removed
+- **107 obsolete documentation files** from archived/ and troubleshooting/
+  - 47 October migration docs (2025-10-26__migration__*)
+  - 13 October roadmap docs (2025-10-26__roadmaps__*)
+  - 9 October admin/design docs (2025-10-26__admin/design__*)
+  - 6 November feature implementation docs
+  - 8 meta-documentation files about doc reorganization
+  - 5 old planning documents (PLAN.md, QUALITY_REPORT.md, etc.)
+  - 7 recent completion reports (info preserved in CHANGELOG)
+  - 8 old November reports (superseded by active docs)
+  - 2 duplicate corpus search docs
+  - 2 duplicate stats implementation docs
+  - 1 old test verification file
+
+### Kept (2 valuable historical references)
+- `archived/2025-11-01__responsive-padding-drawer-analysis.md` - Detailed CSS refactoring analysis
+- `archived/2025-11-06__stats-feature-implementation.md` - Stats feature implementation notes
+
+### Result
+- **Before**: 99 archived files
+- **After**: 2 archived files  
+- **Removed**: 97 obsolete files (98% reduction)
+- All critical information preserved in CHANGELOG.md and active documentation
+
+### Rationale
+All removed documentation was either:
+- Superseded by active documentation in concepts/, reference/, operations/
+- Temporary implementation/planning notes for completed work
+- Meta-documentation about completed doc reorganization
+- Duplicate content already covered elsewhere
+
+---
+
 ## [2.7.0] - 2025-11-11: Documentation Cleanup & Status Update
 
 ### Changed
