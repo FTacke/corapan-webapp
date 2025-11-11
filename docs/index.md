@@ -19,10 +19,11 @@ Willkommen zur CO.RA.PAN Dokumentation. Diese Übersicht hilft dir, die richtige
 
 Konzeptuelle Übersichten und Architektur-Entscheidungen.
 
+- **[Webapp Status Overview](concepts/webapp-status.md)** - Vollständiger Status aller Features, Metriken, Production-Readiness ⭐ NEU
 - **[Architecture Overview](concepts/architecture.md)** - Backend/Frontend Architektur, Blueprints
 - **[Authentication Flow](concepts/authentication-flow.md)** - JWT, Cookie-Auth, Login-Szenarien
 - **[BlackLab Indexing Architecture](concepts/blacklab-indexing.md)** - Corpus Search Engine, Export→Index→Proxy Pipeline
-- **[Advanced Search Architecture](concepts/advanced-search-architecture.md)** - Security hardening, streaming design, performance (NEW)
+- **[Advanced Search Architecture](concepts/advanced-search-architecture.md)** - Security hardening, streaming design, performance
 
 ---
 
