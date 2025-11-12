@@ -21,6 +21,18 @@ let currentParams = null;
  * @param {string} queryParams - Query string (e.g., "q=radio&mode=forma")
  */
 export function initAdvancedTable(queryParams) {
+  // Guard: jQuery must be present
+  if (typeof window.$ === 'undefined' || typeof window.jQuery === 'undefined') {
+    console.error('[Advanced] jQuery not available, cannot initialize DataTables');
+    return;
+  }
+  
+  // Guard: DataTables plugin must be available
+  if (typeof $.fn.dataTable === 'undefined') {
+    console.error('[Advanced] DataTables plugin not available');
+    return;
+  }
+  
   // Store current params for reloadWith
   currentParams = queryParams;
   

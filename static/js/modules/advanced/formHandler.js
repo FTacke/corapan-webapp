@@ -27,6 +27,12 @@ let isInitialized = false;
  * Idempotent - guards against multiple initializations
  */
 function initFormHandler() {
+  // Guard: jQuery must be present
+  if (typeof window.$ === 'undefined' || typeof window.jQuery === 'undefined') {
+    console.error('[Advanced] jQuery not loaded, cannot initialize');
+    return;
+  }
+  
   // Guard: Prevent double-initialization
   if (isInitialized) {
     console.log('[Advanced] Already initialized, skipping');
@@ -94,6 +100,16 @@ document.addEventListener('turbo:load', initFormHandler);
 
 // Turbo cleanup (before page is cached)
 document.addEventListener('turbo:before-cache', cleanupFormHandler);
+
+// HTMX afterSwap event (for dynamic content swaps)
+document.addEventListener('htmx:afterSwap', (e) => {
+  const target = e.target || e.detail?.target;
+  if (target && (target.id === 'adv-form' || target.querySelector?.('#adv-form'))) {
+    console.log('[Advanced] HTMX swap detected, re-initializing');
+    isInitialized = false;
+    initFormHandler();
+  }
+});
 
 /**
  * Initialize filters with Select2
@@ -279,10 +295,21 @@ function bindFormSubmit() {
  */
 function buildQueryParams() {
   const form = document.getElementById('adv-form');
+  if (!form) {
+    console.error('[Advanced] Form not found in buildQueryParams');
+    throw new Error('Form element #adv-form is missing');
+  }
+  
   const params = new URLSearchParams();
 
   // Required: Query
-  const q = form.querySelector('#q').value.trim();
+  const qElement = form.querySelector('#q');
+  if (!qElement) {
+    console.error('[Advanced] Query element not found');
+    throw new Error('Query element #q is missing');
+  }
+  
+  const q = qElement.value.trim();
   if (!q) {
     alert('Por favor ingresa una consulta');
     throw new Error('Query is required');

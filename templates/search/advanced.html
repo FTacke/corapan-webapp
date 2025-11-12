@@ -342,12 +342,12 @@
   </section>
 </article>
 
-<!-- Scripts -->
-<script src="{{ url_for('static', filename='vendor/jquery.min.js') }}"></script>
-<!-- Select2 4.1.0-rc.0 (matches CSS version) -->
-<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-<script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
-<script src="https://unpkg.com/htmx.org@1.9.10"></script>
+<!-- Scripts in dependency order -->
+<script src="{{ url_for('static', filename='vendor/jquery-3.7.1.min.js') }}" defer></script>
+<script src="{{ url_for('static', filename='vendor/select2.min.js') }}" defer></script>
+<script src="{{ url_for('static', filename='vendor/jquery.dataTables.min.js') }}" defer></script>
+<script src="{{ url_for('static', filename='vendor/htmx-1.9.10.min.js') }}" defer></script>
+<!-- App modules remain as type="module" -->
 <script src="{{ url_for('static', filename='js/modules/corpus/config.js') }}" type="module"></script>
 <script src="{{ url_for('static', filename='js/modules/corpus/filters.js') }}" type="module"></script>
 <script src="{{ url_for('static', filename='js/modules/advanced/initTable.js') }}" type="module"></script>

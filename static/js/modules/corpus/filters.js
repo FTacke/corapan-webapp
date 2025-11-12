@@ -125,10 +125,14 @@ export class CorpusFiltersManager {
             return;
         }
 
-        // 2) Check if dependencies are ready
-        if (!this.depsReady()) {
-            console.log('[Filters] Dependencies not ready, waiting for load event');
-            window.addEventListener('load', () => this.enhanceFilters(), { once: true });
+        // 2) Guard: jQuery and Select2 must be present
+        if (typeof window.$ === 'undefined' || typeof window.jQuery === 'undefined') {
+            console.error('[Filters] jQuery not loaded, cannot initialize Select2');
+            return;
+        }
+        
+        if (typeof $.fn.select2 === 'undefined') {
+            console.error('[Filters] Select2 plugin not loaded');
             return;
         }
 
@@ -143,6 +147,12 @@ export class CorpusFiltersManager {
         allSelects.forEach(select => {
             if (!select || select.hasAttribute('data-enhanced')) {
                 return; // Already enhanced
+            }
+            
+            // Skip if already has Select2 instance
+            if ($(select).data('select2')) {
+                console.log('[Filters] Already has Select2:', select.id);
+                return;
             }
 
             const placeholder = select.dataset.placeholder || 'Seleccionar';
@@ -180,6 +190,13 @@ export class CorpusFiltersManager {
      */
     cleanupForCache() {
         document.body.classList.remove('corpus-hydrating');
+        
+        // Guard: Check if jQuery and Select2 are available
+        if (typeof window.$ === 'undefined' || typeof $.fn.select2 === 'undefined') {
+            console.log('[Filters] jQuery/Select2 not available for cleanup');
+            this.isInitialized = false;
+            return;
+        }
         
         const allSelects = document.querySelectorAll('.md3-corpus-filter-grid select[data-enhance][data-enhanced]');
         
@@ -286,6 +303,11 @@ export class CorpusFiltersManager {
      * Destroy all Select2 instances
      */
     destroy() {
+        if (typeof window.$ === 'undefined' || typeof $.fn.select2 === 'undefined') {
+            console.log('[Filters] jQuery/Select2 not available for destroy');
+            return;
+        }
+        
         Object.values(this.filters).forEach(filter => {
             if (filter && $(filter).data('select2')) {
                 $(filter).select2('destroy');
@@ -295,5 +317,12 @@ export class CorpusFiltersManager {
         if (this.countrySelect && $(this.countrySelect).data('select2')) {
             $(this.countrySelect).select2('destroy');
         }
+    }
+    
+    /**
+     * Safe cleanup method for external use
+     */
+    cleanup() {
+        this.destroy();
     }
 }
