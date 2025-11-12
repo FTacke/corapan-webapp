@@ -258,5 +258,87 @@
     
     {% block extra_scripts %}
     {% endblock %}
+
+    <!-- ====================================
+         HOTFIX: Adaptive Title + Scroll State
+         ======================================
+         Direktes Script für HTMX-Events.
+         Sollte per Event-Listener alle Navigation abdecken.
+    -->
+    <script>
+    (function () {
+      const SUFFIX = 'CO.RA.PAN';
+      const TOP_BAR = () => document.querySelector('[data-role="top-app-bar"]') || document.body;
+
+      function pickTitle() {
+        const main = document.querySelector('main');
+        const fromAttr = main?.getAttribute('data-page-title')?.trim();
+        if (fromAttr) return fromAttr;
+        const h1 = main?.querySelector('h1,[data-h1]');
+        if (h1 && h1.textContent.trim()) return h1.textContent.trim();
+        const noSuffix = document.title.replace(/\s*\|\s*CO\.RA\.PAN\s*$/i, '');
+        return noSuffix || 'CO.RA.PAN';
+      }
+
+      function applyTitle() {
+        const t = pickTitle();
+        const el = document.querySelector('[data-page-title-el]');
+        if (el) el.textContent = t;
+        document.title = t ? `${t} | ${SUFFIX}` : SUFFIX;
+        console.log('[Hotfix] applyTitle():', t);
+      }
+
+      function applyScroll() {
+        const thr = 8;
+        const target = document.body;  // FIX: CSS expects data-scrolled on body, not header!
+        if (!target) return;
+        if (window.scrollY > thr) target.setAttribute('data-scrolled','true');
+        else target.removeAttribute('data-scrolled');
+        console.log('[Hotfix] applyScroll(): scrollY=' + window.scrollY + ', data-scrolled=' + target.getAttribute('data-scrolled'));
+      }
+
+      // Initial
+      console.log('[Hotfix] Initializing...');
+      applyTitle(); 
+      applyScroll();
+      window.addEventListener('scroll', applyScroll, { passive: true });
+
+      // HTMX
+      if (window.htmx) {
+        console.log('[Hotfix] HTMX detected, binding listeners...');
+        document.body.addEventListener('htmx:afterSwap', function (e) {
+          console.log('[Hotfix] htmx:afterSwap triggered');
+          applyTitle(); 
+          applyScroll();
+        });
+        document.body.addEventListener('htmx:afterSettle', function () {
+          console.log('[Hotfix] htmx:afterSettle triggered');
+          applyTitle();
+        });
+        document.body.addEventListener('htmx:historyRestore', function () {
+          console.log('[Hotfix] htmx:historyRestore triggered');
+          applyTitle(); 
+          applyScroll();
+        });
+      } else {
+        console.log('[Hotfix] HTMX not found');
+      }
+
+      // Fallback
+      window.addEventListener('popstate', function () { 
+        console.log('[Hotfix] popstate triggered');
+        applyTitle(); 
+        applyScroll(); 
+      });
+      document.addEventListener('DOMContentLoaded', function () { 
+        console.log('[Hotfix] DOMContentLoaded triggered');
+        applyTitle(); 
+        applyScroll(); 
+      }, { once:true });
+
+      console.log('[Hotfix] ✅ Bootstrap complete');
+    })();
+    </script>
+
   </body>
 </html>

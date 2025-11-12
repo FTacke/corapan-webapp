@@ -9,7 +9,8 @@
 {% set role_value = user_role.value if user_role else '' %}
 
 <header class="md3-top-app-bar" 
-        role="banner" 
+        role="banner"
+        data-role="top-app-bar"
         data-element="top-app-bar"
         data-size="small"
         data-auth="{{ 'true' if is_authenticated else 'false' }}">
@@ -26,8 +27,8 @@
 
     {# Center: Adaptive Title (Site → Page beim Scrollen) #}
     <div class="md3-top-app-bar__title" aria-live="polite" aria-atomic="true">
-      <span class="md3-top-app-bar__title-site" id="siteTitle">CO.RA.PAN</span>
-      <span class="md3-top-app-bar__title-page" id="pageTitle"></span>
+      <span class="md3-top-app-bar__title-site" id="siteTitle" data-site-title>CO.RA.PAN</span>
+      <span class="md3-top-app-bar__title-page" id="pageTitle" data-page-title-el></span>
     </div>
 
     {# Right: Login/Account Actions #}
