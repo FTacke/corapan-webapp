@@ -787,7 +787,6 @@ All removed documentation was either:
 - `database_maintenance.md` → `reference/database-maintenance.md`
 - `media-folder-structure.md` → `reference/media-folder-structure.md`
 - `deployment.md` → `operations/deployment.md`
-- `gitlab-setup.md` → `operations/gitlab-setup.md`
 - `git-security-checklist.md` → `operations/git-security-checklist.md`
 - `mobile-speaker-layout.md` → `design/mobile-speaker-layout.md`
 - `stats-interactive-features.md` → `design/stats-interactive-features.md`

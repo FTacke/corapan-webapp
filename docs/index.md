@@ -62,7 +62,6 @@ Deployment, CI/CD, Server-Konfiguration, Security.
 - **[BlackLab Quick Reference](operations/blacklab-quick-reference.md)** - Quick start commands and troubleshooting
 - **[Development Setup](operations/development-setup.md)** - Local dev environment setup with Make targets
 - **[Deployment Guide](operations/deployment.md)** - Production-Server-Setup, Docker, Updates
-- **[GitLab CI/CD Setup](operations/gitlab-setup.md)** - Pipeline-Konfiguration
 - **[Git Security Checklist](operations/git-security-checklist.md)** - Security Best Practices
 - **[Rate Limiting Strategy](operations/rate-limiting-strategy.md)** - Advanced Search API rate limits (NEW)
 - **[Advanced Search Monitoring](operations/advanced-search-monitoring.md)** - Logging, metrics, observability (NEW)

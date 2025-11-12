@@ -17,7 +17,6 @@
 - ✅ `data/counters/` - Counter-JSON-Dateien
 
 ### Build-Artefakte
-- ✅ `node_modules/` - Node-Dependencies
 - ✅ `.venv/` - Python Virtual Environment
 - ✅ `__pycache__/` - Python Cache
 - ✅ `.ruff_cache/` - Linter Cache

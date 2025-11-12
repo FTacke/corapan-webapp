@@ -18,7 +18,7 @@ GitLab: `git@gitlab.uni-marburg.de:tackef/corapan-new.git`
 
 ## Environment
 
-- Python 3.12+, Node 20+, FFmpeg, and libsndfile are required locally.
+- Python 3.12+, FFmpeg, and libsndfile are required locally.
 - Secrets (Flask key, JWT keys, hashed passwords) are provided via environment variables or mounted files.
 - The `ALLOW_PUBLIC_TEMP_AUDIO` flag controls whether anonymous users can access generated snippets (they remain available to authenticated roles).
 
@@ -29,8 +29,6 @@ python -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
 pip install -e .
-npm install
-npm run build
 FLASK_SECRET_KEY=change-me python -m src.app.main
 ```
 
@@ -128,7 +126,7 @@ The documentation follows "Docs as Code" principles with a clear 8-category taxo
 
 ## Development
 
-**Requirements**: Python 3.12+, Node 20+, FFmpeg, libsndfile
+**Requirements**: Python 3.12+, FFmpeg, libsndfile
 
 **Setup**:
 ```bash
@@ -136,8 +134,6 @@ python -m venv .venv
 .venv\Scripts\activate
 pip install -r requirements.txt
 pip install -e .
-npm install
-npm run build
 ```
 
 **Run**:
