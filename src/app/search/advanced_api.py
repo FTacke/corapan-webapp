@@ -10,6 +10,7 @@ from __future__ import annotations
 import csv
 import io
 import logging
+import os
 from typing import Generator, Optional
 
 import httpx
@@ -18,7 +19,7 @@ from flask import Blueprint, jsonify, request, Response, current_app
 from .cql import build_cql, build_filters, filters_to_blacklab_query
 from .cql_validator import validate_cql_pattern, validate_filter_values, CQLValidationError  # Punkt 3
 from ..extensions import limiter
-from ..extensions.http_client import get_http_client
+from ..extensions.http_client import get_http_client, BLS_BASE_URL
 
 logger = logging.getLogger(__name__)
 
@@ -28,6 +29,10 @@ bp = Blueprint("advanced_api", __name__, url_prefix="/search/advanced")
 MAX_HITS_PER_PAGE = 100
 GLOBAL_HITS_CAP = 50000
 EXPORT_CHUNK_SIZE = 1000
+
+# Export streaming configuration
+EXPORT_TIMEOUT = httpx.Timeout(connect=5.0, read=30.0, write=30.0, pool=5.0)
+EXPORT_CHUNK_BYTES = 8192
 
 
 def _build_bls_url(corpus: str = "corapan") -> str:
@@ -45,7 +50,7 @@ def _make_bls_request(
     Make request to BlackLab Server with proper error handling.
     
     Args:
-        path: BLS endpoint path (e.g., "/corapan/hits")
+        path: BLS endpoint path (e.g., "/corapan/hits" or "corapan/hits")
         params: Query parameters
         method: HTTP method
         timeout_override: Override default timeout (seconds)
@@ -58,22 +63,37 @@ def _make_bls_request(
         httpx.HTTPStatusError: On HTTP error
     """
     client = get_http_client()
-    url = f"/bls{path}"  # Full URL from root
+    
+    # Build absolute URL for BLS request
+    # Ensure path is clean (remove leading /bls/ if present)
+    if path.startswith("/bls/"):
+        path = path[4:]  # Remove "/bls" prefix, keep "/"
+    elif path.startswith("bls/"):
+        path = "/" + path[4:]  # Convert "bls/..." to "/..."
+    elif not path.startswith("/"):
+        path = "/" + path  # Ensure leading slash
+    
+    # Construct full URL
+    full_url = f"{BLS_BASE_URL}{path}"
     
     try:
         if method.upper() == "GET":
-            response = client.get(url, params=params)
+            response = client.get(full_url, params=params)
         else:
-            response = client.request(method.upper(), url, params=params)
+            response = client.request(method.upper(), full_url, params=params)
         
         response.raise_for_status()
+        logger.debug(f"BLS {method} {path}: {response.status_code} ({len(response.content)} bytes)")
         return response
         
     except httpx.TimeoutException:
         logger.error(f"BLS timeout on {path}")
         raise
     except httpx.HTTPStatusError as e:
-        logger.error(f"BLS error: {e.response.status_code} - {e.response.text[:200]}")
+        logger.error(f"BLS error on {path}: {e.response.status_code} - {e.response.text[:200]}")
+        raise
+    except Exception as e:
+        logger.error(f"BLS request failed on {path}: {type(e).__name__}: {str(e)}")
         raise
 
 
@@ -100,11 +120,35 @@ def datatable_data():
     Returns:
         JSON: {draw, recordsTotal, recordsFiltered, data: [...]}
     """
+    # Parameter extraction helpers (safe, handle missing/invalid values)
+    def get_str(name: str, default: str = "") -> str:
+        """Safely extract string parameter."""
+        val = request.args.get(name, default, type=str)
+        return (val or default).strip()
+    
+    def get_int(name: str, default: int = 0) -> int:
+        """Safely extract integer parameter with fallback."""
+        try:
+            val = request.args.get(name, type=int)
+            return val if val is not None else default
+        except (ValueError, TypeError):
+            return default
+    
+    def get_bool(name: str, default: bool = False) -> bool:
+        """Safely extract boolean parameter (checks for '1', 'true', 'on', 'yes')."""
+        val = request.args.get(name, "").lower()
+        return val in ("1", "true", "on", "yes") if val else default
+    
+    def get_list(name: str) -> list:
+        """Safely extract list parameter (handles both param[] and comma-separated)."""
+        vals = request.args.getlist(name)
+        return [v.strip() for v in vals if v and v.strip()]
+    
     try:
-        # Extract DataTables parameters
-        draw = request.args.get("draw", 1, type=int)
-        start = request.args.get("start", 0, type=int)
-        length = request.args.get("length", 50, type=int)
+        # Extract DataTables parameters with safe helpers
+        draw = get_int("draw", 1)
+        start = get_int("start", 0)
+        length = get_int("length", 50)
         
         # Clamp length to MAX_HITS_PER_PAGE
         length = min(length, MAX_HITS_PER_PAGE)
@@ -118,10 +162,13 @@ def datatable_data():
         except CQLValidationError as e:
             logger.warning(f"CQL validation failed: {e}")
             return jsonify({
-                "error": "invalid_cql",
-                "message": str(e),
                 "draw": draw,
-            }), 400
+                "recordsTotal": 0,
+                "recordsFiltered": 0,
+                "data": [],
+                "error": "invalid_cql",
+                "message": str(e)
+            }), 200  # Return 200 for DataTables compatibility
         
         # Build filters
         filters = build_filters(request.args)
@@ -132,10 +179,13 @@ def datatable_data():
         except CQLValidationError as e:
             logger.warning(f"Filter validation failed: {e}")
             return jsonify({
-                "error": "invalid_filter",
-                "message": str(e),
                 "draw": draw,
-            }), 400
+                "recordsTotal": 0,
+                "recordsFiltered": 0,
+                "data": [],
+                "error": "invalid_filter",
+                "message": str(e)
+            }), 200  # Return 200 for DataTables compatibility
         
         filter_query = filters_to_blacklab_query(filters)
         
@@ -250,14 +300,25 @@ def datatable_data():
     except ValueError as e:
         # CQL validation error (from build_cql)
         logger.warning(f"CQL validation: {e}")
-        return jsonify({"error": "invalid_cql", "message": str(e), "draw": draw}), 400
+        return jsonify({
+            "draw": draw,
+            "recordsTotal": 0,
+            "recordsFiltered": 0,
+            "data": [],
+            "error": "invalid_cql",
+            "message": str(e)
+        }), 200  # Return 200 with error in JSON for DataTables compatibility
         
     except httpx.TimeoutException:
         logger.error("BLS timeout during DataTables request")
         return jsonify({
+            "draw": draw,
+            "recordsTotal": 0,
+            "recordsFiltered": 0,
+            "data": [],
             "error": "upstream_timeout",
             "message": "BlackLab Server did not respond in time"
-        }), 504
+        }), 200  # Return 200 with error in JSON for DataTables compatibility
         
     except httpx.HTTPStatusError as e:
         if e.response.status_code == 400:
@@ -267,23 +328,36 @@ def datatable_data():
                 detail = bls_error.get("message", str(e))
             except:
                 detail = e.response.text[:200]
+            logger.warning(f"BLS CQL error: {detail}")
             return jsonify({
+                "draw": draw,
+                "recordsTotal": 0,
+                "recordsFiltered": 0,
+                "data": [],
                 "error": "invalid_cql",
                 "message": f"CQL syntax error: {detail}"
-            }), 400
+            }), 200  # Return 200 with error in JSON for DataTables compatibility
         else:
-            logger.error(f"BLS HTTP {e.response.status_code}")
+            logger.error(f"BLS HTTP {e.response.status_code}: {e.response.text[:200]}")
             return jsonify({
+                "draw": draw,
+                "recordsTotal": 0,
+                "recordsFiltered": 0,
+                "data": [],
                 "error": "upstream_error",
                 "message": f"BlackLab Server error: {e.response.status_code}"
-            }), 502
+            }), 200  # Return 200 with error in JSON for DataTables compatibility
             
     except Exception as e:
         logger.exception("Unexpected error in DataTables endpoint")
         return jsonify({
+            "draw": draw if 'draw' in locals() else 1,
+            "recordsTotal": 0,
+            "recordsFiltered": 0,
+            "data": [],
             "error": "server_error",
             "message": "An unexpected error occurred"
-        }), 500
+        }), 200  # Return 200 with error in JSON for DataTables compatibility
 
 
 @bp.route("/export", methods=["GET"])
@@ -295,6 +369,7 @@ def export_data():
     Hardening (2025-11-10):
     - Punkt 1: Content-Disposition mit sprechendem Dateinamen, Cache-Control: no-store
     - Punkt 8: Logging von Export-Zeilen, BLS-Duration, Client-Disconnect
+    - V2: Timeout-Safe Streaming mit deterministic error responses
     
     Query parameters:
         - q or query: Search query
@@ -310,6 +385,7 @@ def export_data():
         
     Returns:
         Streaming text/csv or text/tab-separated-values with Content-Disposition
+        On error: text/plain 504 (timeout) or 502 (upstream error)
     """
     import time
     
@@ -322,10 +398,8 @@ def export_data():
             validate_cql_pattern(cql_pattern)
         except CQLValidationError as e:
             logger.warning(f"Export CQL validation failed: {e}")
-            return jsonify({
-                "error": "invalid_cql",
-                "message": str(e),
-            }), 400
+            # Return as plain text error (not JSON, so it doesn't break downloads)
+            return f"CQL validation error: {str(e)}", 400
         
         # Build filters
         filters = build_filters(request.args)
@@ -335,10 +409,8 @@ def export_data():
             validate_filter_values(filters)
         except CQLValidationError as e:
             logger.warning(f"Export filter validation failed: {e}")
-            return jsonify({
-                "error": "invalid_filter",
-                "message": str(e),
-            }), 400
+            # Return as plain text error
+            return f"Filter validation error: {str(e)}", 400
         
         filter_query = filters_to_blacklab_query(filters)
         
@@ -355,9 +427,53 @@ def export_data():
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         filename = f"corapan-export_{timestamp}.{export_format}"
         
+        # Pre-flight: Try to fetch first chunk to validate BLS is reachable
+        # This prevents streaming starting but failing mid-stream
+        logger.debug("Export: Pre-flight BLS call to validate upstream...")
+        try:
+            preflight_params = {
+                "first": 0,
+                "number": 1,  # Just 1 hit to check connectivity
+                "wordsaroundhit": 10,
+                "listvalues": "tokid,start_ms,end_ms,country,speaker_type,sex,mode,discourse,filename,radio",
+            }
+            if filter_query:
+                preflight_params["filter"] = filter_query
+            
+            # Try CQL parameter names
+            preflight_response = None
+            for param_name in ["patt", "cql", "cql_query"]:
+                try:
+                    test_params = {**preflight_params, param_name: cql_pattern}
+                    preflight_response = _make_bls_request("/corapan/hits", test_params)
+                    logger.debug(f"Export preflight: CQL param '{param_name}' accepted")
+                    break
+                except httpx.HTTPStatusError as e:
+                    if e.response.status_code != 400:
+                        raise
+                    continue
+            
+            if preflight_response is None:
+                raise Exception("Could not determine BLS CQL parameter")
+            
+            preflight_data = preflight_response.json()
+            total_hits = preflight_data.get("summary", {}).get("numberOfHits", 0)
+            logger.info(f"Export initiated: format={export_format}, total_hits={total_hits}, "
+                       f"filters={'yes' if filter_query else 'no'}")
+            
+        except httpx.TimeoutException:
+            logger.error("Export preflight timeout - BLS not responding")
+            return "Export error: BlackLab Server timeout", 504
+        except httpx.HTTPStatusError as e:
+            logger.error(f"Export preflight failed: BLS {e.response.status_code}")
+            return f"Export error: BlackLab Server error {e.response.status_code}", 502
+        except Exception as e:
+            logger.error(f"Export preflight failed: {type(e).__name__}: {str(e)}")
+            return f"Export error: {str(e)}", 502
+        
         # Streaming generator function
         def generate_export() -> Generator[str, None, None]:
-            """Stream CSV rows, fetching from BLS in chunks."""
+            """Stream CSV rows, fetching from BLS in chunks with timeout protection."""
             
             # CSV header with UTF-8 BOM (optional, für Excel-Kompatibilität)
             fieldnames = [
@@ -376,53 +492,68 @@ def export_data():
             writer.writeheader()
             yield writer_buffer.getvalue()
             
-            # Stream hits in chunks
+            # Stream hits in chunks with timeout protection
             total_exported = 0
             first = 0
             export_start_time = time.time()
+            max_export_time = 300  # 5 minutes absolute max
             
             try:
                 while total_exported < GLOBAL_HITS_CAP:
+                    # Check if we've exceeded absolute time limit
+                    elapsed = time.time() - export_start_time
+                    if elapsed > max_export_time:
+                        logger.warning(f"Export reached max duration ({max_export_time}s) after {total_exported} rows")
+                        break
+                    
                     chunk_start = time.time()
                     
-                    # Fetch chunk
-                    bls_params = {
-                        "first": first,
-                        "number": EXPORT_CHUNK_SIZE,  # Punkt 1: Chunk-Size 1000 bestätigt
-                        "wordsaroundhit": 10,
-                        "listvalues": "tokid,start_ms,end_ms,country,speaker_type,sex,mode,discourse,filename,radio",
-                    }
-                    
-                    if filter_query:
-                        bls_params["filter"] = filter_query
-                    
-                    # Try CQL param names
-                    response = None
-                    for param_name in ["patt", "cql", "cql_query"]:
-                        try:
-                            test_params = {**bls_params, param_name: cql_pattern}
-                            response = _make_bls_request("/corapan/hits", test_params)
-                            break
-                        except httpx.HTTPStatusError as e:
-                            if e.response.status_code != 400:
-                                raise
-                            continue
-                    
-                    if response is None:
-                        raise Exception("Could not determine BLS CQL parameter")
+                    # Fetch chunk with explicit timeout
+                    try:
+                        bls_params = {
+                            "first": first,
+                            "number": EXPORT_CHUNK_SIZE,
+                            "wordsaroundhit": 10,
+                            "listvalues": "tokid,start_ms,end_ms,country,speaker_type,sex,mode,discourse,filename,radio",
+                        }
+                        
+                        if filter_query:
+                            bls_params["filter"] = filter_query
+                        
+                        # Try CQL param names
+                        response = None
+                        for param_name in ["patt", "cql", "cql_query"]:
+                            try:
+                                test_params = {**bls_params, param_name: cql_pattern}
+                                response = _make_bls_request("/corapan/hits", test_params)
+                                break
+                            except httpx.HTTPStatusError as e:
+                                if e.response.status_code != 400:
+                                    raise
+                                continue
+                        
+                        if response is None:
+                            raise Exception("Could not determine BLS CQL parameter")
+                        
+                    except httpx.TimeoutException:
+                        logger.error(f"Export chunk timeout at offset {first}")
+                        # Gracefully end export
+                        yield f"\n# Export interrupted: BLS timeout at row {total_exported}\n"
+                        break
+                    except httpx.HTTPStatusError as e:
+                        logger.error(f"Export chunk failed: BLS {e.response.status_code} at offset {first}")
+                        yield f"\n# Export interrupted: BLS error {e.response.status_code} at row {total_exported}\n"
+                        break
+                    except Exception as e:
+                        logger.error(f"Export chunk failed: {type(e).__name__}: {str(e)}")
+                        yield f"\n# Export interrupted: {type(e).__name__} at row {total_exported}\n"
+                        break
                     
                     # Punkt 8: BLS-Duration Logging
                     chunk_duration = time.time() - chunk_start
                     
                     data = response.json()
                     hits = data.get("hits", [])
-                    summary = data.get("summary", {})
-                    number_of_hits = summary.get("numberOfHits", 0)
-                    
-                    # Punkt 8: Log BLS-Anfrage Dauer und Trefferzahl
-                    if first == 0:
-                        logger.info(f"Export started: format={export_format}, total_hits={number_of_hits}, "
-                                  f"filters={'yes' if filter_query else 'no'}")
                     
                     logger.debug(f"Export chunk: offset={first}, duration={chunk_duration:.2f}s, "
                                f"hits={len(hits)}, total_so_far={total_exported}")
@@ -468,7 +599,8 @@ def export_data():
                     total_exported += len(hits)
                     
                     # Check if we've got all hits
-                    if total_exported >= number_of_hits:
+                    if len(hits) < EXPORT_CHUNK_SIZE:
+                        logger.info(f"Export finished: {total_exported} total rows fetched")
                         break
                     
                     first += EXPORT_CHUNK_SIZE
@@ -476,13 +608,17 @@ def export_data():
                 # Punkt 8: Export completion logging
                 export_duration = time.time() - export_start_time
                 logger.info(f"Export completed: {total_exported} lines in {export_duration:.2f}s "
-                          f"({total_exported/export_duration:.0f} lines/sec)")
+                          f"({total_exported/max(export_duration, 0.1):.0f} lines/sec)")
                 
             except GeneratorExit:
                 # Punkt 1: Client-Disconnect Handling
                 export_duration = time.time() - export_start_time
                 logger.warning(f"Export aborted by client after {total_exported} lines, {export_duration:.2f}s")
                 raise
+            except Exception as e:
+                # Unexpected error in generator
+                logger.exception(f"Unexpected error in export generator after {total_exported} rows")
+                yield f"\n# Unexpected error: {type(e).__name__}\n"
         
         # Punkt 1: Content-Disposition mit sprechendem Dateinamen + Cache-Control
         return Response(
@@ -492,30 +628,22 @@ def export_data():
                 "Content-Disposition": f'attachment; filename="{filename}"',
                 "Content-Type": f"{mime_type}; charset=utf-8",
                 "Cache-Control": "no-store",  # Punkt 1: Kein Caching
+                "X-Accel-Buffering": "no",     # Disable nginx/proxy buffering
             }
         )
         
     except ValueError as e:
         logger.warning(f"Export CQL validation: {e}")
-        return jsonify({"error": "invalid_cql", "message": str(e)}), 400
+        return f"Export error: CQL validation failed - {str(e)}", 400
         
     except httpx.TimeoutException:
         logger.error("BLS timeout during export")
-        return jsonify({
-            "error": "upstream_timeout",
-            "message": "BlackLab Server did not respond in time"
-        }), 504
+        return "Export error: BlackLab Server timeout", 504
         
     except httpx.HTTPStatusError as e:
         logger.error(f"BLS HTTP {e.response.status_code} during export")
-        return jsonify({
-            "error": "upstream_error",
-            "message": f"BlackLab Server error: {e.response.status_code}"
-        }), 502
+        return f"Export error: BlackLab Server error {e.response.status_code}", 502
         
     except Exception as e:
         logger.exception("Unexpected error in export endpoint")
-        return jsonify({
-            "error": "server_error",
-            "message": "An unexpected error occurred during export"
-        }), 500
+        return f"Export error: {type(e).__name__} - {str(e)}", 500

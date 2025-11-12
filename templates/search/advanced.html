@@ -13,6 +13,7 @@
 <link rel="stylesheet" href="{{ url_for('static', filename='css/md3/components/tabs.css') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/md3/components/forms.css') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/md3/components/corpus.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/md3/components/cards.css') }}">
 <!-- External Libraries (CDN Base Styles BEFORE Project Overrides) -->
 <link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/jquery.dataTables.min.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css">
@@ -49,10 +50,20 @@
     
     <!-- Advanced Search Container -->
     <section class="md3-advanced">
-      <!-- Search Form -->
-      <form id="adv-form" class="md3-advanced__form" role="search" aria-label="Búsqueda avanzada con filtros">
-        <!-- ROW 1: Query + Mode + Expert Toggle -->
-        <div class="md3-advanced__row md3-advanced__row--query">
+      <!-- Search Form Card (MD3 Design) -->
+      <div class="md3-card p-4 gap-4">
+        <form id="advanced-search-form" class="grid gap-4" role="search" aria-label="Búsqueda avanzada con filtros">
+          
+          <!-- Form Header with CQL Toggle -->
+          <div class="flex items-center justify-between gap-3 md3-card__header">
+            <h2 class="text-title-large m-0">Búsqueda avanzada</h2>
+            <label class="md3-switch m-0">
+              <input type="checkbox" name="expert_cql" id="expert_cql" {% if request.args.get('expert_cql') %}checked{% endif %}>
+              <span>Expert CQL</span>
+            </label>
+          </div>
+
+          <!-- ROW 1: Query Field -->
           <div class="md3-outlined-textfield md3-outlined-textfield--flex">
             <input 
               type="text" 
@@ -71,6 +82,7 @@
             </div>
           </div>
 
+          <!-- ROW 2: Mode Select -->
           <div class="md3-outlined-textfield">
             <select 
               name="mode" 
@@ -89,202 +101,170 @@
             </div>
           </div>
 
-          <label class="md3-advanced__expert">
-            <input type="checkbox" name="expert" id="expert" {% if request.args.get('expert') %}checked{% endif %}>
-            <span>Expert/CQL</span>
-          </label>
-        </div>
-
-        <!-- ROW CQL: Raw CQL Field (hidden by default) -->
-        <div class="md3-advanced__row md3-advanced__row--cql" id="cql-row" {% if not request.args.get('expert') %}hidden{% endif %}>
-          <div class="md3-outlined-textfield md3-outlined-textfield--flex">
-            <input 
-              type="text" 
-              id="cql_raw" 
-              name="cql_raw" 
-              class="md3-outlined-textfield__input" 
-              placeholder=" "
-              value="{{ request.args.get('cql_raw', '') }}">
-            <label for="cql_raw" class="md3-outlined-textfield__label">CQL</label>
-            <div class="md3-outlined-textfield__outline">
-              <div class="md3-outlined-textfield__outline-start"></div>
-              <div class="md3-outlined-textfield__outline-notch"></div>
-              <div class="md3-outlined-textfield__outline-end"></div>
+          <!-- ROW 3: Metadata Filters (Country, Speaker, Sex, Mode, Discourse) -->
+          <div class="md3-corpus-filter-grid">
+            <!-- País -->
+            <div class="md3-outlined-textfield md3-outlined-textfield--compact">
+              <select 
+                id="filter-country-code" 
+                name="country_code" 
+                multiple 
+                class="md3-outlined-textfield__input md3-outlined-textfield__input--select" 
+                data-enhance="select2" 
+                data-placeholder="País"
+                aria-label="Filtrar por país">
+                <option value=""></option>
+                <option value="ARG" {% if 'ARG' in request.args.getlist('country_code') %}selected{% endif %}>Argentina</option>
+                <option value="BOL" {% if 'BOL' in request.args.getlist('country_code') %}selected{% endif %}>Bolivia</option>
+                <option value="CHL" {% if 'CHL' in request.args.getlist('country_code') %}selected{% endif %}>Chile</option>
+                <option value="COL" {% if 'COL' in request.args.getlist('country_code') %}selected{% endif %}>Colombia</option>
+                <option value="CRI" {% if 'CRI' in request.args.getlist('country_code') %}selected{% endif %}>Costa Rica</option>
+                <option value="CUB" {% if 'CUB' in request.args.getlist('country_code') %}selected{% endif %}>Cuba</option>
+                <option value="ECU" {% if 'ECU' in request.args.getlist('country_code') %}selected{% endif %}>Ecuador</option>
+                <option value="ESP" {% if 'ESP' in request.args.getlist('country_code') %}selected{% endif %}>España</option>
+                <option value="USA" {% if 'USA' in request.args.getlist('country_code') %}selected{% endif %}>Estados Unidos</option>
+                <option value="GTM" {% if 'GTM' in request.args.getlist('country_code') %}selected{% endif %}>Guatemala</option>
+                <option value="HND" {% if 'HND' in request.args.getlist('country_code') %}selected{% endif %}>Honduras</option>
+                <option value="MEX" {% if 'MEX' in request.args.getlist('country_code') %}selected{% endif %}>México</option>
+                <option value="NIC" {% if 'NIC' in request.args.getlist('country_code') %}selected{% endif %}>Nicaragua</option>
+                <option value="PAN" {% if 'PAN' in request.args.getlist('country_code') %}selected{% endif %}>Panamá</option>
+                <option value="PRY" {% if 'PRY' in request.args.getlist('country_code') %}selected{% endif %}>Paraguay</option>
+                <option value="PER" {% if 'PER' in request.args.getlist('country_code') %}selected{% endif %}>Perú</option>
+                <option value="DOM" {% if 'DOM' in request.args.getlist('country_code') %}selected{% endif %}>República Dominicana</option>
+                <option value="SLV" {% if 'SLV' in request.args.getlist('country_code') %}selected{% endif %}>El Salvador</option>
+                <option value="URY" {% if 'URY' in request.args.getlist('country_code') %}selected{% endif %}>Uruguay</option>
+                <option value="VEN" {% if 'VEN' in request.args.getlist('country_code') %}selected{% endif %}>Venezuela</option>
+              </select>
+              <label for="filter-country-code" class="md3-outlined-textfield__label md3-outlined-textfield__label--select">País</label>
+              <div class="md3-outlined-textfield__outline">
+                <div class="md3-outlined-textfield__outline-start"></div>
+                <div class="md3-outlined-textfield__outline-notch"></div>
+                <div class="md3-outlined-textfield__outline-end"></div>
+              </div>
             </div>
-          </div>
-        </div>
 
-        <!-- Filter Checkboxes (above grid, like Simple Search) -->
-
-        <!-- ROW 2: Filters (1:1 identisch mit Simple Search) -->
-        <div class="md3-corpus-filter-grid">
-          <!-- País -->
-          <div class="md3-outlined-textfield md3-outlined-textfield--compact">
-            <select 
-              id="filter-country-code" 
-              name="country_code" 
-              multiple 
-              class="md3-outlined-textfield__input md3-outlined-textfield__input--select" 
-              data-enhance="select2" 
-              data-placeholder="País"
-              aria-label="Filtrar por país">
-              <option value=""></option>
-              <option value="ARG" {% if 'ARG' in request.args.getlist('country_code') %}selected{% endif %}>Argentina</option>
-              <option value="BOL" {% if 'BOL' in request.args.getlist('country_code') %}selected{% endif %}>Bolivia</option>
-              <option value="CHL" {% if 'CHL' in request.args.getlist('country_code') %}selected{% endif %}>Chile</option>
-              <option value="COL" {% if 'COL' in request.args.getlist('country_code') %}selected{% endif %}>Colombia</option>
-              <option value="CRI" {% if 'CRI' in request.args.getlist('country_code') %}selected{% endif %}>Costa Rica</option>
-              <option value="CUB" {% if 'CUB' in request.args.getlist('country_code') %}selected{% endif %}>Cuba</option>
-              <option value="ECU" {% if 'ECU' in request.args.getlist('country_code') %}selected{% endif %}>Ecuador</option>
-              <option value="ESP" {% if 'ESP' in request.args.getlist('country_code') %}selected{% endif %}>España</option>
-              <option value="USA" {% if 'USA' in request.args.getlist('country_code') %}selected{% endif %}>Estados Unidos</option>
-              <option value="GTM" {% if 'GTM' in request.args.getlist('country_code') %}selected{% endif %}>Guatemala</option>
-              <option value="HND" {% if 'HND' in request.args.getlist('country_code') %}selected{% endif %}>Honduras</option>
-              <option value="MEX" {% if 'MEX' in request.args.getlist('country_code') %}selected{% endif %}>México</option>
-              <option value="NIC" {% if 'NIC' in request.args.getlist('country_code') %}selected{% endif %}>Nicaragua</option>
-              <option value="PAN" {% if 'PAN' in request.args.getlist('country_code') %}selected{% endif %}>Panamá</option>
-              <option value="PRY" {% if 'PRY' in request.args.getlist('country_code') %}selected{% endif %}>Paraguay</option>
-              <option value="PER" {% if 'PER' in request.args.getlist('country_code') %}selected{% endif %}>Perú</option>
-              <option value="DOM" {% if 'DOM' in request.args.getlist('country_code') %}selected{% endif %}>República Dominicana</option>
-              <option value="SLV" {% if 'SLV' in request.args.getlist('country_code') %}selected{% endif %}>El Salvador</option>
-              <option value="URY" {% if 'URY' in request.args.getlist('country_code') %}selected{% endif %}>Uruguay</option>
-              <option value="VEN" {% if 'VEN' in request.args.getlist('country_code') %}selected{% endif %}>Venezuela</option>
-            </select>
-            <label for="filter-country-code" class="md3-outlined-textfield__label md3-outlined-textfield__label--select">País</label>
-            <div class="md3-outlined-textfield__outline">
-              <div class="md3-outlined-textfield__outline-start"></div>
-              <div class="md3-outlined-textfield__outline-notch"></div>
-              <div class="md3-outlined-textfield__outline-end"></div>
+            <!-- Hablante -->
+            <div class="md3-outlined-textfield md3-outlined-textfield--compact">
+              <select 
+                id="filter-speaker-type" 
+                name="speaker_type" 
+                multiple 
+                class="md3-outlined-textfield__input md3-outlined-textfield__input--select" 
+                data-enhance="select2" 
+                data-placeholder="Hablante"
+                aria-label="Filtrar por hablante">
+                <option value=""></option>
+                <option value="pro" {% if 'pro' in request.args.getlist('speaker_type') %}selected{% endif %}>Profesional</option>
+                <option value="otro" {% if 'otro' in request.args.getlist('speaker_type') %}selected{% endif %}>Otro</option>
+              </select>
+              <label for="filter-speaker-type" class="md3-outlined-textfield__label md3-outlined-textfield__label--select">Hablante</label>
+              <div class="md3-outlined-textfield__outline">
+                <div class="md3-outlined-textfield__outline-start"></div>
+                <div class="md3-outlined-textfield__outline-notch"></div>
+                <div class="md3-outlined-textfield__outline-end"></div>
+              </div>
             </div>
-          </div>
 
-          <!-- Hablante -->
-          <div class="md3-outlined-textfield md3-outlined-textfield--compact">
-            <select 
-              id="filter-speaker-type" 
-              name="speaker_type" 
-              multiple 
-              class="md3-outlined-textfield__input md3-outlined-textfield__input--select" 
-              data-enhance="select2" 
-              data-placeholder="Hablante"
-              aria-label="Filtrar por hablante">
-              <option value=""></option>
-              <option value="pro" {% if 'pro' in request.args.getlist('speaker_type') %}selected{% endif %}>Profesional</option>
-              <option value="otro" {% if 'otro' in request.args.getlist('speaker_type') %}selected{% endif %}>Otro</option>
-            </select>
-            <label for="filter-speaker-type" class="md3-outlined-textfield__label md3-outlined-textfield__label--select">Hablante</label>
-            <div class="md3-outlined-textfield__outline">
-              <div class="md3-outlined-textfield__outline-start"></div>
-              <div class="md3-outlined-textfield__outline-notch"></div>
-              <div class="md3-outlined-textfield__outline-end"></div>
+            <!-- Sexo -->
+            <div class="md3-outlined-textfield md3-outlined-textfield--compact">
+              <select 
+                id="filter-sex" 
+                name="sex" 
+                multiple 
+                class="md3-outlined-textfield__input md3-outlined-textfield__input--select" 
+                data-enhance="select2" 
+                data-placeholder="Sexo"
+                aria-label="Filtrar por sexo">
+                <option value=""></option>
+                <option value="m" {% if 'm' in request.args.getlist('sex') %}selected{% endif %}>Masculino</option>
+                <option value="f" {% if 'f' in request.args.getlist('sex') %}selected{% endif %}>Femenino</option>
+              </select>
+              <label for="filter-sex" class="md3-outlined-textfield__label md3-outlined-textfield__label--select">Sexo</label>
+              <div class="md3-outlined-textfield__outline">
+                <div class="md3-outlined-textfield__outline-start"></div>
+                <div class="md3-outlined-textfield__outline-notch"></div>
+                <div class="md3-outlined-textfield__outline-end"></div>
+              </div>
             </div>
-          </div>
 
-          <!-- Sexo -->
-          <div class="md3-outlined-textfield md3-outlined-textfield--compact">
-            <select 
-              id="filter-sex" 
-              name="sex" 
-              multiple 
-              class="md3-outlined-textfield__input md3-outlined-textfield__input--select" 
-              data-enhance="select2" 
-              data-placeholder="Sexo"
-              aria-label="Filtrar por sexo">
-              <option value=""></option>
-              <option value="m" {% if 'm' in request.args.getlist('sex') %}selected{% endif %}>Masculino</option>
-              <option value="f" {% if 'f' in request.args.getlist('sex') %}selected{% endif %}>Femenino</option>
-            </select>
-            <label for="filter-sex" class="md3-outlined-textfield__label md3-outlined-textfield__label--select">Sexo</label>
-            <div class="md3-outlined-textfield__outline">
-              <div class="md3-outlined-textfield__outline-start"></div>
-              <div class="md3-outlined-textfield__outline-notch"></div>
-              <div class="md3-outlined-textfield__outline-end"></div>
+            <!-- Modo -->
+            <div class="md3-outlined-textfield md3-outlined-textfield--compact">
+              <select 
+                id="filter-speech-mode" 
+                name="speech_mode" 
+                multiple 
+                class="md3-outlined-textfield__input md3-outlined-textfield__input--select" 
+                data-enhance="select2" 
+                data-placeholder="Modo"
+                aria-label="Filtrar por modo de habla">
+                <option value=""></option>
+                <option value="pre" {% if 'pre' in request.args.getlist('speech_mode') %}selected{% endif %}>Anuncio</option>
+                <option value="lectura" {% if 'lectura' in request.args.getlist('speech_mode') %}selected{% endif %}>Lectura</option>
+                <option value="libre" {% if 'libre' in request.args.getlist('speech_mode') %}selected{% endif %}>Habla libre</option>
+              </select>
+              <label for="filter-speech-mode" class="md3-outlined-textfield__label md3-outlined-textfield__label--select">Modo</label>
+              <div class="md3-outlined-textfield__outline">
+                <div class="md3-outlined-textfield__outline-start"></div>
+                <div class="md3-outlined-textfield__outline-notch"></div>
+                <div class="md3-outlined-textfield__outline-end"></div>
+              </div>
             </div>
-          </div>
 
-          <!-- Modo -->
-          <div class="md3-outlined-textfield md3-outlined-textfield--compact">
-            <select 
-              id="filter-speech-mode" 
-              name="speech_mode" 
-              multiple 
-              class="md3-outlined-textfield__input md3-outlined-textfield__input--select" 
-              data-enhance="select2" 
-              data-placeholder="Modo"
-              aria-label="Filtrar por modo de habla">
-              <option value=""></option>
-              <option value="pre" {% if 'pre' in request.args.getlist('speech_mode') %}selected{% endif %}>Anuncio</option>
-              <option value="lectura" {% if 'lectura' in request.args.getlist('speech_mode') %}selected{% endif %}>Lectura</option>
-              <option value="libre" {% if 'libre' in request.args.getlist('speech_mode') %}selected{% endif %}>Habla libre</option>
-            </select>
-            <label for="filter-speech-mode" class="md3-outlined-textfield__label md3-outlined-textfield__label--select">Modo</label>
-            <div class="md3-outlined-textfield__outline">
-              <div class="md3-outlined-textfield__outline-start"></div>
-              <div class="md3-outlined-textfield__outline-notch"></div>
-              <div class="md3-outlined-textfield__outline-end"></div>
+            <!-- Discurso -->
+            <div class="md3-outlined-textfield md3-outlined-textfield--compact">
+              <select 
+                id="filter-discourse" 
+                name="discourse" 
+                multiple 
+                class="md3-outlined-textfield__input md3-outlined-textfield__input--select" 
+                data-enhance="select2" 
+                data-placeholder="Discurso"
+                aria-label="Filtrar por tipo de discurso">
+                <option value=""></option>
+                <option value="general" {% if 'general' in request.args.getlist('discourse') %}selected{% endif %}>General</option>
+                <option value="tiempo" {% if 'tiempo' in request.args.getlist('discourse') %}selected{% endif %}>Tiempo</option>
+                <option value="tránsito" {% if 'tránsito' in request.args.getlist('discourse') %}selected{% endif %}>Tránsito</option>
+              </select>
+              <label for="filter-discourse" class="md3-outlined-textfield__label md3-outlined-textfield__label--select">Discurso</label>
+              <div class="md3-outlined-textfield__outline">
+                <div class="md3-outlined-textfield__outline-start"></div>
+                <div class="md3-outlined-textfield__outline-notch"></div>
+                <div class="md3-outlined-textfield__outline-end"></div>
+              </div>
             </div>
           </div>
 
-          <!-- Discurso -->
-          <div class="md3-outlined-textfield md3-outlined-textfield--compact">
-            <select 
-              id="filter-discourse" 
-              name="discourse" 
-              multiple 
-              class="md3-outlined-textfield__input md3-outlined-textfield__input--select" 
-              data-enhance="select2" 
-              data-placeholder="Discurso"
-              aria-label="Filtrar por tipo de discurso">
-              <option value=""></option>
-              <option value="general" {% if 'general' in request.args.getlist('discourse') %}selected{% endif %}>General</option>
-              <option value="tiempo" {% if 'tiempo' in request.args.getlist('discourse') %}selected{% endif %}>Tiempo</option>
-              <option value="tránsito" {% if 'tránsito' in request.args.getlist('discourse') %}selected{% endif %}>Tránsito</option>
-            </select>
-            <label for="filter-discourse" class="md3-outlined-textfield__label md3-outlined-textfield__label--select">Discurso</label>
-            <div class="md3-outlined-textfield__outline">
-              <div class="md3-outlined-textfield__outline-start"></div>
-              <div class="md3-outlined-textfield__outline-notch"></div>
-              <div class="md3-outlined-textfield__outline-end"></div>
-            </div>
+          <!-- ROW 4: Additional Checkboxes -->
+          <div class="md3-regional-filter-section">
+            <label class="md3-checkbox-container">
+              <input type="checkbox" id="include-regional" name="include_regional" value="1" {% if request.args.get('include_regional') %}checked{% endif %}>
+              <span class="md3-checkbox">
+                <svg class="md3-checkbox__checkmark" viewBox="0 0 18 18">
+                  <path class="md3-checkbox__checkmark-path" fill="none" stroke="white" d="M1.73,9.29 l4.75,4.75 l10.04,-10.04"></path>
+                </svg>
+              </span>
+              <span class="md3-checkbox__label">Incluir emisoras regionales</span>
+            </label>
+            <label class="md3-checkbox-container">
+              <input type="checkbox" id="case-sensitive" name="case_sensitive" value="1" {% if request.args.get('case_sensitive') %}checked{% endif %}>
+              <span class="md3-checkbox">
+                <svg class="md3-checkbox__checkmark" viewBox="0 0 18 18">
+                  <path class="md3-checkbox__checkmark-path" fill="none" stroke="white" d="M1.73,9.29 l4.75,4.75 l10.04,-10.04"></path>
+                </svg>
+              </span>
+              <span class="md3-checkbox__label">Sensibilidad a mayúsculas</span>
+            </label>
           </div>
-        </div>
 
-        <!-- Filter Checkboxes (below grid, like Simple Search) -->
-        <div class="md3-regional-filter-section">
-          <label class="md3-checkbox-container">
-            <input type="checkbox" id="include-regional" name="include_regional" value="1" {% if request.args.get('include_regional') %}checked{% endif %}>
-            <span class="md3-checkbox">
-              <svg class="md3-checkbox__checkmark" viewBox="0 0 18 18">
-                <path class="md3-checkbox__checkmark-path" fill="none" stroke="white" d="M1.73,9.29 l4.75,4.75 l10.04,-10.04"></path>
-              </svg>
-            </span>
-            <span class="md3-checkbox__label">Incluir emisoras regionales</span>
-          </label>
-          <label class="md3-checkbox-container">
-            <input type="checkbox" id="sensitive-search" name="sensitive" value="1" {% if request.args.get('sensitive') is none or request.args.get('sensitive') == '1' %}checked{% endif %}>
-            <span class="md3-checkbox">
-              <svg class="md3-checkbox__checkmark" viewBox="0 0 18 18">
-                <path class="md3-checkbox__checkmark-path" fill="none" stroke="white" d="M1.73,9.29 l4.75,4.75 l10.04,-10.04"></path>
-              </svg>
-            </span>
-            <span class="md3-checkbox__label">Sensibilidad a mayúsculas y acentos</span>
-          </label>
-        </div>
+          <!-- ROW 5: Submit Button -->
+          <div class="flex gap-3 justify-end">
+            <button type="submit" class="md3-button md3-button--filled">Buscar</button>
+          </div>
 
-        <!-- Actions (like Simple Search) -->
-        <div class="md3-corpus-actions">
-          <button type="submit" class="md3-button-filled" id="search-advanced">
-            <i class="fa-solid fa-magnifying-glass"></i>
-            <span>Buscar</span>
-          </button>
-          <button type="button" class="md3-button-outlined" id="reset-filters">
-            <i class="fa-solid fa-rotate-left"></i>
-            <span>Restablecer</span>
-          </button>
-        </div>
-      </form>
+        </form>
+      </div>
 
-      <!-- Summary Box (with htmx target) -->
+      <!-- Summary Box (Results) -->
       <div id="adv-summary" 
         class="md3-advanced__summary" 
         role="status" 
@@ -292,7 +272,7 @@
         aria-atomic="true"
         tabindex="-1"
         hidden>
-        <!-- Content loaded via htmx or JS -->
+        <!-- Content loaded via JS -->
       </div>
 
       <!-- Toolbar: Export Buttons -->
