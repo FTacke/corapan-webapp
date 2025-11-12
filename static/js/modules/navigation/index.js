@@ -9,12 +9,12 @@ import { initTopAppBar } from './app-bar.js';
 import { initMaterialSymbolsFallback } from './material-symbols-loader.js';
 import { initTurboIntegration } from './turbo-integration.js';
 
-// Import viewport and scroll state detection
+// Import viewport detection
 import './viewport.js';
-import './scroll-state.js';
 
-// Import page title controller
-import './page-title.js';
+// Import and initialize scroll state and page title
+import { initScrollState } from './scroll-state.js';
+import { initPageTitle } from './page-title.js';
 
 /**
  * Initialize MD3 Navigation System
@@ -34,6 +34,10 @@ export function initMD3Navigation() {
   
   // Initialize Turbo integration for persistent navigation
   initTurboIntegration();
+  
+  // Initialize adaptive title and scroll state (framework-agnostisch)
+  initPageTitle();
+  initScrollState();
   
   // Log current window size (dev only)
   if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
