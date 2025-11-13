@@ -66,15 +66,26 @@ export function initAdvancedTable(queryParams) {
       url: ajaxUrl,
       type: 'GET',
       error: function(xhr, error, thrown) {
+        // Network/HTTP error
         console.error('DataTables AJAX error:', xhr.status, error);
         handleDataTablesError(xhr);
       },
       dataSrc: function(json) {
-        // After data load: update summary and export buttons
+        console.log('[DataTables dataSrc] Response received:', json);
+        
+        // Check for backend error in response body (e.g., BLS unreachable)
+        if (json && json.error) {
+          console.warn(`[DataTables] Backend error detected: ${json.error}`);
+          handleBackendError(json);
+          // Return empty data so DataTables shows empty table + our error banner
+          return [];
+        }
+        
+        // Normal flow: update summary and export buttons
         updateSummary(json, queryParams);
         updateExportButtons(queryParams);
         focusSummary();
-        return json.data;
+        return json.data || [];
       }
     },
 
@@ -246,6 +257,101 @@ function focusSummary() {
       summaryBox.focus();
       summaryBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }, 100);
+  }
+}
+
+/**
+ * Handle backend errors returned in JSON response body
+ * (e.g., BlackLab connection error, invalid CQL syntax)
+ */
+function handleBackendError(json) {
+  const errorCode = json.error || 'unknown_error';
+  const errorMessage = json.message || 'An error occurred in the search backend';
+  
+  console.error(`[Backend Error] ${errorCode}: ${errorMessage}`);
+  
+  // Map error codes to user-friendly messages and icons
+  const errorConfig = {
+    'upstream_unavailable': {
+      icon: 'cloud_off',
+      title: 'Search Backend Unavailable',
+      message: 'The search backend (BlackLab) is currently not reachable. Please check that the BlackLab server is running.',
+      severity: 'error'
+    },
+    'upstream_timeout': {
+      icon: 'schedule',
+      title: 'Search Timeout',
+      message: 'The search backend took too long to respond. Please try again or simplify your query.',
+      severity: 'warning'
+    },
+    'upstream_error': {
+      icon: 'cloud_queue',
+      title: 'Backend Error',
+      message: errorMessage,
+      severity: 'error'
+    },
+    'invalid_cql': {
+      icon: 'code',
+      title: 'CQL Syntax Error',
+      message: errorMessage,
+      severity: 'warning'
+    },
+    'invalid_filter': {
+      icon: 'filter_list',
+      title: 'Invalid Filter',
+      message: errorMessage,
+      severity: 'warning'
+    },
+    'server_error': {
+      icon: 'error_outline',
+      title: 'Server Error',
+      message: 'An unexpected error occurred. Please try again or contact support.',
+      severity: 'error'
+    }
+  };
+  
+  const config = errorConfig[errorCode] || {
+    icon: 'warning',
+    title: 'Error',
+    message: errorMessage,
+    severity: 'error'
+  };
+  
+  // Display error banner using MD3 alert component
+  let resultsSection = document.getElementById('results-section');
+  
+  // Fallback: create results section if it doesn't exist
+  if (!resultsSection) {
+    console.warn('[Backend Error] results-section not found, creating fallback container');
+    const table = document.getElementById('advanced-table');
+    if (table && table.parentElement) {
+      resultsSection = document.createElement('div');
+      resultsSection.id = 'results-section';
+      table.parentElement.insertBefore(resultsSection, table);
+    } else {
+      console.error('[Backend Error] Cannot find suitable location to display error banner');
+      return;
+    }
+  }
+  
+  if (resultsSection) {
+    // Remove any existing error/alert messages
+    const existingErrors = resultsSection.querySelectorAll('.md3-alert');
+    existingErrors.forEach(el => el.remove());
+    
+    // Create alert banner with icon, title, and message
+    const alertClass = config.severity === 'error' ? 'md3-alert--error' : 'md3-alert--warning';
+    const alertHtml = `
+      <div class="md3-alert ${alertClass}" role="alert">
+        <span class="material-symbols-rounded md3-alert__icon" aria-hidden="true">${config.icon}</span>
+        <div class="md3-alert__content">
+          <div class="md3-alert__title">${config.title}</div>
+          <div class="md3-alert__message">${escapeHtml(config.message)}</div>
+        </div>
+      </div>
+    `;
+    resultsSection.insertAdjacentHTML('afterbegin', alertHtml);
+    console.log('[Backend Error] Alert banner displayed for:', errorCode);
   }
 }
 

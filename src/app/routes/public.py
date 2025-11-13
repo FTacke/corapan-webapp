@@ -1,9 +1,13 @@
 ﻿"""Public routes."""
 from __future__ import annotations
 
+import logging
 from flask import Blueprint, make_response, render_template, request, jsonify
 from ..services.counters import counter_visits
 from flask_jwt_extended import jwt_required
+import httpx
+
+logger = logging.getLogger(__name__)
 
 blueprint = Blueprint("public", __name__)
 
@@ -22,11 +26,132 @@ def landing_page():
 
 @blueprint.get("/health")
 def health_check():
-    """Health check endpoint for Docker/Kubernetes monitoring."""
+    """
+    Health check endpoint for Docker/Kubernetes monitoring.
+    
+    Checks:
+    - Flask app is running (HTTP 200)
+    - BlackLab server is reachable (if BLS_BASE_URL is configured)
+    
+    Response:
+    {
+        "status": "healthy" | "degraded" | "unhealthy",
+        "service": "corapan-web",
+        "checks": {
+            "flask": {"ok": true},
+            "blacklab": {"ok": true|false, "url": "...", "error": "..."}
+        }
+    }
+    """
+    from ..extensions.http_client import BLS_BASE_URL, get_http_client
+    
+    checks = {
+        "flask": {"ok": True}  # If we got here, Flask is healthy
+    }
+    
+    # Check BlackLab availability (quick preflight)
+    blacklab_check = {
+        "url": BLS_BASE_URL,
+        "ok": False,
+        "error": None
+    }
+    
+    try:
+        client = get_http_client()
+        # Try a simple status endpoint first, fall back to /
+        response = client.get(f"{BLS_BASE_URL}/", timeout=3.0)  # Single timeout value for all operations
+        if response.status_code in (200, 404):  # 200 = endpoint exists, 404 = BLS exists but endpoint doesn't
+            blacklab_check["ok"] = True
+            logger.debug(f"BlackLab health check OK at {BLS_BASE_URL}")
+        else:
+            blacklab_check["error"] = f"HTTP {response.status_code}"
+            logger.warning(f"BlackLab health check returned {response.status_code}: {response.text[:100]}")
+    except httpx.ConnectError:
+        blacklab_check["error"] = "Connection refused / unreachable"
+        logger.warning(f"BlackLab health check failed (ConnectError): {BLS_BASE_URL}")
+    except httpx.TimeoutException:
+        blacklab_check["error"] = "Timeout"
+        logger.warning(f"BlackLab health check timed out: {BLS_BASE_URL}")
+    except Exception as e:
+        blacklab_check["error"] = f"{type(e).__name__}: {str(e)}"
+        logger.warning(f"BlackLab health check error: {e}")
+    
+    checks["blacklab"] = blacklab_check
+    
+    # Determine overall status
+    if checks["flask"]["ok"] and checks["blacklab"]["ok"]:
+        overall_status = "healthy"
+        http_code = 200
+    elif checks["flask"]["ok"]:
+        # Flask OK but BlackLab not available
+        overall_status = "degraded"
+        http_code = 200  # Still return 200 so Docker healthcheck passes for Flask
+    else:
+        overall_status = "unhealthy"
+        http_code = 503
+    
     return jsonify({
-        "status": "healthy",
-        "service": "corapan-web"
-    }), 200
+        "status": overall_status,
+        "service": "corapan-web",
+        "checks": checks
+    }), http_code
+
+
+@blueprint.get("/health/bls")
+def health_check_bls():
+    """
+    Dedicated BlackLab health check for developer diagnostics.
+    
+    Response:
+    {
+        "ok": true|false,
+        "url": "http://localhost:8081/blacklab-server",
+        "status_code": 200 | error code,
+        "error": "Connection refused" | null
+    }
+    """
+    from ..extensions.http_client import BLS_BASE_URL, get_http_client
+    
+    logger.debug(f"BlackLab diagnostic check: {BLS_BASE_URL}")
+    
+    try:
+        client = get_http_client()
+        response = client.get(f"{BLS_BASE_URL}/", timeout=3.0)  # Single timeout value
+        ok = response.status_code in (200, 404)
+        
+        return jsonify({
+            "ok": ok,
+            "url": BLS_BASE_URL,
+            "status_code": response.status_code,
+            "error": None
+        }), 200 if ok else 502
+        
+    except httpx.ConnectError as e:
+        logger.warning(f"BlackLab not reachable: {e}")
+        return jsonify({
+            "ok": False,
+            "url": BLS_BASE_URL,
+            "status_code": None,
+            "error": f"Connection refused (check if BlackLab is running at {BLS_BASE_URL})"
+        }), 502
+        
+    except httpx.TimeoutException:
+        logger.warning(f"BlackLab timeout at {BLS_BASE_URL}")
+        return jsonify({
+            "ok": False,
+            "url": BLS_BASE_URL,
+            "status_code": None,
+            "error": "Timeout (BlackLab not responding)"
+        }), 504
+        
+    except Exception as e:
+        logger.error(f"BlackLab health check error: {e}")
+        return jsonify({
+            "ok": False,
+            "url": BLS_BASE_URL,
+            "status_code": None,
+            "error": f"{type(e).__name__}: {str(e)}"
+        }), 500
 
 
 @blueprint.get("/proyecto")

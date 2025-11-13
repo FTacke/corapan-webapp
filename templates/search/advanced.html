@@ -14,6 +14,7 @@
 <link rel="stylesheet" href="{{ url_for('static', filename='css/md3/components/forms.css') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/md3/components/corpus.css') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/md3/components/cards.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/md3/components/alerts.css') }}">
 <!-- External Libraries (CDN Base Styles BEFORE Project Overrides) -->
 <link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/jquery.dataTables.min.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css">
@@ -51,8 +52,7 @@
     <!-- Advanced Search Container -->
     <section class="md3-advanced">
       <!-- Search Form Card (MD3 Design) -->
-      <div class="md3-card p-4 gap-4">
-        <form id="advanced-search-form" class="grid gap-4" role="search" aria-label="Búsqueda avanzada con filtros">
+      <form id="advanced-search-form" class="md3-advanced__form" role="search" aria-label="Búsqueda avanzada con filtros">
           
           <!-- Form Header with CQL Toggle -->
           <div class="flex items-center justify-between gap-3 md3-card__header">
@@ -262,9 +262,12 @@
           </div>
 
         </form>
-      </div>
 
       <!-- Summary Box (Results) -->
+      <div id="results-section">
+        <!-- Error banners will be inserted here -->
+      </div>
+      
       <div id="adv-summary" 
         class="md3-advanced__summary" 
         role="status" 

@@ -31,6 +31,7 @@ Konzeptuelle Übersichten und Architektur-Entscheidungen.
 
 Schritt-für-Schritt-Anleitungen für häufige Aufgaben.
 
+- **[Advanced Search Dev Setup](how-to/advanced-search-dev-setup.md)** - BlackLab konfigurieren, starten, debuggen (NEW 2025-11-13)
 - **[Token Input Usage](how-to/token-input-usage.md)** - Multi-Paste-Feature für Corpus-Tokens
 - **[Build BlackLab Index](how-to/build-blacklab-index.md)** - Index-Build, CLI-Optionen, Validierung
 - **[Execute BlackLab Stage 2-3](how-to/execute-blacklab-stage-2-3.md)** - Index-Build ausführen, Tests durchführen (NEW)

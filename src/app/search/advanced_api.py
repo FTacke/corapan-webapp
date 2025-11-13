@@ -309,6 +309,19 @@ def datatable_data():
             "message": str(e)
         }), 200  # Return 200 with error in JSON for DataTables compatibility
         
+    except httpx.ConnectError:
+        # Connection refused, DNS lookup failed, or BlackLab unreachable
+        # This is a clear, actionable error for the user
+        logger.warning(f"BLS connection failed (server not reachable at {BLS_BASE_URL})")
+        return jsonify({
+            "draw": draw,
+            "recordsTotal": 0,
+            "recordsFiltered": 0,
+            "data": [],
+            "error": "upstream_unavailable",
+            "message": f"Search backend (BlackLab) is currently not reachable. Please check that the BlackLab server is running at {BLS_BASE_URL}."
+        }), 200  # Return 200 with error in JSON for DataTables compatibility
+        
     except httpx.TimeoutException:
         logger.error("BLS timeout during DataTables request")
         return jsonify({
@@ -317,7 +330,7 @@ def datatable_data():
             "recordsFiltered": 0,
             "data": [],
             "error": "upstream_timeout",
-            "message": "BlackLab Server did not respond in time"
+            "message": "BlackLab Server did not respond in time. Please try again later."
         }), 200  # Return 200 with error in JSON for DataTables compatibility
         
     except httpx.HTTPStatusError as e:
@@ -461,6 +474,9 @@ def export_data():
             logger.info(f"Export initiated: format={export_format}, total_hits={total_hits}, "
                        f"filters={'yes' if filter_query else 'no'}")
             
+        except httpx.ConnectError:
+            logger.warning(f"Export preflight failed - BLS connection refused at {BLS_BASE_URL}")
+            return f"Export error: BlackLab Server is not reachable at {BLS_BASE_URL}", 502
         except httpx.TimeoutException:
             logger.error("Export preflight timeout - BLS not responding")
             return "Export error: BlackLab Server timeout", 504
@@ -535,6 +551,10 @@ def export_data():
                         if response is None:
                             raise Exception("Could not determine BLS CQL parameter")
                         
+                    except httpx.ConnectError:
+                        logger.error(f"Export chunk connection failed at offset {first} - BLS unreachable at {BLS_BASE_URL}")
+                        yield f"\n# Export interrupted: BlackLab connection failed at row {total_exported}\n"
+                        break
                     except httpx.TimeoutException:
                         logger.error(f"Export chunk timeout at offset {first}")
                         # Gracefully end export
@@ -635,6 +655,10 @@ def export_data():
     except ValueError as e:
         logger.warning(f"Export CQL validation: {e}")
         return f"Export error: CQL validation failed - {str(e)}", 400
+        
+    except httpx.ConnectError:
+        logger.error(f"Export connection failed - BLS unreachable at {BLS_BASE_URL}")
+        return f"Export error: BlackLab Server is not reachable at {BLS_BASE_URL}", 502
         
     except httpx.TimeoutException:
         logger.error("BLS timeout during export")

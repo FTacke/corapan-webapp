@@ -1,4 +1,18 @@
-"""HTTP client for external API proxying (BlackLab, etc.)."""
+"""HTTP client for external API proxying (BlackLab, etc.).
+
+Configuration:
+    BLS_BASE_URL: Base URL for BlackLab Server (CQL/FCS interface)
+        - Environment variable: BLS_BASE_URL
+        - Default (development): http://localhost:8081/blacklab-server
+        - Example (Docker): http://blacklab:8081/blacklab-server
+        - Must include protocol and path, trailing slash will be removed
+        
+        Set before creating the app:
+            export BLS_BASE_URL=http://localhost:8080/blacklab-server  # for dev
+            
+        Or in passwords.env (loaded at startup):
+            BLS_BASE_URL=http://localhost:8081/blacklab-server
+"""
 from __future__ import annotations
 
 import os
@@ -9,6 +23,8 @@ from typing import Optional
 _http_client: Optional[httpx.Client] = None
 
 # Get BLS base URL from environment (required for proxying)
+# Default: http://localhost:8081/blacklab-server (Docker on local port 8081)
+# For dev without Docker: http://localhost:8080/blacklab-server (typical BLS port)
 BLS_BASE_URL = os.environ.get("BLS_BASE_URL", "http://localhost:8081/blacklab-server").rstrip("/")
 
 

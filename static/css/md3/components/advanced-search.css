@@ -30,8 +30,12 @@
 .md3-advanced__form {
   display: flex;
   flex-direction: column;
-  gap: var(--space-4, 1rem);
+  gap: var(--space-6, 1.5rem);
   margin-block-end: var(--space-6, 1.5rem);
+  padding: var(--space-6, 1.5rem);
+  background: var(--md-sys-color-surface-container);
+  border: 1px solid var(--md-sys-color-outline-variant);
+  border-radius: var(--radius-sm, 8px);
 }
 
 /* Row: Query + Mode + Expert */
@@ -39,6 +43,11 @@
   display: grid !important;
   gap: var(--space-3, 0.75rem);
   align-items: end;
+  margin-bottom: var(--space-6, 1.5rem);
+}
+
+.md3-advanced__row:last-of-type {
+  margin-bottom: 0;
 }
 
 .md3-advanced__row--query {
@@ -60,7 +69,45 @@
   gap: var(--space-3, 0.75rem);
 }
 
+/* Filter Grid (alternative structure - if used with div instead of row) */
+/* Matches .md3-corpus-filter-grid from forms.css but with desktop-first approach */
+.md3-corpus-filter-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: var(--space-3, 0.75rem);
+  align-items: start;
+  margin-bottom: var(--space-6, 1.5rem);
+}
+
+/* Responsive: Tablet (2-3 columns) */
+@media (max-width: 1120px) {
+  .md3-corpus-filter-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+/* Responsive: Small tablet/mobile landscape (2 columns) */
+@media (max-width: 960px) {
+  .md3-corpus-filter-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* Responsive: Mobile (1 column) */
+@media (max-width: 600px) {
+  .md3-corpus-filter-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 /* Responsive: Stack filters on mobile/tablet */
+@media (max-width: 1120px) {
+  .md3-advanced__form {
+    padding: var(--space-4, 1rem);
+    gap: var(--space-4, 1rem);
+  }
+}
+
 @media (max-width: 960px) {
   .md3-advanced__row--query {
     grid-template-columns: 1fr !important;
@@ -74,6 +121,11 @@
 @media (max-width: 600px) {
   .md3-advanced__row--filters {
     grid-template-columns: 1fr !important;
+  }
+  
+  .md3-advanced__form {
+    padding: var(--space-3, 0.75rem);
+    gap: var(--space-3, 0.75rem);
   }
 }
 
