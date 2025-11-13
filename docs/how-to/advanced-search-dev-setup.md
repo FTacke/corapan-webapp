@@ -10,7 +10,7 @@
 The Advanced Search feature requires a running **BlackLab Server** instance. This guide explains:
 
 1. How BlackLab is configured in the app
-2. How to start BlackLab locally for development
+2. How to start BlackLab locally for development (Docker recommended)
 3. How to diagnose issues when BlackLab is unavailable
 4. What happens in the UI when BlackLab goes offline
 
@@ -18,23 +18,29 @@ The Advanced Search feature requires a running **BlackLab Server** instance. Thi
 
 ## 1. BlackLab Configuration
 
-### Quick Start for Windows Development
+### Quick Start for Windows Development (Recommended)
 
-**Fastest way to get Advanced Search running:**
+**Standard development workflow with real search results:**
 
 ```powershell
-# Terminal 1: Start Mock BlackLab Server (Port 8081)
-Start-Process powershell -ArgumentList "-NoExit", "-Command", "cd '$PWD'; python scripts/mock_bls_server.py 8081"
+# Terminal 1: Start BlackLab in Docker (real index, real searches)
+.\scripts\start_blacklab_docker.ps1
 
-# Terminal 2: Start Flask with BLS_BASE_URL
+# Terminal 2: Start Flask (uses default BLS_BASE_URL)
 .venv\Scripts\activate
 $env:FLASK_ENV="development"
-$env:BLS_BASE_URL="http://localhost:8081/blacklab-server"
 python -m src.app.main
 
 # Test in browser: http://localhost:8000/search/advanced
-# Search for "casa" - should return 324 mock results
+# Search for real tokens like "casa" - returns actual corpus hits
 ```
+
+**Why this is the recommended approach:**
+- ✅ Uses the actual BlackLab index from `data/blacklab_index/`
+- ✅ Returns real search results based on your queries
+- ✅ Tests the full search pipeline with real CQL and metadata
+- ✅ Works exactly like production (same Docker image)
+- ✅ No environment variable configuration needed (uses default port 8081)
 
 ---
 
@@ -43,22 +49,26 @@ python -m src.app.main
 The app communicates with BlackLab via the `BLS_BASE_URL` environment variable:
 
 ```bash
-# Default (if not set)
+# Default (if not set) - for local Docker-BlackLab on host port 8081
 BLS_BASE_URL=http://localhost:8081/blacklab-server
 
-# Set manually for local dev (Docker on different port)
+# Override manually if needed (e.g., different port or remote server)
 export BLS_BASE_URL=http://localhost:8080/blacklab-server
 
 # Or in passwords.env (read on app startup)
 BLS_BASE_URL=http://localhost:8080/blacklab-server
 ```
 
+**Important:** The default value (`http://localhost:8081/blacklab-server`) is configured to work with the standard Docker setup (Option A below). If you use the recommended PowerShell scripts, no environment variable configuration is needed.
+
 ### Configuration Location
 
 - **Environment variable:** `BLS_BASE_URL`
-- **Default value:** `http://localhost:8081/blacklab-server`
+- **Default value:** `http://localhost:8081/blacklab-server` (Docker-BlackLab on local dev, port 8081)
 - **Code location:** `src/app/extensions/http_client.py`
-- **Setup method:** `passwords.env` or shell export
+- **Setup method:** Uses default, or override via `passwords.env` / shell export
+
+**Note:** The default is intentionally set to port `8081` to match the recommended Docker setup. This avoids conflicts with other services often running on port `8080` and provides a clean separation for development.
 
 ### What URL Should Point To?
 
@@ -66,8 +76,8 @@ BlackLab exposes two interfaces:
 
 | Interface       | Purpose                              | Example URL                           |
 |-----------------|--------------------------------------|---------------------------------------|
-| **FCS** (Search)| REST API for search, exports, etc.  | `http://localhost:8080/blacklab-server` |
-| **GUI**         | Web interface (optional)            | `http://localhost:8080/blacklab-server-gui` |
+| **FCS** (Search)| REST API for search, exports, etc.  | `http://localhost:8081/blacklab-server` |
+| **GUI**         | Web interface (optional)            | `http://localhost:8081/blacklab-server-gui` |
 
 The app uses the **FCS interface** for CQL queries, metadata filtering, and hit retrieval.
 
@@ -75,9 +85,73 @@ The app uses the **FCS interface** for CQL queries, metadata filtering, and hit 
 
 ## 2. Starting BlackLab Locally
 
-### Quick Start: Mock Server (Recommended for Development)
+### Option A (Recommended): Docker Container with Helper Scripts
 
-For **rapid development and UI testing**, use the included mock BlackLab server:
+**For Windows development, use the provided PowerShell scripts:**
+
+```powershell
+# Start BlackLab (creates container if needed, starts if stopped)
+.\scripts\start_blacklab_docker.ps1
+
+# Stop BlackLab (keeps container for next start)
+.\scripts\stop_blacklab_docker.ps1
+```
+
+**What this does:**
+- Creates/starts a Docker container named `corapan-blacklab-dev`
+- Uses image: `instituutnederlandsetaal/blacklab:latest` (official BlackLab Server)
+- Maps host port **8081** to container port 8080
+- Mounts `config/blacklab/` as `/etc/blacklab` (read-only config)
+- Mounts `data/blacklab_index/` as `/data/index` (read-write index storage)
+- URL: `http://localhost:8081/blacklab-server`
+
+**Important:** This Docker setup only runs the BlackLab Server. The index must be pre-built using the JAR-based script (see "Known Issue" below). The Docker image does NOT include indexing tools.
+
+**⚠️ Known Issue: Index Migration Required**
+
+The existing index was built with Lucene 8.11.1, but the current BlackLab Docker image uses Lucene 9.x.  
+**Symptoms:** Container starts, but queries return HTTP 500 errors.  
+**Solution:** Rebuild the index using the JAR-based IndexTool script:
+
+```powershell
+# Prerequisites: Java 11+ and BlackLab JAR (see migration guide)
+# Rebuild BlackLab index from TSV sources
+.\scripts\build_blacklab_index.ps1
+
+# Then start BlackLab normally
+.\scripts\start_blacklab_docker.ps1
+```
+
+**For detailed information about the index migration and JAR setup, see:**  
+📖 [BlackLab Index Lucene Migration Guide](../troubleshooting/blacklab-index-lucene-migration.md)  
+📖 [Local Workflow README](../../LOKAL/01 - Add New Transcriptions/README.md)
+
+---
+
+**Manual Docker command (if you prefer):**
+
+```bash
+# Start BlackLab on port 8081 (maps to internal port 8080)
+docker run -d \
+  --name corapan-blacklab-dev \
+  -p 8081:8080 \
+  -v "$(pwd)/config/blacklab/corapan.blf.yaml:/etc/blacklab/corapan.blf.yaml:ro" \
+  -v "$(pwd)/data/blacklab_index:/var/lib/blacklab/index:rw" \
+  corpuslab/blacklab-server:3.5.0
+
+# Verify it's running
+curl -s http://localhost:8081/blacklab-server/ | head -20
+# Should return XML/JSON with BlackLab server info
+```
+
+**Why port 8081?**
+- Matches the default `BLS_BASE_URL` in the code
+- Avoids conflicts with other services on port `8080`
+- No environment variable setup needed for standard dev workflow
+
+### Option B: Mock Server (UI Testing / Fallback Only)
+
+**Use only for rapid UI testing or when Docker is not available.**
 
 ```powershell
 # Windows PowerShell - Start mock server in separate window
@@ -90,35 +164,23 @@ python scripts/mock_bls_server.py 8081
 **What the mock provides:**
 - ✅ Realistic response structure matching real BlackLab API
 - ✅ 324 mock hits with KWIC data (left, match, right)
-- ✅ Pagination, filtering, and metadata support
+- ✅ Pagination and metadata support
 - ✅ Fast startup (no index building required)
-- ⚠️ **Limitation:** Returns same mock data for any query (not real search results)
+- ⚠️ **Critical limitation:** Returns same 324 mock hits for ANY query (not real search results)
 
 **When to use mock:**
-- UI development and styling
-- Error handling testing
-- DataTables integration verification
-- Quick local testing without Docker
+- Quick UI/styling verification
+- DataTables integration testing
+- Error banner/handling development
+- When Docker is unavailable
 
----
+**When NOT to use mock:**
+- Testing actual CQL queries
+- Validating metadata filtering
+- Verifying corpus data accuracy
+- Any feature development requiring real search results
 
-### Option A: Docker Container (For Real Search Results)
-
-```bash
-# Start BlackLab on port 8080 (map to 8080 on host)
-docker run -d \
-  --name blacklab-dev \
-  -p 8080:8080 \
-  -v "$(pwd)/config/blacklab/corapan.blf.yaml:/etc/blacklab/corapan.blf.yaml:ro" \
-  -v "$(pwd)/data/blacklab_index:/var/lib/blacklab/index:rw" \
-  corpuslab/blacklab-server:3.5.0
-
-# Verify it's running
-curl -s http://localhost:8080/blacklab-server/ | head -20
-# Should return XML/JSON with BlackLab server info
-```
-
-### Option B: Docker Compose (Advanced)
+### Option C: Docker Compose (Production / Advanced)
 
 If you want to manage BlackLab alongside the Flask app in production, add a service to `docker-compose.yml`:
 
@@ -156,16 +218,24 @@ docker-compose up -d blacklab
 docker-compose up -d web
 ```
 
-### Option C: Standalone JAR (If Available)
+### Option D: Standalone JAR (Advanced / If Available)
 
 If you have a BlackLab JAR file locally:
 
 ```bash
+# Start BlackLab Server from JAR
 java -jar blacklab-server.jar \
   --port 8080 \
   --config config/blacklab/corapan.blf.yaml \
   --index data/blacklab_index/
 ```
+
+**Note:** You would need to set `BLS_BASE_URL=http://localhost:8080/blacklab-server` in this case.
+
+**IndexTool Usage:**  
+The same JAR contains the IndexTool for building indices. See:  
+📖 [tools/blacklab/README.md](../../tools/blacklab/README.md) for download instructions  
+📖 [scripts/build_blacklab_index.ps1](../../scripts/build_blacklab_index.ps1) for usage examples
 
 ---
 
@@ -174,10 +244,10 @@ java -jar blacklab-server.jar \
 ### Quick Health Check
 
 ```bash
-# Check if BlackLab is responding
-curl -s http://localhost:8080/blacklab-server/ | head -5
+# Check if BlackLab is responding (from host)
+curl -s http://localhost:8081/blacklab-server/ | head -5
 
-# Check via the app's health endpoint
+# Check via the app's health endpoint (shows what Flask sees)
 curl -s http://localhost:8000/health/bls | jq .
 # Response:
 # {
@@ -187,6 +257,8 @@ curl -s http://localhost:8000/health/bls | jq .
 #   "error": null
 # }
 ```
+
+**Note:** The default setup uses port `8081` (not `8080`) to match the default `BLS_BASE_URL`. All examples below use port `8081`.
 
 ### Using the App's Health Endpoints
 
@@ -227,6 +299,8 @@ curl -s http://localhost:8000/health/bls | jq .
 # {"ok": false, "url": "http://localhost:8081/blacklab-server", "status_code": null, 
 #  "error": "Connection refused (check if BlackLab is running at http://localhost:8081/blacklab-server)"}
 ```
+
+**Note:** The health endpoint returns the currently configured `BLS_BASE_URL`, which in local dev is normally `http://localhost:8081/blacklab-server` (Docker-BlackLab on port 8081).
 
 ---
 
@@ -281,12 +355,14 @@ curl -s http://localhost:8000/health/bls | jq .url
 **Step 3: Test connectivity directly**
 
 ```bash
-# From host machine
+# From host machine (default port 8081)
+curl -v http://localhost:8081/blacklab-server/
+
+# If you configured a different port (8080)
 curl -v http://localhost:8080/blacklab-server/
 
-# From inside Docker app container
+# From inside Docker app container (if using compose)
 docker exec corapan-container curl -v http://blacklab:8080/blacklab-server/
-# (if using docker-compose network)
 ```
 
 **Step 4: Check Docker network (if using compose)**
@@ -412,12 +488,13 @@ BLS_BASE_URL=http://blacklab.example.com:8080/blacklab-server
 
 | Issue | Cause | Fix |
 |-------|-------|-----|
-| `WinError 10061: Connection refused` | BlackLab not running or wrong port | Start BlackLab, verify port matches `BLS_BASE_URL` |
-| `Connection refused on localhost:8081` | Default port conflicts with something else | Change port in BlackLab config or `BLS_BASE_URL` |
+| `WinError 10061: Connection refused` | BlackLab not running or wrong port | Start BlackLab with `.\scripts\start_blacklab_docker.ps1`, verify port matches `BLS_BASE_URL` |
+| `Connection refused on localhost:8081` | BlackLab not running on expected port | Run `docker ps` to check, use helper script to start |
 | `404 Not Found on /blacklab-server/` | BlackLab running but path is wrong | Verify BlackLab is exposing `/blacklab-server` (not `/blacklab`) |
 | `Timeout (no response from BLS)` | BlackLab slow or indexing | Wait for index to finish, or increase timeouts in code |
 | `Invalid CQL parameter accepted` | BlackLab version mismatch (patt vs cql) | Code auto-detects; check logs for which parameter was used |
 | Search works but very slow | BLS returning large result sets | Implement pagination, reduce result limit, or optimize index |
+| Port 8081 already in use | Another service using port 8081 | Stop other service, or change Docker port mapping and set `BLS_BASE_URL` accordingly |
 
 ---
 
@@ -427,25 +504,104 @@ BLS_BASE_URL=http://blacklab.example.com:8080/blacklab-server
 # View Flask logs
 docker logs corapan-container --follow
 
-# View BlackLab logs
+# View BlackLab logs (if using Docker)
 docker logs corapan-blacklab-dev --follow
 
 # Check health in loop (useful for debugging)
 watch -n 1 'curl -s http://localhost:8000/health/bls | jq .ok'
 
-# Rebuild and restart Docker services
-docker-compose up -d --build --force-recreate
+# Restart BlackLab (using helper scripts)
+.\scripts\stop_blacklab_docker.ps1
+.\scripts\start_blacklab_docker.ps1
 
-# Stop and remove all
-docker-compose down
+# Remove and recreate BlackLab container
+docker stop corapan-blacklab-dev
+docker rm corapan-blacklab-dev
+.\scripts\start_blacklab_docker.ps1
 
 # Connect to BlackLab web UI (if available)
-# http://localhost:8080/blacklab-server-gui/
+# http://localhost:8081/blacklab-server-gui/
 ```
 
 ---
 
-## 9. References
+## 9. Test Scenarios
+
+### Test 1: BlackLab Running (Standard Dev Workflow)
+
+1. **Start BlackLab:**
+   ```powershell
+   .\scripts\start_blacklab_docker.ps1
+   ```
+   Expected output: `BlackLab is now running on http://localhost:8081/blacklab-server (Container: corapan-blacklab-dev)`
+
+2. **Start Flask:**
+   ```powershell
+   .venv\Scripts\activate
+   $env:FLASK_ENV="development"
+   python -m src.app.main
+   ```
+
+3. **Test in Browser:**
+   - Navigate to `http://localhost:8000/search/advanced`
+   - Enter a search query (e.g., `casa`)
+   - Click "Search"
+
+   **Expected:**
+   - ✅ No error banner
+   - ✅ Results appear in DataTable
+   - ✅ Real corpus hits (not always 324 results)
+   - ✅ Metadata columns populated correctly
+
+4. **Verify Health Check:**
+   ```bash
+   curl -s http://localhost:8000/health/bls | jq .
+   ```
+   **Expected:**
+   ```json
+   {
+     "ok": true,
+     "url": "http://localhost:8081/blacklab-server",
+     "status_code": 200,
+     "error": null
+   }
+   ```
+
+### Test 2: BlackLab Stopped (Error Handling)
+
+1. **Stop BlackLab:**
+   ```powershell
+   .\scripts\stop_blacklab_docker.ps1
+   ```
+
+2. **Flask still running, attempt search:**
+   - Go to `http://localhost:8000/search/advanced`
+   - Enter query `casa`
+   - Click "Search"
+
+   **Expected:**
+   - ✅ Error banner appears: "Search Backend Unavailable"
+   - ✅ Banner message: "...check that BlackLab is running at http://localhost:8081/blacklab-server"
+   - ✅ Empty table (0 results)
+   - ✅ No JavaScript console errors
+
+3. **Verify Health Check:**
+   ```bash
+   curl -s http://localhost:8000/health/bls | jq .
+   ```
+   **Expected:**
+   ```json
+   {
+     "ok": false,
+     "url": "http://localhost:8081/blacklab-server",
+     "status_code": null,
+     "error": "Connection refused (check if BlackLab is running at http://localhost:8081/blacklab-server)"
+   }
+   ```
+
+---
+
+## 10. References
 
 - **BlackLab Documentation:** https://inl.github.io/BlackLab/
 - **CQL Query Language:** https://inl.github.io/BlackLab/corpus-query-language.html
@@ -453,10 +609,11 @@ docker-compose down
 - **Search Endpoints:** `src/app/search/advanced_api.py`
 - **Frontend Handler:** `static/js/modules/advanced/initTable.js`
 - **Health Check:** `src/app/routes/public.py` (`/health`, `/health/bls`)
+- **Helper Scripts:** `scripts/start_blacklab_docker.ps1`, `scripts/stop_blacklab_docker.ps1`
 
 ---
 
-## 10. Related Documentation
+## 11. Related Documentation
 
 - [Advanced Search (UI/UX)](./advanced-search-ui-finalization.md)
 - [Advanced Search (CQL)](./advanced-search.md)

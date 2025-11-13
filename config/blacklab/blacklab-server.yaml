@@ -1,0 +1,23 @@
+# BlackLab Server Configuration
+# Minimal config for CO.RA.PAN development
+
+# Index directories
+indexLocations:
+  - /data/index
+
+# Allow index creation from API
+allowCreateIndex: false
+
+# Performance settings
+performance:
+  maxConcurrentSearches: 4
+  maxRunningJobsPerUser: 2
+
+# Cache settings
+cache:
+  maxSizeMb: 500
+  maxSearchAgeSec: 3600
+
+# Debug settings (for development)
+debug:
+  enabled: false

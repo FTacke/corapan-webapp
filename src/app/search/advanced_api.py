@@ -237,6 +237,7 @@ def datatable_data():
                    f"number_of_docs={number_of_docs}, filter={'yes' if filter_query else 'no'}")
         
         # Process hits for DataTable
+        # Note: Frontend expects objects with keys (not arrays) to match DataTables columnDefs
         processed_hits = []
         for hit in hits:
             left = hit.get("left", {}).get("word", [])
@@ -245,50 +246,30 @@ def datatable_data():
             
             # Metadata from hit
             match_info = hit.get("match", {})
-            tokid = match_info.get("tokid", [None])[0]
+            tokid = match_info.get("tokid", [None])[0] if match_info.get("tokid") else None
             start_ms = match_info.get("start_ms", [0])[0] if match_info.get("start_ms") else 0
             end_ms = match_info.get("end_ms", [0])[0] if match_info.get("end_ms") else 0
             
             # Document metadata (from listvalues)
             hit_metadata = hit.get("metadata", {})
-            country = hit_metadata.get("country", "")
-            speaker_type = hit_metadata.get("speaker_type", "")
-            sex = hit_metadata.get("sex", "")
-            mode = hit_metadata.get("mode", "")
-            discourse = hit_metadata.get("discourse", "")
-            filename = hit_metadata.get("filename", "")
-            radio = hit_metadata.get("radio", "")
             
+            # Build row as OBJECT (not array) to match frontend DataTables columnDefs
             row = {
                 "left": " ".join(left[-10:]) if left else "",
                 "match": " ".join(match),
                 "right": " ".join(right[:10]) if right else "",
-                "country": country,
-                "speaker_type": speaker_type,
-                "sex": sex,
-                "mode": mode,
-                "discourse": discourse,
-                "filename": filename,
-                "radio": radio,
-                "tokid": tokid,
-                "start_ms": start_ms,
-                "end_ms": end_ms,
+                "country": hit_metadata.get("country", ""),
+                "speaker_type": hit_metadata.get("speaker_type", ""),
+                "sex": hit_metadata.get("sex", ""),
+                "mode": hit_metadata.get("mode", ""),
+                "discourse": hit_metadata.get("discourse", ""),
+                "filename": hit_metadata.get("filename", ""),
+                "radio": hit_metadata.get("radio", ""),
+                "tokid": str(tokid) if tokid else "",
+                "start_ms": int(start_ms),
+                "end_ms": int(end_ms),
             }
-            processed_hits.append([
-                row["left"],
-                row["match"],
-                row["right"],
-                row["country"],
-                row["speaker_type"],
-                row["sex"],
-                row["mode"],
-                row["discourse"],
-                row["filename"],
-                row["radio"],
-                str(row["tokid"]),
-                f"{row['start_ms']}",
-                f"{row['end_ms']}",
-            ])
+            processed_hits.append(row)
         
         return jsonify({
             "draw": draw,

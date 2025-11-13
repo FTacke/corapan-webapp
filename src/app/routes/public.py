@@ -102,6 +102,10 @@ def health_check_bls():
     """
     Dedicated BlackLab health check for developer diagnostics.
     
+    Returns the configured BLS_BASE_URL and connection status.
+    In local dev, this normally shows http://localhost:8081/blacklab-server
+    (Docker-BlackLab on port 8081, matching the default BLS_BASE_URL).
+    
     Response:
     {
         "ok": true|false,

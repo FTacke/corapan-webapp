@@ -61,6 +61,12 @@ config/keys/
 htmlcov/
 
 # =============================================================================
+# External Tools & Dependencies (User-downloaded)
+# =============================================================================
+# BlackLab JAR files (large binaries, downloaded by user)
+tools/blacklab/*.jar
+
+# =============================================================================
 # Logs (NEVER COMMIT - may contain sensitive data)
 # =============================================================================
 *.log

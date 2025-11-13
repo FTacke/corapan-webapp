@@ -1,0 +1,93 @@
+feat: stabilize BlackLab Lucene 9 index build via IndexTool
+
+STAGE 3 COMPLETION: Reproducible JAR-based Index Build Infrastructure
+
+### Hauptänderungen
+
+1. **Kanonische Datenstruktur etabliert**
+   - data/blacklab_index.backup/ als offizielle TSV-Quelle definiert
+   - 146 TSV-Dateien + docmeta.jsonl konsolidiert (161.71 MB)
+   - Export-Skript aktualisiert für direkte Ausgabe in Backup-Location
+
+2. **Build-Skript komplett neu geschrieben (JAR-basiert)**
+   - scripts/build_blacklab_index.ps1: 351 Zeilen, 5-Phasen-Prozess
+   - Ersetzt unreliablen Docker-basierten blacklab-indexer
+   - Nutzt nl.inl.blacklab.tools.IndexTool direkt aus JAR
+   - Zwei-Stufen JAR-Lookup: $env:BLACKLAB_JAR → tools/blacklab/
+   - Automatisches Backup mit Timestamp (data/blacklab_index.old_*)
+   - Parameter: --Force, --SkipBackup
+
+3. **Tools-Infrastruktur**
+   - tools/blacklab/ Verzeichnis erstellt
+   - tools/blacklab/README.md mit Download-Anleitung
+   - .gitignore: tools/blacklab/*.jar hinzugefügt
+
+4. **LOKAL-Workflow vereinfacht**
+   - LOKAL/.../build_index.ps1: Workflow-Wrapper (JSON→TSV→Index)
+   - LOKAL/.../README.md: Vollständige Dokumentation
+   - LOKAL/.../blacklab_index_creation.py: Export-Pfade aktualisiert
+
+5. **Dokumentation aktualisiert**
+   - docs/troubleshooting/blacklab-index-lucene-migration.md:
+     * Current State Section hinzugefügt
+     * Prerequisites erweitert (Java 11+, JAR-Anforderungen)
+     * Test-Checkliste hinzugefügt (5 Tests)
+     * Docker→JAR Migration komplett
+   - docs/how-to/advanced-search-dev-setup.md:
+     * Known Issue Section aktualisiert
+     * Option A (Docker): Klarstellung Index-Prebuild erforderlich
+     * Option D (JAR): IndexTool-Informationen hinzugefügt
+
+### Technische Details
+
+- **Alter Ansatz:** Docker Container mit blacklab-indexer (nicht verfügbar)
+- **Neuer Ansatz:** Java -cp blacklab-server.jar nl.inl.blacklab.tools.IndexTool
+- **Kanonischer Pfad:** data/blacklab_index.backup/tsv/*.tsv
+- **Ziel-Index:** data/blacklab_index/ (Lucene 9.11.1)
+- **Konfiguration:** config/blacklab/corapan-tsv.blf.yaml (17 Annotationen)
+
+### Voraussetzungen (NEU)
+
+- Java 11+ (für IndexTool)
+- BlackLab JAR (User muss manuell herunterladen)
+- TSV-Quelldaten in data/blacklab_index.backup/
+
+### Breaking Changes
+
+Index-Build benötigt jetzt:
+1. Java 11+ im PATH
+2. BlackLab JAR (Download: https://github.com/INL/BlackLab/releases)
+3. JAR-Location: $env:BLACKLAB_JAR oder tools/blacklab/blacklab-server.jar
+
+Docker-Container enthält NUR noch Server, KEINE Indexierungs-Tools.
+
+### Nächste Schritte für Entwickler
+
+1. BlackLab JAR herunterladen (siehe tools/blacklab/README.md)
+2. Index neu aufbauen: .\scripts\build_blacklab_index.ps1
+3. Tests durchführen (siehe Migration Guide, Test-Checkliste)
+
+### Referenzen
+
+- Lucene 8→9 Migration erforderlich (inkompatible Index-Formate)
+- BlackLab IndexTool Dokumentation: https://blacklab.ivdnt.org/
+- Stage 3 Agent-Prompt: "BlackLab Index-Build sauber fertigstellen"
+
+### Dateien
+
+Erstellt:
+- scripts/build_blacklab_index.ps1
+- tools/blacklab/README.md
+- LOKAL/.../build_index.ps1
+- LOKAL/.../README.md
+
+Aktualisiert:
+- LOKAL/.../blacklab_index_creation.py
+- docs/troubleshooting/blacklab-index-lucene-migration.md
+- docs/how-to/advanced-search-dev-setup.md
+- .gitignore
+
+Gesichert:
+- scripts/build_blacklab_index.old.ps1 (Docker-basierte Version)
+
+Refs: #stage3 #lucene9-migration #reproducible-builds
