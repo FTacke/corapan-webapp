@@ -1,9 +1,9 @@
 <#
 .SYNOPSIS
-    Build BlackLab Lucene 8 index using BlackLab 3.x Docker image.
+    Build BlackLab index using BlackLab 5.x Docker image.
 
 .DESCRIPTION
-    This script rebuilds the BlackLab index from TSV files using BlackLab 3.0.0 (Lucene 8).
+    This script rebuilds the BlackLab index from TSV files using BlackLab 5.0.0-SNAPSHOT (Lucene 9.11.1).
     It runs the index creation inside a Docker container to avoid local JAR/Java issues.
 
     Prerequisites:
@@ -38,10 +38,11 @@
 .NOTES
     Author: GitHub Copilot
     Date: November 13, 2025
-    BlackLab Version: 3.0.0 (Lucene 8)
+    BlackLab Version: 5.0.0-SNAPSHOT (Lucene 9.11.1)
+    Docker Image: instituutnederlandsetaal/blacklab:latest
     
-    This is the stable production version. BlackLab 4.x (Lucene 9) migration
-    is prepared but currently blocked by upstream Reflections library issues.
+    This is the current production version. BlackLab 4.x was skipped due to
+    upstream Reflections library issues.
 #>
 
 [CmdletBinding()]
@@ -53,6 +54,7 @@ param(
 $ErrorActionPreference = "Stop"
 
 # Configuration
+# BlackLab 5.0.0-SNAPSHOT (Lucene 9.11.1) as of 2025-11-13
 $BLACKLAB_IMAGE = "instituutnederlandsetaal/blacklab:latest"
 $EXPORT_DIR = "data\blacklab_export"
 $TSV_DIR = Join-Path $EXPORT_DIR "tsv"
@@ -62,7 +64,7 @@ $BLF_CONFIG = "config\blacklab\corapan-tsv.blf.yaml"
 
 Write-Host ""
 Write-Host "=========================================" -ForegroundColor Cyan
-Write-Host "BlackLab Index Build (v3.0.0 / Lucene 8)" -ForegroundColor Cyan
+Write-Host "BlackLab Index Build (5.x / Lucene 9)" -ForegroundColor Cyan
 Write-Host "=========================================" -ForegroundColor Cyan
 Write-Host ""
 

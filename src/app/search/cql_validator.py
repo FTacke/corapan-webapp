@@ -88,7 +88,8 @@ def validate_cql_pattern(cql: str) -> str:
         (r'\x00', "Null byte in pattern"),
         
         # Command injection (unlikely in CQL context, but check anyway)
-        (r'[&|;`$]', "Shell metacharacter in pattern"),
+        # Note: & is valid in CQL for combining constraints: [word="x" & pos="NOUN"]
+        (r'[|;`$]', "Shell metacharacter in pattern"),
     ]
     
     for pattern, reason in suspicious_patterns:

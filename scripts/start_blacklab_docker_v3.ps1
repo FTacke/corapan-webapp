@@ -1,9 +1,9 @@
 <#
 .SYNOPSIS
-    Start BlackLab Server 3.0.0 in Docker container.
+    Start BlackLab Server 5.x in Docker container.
 
 .DESCRIPTION
-    This script starts BlackLab Server 3.0.0 (Lucene 8) in a Docker container.
+    This script starts BlackLab Server 5.0.0-SNAPSHOT (Lucene 9.11.1) in a Docker container.
     It exposes the server on http://localhost:8081/blacklab-server/
     
     The container mounts:
@@ -29,10 +29,11 @@
 .NOTES
     Author: GitHub Copilot
     Date: November 13, 2025
-    BlackLab Version: 3.0.0 (Lucene 8)
+    BlackLab Version: 5.0.0-SNAPSHOT (Lucene 9.11.1)
+    Docker Image: instituutnederlandsetaal/blacklab:latest
     
-    This is the stable production version. BlackLab 4.x (Lucene 9) is prepared
-    but currently blocked by upstream issues.
+    This is the current production version. BlackLab 4.x was skipped due to
+    upstream Reflections library issues.
     
     To stop the container:
     docker stop blacklab-server-v3
@@ -47,6 +48,7 @@ param(
 $ErrorActionPreference = "Stop"
 
 # Configuration
+# BlackLab 5.0.0-SNAPSHOT (Lucene 9.11.1) as of 2025-11-13
 $BLACKLAB_IMAGE = "instituutnederlandsetaal/blacklab:latest"
 $CONTAINER_NAME = "blacklab-server-v3"
 $HOST_PORT = 8081
@@ -56,7 +58,7 @@ $CONFIG_DIR = "config\blacklab"
 
 Write-Host ""
 Write-Host "=========================================" -ForegroundColor Cyan
-Write-Host "BlackLab Server Start (v3.0.0)" -ForegroundColor Cyan
+Write-Host "BlackLab Server Start (5.x)" -ForegroundColor Cyan
 Write-Host "=========================================" -ForegroundColor Cyan
 Write-Host ""
 
@@ -181,11 +183,13 @@ $indexMount = $indexPath.Replace('\', '/').Replace('C:', '/c')
 $configMount = $configPath.Replace('\', '/').Replace('C:', '/c')
 
 # Build docker run arguments
+# Note: BlackLab 5.x expects indexLocations to contain subdirectories, each being an index
+# So we mount the index as /data/index/corapan (not directly as /data/index)
 $dockerArgs = @(
     "run"
     "--name", $CONTAINER_NAME
     "-p", "${HOST_PORT}:${CONTAINER_PORT}"
-    "-v", "${indexMount}:/data/index:ro"
+    "-v", "${indexMount}:/data/index/corapan:ro"
 )
 
 # Add config mount if directory exists

@@ -181,52 +181,61 @@ def build_filters(params: Dict) -> Dict[str, any]:
     
     # Country codes (multi-select)
     country_codes = params.getlist("country_code") if hasattr(params, "getlist") else (
-        params.get("country_code", []) if isinstance(params.get("country_code"), list) else [params.get("country_code")]
+        params.get("country_code", []) if isinstance(params.get("country_code"), list) else 
+        ([params.get("country_code")] if params.get("country_code") else [])
     )
-    country_codes = [c.strip().upper() for c in country_codes if c.strip()]
+    country_codes = [c.strip().upper() for c in country_codes if c and c.strip()]
     if country_codes:
         filters["country_code"] = country_codes
     
     # Speaker types (multi-select)
     speaker_types = params.getlist("speaker_type") if hasattr(params, "getlist") else (
-        params.get("speaker_type", []) if isinstance(params.get("speaker_type"), list) else [params.get("speaker_type")]
+        params.get("speaker_type", []) if isinstance(params.get("speaker_type"), list) else 
+        ([params.get("speaker_type")] if params.get("speaker_type") else [])
     )
-    speaker_types = [s.strip() for s in speaker_types if s.strip()]
+    speaker_types = [s.strip() for s in speaker_types if s and s.strip()]
     if speaker_types:
         filters["speaker_type"] = speaker_types
     
     # Sexes (multi-select)
     sexes = params.getlist("sex") if hasattr(params, "getlist") else (
-        params.get("sex", []) if isinstance(params.get("sex"), list) else [params.get("sex")]
+        params.get("sex", []) if isinstance(params.get("sex"), list) else 
+        ([params.get("sex")] if params.get("sex") else [])
     )
-    sexes = [s.strip() for s in sexes if s.strip()]
+    sexes = [s.strip() for s in sexes if s and s.strip()]
     if sexes:
         filters["sex"] = sexes
     
     # Speech modes: check both 'speech_mode' and 'mode' (UI uses both)
     modes = params.getlist("speech_mode") if hasattr(params, "getlist") else (
-        params.get("speech_mode", []) if isinstance(params.get("speech_mode"), list) else [params.get("speech_mode")]
+        params.get("speech_mode", []) if isinstance(params.get("speech_mode"), list) else 
+        ([params.get("speech_mode")] if params.get("speech_mode") else [])
     )
-    # Fallback to 'mode' if speech_mode is empty
+    # Fallback to 'mode' if speech_mode is empty (but exclude CQL search mode!)
     if not modes:
-        modes = params.getlist("mode") if hasattr(params, "getlist") else (
-            params.get("mode", []) if isinstance(params.get("mode"), list) else [params.get("mode")]
-        )
-    modes = [m.strip() for m in modes if m.strip()]
+        mode_param = params.get("mode")
+        # Skip if mode is a search mode (forma, lemma, cql, forma_exacta)
+        if mode_param and mode_param not in ["forma", "lemma", "cql", "forma_exacta"]:
+            modes = params.getlist("mode") if hasattr(params, "getlist") else (
+                [mode_param] if isinstance(mode_param, str) else (mode_param if isinstance(mode_param, list) else [])
+            )
+    modes = [m.strip() for m in modes if m and m.strip()]
     if modes:
         filters["mode"] = modes
     
     # Discourse types (multi-select)
     discourses = params.getlist("discourse") if hasattr(params, "getlist") else (
-        params.get("discourse", []) if isinstance(params.get("discourse"), list) else [params.get("discourse")]
+        params.get("discourse", []) if isinstance(params.get("discourse"), list) else 
+        ([params.get("discourse")] if params.get("discourse") else [])
     )
-    discourses = [d.strip() for d in discourses if d.strip()]
+    discourses = [d.strip() for d in discourses if d and d.strip()]
     if discourses:
         filters["discourse"] = discourses
     
-    # Radio filter: set to "national" if include_regional=False
-    include_regional = params.get("include_regional") in ("1", "true", True)
-    if not include_regional:
+    # Radio filter: set to "national" if include_regional is explicitly set to False
+    # Default: include all (regional + national) if parameter is not provided
+    include_regional = params.get("include_regional")
+    if include_regional in ("0", "false", False):
         filters["radio"] = "national"
     
     return filters

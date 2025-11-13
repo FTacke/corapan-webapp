@@ -50,7 +50,7 @@ def _make_bls_request(
     Make request to BlackLab Server with proper error handling.
     
     Args:
-        path: BLS endpoint path (e.g., "/corapan/hits" or "corapan/hits")
+        path: BLS endpoint path (e.g., "/corpora/corapan/hits" or "corpora/corapan/hits")
         params: Query parameters
         method: HTTP method
         timeout_override: Override default timeout (seconds)
@@ -65,7 +65,7 @@ def _make_bls_request(
     client = get_http_client()
     
     # Build absolute URL for BLS request
-    # Ensure path is clean (remove leading /bls/ if present)
+    # Ensure path is clean (remove leading /bls/ if present for legacy compatibility)
     if path.startswith("/bls/"):
         path = path[4:]  # Remove "/bls" prefix, keep "/"
     elif path.startswith("bls/"):
@@ -73,14 +73,22 @@ def _make_bls_request(
     elif not path.startswith("/"):
         path = "/" + path  # Ensure leading slash
     
+    # BlackLab v5 API: ensure /corpora/ prefix for corpus endpoints
+    # Convert old v4 paths like /corapan/hits to /corpora/corapan/hits
+    if path.startswith("/corapan/"):
+        path = "/corpora" + path
+    
     # Construct full URL
     full_url = f"{BLS_BASE_URL}{path}"
     
+    # Always request JSON from BlackLab (v5 defaults to HTML without Accept header)
+    headers = {"Accept": "application/json"}
+    
     try:
         if method.upper() == "GET":
-            response = client.get(full_url, params=params)
+            response = client.get(full_url, params=params, headers=headers)
         else:
-            response = client.request(method.upper(), full_url, params=params)
+            response = client.request(method.upper(), full_url, params=params, headers=headers)
         
         response.raise_for_status()
         logger.debug(f"BLS {method} {path}: {response.status_code} ({len(response.content)} bytes)")
@@ -208,7 +216,7 @@ def datatable_data():
         for param_name in cql_param_names:
             try:
                 test_params = {**bls_params, param_name: cql_pattern}
-                response = _make_bls_request("/corapan/hits", test_params)
+                response = _make_bls_request("/corpora/corapan/hits", test_params)
                 logger.debug(f"CQL param '{param_name}' accepted")
                 break
             except httpx.HTTPStatusError as e:
@@ -228,9 +236,11 @@ def datatable_data():
         
         # Punkt 2: Konsistenz - beide immer = numberOfHits (Server-Side Filtering)
         # Doc-Zahlen (numberOfDocs, docsRetrieved) nur für Summary-Badge nutzen
-        number_of_hits = summary.get("numberOfHits", 0)
-        docs_retrieved = summary.get("docsRetrieved", 0)
-        number_of_docs = summary.get("numberOfDocs", 0)
+        # BlackLab v5: resultsStats.hits (nicht numberOfHits)
+        results_stats = summary.get("resultsStats", {})
+        number_of_hits = results_stats.get("hits", 0)
+        docs_retrieved = results_stats.get("documents", 0)  # v5: documents statt docsRetrieved
+        number_of_docs = results_stats.get("documents", 0)
         
         # Punkt 8: Logging von Trefferzahl
         logger.info(f"DataTables query: hits={number_of_hits}, docs_retrieved={docs_retrieved}, "
@@ -238,11 +248,12 @@ def datatable_data():
         
         # Process hits for DataTable
         # Note: Frontend expects objects with keys (not arrays) to match DataTables columnDefs
+        # BlackLab v5: before/after instead of left/right
         processed_hits = []
         for hit in hits:
-            left = hit.get("left", {}).get("word", [])
+            left = hit.get("before", {}).get("word", [])
             match = hit.get("match", {}).get("word", [])
-            right = hit.get("right", {}).get("word", [])
+            right = hit.get("after", {}).get("word", [])
             
             # Metadata from hit
             match_info = hit.get("match", {})
@@ -439,7 +450,7 @@ def export_data():
             for param_name in ["patt", "cql", "cql_query"]:
                 try:
                     test_params = {**preflight_params, param_name: cql_pattern}
-                    preflight_response = _make_bls_request("/corapan/hits", test_params)
+                    preflight_response = _make_bls_request("/corpora/corapan/hits", test_params)
                     logger.debug(f"Export preflight: CQL param '{param_name}' accepted")
                     break
                 except httpx.HTTPStatusError as e:
@@ -522,7 +533,7 @@ def export_data():
                         for param_name in ["patt", "cql", "cql_query"]:
                             try:
                                 test_params = {**bls_params, param_name: cql_pattern}
-                                response = _make_bls_request("/corapan/hits", test_params)
+                                response = _make_bls_request("/corpora/corapan/hits", test_params)
                                 break
                             except httpx.HTTPStatusError as e:
                                 if e.response.status_code != 400:
