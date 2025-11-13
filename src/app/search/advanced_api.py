@@ -9,8 +9,10 @@ from __future__ import annotations
 
 import csv
 import io
+import json
 import logging
 import os
+from pathlib import Path
 from typing import Generator, Optional
 
 import httpx
@@ -28,6 +30,27 @@ bp = Blueprint("advanced_api", __name__, url_prefix="/search/advanced")
 # Limits and caps
 MAX_HITS_PER_PAGE = 100
 GLOBAL_HITS_CAP = 50000
+
+# Load docmeta.jsonl for metadata lookup (file_id -> metadata)
+def _load_docmeta():
+    """Load document metadata from docmeta.jsonl."""
+    docmeta_path = Path(__file__).parent.parent.parent.parent / "data" / "blacklab_export" / "docmeta.jsonl"
+    docmeta = {}
+    if docmeta_path.exists():
+        try:
+            with open(docmeta_path, 'r', encoding='utf-8') as f:
+                for line in f:
+                    doc = json.loads(line)
+                    file_id = doc.get("file_id")
+                    if file_id:
+                        docmeta[file_id] = doc
+            logger.info(f"Loaded {len(docmeta)} document metadata entries")
+        except Exception as e:
+            logger.warning(f"Failed to load docmeta.jsonl: {e}")
+    return docmeta
+
+# Cache docmeta at module level
+_DOCMETA_CACHE = _load_docmeta()
 EXPORT_CHUNK_SIZE = 1000
 
 # Export streaming configuration
@@ -163,6 +186,7 @@ def datatable_data():
         
         # Build CQL
         cql_pattern = build_cql(request.args)
+        logger.info(f"Built CQL pattern: {cql_pattern} (mode={request.args.get('mode')}, q={request.args.get('q')})")
         
         # Punkt 3: Validierung CQL Pattern und Filter
         try:
@@ -198,11 +222,12 @@ def datatable_data():
         filter_query = filters_to_blacklab_query(filters)
         
         # BLS parameters
+        # Note: listvalues must include 'word' for KWIC display in BlackLab v5
         bls_params = {
             "first": start,
             "number": length,
             "wordsaroundhit": 10,
-            "listvalues": "tokid,start_ms,end_ms,country,speaker_type,sex,mode,discourse,filename,radio",
+            "listvalues": "word,tokid,start_ms,end_ms,utterance_id",
         }
         
         if filter_query:
@@ -234,6 +259,10 @@ def datatable_data():
         summary = data.get("summary", {})
         hits = data.get("hits", [])
         
+        # DEBUG: Log first hit structure
+        if hits:
+            logger.debug(f"First hit structure: {json.dumps(hits[0], indent=2)[:500]}")
+        
         # Punkt 2: Konsistenz - beide immer = numberOfHits (Server-Side Filtering)
         # Doc-Zahlen (numberOfDocs, docsRetrieved) nur für Summary-Badge nutzen
         # BlackLab v5: resultsStats.hits (nicht numberOfHits)
@@ -255,30 +284,44 @@ def datatable_data():
             match = hit.get("match", {}).get("word", [])
             right = hit.get("after", {}).get("word", [])
             
-            # Metadata from hit
+            # Token metadata from hit
             match_info = hit.get("match", {})
             tokid = match_info.get("tokid", [None])[0] if match_info.get("tokid") else None
             start_ms = match_info.get("start_ms", [0])[0] if match_info.get("start_ms") else 0
             end_ms = match_info.get("end_ms", [0])[0] if match_info.get("end_ms") else 0
             
-            # Document metadata (from listvalues)
-            hit_metadata = hit.get("metadata", {})
+            # Extract file_id from utterance_id
+            # utterance_id format: "VEN_2022-01-18_VEN_RCR:6" (COUNTRY_DATE_COUNTRY_STATION:SEG)
+            # file_id format: "2022-01-18_VEN_RCR" (DATE_COUNTRY_STATION, uppercase)
+            utterance_id = match_info.get("utterance_id", [None])[0] if match_info.get("utterance_id") else None
+            file_id = None
+            if utterance_id and ":" in utterance_id:
+                # Split "VEN_2022-01-18_VEN_RCR:6" -> ["ven", "2022-01-18", "ven", "rcr"]
+                parts = utterance_id.split(":")[0].split("_")
+                if len(parts) >= 4:
+                    # Reconstruct as "2022-01-18_VEN_RCR" (with uppercase country/station)
+                    file_id = f"{parts[1]}_{parts[2].upper()}_{parts[3].upper()}"
+            
+            # Fetch document metadata from docmeta cache
+            doc_meta = _DOCMETA_CACHE.get(file_id, {})
             
             # Build row as OBJECT (not array) to match frontend DataTables columnDefs
             row = {
                 "left": " ".join(left[-10:]) if left else "",
                 "match": " ".join(match),
                 "right": " ".join(right[:10]) if right else "",
-                "country": hit_metadata.get("country", ""),
-                "speaker_type": hit_metadata.get("speaker_type", ""),
-                "sex": hit_metadata.get("sex", ""),
-                "mode": hit_metadata.get("mode", ""),
-                "discourse": hit_metadata.get("discourse", ""),
-                "filename": hit_metadata.get("filename", ""),
-                "radio": hit_metadata.get("radio", ""),
+                "country": doc_meta.get("country_code", ""),
+                "speaker_type": doc_meta.get("speaker_type", ""),  # Note: not in docmeta.jsonl, may need update
+                "sex": doc_meta.get("sex", ""),  # Note: not in docmeta.jsonl
+                "mode": doc_meta.get("mode", ""),  # Note: not in docmeta.jsonl
+                "discourse": doc_meta.get("discourse", ""),  # Note: not in docmeta.jsonl
+                "filename": doc_meta.get("file_id", ""),
+                "radio": doc_meta.get("radio", ""),
                 "tokid": str(tokid) if tokid else "",
                 "start_ms": int(start_ms),
                 "end_ms": int(end_ms),
+                "date": doc_meta.get("date", ""),
+                "city": doc_meta.get("city", ""),
             }
             processed_hits.append(row)
         

@@ -74,6 +74,10 @@ def build_token_cql(
         # Lemma search: use 'lemma' field
         field = "lemma"
         value = escaped.lower()  # Lemmas are normalized
+    elif mode == "pos":
+        # POS tag search
+        field = "pos"
+        value = escaped.upper()  # POS tags are uppercase
     else:  # mode == "forma"
         # forma: if sensitive=False, use 'norm', else use 'word'
         if sensitive:
@@ -86,8 +90,8 @@ def build_token_cql(
     # Base constraint
     constraints = [f'{field}="{value}"']
     
-    # POS constraint (optional)
-    if pos:
+    # POS constraint (optional) - only add if not already a POS search
+    if pos and mode != "pos":
         constraints.append(f'pos="{escape_cql(pos)}"')
     
     # Combine with &
