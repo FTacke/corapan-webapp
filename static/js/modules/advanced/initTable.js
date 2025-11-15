@@ -56,8 +56,8 @@ export function initAdvancedTable(queryParams) {
     processing: true,
     deferRender: true,
     autoWidth: false,
-    searching: false,      // Disable client-side search
-    ordering: false,       // Disable sorting
+    searching: false,      // Disable client-side search (search is handled via form)
+    ordering: true,        // Enable ordering (server-side support expected)
     pageLength: 50,
     lengthMenu: [25, 50, 100],
     
@@ -106,47 +106,41 @@ export function initAdvancedTable(queryParams) {
         targets: 1,
         data: 'left',
         render: function(data) {
-          return escapeHtml(data || '');
+          return `<span class="md3-corpus-context">${escapeHtml(data || '')}</span>`;
         },
-        className: 'md3-datatable__cell--context'
+        className: 'md3-datatable__cell--context right-align',
+        width: '200px'
       },
       // Column 2: Match (KWIC) - highlighted
       {
         targets: 2,
         data: 'match',
         render: function(data) {
-          return `<mark>${escapeHtml(data || '')}</mark>`;
+          return `<span class="md3-corpus-keyword"><mark>${escapeHtml(data || '')}</mark></span>`;
         },
-        className: 'md3-datatable__cell--match'
+        className: 'md3-datatable__cell--match center-align',
+        width: '150px'
       },
       // Column 3: Context right
       {
         targets: 3,
         data: 'right',
         render: function(data) {
-          return escapeHtml(data || '');
+          return `<span class="md3-corpus-context">${escapeHtml(data || '')}</span>`;
         },
-        className: 'md3-datatable__cell--context'
+        className: 'md3-datatable__cell--context',
+        width: '200px'
       },
       // Column 4: Audio player
       {
         targets: 4,
         data: null,
         render: function(data, type, row) {
-          if (!row.start_ms || !row.filename) {
-            return '<span class="md3-datatable__empty">-</span>';
-          }
-          const startMs = parseInt(row.start_ms) || 0;
-          const endMs = parseInt(row.end_ms) || startMs + 5000;
-          const audioUrl = `/media/segment/${encodeURIComponent(row.filename)}/${startMs}/${endMs}`;
-          return `<audio controls style="width: 150px; height: 30px;" 
-            aria-label="Audio excerpt from ${escapeHtml(row.filename)}">
-            <source src="${audioUrl}" type="audio/mpeg">
-            Your browser does not support the audio element.
-          </audio>`;
+          return renderAudioButtons(row);
         },
         orderable: false,
-        className: 'md3-datatable__cell--audio'
+        className: 'md3-datatable__cell--audio center-align',
+        width: '120px'
       },
       // Column 5: Country
       {
@@ -155,6 +149,7 @@ export function initAdvancedTable(queryParams) {
         render: function(data) {
           return escapeHtml(data || '-');
         }
+        , width: '80px'
       },
       // Column 6: Speaker type
       {
@@ -163,6 +158,7 @@ export function initAdvancedTable(queryParams) {
         render: function(data) {
           return escapeHtml(data || '-');
         }
+        , width: '80px'
       },
       // Column 7: Sex
       {
@@ -171,6 +167,7 @@ export function initAdvancedTable(queryParams) {
         render: function(data) {
           return escapeHtml(data || '-');
         }
+        , width: '80px'
       },
       // Column 8: Mode
       {
@@ -179,6 +176,7 @@ export function initAdvancedTable(queryParams) {
         render: function(data) {
           return escapeHtml(data || '-');
         }
+        , width: '80px'
       },
       // Column 9: Discourse
       {
@@ -187,6 +185,7 @@ export function initAdvancedTable(queryParams) {
         render: function(data) {
           return escapeHtml(data || '-');
         }
+        , width: '80px'
       },
       // Column 10: Token ID
       {
@@ -195,22 +194,31 @@ export function initAdvancedTable(queryParams) {
         render: function(data) {
           return escapeHtml(data || '-');
         }
+        , width: '100px'
       },
       // Column 11: Filename
       {
         targets: 11,
         data: 'filename',
-        render: function(data) {
-          return escapeHtml(data || '-');
-        }
+        render: function(data, type, row) {
+          return renderFileLink(data, type, row);
+        },
+        width: '80px',
+        className: 'center-align'
       }
     ],
 
     // Responsive behavior
     responsive: false,
     
-    // DOM structure
-    dom: '<"top"lp><"clear">rt<"bottom"lpi><"clear">',
+    // DOM structure (match corpus layout with export buttons)
+    dom: '<"top"pB<"ml-auto"lf>>rt<"bottom"ip>',
+    buttons: [
+      { extend: 'copyHtml5', text: '<i class="fa-solid fa-copy"></i> Copiar', exportOptions: { columns: [0,1,2,3,5,6,7,8,9,10,11] } },
+      { extend: 'csvHtml5', text: '<i class="bi bi-filetype-csv"></i> CSV', exportOptions: { columns: [0,1,2,3,5,6,7,8,9,10,11] } },
+      { extend: 'excelHtml5', text: '<i class="bi bi-filetype-xlsx"></i> Excel', exportOptions: { columns: [0,1,2,3,5,6,7,8,9,10,11] } },
+      { extend: 'pdfHtml5', text: '<i class="bi bi-filetype-pdf"></i> PDF', orientation: 'landscape', pageSize: 'A4', exportOptions: { columns: [0,1,2,3,5,6,7,8,9,10,11] }, customize: function(doc) { doc.defaultStyle.fontSize = 8; doc.styles.tableHeader.fontSize = 9; } }
+    ],
 
     // Localization
     language: {
@@ -229,8 +237,31 @@ export function initAdvancedTable(queryParams) {
       }
     }
   });
-
   console.log('✅ DataTables initialized');
+
+  // Adjust columns after init (to avoid pixel shifts)
+  setTimeout(() => {
+    try {
+      if (advancedTable && advancedTable.columns) {
+        advancedTable.columns.adjust();
+        if (advancedTable.responsive) advancedTable.responsive.recalc();
+      }
+    } catch (e) {
+      console.warn('[Advanced] Column adjust error:', e);
+    }
+  }, 100);
+
+  // Window resize -> adjust columns
+  $(window).on('resize.advancedTable', () => {
+    try {
+      if (advancedTable && advancedTable.columns) {
+        advancedTable.columns.adjust();
+        if (advancedTable.responsive) advancedTable.responsive.recalc();
+      }
+    } catch (e) {
+      console.warn('[Advanced] Column adjust error on resize:', e);
+    }
+  });
 }
 
 /**
@@ -428,6 +459,61 @@ export function updateExportButtons(queryParams) {
   
   console.log('[Export] Buttons updated');
 }
+
+  /**
+   * Render audio control buttons similar to Corpus view
+   */
+  function renderAudioButtons(row) {
+    const hasAudio = row.start_ms && row.filename;
+    if (!hasAudio) return '<span class="md3-datatable__empty">-</span>';
+
+    const filename = row.filename || '';
+    const tokenId = row.tokid || '';
+    const start = row.start_ms || 0;
+    const end = row.end_ms || (parseInt(start) + 5000);
+    return `
+      <div class="md3-corpus-audio-buttons">
+        <div class="md3-corpus-audio-row">
+          <span class="md3-corpus-audio-label">Res.:</span>
+          <a class="audio-button" data-filename="${escapeHtml(filename)}" data-start="${start}" data-end="${end}" data-token-id="${escapeHtml(tokenId)}" data-type="pal">
+            <i class="fa-solid fa-play"></i>
+          </a>
+          <a class="download-button" data-filename="${escapeHtml(filename)}" data-start="${start}" data-end="${end}" data-token-id="${escapeHtml(tokenId)}" data-type="pal">
+            <i class="fa-solid fa-download"></i>
+          </a>
+        </div>
+        <div class="md3-corpus-audio-row">
+          <span class="md3-corpus-audio-label">Ctx:</span>
+          <a class="audio-button" data-filename="${escapeHtml(filename)}" data-start="${row.context_start || start}" data-end="${row.context_end || end}" data-token-id="${escapeHtml(tokenId)}" data-type="ctx">
+            <i class="fa-solid fa-play"></i>
+          </a>
+          <a class="download-button" data-filename="${escapeHtml(filename)}" data-start="${row.context_start || start}" data-end="${row.context_end || end}" data-token-id="${escapeHtml(tokenId)}" data-type="ctx">
+            <i class="fa-solid fa-download"></i>
+          </a>
+        </div>
+      </div>
+    `;
+  }
+
+  /**
+   * Render file link with player icon (mimics corpus renderFileLink)
+   */
+  function renderFileLink(filename, type, row) {
+    if (!filename) return '';
+    if (type === 'sort' || type === 'type') return filename;
+    const base = filename.trim().replace(/\.mp3$/i, '');
+    const transcriptionPath = `/media/transcripts/${encodeURIComponent(base)}.json`;
+    const audioPath = `/media/full/${encodeURIComponent(base)}.mp3`;
+    let playerUrl = `/player?transcription=${encodeURIComponent(transcriptionPath)}&audio=${encodeURIComponent(audioPath)}`;
+    if (row && row.tokid) {
+      playerUrl += `&token_id=${encodeURIComponent(row.tokid)}`;
+    }
+    return `
+      <a href="${playerUrl}" class="player-link" title="${escapeHtml(filename)}">
+        <i class="fa-regular fa-file"></i>
+      </a>
+    `;
+  }
 
 /**
  * Update summary box with results info

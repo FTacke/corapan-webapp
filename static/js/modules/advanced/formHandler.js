@@ -10,9 +10,11 @@
 
 import { initAdvancedTable, updateExportButtons, updateSummary } from './initTable.js';
 import { CorpusFiltersManager } from '../corpus/filters.js';
+import { CorpusAudioManager } from '../corpus/audio.js';
 
 let filtersManager = null;
 let resultsLoaded = false;
+let audioManager = null;
 
 // --- Null-sichere Helpers ---
 function q(form, sel) { return form ? form.querySelector(sel) : null; }
@@ -186,6 +188,12 @@ function initFormHandler(root = document) {
   if (!filtersManager) {
     filtersManager = new CorpusFiltersManager();
     filtersManager.initialize();
+  }
+
+  // Initialize audio manager to bind play/download button events
+  if (!audioManager) {
+    audioManager = new CorpusAudioManager();
+    audioManager.bindEvents();
   }
 
   // Select2-Fallback (robust, optional)

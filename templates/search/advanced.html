@@ -17,10 +17,12 @@
 <link rel="stylesheet" href="{{ url_for('static', filename='css/md3/components/alerts.css') }}">
 <!-- External Libraries (CDN Base Styles BEFORE Project Overrides) -->
 <link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/jquery.dataTables.min.css">
+<link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.2/css/buttons.dataTables.min.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css">
 <!-- Project Overrides (AFTER CDN Styles) -->
 <link rel="stylesheet" href="{{ url_for('static', filename='css/md3/components/select2-tagify.css') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/md3/components/datatables.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/md3/components/datatables-theme-lock.css') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/md3/components/advanced-search.css') }}">
 {% endblock %}
 
@@ -279,23 +281,10 @@
         <!-- Content loaded via JS -->
       </div>
 
-      <!-- Toolbar: Export Buttons -->
-      <div class="md3-advanced__toolbar">
-        <div class="md3-advanced__toolbar-spacer"></div>
-        <div class="md3-advanced__exports">
-          <a id="export-csv" class="md3-button-tonal" download aria-label="Descargar todos los resultados como CSV">
-            <i class="fa-solid fa-download"></i>
-            <span>Export CSV</span>
-          </a>
-          <a id="export-tsv" class="md3-button-outlined" download aria-label="Descargar todos los resultados como TSV">
-            <i class="fa-solid fa-download"></i>
-            <span>Export TSV</span>
-          </a>
-        </div>
-      </div>
+      <!-- Toolbar: Export Buttons (DataTables buttons are inserted into the table DOM) -->
 
       <!-- DataTables Container -->
-      <div class="md3-advanced__tablewrap">
+      <div class="md3-advanced__tablewrap md3-corpus-table-container">
         <table id="advanced-table" class="md3-corpus-table" role="grid">
           <caption class="sr-only">
             Resultados de búsqueda avanzada. 
@@ -330,6 +319,10 @@
 <script src="{{ url_for('static', filename='vendor/jquery-3.7.1.min.js') }}" defer></script>
 <script src="{{ url_for('static', filename='vendor/select2.min.js') }}" defer></script>
 <script src="{{ url_for('static', filename='vendor/jquery.dataTables.min.js') }}" defer></script>
+<!-- DataTables Buttons Extension (to match corpus styling and export UI) -->
+<script src="https://cdn.datatables.net/buttons/2.4.2/js/dataTables.buttons.min.js" defer></script>
+<script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.html5.min.js" defer></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js" defer></script>
 <script src="{{ url_for('static', filename='vendor/htmx-1.9.10.min.js') }}" defer></script>
 <!-- App modules remain as type="module" -->
 <script src="{{ url_for('static', filename='js/modules/corpus/config.js') }}" type="module"></script>
