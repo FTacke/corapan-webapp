@@ -30,16 +30,16 @@
   <div class="md3-kwic-item">
     <!-- Context -->
     <div class="md3-kwic-context">
-      <span class="md3-kwic-left">{{ hit.left }}</span>
-      <mark class="md3-kwic-hit">{{ hit.match }}</mark>
-      <span class="md3-kwic-right">{{ hit.right }}</span>
+      <span class="md3-kwic-left">{{ hit.context_left }}</span>
+      <mark class="md3-kwic-hit">{{ hit.text }}</mark>
+      <span class="md3-kwic-right">{{ hit.context_right }}</span>
     </div>
     
     <!-- Metadata -->
     <div class="md3-kwic-meta">
       <span class="md3-kwic-meta__item" title="Documento">
         <span class="material-symbols-rounded" aria-hidden="true">description</span>
-        {{ hit.doc_pid }}
+        {{ hit.filename }}
       </span>
       {% if hit.lemma %}
       <span class="md3-kwic-meta__item" title="Lema">

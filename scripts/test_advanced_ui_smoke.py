@@ -74,7 +74,7 @@ def test_data_endpoint_lemma():
         if hits > 0:
             # Check first row structure (12 columns)
             row = data["data"][0]
-            expected_fields = ["left", "match", "right", "country", "speaker_type", "sex", "mode", "discourse", "tokid", "filename", "start_ms", "end_ms"]
+            expected_fields = ["context_left", "text", "context_right", "country_code", "speaker_type", "sex", "mode", "discourse", "token_id", "filename", "start_ms", "end_ms"]
             for field in expected_fields:
                 assert field in row, f"Missing field: {field}"
             
@@ -227,8 +227,8 @@ def test_export_csv():
             return False
         
         header = lines[0]
-        # Expected columns: left,match,right,country,speaker_type,sex,mode,discourse,filename,radio,tokid,start_ms,end_ms
-        if "left" not in header or "match" not in header:
+        # Expected columns: context_left,text,context_right,country_code,speaker_type,sex,mode,discourse,filename,radio,token_id,start_ms,end_ms
+        if "context_left" not in header or "text" not in header:
             log_fail(f"Invalid CSV header: {header}")
             return False
         

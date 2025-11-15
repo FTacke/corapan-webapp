@@ -89,7 +89,7 @@ def test_country_filter():
         print(f"recordsFiltered: {data.get('recordsFiltered')}")
         
         if data.get('data'):
-            print("\nFirst hit country:", data['data'][0].get('country'))
+            print("\nFirst hit country:", data['data'][0].get('country_code'))
         
         return data.get('recordsTotal', 0) > 0
     except Exception as e:
@@ -151,7 +151,7 @@ def test_pos_mode():
         print(f"recordsFiltered: {data.get('recordsFiltered')}")
         
         if data.get('data'):
-            print("\nFirst hit match:", data['data'][0].get('match'))
+            print("\nFirst hit match:", data['data'][0].get('text'))
         
         return data.get('recordsTotal', 0) > 0
     except Exception as e:

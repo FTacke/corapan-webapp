@@ -65,9 +65,10 @@ export class CorpusSearchManager {
             filterValues.countries.forEach(c => params.append('country_code', c));
         }
         
-        // Regional checkbox
-        if (filterValues.includeRegional) {
-            params.append('include_regional', '1');
+        // Regional checkbox (already set via FiltersManager / hidden inputs)
+        const includeRegional = formData.get('include_regional');
+        if (includeRegional) {
+            params.append('include_regional', includeRegional);
         }
         
         // Speakers
@@ -90,6 +91,10 @@ export class CorpusSearchManager {
             filterValues.discourse.forEach(d => params.append('discourse', d));
         }
         
+        // Sensitive flag: default to 1 if missing
+        const sensitive = formData.get('sensitive') || '1';
+        params.append('sensitive', sensitive);
+
         return params;
     }
 

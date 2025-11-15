@@ -4,6 +4,7 @@ from __future__ import annotations
 from flask import Blueprint, Response, current_app, g, jsonify, render_template, request
 
 from ..services.corpus_search import SearchParams, search_tokens
+from ..services.blacklab_search import search_blacklab
 from ..services.counters import counter_search
 from ..services.database import open_db
 
@@ -132,7 +133,34 @@ def search() -> Response:
         context["active_tab"] = "tab-token"
         return _render_corpus(context)
     
-    service_result = search_tokens(params)
+    # Decide to use BlackLab for text/lemma search, and SQLite for direct token lookups
+    use_blacklab = True
+    if params.search_mode == "token_ids":
+        use_blacklab = False
+    service_result = None
+    if use_blacklab and params.query.strip():
+        # Convert params to a dict compatible with blacklab_search
+        bls_params = {
+            "query": params.query,
+            "search_mode": params.search_mode,
+            "sensitive": params.sensitive,
+            "country_code": params.countries or [],
+            "speaker_type": params.speaker_types or [],
+            "sex": params.sexes or [],
+            "speech_mode": params.speech_modes or [],
+            "discourse": params.discourses or [],
+            "page": params.page,
+            "page_size": params.page_size,
+            "include_regional": request.values.get("include_regional"),
+        }
+        try:
+            service_result = search_blacklab(bls_params)
+        except Exception as e:
+            current_app.logger.error(f"BlackLab search failed: {e}")
+            # Fallback to SQLite search
+            service_result = search_tokens(params)
+    else:
+        service_result = search_tokens(params)
     context = _default_context()
     
     # Active tab bestimmen
@@ -277,7 +305,32 @@ def search_datatables() -> Response:
     
     # Execute search
     counter_search.increment()
-    service_result = search_tokens(params)
+    # Use BlackLab for text/lemma searches; fallback to SQLite for token_ids
+    use_blacklab = True
+    if params.search_mode == "token_ids":
+        use_blacklab = False
+    if use_blacklab and params.query.strip():
+        bls_params = {
+            "query": params.query,
+            "search_mode": params.search_mode,
+            "sensitive": params.sensitive,
+            "country_code": params.countries or [],
+            "speaker_type": params.speaker_types or [],
+            "sex": params.sexes or [],
+            "speech_mode": params.speech_modes or [],
+            "discourse": params.discourses or [],
+            "page": page,
+            "page_size": length,
+            "include_regional": request.args.get("include_regional"),
+            "table_search": dt_search,
+        }
+        try:
+            service_result = search_blacklab(bls_params)
+        except Exception as e:
+            current_app.logger.error(f"BlackLab datatables search failed: {e}")
+            service_result = search_tokens(params)
+    else:
+        service_result = search_tokens(params)
     
     # Format for DataTables - NOW WITH OBJECT MODE
     # DataTables kann sowohl Arrays als auch Objekte verarbeiten.
@@ -343,7 +396,9 @@ def token_lookup() -> Response:
         
         # EXPLIZITE Spaltenliste statt SELECT *
         select_cols = _get_select_columns()
-        sql = f"SELECT {select_cols} FROM tokens WHERE token_id IN ({placeholders})"
+        # select_cols references 't.' alias by default, so alias the tokens table
+        # to 't' in the FROM clause to avoid "no such column: t.token_id" errors.
+        sql = f"SELECT {select_cols} FROM tokens t WHERE token_id IN ({placeholders})"
         cursor.execute(sql, token_ids)
         rows = cursor.fetchall()
     

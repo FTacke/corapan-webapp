@@ -101,30 +101,30 @@ export function initAdvancedTable(queryParams) {
         searchable: false,
         orderable: false
       },
-      // Column 1: Context left
+      // Column 1: Context left (canonical key)
       {
         targets: 1,
-        data: 'left',
+        data: 'context_left',
         render: function(data) {
           return `<span class="md3-corpus-context">${escapeHtml(data || '')}</span>`;
         },
         className: 'md3-datatable__cell--context right-align',
         width: '200px'
       },
-      // Column 2: Match (KWIC) - highlighted
+      // Column 2: Match (KWIC) - highlighted (canonical 'text')
       {
         targets: 2,
-        data: 'match',
+        data: 'text',
         render: function(data) {
           return `<span class="md3-corpus-keyword"><mark>${escapeHtml(data || '')}</mark></span>`;
         },
         className: 'md3-datatable__cell--match center-align',
         width: '150px'
       },
-      // Column 3: Context right
+      // Column 3: Context right (canonical key)
       {
         targets: 3,
-        data: 'right',
+        data: 'context_right',
         render: function(data) {
           return `<span class="md3-corpus-context">${escapeHtml(data || '')}</span>`;
         },
@@ -142,10 +142,10 @@ export function initAdvancedTable(queryParams) {
         className: 'md3-datatable__cell--audio center-align',
         width: '120px'
       },
-      // Column 5: Country
+      // Column 5: Country (canonical 'country_code')
       {
         targets: 5,
-        data: 'country',
+        data: 'country_code',
         render: function(data) {
           return escapeHtml(data || '-');
         }
@@ -187,10 +187,10 @@ export function initAdvancedTable(queryParams) {
         }
         , width: '80px'
       },
-      // Column 10: Token ID
+      // Column 10: Token ID (canonical 'token_id')
       {
         targets: 10,
-        data: 'tokid',
+        data: 'token_id',
         render: function(data) {
           return escapeHtml(data || '-');
         }
@@ -468,8 +468,8 @@ export function updateExportButtons(queryParams) {
     if (!hasAudio) return '<span class="md3-datatable__empty">-</span>';
 
     const filename = row.filename || '';
-    const tokenId = row.tokid || '';
-    const start = row.start_ms || 0;
+    const tokenId = row.token_id || '';
+    const start = row.start_ms || row.start || 0;
     const end = row.end_ms || (parseInt(start) + 5000);
     return `
       <div class="md3-corpus-audio-buttons">
@@ -505,8 +505,8 @@ export function updateExportButtons(queryParams) {
     const transcriptionPath = `/media/transcripts/${encodeURIComponent(base)}.json`;
     const audioPath = `/media/full/${encodeURIComponent(base)}.mp3`;
     let playerUrl = `/player?transcription=${encodeURIComponent(transcriptionPath)}&audio=${encodeURIComponent(audioPath)}`;
-    if (row && row.tokid) {
-      playerUrl += `&token_id=${encodeURIComponent(row.tokid)}`;
+    if (row && row.token_id) {
+      playerUrl += `&token_id=${encodeURIComponent(row.token_id)}`;
     }
     return `
       <a href="${playerUrl}" class="player-link" title="${escapeHtml(filename)}">

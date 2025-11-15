@@ -7,6 +7,7 @@ document filters for metadata-based filtering.
 import logging
 import re
 from typing import Dict, List, Optional
+import re as _re
 
 from .speaker_utils import get_speaker_codes_for_filters
 
@@ -97,7 +98,9 @@ def build_token_cql(
             value = escaped.lower()
     
     # Base constraint
-    constraints = [f'{field}="{value}"']
+    # Determine operator (default = equality)
+    operator = locals().get('operator', '=')
+    constraints = [f'{field}{operator}"{value}"']
     
     # POS constraint (optional) - only add if not already a POS search
     if pos and mode != "pos":
@@ -358,11 +361,9 @@ def build_filters(params: Dict) -> Dict[str, any]:
     if discourses:
         filters["discourse"] = discourses
     
-    # Radio filter: set to "national" if include_regional is explicitly set to False
-    # Default: include all (regional + national) if parameter is not provided
-    include_regional = params.get("include_regional")
-    if include_regional in ("0", "false", False):
-        filters["radio"] = "national"
+    # Radio filtering is handled at the routing layer via `countries` logic (national vs regional)
+    # Do not add a synthetic radio="national" filter here - token-level 'radio' values
+    # are actual station names (e.g. 'Radio Mitre'), not 'national'.
     
     return filters
 

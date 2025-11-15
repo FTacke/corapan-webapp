@@ -287,74 +287,25 @@ def datatable_data():
         logger.info(f"DataTables query: hits={number_of_hits}, docs_retrieved={docs_retrieved}, "
                    f"number_of_docs={number_of_docs}, filter={'yes' if filter_query else 'no'}")
         
-        # Process hits for DataTable
-        # Note: Frontend expects objects with keys (not arrays) to match DataTables columnDefs
-        # BlackLab v5: before/after instead of left/right
-        processed_hits = []
-        
-        for hit in hits:
-            left = hit.get("before", {}).get("word", [])
-            match = hit.get("match", {}).get("word", [])
-            right = hit.get("after", {}).get("word", [])
-            
-            # Token metadata from hit
-            match_info = hit.get("match", {})
-            tokid = match_info.get("tokid", [None])[0] if match_info.get("tokid") else None
-            start_ms = match_info.get("start_ms", [0])[0] if match_info.get("start_ms") else 0
-            end_ms = match_info.get("end_ms", [0])[0] if match_info.get("end_ms") else 0
-            
-            # Extract speaker_code from hit (available in match annotations)
-            speaker_code_list = match_info.get("speaker_code", [])
-            speaker_code = speaker_code_list[0] if speaker_code_list else ""
-            
-            # Map speaker_code to attributes (speaker_type, sex, mode, discourse)
-            speaker_type, sex, mode, discourse = map_speaker_attributes(speaker_code)
-            
-            # Extract file_id from utterance_id
-            # utterance_id format: "VEN_2022-01-18_VEN_RCR:6" (COUNTRY_DATE_COUNTRY_STATION:SEG)
-            # file_id format: "2022-01-18_VEN_RCR" (DATE_COUNTRY_STATION, uppercase)
-            utterance_id = match_info.get("utterance_id", [None])[0] if match_info.get("utterance_id") else None
-            file_id = None
-            if utterance_id and ":" in utterance_id:
-                # Split "VEN_2022-01-18_VEN_RCR:6" -> ["ven", "2022-01-18", "ven", "rcr"]
-                parts = utterance_id.split(":")[0].split("_")
-                if len(parts) >= 4:
-                    # Reconstruct as "2022-01-18_VEN_RCR" (with uppercase country/station)
-                    file_id = f"{parts[1]}_{parts[2].upper()}_{parts[3].upper()}"
-            
-            # Fetch document metadata from docmeta cache
-            doc_meta = _DOCMETA_CACHE.get(file_id, {})
-            
-            # Build row as OBJECT (not array) to match frontend DataTables columnDefs
-            # Use speaker attributes from speaker_code mapping (canonical source)
-            row = {
-                "left": " ".join(left[-10:]) if left else "",
-                "match": " ".join(match),
-                "right": " ".join(right[:10]) if right else "",
-                "country": doc_meta.get("country_code", ""),
-                "speaker_type": speaker_type,
-                "sex": sex,
-                "mode": mode,
-                "discourse": discourse,
-                "filename": doc_meta.get("file_id", ""),
-                "radio": doc_meta.get("radio", ""),
-                "tokid": str(tokid) if tokid else "",
-                "start_ms": int(start_ms),
-                "end_ms": int(end_ms),
-                "date": doc_meta.get("date", ""),
-                "city": doc_meta.get("city", ""),
-            }
-            
-            processed_hits.append(row)
+        # Process hits for DataTable: map to canonical keys via blacklab_search helper
+        from ..services.blacklab_search import _hit_to_canonical as _hit2canon
+        processed_hits = [_hit2canon(hit) for hit in hits]
         
         # BlackLab is Single Source of Truth for counts
         # Both recordsTotal and recordsFiltered come from BlackLab
-        return jsonify({
+        response_payload = {
             "draw": draw,
             "recordsTotal": number_of_hits,
             "recordsFiltered": number_of_hits,
             "data": processed_hits,
-        })
+        }
+        # Debug helper: include CQL when running in debug mode
+        # Prefer Flask app.debug flag; ENV config may be missing in some configurations
+        if current_app.debug or current_app.config.get('DEBUG'):
+            response_payload['cql_debug'] = cql_pattern
+            response_payload['filter_debug'] = filter_query or ''
+
+        return jsonify(response_payload)
         
     except ValueError as e:
         # CQL validation error (from build_cql)
