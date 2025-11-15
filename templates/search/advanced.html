@@ -91,6 +91,7 @@
               <option value="forma_exacta" {% if request.args.get('mode') == 'forma_exacta' %}selected{% endif %}>Forma exacta</option>
               <option value="forma" {% if request.args.get('mode') == 'forma' or not request.args.get('mode') %}selected{% endif %}>Forma</option>
               <option value="lemma" {% if request.args.get('mode') == 'lemma' %}selected{% endif %}>Lemma</option>
+              <option value="pos" {% if request.args.get('mode') == 'pos' %}selected{% endif %}>POS</option>
               <option value="cql" {% if request.args.get('mode') == 'cql' %}selected{% endif %}>CQL</option>
             </select>
             <label for="mode" class="md3-outlined-textfield__label md3-outlined-textfield__label--select">Modus</label>

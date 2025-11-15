@@ -143,43 +143,81 @@ annotatedFields:
         description: "Standardized speaker code (e.g. lib-pm, lec-pf)"
         valuePath: speaker_code
         uiType: "select"
+      
+      # ===== DOC-LEVEL METADATA (repeated per token) =====
+      - name: file_id
+        displayName: "File ID"
+        description: "Unique file identifier"
+        valuePath: file_id
+        uiType: "text"
+      
+      - name: country_code
+        displayName: "Country"
+        description: "ISO country code"
+        valuePath: country_code
+        uiType: "select"
+      
+      - name: date
+        displayName: "Recording Date"
+        description: "Date of recording (YYYY-MM-DD)"
+        valuePath: date
+        uiType: "text"
+      
+      - name: radio
+        displayName: "Radio Station"
+        description: "Radio station name"
+        valuePath: radio
+        uiType: "select"
+      
+      - name: city
+        displayName: "City"
+        description: "Recording city"
+        valuePath: city
+        uiType: "select"
+      
+      - name: audio_path
+        displayName: "Audio File"
+        description: "Path to MP3 file"
+        valuePath: audio_path
+        uiType: "text"
 
 # ===== METADATA FIELDS =====
-# These are imported from docmeta.jsonl via blacklab-server.yaml
+# Extract document metadata from token annotation values (using first token)
+# For tabular formats, BlackLab can extract metadata from any constant token annotation
 metadata:
   fields:
     - name: file_id
       displayName: "File ID"
       description: "Unique file identifier"
-      type: "text"
-      valuePath: "@doc"
+      type: "untokenized"
+      valuePath: contents%file_id
     
     - name: country_code
       displayName: "Country"
       description: "ISO country code"
-      type: "text"
-      valuePath: "@country_code"
+      type: "untokenized"
+      valuePath: contents%country_code
     
     - name: date
       displayName: "Recording Date"
       description: "Date of recording (YYYY-MM-DD)"
-      type: "text"
-      valuePath: "@date"
+      type: "untokenized"
+      valuePath: contents%date
     
     - name: radio
       displayName: "Radio Station"
       description: "Radio station name"
       type: "text"
-      valuePath: "@radio"
+      valuePath: contents%radio
     
     - name: city
       displayName: "City"
       description: "Recording city"
       type: "text"
-      valuePath: "@city"
+      valuePath: contents%city
     
     - name: audio_path
       displayName: "Audio File"
       description: "Path to MP3 file"
-      type: "text"
-      valuePath: "@audio_path"
+      type: "untokenized"
+      valuePath: contents%audio_path

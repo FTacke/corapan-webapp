@@ -4,8 +4,13 @@ CQL (Corpus Query Language) Builder for BlackLab searches.
 Constructs CQL patterns from user input (form data) and builds
 document filters for metadata-based filtering.
 """
+import logging
 import re
 from typing import Dict, List, Optional
+
+from .speaker_utils import get_speaker_codes_for_filters
+
+logger = logging.getLogger(__name__)
 
 
 def escape_cql(text: str) -> str:
@@ -59,6 +64,10 @@ def build_token_cql(
     Returns:
         CQL string for this token, e.g., [word="México"] or [norm="mexico"]
     """
+    # Defensive: ensure token is not None/empty
+    if not token:
+        raise ValueError("Token cannot be empty")
+    
     # If mode is 'cql', return the token as-is (it's raw CQL already)
     if mode == "cql":
         return token
@@ -99,6 +108,54 @@ def build_token_cql(
     return f"[{constraint_str}]"
 
 
+def build_speaker_code_constraint(filters: Dict) -> str:
+    """
+    Build CQL constraint for speaker_code from speaker attribute filters.
+    
+    Args:
+        filters: Output from build_filters() containing speaker_type, sex, mode, discourse
+        
+    Returns:
+        CQL constraint string like 'speaker_code="lib-pf"' or 'speaker_code="(lib-pf|lec-pf)"'
+        Empty string if no speaker filters
+    """
+    # Defensive: handle None filters
+    if not filters:
+        return ""
+    
+    speaker_types = filters.get("speaker_type", [])
+    sexes = filters.get("sex", [])
+    modes = filters.get("mode", [])
+    discourses = filters.get("discourse", [])
+    
+    # If no speaker filters, return empty
+    if not any([speaker_types, sexes, modes, discourses]):
+        return ""
+    
+    # Get matching speaker_codes
+    matching_codes = get_speaker_codes_for_filters(
+        speaker_types=speaker_types,
+        sexes=sexes,
+        modes=modes,
+        discourses=discourses
+    )
+    
+    if not matching_codes:
+        # No matching codes → impossible filter (will return 0 results)
+        logger.warning(f"No speaker_codes match filters: speaker_type={speaker_types}, sex={sexes}, mode={modes}, discourse={discourses}")
+        return 'speaker_code="__IMPOSSIBLE__"'
+    
+    logger.info(f"Speaker filters → speaker_codes: {matching_codes}")
+    
+    # Build constraint
+    if len(matching_codes) == 1:
+        return f'speaker_code="{matching_codes[0]}"'
+    else:
+        # Multiple codes: use regex alternation
+        codes_pattern = "|".join(matching_codes)
+        return f'speaker_code="({codes_pattern})"'
+
+
 def build_cql(params: Dict) -> str:
     """
     Build full CQL pattern from form parameters.
@@ -118,6 +175,10 @@ def build_cql(params: Dict) -> str:
     Raises:
         ValueError: If query is empty or invalid
     """
+    # Defensive: ensure params is not None
+    if not params:
+        raise ValueError("params cannot be None")
+    
     # Query: try both 'q' and 'query'
     query = params.get("q") or params.get("query", "")
     query = query.strip() if query else ""
@@ -150,7 +211,68 @@ def build_cql(params: Dict) -> str:
         cql_parts.append(cql_token)
     
     # Join tokens sequentially (space = sequence in CQL)
-    return " ".join(cql_parts)
+    base_cql = " ".join(cql_parts)
+    
+    return base_cql
+
+
+def build_cql_with_speaker_filter(params: Dict, filters: Dict) -> str:
+    """
+    Build CQL pattern with speaker_code and metadata constraints integrated.
+    
+    Combines base CQL pattern with:
+    1. Speaker_code filter (added to each token)
+    2. Document metadata filter (added to first token only)
+    
+    Args:
+        params: Request parameters for base CQL (q, mode, sensitive, pos)
+        filters: Filter dict from build_filters() (for speaker attributes and metadata)
+        
+    Returns:
+        Complete CQL pattern with speaker + metadata constraints
+        Example: '[lemma="casa" & speaker_code="lib-pf" & country_code="ven"]'
+    """
+    # Defensive: ensure params and filters are not None
+    if not params:
+        raise ValueError("params cannot be None")
+    if filters is None:
+        filters = {}
+    
+    # Build base CQL
+    base_cql = build_cql(params)
+    
+    # Get speaker_code constraint
+    speaker_constraint = build_speaker_code_constraint(filters)
+    
+    # Get metadata constraints (country, radio, city, date)
+    metadata_constraint = build_metadata_cql_constraints(filters)
+    
+    # Use regex to find all [...] token patterns
+    import re
+    token_pattern = re.compile(r'\[([^\]]+)\]')
+    
+    # Track if this is the first token (for metadata constraint)
+    is_first_token = [True]  # Mutable to modify in nested function
+    
+    def add_constraints(match):
+        existing = match.group(1)
+        constraints = [existing]
+        
+        # Add speaker constraint to every token
+        if speaker_constraint:
+            constraints.append(speaker_constraint)
+        
+        # Add metadata constraint to first token only
+        if is_first_token[0] and metadata_constraint:
+            constraints.append(metadata_constraint)
+            is_first_token[0] = False
+        
+        return f'[{" & ".join(constraints)}]'
+    
+    modified_cql = token_pattern.sub(add_constraints, base_cql)
+    
+    logger.info(f"CQL with filters: {modified_cql}")
+    return modified_cql
 
 
 def build_filters(params: Dict) -> Dict[str, any]:
@@ -215,11 +337,11 @@ def build_filters(params: Dict) -> Dict[str, any]:
         params.get("speech_mode", []) if isinstance(params.get("speech_mode"), list) else 
         ([params.get("speech_mode")] if params.get("speech_mode") else [])
     )
-    # Fallback to 'mode' if speech_mode is empty (but exclude CQL search mode!)
+    # Fallback to 'mode' if speech_mode is empty (but exclude CQL search modes!)
     if not modes:
         mode_param = params.get("mode")
-        # Skip if mode is a search mode (forma, lemma, cql, forma_exacta)
-        if mode_param and mode_param not in ["forma", "lemma", "cql", "forma_exacta"]:
+        # Skip if mode is a search mode (forma, lemma, cql, forma_exacta, pos)
+        if mode_param and mode_param not in ["forma", "lemma", "cql", "forma_exacta", "pos"]:
             modes = params.getlist("mode") if hasattr(params, "getlist") else (
                 [mode_param] if isinstance(mode_param, str) else (mode_param if isinstance(mode_param, list) else [])
             )
@@ -245,84 +367,83 @@ def build_filters(params: Dict) -> Dict[str, any]:
     return filters
 
 
-def filters_to_blacklab_query(filters: Dict) -> str:
+def build_metadata_cql_constraints(filters: Dict) -> str:
     """
-    Convert filters dict to BlackLab filter query string.
+    Build CQL token constraints for document metadata annotations.
     
-    Logic:
-    - Within a facet (e.g., country_code list): OR'd together
-    - Between facets: AND'd together
-    - radio:"national" is AND'd with other filters
-    
-    Example:
-        filters = {
-            "country_code": ["ARG", "CHL"],
-            "speaker_type": ["pro"],
-            "mode": ["lectura"],
-            "radio": "national"
-        }
-    Produces:
-        country_code:("ARG" OR "CHL") AND speaker_type:("pro") AND mode:("lectura") AND radio:"national"
+    Since metadata is stored as token annotations (repeated on every token),
+    we can filter by adding constraints like: country_code="ven"
     
     Args:
         filters: Output from build_filters()
         
     Returns:
-        Filter string for BlackLab 'filter' parameter (empty if no filters)
+        CQL constraint string to add to first token pattern
+        Example: 'country_code="ven" & radio="rcr"'
     """
     if not filters:
         return ""
     
     parts = []
     
-    # Country codes: OR'd within, quoted
-    if "country_code" in filters:
-        codes = filters["country_code"]
-        if len(codes) == 1:
-            parts.append(f'country_code:"{codes[0]}"')
-        else:
-            or_list = ' OR '.join(f'"{c}"' for c in codes)
-            parts.append(f'country_code:({or_list})')
+    # Country codes (multi-select, OR within)
+    country_codes = filters.get("country_code", [])
+    if country_codes:
+        # Defensive: filter out empty strings
+        country_codes = [c for c in country_codes if c and c.strip()]
+        if country_codes:
+            # Metadata is lowercased in index
+            country_codes_lower = [c.lower() for c in country_codes]
+            if len(country_codes_lower) == 1:
+                parts.append(f'country_code="{country_codes_lower[0]}"')
+            else:
+                or_list = '|'.join(country_codes_lower)
+                parts.append(f'country_code="({or_list})"')
     
-    # Speaker types: OR'd within
-    if "speaker_type" in filters:
-        types = filters["speaker_type"]
-        if len(types) == 1:
-            parts.append(f'speaker_type:"{types[0]}"')
-        else:
-            or_list = ' OR '.join(f'"{t}"' for t in types)
-            parts.append(f'speaker_type:({or_list})')
+    # Radio filter (lowercased in index)
+    radio = filters.get("radio")
+    if radio and str(radio).strip():
+        parts.append(f'radio="{str(radio).lower()}"')
     
-    # Sex: OR'd within
-    if "sex" in filters:
-        sexes = filters["sex"]
-        if len(sexes) == 1:
-            parts.append(f'sex:"{sexes[0]}"')
-        else:
-            or_list = ' OR '.join(f'"{s}"' for s in sexes)
-            parts.append(f'sex:({or_list})')
+    # City filter (lowercased in index)
+    city = filters.get("city")
+    if city and str(city).strip():
+        parts.append(f'city="{str(city).lower()}"')
     
-    # Mode (speech_mode): OR'd within
-    if "mode" in filters:
-        modes = filters["mode"]
-        if len(modes) == 1:
-            parts.append(f'mode:"{modes[0]}"')
-        else:
-            or_list = ' OR '.join(f'"{m}"' for m in modes)
-            parts.append(f'mode:({or_list})')
+    # Date filter
+    date = filters.get("date")
+    if date and str(date).strip():
+        parts.append(f'date="{str(date)}"')
     
-    # Discourse: OR'd within
-    if "discourse" in filters:
-        discourses = filters["discourse"]
-        if len(discourses) == 1:
-            parts.append(f'discourse:"{discourses[0]}"')
-        else:
-            or_list = ' OR '.join(f'"{d}"' for d in discourses)
-            parts.append(f'discourse:({or_list})')
+    # Join with &
+    constraint = " & ".join(parts)
     
-    # Radio: special case (single value)
-    if "radio" in filters:
-        parts.append(f'radio:"{filters["radio"]}"')
+    if constraint:
+        logger.info(f"Metadata CQL constraints: {constraint}")
     
-    # Combine all parts with AND
-    return " AND ".join(parts)
+    return constraint
+
+
+def filters_to_blacklab_query(filters: Dict) -> str:
+    """
+    Convert filters dict to BlackLab document filter query string.
+    
+    NOTE: As of Option A implementation (Nov 2025), document metadata is stored
+    as token annotations, not document metadata fields. This function is deprecated
+    in favor of build_metadata_cql_constraints() which adds metadata constraints
+    directly to the CQL pattern.
+    
+    Kept for backwards compatibility but returns empty string.
+    
+    Args:
+        filters: Output from build_filters()
+        
+    Returns:
+        Empty string (metadata filtering now handled via CQL annotations)
+    """
+    # Metadata filtering is now handled via CQL constraints
+    # See build_cql_with_metadata_filter() and build_metadata_cql_constraints()
+    return ""
+
+
+

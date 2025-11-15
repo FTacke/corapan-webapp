@@ -89,7 +89,8 @@ def validate_cql_pattern(cql: str) -> str:
         
         # Command injection (unlikely in CQL context, but check anyway)
         # Note: & is valid in CQL for combining constraints: [word="x" & pos="NOUN"]
-        (r'[|;`$]', "Shell metacharacter in pattern"),
+        # Note: | is valid in CQL for regex alternation: speaker_code="(lib-pf|lec-pf)"
+        (r'[;`$]', "Shell metacharacter in pattern"),
     ]
     
     for pattern, reason in suspicious_patterns:

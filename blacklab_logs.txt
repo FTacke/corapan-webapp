@@ -1,0 +1,77 @@
+﻿docker : 15-Nov-2025 08:29:09.858 INFO [main] org.apache.catalina.startup.VersionLoggerListener.log Server version name:   Apache 
+Tomcat/10.1.48
+In Zeile:1 Zeichen:1
++ docker logs blacklab-server-v3 2>&1 | Out-File -FilePath "blacklab_lo ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (15-Nov-2025 08:... Tomcat/10.1.48:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+15-Nov-2025 08:29:09.865 INFO [main] org.apache.catalina.startup.VersionLoggerListener.log Server built:          Oct 10 2025 14:33:56 
+UTC
+15-Nov-2025 08:29:09.865 INFO [main] org.apache.catalina.startup.VersionLoggerListener.log Server version number: 10.1.48.0
+15-Nov-2025 08:29:09.865 INFO [main] org.apache.catalina.startup.VersionLoggerListener.log OS Name:               Linux
+15-Nov-2025 08:29:09.865 INFO [main] org.apache.catalina.startup.VersionLoggerListener.log OS Version:            
+5.15.167.4-microsoft-standard-WSL2
+15-Nov-2025 08:29:09.866 INFO [main] org.apache.catalina.startup.VersionLoggerListener.log Architecture:          amd64
+15-Nov-2025 08:29:09.866 INFO [main] org.apache.catalina.startup.VersionLoggerListener.log Java Home:             /opt/java/openjdk
+15-Nov-2025 08:29:09.866 INFO [main] org.apache.catalina.startup.VersionLoggerListener.log JVM Version:           17.0.16+8
+15-Nov-2025 08:29:09.866 INFO [main] org.apache.catalina.startup.VersionLoggerListener.log JVM Vendor:            Eclipse Adoptium
+15-Nov-2025 08:29:09.866 INFO [main] org.apache.catalina.startup.VersionLoggerListener.log CATALINA_BASE:         /usr/local/tomcat
+15-Nov-2025 08:29:09.866 INFO [main] org.apache.catalina.startup.VersionLoggerListener.log CATALINA_HOME:         /usr/local/tomcat
+15-Nov-2025 08:29:09.875 INFO [main] org.apache.catalina.startup.VersionLoggerListener.log Command line argument: 
+-Djava.util.logging.config.file=/usr/local/tomcat/conf/logging.properties
+15-Nov-2025 08:29:09.875 INFO [main] org.apache.catalina.startup.VersionLoggerListener.log Command line argument: 
+-Djava.util.logging.manager=org.apache.juli.ClassLoaderLogManager
+15-Nov-2025 08:29:09.875 INFO [main] org.apache.catalina.startup.VersionLoggerListener.log Command line argument: 
+-Djdk.tls.ephemeralDHKeySize=2048
+15-Nov-2025 08:29:09.876 INFO [main] org.apache.catalina.startup.VersionLoggerListener.log Command line argument: 
+-Djava.protocol.handler.pkgs=org.apache.catalina.webresources
+15-Nov-2025 08:29:09.876 INFO [main] org.apache.catalina.startup.VersionLoggerListener.log Command line argument: 
+-Dsun.io.useCanonCaches=false
+15-Nov-2025 08:29:09.876 INFO [main] org.apache.catalina.startup.VersionLoggerListener.log Command line argument: 
+-Dorg.apache.catalina.security.SecurityListener.UMASK=0027
+15-Nov-2025 08:29:09.876 INFO [main] org.apache.catalina.startup.VersionLoggerListener.log Command line argument: 
+--add-opens=java.base/java.lang=ALL-UNNAMED
+15-Nov-2025 08:29:09.876 INFO [main] org.apache.catalina.startup.VersionLoggerListener.log Command line argument: 
+--add-opens=java.base/java.lang.reflect=ALL-UNNAMED
+15-Nov-2025 08:29:09.876 INFO [main] org.apache.catalina.startup.VersionLoggerListener.log Command line argument: 
+--add-opens=java.base/java.io=ALL-UNNAMED
+15-Nov-2025 08:29:09.877 INFO [main] org.apache.catalina.startup.VersionLoggerListener.log Command line argument: 
+--add-opens=java.base/java.util=ALL-UNNAMED
+15-Nov-2025 08:29:09.877 INFO [main] org.apache.catalina.startup.VersionLoggerListener.log Command line argument: 
+--add-opens=java.base/java.util.concurrent=ALL-UNNAMED
+15-Nov-2025 08:29:09.877 INFO [main] org.apache.catalina.startup.VersionLoggerListener.log Command line argument: 
+--add-opens=java.rmi/sun.rmi.transport=ALL-UNNAMED
+15-Nov-2025 08:29:09.877 INFO [main] org.apache.catalina.startup.VersionLoggerListener.log Command line argument: 
+-Dcatalina.base=/usr/local/tomcat
+15-Nov-2025 08:29:09.877 INFO [main] org.apache.catalina.startup.VersionLoggerListener.log Command line argument: 
+-Dcatalina.home=/usr/local/tomcat
+15-Nov-2025 08:29:09.877 INFO [main] org.apache.catalina.startup.VersionLoggerListener.log Command line argument: 
+-Djava.io.tmpdir=/usr/local/tomcat/temp
+15-Nov-2025 08:29:09.891 INFO [main] org.apache.catalina.core.AprLifecycleListener.lifecycleEvent Loaded Apache Tomcat Native library 
+[2.0.9] using APR version [1.7.2].
+15-Nov-2025 08:29:09.904 INFO [main] org.apache.catalina.core.AprLifecycleListener.initializeSSL OpenSSL successfully initialized 
+[OpenSSL 3.0.13 30 Jan 2024]
+15-Nov-2025 08:29:10.186 INFO [main] org.apache.coyote.AbstractProtocol.init Initializing ProtocolHandler ["http-nio-8080"]
+15-Nov-2025 08:29:10.230 INFO [main] org.apache.catalina.startup.Catalina.load Server initialization in [626] milliseconds
+15-Nov-2025 08:29:10.278 INFO [main] org.apache.catalina.core.StandardService.startInternal Starting service [Catalina]
+15-Nov-2025 08:29:10.278 INFO [main] org.apache.catalina.core.StandardEngine.startInternal Starting Servlet engine: [Apache 
+Tomcat/10.1.48]
+15-Nov-2025 08:29:10.297 INFO [main] org.apache.catalina.startup.HostConfig.deployWAR Deploying web application archive 
+[/usr/local/tomcat/webapps/blacklab-server.war]
+15-Nov-2025 08:29:15.207 INFO [main] org.apache.jasper.servlet.TldScanner.scanJars At least one JAR was scanned for TLDs yet contained 
+no TLDs. Enable debug logging for this logger for a complete list of JARs that were scanned but no TLDs were found in them. Skipping 
+unneeded JARs during scanning can improve startup time and JSP compilation time.
+15-Nov-2025 08:29:15.270 INFO [main] org.apache.catalina.startup.HostConfig.deployWAR Deployment of web application archive 
+[/usr/local/tomcat/webapps/blacklab-server.war] has finished in [4,973] ms
+15-Nov-2025 08:29:15.275 INFO [main] org.apache.coyote.AbstractProtocol.start Starting ProtocolHandler ["http-nio-8080"]
+15-Nov-2025 08:29:15.291 INFO [main] org.apache.catalina.startup.Catalina.start Server startup in [5060] milliseconds
+08:29:25.063 [http-nio-8080-exec-1] nl.in.bl.se.BlackLabServer          INFO  rid= Starting BlackLab Server...
+08:29:25.078 [http-nio-8080-exec-1] nl.in.bl.se.BlackLabServer          INFO  rid= BlackLab Server ready.
+08:29:25.083 [http-nio-8080-exec-1] nl.in.bl.se.BlackLabServer          DEBUG rid= Running from dir: /usr/local/tomcat/webapps/blacklab-server
+08:29:25.100 [http-nio-8080-exec-1] nl.in.bl.se.BlackLab                DEBUG rid= Configuration directory: /etc/blacklab (found blacklab-server.yaml)
+08:29:25.105 [http-nio-8080-exec-1] nl.in.bl.se.co.ConfigFileReader     DEBUG rid= Reading configuration file /etc/blacklab/blacklab-server.yaml
+08:30:25.790 [http-nio-8080-exec-2] nl.in.bl.se.BlackLabServer          DEBUG rid= Running from dir: /usr/local/tomcat/webapps/blacklab-server
+08:30:25.793 [http-nio-8080-exec-2] nl.in.bl.se.co.ConfigFileReader     DEBUG rid= Reading configuration file /etc/blacklab/blacklab-server.yaml
+08:30:38.137 [http-nio-8080-exec-3] nl.in.bl.se.BlackLabServer          DEBUG rid= Running from dir: /usr/local/tomcat/webapps/blacklab-server
+08:30:38.140 [http-nio-8080-exec-3] nl.in.bl.se.co.ConfigFileReader     DEBUG rid= Reading configuration file /etc/blacklab/blacklab-server.yaml

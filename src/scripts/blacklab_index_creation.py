@@ -66,6 +66,10 @@ class TokenFull:
     aspect: str = ""
     text: str = ""
     speaker_code: str = ""
+    speaker_type: str = ""
+    sex: str = ""
+    mode: str = ""
+    discourse: str = ""
 
     def to_tsv_row(self) -> str:
         """Export to TSV row."""
@@ -88,6 +92,10 @@ class TokenFull:
                 self.meta.sentence_id,
                 self.meta.utterance_id,
                 self.speaker_code,
+                self.speaker_type,
+                self.sex,
+                self.mode,
+                self.discourse,
             ]
         )
 
@@ -97,6 +105,44 @@ def _normalize_unicode(s: str) -> str:
     if not s:
         return s
     return unicodedata.normalize("NFKC", s)
+
+
+def map_speaker_attributes(code: str) -> tuple[str, str, str, str]:
+    """
+    Map speaker_code to (speaker_type, sex, mode, discourse) tuple.
+    
+    Aligned with database_creation_v3.py for consistency.
+    
+    Args:
+        code: Standardized speaker code (e.g. 'lib-pm', 'foreign', 'none')
+    
+    Returns:
+        Tuple of (speaker_type, sex, mode, discourse)
+        
+    Speaker codes follow pattern: {role}-{person}{sex}
+    - role: lib, lec, pre, tie, traf, foreign
+    - person: p (politician), o (other)
+    - sex: m (masculino), f (femenino)
+    """
+    mapping = {
+        'lib-pm':  ('pro', 'm', 'libre', 'general'),
+        'lib-pf':  ('pro', 'f', 'libre', 'general'),
+        'lib-om':  ('otro','m', 'libre', 'general'),
+        'lib-of':  ('otro','f', 'libre', 'general'),
+        'lec-pm':  ('pro', 'm', 'lectura', 'general'),
+        'lec-pf':  ('pro', 'f', 'lectura', 'general'),
+        'lec-om':  ('otro','m', 'lectura', 'general'),
+        'lec-of':  ('otro','f', 'lectura', 'general'),
+        'pre-pm':  ('pro', 'm', 'pre', 'general'),
+        'pre-pf':  ('pro', 'f', 'pre', 'general'),
+        'tie-pm':  ('pro', 'm', 'n/a', 'tiempo'),
+        'tie-pf':  ('pro', 'f', 'n/a', 'tiempo'),
+        'traf-pm': ('pro', 'm', 'n/a', 'tránsito'),
+        'traf-pf': ('pro', 'f', 'n/a', 'tránsito'),
+        'foreign': ('n/a', 'n/a', 'n/a', 'foreign'),
+        'none':    ('', '', '', '')
+    }
+    return mapping.get(code, ('', '', '', ''))
 
 
 def _escape_xml(s: str) -> str:
@@ -139,6 +185,10 @@ def _extract_full_token(token_dict: dict[str, Any]) -> Optional[TokenFull]:
     if not meta:
         return None
 
+    # Extract speaker_code and map to speaker attributes
+    speaker_code = str(token_dict.get("speaker_code", "")).strip()
+    speaker_type, sex, mode, discourse = map_speaker_attributes(speaker_code)
+
     return TokenFull(
         meta=meta,
         past_type=str(token_dict.get("past_type", "")).strip(),
@@ -149,7 +199,11 @@ def _extract_full_token(token_dict: dict[str, Any]) -> Optional[TokenFull]:
         number=str(token_dict.get("number", "")).strip(),
         aspect=str(token_dict.get("aspect", "")).strip(),
         text=_normalize_unicode(str(token_dict.get("text", ""))),
-        speaker_code=str(token_dict.get("speaker_code", "")).strip(),
+        speaker_code=speaker_code,
+        speaker_type=speaker_type,
+        sex=sex,
+        mode=mode,
+        discourse=discourse,
     )
 
 
@@ -215,9 +269,9 @@ def export_to_tsv(
     tsv_file = output_dir / f"{file_id}.tsv"
     try:
         with open(tsv_file, "w", encoding="utf-8") as f:
-            # Header
+            # Header (added speaker_type, sex, mode, discourse)
             f.write(
-                "word\tnorm\tlemma\tpos\tpast_type\tfuture_type\ttense\tmood\tperson\tnumber\taspect\ttokid\tstart_ms\tend_ms\tsentence_id\tutterance_id\tspeaker_code\n"
+                "word\tnorm\tlemma\tpos\tpast_type\tfuture_type\ttense\tmood\tperson\tnumber\taspect\ttokid\tstart_ms\tend_ms\tsentence_id\tutterance_id\tspeaker_code\tspeaker_type\tsex\tmode\tdiscourse\n"
             )
             # Data rows
             for token in tokens:

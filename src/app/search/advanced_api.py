@@ -18,10 +18,12 @@ from typing import Generator, Optional
 import httpx
 from flask import Blueprint, jsonify, request, Response, current_app
 
-from .cql import build_cql, build_filters, filters_to_blacklab_query
+from .cql import build_cql, build_filters, filters_to_blacklab_query, build_cql_with_speaker_filter
 from .cql_validator import validate_cql_pattern, validate_filter_values, CQLValidationError  # Punkt 3
+from .speaker_utils import map_speaker_attributes
 from ..extensions import limiter
 from ..extensions.http_client import get_http_client, BLS_BASE_URL
+from ..services.database import open_db
 
 logger = logging.getLogger(__name__)
 
@@ -30,6 +32,9 @@ bp = Blueprint("advanced_api", __name__, url_prefix="/search/advanced")
 # Limits and caps
 MAX_HITS_PER_PAGE = 100
 GLOBAL_HITS_CAP = 50000
+
+
+
 
 # Load docmeta.jsonl for metadata lookup (file_id -> metadata)
 def _load_docmeta():
@@ -48,6 +53,9 @@ def _load_docmeta():
         except Exception as e:
             logger.warning(f"Failed to load docmeta.jsonl: {e}")
     return docmeta
+
+
+
 
 # Cache docmeta at module level
 _DOCMETA_CACHE = _load_docmeta()
@@ -184,25 +192,7 @@ def datatable_data():
         # Clamp length to MAX_HITS_PER_PAGE
         length = min(length, MAX_HITS_PER_PAGE)
         
-        # Build CQL
-        cql_pattern = build_cql(request.args)
-        logger.info(f"Built CQL pattern: {cql_pattern} (mode={request.args.get('mode')}, q={request.args.get('q')})")
-        
-        # Punkt 3: Validierung CQL Pattern und Filter
-        try:
-            validate_cql_pattern(cql_pattern)
-        except CQLValidationError as e:
-            logger.warning(f"CQL validation failed: {e}")
-            return jsonify({
-                "draw": draw,
-                "recordsTotal": 0,
-                "recordsFiltered": 0,
-                "data": [],
-                "error": "invalid_cql",
-                "message": str(e)
-            }), 200  # Return 200 for DataTables compatibility
-        
-        # Build filters
+        # Build filters first (needed for speaker-based CQL construction)
         filters = build_filters(request.args)
         
         # Punkt 3: Validierung Filter Values
@@ -219,15 +209,37 @@ def datatable_data():
                 "message": str(e)
             }), 200  # Return 200 for DataTables compatibility
         
+        # Build CQL with speaker filter integrated
+        cql_pattern = build_cql_with_speaker_filter(request.args, filters)
+        logger.info(f"Built CQL pattern: {cql_pattern} (mode={request.args.get('mode')}, q={request.args.get('q')})")
+        
+        # Punkt 3: Validierung CQL Pattern
+        try:
+            validate_cql_pattern(cql_pattern)
+        except CQLValidationError as e:
+            logger.warning(f"CQL validation failed: {e}")
+            return jsonify({
+                "draw": draw,
+                "recordsTotal": 0,
+                "recordsFiltered": 0,
+                "data": [],
+                "error": "invalid_cql",
+                "message": str(e)
+            }), 200  # Return 200 for DataTables compatibility
+        
+        # Get BlackLab document filter query (country, radio, city, date)
         filter_query = filters_to_blacklab_query(filters)
+        logger.info(f"BlackLab document filter: {filter_query}")
+        logger.info(f"All filters: {filters}")
         
         # BLS parameters
         # Note: listvalues must include 'word' for KWIC display in BlackLab v5
+        # Include 'speaker_code' for speaker attribute mapping
         bls_params = {
             "first": start,
             "number": length,
             "wordsaroundhit": 10,
-            "listvalues": "word,tokid,start_ms,end_ms,utterance_id",
+            "listvalues": "word,tokid,start_ms,end_ms,utterance_id,speaker_code",
         }
         
         if filter_query:
@@ -279,6 +291,7 @@ def datatable_data():
         # Note: Frontend expects objects with keys (not arrays) to match DataTables columnDefs
         # BlackLab v5: before/after instead of left/right
         processed_hits = []
+        
         for hit in hits:
             left = hit.get("before", {}).get("word", [])
             match = hit.get("match", {}).get("word", [])
@@ -289,6 +302,13 @@ def datatable_data():
             tokid = match_info.get("tokid", [None])[0] if match_info.get("tokid") else None
             start_ms = match_info.get("start_ms", [0])[0] if match_info.get("start_ms") else 0
             end_ms = match_info.get("end_ms", [0])[0] if match_info.get("end_ms") else 0
+            
+            # Extract speaker_code from hit (available in match annotations)
+            speaker_code_list = match_info.get("speaker_code", [])
+            speaker_code = speaker_code_list[0] if speaker_code_list else ""
+            
+            # Map speaker_code to attributes (speaker_type, sex, mode, discourse)
+            speaker_type, sex, mode, discourse = map_speaker_attributes(speaker_code)
             
             # Extract file_id from utterance_id
             # utterance_id format: "VEN_2022-01-18_VEN_RCR:6" (COUNTRY_DATE_COUNTRY_STATION:SEG)
@@ -306,15 +326,16 @@ def datatable_data():
             doc_meta = _DOCMETA_CACHE.get(file_id, {})
             
             # Build row as OBJECT (not array) to match frontend DataTables columnDefs
+            # Use speaker attributes from speaker_code mapping (canonical source)
             row = {
                 "left": " ".join(left[-10:]) if left else "",
                 "match": " ".join(match),
                 "right": " ".join(right[:10]) if right else "",
                 "country": doc_meta.get("country_code", ""),
-                "speaker_type": doc_meta.get("speaker_type", ""),  # Note: not in docmeta.jsonl, may need update
-                "sex": doc_meta.get("sex", ""),  # Note: not in docmeta.jsonl
-                "mode": doc_meta.get("mode", ""),  # Note: not in docmeta.jsonl
-                "discourse": doc_meta.get("discourse", ""),  # Note: not in docmeta.jsonl
+                "speaker_type": speaker_type,
+                "sex": sex,
+                "mode": mode,
+                "discourse": discourse,
                 "filename": doc_meta.get("file_id", ""),
                 "radio": doc_meta.get("radio", ""),
                 "tokid": str(tokid) if tokid else "",
@@ -323,12 +344,15 @@ def datatable_data():
                 "date": doc_meta.get("date", ""),
                 "city": doc_meta.get("city", ""),
             }
+            
             processed_hits.append(row)
         
+        # BlackLab is Single Source of Truth for counts
+        # Both recordsTotal and recordsFiltered come from BlackLab
         return jsonify({
             "draw": draw,
-            "recordsTotal": number_of_hits,  # Punkt 2: Beide = numberOfHits
-            "recordsFiltered": number_of_hits,  # Punkt 2: Server-Side Filtering (beide identisch)
+            "recordsTotal": number_of_hits,
+            "recordsFiltered": number_of_hits,
             "data": processed_hits,
         })
         
