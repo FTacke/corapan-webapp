@@ -263,8 +263,27 @@ def datatable_data():
         # But first compute include_regional-adjusted country list similar to corpus routes
         # Compute country list using centralized logic
         countries = request.args.getlist('country_code')
-        include_regional = request.args.get('include_regional') == '1'
+        include_regional_param = request.args.get('include_regional')  # Can be None, '0', or '1'
+        include_regional = include_regional_param == '1'
         countries = resolve_countries_for_include_regional(countries, include_regional)
+        
+        # OPTIMIZATION: If ALL countries are selected (default case when no params sent),
+        # clear the country filter to avoid building inefficient CQL regex with 20-25 alternatives.
+        # This allows queries to match all documents without unnecessary country_code constraints.
+        # 
+        # IMPORTANT: Only apply this optimization when user has NOT explicitly set include_regional.
+        # If include_regional is explicitly set, we must keep the filter to exclude regional codes.
+        ALL_NATIONAL_CODES = ['ARG', 'BOL', 'CHL', 'COL', 'CRI', 'CUB', 'ECU', 'ESP', 'GTM', 
+                              'HND', 'MEX', 'NIC', 'PAN', 'PRY', 'PER', 'DOM', 'SLV', 'URY', 'USA', 'VEN']
+        ALL_REGIONAL_CODES = ['ARG-CHU', 'ARG-CBA', 'ARG-SDE', 'ESP-CAN', 'ESP-SEV']
+        
+        # Only optimize when include_regional param is NOT explicitly set
+        if countries and include_regional_param is None:
+            countries_set = set(countries)
+            all_expected = set(ALL_NATIONAL_CODES)  # When no param, defaults to national only
+            if countries_set == all_expected:
+                # All national countries selected and no explicit include_regional → no need to filter
+                countries = []
 
         # Build filters from request.args and then override the country list computed above
         filters = build_filters(request.args)
@@ -307,16 +326,12 @@ def datatable_data():
             "listvalues": "word,tokid,start_ms,end_ms,file_id,filename,country,country_code,speaker_type,sex,mode,discourse,radio,utterance_id,speaker_code",
         }
         
-        # If we didn't build a filter_query from token-level fields, try building
-        # a doc-level filter (file_id) using our loaded docmeta cache
-        if not filter_query and filters.get("country_code") and _DOCMETA_CACHE:
-            requested_countries = {c.upper() for c in filters.get("country_code", [])}
-            # Find file_ids that match requested countries
-            matched_file_ids = [file_id for file_id, meta in _DOCMETA_CACHE.items() if meta.get("country_code", "").upper() in requested_countries]
-            if matched_file_ids:
-                # Sanitize file ids (strip whitespace) - BlackLab expects OR syntax in filters: file_id:("id1" OR "id2")
-                or_list = " OR ".join([f'"{fid.strip()}"' for fid in matched_file_ids if fid and fid.strip()])
-                filter_query = f'file_id:({or_list})'
+        # IMPORTANT: Do NOT build file_id filter when all countries are selected.
+        # file_id is NOT indexed as document-level metadata (only as token annotation).
+        # Instead, rely on token-level country_code metadata (already built by filters_to_blacklab_query).
+        # 
+        # Skip file_id filter building entirely - it causes 0 results because file_id
+        # doesn't exist as doc-level metadata field in the BlackLab index.
 
         if filter_query:
             bls_params = {

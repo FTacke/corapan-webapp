@@ -137,7 +137,7 @@ Write-Host "  OK TSV-Quelle: $($tsvFiles.Count) Dateien gefunden" -ForegroundCol
 if (-not (Test-Path $docmetaPath)) {
     Write-Host "  FEHLER: docmeta.jsonl nicht gefunden: $docmetaPath" -ForegroundColor Red
     exit 1
-<CmdletBinding/>
+}
 
 $docmetaLines = (Get-Content $docmetaPath | Measure-Object -Line).Lines
 Write-Host "  OK Docmeta: $docmetaLines Dokumente" -ForegroundColor Green

@@ -19,12 +19,16 @@ from urllib.parse import urlencode
 # Try to import Flask test client
 try:
     import sys
-    sys.path.insert(0, '/home/runner/work/corapan-webapp/corapan-webapp/src')
+    import os
+    # Add src directory to path (works for both CI and local dev)
+    src_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'src')
+    if src_path not in sys.path:
+        sys.path.insert(0, src_path)
     from app import create_app
     FLASK_AVAILABLE = True
-except ImportError:
+except ImportError as e:
     FLASK_AVAILABLE = False
-    pytest.skip("Flask app not available", allow_module_level=True)
+    pytest.skip(f"Flask app not available: {e}", allow_module_level=True)
 
 logger = logging.getLogger(__name__)
 
