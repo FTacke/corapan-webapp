@@ -8,6 +8,7 @@ import { CorpusFiltersManager } from './filters.js';
 import { CorpusDatatablesManager, adjustCorpusTable } from './datatables.js';
 import { CorpusAudioManager } from './audio.js';
 import { CorpusSearchManager } from './search.js';
+import '../search/corpusForm.js';
 import { CorpusTokenManager } from './tokens.js';
 
 /**

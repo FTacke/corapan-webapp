@@ -66,6 +66,18 @@ class TokenFull:
     aspect: str = ""
     text: str = ""
     speaker_code: str = ""
+    speaker_type: str = ""
+    speaker_sex: str = ""
+    speaker_mode: str = ""
+    speaker_discourse: str = ""
+    # Document-level metadata (repeated per token)
+    file_id: str = ""
+    country_code: str = ""
+    country_scope: str = ""
+    country_parent_code: str = ""
+    country_region_code: str = ""
+    city: str = ""
+    radio: str = ""
 
     def to_tsv_row(self) -> str:
         """Export to TSV row."""
@@ -88,6 +100,17 @@ class TokenFull:
                 self.meta.sentence_id,
                 self.meta.utterance_id,
                 self.speaker_code,
+                self.speaker_type,
+                self.speaker_sex,
+                self.speaker_mode,
+                self.speaker_discourse,
+                self.file_id,
+                self.country_code,
+                self.country_scope,
+                self.country_parent_code,
+                self.country_region_code,
+                self.city,
+                self.radio,
             ]
         )
 
@@ -97,6 +120,44 @@ def _normalize_unicode(s: str) -> str:
     if not s:
         return s
     return unicodedata.normalize("NFKC", s)
+
+
+def map_speaker_attributes(code: str) -> tuple[str, str, str, str]:
+    """
+    Map speaker_code to (speaker_type, speaker_sex, speaker_mode, speaker_discourse) tuple.
+    
+    Aligned with mapping_new_plan.md for consistency.
+    
+    Args:
+        code: Standardized speaker code (e.g. 'lib-pm', 'foreign', 'none')
+    
+    Returns:
+        Tuple of (speaker_type, speaker_sex, speaker_mode, speaker_discourse)
+        
+    Speaker codes follow pattern: {role}-{person}{sex}
+    - role: lib, lec, pre, tie, traf, foreign
+    - person: p (politician), o (other)
+    - sex: m (masculino), f (femenino)
+    """
+    mapping = {
+        'lib-pm':  ('pro', 'm', 'libre', 'general'),
+        'lib-pf':  ('pro', 'f', 'libre', 'general'),
+        'lib-om':  ('otro','m', 'libre', 'general'),
+        'lib-of':  ('otro','f', 'libre', 'general'),
+        'lec-pm':  ('pro', 'm', 'lectura', 'general'),
+        'lec-pf':  ('pro', 'f', 'lectura', 'general'),
+        'lec-om':  ('otro','m', 'lectura', 'general'),
+        'lec-of':  ('otro','f', 'lectura', 'general'),
+        'pre-pm':  ('pro', 'm', 'pre', 'general'),
+        'pre-pf':  ('pro', 'f', 'pre', 'general'),
+        'tie-pm':  ('pro', 'm', 'n/a', 'tiempo'),
+        'tie-pf':  ('pro', 'f', 'n/a', 'tiempo'),
+        'traf-pm': ('pro', 'm', 'n/a', 'tránsito'),
+        'traf-pf': ('pro', 'f', 'n/a', 'tránsito'),
+        'foreign': ('n/a', 'n/a', 'n/a', 'foreign'),
+        'none':    ('', '', '', '')
+    }
+    return mapping.get(code, ('', '', '', ''))
 
 
 def _escape_xml(s: str) -> str:
@@ -110,11 +171,14 @@ def _escape_xml(s: str) -> str:
 
 
 def _extract_mandatory_token(token_dict: dict[str, Any]) -> Optional[TokenMeta]:
-    """Extract mandatory fields; return None if any missing."""
+    """Extract mandatory fields; return None if any missing.
+    
+    Note: Individual token warnings are suppressed; per-file summaries are logged in export_to_tsv().
+    """
     required = ["token_id", "start_ms", "end_ms", "lemma", "pos", "norm", "sentence_id", "utterance_id"]
     for field in required:
         if field not in token_dict or token_dict[field] is None:
-            logger.warning(f"Token missing mandatory field '{field}': {token_dict.get('token_id', '?')}")
+            # Don't log per-token (too noisy); summary is logged in export_to_tsv()
             return None
 
     try:
@@ -129,15 +193,27 @@ def _extract_mandatory_token(token_dict: dict[str, Any]) -> Optional[TokenMeta]:
             utterance_id=str(token_dict["utterance_id"]),
         )
     except (ValueError, TypeError) as e:
-        logger.warning(f"Token field conversion error: {e}")
+        # Rare case - keep this warning for real conversion errors
+        logger.warning(f"Token field conversion error in {token_dict.get('token_id', '?')}: {e}")
         return None
 
 
-def _extract_full_token(token_dict: dict[str, Any]) -> Optional[TokenFull]:
-    """Extract full token with optional fields."""
+def _extract_full_token(
+    token_dict: dict[str, Any],
+    segment_speaker: dict[str, Any],
+    doc_meta: dict[str, str],
+) -> Optional[TokenFull]:
+    """Extract full token with optional fields, speaker from segment, and document metadata."""
     meta = _extract_mandatory_token(token_dict)
     if not meta:
         return None
+
+    # Extract speaker info from segment["speaker"] object (not from token)
+    speaker_code = segment_speaker.get("code", "none")
+    speaker_type = segment_speaker.get("speaker_type", "")
+    speaker_sex = segment_speaker.get("speaker_sex", "")
+    speaker_mode = segment_speaker.get("speaker_mode", "")
+    speaker_discourse = segment_speaker.get("speaker_discourse", "")
 
     return TokenFull(
         meta=meta,
@@ -149,7 +225,18 @@ def _extract_full_token(token_dict: dict[str, Any]) -> Optional[TokenFull]:
         number=str(token_dict.get("number", "")).strip(),
         aspect=str(token_dict.get("aspect", "")).strip(),
         text=_normalize_unicode(str(token_dict.get("text", ""))),
-        speaker_code=str(token_dict.get("speaker_code", "")).strip(),
+        speaker_code=speaker_code,
+        speaker_type=speaker_type,
+        speaker_sex=speaker_sex,
+        speaker_mode=speaker_mode,
+        speaker_discourse=speaker_discourse,
+        file_id=doc_meta.get("file_id", ""),
+        country_code=doc_meta.get("country_code", ""),
+        country_scope=doc_meta.get("country_scope", ""),
+        country_parent_code=doc_meta.get("country_parent_code", ""),
+        country_region_code=doc_meta.get("country_region_code", ""),
+        city=doc_meta.get("city", ""),
+        radio=doc_meta.get("radio", ""),
     )
 
 
@@ -197,15 +284,48 @@ def export_to_tsv(
     if file_id in skip_cache and skip_cache[file_id] == content_hash:
         return (True, f"Skipped {file_id} (unchanged)")
 
+    # Extract document-level metadata
+    doc_meta = {
+        "file_id": corpus_doc.get("file_id", file_id),
+        "country_code": corpus_doc.get("country_code", ""),
+        "country_scope": corpus_doc.get("country_scope", ""),
+        "country_parent_code": corpus_doc.get("country_parent_code", ""),
+        "country_region_code": corpus_doc.get("country_region_code", ""),
+        "city": corpus_doc.get("city", ""),
+        "radio": corpus_doc.get("radio", ""),
+    }
+
     # Extract tokens
     tokens: list[TokenFull] = []
+    skipped_count = 0
+    total_count = 0
+    
     for segment in corpus_doc.get("segments", []):
+        # Get speaker info from segment["speaker"] object
+        segment_speaker = segment.get("speaker", {})
+        if not isinstance(segment_speaker, dict):
+            # Fallback: if speaker is not a dict, try legacy speaker_code
+            speaker_code = str(segment.get("speaker_code", "none")).strip()
+            speaker_type, speaker_sex, speaker_mode, speaker_discourse = map_speaker_attributes(speaker_code)
+            segment_speaker = {
+                "code": speaker_code,
+                "speaker_type": speaker_type,
+                "speaker_sex": speaker_sex,
+                "speaker_mode": speaker_mode,
+                "speaker_discourse": speaker_discourse,
+            }
+        
         for token_dict in segment.get("words", []):
-            token = _extract_full_token(token_dict)
+            total_count += 1
+            token = _extract_full_token(token_dict, segment_speaker, doc_meta)
             if token:
                 tokens.append(token)
             else:
-                logger.warning(f"Skipping malformed token in {file_id}")
+                skipped_count += 1
+
+    # Log summary instead of per-token warnings
+    if skipped_count > 0:
+        logger.warning(f"Skipped {skipped_count}/{total_count} malformed tokens in {file_id} (missing lemma or other required fields)")
 
     if not tokens:
         logger.error(f"No valid tokens in {file_id}")
@@ -215,9 +335,12 @@ def export_to_tsv(
     tsv_file = output_dir / f"{file_id}.tsv"
     try:
         with open(tsv_file, "w", encoding="utf-8") as f:
-            # Header
+            # Header with all new fields
             f.write(
-                "word\tnorm\tlemma\tpos\tpast_type\tfuture_type\ttense\tmood\tperson\tnumber\taspect\ttokid\tstart_ms\tend_ms\tsentence_id\tutterance_id\tspeaker_code\n"
+                "word\tnorm\tlemma\tpos\tpast_type\tfuture_type\ttense\tmood\tperson\tnumber\taspect\t"
+                "tokid\tstart_ms\tend_ms\tsentence_id\tutterance_id\t"
+                "speaker_code\tspeaker_type\tspeaker_sex\tspeaker_mode\tspeaker_discourse\t"
+                "file_id\tcountry_code\tcountry_scope\tcountry_parent_code\tcountry_region_code\tcity\tradio\n"
             )
             # Data rows
             for token in tokens:
@@ -275,14 +398,20 @@ def run_export(
         # TSV export (TSV-only format)
         success, msg = export_to_tsv(corpus_doc, json_file, out_dir, skip_cache)
 
-        # Build docmeta
+        # Build docmeta with new country fields
         file_id = json_file.stem
         docmeta = {
             "doc": file_id,
-            "country_code": corpus_doc.get("country_code", ""),
+            "file_id": corpus_doc.get("file_id", file_id),
+            "filename": corpus_doc.get("filename", ""),
             "date": corpus_doc.get("date", ""),
-            "radio": corpus_doc.get("radio", ""),
+            "country_code": corpus_doc.get("country_code", ""),
+            "country_scope": corpus_doc.get("country_scope", ""),
+            "country_parent_code": corpus_doc.get("country_parent_code", ""),
+            "country_region_code": corpus_doc.get("country_region_code", ""),
             "city": corpus_doc.get("city", ""),
+            "radio": corpus_doc.get("radio", ""),
+            "revision": corpus_doc.get("revision", ""),
             "audio_path": corpus_doc.get("filename", ""),
         }
 
@@ -366,9 +495,9 @@ def main() -> int:
     """CLI entry point."""
     parser = argparse.ArgumentParser(description="BlackLab Index Export Tool")
     parser.add_argument("--in", dest="in_dir", default="media/transcripts", help="Input JSON directory (relative to project root)")
-    parser.add_argument("--out", dest="out_dir", default="data/blacklab_index/tsv", help="Output directory (relative to project root)")
+    parser.add_argument("--out", dest="out_dir", default="data/blacklab_export/tsv", help="Output directory (relative to project root)")
     parser.add_argument("--format", choices=["tsv"], default="tsv", help="Export format (TSV-only)")
-    parser.add_argument("--docmeta", dest="docmeta_file", default="data/blacklab_index/docmeta.jsonl", help="Docmeta output file")
+    parser.add_argument("--docmeta", dest="docmeta_file", default="data/blacklab_export/docmeta.jsonl", help="Docmeta output file")
     parser.add_argument("--workers", type=int, default=4, help="Number of worker threads")
     parser.add_argument("--limit", type=int, default=None, help="Limit number of files (for testing)")
     parser.add_argument("--dry-run", action="store_true", help="Dry-run mode (no writes)")

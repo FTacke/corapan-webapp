@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 bp = Blueprint("bls", __name__, url_prefix="/bls")
 
 # BlackLab Server upstream
-BLS_UPSTREAM = "http://127.0.0.1:8081/blacklab-server"
+BLS_UPSTREAM = "http://127.0.0.1:8081/blacklab-server/"
 
 # Hop-by-hop headers to remove (per RFC 7230)
 HOP_BY_HOP_HEADERS = {
@@ -76,14 +76,10 @@ def _proxy_request(method: str, path: str) -> Response:
         # Remove hop-by-hop headers from response
         response_headers = _remove_hop_by_hop_headers(dict(upstream_response.headers))
 
-        # Stream response back to client
-        def generate():
-            for chunk in upstream_response.iter_raw(chunk_size=65536):
-                if chunk:
-                    yield chunk
-
+        # Return response content (avoid re-iterating a streamed response)
+        content = upstream_response.content
         return Response(
-            generate(),
+            content,
             status=upstream_response.status_code,
             headers=response_headers,
             mimetype=upstream_response.headers.get("content-type", "application/json"),

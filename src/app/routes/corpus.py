@@ -4,7 +4,9 @@ from __future__ import annotations
 from flask import Blueprint, Response, current_app, g, jsonify, render_template, request
 
 from ..services.corpus_search import SearchParams, search_tokens
+from ..services.blacklab_search import search_blacklab
 from ..services.counters import counter_search
+from ..search.cql import resolve_countries_for_include_regional
 from ..services.database import open_db
 
 blueprint = Blueprint("corpus", __name__, url_prefix="/corpus")
@@ -89,25 +91,10 @@ def search() -> Response:
     search_mode = search_mode_override if search_mode_override else data_source.get("search_mode", "text")
     
     # Handle country/region filtering
-    # Regional codes that should be excluded by default
-    regional_codes = ['ARG-CHU', 'ARG-CBA', 'ARG-SDE', 'ESP-CAN', 'ESP-SEV']
-    national_codes = ['ARG', 'BOL', 'CHL', 'COL', 'CRI', 'CUB', 'ECU', 'ESP', 'GTM', 
-                      'HND', 'MEX', 'NIC', 'PAN', 'PRY', 'PER', 'DOM', 'SLV', 'URY', 'USA', 'VEN']
-    
+    # Compute countries list with include_regional semantics
     countries = data_source.getlist("country_code")
     include_regional = data_source.get("include_regional") == "1"
-    
-    # If nothing selected, use defaults based on include_regional
-    if not countries:
-        if include_regional:
-            # Include all: 19 national + 5 regional
-            countries = national_codes + regional_codes
-        else:
-            # Only national capitals
-            countries = national_codes
-    elif not include_regional:
-        # If user selected countries but checkbox is off, exclude any regional codes
-        countries = [c for c in countries if c not in regional_codes]
+    countries = resolve_countries_for_include_regional(countries, include_regional)
     
     params = SearchParams(
         query=data_source.get("query", ""),
@@ -132,7 +119,34 @@ def search() -> Response:
         context["active_tab"] = "tab-token"
         return _render_corpus(context)
     
-    service_result = search_tokens(params)
+    # Decide to use BlackLab for text/lemma search, and SQLite for direct token lookups
+    use_blacklab = True
+    if params.search_mode == "token_ids":
+        use_blacklab = False
+    service_result = None
+    if use_blacklab and params.query.strip():
+        # Convert params to a dict compatible with blacklab_search
+        bls_params = {
+            "query": params.query,
+            "search_mode": params.search_mode,
+            "sensitive": params.sensitive,
+            "country_code": params.countries or [],
+            "speaker_type": params.speaker_types or [],
+            "sex": params.sexes or [],
+            "speech_mode": params.speech_modes or [],
+            "discourse": params.discourses or [],
+            "page": params.page,
+            "page_size": params.page_size,
+            "include_regional": request.values.get("include_regional"),
+        }
+        try:
+            service_result = search_blacklab(bls_params)
+        except Exception as e:
+            current_app.logger.error(f"BlackLab search failed: {e}")
+            # Fallback to SQLite search
+            service_result = search_tokens(params)
+    else:
+        service_result = search_tokens(params)
     context = _default_context()
     
     # Active tab bestimmen
@@ -197,6 +211,7 @@ def search_datatables() -> Response:
     
     countries = request.args.getlist("country_code")
     include_regional = request.args.get("include_regional") == "1"
+    countries = resolve_countries_for_include_regional(countries, include_regional)
     speaker_types = request.args.getlist("speaker_type")
     sexes = request.args.getlist("sex")
     speech_modes = request.args.getlist("speech_mode")
@@ -277,7 +292,32 @@ def search_datatables() -> Response:
     
     # Execute search
     counter_search.increment()
-    service_result = search_tokens(params)
+    # Use BlackLab for text/lemma searches; fallback to SQLite for token_ids
+    use_blacklab = True
+    if params.search_mode == "token_ids":
+        use_blacklab = False
+    if use_blacklab and params.query.strip():
+        bls_params = {
+            "query": params.query,
+            "search_mode": params.search_mode,
+            "sensitive": params.sensitive,
+            "country_code": params.countries or [],
+            "speaker_type": params.speaker_types or [],
+            "sex": params.sexes or [],
+            "speech_mode": params.speech_modes or [],
+            "discourse": params.discourses or [],
+            "page": page,
+            "page_size": length,
+            "include_regional": request.args.get("include_regional"),
+            "table_search": dt_search,
+        }
+        try:
+            service_result = search_blacklab(bls_params)
+        except Exception as e:
+            current_app.logger.error(f"BlackLab datatables search failed: {e}")
+            service_result = search_tokens(params)
+    else:
+        service_result = search_tokens(params)
     
     # Format for DataTables - NOW WITH OBJECT MODE
     # DataTables kann sowohl Arrays als auch Objekte verarbeiten.
@@ -343,7 +383,9 @@ def token_lookup() -> Response:
         
         # EXPLIZITE Spaltenliste statt SELECT *
         select_cols = _get_select_columns()
-        sql = f"SELECT {select_cols} FROM tokens WHERE token_id IN ({placeholders})"
+        # select_cols references 't.' alias by default, so alias the tokens table
+        # to 't' in the FROM clause to avoid "no such column: t.token_id" errors.
+        sql = f"SELECT {select_cols} FROM tokens t WHERE token_id IN ({placeholders})"
         cursor.execute(sql, token_ids)
         rows = cursor.fetchall()
     

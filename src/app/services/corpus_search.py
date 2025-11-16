@@ -423,7 +423,11 @@ def search_tokens(params: SearchParams) -> dict[str, object]:
             rows = cursor.fetchall()
         else:
             select_cols = _get_select_columns()
-            base_sql = f"SELECT {select_cols}, 1 as word_count FROM tokens WHERE 1=1{filter_clause}"
+            # NOTE: _get_select_columns() uses alias 't' by default (e.g. "t.token_id"
+            # as token_id). We must therefore alias the tokens table as 't' in the FROM
+            # clause. Forgetting the alias caused: sqlite3.OperationalError: no such
+            # column: t.token_id when the query was executed.
+            base_sql = f"SELECT {select_cols}, 1 as word_count FROM tokens t WHERE 1=1{filter_clause}"
             count_sql = f"SELECT COUNT(*) FROM ({base_sql})"
             cursor.execute(count_sql, filter_params)
             total_results = cursor.fetchone()[0]

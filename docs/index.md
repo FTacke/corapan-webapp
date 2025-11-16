@@ -24,6 +24,7 @@ Konzeptuelle Übersichten und Architektur-Entscheidungen.
 - **[Authentication Flow](concepts/authentication-flow.md)** - JWT, Cookie-Auth, Login-Szenarien
 - **[BlackLab Indexing Architecture](concepts/blacklab-indexing.md)** - Corpus Search Engine, Export→Index→Proxy Pipeline
 - **[Advanced Search Architecture](concepts/advanced-search-architecture.md)** - Security hardening, streaming design, performance
+- **[Search Unification Plan](concepts/search-unification-plan.md)** - Simple vs. Advanced Search, 3-Phasen-Plan, Unified Mapping ⭐ NEU (2025-11-13)
 
 ---
 
@@ -31,6 +32,7 @@ Konzeptuelle Übersichten und Architektur-Entscheidungen.
 
 Schritt-für-Schritt-Anleitungen für häufige Aufgaben.
 
+- **[Advanced Search Dev Setup](how-to/advanced-search-dev-setup.md)** - BlackLab konfigurieren, starten, debuggen (NEW 2025-11-13)
 - **[Token Input Usage](how-to/token-input-usage.md)** - Multi-Paste-Feature für Corpus-Tokens
 - **[Build BlackLab Index](how-to/build-blacklab-index.md)** - Index-Build, CLI-Optionen, Validierung
 - **[Execute BlackLab Stage 2-3](how-to/execute-blacklab-stage-2-3.md)** - Index-Build ausführen, Tests durchführen (NEW)
@@ -49,6 +51,14 @@ API-Dokumentation, Datenbank-Schema, technische Spezifikationen.
 - **[BLF YAML Schema](reference/blf-yaml-schema.md)** - Index-Konfiguration, Annotations, Metadata
 - **[CQL Escaping Rules](reference/cql-escaping-rules.md)** - CQL security, escaping, injection prevention (NEW)
 - **[Advanced Export Streaming](reference/advanced-export-streaming.md)** - Export endpoint spec, streaming, performance (NEW)
+
+**Search System Analysis (Bestandsaufnahme):**
+- **[ADVANCED SEARCH/BESTANDSAUFNAHME_SIMPLE_VS_ADVANCED.md](ADVANCED SEARCH/BESTANDSAUFNAHME_SIMPLE_VS_ADVANCED.md)** - Vollständige Analyse: Simple vs. Advanced Search
+- **[ADVANCED SEARCH/BESTANDSAUFNAHME_SIMPLE_SEARCH.md](ADVANCED SEARCH/BESTANDSAUFNAHME_SIMPLE_SEARCH.md)** - Simple Search Datenfluss-Details
+- **[ADVANCED SEARCH/BESTANDSAUFNAHME_ADVANCED_SEARCH.md](ADVANCED SEARCH/BESTANDSAUFNAHME_ADVANCED_SEARCH.md)** - Advanced Search BlackLab-Integration
+- **[ADVANCED SEARCH/BESTANDSAUFNAHME_DATATABLES_VERGLEICH.md](ADVANCED SEARCH/BESTANDSAUFNAHME_DATATABLES_VERGLEICH.md)** - Frontend DataTables-Konfiguration
+- **[ADVANCED SEARCH/BESTANDSAUFNAHME_GEMEINSAME_BASIS.md](ADVANCED SEARCH/BESTANDSAUFNAHME_GEMEINSAME_BASIS.md)** - Gemeinsames Mapping-Potenzial
+- **[ADVANCED SEARCH/BESTANDSAUFNAHME_OFFENE_PUNKTE.md](ADVANCED SEARCH/BESTANDSAUFNAHME_OFFENE_PUNKTE.md)** - Stolpersteine & Offene Fragen
 
 ---
 

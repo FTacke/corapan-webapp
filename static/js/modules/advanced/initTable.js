@@ -21,6 +21,18 @@ let currentParams = null;
  * @param {string} queryParams - Query string (e.g., "q=radio&mode=forma")
  */
 export function initAdvancedTable(queryParams) {
+  // Guard: jQuery must be present
+  if (typeof window.$ === 'undefined' || typeof window.jQuery === 'undefined') {
+    console.error('[Advanced] jQuery not available, cannot initialize DataTables');
+    return;
+  }
+  
+  // Guard: DataTables plugin must be available
+  if (typeof $.fn.dataTable === 'undefined') {
+    console.error('[Advanced] DataTables plugin not available');
+    return;
+  }
+  
   // Store current params for reloadWith
   currentParams = queryParams;
   
@@ -44,8 +56,8 @@ export function initAdvancedTable(queryParams) {
     processing: true,
     deferRender: true,
     autoWidth: false,
-    searching: false,      // Disable client-side search
-    ordering: false,       // Disable sorting
+    searching: false,      // Disable client-side search (search is handled via form)
+    ordering: true,        // Enable ordering (server-side support expected)
     pageLength: 50,
     lengthMenu: [25, 50, 100],
     
@@ -54,15 +66,26 @@ export function initAdvancedTable(queryParams) {
       url: ajaxUrl,
       type: 'GET',
       error: function(xhr, error, thrown) {
+        // Network/HTTP error
         console.error('DataTables AJAX error:', xhr.status, error);
         handleDataTablesError(xhr);
       },
       dataSrc: function(json) {
-        // After data load: update summary and export buttons
+        console.log('[DataTables dataSrc] Response received:', json);
+        
+        // Check for backend error in response body (e.g., BLS unreachable)
+        if (json && json.error) {
+          console.warn(`[DataTables] Backend error detected: ${json.error}`);
+          handleBackendError(json);
+          // Return empty data so DataTables shows empty table + our error banner
+          return [];
+        }
+        
+        // Normal flow: update summary and export buttons
         updateSummary(json, queryParams);
         updateExportButtons(queryParams);
         focusSummary();
-        return json.data;
+        return json.data || [];
       }
     },
 
@@ -78,60 +101,61 @@ export function initAdvancedTable(queryParams) {
         searchable: false,
         orderable: false
       },
-      // Column 1: Context left
+      // Column 1: Context left (canonical key)
       {
         targets: 1,
-        data: 'left',
+        data: 'context_left',
         render: function(data) {
-          return escapeHtml(data || '');
+          return `<span class="md3-corpus-context">${escapeHtml(data || '')}</span>`;
         },
-        className: 'md3-datatable__cell--context'
+        className: 'md3-datatable__cell--context right-align',
+        width: '200px'
       },
-      // Column 2: Match (KWIC) - highlighted
+      // Column 2: Match (KWIC) - highlighted (canonical 'text')
       {
         targets: 2,
-        data: 'match',
+        data: 'text',
         render: function(data) {
-          return `<mark>${escapeHtml(data || '')}</mark>`;
+          return `<span class="md3-corpus-keyword"><mark>${escapeHtml(data || '')}</mark></span>`;
         },
-        className: 'md3-datatable__cell--match'
+        className: 'md3-datatable__cell--match center-align',
+        width: '150px'
       },
-      // Column 3: Context right
+      // Column 3: Context right (canonical key)
       {
         targets: 3,
-        data: 'right',
+        data: 'context_right',
         render: function(data) {
-          return escapeHtml(data || '');
+          return `<span class="md3-corpus-context">${escapeHtml(data || '')}</span>`;
         },
-        className: 'md3-datatable__cell--context'
+        className: 'md3-datatable__cell--context',
+        width: '200px'
       },
       // Column 4: Audio player
       {
         targets: 4,
         data: null,
         render: function(data, type, row) {
-          if (!row.start_ms || !row.filename) {
-            return '<span class="md3-datatable__empty">-</span>';
-          }
-          const startMs = parseInt(row.start_ms) || 0;
-          const endMs = parseInt(row.end_ms) || startMs + 5000;
-          const audioUrl = `/media/segment/${encodeURIComponent(row.filename)}/${startMs}/${endMs}`;
-          return `<audio controls style="width: 150px; height: 30px;" 
-            aria-label="Audio excerpt from ${escapeHtml(row.filename)}">
-            <source src="${audioUrl}" type="audio/mpeg">
-            Your browser does not support the audio element.
-          </audio>`;
+          return renderAudioButtons(row);
         },
         orderable: false,
-        className: 'md3-datatable__cell--audio'
+        className: 'md3-datatable__cell--audio center-align',
+        width: '120px'
       },
-      // Column 5: Country
+      // Column 5: Country (canonical 'country_code') - always uppercase
       {
         targets: 5,
-        data: 'country',
-        render: function(data) {
-          return escapeHtml(data || '-');
-        }
+        data: 'country_code',
+        render: function(data, type) {
+          // For sorting/filtering, return original value
+          if (type === 'sort' || type === 'filter' || type === 'type') {
+            return data || '';
+          }
+          // For display, uppercase
+          return escapeHtml((data || '-').toUpperCase());
+        },
+        width: '80px',
+        orderable: true
       },
       // Column 6: Speaker type
       {
@@ -139,7 +163,9 @@ export function initAdvancedTable(queryParams) {
         data: 'speaker_type',
         render: function(data) {
           return escapeHtml(data || '-');
-        }
+        },
+        width: '80px',
+        orderable: true
       },
       // Column 7: Sex
       {
@@ -147,7 +173,9 @@ export function initAdvancedTable(queryParams) {
         data: 'sex',
         render: function(data) {
           return escapeHtml(data || '-');
-        }
+        },
+        width: '80px',
+        orderable: true
       },
       // Column 8: Mode
       {
@@ -155,7 +183,9 @@ export function initAdvancedTable(queryParams) {
         data: 'mode',
         render: function(data) {
           return escapeHtml(data || '-');
-        }
+        },
+        width: '80px',
+        orderable: true
       },
       // Column 9: Discourse
       {
@@ -163,31 +193,43 @@ export function initAdvancedTable(queryParams) {
         data: 'discourse',
         render: function(data) {
           return escapeHtml(data || '-');
-        }
+        },
+        width: '80px',
+        orderable: true
       },
-      // Column 10: Token ID
+      // Column 10: Token ID (canonical 'token_id')
       {
         targets: 10,
-        data: 'tokid',
+        data: 'token_id',
         render: function(data) {
           return escapeHtml(data || '-');
-        }
+        },
+        width: '100px',
+        orderable: true
       },
       // Column 11: Filename
       {
         targets: 11,
         data: 'filename',
-        render: function(data) {
-          return escapeHtml(data || '-');
-        }
+        render: function(data, type, row) {
+          return renderFileLink(data, type, row);
+        },
+        width: '80px',
+        className: 'center-align'
       }
     ],
 
     // Responsive behavior
     responsive: false,
     
-    // DOM structure
-    dom: '<"top"lp><"clear">rt<"bottom"lpi><"clear">',
+    // DOM structure (match corpus layout with export buttons)
+    dom: '<"top"pB<"ml-auto"lf>>rt<"bottom"ip>',
+    buttons: [
+      { extend: 'copyHtml5', text: '<i class="fa-solid fa-copy"></i> Copiar', exportOptions: { columns: [0,1,2,3,5,6,7,8,9,10,11] } },
+      { extend: 'csvHtml5', text: '<i class="bi bi-filetype-csv"></i> CSV', exportOptions: { columns: [0,1,2,3,5,6,7,8,9,10,11] } },
+      { extend: 'excelHtml5', text: '<i class="bi bi-filetype-xlsx"></i> Excel', exportOptions: { columns: [0,1,2,3,5,6,7,8,9,10,11] } },
+      { extend: 'pdfHtml5', text: '<i class="bi bi-filetype-pdf"></i> PDF', orientation: 'landscape', pageSize: 'A4', exportOptions: { columns: [0,1,2,3,5,6,7,8,9,10,11] }, customize: function(doc) { doc.defaultStyle.fontSize = 8; doc.styles.tableHeader.fontSize = 9; } }
+    ],
 
     // Localization
     language: {
@@ -206,8 +248,31 @@ export function initAdvancedTable(queryParams) {
       }
     }
   });
-
   console.log('✅ DataTables initialized');
+
+  // Adjust columns after init (to avoid pixel shifts)
+  setTimeout(() => {
+    try {
+      if (advancedTable && advancedTable.columns) {
+        advancedTable.columns.adjust();
+        if (advancedTable.responsive) advancedTable.responsive.recalc();
+      }
+    } catch (e) {
+      console.warn('[Advanced] Column adjust error:', e);
+    }
+  }, 100);
+
+  // Window resize -> adjust columns
+  $(window).on('resize.advancedTable', () => {
+    try {
+      if (advancedTable && advancedTable.columns) {
+        advancedTable.columns.adjust();
+        if (advancedTable.responsive) advancedTable.responsive.recalc();
+      }
+    } catch (e) {
+      console.warn('[Advanced] Column adjust error on resize:', e);
+    }
+  });
 }
 
 /**
@@ -234,6 +299,101 @@ function focusSummary() {
       summaryBox.focus();
       summaryBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }, 100);
+  }
+}
+
+/**
+ * Handle backend errors returned in JSON response body
+ * (e.g., BlackLab connection error, invalid CQL syntax)
+ */
+function handleBackendError(json) {
+  const errorCode = json.error || 'unknown_error';
+  const errorMessage = json.message || 'An error occurred in the search backend';
+  
+  console.error(`[Backend Error] ${errorCode}: ${errorMessage}`);
+  
+  // Map error codes to user-friendly messages and icons
+  const errorConfig = {
+    'upstream_unavailable': {
+      icon: 'cloud_off',
+      title: 'Search Backend Unavailable',
+      message: 'The search backend (BlackLab) is currently not reachable. Please check that the BlackLab server is running.',
+      severity: 'error'
+    },
+    'upstream_timeout': {
+      icon: 'schedule',
+      title: 'Search Timeout',
+      message: 'The search backend took too long to respond. Please try again or simplify your query.',
+      severity: 'warning'
+    },
+    'upstream_error': {
+      icon: 'cloud_queue',
+      title: 'Backend Error',
+      message: errorMessage,
+      severity: 'error'
+    },
+    'invalid_cql': {
+      icon: 'code',
+      title: 'CQL Syntax Error',
+      message: errorMessage,
+      severity: 'warning'
+    },
+    'invalid_filter': {
+      icon: 'filter_list',
+      title: 'Invalid Filter',
+      message: errorMessage,
+      severity: 'warning'
+    },
+    'server_error': {
+      icon: 'error_outline',
+      title: 'Server Error',
+      message: 'An unexpected error occurred. Please try again or contact support.',
+      severity: 'error'
+    }
+  };
+  
+  const config = errorConfig[errorCode] || {
+    icon: 'warning',
+    title: 'Error',
+    message: errorMessage,
+    severity: 'error'
+  };
+  
+  // Display error banner using MD3 alert component
+  let resultsSection = document.getElementById('results-section');
+  
+  // Fallback: create results section if it doesn't exist
+  if (!resultsSection) {
+    console.warn('[Backend Error] results-section not found, creating fallback container');
+    const table = document.getElementById('advanced-table');
+    if (table && table.parentElement) {
+      resultsSection = document.createElement('div');
+      resultsSection.id = 'results-section';
+      table.parentElement.insertBefore(resultsSection, table);
+    } else {
+      console.error('[Backend Error] Cannot find suitable location to display error banner');
+      return;
+    }
+  }
+  
+  if (resultsSection) {
+    // Remove any existing error/alert messages
+    const existingErrors = resultsSection.querySelectorAll('.md3-alert');
+    existingErrors.forEach(el => el.remove());
+    
+    // Create alert banner with icon, title, and message
+    const alertClass = config.severity === 'error' ? 'md3-alert--error' : 'md3-alert--warning';
+    const alertHtml = `
+      <div class="md3-alert ${alertClass}" role="alert">
+        <span class="material-symbols-rounded md3-alert__icon" aria-hidden="true">${config.icon}</span>
+        <div class="md3-alert__content">
+          <div class="md3-alert__title">${config.title}</div>
+          <div class="md3-alert__message">${escapeHtml(config.message)}</div>
+        </div>
+      </div>
+    `;
+    resultsSection.insertAdjacentHTML('afterbegin', alertHtml);
+    console.log('[Backend Error] Alert banner displayed for:', errorCode);
   }
 }
 
@@ -311,6 +471,73 @@ export function updateExportButtons(queryParams) {
   console.log('[Export] Buttons updated');
 }
 
+  /**
+   * Render audio control buttons similar to Corpus view
+   */
+  function renderAudioButtons(row) {
+    const hasAudio = row.start_ms && row.filename;
+    if (!hasAudio) return '<span class="md3-datatable__empty">-</span>';
+
+    const filename = row.filename || '';
+    const tokenId = row.token_id || '';
+    
+    // Convert milliseconds to seconds for audio playback
+    // Backend expects seconds (start/end parameters)
+    const startMs = row.start_ms || row.start || 0;
+    const endMs = row.end_ms || (parseInt(startMs) + 5000);
+    const contextStartMs = row.context_start || startMs;
+    const contextEndMs = row.context_end || endMs;
+    
+    // Convert to seconds (backend /play_audio expects seconds)
+    const startSec = (startMs / 1000).toFixed(3);
+    const endSec = (endMs / 1000).toFixed(3);
+    const contextStartSec = (contextStartMs / 1000).toFixed(3);
+    const contextEndSec = (contextEndMs / 1000).toFixed(3);
+    
+    return `
+      <div class="md3-corpus-audio-buttons">
+        <div class="md3-corpus-audio-row">
+          <span class="md3-corpus-audio-label">Res.:</span>
+          <a class="audio-button" data-filename="${escapeHtml(filename)}" data-start="${startSec}" data-end="${endSec}" data-token-id="${escapeHtml(tokenId)}" data-type="pal">
+            <i class="fa-solid fa-play"></i>
+          </a>
+          <a class="download-button" data-filename="${escapeHtml(filename)}" data-start="${startSec}" data-end="${endSec}" data-token-id="${escapeHtml(tokenId)}" data-type="pal">
+            <i class="fa-solid fa-download"></i>
+          </a>
+        </div>
+        <div class="md3-corpus-audio-row">
+          <span class="md3-corpus-audio-label">Ctx:</span>
+          <a class="audio-button" data-filename="${escapeHtml(filename)}" data-start="${contextStartSec}" data-end="${contextEndSec}" data-token-id="${escapeHtml(tokenId)}" data-type="ctx">
+            <i class="fa-solid fa-play"></i>
+          </a>
+          <a class="download-button" data-filename="${escapeHtml(filename)}" data-start="${contextStartSec}" data-end="${contextEndSec}" data-token-id="${escapeHtml(tokenId)}" data-type="ctx">
+            <i class="fa-solid fa-download"></i>
+          </a>
+        </div>
+      </div>
+    `;
+  }
+
+  /**
+   * Render file link with player icon (mimics corpus renderFileLink)
+   */
+  function renderFileLink(filename, type, row) {
+    if (!filename) return '';
+    if (type === 'sort' || type === 'type') return filename;
+    const base = filename.trim().replace(/\.mp3$/i, '');
+    const transcriptionPath = `/media/transcripts/${encodeURIComponent(base)}.json`;
+    const audioPath = `/media/full/${encodeURIComponent(base)}.mp3`;
+    let playerUrl = `/player?transcription=${encodeURIComponent(transcriptionPath)}&audio=${encodeURIComponent(audioPath)}`;
+    if (row && row.token_id) {
+      playerUrl += `&token_id=${encodeURIComponent(row.token_id)}`;
+    }
+    return `
+      <a href="${playerUrl}" class="player-link" title="${escapeHtml(filename)}">
+        <i class="fa-regular fa-file"></i>
+      </a>
+    `;
+  }
+
 /**
  * Update summary box with results info
  * Shows query, hit count + badge if server filters are active
@@ -348,12 +575,7 @@ export function updateSummary(data, queryParams) {
   
   html += `</span>`;
   
-  if (filtersActive) {
-    html += ` <span class="md3-badge--serverfilter">
-      <span class="material-symbols-rounded" aria-hidden="true">filter_alt</span>
-      Serverfilter activo
-    </span>`;
-  }
+  // Serverfilter badge removed - not needed
   
   summaryBox.innerHTML = html;
   summaryBox.hidden = false;
