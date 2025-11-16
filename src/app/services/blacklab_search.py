@@ -69,21 +69,62 @@ def _hit_to_canonical(hit: dict[str, Any]) -> dict[str, Any]:
         return arr[0] if isinstance(arr, list) and arr else ""
 
     # Compose text and lemma
-    text = " ".join(match.get("word", [])) if match.get("word") else _safe_first(match.get("tokid", []))
+    # Match text may come as word array or fallback to tokid
+    if match.get("word"):
+        text = " ".join(match.get("word", []))
+    else:
+        # tokid may be present as list of ids or strings
+        text = _safe_first(match.get("tokid", [])) if match.get("tokid") else _safe_first(match.get("word", []))
     lemma = " ".join(match.get("lemma", [])) if match.get("lemma") else ""
     pos = " ".join(match.get("pos", [])) if match.get("pos") else ""
 
     token_id = _safe_first(match.get("tokid", [])) or ""
     filename = _safe_first(match.get("filename", [])) or hit.get("docPid", "")
     # metadata fields may exist under match or under doc metadata
-    country = _safe_first(match.get("country", [])) or hit.get("docInfo", {}).get("country", "")
-    speaker_type = _safe_first(match.get("speaker_type", [])) or hit.get("docInfo", {}).get("speaker_type", "")
+    # BL v5 may return 'country' or 'country_code' keys; support both
+    # docInfo may be a dict or a list of dicts (v4 vs v5 shapes); handle both
+    def _safe_doc_field(field_name: str) -> str:
+        doc_info = hit.get("docInfo") or hit.get("docInfos") or {}
+        if isinstance(doc_info, list):
+            # take first dict element
+            if doc_info and isinstance(doc_info[0], dict):
+                return doc_info[0].get(field_name, "") or ""
+            return ""
+        if isinstance(doc_info, dict):
+            return doc_info.get(field_name, "") or ""
+        return ""
+
+    country = _safe_first(match.get("country", [])) or _safe_first(match.get("country_code", [])) or _safe_doc_field("country") or _safe_doc_field("country_code")
+    speaker_type = _safe_first(match.get("speaker_type", [])) or _safe_doc_field("speaker_type")
     sex = _safe_first(match.get("sex", [])) or ""
     mode = _safe_first(match.get("mode", [])) or ""
     discourse = _safe_first(match.get("discourse", [])) or ""
 
-    context_left = " ".join(left.get("word", [])) if left.get("word") else ""
-    context_right = " ".join(right.get("word", [])) if right.get("word") else ""
+    # left/right may be dicts with 'word' arrays OR plain arrays of words (v5)
+    def _extract_context(side):
+        if not side:
+            return ""
+        # Case: dict with 'word' key
+        if isinstance(side, dict) and side.get("word"):
+            return " ".join(side.get("word", []))
+        # Case: list of words
+        if isinstance(side, list) and all(isinstance(x, str) for x in side):
+            return " ".join(side)
+        # Case: list of dicts with 'word'
+        if isinstance(side, list) and side and isinstance(side[0], dict) and side[0].get("word"):
+            words = []
+            for elem in side:
+                w = elem.get("word")
+                if isinstance(w, list):
+                    words.extend(w)
+                elif isinstance(w, str):
+                    words.append(w)
+            return " ".join(words)
+        # Fallback: empty
+        return ""
+
+    context_left = _extract_context(left)
+    context_right = _extract_context(right)
 
     # Start/End times: prefer start_ms/end_ms in match arrays (milliseconds),
     # fall back to top-level start/end if present (could be token offsets).
@@ -97,6 +138,12 @@ def _hit_to_canonical(hit: dict[str, Any]) -> dict[str, Any]:
 
     start_ms = _get_first_int("start_ms", 0)
     end_ms = _get_first_int("end_ms", 0)
+
+    def _to_int(val, default=0):
+        try:
+            return int(val)
+        except Exception:
+            return default
 
     return {
         "token_id": token_id,
@@ -116,8 +163,8 @@ def _hit_to_canonical(hit: dict[str, Any]) -> dict[str, Any]:
         "end_ms": end_ms,
         "context_left": context_left,
         "context_right": context_right,
-        "context_start": _safe_first(left.get("start_ms", [])) or 0,
-        "context_end": _safe_first(right.get("end_ms", [])) or 0,
+        "context_start": _to_int(_safe_first(left.get("start_ms", []))) or 0,
+        "context_end": _to_int(_safe_first(right.get("end_ms", []))) or 0,
         "lemma": lemma,
     }
 

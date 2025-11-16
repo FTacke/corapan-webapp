@@ -6,6 +6,7 @@ from flask import Blueprint, Response, current_app, g, jsonify, render_template,
 from ..services.corpus_search import SearchParams, search_tokens
 from ..services.blacklab_search import search_blacklab
 from ..services.counters import counter_search
+from ..search.cql import resolve_countries_for_include_regional
 from ..services.database import open_db
 
 blueprint = Blueprint("corpus", __name__, url_prefix="/corpus")
@@ -90,25 +91,10 @@ def search() -> Response:
     search_mode = search_mode_override if search_mode_override else data_source.get("search_mode", "text")
     
     # Handle country/region filtering
-    # Regional codes that should be excluded by default
-    regional_codes = ['ARG-CHU', 'ARG-CBA', 'ARG-SDE', 'ESP-CAN', 'ESP-SEV']
-    national_codes = ['ARG', 'BOL', 'CHL', 'COL', 'CRI', 'CUB', 'ECU', 'ESP', 'GTM', 
-                      'HND', 'MEX', 'NIC', 'PAN', 'PRY', 'PER', 'DOM', 'SLV', 'URY', 'USA', 'VEN']
-    
+    # Compute countries list with include_regional semantics
     countries = data_source.getlist("country_code")
     include_regional = data_source.get("include_regional") == "1"
-    
-    # If nothing selected, use defaults based on include_regional
-    if not countries:
-        if include_regional:
-            # Include all: 19 national + 5 regional
-            countries = national_codes + regional_codes
-        else:
-            # Only national capitals
-            countries = national_codes
-    elif not include_regional:
-        # If user selected countries but checkbox is off, exclude any regional codes
-        countries = [c for c in countries if c not in regional_codes]
+    countries = resolve_countries_for_include_regional(countries, include_regional)
     
     params = SearchParams(
         query=data_source.get("query", ""),
@@ -225,6 +211,7 @@ def search_datatables() -> Response:
     
     countries = request.args.getlist("country_code")
     include_regional = request.args.get("include_regional") == "1"
+    countries = resolve_countries_for_include_regional(countries, include_regional)
     speaker_types = request.args.getlist("speaker_type")
     sexes = request.args.getlist("sex")
     speech_modes = request.args.getlist("speech_mode")

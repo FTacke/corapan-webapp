@@ -47,6 +47,17 @@ param(
     [switch]$SkipBackup,
     [switch]$Force
 )
+# Deprecated wrapper: forward to canonical build script
+Write-Host "WARNING: This is a legacy build script. For reproducible builds, use scripts/build_blacklab_index.ps1" -ForegroundColor Yellow
+$argsToForward = @()
+if ($SkipBackup) { $argsToForward += "-SkipBackup" }
+if ($Force) { $argsToForward += "-Force" }
+& "$PSScriptRoot\build_blacklab_index.ps1" @argsToForward
+exit $LASTEXITCODE
+# LEGACY
+# This script is kept for historical reasons only. Use `scripts/build_blacklab_index.ps1`
+# (docker-based, pinned BlackLab image) as the canonical and reproducible index build
+# process. This legacy script uses a local JAR; it is not recommended for normal runs.
 
 $ErrorActionPreference = "Stop"
 

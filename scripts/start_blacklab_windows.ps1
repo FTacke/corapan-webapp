@@ -22,7 +22,7 @@
 $ContainerName = "blacklab-dev"
 $HostPort = 8081
 $ContainerPort = 8080
-$ImageName = "instituutnederlandsetaal/blacklab-server:4.0.0-beta.3"
+$ImageName = "instituutnederlandsetaal/blacklab:latest"
 $WorkDir = Get-Location
 
 Write-Host "Starting BlackLab Server for CO.RA.PAN..." -ForegroundColor Cyan
@@ -67,8 +67,8 @@ Write-Host ""
 docker run -d `
   --name $ContainerName `
   -p "${HostPort}:${ContainerPort}" `
-  -v "${WorkDir}\config\blacklab\corapan.blf.yaml:/etc/blacklab/corapan.blf.yaml:ro" `
-  -v "${WorkDir}\data\blacklab_index:/data/blacklab_index:ro" `
+    -v "${WorkDir}\config\blacklab:/etc/blacklab:ro" `
+    -v "${WorkDir}\data\blacklab_index:/data/index/corapan:ro" `
   -e "BLACKLAB_CONFIG_YAML=/etc/blacklab/corapan.blf.yaml" `
   $ImageName
 

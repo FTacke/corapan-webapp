@@ -99,13 +99,13 @@ The app uses the **FCS interface** for CQL queries, metadata filtering, and hit 
 
 **What this does:**
 - Creates/starts a Docker container named `corapan-blacklab-dev`
-- Uses image: `instituutnederlandsetaal/blacklab:latest` (official BlackLab Server)
+- Uses image: `instituutnederlandsetaal/blacklab:5.0.0` (official BlackLab Server, pinned)
 - Maps host port **8081** to container port 8080
 - Mounts `config/blacklab/` as `/etc/blacklab` (read-only config)
 - Mounts `data/blacklab_index/` as `/data/index` (read-write index storage)
 - URL: `http://localhost:8081/blacklab-server`
 
-**Important:** This Docker setup only runs the BlackLab Server. The index must be pre-built using the JAR-based script (see "Known Issue" below). The Docker image does NOT include indexing tools.
+**Important:** This Docker setup only runs the BlackLab Server. The index must be pre-built using the canonical Docker-based index build script (`scripts/build_blacklab_index.ps1`). The Docker image does NOT include indexing tools for exporting JSON→TSV.
 
 **⚠️ Known Issue: Index Migration Required**
 
@@ -114,8 +114,7 @@ The existing index was built with Lucene 8.11.1, but the current BlackLab Docker
 **Solution:** Rebuild the index using the JAR-based IndexTool script:
 
 ```powershell
-# Prerequisites: Java 11+ and BlackLab JAR (see migration guide)
-# Rebuild BlackLab index from TSV sources
+# Rebuild BlackLab index from TSV sources (use the canonical Docker-based build)
 .\scripts\build_blacklab_index.ps1
 
 # Then start BlackLab normally

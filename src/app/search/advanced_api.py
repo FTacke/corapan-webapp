@@ -18,7 +18,7 @@ from typing import Generator, Optional
 import httpx
 from flask import Blueprint, jsonify, request, Response, current_app
 
-from .cql import build_cql, build_filters, filters_to_blacklab_query, build_cql_with_speaker_filter
+from .cql import build_cql, build_filters, filters_to_blacklab_query, build_cql_with_speaker_filter, resolve_countries_for_include_regional
 from .cql_validator import validate_cql_pattern, validate_filter_values, CQLValidationError  # Punkt 3
 from .speaker_utils import map_speaker_attributes
 from ..extensions import limiter
@@ -48,7 +48,8 @@ def _load_docmeta():
                     doc = json.loads(line)
                     file_id = doc.get("file_id")
                     if file_id:
-                        docmeta[file_id] = doc
+                        # Normalize file_id keys by stripping whitespace
+                        docmeta[file_id.strip()] = doc
             logger.info(f"Loaded {len(docmeta)} document metadata entries")
         except Exception as e:
             logger.warning(f"Failed to load docmeta.jsonl: {e}")
@@ -124,6 +125,8 @@ def _make_bls_request(
         response.raise_for_status()
         logger.debug(f"BLS {method} {path}: {response.status_code} ({len(response.content)} bytes)")
         return response
+
+        
         
     except httpx.TimeoutException:
         logger.error(f"BLS timeout on {path}")
@@ -134,6 +137,70 @@ def _make_bls_request(
     except Exception as e:
         logger.error(f"BLS request failed on {path}: {type(e).__name__}: {str(e)}")
         raise
+
+
+def _enrich_hits_with_docmeta(items: list, hits: list, docinfos: dict, docmeta_cache: dict) -> list:
+    """
+    Enrich canonical items with docmeta information and speaker attribute mapping.
+    - Map docPid -> file_id using docInfos if present
+    - Lookup docmeta in docmeta_cache to get country_code, radio, date
+    - Map speaker attributes from speaker_code if speaker metadata missing
+    Returns enriched items list (mutates input list)
+    """
+    # Build mapping docPid -> file_id from docInfos
+    pid_to_file_id = {}
+    for pid, info in docinfos.items():
+        md = info.get('metadata', {}) or {}
+        file_id = md.get('file_id') or None
+        if not file_id and md.get('fromInputFile'):
+            src = md.get('fromInputFile')
+            if isinstance(src, list) and src:
+                src = src[0]
+            # src may be an absolute path - take basename and remove extension
+            base = os.path.basename(src)
+            file_id = os.path.splitext(base)[0]
+            if file_id:
+                pid_to_file_id[str(pid)] = file_id
+
+    def _enrich_item(item, hit):
+        # Determine file_id: prefer docInfos mapping if filename is numeric docPid
+        candidate = item.get('filename')
+        file_id = None
+        if candidate and isinstance(candidate, str):
+            if candidate.isdigit():
+                file_id = pid_to_file_id.get(candidate)
+            elif candidate in docmeta_cache:
+                file_id = candidate
+            else:
+                # If candidate isn't numeric and not direct file id, keep as-is
+                file_id = candidate
+        if not file_id:
+            file_id = pid_to_file_id.get(str(hit.get('docPid')))
+        docmeta = docmeta_cache.get(file_id) if file_id else None
+        if docmeta:
+            item['country_code'] = item.get('country_code') or (docmeta.get('country_code') or '').lower()
+            item['filename'] = item.get('filename') or docmeta.get('file_id')
+            item['radio'] = item.get('radio') or docmeta.get('radio')
+            item['date'] = item.get('date') or docmeta.get('date')
+        if not item.get('speaker_type') or not item.get('sex') or not item.get('mode') or not item.get('discourse'):
+            # docInfo can be list or dict - normalize to dict first
+            doc_info = hit.get('docInfo') or {}
+            if isinstance(doc_info, list) and doc_info:
+                doc_info = doc_info[0] if isinstance(doc_info[0], dict) else {}
+            spk_code = item.get('speaker_code') or hit.get('match', {}).get('speaker_code') or (doc_info.get('speaker_code') if isinstance(doc_info, dict) else None)
+            if isinstance(spk_code, list) and spk_code:
+                spk_code = spk_code[0]
+            if spk_code:
+                spk_type, sex, mode, discourse = map_speaker_attributes(spk_code)
+                item['speaker_type'] = item.get('speaker_type') or spk_type
+                item['sex'] = item.get('sex') or sex
+                item['mode'] = item.get('mode') or mode
+                item['discourse'] = item.get('discourse') or discourse
+        return item
+
+    for idx, (item, hit) in enumerate(zip(items, hits)):
+        items[idx] = _enrich_item(item, hit)
+    return items
 
 
 @bp.route("/data", methods=["GET"])
@@ -193,7 +260,17 @@ def datatable_data():
         length = min(length, MAX_HITS_PER_PAGE)
         
         # Build filters first (needed for speaker-based CQL construction)
+        # But first compute include_regional-adjusted country list similar to corpus routes
+        # Compute country list using centralized logic
+        countries = request.args.getlist('country_code')
+        include_regional = request.args.get('include_regional') == '1'
+        countries = resolve_countries_for_include_regional(countries, include_regional)
+
+        # Build filters from request.args and then override the country list computed above
         filters = build_filters(request.args)
+        # Build_filters populates country_code as list if present; override it with our computed list
+        if countries:
+            filters['country_code'] = countries
         
         # Punkt 3: Validierung Filter Values
         try:
@@ -209,11 +286,67 @@ def datatable_data():
                 "message": str(e)
             }), 200  # Return 200 for DataTables compatibility
         
-        # Build CQL with speaker filter integrated
-        cql_pattern = build_cql_with_speaker_filter(request.args, filters)
-        logger.info(f"Built CQL pattern: {cql_pattern} (mode={request.args.get('mode')}, q={request.args.get('q')})")
+        # Build the initial BlackLab document filter from token-level filters
+        # (country, radio, city, date). We'll try to expand country_code filters
+        # into a doc-level file_id filter using document metadata when available.
+        filter_query = filters_to_blacklab_query(filters)
+        logger.info(f"BlackLab document filter (initial): {filter_query}")
         
-        # Punkt 3: Validierung CQL Pattern
+        # CQL Pattern validation is performed after the pattern is built.
+        
+        logger.info(f"All filters: {filters}")
+        
+        # BLS parameters
+        # Note: listvalues must include 'word' for KWIC display in BlackLab v5
+        # Include 'speaker_code' for speaker attribute mapping
+        bls_params = {
+            "first": start,
+            "number": length,
+            "wordsaroundhit": 10,
+            # Include all token-level metadata needed for canonical mapping
+            "listvalues": "word,tokid,start_ms,end_ms,file_id,filename,country,country_code,speaker_type,sex,mode,discourse,radio,utterance_id,speaker_code",
+        }
+        
+        # If we didn't build a filter_query from token-level fields, try building
+        # a doc-level filter (file_id) using our loaded docmeta cache
+        if not filter_query and filters.get("country_code") and _DOCMETA_CACHE:
+            requested_countries = {c.upper() for c in filters.get("country_code", [])}
+            # Find file_ids that match requested countries
+            matched_file_ids = [file_id for file_id, meta in _DOCMETA_CACHE.items() if meta.get("country_code", "").upper() in requested_countries]
+            if matched_file_ids:
+                # Sanitize file ids (strip whitespace) - BlackLab expects OR syntax in filters: file_id:("id1" OR "id2")
+                or_list = " OR ".join([f'"{fid.strip()}"' for fid in matched_file_ids if fid and fid.strip()])
+                filter_query = f'file_id:({or_list})'
+
+        if filter_query:
+            bls_params = {
+                "first": start,
+                "number": length,
+                "wordsaroundhit": 10,
+                # Include all token-level metadata needed for canonical mapping
+                "listvalues": "word,tokid,start_ms,end_ms,file_id,filename,country,country_code,speaker_type,sex,mode,discourse,radio,utterance_id,speaker_code",
+            }
+            bls_params["filter"] = filter_query
+        else:
+            bls_params = {
+                "first": start,
+                "number": length,
+                "wordsaroundhit": 10,
+                # Include all token-level metadata needed for canonical mapping
+                "listvalues": "word,tokid,start_ms,end_ms,file_id,filename,country,country_code,speaker_type,sex,mode,discourse,radio,utterance_id,speaker_code",
+            }
+
+        # Build CQL with speaker filter integrated
+        # Important: pass filters with computed country_code and include_regional semantics
+        # If we build a doc-level BLS filter (file_id list), avoid adding token-level
+        # country_code constraints into the CQL (they can be redundant and cause mismatches).
+        cql_filters = dict(filters)  # copy to avoid mutating original
+        if filter_query:  # doc-level filter present
+            cql_filters.pop('country_code', None)
+        cql_pattern = build_cql_with_speaker_filter(request.args, cql_filters)
+        logger.info(f"Built CQL pattern: {cql_pattern} (mode={request.args.get('mode')}, q={request.args.get('q')})")
+
+        # Validate CQL pattern
         try:
             validate_cql_pattern(cql_pattern)
         except CQLValidationError as e:
@@ -226,25 +359,7 @@ def datatable_data():
                 "error": "invalid_cql",
                 "message": str(e)
             }), 200  # Return 200 for DataTables compatibility
-        
-        # Get BlackLab document filter query (country, radio, city, date)
-        filter_query = filters_to_blacklab_query(filters)
-        logger.info(f"BlackLab document filter: {filter_query}")
-        logger.info(f"All filters: {filters}")
-        
-        # BLS parameters
-        # Note: listvalues must include 'word' for KWIC display in BlackLab v5
-        # Include 'speaker_code' for speaker attribute mapping
-        bls_params = {
-            "first": start,
-            "number": length,
-            "wordsaroundhit": 10,
-            "listvalues": "word,tokid,start_ms,end_ms,utterance_id,speaker_code",
-        }
-        
-        if filter_query:
-            bls_params["filter"] = filter_query
-        
+
         # Try CQL parameter names in order: patt, cql, cql_query
         cql_param_names = ["patt", "cql", "cql_query"]
         response = None
@@ -255,6 +370,7 @@ def datatable_data():
                 test_params = {**bls_params, param_name: cql_pattern}
                 response = _make_bls_request("/corpora/corapan/hits", test_params)
                 logger.debug(f"CQL param '{param_name}' accepted")
+                logger.debug(f"BL request params: {test_params}")
                 break
             except httpx.HTTPStatusError as e:
                 last_error = e
@@ -270,6 +386,14 @@ def datatable_data():
         data = response.json()
         summary = data.get("summary", {})
         hits = data.get("hits", [])
+        # Temporary debug: log BL summary and counts for troubleshooting
+        try:
+            logger.debug(f"BLS summary keys: {list(summary.keys())}")
+            logger.debug(f"BLS resultsStats: {summary.get('resultsStats')}")
+            logger.debug(f"BLS numberOfHits: {summary.get('numberOfHits')}")
+            logger.debug(f"BLS hits count (len): {len(hits)}")
+        except Exception:
+            logger.exception("Error logging BLS summary for debug")
         
         # DEBUG: Log first hit structure
         if hits:
@@ -290,6 +414,9 @@ def datatable_data():
         # Process hits for DataTable: map to canonical keys via blacklab_search helper
         from ..services.blacklab_search import _hit_to_canonical as _hit2canon
         processed_hits = [_hit2canon(hit) for hit in hits]
+
+        # Enrich processed hits using helper
+        processed_hits = _enrich_hits_with_docmeta(processed_hits, hits, data.get('docInfos', {}) or {}, _DOCMETA_CACHE or {})
         
         # BlackLab is Single Source of Truth for counts
         # Both recordsTotal and recordsFiltered come from BlackLab
@@ -304,6 +431,9 @@ def datatable_data():
         if current_app.debug or current_app.config.get('DEBUG'):
             response_payload['cql_debug'] = cql_pattern
             response_payload['filter_debug'] = filter_query or ''
+        # Temporary debug: include BLS summary and hit counts to inspect responses
+        response_payload['bls_summary'] = summary
+        response_payload['bls_hits_len'] = len(hits)
 
         return jsonify(response_payload)
         
@@ -373,14 +503,32 @@ def datatable_data():
             
     except Exception as e:
         logger.exception("Unexpected error in DataTables endpoint")
-        return jsonify({
+        msg = str(e)
+        # include small debug payload for troubleshooting
+        debug_payload = {}
+        try:
+            debug_payload['request_args'] = dict(request.args)
+            if 'cql_pattern' in locals():
+                debug_payload['cql_pattern'] = cql_pattern
+            if 'filter_query' in locals():
+                debug_payload['filter_query'] = filter_query
+            if 'bls_params' in locals():
+                debug_payload['bls_params'] = bls_params
+        except Exception:
+            pass
+        payload = {
             "draw": draw if 'draw' in locals() else 1,
             "recordsTotal": 0,
             "recordsFiltered": 0,
             "data": [],
             "error": "server_error",
-            "message": "An unexpected error occurred"
-        }), 200  # Return 200 with error in JSON for DataTables compatibility
+            "message": "An unexpected error occurred",
+        }
+        # Include error details and debug payload only when debug is enabled
+        if current_app.debug or current_app.config.get('DEBUG'):
+            payload['error_details'] = msg
+            payload['debug'] = debug_payload
+        return jsonify(payload), 200  # Return 200 with error in JSON for DataTables compatibility
 
 
 @bp.route("/export", methods=["GET"])
@@ -424,8 +572,14 @@ def export_data():
             # Return as plain text error (not JSON, so it doesn't break downloads)
             return f"CQL validation error: {str(e)}", 400
         
-        # Build filters
+        # Build filters - compute include_regional-adjusted countries
+        countries = request.args.getlist('country_code')
+        include_regional = request.args.get('include_regional') == '1'
+        countries = resolve_countries_for_include_regional(countries, include_regional)
+
         filters = build_filters(request.args)
+        if countries:
+            filters['country_code'] = countries
         
         # Punkt 3: Validierung Filter Values
         try:

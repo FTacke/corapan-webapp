@@ -46,3 +46,19 @@ def test_legacy_hit_mapping_contains_canonical_keys():
     assert mapped.get("context_left") == "en el"
     assert mapped.get("context_right") == "sector tronco"
     assert mapped.get("start_ms") == 1641470
+
+
+SAMPLE_HIT_DOCINFO_LIST = {
+    "docPid": "1",
+    "start": 1000,
+    "before": {"word": ["un", "ejemplo"]},
+    "match": {"word": ["casa"], "tokid": ["arg123"], "start_ms": ["1000"], "end_ms": ["1500"]},
+    "after": {"word": ["en", "el"]},
+    "docInfo": [{"country": "ARG", "speaker_type": "pro"}]
+}
+
+
+def test_docinfo_list_mapping_handles_list():
+    mapped = _hit_to_canonical(SAMPLE_HIT_DOCINFO_LIST)
+    assert mapped.get("country_code") == "arg"
+    assert mapped.get("speaker_type") == "pro"

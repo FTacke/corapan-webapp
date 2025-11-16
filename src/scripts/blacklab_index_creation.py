@@ -420,9 +420,9 @@ def main() -> int:
     """CLI entry point."""
     parser = argparse.ArgumentParser(description="BlackLab Index Export Tool")
     parser.add_argument("--in", dest="in_dir", default="media/transcripts", help="Input JSON directory (relative to project root)")
-    parser.add_argument("--out", dest="out_dir", default="data/blacklab_index/tsv", help="Output directory (relative to project root)")
+    parser.add_argument("--out", dest="out_dir", default="data/blacklab_export/tsv", help="Output directory (relative to project root)")
     parser.add_argument("--format", choices=["tsv"], default="tsv", help="Export format (TSV-only)")
-    parser.add_argument("--docmeta", dest="docmeta_file", default="data/blacklab_index/docmeta.jsonl", help="Docmeta output file")
+    parser.add_argument("--docmeta", dest="docmeta_file", default="data/blacklab_export/docmeta.jsonl", help="Docmeta output file")
     parser.add_argument("--workers", type=int, default=4, help="Number of worker threads")
     parser.add_argument("--limit", type=int, default=None, help="Limit number of files (for testing)")
     parser.add_argument("--dry-run", action="store_true", help="Dry-run mode (no writes)")

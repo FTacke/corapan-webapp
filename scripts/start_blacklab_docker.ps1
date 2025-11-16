@@ -113,7 +113,7 @@ if ($containerExists -eq $CONTAINER_NAME) {
         --name $CONTAINER_NAME `
         -p "${HOST_PORT}:${CONTAINER_PORT}" `
         -v "${configPath}:/etc/blacklab:ro" `
-        -v "${indexPath}:/data/index:rw" `
+        -v "${indexPath}:/data/index/corapan:ro" `
         $IMAGE
     
     if ($LASTEXITCODE -eq 0) {

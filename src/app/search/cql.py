@@ -394,12 +394,13 @@ def build_metadata_cql_constraints(filters: Dict) -> str:
         country_codes = [c for c in country_codes if c and c.strip()]
         if country_codes:
             # Metadata is lowercased in index
+            # Use case-insensitive regex to avoid hits=0 due to case mismatch
             country_codes_lower = [c.lower() for c in country_codes]
             if len(country_codes_lower) == 1:
-                parts.append(f'country_code="{country_codes_lower[0]}"')
+                parts.append(f'country_code@i:/{country_codes_lower[0]}/')
             else:
                 or_list = '|'.join(country_codes_lower)
-                parts.append(f'country_code="({or_list})"')
+                parts.append(f'country_code@i:/(?:{or_list})/')
     
     # Radio filter (lowercased in index)
     radio = filters.get("radio")
@@ -445,6 +446,23 @@ def filters_to_blacklab_query(filters: Dict) -> str:
     # Metadata filtering is now handled via CQL constraints
     # See build_cql_with_metadata_filter() and build_metadata_cql_constraints()
     return ""
+
+
+def resolve_countries_for_include_regional(countries: Optional[list], include_regional: bool) -> list:
+    """
+    Resolve countries list by applying include_regional semantics.
+    If no countries given: selects national_codes or national+regional based on include_regional.
+    If countries given and include_regional=False: excludes regional codes from selection.
+    """
+    regional_codes = ['ARG-CHU', 'ARG-CBA', 'ARG-SDE', 'ESP-CAN', 'ESP-SEV']
+    national_codes = ['ARG', 'BOL', 'CHL', 'COL', 'CRI', 'CUB', 'ECU', 'ESP', 'GTM', 
+                      'HND', 'MEX', 'NIC', 'PAN', 'PRY', 'PER', 'DOM', 'SLV', 'URY', 'USA', 'VEN']
+
+    if not countries:
+        return national_codes + regional_codes if include_regional else national_codes
+    if not include_regional:
+        return [c for c in countries if c not in regional_codes]
+    return countries
 
 
 

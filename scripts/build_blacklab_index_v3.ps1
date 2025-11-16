@@ -45,7 +45,7 @@
     upstream Reflections library issues.
 #>
 
-[CmdletBinding()]
+#[CmdletBinding()]
 param(
     [switch]$SkipBackup,
     [switch]$Force
@@ -53,8 +53,8 @@ param(
 
 $ErrorActionPreference = "Stop"
 
-# Configuration
-# BlackLab 5.0.0-SNAPSHOT (Lucene 9.11.1) as of 2025-11-13
+# Configuration (Compatibility wrapper, forwards to canonical script)
+# BlackLab 5.x (Lucene 9.x) as of 2025-11-13
 $BLACKLAB_IMAGE = "instituutnederlandsetaal/blacklab:latest"
 $EXPORT_DIR = "data\blacklab_export"
 $TSV_DIR = Join-Path $EXPORT_DIR "tsv"
@@ -79,6 +79,7 @@ $indexTargetPath = Join-Path $repoRoot $INDEX_TARGET_DIR
 $blfConfigPath = Join-Path $repoRoot $BLF_CONFIG
 
 Write-Host "Konfiguration:" -ForegroundColor White
+Write-Host "  NOTE: This script is kept for compatibility. Use scripts/build_blacklab_index.ps1 as canonical" -ForegroundColor Yellow
 Write-Host "  Repository:      $repoRoot" -ForegroundColor Gray
 Write-Host "  Docker-Image:    $BLACKLAB_IMAGE" -ForegroundColor Gray
 Write-Host "  Export-Quelle:   $exportPath" -ForegroundColor Gray
@@ -136,7 +137,7 @@ Write-Host "  OK TSV-Quelle: $($tsvFiles.Count) Dateien gefunden" -ForegroundCol
 if (-not (Test-Path $docmetaPath)) {
     Write-Host "  FEHLER: docmeta.jsonl nicht gefunden: $docmetaPath" -ForegroundColor Red
     exit 1
-}
+<CmdletBinding/>
 
 $docmetaLines = (Get-Content $docmetaPath | Measure-Object -Line).Lines
 Write-Host "  OK Docmeta: $docmetaLines Dokumente" -ForegroundColor Green
@@ -170,6 +171,16 @@ if (-not $imageExists) {
         exit 1
     }
     
+Write-Host "  NOTE: This script forwards to scripts/build_blacklab_index.ps1 (canonical)." -ForegroundColor Yellow
+Write-Host "          Use the canonical script directly: .\scripts\build_blacklab_index.ps1" -ForegroundColor Yellow
+Write-Host "          Forwarding call..." -ForegroundColor Gray
+
+# Forward args to canonical script
+$forwardArgs = @()
+if ($SkipBackup) { $forwardArgs += "-SkipBackup" }
+if ($Force) { $forwardArgs += "-Force" }
+& "$PSScriptRoot\build_blacklab_index.ps1" @forwardArgs
+exit $LASTEXITCODE
     Write-Host "  OK Image heruntergeladen" -ForegroundColor Green
 } else {
     Write-Host "  OK Image ist bereits vorhanden" -ForegroundColor Green
@@ -257,6 +268,7 @@ $dockerArgs = @(
     "/data/export/tsv"
     "/config/corapan-tsv.blf.yaml"
     "--linked-file-dir", "/data/export"
+    "--threads", "1"
 )
 
 Write-Host "  Docker-Befehl:" -ForegroundColor Gray
