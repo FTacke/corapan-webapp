@@ -30,7 +30,7 @@ logger = logging.getLogger(__name__)
 bp = Blueprint("advanced_api", __name__, url_prefix="/search/advanced")
 
 # Limits and caps
-MAX_HITS_PER_PAGE = 100
+MAX_HITS_PER_PAGE = 5000  # Fetch all hits from BLS so Python can filter them properly
 GLOBAL_HITS_CAP = 50000
 
 
@@ -41,6 +41,8 @@ def _load_docmeta():
     """Load document metadata from docmeta.jsonl."""
     docmeta_path = Path(__file__).parent.parent.parent.parent / "data" / "blacklab_export" / "docmeta.jsonl"
     docmeta = {}
+    country_codes_by_parent = {}
+    
     if docmeta_path.exists():
         try:
             with open(docmeta_path, 'r', encoding='utf-8') as f:
@@ -50,16 +52,24 @@ def _load_docmeta():
                     if file_id:
                         # Normalize file_id keys by stripping whitespace
                         docmeta[file_id.strip()] = doc
+                    
+                    # Build parent -> all codes mapping
+                    parent = (doc.get("country_parent_code") or doc.get("country_code") or "").upper()
+                    code = (doc.get("country_code") or "").upper()
+                    if parent and code:
+                        country_codes_by_parent.setdefault(parent, set()).add(code)
+            
             logger.info(f"Loaded {len(docmeta)} document metadata entries")
+            logger.info(f"Built country codes mapping for {len(country_codes_by_parent)} parents")
         except Exception as e:
             logger.warning(f"Failed to load docmeta.jsonl: {e}")
-    return docmeta
+    return docmeta, country_codes_by_parent
 
 
 
 
 # Cache docmeta at module level
-_DOCMETA_CACHE = _load_docmeta()
+_DOCMETA_CACHE, COUNTRY_CODES_BY_PARENT = _load_docmeta()
 EXPORT_CHUNK_SIZE = 1000
 
 # Export streaming configuration
@@ -179,6 +189,7 @@ def _enrich_hits_with_docmeta(items: list, hits: list, docinfos: dict, docmeta_c
         docmeta = docmeta_cache.get(file_id) if file_id else None
         if docmeta:
             item['country_code'] = item.get('country_code') or (docmeta.get('country_code') or '').lower()
+            item['country_scope'] = item.get('country_scope') or (docmeta.get('country_scope') or '').lower()
             item['filename'] = item.get('filename') or docmeta.get('file_id')
             item['radio'] = item.get('radio') or docmeta.get('radio')
             item['date'] = item.get('date') or docmeta.get('date')
@@ -318,9 +329,11 @@ def datatable_data():
         # BLS parameters
         # Note: listvalues must include 'word' for KWIC display in BlackLab v5
         # Include 'speaker_code' for speaker attribute mapping
+        # IMPORTANT: Fetch ALL hits here (first=0, number=MAX), then paginate in Python after filtering
+        # This ensures we can filter the full result set and paginate correctly
         bls_params = {
-            "first": start,
-            "number": length,
+            "first": 0,  # ← Start from beginning (pagination happens in Python)
+            "number": MAX_HITS_PER_PAGE,  # ← Max limit per request
             "wordsaroundhit": 10,
             # Include all token-level metadata needed for canonical mapping
             "listvalues": "word,tokid,start_ms,end_ms,file_id,filename,country,country_code,speaker_type,sex,mode,discourse,radio,utterance_id,speaker_code",
@@ -334,22 +347,7 @@ def datatable_data():
         # doesn't exist as doc-level metadata field in the BlackLab index.
 
         if filter_query:
-            bls_params = {
-                "first": start,
-                "number": length,
-                "wordsaroundhit": 10,
-                # Include all token-level metadata needed for canonical mapping
-                "listvalues": "word,tokid,start_ms,end_ms,file_id,filename,country,country_code,speaker_type,sex,mode,discourse,radio,utterance_id,speaker_code",
-            }
             bls_params["filter"] = filter_query
-        else:
-            bls_params = {
-                "first": start,
-                "number": length,
-                "wordsaroundhit": 10,
-                # Include all token-level metadata needed for canonical mapping
-                "listvalues": "word,tokid,start_ms,end_ms,file_id,filename,country,country_code,speaker_type,sex,mode,discourse,radio,utterance_id,speaker_code",
-            }
 
         # Build CQL with speaker filter integrated
         # Important: pass filters with computed country_code and include_regional semantics
@@ -433,13 +431,48 @@ def datatable_data():
         # Enrich processed hits using helper
         processed_hits = _enrich_hits_with_docmeta(processed_hits, hits, data.get('docInfos', {}) or {}, _DOCMETA_CACHE or {})
         
-        # BlackLab is Single Source of Truth for counts
-        # Both recordsTotal and recordsFiltered come from BlackLab
+        # Apply country filter (post-processing since metadata is document-level)
+        def _matches_country_filter(item, filters):
+            """Ultra-simple 3-case country filter: checkbox OR exact whitelist."""
+            include_regional = filters.get("include_regional", False)
+            selected_codes = [c.upper() for c in filters.get("country_code", [])]
+            
+            code = (item.get("country_code") or "").upper()
+            scope = (item.get("country_scope") or "").lower()  # "national" / "regional" / ""
+            
+            # Reject documents without country_code
+            if not code:
+                return False
+            
+            # CASE 3: País-Dropdown has selections → exact whitelist (checkbox irrelevant)
+            if selected_codes:
+                selected_set = set(selected_codes)
+                return code in selected_set
+            
+            # CASE 1+2: No país selection → checkbox controls behavior
+            
+            # Checkbox off: only national documents
+            if not include_regional:
+                return scope == "national"
+            
+            # Checkbox on: national + regional (all documents)
+            return True
+        
+        # Apply filter
+        filtered_hits = [h for h in processed_hits if _matches_country_filter(h, filters)]
+        
+        # Apply pagination to filtered hits
+        paginated_hits = filtered_hits[start:start + length]
+        
+        # Simple count logic: backend filter is the only filter
+        records_total = len(filtered_hits)
+        records_filtered = len(filtered_hits)
+        
         response_payload = {
             "draw": draw,
-            "recordsTotal": number_of_hits,
-            "recordsFiltered": number_of_hits,
-            "data": processed_hits,
+            "recordsTotal": records_total,
+            "recordsFiltered": records_filtered,
+            "data": paginated_hits,
         }
         # Debug helper: include CQL when running in debug mode
         # Prefer Flask app.debug flag; ENV config may be missing in some configurations

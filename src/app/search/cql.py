@@ -288,6 +288,7 @@ def build_filters(params: Dict) -> Dict[str, any]:
     
     Args:
         params: Request form data (can have multi-value fields)
+            - include_regional: Checkbox to include regional broadcasts (bool)
             - country_scope: 'national' | 'regional' | '' (all)
             - country_parent_code[]: List of parent country codes (e.g., ['ARG', 'ESP'])
             - country_region_code[]: List of region codes (e.g., ['CBA', 'SEV'])
@@ -317,48 +318,29 @@ def build_filters(params: Dict) -> Dict[str, any]:
     """
     filters = {}
     
-    # Country scope (national / regional)
-    country_scope = params.get("country_scope", "").strip()
-    if country_scope and country_scope in ["national", "regional"]:
-        filters["country_scope"] = country_scope
-    
-    # Country parent code (multi-select)
-    country_parent_codes = params.getlist("country_parent_code") if hasattr(params, "getlist") else (
-        params.get("country_parent_code", []) if isinstance(params.get("country_parent_code"), list) else 
-        ([params.get("country_parent_code")] if params.get("country_parent_code") else [])
+    # Checkbox: Include regional broadcasts (also check "include_regionales" alias)
+    include_regional = (
+        params.get("include_regional") in ("1", "true", "on", True)
+        or params.get("include_regionales") in ("1", "true", "on", True)
     )
-    country_parent_codes = [c.strip().upper() for c in country_parent_codes if c and c.strip()]
-    if country_parent_codes:
-        filters["country_parent_code"] = country_parent_codes
+    filters["include_regional"] = include_regional
     
-    # Country region code (multi-select)
-    country_region_codes = params.getlist("country_region_code") if hasattr(params, "getlist") else (
-        params.get("country_region_code", []) if isinstance(params.get("country_region_code"), list) else 
-        ([params.get("country_region_code")] if params.get("country_region_code") else [])
-    )
-    country_region_codes = [c.strip().upper() for c in country_region_codes if c and c.strip()]
-    if country_region_codes:
-        filters["country_region_code"] = country_region_codes
+    # Country codes: exact whitelist (can be national like ARG or regional like ARG-CBA)
+    raw_codes = []
+    if hasattr(params, "getlist"):
+        raw_codes = params.getlist("country_code")
+    else:
+        val = params.get("country_code")
+        if isinstance(val, list):
+            raw_codes = val
+        elif isinstance(val, str):
+            raw_codes = [val]
     
-    # LEGACY: Country codes (for backward compatibility)
-    # If country_code is provided but country_parent_code is not, treat country_code as country_parent_code
-    country_codes = params.getlist("country_code") if hasattr(params, "getlist") else (
-        params.get("country_code", []) if isinstance(params.get("country_code"), list) else 
-        ([params.get("country_code")] if params.get("country_code") else [])
-    )
-    country_codes = [c.strip().upper() for c in country_codes if c and c.strip()]
-    if country_codes:
-        # If it's a 3-letter national code (ARG, ESP, etc.), treat as country_parent_code
-        # If it's a regional code (ARG-CBA), keep as country_code for exact match
-        national_codes = [c for c in country_codes if len(c) == 3]
-        regional_codes = [c for c in country_codes if len(c) > 3 and '-' in c]
-        
-        if national_codes and not filters.get("country_parent_code"):
-            filters["country_parent_code"] = national_codes
-        if regional_codes:
-            filters["country_code"] = regional_codes
+    filters["country_code"] = [
+        c.strip().upper() for c in raw_codes if c and c.strip()
+    ]
     
-    # Speaker types (multi-select)
+    # Speaker types (multi-select) - no lowercasing
     speaker_types = params.getlist("speaker_type") if hasattr(params, "getlist") else (
         params.get("speaker_type", []) if isinstance(params.get("speaker_type"), list) else 
         ([params.get("speaker_type")] if params.get("speaker_type") else [])
@@ -367,7 +349,7 @@ def build_filters(params: Dict) -> Dict[str, any]:
     if speaker_types:
         filters["speaker_type"] = speaker_types
     
-    # Sexes (multi-select)
+    # Sexes (multi-select) - no lowercasing
     sexes = params.getlist("sex") if hasattr(params, "getlist") else (
         params.get("sex", []) if isinstance(params.get("sex"), list) else 
         ([params.get("sex")] if params.get("sex") else [])
@@ -376,7 +358,7 @@ def build_filters(params: Dict) -> Dict[str, any]:
     if sexes:
         filters["sex"] = sexes
     
-    # Speech modes: check both 'speech_mode' and 'mode' (UI uses both)
+    # Speech modes: check both 'speech_mode' and 'mode' (UI uses both) - no lowercasing
     modes = params.getlist("speech_mode") if hasattr(params, "getlist") else (
         params.get("speech_mode", []) if isinstance(params.get("speech_mode"), list) else 
         ([params.get("speech_mode")] if params.get("speech_mode") else [])
@@ -393,7 +375,7 @@ def build_filters(params: Dict) -> Dict[str, any]:
     if modes:
         filters["mode"] = modes
     
-    # Discourse types (multi-select)
+    # Discourse types (multi-select) - no lowercasing
     discourses = params.getlist("discourse") if hasattr(params, "getlist") else (
         params.get("discourse", []) if isinstance(params.get("discourse"), list) else 
         ([params.get("discourse")] if params.get("discourse") else [])
@@ -402,12 +384,12 @@ def build_filters(params: Dict) -> Dict[str, any]:
     if discourses:
         filters["discourse"] = discourses
     
-    # City filter (single value)
+    # City filter (single value) - no lowercasing
     city = params.get("city", "").strip()
     if city:
         filters["city"] = city
     
-    # Radio station filter (single value)
+    # Radio station filter (single value) - no lowercasing
     radio = params.get("radio", "").strip()
     if radio:
         filters["radio"] = radio
@@ -439,61 +421,58 @@ def build_metadata_cql_constraints(filters: Dict) -> str:
     
     parts = []
     
-    # Country scope (national / regional)
+    # Country scope (national / regional) - no lowercasing, field is case-insensitive
     country_scope = filters.get("country_scope")
     if country_scope:
-        parts.append(f'country_scope="{country_scope.lower()}"')
+        parts.append(f'country_scope="{country_scope}"')
     
-    # Country parent codes (multi-select, OR within)
+    # Country parent codes (multi-select, OR within) - no lowercasing
     country_parent_codes = filters.get("country_parent_code", [])
     if country_parent_codes:
         country_parent_codes = [c for c in country_parent_codes if c and c.strip()]
         if country_parent_codes:
-            country_parent_lower = [c.lower() for c in country_parent_codes]
-            if len(country_parent_lower) == 1:
-                parts.append(f'country_parent_code="{country_parent_lower[0]}"')
+            if len(country_parent_codes) == 1:
+                parts.append(f'country_parent_code="{country_parent_codes[0]}"')
             else:
-                or_list = '|'.join(country_parent_lower)
+                or_list = '|'.join(country_parent_codes)
                 parts.append(f'country_parent_code="({or_list})"')
     
-    # Country region codes (multi-select, OR within)
+    # Country region codes (multi-select, OR within) - no lowercasing
     country_region_codes = filters.get("country_region_code", [])
     if country_region_codes:
         country_region_codes = [c for c in country_region_codes if c and c.strip()]
         if country_region_codes:
-            country_region_lower = [c.lower() for c in country_region_codes]
-            if len(country_region_lower) == 1:
-                parts.append(f'country_region_code="{country_region_lower[0]}"')
+            if len(country_region_codes) == 1:
+                parts.append(f'country_region_code="{country_region_codes[0]}"')
             else:
-                or_list = '|'.join(country_region_lower)
+                or_list = '|'.join(country_region_codes)
                 parts.append(f'country_region_code="({or_list})"')
     
-    # LEGACY: Country codes (for backward compatibility)
+    # LEGACY: Country codes (for backward compatibility) - no lowercasing
     # This is the full code including region (e.g., 'ARG-CBA')
     country_codes = filters.get("country_code", [])
     if country_codes:
         country_codes = [c for c in country_codes if c and c.strip()]
         if country_codes:
-            country_codes_lower = [c.lower() for c in country_codes]
-            if len(country_codes_lower) == 1:
-                parts.append(f'country_code="{country_codes_lower[0]}"')
+            if len(country_codes) == 1:
+                parts.append(f'country_code="{country_codes[0]}"')
             else:
-                or_list = '|'.join(country_codes_lower)
+                or_list = '|'.join(country_codes)
                 parts.append(f'country_code="({or_list})"')
     
-    # Radio filter (lowercased in index)
+    # Radio filter - no lowercasing (field is case-insensitive in BlackLab)
     radio = filters.get("radio")
     if radio and str(radio).strip():
         # Escape quotes in radio name
         radio_escaped = str(radio).replace('"', '\\"')
-        parts.append(f'radio="{radio_escaped.lower()}"')
+        parts.append(f'radio="{radio_escaped}"')
     
-    # City filter (lowercased in index)
+    # City filter - no lowercasing (field is case-insensitive in BlackLab)
     city = filters.get("city")
     if city and str(city).strip():
         # Escape quotes in city name
         city_escaped = str(city).replace('"', '\\"')
-        parts.append(f'city="{city_escaped.lower()}"')
+        parts.append(f'city="{city_escaped}"')
     
     # Date filter
     date = filters.get("date")

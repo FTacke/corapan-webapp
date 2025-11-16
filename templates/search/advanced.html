@@ -121,9 +121,22 @@
                 </div>
                 <div class="md3-filter-field__menu" role="menu" hidden>
                   <div class="md3-filter-field__menu-content">
+                    <!-- National codes (always visible) -->
                     <label class="md3-filter-option">
                       <input type="checkbox" name="pais_ui" value="ARG" data-label="ARG">
                       <span>ARG</span>
+                    </label>
+                    <label class="md3-filter-option md3-filter-option--regional" data-parent="ARG" style="display: none;">
+                      <input type="checkbox" name="pais_ui" value="ARG-CBA" data-label="ARG-CBA">
+                      <span>  ↳ ARG-CBA</span>
+                    </label>
+                    <label class="md3-filter-option md3-filter-option--regional" data-parent="ARG" style="display: none;">
+                      <input type="checkbox" name="pais_ui" value="ARG-CHU" data-label="ARG-CHU">
+                      <span>  ↳ ARG-CHU</span>
+                    </label>
+                    <label class="md3-filter-option md3-filter-option--regional" data-parent="ARG" style="display: none;">
+                      <input type="checkbox" name="pais_ui" value="ARG-SDE" data-label="ARG-SDE">
+                      <span>  ↳ ARG-SDE</span>
                     </label>
                     <label class="md3-filter-option">
                       <input type="checkbox" name="pais_ui" value="BOL" data-label="BOL">
@@ -152,6 +165,14 @@
                     <label class="md3-filter-option">
                       <input type="checkbox" name="pais_ui" value="ESP" data-label="ESP">
                       <span>ESP</span>
+                    </label>
+                    <label class="md3-filter-option md3-filter-option--regional" data-parent="ESP" style="display: none;">
+                      <input type="checkbox" name="pais_ui" value="ESP-CAN" data-label="ESP-CAN">
+                      <span>  ↳ ESP-CAN</span>
+                    </label>
+                    <label class="md3-filter-option md3-filter-option--regional" data-parent="ESP" style="display: none;">
+                      <input type="checkbox" name="pais_ui" value="ESP-SEV" data-label="ESP-SEV">
+                      <span>  ↳ ESP-SEV</span>
                     </label>
                     <label class="md3-filter-option">
                       <input type="checkbox" name="pais_ui" value="USA" data-label="USA">
@@ -205,7 +226,11 @@
                 </div>
                 <!-- Hidden select for backend -->
                 <select name="country_code" multiple hidden>
+                  <!-- National codes -->
                   <option value="ARG" {% if 'ARG' in request.args.getlist('country_code') %}selected{% endif %}>ARG</option>
+                  <option value="ARG-CBA" {% if 'ARG-CBA' in request.args.getlist('country_code') %}selected{% endif %}>ARG-CBA</option>
+                  <option value="ARG-CHU" {% if 'ARG-CHU' in request.args.getlist('country_code') %}selected{% endif %}>ARG-CHU</option>
+                  <option value="ARG-SDE" {% if 'ARG-SDE' in request.args.getlist('country_code') %}selected{% endif %}>ARG-SDE</option>
                   <option value="BOL" {% if 'BOL' in request.args.getlist('country_code') %}selected{% endif %}>BOL</option>
                   <option value="CHL" {% if 'CHL' in request.args.getlist('country_code') %}selected{% endif %}>CHL</option>
                   <option value="COL" {% if 'COL' in request.args.getlist('country_code') %}selected{% endif %}>COL</option>
@@ -213,6 +238,8 @@
                   <option value="CUB" {% if 'CUB' in request.args.getlist('country_code') %}selected{% endif %}>CUB</option>
                   <option value="ECU" {% if 'ECU' in request.args.getlist('country_code') %}selected{% endif %}>ECU</option>
                   <option value="ESP" {% if 'ESP' in request.args.getlist('country_code') %}selected{% endif %}>ESP</option>
+                  <option value="ESP-CAN" {% if 'ESP-CAN' in request.args.getlist('country_code') %}selected{% endif %}>ESP-CAN</option>
+                  <option value="ESP-SEV" {% if 'ESP-SEV' in request.args.getlist('country_code') %}selected{% endif %}>ESP-SEV</option>
                   <option value="USA" {% if 'USA' in request.args.getlist('country_code') %}selected{% endif %}>USA</option>
                   <option value="GTM" {% if 'GTM' in request.args.getlist('country_code') %}selected{% endif %}>GTM</option>
                   <option value="HND" {% if 'HND' in request.args.getlist('country_code') %}selected{% endif %}>HND</option>
@@ -652,4 +679,43 @@
 <script src="{{ url_for('static', filename='js/modules/search/patternBuilder.js') }}" type="module"></script>
 <script src="{{ url_for('static', filename='js/modules/search/searchUI.js') }}" type="module"></script>
 <script src="{{ url_for('static', filename='js/modules/advanced/initTable.js') }}" type="module"></script>
+
+<!-- Regional checkbox toggle logic -->
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const includeRegionalCheckbox = document.getElementById('include-regional');
+    const regionalOptions = document.querySelectorAll('.md3-filter-option--regional');
+    
+    function toggleRegionalOptions() {
+      const isChecked = includeRegionalCheckbox?.checked || false;
+      regionalOptions.forEach(option => {
+        option.style.display = isChecked ? '' : 'none';
+        // Uncheck regional options when hiding them
+        if (!isChecked) {
+          const checkbox = option.querySelector('input[type="checkbox"]');
+          if (checkbox) {
+            checkbox.checked = false;
+          }
+        }
+      });
+    }
+    
+    // Initial state
+    if (includeRegionalCheckbox) {
+      toggleRegionalOptions();
+      includeRegionalCheckbox.addEventListener('change', toggleRegionalOptions);
+    }
+    
+    // Re-bind after HTMX swaps
+    document.addEventListener('htmx:afterSwap', function() {
+      const checkbox = document.getElementById('include-regional');
+      const regionals = document.querySelectorAll('.md3-filter-option--regional');
+      if (checkbox && regionals.length > 0) {
+        toggleRegionalOptions();
+        checkbox.removeEventListener('change', toggleRegionalOptions);
+        checkbox.addEventListener('change', toggleRegionalOptions);
+      }
+    });
+  });
+</script>
 {% endblock %}

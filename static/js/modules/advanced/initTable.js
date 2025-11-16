@@ -142,14 +142,20 @@ export function initAdvancedTable(queryParams) {
         className: 'md3-datatable__cell--audio center-align',
         width: '120px'
       },
-      // Column 5: Country (canonical 'country_code')
+      // Column 5: Country (canonical 'country_code') - always uppercase
       {
         targets: 5,
         data: 'country_code',
-        render: function(data) {
-          return escapeHtml(data || '-');
-        }
-        , width: '80px'
+        render: function(data, type) {
+          // For sorting/filtering, return original value
+          if (type === 'sort' || type === 'filter' || type === 'type') {
+            return data || '';
+          }
+          // For display, uppercase
+          return escapeHtml((data || '-').toUpperCase());
+        },
+        width: '80px',
+        orderable: true
       },
       // Column 6: Speaker type
       {
@@ -157,8 +163,9 @@ export function initAdvancedTable(queryParams) {
         data: 'speaker_type',
         render: function(data) {
           return escapeHtml(data || '-');
-        }
-        , width: '80px'
+        },
+        width: '80px',
+        orderable: true
       },
       // Column 7: Sex
       {
@@ -166,8 +173,9 @@ export function initAdvancedTable(queryParams) {
         data: 'sex',
         render: function(data) {
           return escapeHtml(data || '-');
-        }
-        , width: '80px'
+        },
+        width: '80px',
+        orderable: true
       },
       // Column 8: Mode
       {
@@ -175,8 +183,9 @@ export function initAdvancedTable(queryParams) {
         data: 'mode',
         render: function(data) {
           return escapeHtml(data || '-');
-        }
-        , width: '80px'
+        },
+        width: '80px',
+        orderable: true
       },
       // Column 9: Discourse
       {
@@ -184,8 +193,9 @@ export function initAdvancedTable(queryParams) {
         data: 'discourse',
         render: function(data) {
           return escapeHtml(data || '-');
-        }
-        , width: '80px'
+        },
+        width: '80px',
+        orderable: true
       },
       // Column 10: Token ID (canonical 'token_id')
       {
@@ -193,8 +203,9 @@ export function initAdvancedTable(queryParams) {
         data: 'token_id',
         render: function(data) {
           return escapeHtml(data || '-');
-        }
-        , width: '100px'
+        },
+        width: '100px',
+        orderable: true
       },
       // Column 11: Filename
       {
@@ -469,25 +480,37 @@ export function updateExportButtons(queryParams) {
 
     const filename = row.filename || '';
     const tokenId = row.token_id || '';
-    const start = row.start_ms || row.start || 0;
-    const end = row.end_ms || (parseInt(start) + 5000);
+    
+    // Convert milliseconds to seconds for audio playback
+    // Backend expects seconds (start/end parameters)
+    const startMs = row.start_ms || row.start || 0;
+    const endMs = row.end_ms || (parseInt(startMs) + 5000);
+    const contextStartMs = row.context_start || startMs;
+    const contextEndMs = row.context_end || endMs;
+    
+    // Convert to seconds (backend /play_audio expects seconds)
+    const startSec = (startMs / 1000).toFixed(3);
+    const endSec = (endMs / 1000).toFixed(3);
+    const contextStartSec = (contextStartMs / 1000).toFixed(3);
+    const contextEndSec = (contextEndMs / 1000).toFixed(3);
+    
     return `
       <div class="md3-corpus-audio-buttons">
         <div class="md3-corpus-audio-row">
           <span class="md3-corpus-audio-label">Res.:</span>
-          <a class="audio-button" data-filename="${escapeHtml(filename)}" data-start="${start}" data-end="${end}" data-token-id="${escapeHtml(tokenId)}" data-type="pal">
+          <a class="audio-button" data-filename="${escapeHtml(filename)}" data-start="${startSec}" data-end="${endSec}" data-token-id="${escapeHtml(tokenId)}" data-type="pal">
             <i class="fa-solid fa-play"></i>
           </a>
-          <a class="download-button" data-filename="${escapeHtml(filename)}" data-start="${start}" data-end="${end}" data-token-id="${escapeHtml(tokenId)}" data-type="pal">
+          <a class="download-button" data-filename="${escapeHtml(filename)}" data-start="${startSec}" data-end="${endSec}" data-token-id="${escapeHtml(tokenId)}" data-type="pal">
             <i class="fa-solid fa-download"></i>
           </a>
         </div>
         <div class="md3-corpus-audio-row">
           <span class="md3-corpus-audio-label">Ctx:</span>
-          <a class="audio-button" data-filename="${escapeHtml(filename)}" data-start="${row.context_start || start}" data-end="${row.context_end || end}" data-token-id="${escapeHtml(tokenId)}" data-type="ctx">
+          <a class="audio-button" data-filename="${escapeHtml(filename)}" data-start="${contextStartSec}" data-end="${contextEndSec}" data-token-id="${escapeHtml(tokenId)}" data-type="ctx">
             <i class="fa-solid fa-play"></i>
           </a>
-          <a class="download-button" data-filename="${escapeHtml(filename)}" data-start="${row.context_start || start}" data-end="${row.context_end || end}" data-token-id="${escapeHtml(tokenId)}" data-type="ctx">
+          <a class="download-button" data-filename="${escapeHtml(filename)}" data-start="${contextStartSec}" data-end="${contextEndSec}" data-token-id="${escapeHtml(tokenId)}" data-type="ctx">
             <i class="fa-solid fa-download"></i>
           </a>
         </div>
@@ -552,12 +575,7 @@ export function updateSummary(data, queryParams) {
   
   html += `</span>`;
   
-  if (filtersActive) {
-    html += ` <span class="md3-badge--serverfilter">
-      <span class="material-symbols-rounded" aria-hidden="true">filter_alt</span>
-      Serverfilter activo
-    </span>`;
-  }
+  // Serverfilter badge removed - not needed
   
   summaryBox.innerHTML = html;
   summaryBox.hidden = false;

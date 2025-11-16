@@ -151,13 +151,64 @@ corpusConfig:
 - **Document metadata:** `data/blacklab_export/docmeta.jsonl` (146 entries)
 
 ### Index
-- **Current index:** `data/blacklab_index/` (43 docs, partial)
-- **Backup:** `data/blacklab_index.backup_20251116_151221/` (previous version)
+- **Current index:** `data/blacklab_index/` (active index)
+- **Backup:** `data/blacklab_index.backup/` (single rotating backup)
 
 ### Configuration
 - **BLF config:** `config/blacklab/corapan-tsv.blf.yaml`
 - **Exporter script:** `src/scripts/blacklab_index_creation.py`
-- **Build script:** `scripts/build_blacklab_index_v3.ps1`
+- **Build script (canonical):** `scripts/build_blacklab_index.ps1`
+- **Build script (compatibility wrapper):** `scripts/build_blacklab_index_v3.ps1` (delegates to canonical)
+
+---
+
+## 5. Index Build & Backup Strategy
+
+### Canonical Build Script
+**Location:** `scripts/build_blacklab_index.ps1`
+
+This is the **single source of truth** for building the BlackLab index. All other build scripts should delegate to this one.
+
+### Backup Strategy (Simplified November 16, 2025)
+
+**Rule:** Maximum **one backup** is maintained at any time.
+
+**Directory Structure:**
+- `data/blacklab_index/` - Active index (currently in use)
+- `data/blacklab_index.backup/` - Single rotating backup
+
+**Build Process:**
+1. When building a new index:
+   - If `data/blacklab_index.backup/` exists → delete it
+   - If `data/blacklab_index/` exists → move to `data/blacklab_index.backup/`
+   - Build new index in `data/blacklab_index/`
+
+**No More:**
+- ❌ Timestamped backups (`blacklab_index.backup_YYYYMMDD_HHMMSS`)
+- ❌ Version-numbered directories (`blacklab_index_v2`, `blacklab_index_v3`)
+- ❌ Debug directories (`blacklab_index.debug_*`)
+- ❌ Manual backup management
+
+**Usage:**
+```powershell
+# Standard build (with backup and confirmation)
+.\scripts\build_blacklab_index.ps1
+
+# Force build without confirmation
+.\scripts\build_blacklab_index.ps1 -Force
+
+# Build without creating backup (dangerous!)
+.\scripts\build_blacklab_index.ps1 -SkipBackup -Force
+
+# Compatibility (delegates to canonical script)
+.\scripts\build_blacklab_index_v3.ps1
+```
+
+**Benefits:**
+- Simple and predictable
+- No disk space accumulation
+- Always one rollback option available
+- Clear state: current + previous
 
 ---
 

@@ -148,7 +148,7 @@ def _hit_to_canonical(hit: dict[str, Any]) -> dict[str, Any]:
     return {
         "token_id": token_id,
         "filename": filename,
-        "country_code": country.lower() if isinstance(country, str) else country,
+        "country_code": country if isinstance(country, str) else country,  # No lowercasing - field is case-insensitive
         "radio": _safe_first(match.get("radio", [])) or "",
         "date": _safe_first(match.get("date", [])) or "",
         "speaker_type": speaker_type,

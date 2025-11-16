@@ -100,12 +100,18 @@ Write-Host ""
 
 Write-Host "[2/4] Backing up existing index..." -ForegroundColor Yellow
 
+$backupDir = Join-Path $repoRoot "data\blacklab_index.backup"
+
 if (Test-Path $indexTargetPath) {
     $indexFiles = @(Get-ChildItem -Path $indexTargetPath -File -Recurse -ErrorAction SilentlyContinue)
     if ($indexFiles.Count -gt 0) {
         if (-not $SkipBackup) {
-            $timestamp = Get-Date -Format "yyyyMMdd_HHmmss"
-            $backupDir = Join-Path $repoRoot ("data\blacklab_index.old_{0}" -f $timestamp)
+            # Remove old backup if it exists
+            if (Test-Path $backupDir) {
+                Write-Host "  Removing old backup..." -ForegroundColor Gray
+                Remove-Item -Path $backupDir -Recurse -Force
+            }
+            
             Write-Host ("  Creating backup: {0}" -f $backupDir) -ForegroundColor Gray
             
             if (-not $Force) {
