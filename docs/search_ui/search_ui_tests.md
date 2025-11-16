@@ -22,7 +22,7 @@ Test Cases
 - UI: Mode: `Lema`, Query: `alcalde`, `ignore_accents` unchecked
 - Expected CQL: `[lemma="alcalde"]`
 - Expected: The sentence above should be matched (alcalde lemma present), test with `sensitive=1` and `sensitive=0`.
-- Status: Not run
+- Status: **Automated** - See `tests/test_advanced_datatables_results.py::test_example_sentence_lemma_alcalde`
 
 2) Simple Search - Forma (contains)
 - UI: Mode: `Forma`, Query: `alcalde`, `ignore_accents` unchecked
@@ -69,7 +69,7 @@ Test Cases
 - UI: Mode: `Forma`, Query: `mujer`, ignore_accents checked
 - Expected: Use `norm` field (case/diacritics removed) or regex `.*` approach for insensitive searches (sensitive=0)
 - Expected: Matches for 'mujér', 'Mujer', etc.
-- Status: Not run
+- Status: **Automated** - See `tests/test_advanced_datatables_results.py::test_example_sentence_forma_mujer_insensitive`
 
 8) Pattern/Template: Adjetivo + Sustantivo template
 - UI: Use template, adjust tokens for 'más de mil...', map to pattern
@@ -87,8 +87,31 @@ Keep this file updated with manual test results (pass/fail + date per case).
 
 ---
 
+## Automated Test Coverage
+
+Several test cases have been automated in `tests/test_advanced_datatables_results.py`:
+
+- **Test Case 1** (Simple Search - Lema): `test_example_sentence_lemma_alcalde`
+- **Test Case 7** (Ignore accents/case): `test_example_sentence_forma_mujer_insensitive`
+- **Test Case 9** (País default + include_regional): `test_include_regional_logic`
+- **Test Case 10** (País selected + include_regional): `test_country_filter_esp`
+
+Additional automated tests cover:
+- JSON structure and field validation
+- KWIC context completeness
+- Metadata field population
+- Case preservation in token text
+- Audio metadata presence
+- Pagination
+- Error handling
+
+See `tests/README.md` for details on running automated tests.
+
+---
+
 Notes
-- These tests should be executed manually against a running BlackLab instance (Docker) or using test fixtures that emulate BlackLab responses.
+- Manual tests should be executed against a running BlackLab instance (Docker).
+- Automated tests will skip gracefully if BlackLab is not available (no mocks).
 - Add new cases for corner behaviour and edge-case CQL.
 
 
