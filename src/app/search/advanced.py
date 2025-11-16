@@ -49,11 +49,14 @@ def results():
         HTML fragment with KWIC results + pagination
     """
     try:
-        # Build CQL pattern
-        cql_pattern = build_cql(request.args)
-        
         # Build document filters
         filters = build_filters(request.args)
+        
+        # Build CQL pattern with integrated speaker and metadata filters
+        from .cql import build_cql_with_speaker_filter
+        cql_pattern = build_cql_with_speaker_filter(request.args, filters)
+        
+        # Legacy filter query (deprecated, now integrated in CQL)
         filter_query = filters_to_blacklab_query(filters)
         
         # Pagination
@@ -66,15 +69,15 @@ def results():
             "first": hitstart,
             "number": maxhits,
             "wordsaroundhit": 10,  # Context words (left/right)
-            "listvalues": "tokid,start_ms,end_ms,country,speaker_type,sex,mode,discourse,filename,radio",
+            "listvalues": "tokid,start_ms,end_ms,word,lemma,pos,country_code,country_scope,country_parent_code,country_region_code,speaker_code,speaker_type,speaker_sex,speaker_mode,speaker_discourse,filename,radio,city,date",
         }
         
         # Add filter if present
         if filter_query:
             bls_params["filter"] = filter_query
         
-        # Call BlackLab via Flask proxy
-        bls_url = f"{request.url_root}bls/corapan/hits"
+        # Call BlackLab via Flask proxy (use v5 API path)
+        bls_url = f"{request.url_root}bls/corpora/corapan/hits"
         
         # Try CQL parameter names in order: patt (standard), cql, cql_query
         cql_param_names = ["patt", "cql", "cql_query"]

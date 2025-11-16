@@ -96,9 +96,9 @@ def _hit_to_canonical(hit: dict[str, Any]) -> dict[str, Any]:
 
     country = _safe_first(match.get("country", [])) or _safe_first(match.get("country_code", [])) or _safe_doc_field("country") or _safe_doc_field("country_code")
     speaker_type = _safe_first(match.get("speaker_type", [])) or _safe_doc_field("speaker_type")
-    sex = _safe_first(match.get("sex", [])) or ""
-    mode = _safe_first(match.get("mode", [])) or ""
-    discourse = _safe_first(match.get("discourse", [])) or ""
+    speaker_sex = _safe_first(match.get("speaker_sex", [])) or _safe_first(match.get("sex", [])) or ""
+    speaker_mode = _safe_first(match.get("speaker_mode", [])) or _safe_first(match.get("mode", [])) or ""
+    speaker_discourse = _safe_first(match.get("speaker_discourse", [])) or _safe_first(match.get("discourse", [])) or ""
 
     # left/right may be dicts with 'word' arrays OR plain arrays of words (v5)
     def _extract_context(side):
@@ -152,9 +152,13 @@ def _hit_to_canonical(hit: dict[str, Any]) -> dict[str, Any]:
         "radio": _safe_first(match.get("radio", [])) or "",
         "date": _safe_first(match.get("date", [])) or "",
         "speaker_type": speaker_type,
-        "sex": sex,
-        "mode": mode,
-        "discourse": discourse,
+        "speaker_sex": speaker_sex,
+        "speaker_mode": speaker_mode,
+        "speaker_discourse": speaker_discourse,
+        # Legacy fields for backward compatibility
+        "sex": speaker_sex,
+        "mode": speaker_mode,
+        "discourse": speaker_discourse,
         "text": text,
         # Provide both ms-specific fields and 'start'/'end' for backward compatibility
         "start": start_ms,
@@ -221,7 +225,7 @@ def search_blacklab(params: Any) -> dict[str, Any]:
         "number": page_size,
         "wordsaroundhit": 10,
         # Ensure we request the fields we need for canonical mapping
-        "listvalues": "tokid,start_ms,end_ms,word,lemma,pos,country,speaker_type,sex,mode,discourse,filename,radio",
+        "listvalues": "tokid,start_ms,end_ms,word,lemma,pos,country_code,country_scope,country_parent_code,country_region_code,speaker_code,speaker_type,speaker_sex,speaker_mode,speaker_discourse,filename,radio,city,date",
     }
 
     # Add CQL param as patt/cql/cql_query fallback handled by upper layer

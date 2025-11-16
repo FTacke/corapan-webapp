@@ -288,34 +288,75 @@ def build_filters(params: Dict) -> Dict[str, any]:
     
     Args:
         params: Request form data (can have multi-value fields)
-            - country_code[]: List of country codes (e.g., ['ARG', 'CHL'])
+            - country_scope: 'national' | 'regional' | '' (all)
+            - country_parent_code[]: List of parent country codes (e.g., ['ARG', 'ESP'])
+            - country_region_code[]: List of region codes (e.g., ['CBA', 'SEV'])
+            - country_code[]: LEGACY - List of country codes (e.g., ['ARG', 'CHL'])
             - speaker_type[]: List of speaker types (e.g., ['pro', 'otro'])
             - sex[]: List of sexes (e.g., ['m', 'f'])
             - speech_mode[] or mode[]: List of modes (e.g., ['pre', 'lectura'])
             - discourse[]: List of discourse types
-            - include_regional: bool, if False add radio:"national"
+            - city: City name
+            - radio: Radio station name
+            - date: Date (YYYY-MM-DD)
             
     Returns:
         Dictionary with filter criteria (lists for facets)
         {
-            "country_code": ["ARG", "CHL"],
+            "country_scope": "regional",
+            "country_parent_code": ["ARG", "ESP"],
+            "country_region_code": ["CBA", "SEV"],
             "speaker_type": ["pro"],
             "sex": ["m", "f"],
             "mode": ["lectura"],
             "discourse": ["general"],
-            "radio": "national"  # Only set if include_regional=False
+            "city": "Buenos Aires",
+            "radio": "Radio Mitre",
+            "date": "2023-08-12"
         }
     """
     filters = {}
     
-    # Country codes (multi-select)
+    # Country scope (national / regional)
+    country_scope = params.get("country_scope", "").strip()
+    if country_scope and country_scope in ["national", "regional"]:
+        filters["country_scope"] = country_scope
+    
+    # Country parent code (multi-select)
+    country_parent_codes = params.getlist("country_parent_code") if hasattr(params, "getlist") else (
+        params.get("country_parent_code", []) if isinstance(params.get("country_parent_code"), list) else 
+        ([params.get("country_parent_code")] if params.get("country_parent_code") else [])
+    )
+    country_parent_codes = [c.strip().upper() for c in country_parent_codes if c and c.strip()]
+    if country_parent_codes:
+        filters["country_parent_code"] = country_parent_codes
+    
+    # Country region code (multi-select)
+    country_region_codes = params.getlist("country_region_code") if hasattr(params, "getlist") else (
+        params.get("country_region_code", []) if isinstance(params.get("country_region_code"), list) else 
+        ([params.get("country_region_code")] if params.get("country_region_code") else [])
+    )
+    country_region_codes = [c.strip().upper() for c in country_region_codes if c and c.strip()]
+    if country_region_codes:
+        filters["country_region_code"] = country_region_codes
+    
+    # LEGACY: Country codes (for backward compatibility)
+    # If country_code is provided but country_parent_code is not, treat country_code as country_parent_code
     country_codes = params.getlist("country_code") if hasattr(params, "getlist") else (
         params.get("country_code", []) if isinstance(params.get("country_code"), list) else 
         ([params.get("country_code")] if params.get("country_code") else [])
     )
     country_codes = [c.strip().upper() for c in country_codes if c and c.strip()]
     if country_codes:
-        filters["country_code"] = country_codes
+        # If it's a 3-letter national code (ARG, ESP, etc.), treat as country_parent_code
+        # If it's a regional code (ARG-CBA), keep as country_code for exact match
+        national_codes = [c for c in country_codes if len(c) == 3]
+        regional_codes = [c for c in country_codes if len(c) > 3 and '-' in c]
+        
+        if national_codes and not filters.get("country_parent_code"):
+            filters["country_parent_code"] = national_codes
+        if regional_codes:
+            filters["country_code"] = regional_codes
     
     # Speaker types (multi-select)
     speaker_types = params.getlist("speaker_type") if hasattr(params, "getlist") else (
@@ -361,9 +402,20 @@ def build_filters(params: Dict) -> Dict[str, any]:
     if discourses:
         filters["discourse"] = discourses
     
-    # Radio filtering is handled at the routing layer via `countries` logic (national vs regional)
-    # Do not add a synthetic radio="national" filter here - token-level 'radio' values
-    # are actual station names (e.g. 'Radio Mitre'), not 'national'.
+    # City filter (single value)
+    city = params.get("city", "").strip()
+    if city:
+        filters["city"] = city
+    
+    # Radio station filter (single value)
+    radio = params.get("radio", "").strip()
+    if radio:
+        filters["radio"] = radio
+    
+    # Date filter (single value)
+    date = params.get("date", "").strip()
+    if date:
+        filters["date"] = date
     
     return filters
 
@@ -373,44 +425,75 @@ def build_metadata_cql_constraints(filters: Dict) -> str:
     Build CQL token constraints for document metadata annotations.
     
     Since metadata is stored as token annotations (repeated on every token),
-    we can filter by adding constraints like: country_code="ven"
+    we can filter by adding constraints like: country_code="arg" & country_scope="national"
     
     Args:
         filters: Output from build_filters()
         
     Returns:
         CQL constraint string to add to first token pattern
-        Example: 'country_code="ven" & radio="rcr"'
+        Example: 'country_scope="regional" & country_parent_code="arg" & country_region_code="cba"'
     """
     if not filters:
         return ""
     
     parts = []
     
-    # Country codes (multi-select, OR within)
+    # Country scope (national / regional)
+    country_scope = filters.get("country_scope")
+    if country_scope:
+        parts.append(f'country_scope="{country_scope.lower()}"')
+    
+    # Country parent codes (multi-select, OR within)
+    country_parent_codes = filters.get("country_parent_code", [])
+    if country_parent_codes:
+        country_parent_codes = [c for c in country_parent_codes if c and c.strip()]
+        if country_parent_codes:
+            country_parent_lower = [c.lower() for c in country_parent_codes]
+            if len(country_parent_lower) == 1:
+                parts.append(f'country_parent_code="{country_parent_lower[0]}"')
+            else:
+                or_list = '|'.join(country_parent_lower)
+                parts.append(f'country_parent_code="({or_list})"')
+    
+    # Country region codes (multi-select, OR within)
+    country_region_codes = filters.get("country_region_code", [])
+    if country_region_codes:
+        country_region_codes = [c for c in country_region_codes if c and c.strip()]
+        if country_region_codes:
+            country_region_lower = [c.lower() for c in country_region_codes]
+            if len(country_region_lower) == 1:
+                parts.append(f'country_region_code="{country_region_lower[0]}"')
+            else:
+                or_list = '|'.join(country_region_lower)
+                parts.append(f'country_region_code="({or_list})"')
+    
+    # LEGACY: Country codes (for backward compatibility)
+    # This is the full code including region (e.g., 'ARG-CBA')
     country_codes = filters.get("country_code", [])
     if country_codes:
-        # Defensive: filter out empty strings
         country_codes = [c for c in country_codes if c and c.strip()]
         if country_codes:
-            # Metadata is lowercased in index
-            # Use case-insensitive regex to avoid hits=0 due to case mismatch
             country_codes_lower = [c.lower() for c in country_codes]
             if len(country_codes_lower) == 1:
-                parts.append(f'country_code@i:/{country_codes_lower[0]}/')
+                parts.append(f'country_code="{country_codes_lower[0]}"')
             else:
                 or_list = '|'.join(country_codes_lower)
-                parts.append(f'country_code@i:/(?:{or_list})/')
+                parts.append(f'country_code="({or_list})"')
     
     # Radio filter (lowercased in index)
     radio = filters.get("radio")
     if radio and str(radio).strip():
-        parts.append(f'radio="{str(radio).lower()}"')
+        # Escape quotes in radio name
+        radio_escaped = str(radio).replace('"', '\\"')
+        parts.append(f'radio="{radio_escaped.lower()}"')
     
     # City filter (lowercased in index)
     city = filters.get("city")
     if city and str(city).strip():
-        parts.append(f'city="{str(city).lower()}"')
+        # Escape quotes in city name
+        city_escaped = str(city).replace('"', '\\"')
+        parts.append(f'city="{city_escaped.lower()}"')
     
     # Date filter
     date = filters.get("date")
