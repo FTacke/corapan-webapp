@@ -11,7 +11,8 @@ document.addEventListener('DOMContentLoaded', () => {
     console.log('[Player Token Marker] DOM ready, checking for token_id');
     
     const urlParams = new URLSearchParams(window.location.search);
-    const targetTokenId = urlParams.get('token_id');
+    const targetTokenIdRaw = urlParams.get('token_id');
+    const targetTokenId = (targetTokenIdRaw || '').toString().trim().toLowerCase();
     
     if (!targetTokenId) {
         console.log('[Player Token Marker] No token_id in URL');
@@ -22,28 +23,32 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Wait a bit for transcription to render
     setTimeout(() => {
-        // Find all words with the target token_id
-        const words = document.querySelectorAll('[data-token-id]');
+        // Try direct querySelector first (CSS.escape to handle special characters)
+        const escaped = CSS.escape(targetTokenId);
+        const container = document.getElementById('transcriptionContainer') || document.body;
+        let node = container.querySelector(`[data-token-id-lower="${escaped}"]`);
+        if (!node) {
+            // Fallback: iterate all and compare normalized dataset values
+            const words = document.querySelectorAll('[data-token-id-lower]');
+            console.log('[Player Token Marker] Found', words.length, 'words with token_id data');
+            for (const word of words) {
+                const wTok = (word.dataset.tokenIdLower || '').toString().trim().toLowerCase();
+                if (wTok === targetTokenId) {
+                    node = word;
+                    break;
+                }
+            }
+        }
         console.log('[Player Token Marker] Found', words.length, 'words with token_id data');
         
-        let found = false;
-        words.forEach(word => {
-            if (word.dataset.tokenId === targetTokenId) {
-                console.log('[Player Token Marker] MATCH! Found target token_id in word:', word.textContent);
-                
-                // Add highlight class
-                word.classList.add('word-token-id');
-                found = true;
-                
-                // Scroll into view after a short delay
-                setTimeout(() => {
-                    word.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                    console.log('[Player Token Marker] Scrolled to token');
-                }, 100);
-            }
-        });
-        
-        if (!found) {
+        if (node) {
+            console.log('[Player Token Marker] MATCH! Found target token_id in word:', node.textContent);
+            node.classList.add('word-token-id');
+            setTimeout(() => {
+                node.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                console.log('[Player Token Marker] Scrolled to token');
+            }, 100);
+        } else {
             console.warn('[Player Token Marker] Token_id not found in transcription:', targetTokenId);
         }
     }, 500);

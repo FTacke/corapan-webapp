@@ -236,6 +236,12 @@ export class SearchUI {
         `;
       }
 
+      // Ensure UI container is visible (in case DataTables is initialized while hidden)
+      const tableContainer = document.getElementById('datatable-container');
+      if (tableContainer) tableContainer.style.display = '';
+      const subTabs = document.getElementById('search-sub-tabs');
+      if (subTabs) subTabs.style.display = '';
+
       // Initialize DataTable (this would call existing initTable logic)
       this.initResultsTable(queryParams.toString());
 

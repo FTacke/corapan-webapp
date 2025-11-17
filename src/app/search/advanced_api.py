@@ -194,7 +194,19 @@ def _enrich_hits_with_docmeta(items: list, hits: list, docinfos: dict, docmeta_c
         docmeta = docmeta_cache.get(file_id) if file_id else None
         if docmeta:
             item['country_code'] = item.get('country_code') or (docmeta.get('country_code') or '').lower()
-            item['country_scope'] = item.get('country_scope') or (docmeta.get('country_scope') or '').lower()
+            # Country scope may be absent in older docmeta files. Derive reasonable default:
+            # If docmeta contains an explicit country_scope, use it. Otherwise infer from known regional codes.
+            doc_scope = (docmeta.get('country_scope') or '').lower()
+            if doc_scope:
+                item['country_scope'] = item.get('country_scope') or doc_scope
+            else:
+                # Derive: region codes like 'ARG-CBA' indicate regional; otherwise national
+                regional_codes = {'ARG-CHU', 'ARG-CBA', 'ARG-SDE', 'ESP-CAN', 'ESP-SEV'}
+                code = (docmeta.get('country_code') or '').upper()
+                if code in regional_codes:
+                    item['country_scope'] = item.get('country_scope') or 'regional'
+                else:
+                    item['country_scope'] = item.get('country_scope') or 'national'
             # Only override filename from docmeta if not already set
             item['filename'] = item.get('filename') or docmeta.get('file_id')
             item['radio'] = item.get('radio') or docmeta.get('radio')
@@ -436,6 +448,12 @@ def datatable_data():
 
         # Enrich processed hits using helper
         processed_hits = _enrich_hits_with_docmeta(processed_hits, hits, data.get('docInfos', {}) or {}, _DOCMETA_CACHE or {})
+        if current_app.debug or current_app.config.get('DEBUG'):
+            try:
+                sample = processed_hits[:5]
+                logger.debug(f"Sample processed hits after enrichment: {json.dumps(sample, default=str)[:1000]}")
+            except Exception:
+                logger.exception("Error logging sample processed hits")
         
         # Apply country filter (post-processing since metadata is document-level)
         def _matches_country_filter(item, filters):
@@ -485,6 +503,8 @@ def datatable_data():
         if current_app.debug or current_app.config.get('DEBUG'):
             response_payload['cql_debug'] = cql_pattern
             response_payload['filter_debug'] = filter_query or ''
+            # Include a small sample of processed hits for debugging
+            response_payload['hit_sample'] = processed_hits[:5]
         # Temporary debug: include BLS summary and hit counts to inspect responses
         response_payload['bls_summary'] = summary
         response_payload['bls_hits_len'] = len(hits)

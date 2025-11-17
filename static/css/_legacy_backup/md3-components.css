@@ -1,6 +1,8 @@
-/**
- * Material Design 3 Komponenten - Schlichte Variante
- * Minimalistisches Design mit nur leichten Kurven
+/**n+ * ARCHIVED: Material Design 3 Komponenten (Legacy)
+ * NOTE: This file contains legacy styling including Tagify-specific
+ * overrides which are no longer used in the active codebase. These styles
+ * are retained for historical or forensic reasons only. New code uses
+ * `static/css/md3/components/*` and `select2.css` for active styling.
  */
 
 /* ============================================
@@ -2617,16 +2619,6 @@
   .md3-corpus-table th,
   .md3-corpus-table td {
     padding: 0.25rem 0.125rem;
-  }
-}
-
-/* ===================================
-   Token Input - Tagify Integration
-   =================================== */
-
-/* Style the Tagify container */
-.md3-outlined-textfield .tagify {
-  --tag-bg: var(--md3-color-primary-container);
   --tag-hover: var(--md3-color-primary-container);
   --tag-text-color: var(--md3-color-on-primary-container);
   --tag-remove-bg: transparent;
@@ -2662,7 +2654,11 @@
   align-items: center;
   flex-wrap: wrap;
   gap: 4px;
-}
+/* LEGACY BACKUP: md3-components.css
+  This file contained Tagify-specific overrides and has been archived.
+  The project no longer uses Tagify; TokenTab (MD3 chips) is the supported token UI.
+  This file is intentionally kept as a backup, please do not edit.
+*/
 
 /* Input within Tagify */
 .md3-outlined-textfield .tagify__input {

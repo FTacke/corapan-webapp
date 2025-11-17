@@ -90,7 +90,7 @@ Die alte Datei hätte Browser verwirrbar machen (doppelte Klassendefinitionen, S
 <link rel="stylesheet" href="{{ url_for('static', filename='css/md3/components/tabs.css') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/md3/components/forms.css') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/md3/components/chips.css') }}">
-<link rel="stylesheet" href="{{ url_for('static', filename='css/md3/components/select2-tagify.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/md3/components/select2.css') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/md3/components/datatables.css') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/md3/components/corpus.css') }}">
 

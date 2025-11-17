@@ -198,7 +198,7 @@ Siehe: `docs/reports/2025-11-11-advanced-search-fixes.md`
   ✅ tabs.css
   ✅ forms.css
   ✅ chips.css
-  ✅ select2-tagify.css
+  ✅ select2.css
   ✅ datatables.css
   ✅ corpus.css
   ✅ advanced-search.css

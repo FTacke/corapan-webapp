@@ -16,6 +16,12 @@ console.log('[Player Init] Module loaded');
 
 // Get configuration from backend
 const config = window.PLAYER_CONFIG || {};
+// Store original and normalized (lowercased) token_id for robust matching
+const rawTokenId = (config.token_id || '').toString();
+const tokenIdOriginal = rawTokenId.trim();
+const tokenIdLower = tokenIdOriginal.toLowerCase();
+config.token_id_original = tokenIdOriginal;
+config.token_id = tokenIdLower; // normalized, lower-case token id
 console.log('[Player Init] Config:', config);
 
 // Store instances globally
@@ -106,7 +112,8 @@ async function initializePlayer() {
     if (config.token_id) {
       setTimeout(() => {
         const container = document.getElementById('transcriptionContainer');
-        const targetWord = container?.querySelector(`[data-token-id="${config.token_id}"]`);
+        const escaped = CSS.escape(config.token_id);
+        const targetWord = container?.querySelector(`[data-token-id-lower="${escaped}"]`);
         if (targetWord) {
           console.log('[Player Init] Scrolling to target token (backup)');
           targetWord.scrollIntoView({ behavior: 'smooth', block: 'center' });

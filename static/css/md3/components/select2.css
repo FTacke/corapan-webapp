@@ -1,18 +1,18 @@
-/* Deprecated: select2-tagify.css
-  The project no longer uses Tagify. This file previously contained Tagify
-  integration styles for the Token input. It has been replaced by
-  `select2.css` (Select2-only) and Tagify styles have been archived in
-  `static/css/_legacy_backup/select2-tagify.css`.
-*/
+/* Select2 Integration for Corpus Search Form - MD3 Styled Overrides */
+/* Extracted select2-only styles (Tagify sections removed) */
 
 /* ============================================================================
    SELECT2 MULTI-SELECT CHIPS
    ============================================================================ */
 
-/* Content removed and archived. See `_legacy_backup/select2-tagify.css` for
-   historical Tagify-related styles. */
+.select2-container--default .select2-selection--multiple {
+  border: none !important;
+  border-radius: var(--radius-sm) !important;
+  padding: var(--space-4) !important;
+  min-height: 56px !important;
+  background: transparent !important;
+}
 
-/* MD3-styled Chips für ausgewählte Optionen */
 .select2-container--default .select2-selection--multiple .select2-selection__choice {
   background: var(--md-sys-color-primary) !important;
   border: none !important;
@@ -35,7 +35,6 @@
   opacity: 0.85 !important;
 }
 
-/* Remove-Button (unsichtbar, aber klickbar über gesamten Chip) */
 .select2-container--default .select2-selection--multiple .select2-selection__choice__remove {
   position: absolute !important;
   inset: 0 !important;
@@ -51,12 +50,10 @@
   pointer-events: none !important;
 }
 
-/* Clear-All Button verstecken */
 .select2-container--default .select2-selection__clear {
   display: none !important;
 }
 
-/* Search Field innerhalb Select2 */
 .select2-container--default .select2-selection--multiple .select2-search__field {
   font-size: 16px !important;
   color: var(--md-sys-color-on-surface) !important;
@@ -64,7 +61,6 @@
   margin: 2px !important;
 }
 
-/* Dropdown Container */
 .select2-dropdown {
   border: 1px solid var(--md-sys-color-outline-variant) !important;
   border-radius: var(--radius-sm) !important;
@@ -72,7 +68,6 @@
   background: var(--md-sys-color-surface-container) !important;
 }
 
-/* Dropdown Options - Default State */
 .select2-container--default .select2-results__option {
   padding: 12px 16px !important;
   font-size: 16px !important;
@@ -83,19 +78,16 @@
   transition: background-color 200ms cubic-bezier(0.2, 0, 0, 1) !important;
 }
 
-/* Dropdown Options - Hover/Highlighted State */
 .select2-container--default .select2-results__option--highlighted {
   background: var(--md-sys-color-primary-container) !important;
   color: var(--md-sys-color-on-primary-container) !important;
 }
 
-/* Dropdown Options - Selected State */
 .select2-container--default .select2-results__option--selected {
   color: var(--md-sys-color-on-surface-variant) !important;
   background: var(--md-sys-color-surface-variant) !important;
 }
 
-/* Dropdown Search Field */
 .select2-search--dropdown .select2-search__field {
   padding: 12px 16px !important;
   border: 1px solid var(--md-sys-color-outline-variant) !important;
@@ -110,13 +102,6 @@
   outline: none !important;
 }
 
-/* Tagify-specific rules removed from active styles and archived in
-   static/css/_legacy_backup/select2-tagify.css. */
-
-/* ============================================================================
-   REGIONAL SELECT CONTAINER
-   ============================================================================ */
-
 /* Ensure Select2 inside regional filter takes full width */
 .md3-regional-select .select2-container {
   width: 100% !important;
@@ -130,4 +115,5 @@
 
 .select2-container .select2-search--inline .select2-search__field {
     height: 22px;
-    font-size: 14px !important;}
+    font-size: 14px !important;
+}

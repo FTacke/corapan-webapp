@@ -323,7 +323,7 @@ Diese Anleitung ermöglicht es, die **erweiterte Suche** (Advanced Search) zu pl
        
        <!-- Input je nach Mode -->
        <div id="query-builder-sequence" class="md3-query-builder-mode">
-         <!-- Tagify für Wort-Sequenz -->
+         <!-- TokenTab (MD3 chips) für Wort-Sequenz -->
          <input type="text" id="sequence-input" placeholder="Eingabe: Wort 1, Wort 2, ...">
          <p class="md3-caption">z.B. "el", "gato", "negro"</p>
        </div>

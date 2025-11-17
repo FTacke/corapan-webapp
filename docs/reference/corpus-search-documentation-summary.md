@@ -115,7 +115,7 @@ docs/
 **Frontend:**
 - 6 ES6-Module für verschiedene Funktionen
 - jQuery 3.7.1 + DataTables 1.13.7
-- Select2 4.1.0-rc0 + Tagify
+- Select2 4.1.0-rc0 + TokenTab
 - MD3 Design System
 
 **Database:**

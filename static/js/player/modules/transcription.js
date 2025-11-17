@@ -30,7 +30,8 @@ export class TranscriptionManager {
    * @param {string} targetTokenId - Optional token ID to highlight and scroll to
    */
   async load(transcriptionFile, targetTokenId = null) {
-    this.targetTokenId = targetTokenId;
+    // Normalize target token id for robust comparison (trim whitespace, ensure string)
+    this.targetTokenId = targetTokenId ? String(targetTokenId).trim().toLowerCase() : null;
 
     console.log('[Transcription] Loading with:', {
       transcriptionFile,
@@ -61,6 +62,31 @@ export class TranscriptionManager {
       // attempt client-side lookup — rely on server augmentation.
       this._updateMetadata();
       this._renderSegments();
+      // If we have a target token but no direct match in the rendered markup,
+      // perform a DOM query to ensure the element exists and scroll to it.
+      if (this.targetTokenId) {
+        try {
+          const container = document.getElementById('transcriptionContainer');
+          if (container) {
+            const escaped = CSS.escape(this.targetTokenId);
+            const node = container.querySelector(`[data-token-id-lower="${escaped}"]`);
+            if (node) {
+              console.log('[Transcription] Post-render: found matched node by data-token-id');
+              node.classList.add('word-token-id');
+              setTimeout(() => node.scrollIntoView({ behavior: 'smooth', block: 'center' }), 20);
+              const startTime = parseFloat(node.dataset.start) - 0.25;
+              if (!isNaN(startTime) && this.audioPlayer && this.audioPlayer.audioElement) {
+                this.audioPlayer.audioElement.currentTime = Math.max(0, startTime);
+                console.log('[Transcription] Post-render: audio time set to', startTime);
+              }
+            } else {
+              console.debug('[Transcription] Post-render: no node found for targetTokenId', this.targetTokenId);
+            }
+          }
+        } catch (err) {
+          console.warn('[Transcription] Post-render token lookup failed:', err);
+        }
+      }
       
       console.log('[Transcription] Loaded successfully with targetTokenId:', this.targetTokenId);
     } catch (error) {
@@ -421,7 +447,10 @@ export class TranscriptionManager {
     wordElement.classList.add('word');
     wordElement.dataset.start = word.start;
     wordElement.dataset.end = word.end;
-    wordElement.dataset.tokenId = word.token_id;
+    const tokenIdOriginal = word.token_id ? String(word.token_id).trim() : '';
+    const tokenIdLower = tokenIdOriginal ? tokenIdOriginal.toLowerCase() : '';
+    wordElement.dataset.tokenId = tokenIdOriginal;
+    wordElement.dataset.tokenIdLower = tokenIdLower;
     wordElement.style.cursor = 'pointer';
 
     // Assign group index
@@ -431,7 +460,8 @@ export class TranscriptionManager {
     wordElement.dataset.groupIndex = `${segmentIndex}-${groupIndex}`;
 
     // Highlight target token
-    if (this.targetTokenId && word.token_id === this.targetTokenId) {
+    // Compare normalized token ids
+    if (this.targetTokenId && tokenIdLower === this.targetTokenId) {
       console.log('[Transcription] MATCH! Found target token_id:', this.targetTokenId, 'in word:', word);
       wordElement.classList.add('word-token-id');
       

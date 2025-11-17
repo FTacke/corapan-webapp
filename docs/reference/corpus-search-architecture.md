@@ -498,7 +498,7 @@ static/js/modules/corpus/
 ├── datatables.js            # CorpusDatatablesManager (Server-Side)
 ├── filters.js               # CorpusFiltersManager (Select2)
 ├── search.js                # CorpusSearchManager (Form + Navigation)
-├── tokens.js                # CorpusTokenManager (Tagify)
+├── token-tab.js            # TokenTab (MD3 chips, token management)
 ├── audio.js                 # CorpusAudioManager (Player Integration)
 ├── config.js                # Constants (REGIONAL_OPTIONS, SELECT2_CONFIG)
 ├── api.js                   # API-Calls (falls vorhanden)
@@ -526,8 +526,10 @@ class CorpusApp {
     this.search = new CorpusSearchManager(this.filters)
     this.search.initialize()
     
-    this.tokens = new CorpusTokenManager()
-    this.tokens.initialize()
+    // Token UI (TokenTab) is auto-initialized (MD3 chips). Legacy Tagify-based
+    // CorpusTokenManager is deprecated and not required here.
+    // this.tokens = new CorpusTokenManager()
+    // this.tokens.initialize()
     
     this.audio = new CorpusAudioManager()
     this.audio.initialize()
@@ -829,15 +831,15 @@ class CorpusSearchManager {
    
 2. FRONTEND (Token Manager)
    ↓
-   CorpusTokenManager.onTokenApplyClick()
-   → tagify.value = [{ value: "TOKEN1" }, { value: "TOKEN2" }, { value: "TOKEN3" }]
+  CorpusTokenManager.onTokenApplyClick() (legacy behavior) / TokenTab (preferred)
+  → TokenTab.getTokenIds() = ["TOKEN1", "TOKEN2", "TOKEN3"]
    → hiddenTokens.value = "TOKEN1,TOKEN2,TOKEN3"
    → searchModeOverride.value = "token_ids"
    → form.submit()
    
 3. BROWSER
    ↓
-   POST /corpus/search (wegen Tagify-Form-Submit)
+  POST /corpus/search (TokenTab triggers form submission)
    Body: token_ids=TOKEN1,TOKEN2,TOKEN3&search_mode_override=token_ids
    
 4. BACKEND (Route Handler)
@@ -1083,7 +1085,7 @@ if params.table_search:
 **UI:** Tab "Token"
 
 **Suchfeld:**
-- Token-IDs (Tagify Input): Komma-getrennte Token-IDs
+- Token-IDs (TokenTab input): Komma-getrennte Token-IDs
 - Beispiel: "TOKEN1, TOKEN2, TOKEN3"
 
 **Features:**

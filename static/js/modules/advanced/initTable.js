@@ -20,7 +20,10 @@ let currentParams = null;
  * 
  * @param {string} queryParams - Query string (e.g., "q=radio&mode=forma")
  */
+import { makeBaseConfig, escapeHtml, renderAudioButtons, renderFileLink } from './datatableFactory.js';
+
 export function initAdvancedTable(queryParams) {
+  console.log('[Advanced] initAdvancedTable called with params:', queryParams);
   // Guard: jQuery must be present
   if (typeof window.$ === 'undefined' || typeof window.jQuery === 'undefined') {
     console.error('[Advanced] jQuery not available, cannot initialize DataTables');
@@ -37,6 +40,7 @@ export function initAdvancedTable(queryParams) {
   currentParams = queryParams;
   
   // Step 1: Destroy existing table if present (Re-init safety)
+  console.log('[Advanced] advancedTable exists?', !!advancedTable, 'DOM advanced-table:', !!document.getElementById('advanced-table'));
   if (advancedTable && $.fn.dataTable.isDataTable('#advanced-table')) {
     try {
       advancedTable.destroy();  // Destroy DataTables instance
@@ -471,72 +475,7 @@ export function updateExportButtons(queryParams) {
   console.log('[Export] Buttons updated');
 }
 
-  /**
-   * Render audio control buttons similar to Corpus view
-   */
-  function renderAudioButtons(row) {
-    const hasAudio = row.start_ms && row.filename;
-    if (!hasAudio) return '<span class="md3-datatable__empty">-</span>';
 
-    const filename = row.filename || '';
-    const tokenId = row.token_id || '';
-    
-    // Convert milliseconds to seconds for audio playback
-    // Backend expects seconds (start/end parameters)
-    const startMs = row.start_ms || row.start || 0;
-    const endMs = row.end_ms || (parseInt(startMs) + 5000);
-    const contextStartMs = row.context_start || startMs;
-    const contextEndMs = row.context_end || endMs;
-    
-    // Convert to seconds (backend /play_audio expects seconds)
-    const startSec = (startMs / 1000).toFixed(3);
-    const endSec = (endMs / 1000).toFixed(3);
-    const contextStartSec = (contextStartMs / 1000).toFixed(3);
-    const contextEndSec = (contextEndMs / 1000).toFixed(3);
-    
-    return `
-      <div class="md3-corpus-audio-buttons">
-        <div class="md3-corpus-audio-row">
-          <span class="md3-corpus-audio-label">Res.:</span>
-          <a class="audio-button" data-filename="${escapeHtml(filename)}" data-start="${startSec}" data-end="${endSec}" data-token-id="${escapeHtml(tokenId)}" data-type="pal">
-            <i class="fa-solid fa-play"></i>
-          </a>
-          <a class="download-button" data-filename="${escapeHtml(filename)}" data-start="${startSec}" data-end="${endSec}" data-token-id="${escapeHtml(tokenId)}" data-type="pal">
-            <i class="fa-solid fa-download"></i>
-          </a>
-        </div>
-        <div class="md3-corpus-audio-row">
-          <span class="md3-corpus-audio-label">Ctx:</span>
-          <a class="audio-button" data-filename="${escapeHtml(filename)}" data-start="${contextStartSec}" data-end="${contextEndSec}" data-token-id="${escapeHtml(tokenId)}" data-type="ctx">
-            <i class="fa-solid fa-play"></i>
-          </a>
-          <a class="download-button" data-filename="${escapeHtml(filename)}" data-start="${contextStartSec}" data-end="${contextEndSec}" data-token-id="${escapeHtml(tokenId)}" data-type="ctx">
-            <i class="fa-solid fa-download"></i>
-          </a>
-        </div>
-      </div>
-    `;
-  }
-
-  /**
-   * Render file link with player icon (mimics corpus renderFileLink)
-   */
-  function renderFileLink(filename, type, row) {
-    if (!filename) return '';
-    if (type === 'sort' || type === 'type') return filename;
-    const base = filename.trim().replace(/\.mp3$/i, '');
-    const transcriptionPath = `/media/transcripts/${encodeURIComponent(base)}.json`;
-    const audioPath = `/media/full/${encodeURIComponent(base)}.mp3`;
-    let playerUrl = `/player?transcription=${encodeURIComponent(transcriptionPath)}&audio=${encodeURIComponent(audioPath)}`;
-    if (row && row.token_id) {
-      playerUrl += `&token_id=${encodeURIComponent(row.token_id)}`;
-    }
-    return `
-      <a href="${playerUrl}" class="player-link" title="${escapeHtml(filename)}">
-        <i class="fa-regular fa-file"></i>
-      </a>
-    `;
-  }
 
 /**
  * Update summary box with results info
@@ -598,17 +537,7 @@ export function updateSummary(data, queryParams) {
 /**
  * Escape HTML entities
  */
-function escapeHtml(text) {
-  if (!text) return '';
-  const map = {
-    '&': '&amp;',
-    '<': '&lt;',
-    '>': '&gt;',
-    '"': '&quot;',
-    "'": '&#039;'
-  };
-  return text.replace(/[&<>"']/g, m => map[m]);
-}
+// escapeHtml, renderAudioButtons and renderFileLink are provided by datatableFactory
 
 // Export for external use
 export { advancedTable };

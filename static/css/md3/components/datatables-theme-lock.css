@@ -10,140 +10,117 @@
 /* Force Light Theme für alle DataTable-Komponenten */
 .md3-corpus-table-container,
 .table-container,
-#corpus-table_wrapper {
-  background: white !important;
-  border-color: #dee2e6 !important;
-  color: #1c1b1f !important;
+#corpus-table_wrapper,
+#advanced-table_wrapper,
+#token-results-table_wrapper {
+  /* Use system surface color tokens so dark mode is not forced to light */
+  background: var(--md-sys-color-surface, white) !important;
+  border-color: var(--md-sys-color-outline, #dee2e6) !important;
+  color: var(--md-sys-color-on-surface, #1c1b1f) !important;
 }
 
-#corpus-table {
-  background: white !important;
-  color: #1c1b1f !important;
+#corpus-table,
+#advanced-table,
+#token-results-table,
+.md3-corpus-table {
+  background: var(--md-sys-color-surface, white) !important;
+  color: var(--md-sys-color-on-surface, #1c1b1f) !important;
 }
 
-#corpus-table thead th {
-  background: #f8f9fa !important;
-  color: #495057 !important;
-  border-color: #dee2e6 !important;
+#corpus-table thead th,
+#advanced-table thead th,
+#token-results-table thead th,
+.md3-corpus-table thead th {
+  background: var(--md-sys-color-surface-container, #f8f9fa) !important;
+  color: var(--md-sys-color-on-surface-variant, #495057) !important;
+  border-color: var(--md-sys-color-outline, #dee2e6) !important;
 }
 
-#corpus-table tbody td {
-  color: #1c1b1f !important;
-  border-color: #f0f0f0 !important;
+#corpus-table tbody td,
+#advanced-table tbody td,
+#token-results-table tbody td,
+.md3-corpus-table tbody td {
+  color: var(--md-sys-color-on-surface, #1c1b1f) !important;
 }
 
-#corpus-table tbody tr:nth-child(even) {
-  background: #fafafa !important;
+#corpus-table tbody tr:nth-child(even),
+#advanced-table tbody tr:nth-child(even),
+#token-results-table tbody tr:nth-child(even),
+.md3-corpus-table tbody tr:nth-child(even) {
+  background: var(--md-sys-color-surface-variant, #fafafa) !important;
 }
 
-#corpus-table tbody tr:hover {
+#corpus-table tbody tr:hover,
+#advanced-table tbody tr:hover,
+#token-results-table tbody tr:hover,
+.md3-corpus-table tbody tr:hover {
   background: rgba(0, 105, 92, 0.08) !important;
 }
 
 /* DataTables UI Elements */
 .dataTables_wrapper,
 .dataTables_wrapper * {
-  color: #1c1b1f !important;
+  color: var() !important;
 }
 
 .dataTables_wrapper .dataTables_length select,
 .dataTables_wrapper .dataTables_filter input {
-  background: white !important;
-  color: #1c1b1f !important;
-  border-color: #dee2e6 !important;
+  background: var(--md-sys-color-surface, white) !important;
+  color: var(--md-sys-color-on-surface, #1c1b1f) !important;
+  border-color: var(--md-sys-color-outline, #dee2e6) !important;
 }
 
 .dataTables_wrapper .dataTables_paginate .paginate_button {
-  background: white !important;
-  color: #0a5981 !important;
-  border-color: #dee2e6 !important;
+  background: var(--md-sys-color-surface, white) !important;
+  color: var(--md-sys-color-primary, #0a5981) !important;
+  border-color: var(--md-sys-color-outline, #dee2e6) !important;
 }
 
 .dataTables_wrapper .dataTables_paginate .paginate_button:hover {
-  background: #f0f1f2 !important;
-  border-color: #0a5981 !important;
+  background: var(--md-sys-color-surface-2, #f0f1f2) !important;
+  border-color: var(--md-sys-color-primary, #0a5981) !important;
 }
 
 .dataTables_wrapper .dataTables_paginate .paginate_button.current {
-  background: #0a5981 !important;
-  color: white !important;
+  background: var(--md-sys-color-primary, #0a5981) !important;
+  color: var(--md-sys-color-on-primary, #ffffff) !important;
 }
 
 .dataTables_wrapper .dataTables_paginate .paginate_button.disabled {
-  background: #f8f9fa !important;
-  color: #cac4d0 !important;
+  background: var(--md-sys-color-surface-variant, #f8f9fa) !important;
+  color: var(--md-sys-color-outline, #cac4d0) !important;
 }
 
 /* Export Buttons */
 .dt-buttons .dt-button {
-  background: white !important;
-  color: #0a5981 !important;
-  border-color: #dee2e6 !important;
+  background: var(--md-sys-color-surface, white) !important;
+  color: var(--md-sys-color-primary, #0a5981) !important;
+  border-color: var(--md-sys-color-outline, #dee2e6) !important;
 }
 
 .dt-buttons .dt-button:hover {
-  background: #f0f1f2 !important;
-  border-color: #0a5981 !important;
+  background: var(--md-sys-color-surface-2, #f0f1f2) !important;
+  border-color: var(--md-sys-color-primary, #0a5981) !important;
 }
 
 /* Audio Buttons in Tabelle */
 .audio-cell .audio-button,
 .audio-cell .download-button {
-  background: #f8f9fa !important;
-  color: #0a5981 !important;
-  border-color: #dee2e6 !important;
+  background: var(--md-sys-color-surface-variant, #f8f9fa) !important;
+  color: var(--md-sys-color-primary, #0a5981) !important;
+  border-color: var(--md-sys-color-outline, #dee2e6) !important;
 }
 
 .audio-cell .audio-button:hover,
 .audio-cell .download-button:hover {
-  background: #e9ecef !important;
+  background: var(--md-sys-color-surface-2, #e9ecef) !important;
 }
 
 /* Expliziter Dark-Mode Override */
-:root[data-theme="dark"] .md3-corpus-table-container,
-:root[data-theme="dark"] #corpus-table_wrapper,
-:root[data-theme="auto"][data-system-dark="true"] .md3-corpus-table-container,
-:root[data-theme="auto"][data-system-dark="true"] #corpus-table_wrapper {
-  background: white !important;
-  color: #1c1b1f !important;
-}
-
-:root[data-theme="dark"] #corpus-table,
-:root[data-theme="auto"][data-system-dark="true"] #corpus-table {
-  background: white !important;
-  color: #1c1b1f !important;
-}
-
-:root[data-theme="dark"] #corpus-table thead th,
-:root[data-theme="auto"][data-system-dark="true"] #corpus-table thead th {
-  background: #f8f9fa !important;
-  color: #495057 !important;
-}
-
-:root[data-theme="dark"] #corpus-table tbody td,
-:root[data-theme="auto"][data-system-dark="true"] #corpus-table tbody td {
-  color: #1c1b1f !important;
-}
-
-:root[data-theme="dark"] #corpus-table tbody tr:nth-child(even),
-:root[data-theme="auto"][data-system-dark="true"] #corpus-table tbody tr:nth-child(even) {
-  background: #fafafa !important;
-}
+/* Remove explicit dark-mode override blocks to allow site theme to control datatables appearance */
 
 /* Prevent Media Query Overrides */
-@media (prefers-color-scheme: dark) {
-  .md3-corpus-table-container,
-  #corpus-table_wrapper,
-  #corpus-table {
-    background: white !important;
-    color: #1c1b1f !important;
-  }
-  
-  #corpus-table thead th {
-    background: #f8f9fa !important;
-    color: #495057 !important;
-  }
-}
+/* Avoid using system-level forced dark-mode overrides; let theme tokens decide colors */
 
 /* ============================================================================
    MD3-konformes DataTables Styling für Advanced Search

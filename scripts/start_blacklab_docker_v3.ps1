@@ -42,7 +42,8 @@
 [CmdletBinding()]
 param(
     [switch]$Detach,
-    [switch]$Remove = $true
+    [switch]$Remove = $true,
+    [switch]$Restart
 )
 
 $ErrorActionPreference = "Stop"
@@ -180,8 +181,11 @@ Write-Host ""
 Write-Host "[4/4] Starte BlackLab Server..." -ForegroundColor Yellow
 
 # Convert Windows paths to Docker volume format
-$indexMount = $indexPath.Replace('\', '/').Replace('C:', '/c')
-$configMount = $configPath.Replace('\', '/').Replace('C:', '/c')
+# Replace backslashes and transform drive letter (C:) into /c prefix for Docker
+$indexMount = $indexPath.Replace('\', '/')
+$configMount = $configPath.Replace('\', '/')
+if ($indexMount -match '^[A-Za-z]:') { $indexMount = '/' + ($indexMount.Substring(0,1).ToLower()) + $indexMount.Substring(2) }
+if ($configMount -match '^[A-Za-z]:') { $configMount = '/' + ($configMount.Substring(0,1).ToLower()) + $configMount.Substring(2) }
 
 # Build docker run arguments
 # Note: BlackLab 5.x expects indexLocations to contain subdirectories, each being an index
@@ -199,9 +203,19 @@ if (Test-Path $configPath) {
     $dockerArgs += "${configMount}:/etc/blacklab:ro"
 }
 
-# Add --rm flag if Remove is enabled
-if ($Remove) {
+# Add --rm flag if Remove is enabled and not running detached
+# When running detached, avoid --rm by default so the container persists and logs can be inspected
+if ($Remove -and -not $Detach -and -not $Restart) {
     $dockerArgs += "--rm"
+}
+
+# Add restart policy if requested
+if ($Restart) {
+    # If Restart is requested, do not use --rm due to incompatibility
+    if ($Remove) {
+        Write-Host "  WARNUNG: --restart wurde angegeben, --rm wird ignoriert." -ForegroundColor Yellow
+    }
+    $dockerArgs += "--restart=unless-stopped"
 }
 
 # Add -d flag if Detach is enabled
@@ -230,6 +244,15 @@ try {
     exit 1
 }
 
+# After starting, check if the container exited immediately (likely due to a crash)
+$containerStatus = docker ps -a --filter "name=$CONTAINER_NAME" --format "{{.Status}}" 2>$null
+if ($containerStatus -and $containerStatus -match "Exited") {
+    Write-Host "  FEHLER: Container ist unmittelbar nach dem Start beendet (Exited)." -ForegroundColor Red
+    Write-Host "  Zeige letzte Logs (100 Zeilen):" -ForegroundColor Gray
+    docker logs --tail 100 $CONTAINER_NAME
+    exit 1
+}
+
 if ($Detach) {
     Write-Host ""
     Write-Host "=========================================" -ForegroundColor Green
@@ -248,6 +271,36 @@ if ($Detach) {
     Write-Host "Container stoppen:" -ForegroundColor White
     Write-Host "  docker stop $CONTAINER_NAME" -ForegroundColor Gray
     Write-Host ""
+    # Health check: wait for BlackLab HTTP endpoint to respond before returning
+    Write-Host "Warte auf BlackLab-Server (HTTP) ..." -ForegroundColor Yellow
+    $startTime = Get-Date
+    $timeoutSeconds = 90
+    $ready = $false
+
+    while ( ((Get-Date) - $startTime).TotalSeconds -lt $timeoutSeconds -and -not $ready ) {
+        try {
+            $response = Invoke-WebRequest -Uri "http://localhost:$HOST_PORT/blacklab-server/" -UseBasicParsing -TimeoutSec 2 -ErrorAction Stop
+            if ($response.StatusCode -eq 200 -or $response.StatusCode -eq 404) {
+                $ready = $true
+                break
+            }
+        } catch {
+            # ignore and retry
+        }
+        Start-Sleep -Seconds 2
+    }
+
+    if ($ready) {
+        Write-Host "BlackLab ist erreichbar auf http://localhost:$HOST_PORT/blacklab-server/" -ForegroundColor Green
+    } else {
+        Write-Host "WARNUNG: BlackLab antwortete nicht innerhalb von $timeoutSeconds Sekunden." -ForegroundColor Yellow
+        Write-Host "Pruefen Sie Container-Logs: docker logs --tail 100 $CONTAINER_NAME" -ForegroundColor Gray
+        try {
+            docker logs --tail 50 $CONTAINER_NAME
+        } catch {
+            Write-Host "Fehler beim Lesen der Container-Logs: $_" -ForegroundColor Red
+        }
+    }
 } else {
     Write-Host ""
     Write-Host "Server gestoppt." -ForegroundColor Yellow

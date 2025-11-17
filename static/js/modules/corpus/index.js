@@ -9,8 +9,8 @@ import { CorpusDatatablesManager, adjustCorpusTable } from './datatables.js';
 import { CorpusAudioManager } from './audio.js';
 import { CorpusSearchManager } from './search.js';
 import '../search/corpusForm.js';
-// Token input: Tagify-based Token Manager was replaced by `token-tab.js` (MD3 chips)
-// Keep compatibility with legacy Tagify if present; otherwise, token-tab.js provides the token UI.
+// Token input: TokenTab (MD3 chips) replaces legacy Tagify-based token manager.
+// The app uses window.TokenTab as the canonical token UI and no longer requires Tagify.
 
 /**
  * Main Corpus Application Class
@@ -37,9 +37,9 @@ class CorpusApp {
         const selectsPresent = !!document.querySelector('[data-enhance="select2"]');
         const select2Ready = !selectsPresent || !!(window.jQuery && window.jQuery.fn && window.jQuery.fn.select2);
 
-        // Token input: allow either Tagify OR TokenTab (MD3 chips) to satisfy the token UI
+        // Token input: use TokenTab (MD3 chips) as canonical token UI
         const tokenInputPresent = !!(document.getElementById('token-input') || document.getElementById('tokid-input'));
-        const tokenReady = !tokenInputPresent || !!(window.Tagify || window.TokenTab);
+        const tokenReady = !tokenInputPresent || !!(window.TokenTab);
 
         return core && select2Ready && tokenReady;
     }
@@ -63,7 +63,7 @@ class CorpusApp {
                 console.debug('[Corpus] Waiting for dependencies...', {
                     jQuery: !!window.jQuery,
                     select2: !!(window.jQuery?.fn?.select2),
-                    tokenInput: !!(window.Tagify || window.TokenTab),
+                    tokenInput: !!(window.TokenTab),
                     dataTable: !!(window.jQuery?.fn?.dataTable)
                 });
             }
@@ -132,22 +132,12 @@ class CorpusApp {
             this.filters = new CorpusFiltersManager();
             this.filters.initialize();
 
-            // 2. Initialize Token Input - if a legacy Tagify-based manager is present, initialize it
-            console.log('[Corpus] Step 2: Initializing Token Manager (Tagify if present)...');
-            try {
-                if (window.Tagify) {
-                    // Dynamically import the legacy Tagify token manager only when Tagify exists
-                    const { CorpusTokenManager } = await import('./tokens.js');
-                    this.tokens = new CorpusTokenManager();
-                    this.tokens.initialize();
-                } else if (window.TokenTab) {
-                    // token-tab is MD3-native and auto-initializes itself in `token-tab.js`
-                    console.log('[Corpus] TokenTab present (native MD3 chips). Tagify not required.');
-                } else {
-                    console.log('[Corpus] No token input manager found (Tagify or TokenTab). Token input disabled.');
-                }
-            } catch (err) {
-                console.warn('[Corpus] Token Manager init error (non-fatal):', err);
+            // 2. Initialize Token Input: TokenTab is the canonical MD3 chip-based manager
+            console.log('[Corpus] Step 2: Token Manager (TokenTab preferred)');
+            if (window.TokenTab) {
+                console.log('[Corpus] TokenTab present (MD3 chips). Token input UI ready.');
+            } else {
+                console.log('[Corpus] TokenTab not found; Token input UI disabled or using legacy server-side token submission.');
             }
 
             // 3. Initialize Search Form (depends on filters)

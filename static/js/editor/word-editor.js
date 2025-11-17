@@ -274,8 +274,11 @@ export class WordEditor {
 
     // Restore original word values
     this.editHistory.forEach((change, tokenId) => {
-      // Find word element by token_id
-      const wordSpan = document.querySelector(`[data-token-id="${tokenId}"]`);
+      // Find word element by token_id: prefer original case (data-token-id) then fallback to lowercased attribute
+      const escaped = CSS.escape(String(tokenId || '').trim());
+      const escapedLower = CSS.escape(String(tokenId || '').trim().toLowerCase());
+      let wordSpan = document.querySelector(`[data-token-id="${escaped}"]`);
+      if (!wordSpan) wordSpan = document.querySelector(`[data-token-id-lower="${escapedLower}"]`);
       if (wordSpan) {
         wordSpan.textContent = change.original;
         wordSpan.classList.remove('modified-word');
@@ -379,7 +382,10 @@ export class WordEditor {
       
       // Clear edit history and remove visual markers
       this.editHistory.forEach((change, tokenId) => {
-        const wordSpan = document.querySelector(`[data-token-id="${tokenId}"]`);
+        const escaped = CSS.escape(String(tokenId || '').trim());
+        const escapedLower = CSS.escape(String(tokenId || '').trim().toLowerCase());
+        let wordSpan = document.querySelector(`[data-token-id="${escaped}"]`);
+        if (!wordSpan) wordSpan = document.querySelector(`[data-token-id-lower="${escapedLower}"]`);
         if (wordSpan) {
           wordSpan.classList.remove('modified-word');
         }
@@ -546,7 +552,10 @@ export class WordEditor {
     const valueToApply = isUndo ? oldValue : newValue;
 
     // Find word element
-    const wordSpan = document.querySelector(`[data-token-id="${tokenId}"]`);
+    const escaped = CSS.escape(String(tokenId || '').trim());
+    const escapedLower = CSS.escape(String(tokenId || '').trim().toLowerCase());
+    let wordSpan = document.querySelector(`[data-token-id="${escaped}"]`);
+    if (!wordSpan) wordSpan = document.querySelector(`[data-token-id-lower="${escapedLower}"]`);
     if (!wordSpan) {
       console.warn('[Editor] Word element not found for undo/redo:', tokenId);
       return;

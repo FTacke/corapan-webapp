@@ -37,7 +37,7 @@ Visuelle Darstellungen der CO.RA.PAN Corpus-Sucharchitektur.
 │  │  │  ES6 Modules                                      │     │   │
 │  │  │  ┌─────────┐  ┌─────────┐  ┌──────────┐          │     │   │
 │  │  │  │ filters │  │ search  │  │ tokens   │          │     │   │
-│  │  │  │(Select2)│  │(Form)   │  │(Tagify)  │          │     │   │
+│  │  │  │(Select2)│  │(Form)   │  │(TokenTab)│          │     │   │
 │  │  │  └─────────┘  └─────────┘  └──────────┘          │     │   │
 │  │  │                   │                               │     │   │
 │  │  │  ┌─────────┐  ┌───┴─────┐  ┌──────────┐          │     │   │
@@ -204,8 +204,8 @@ USER
       + Klickt "Buscar"
            │
            ▼
-    ┌──────────────────────────────┐
-    │ Tagify: Token-Validierung    │
+       ┌──────────────────────────────┐
+       │ TokenTab: Token-Validierung  │
     │ • Parse: ',;\\s' Delimiters   │
     │ • Pattern: ^[A-Za-z0-9-]+$   │
     │ • Max: 2000 Tokens           │
@@ -214,8 +214,8 @@ USER
            │
            ▼
     ┌──────────────────────────────┐
-    │ JS: onTokenApplyClick()      │
-    │ • tagify.value → String      │
+       │ JS: onTokenApplyClick()      │
+       │ • TokenTab.getTokenIds() → Array      │
     │ • Set: searchModeOverride    │
     │ • Form Submit (POST)         │
     └──────────────────────────────┘
@@ -436,7 +436,7 @@ BACKEND LOGIC
 ┌─────────────┐  ┌────────────┐  ┌─────────────┐
 │ filters.js  │  │ search.js  │  │ tokens.js   │
 │             │  │            │  │             │
-│ Select2     │  │ Form       │  │ Tagify      │
+│ Select2     │  │ Form       │  │ TokenTab     │
 │ MultiSelect │  │ Submit     │  │ Validation  │
 │ Regional    │  │ Builder    │  │ Drag-Drop   │
 │ Checkbox    │  │ Navigation │  │ Paste       │

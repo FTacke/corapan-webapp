@@ -21,6 +21,62 @@ import { initUserMenu } from './modules/navigation/app-bar.js';
 // Setup automatic token refresh on app initialization
 setupTokenRefresh();
 
+// CSS.escape polyfill (MDN) - define globally for older browsers if missing
+if (typeof CSS === 'undefined' || typeof CSS.escape !== 'function') {
+  (function (global) {
+    function cssEscape(value) {
+      if (arguments.length === 0) {
+        throw new TypeError('`CSS.escape` requires an argument.');
+      }
+      var string = String(value);
+      var length = string.length;
+      var index = -1;
+      var codeUnit;
+      var result = '';
+      var firstCodeUnit = string.charCodeAt(0);
+      while (++index < length) {
+        codeUnit = string.charCodeAt(index);
+        // Note: there’s no need to special-case astral symbols, surrogate
+        // pairs, or lone surrogates.
+        if (codeUnit === 0x0000) {
+          result += '\uFFFD';
+          continue;
+        }
+        if (
+          (codeUnit >= 0x0001 && codeUnit <= 0x001F) ||
+          codeUnit === 0x007F ||
+          (index === 0 && codeUnit >= 0x0030 && codeUnit <= 0x0039) ||
+          (index === 1 && index === 0 && codeUnit >= 0x0030 && codeUnit <= 0x0039 && firstCodeUnit === 0x002D)
+        ) {
+          result += '\\' + codeUnit.toString(16) + ' ';
+          continue;
+        }
+        if (
+          index === 0 && codeUnit === 0x002D && length === 1
+        ) {
+          result += '\\-';
+          continue;
+        }
+        if (
+          codeUnit >= 0x0080 ||
+          codeUnit === 0x002D ||
+          codeUnit === 0x005F ||
+          (codeUnit >= 0x0030 && codeUnit <= 0x0039) ||
+          (codeUnit >= 0x0041 && codeUnit <= 0x005A) ||
+          (codeUnit >= 0x0061 && codeUnit <= 0x007A)
+        ) {
+          result += string.charAt(index);
+          continue;
+        }
+        result += '\\' + string.charAt(index);
+      }
+      return result;
+    }
+    if (global.CSS === undefined) global.CSS = {};
+    global.CSS.escape = cssEscape;
+  })(window);
+}
+
 // Initialize navigation drawer (modal + standard)
 new NavigationDrawer();
 

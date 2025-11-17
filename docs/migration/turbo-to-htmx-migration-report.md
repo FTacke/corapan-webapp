@@ -583,9 +583,7 @@ Binary file (JavaScript minified library)
 @@ -106,11 +106,11 @@
          {% else %}
            {# Simple navigation item #}
--          {# Only Corpus needs full reload due to heavy external dependencies (DataTables, Select2, Tagify) #}
--          {% set disable_turbo = item.label in ['Corpus'] %}
-+          {# Corpus needs full reload due to heavy external dependencies (DataTables, Select2, Tagify) #}
++          {# Only Corpus needs full reload due to heavy external dependencies (DataTables, Select2, TokenTab) #}
 +          {% set disable_boost = item.label in ['Corpus'] %}
            <a href="{{ item.href }}" 
               class="md3-navigation-drawer__item {{ 'md3-navigation-drawer__item--active' if is_active else '' }}"
@@ -622,9 +620,7 @@ Binary file (JavaScript minified library)
 @@ -236,11 +238,11 @@
        {% else %}
          {# Simple navigation item #}
--        {# Only Corpus needs full reload due to heavy external dependencies (DataTables, Select2, Tagify) #}
--        {% set disable_turbo = item.label in ['Corpus'] %}
-+        {# Corpus needs full reload due to heavy external dependencies (DataTables, Select2, Tagify) #}
++        {# Only Corpus needs full reload due to heavy external dependencies (DataTables, Select2, TokenTab) #}
 +        {% set disable_boost = item.label in ['Corpus'] %}
          <a href="{{ item.href }}" 
             class="md3-navigation-drawer__item {{ 'md3-navigation-drawer__item--active' if is_active else '' }}"

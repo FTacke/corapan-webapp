@@ -215,7 +215,7 @@
 }
 
 /* ============================================================================
-   External Libraries (DataTables, Select2, Tagify)
+  External Libraries (DataTables, Select2, TokenTab)
    ============================================================================
    These keep their own styling from CDN/external CSS.
    DataTables custom overrides are in datatables.css

@@ -142,7 +142,7 @@ def _default_context() -> dict[str, object]:
   <link ... css/md3/components/tabs.css>
   <link ... css/md3/components/forms.css>  ← HAT .md3-corpus-filter-grid
   <link ... css/md3/components/corpus-search-form.css>
-  <link ... css/md3/components/select2-tagify.css>
+  <link ... css/md3/components/select2.css>
   <link ... css/md3/components/datatables.css>
   <link ... css/md3/components/corpus.css>
   <link ... css/md3/components/stats.css>
@@ -160,7 +160,7 @@ def _default_context() -> dict[str, object]:
   <link ... css/md3/components/tabs.css>
   <link ... css/md3/components/forms.css>  ← HAT .md3-corpus-filter-grid
   <link ... css/md3/components/chips.css>
-  <link ... css/md3/components/select2-tagify.css>
+  <link ... css/md3/components/select2.css>
   <link ... css/md3/components/datatables.css>
   <link ... css/md3/components/corpus.css>
   <link ... css/md3/components/advanced-search.css>  ← HAT .md3-advanced__row--filters

@@ -95,6 +95,7 @@ export class TranscriptRenderer {
     
     // Data attributes for identification and interaction
     span.dataset.tokenId = wordData.token_id;
+    span.dataset.tokenIdLower = wordData.token_id ? String(wordData.token_id).trim().toLowerCase() : '';
     span.dataset.segmentIndex = segmentIndex;
     span.dataset.wordIndex = wordIndex;
     span.dataset.start = wordData.start;
@@ -166,7 +167,16 @@ export class TranscriptRenderer {
    * Get word element by token ID
    */
   getWordElement(tokenId) {
-    return document.querySelector(`[data-token-id="${tokenId}"]`);
+    const tokenLower = (tokenId || '').toString().trim().toLowerCase();
+    // Prefer exact match (original case) but fallback to lowercased data attribute
+    let el = null;
+    if (tokenId) {
+      el = document.querySelector(`[data-token-id="${tokenId}"]`);
+    }
+    if (!el && tokenLower) {
+      el = document.querySelector(`[data-token-id-lower="${tokenLower}"]`);
+    }
+    return el;
   }
 
   /**
