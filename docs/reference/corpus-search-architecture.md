@@ -45,7 +45,7 @@ Eine dritte Funktion ist geplant:
 
 **Aktive Komponenten:**
 - Backend: Flask-REST-API mit SQLite
-- Frontend: ES6-Module mit jQuery, Select2, Tagify, DataTables
+- Frontend: ES6-Module mit jQuery, Select2, DataTables, und MD3 TokenTab (Token-IDs)
 - Datenbank: SQLite-DB mit indexierten Token-Tabellen
 - UI: MD3-Design-System mit Datentabellen-Rendering
 
@@ -75,7 +75,7 @@ Eine dritte Funktion ist geplant:
 | jQuery | jQuery | 3.7.1 | DOM-Manipulation, Event-Handling |
 | Datenbank-UI | DataTables | 1.13.7 | Server-Side Processing, Tabellen-Rendering |
 | Multi-Select | Select2 | 4.1.0-rc.0 | Filter-Dropdowns (Land, Hablante, Sexo, etc.) |
-| Token-Input | Tagify | Latest | Token-ID-Input mit Drag-Drop |
+| Token-Input | TokenTab (MD3 chips) | Latest | Token-ID-Input mit MD3-Chips (no Tagify) |
 | Datenmanipulation | Sortable.js | Latest | Drag-Drop für Token-Reordering |
 | Charts | ECharts | 5.5.1 | Statistik-Visualisierung (Stats-Tab) |
 | Icons | Font Awesome 6 | 6+ | UI-Icons |
@@ -86,7 +86,7 @@ Eine dritte Funktion ist geplant:
 - `static/js/modules/corpus/datatables.js` - DataTables Manager
 - `static/js/modules/corpus/search.js` - Form-Handling
 - `static/js/modules/corpus/filters.js` - Select2 Filter-Manager
-- `static/js/modules/corpus/tokens.js` - Tagify Token-Manager
+- `static/js/modules/corpus/token-tab.js` - MD3 Token-Tab (native chips, no Tagify)
 - `static/js/modules/corpus/audio.js` - Audio-Player Integration
 - `static/js/modules/corpus/config.js` - Constants + Configuration
 - `static/js/modules/corpus/api.js` - API-Calls (falls vorhanden)
@@ -702,46 +702,26 @@ class CorpusFiltersManager {
 }
 ```
 
-### Component: `CorpusTokenManager`
+### Component: `TokenTab` (MD3 Token Chips)
 
-**Zweck:** Token-ID-Input mit Tagify verwalten
+**Zweck:** `TokenTab` liefert ein MD3-native Token-Input mittels Chips, Drag & Drop und einfachem Programmatic-API.
 
 ```javascript
-class CorpusTokenManager {
-  initTagify() {
-    // Tagify initialisieren
-    this.tagify = new Tagify(this.tokenInput, {
-      delimiters: ',;\\s\\n\\r\\t',      // Separatoren
-      pattern: /^[A-Za-z0-9-]+$/,        // Validierungsmuster
-      duplicates: false,
-      maxTags: 2000,
-      editTags: 1,
-      enforceWhitelist: false,
-      dropdown: { enabled: 0 }
-    })
-    
-    // Drag-Drop mit SortableJS
-    Sortable.create(this.tagify.DOM.scope, {
-      animation: 150,
-      draggable: '.tagify__tag',
-      onEnd: () => this.tagify.updateValueByDOMTags()
-    })
-  }
-  
-  onTokenApplyClick() {
-    // Token-IDs aus Input lesen
-    const tokenIds = this.tagify.value.map(tag => tag.value).join(',')
-    
-    // Versteckt-Feld aktualisieren
-    this.hiddenTokens.value = tokenIds
-    
-    // Search-Mode Override setzen
-    this.searchModeOverride.value = 'token_ids'
-    
-    // Form absenden
-    this.form.submit()
-  }
-}
+// Beispiel: TokenTab-API im Client verwenden
+// TokenTab bietet folgende Funktionen global unter `window.TokenTab`:
+// - addTokenIds(ids)  // Fügt mehrere Tokens hinzu
+// - getTokenIds()     // Liest alle Token-IDs zurück
+// - clearTokens()     // Entfernt alle Token-IDs
+// - initializeTokenDataTable(idsRaw) // Initialisiert Token DataTable (falls benötigt)
+
+// Tokens programatisch setzen:
+window.TokenTab.addTokenIds(['tok1','tok2'])
+
+// Tokens lesen:
+const ids = window.TokenTab.getTokenIds()
+
+// DataTable mit Token-IDs initialisieren:
+window.TokenTab.initializeTokenDataTable(ids.join(','))
 ```
 
 ### Component: `CorpusSearchManager`

@@ -145,10 +145,54 @@ def _hit_to_canonical(hit: dict[str, Any]) -> dict[str, Any]:
         except Exception:
             return default
 
+    # Helper: safely extract first/last ms values from 'left'/'right' sides
+    def _safe_last(arr):
+        return arr[-1] if isinstance(arr, list) and arr else ""
+
+    def _get_context_start(side) -> int:
+        """Return the first start_ms value from a side (dict or list-of-dicts).
+
+        side may be a dict with 'start_ms' list, a list of dicts, or a list of strings.
+        """
+        try:
+            # Case: dict with start_ms
+            if isinstance(side, dict) and side.get("start_ms"):
+                return _to_int(_safe_first(side.get("start_ms", [])))
+            # Case: list of dicts (v5 sometimes contains list of elements with start_ms)
+            if isinstance(side, list) and side and isinstance(side[0], dict):
+                # Take first element's start_ms
+                return _to_int(_safe_first(side[0].get("start_ms", [])))
+            # Fallback: if start_ms missing but end_ms present, use first end_ms
+            if isinstance(side, dict) and side.get("end_ms"):
+                return _to_int(_safe_first(side.get("end_ms", [])))
+        except Exception:
+            pass
+        return 0
+
+    def _get_context_end(side) -> int:
+        """Return the last end_ms value from a side (dict or list-of-dicts).
+
+        side may be a dict with 'end_ms' list, a list of dicts, or a list of strings.
+        """
+        try:
+            # Prefer explicit end_ms when present
+            if isinstance(side, dict) and side.get("end_ms"):
+                return _to_int(_safe_last(side.get("end_ms", [])))
+            if isinstance(side, list) and side and isinstance(side[-1], dict) and side[-1].get("end_ms"):
+                return _to_int(_safe_last(side[-1].get("end_ms", [])))
+            # Fallback: if end_ms missing, use last start_ms as end
+            if isinstance(side, dict) and side.get("start_ms"):
+                return _to_int(_safe_last(side.get("start_ms", [])))
+            if isinstance(side, list) and side and isinstance(side[-1], dict) and side[-1].get("start_ms"):
+                return _to_int(_safe_last(side[-1].get("start_ms", [])))
+        except Exception:
+            pass
+        return 0
+
     return {
         "token_id": token_id,
         "filename": filename,
-        "country_code": country if isinstance(country, str) else country,  # No lowercasing - field is case-insensitive
+        "country_code": country.lower() if isinstance(country, str) else country,
         "radio": _safe_first(match.get("radio", [])) or "",
         "date": _safe_first(match.get("date", [])) or "",
         "speaker_type": speaker_type,
@@ -167,8 +211,8 @@ def _hit_to_canonical(hit: dict[str, Any]) -> dict[str, Any]:
         "end_ms": end_ms,
         "context_left": context_left,
         "context_right": context_right,
-        "context_start": _to_int(_safe_first(left.get("start_ms", []))) or 0,
-        "context_end": _to_int(_safe_first(right.get("end_ms", []))) or 0,
+        "context_start": _get_context_start(left),
+        "context_end": _get_context_end(right),
         "lemma": lemma,
     }
 

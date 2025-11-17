@@ -186,10 +186,16 @@ def _enrich_hits_with_docmeta(items: list, hits: list, docinfos: dict, docmeta_c
                 file_id = candidate
         if not file_id:
             file_id = pid_to_file_id.get(str(hit.get('docPid')))
+        # If we resolved a file_id from docInfos mapping, and the item's filename
+        # was a numeric docPid, replace it with the resolved file_id so downstream
+        # logic (media path resolution) uses the actual file identifier.
+        if file_id:
+            item['filename'] = file_id
         docmeta = docmeta_cache.get(file_id) if file_id else None
         if docmeta:
             item['country_code'] = item.get('country_code') or (docmeta.get('country_code') or '').lower()
             item['country_scope'] = item.get('country_scope') or (docmeta.get('country_scope') or '').lower()
+            # Only override filename from docmeta if not already set
             item['filename'] = item.get('filename') or docmeta.get('file_id')
             item['radio'] = item.get('radio') or docmeta.get('radio')
             item['date'] = item.get('date') or docmeta.get('date')

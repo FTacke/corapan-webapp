@@ -9,7 +9,8 @@ import { CorpusDatatablesManager, adjustCorpusTable } from './datatables.js';
 import { CorpusAudioManager } from './audio.js';
 import { CorpusSearchManager } from './search.js';
 import '../search/corpusForm.js';
-import { CorpusTokenManager } from './tokens.js';
+// Token input: Tagify-based Token Manager was replaced by `token-tab.js` (MD3 chips)
+// Keep compatibility with legacy Tagify if present; otherwise, token-tab.js provides the token UI.
 
 /**
  * Main Corpus Application Class
@@ -29,41 +30,48 @@ class CorpusApp {
      * @returns {boolean} True if all dependencies are ready
      */
     depsReady() {
-        return !!(window.jQuery && 
-                  window.jQuery.fn && 
-                  window.jQuery.fn.select2 && 
-                  window.Tagify && 
-                  window.jQuery.fn.dataTable);
+        // Core deps: jQuery + DataTables
+        const core = !!(window.jQuery && window.jQuery.fn && window.jQuery.fn.dataTable);
+
+        // Select2 only necessary when selects exist and require enhancement
+        const selectsPresent = !!document.querySelector('[data-enhance="select2"]');
+        const select2Ready = !selectsPresent || !!(window.jQuery && window.jQuery.fn && window.jQuery.fn.select2);
+
+        // Token input: allow either Tagify OR TokenTab (MD3 chips) to satisfy the token UI
+        const tokenInputPresent = !!(document.getElementById('token-input') || document.getElementById('tokid-input'));
+        const tokenReady = !tokenInputPresent || !!(window.Tagify || window.TokenTab);
+
+        return core && select2Ready && tokenReady;
     }
 
     /**
      * Wait for external dependencies to be loaded
      * @returns {Promise} Resolves when all dependencies are ready
      */
-    async waitForDependencies() {
-        const maxAttempts = 100; // 10 seconds max
-        const checkInterval = 100; // 100ms between checks
-        
+    async waitForDependencies({ maxAttempts = 50, checkInterval = 200, logInterval = 5 } = {}) {
+        // Waits for critical page dependencies with a quieter default logging cadence.
+        // Default: 50 attempts * 200ms = 10s total
         for (let i = 0; i < maxAttempts; i++) {
             if (this.depsReady()) {
                 console.log('✅ All Corpus dependencies loaded');
                 return true;
             }
-            
-            // Log what's missing every second
-            if (i % 10 === 0) {
-                console.log('[Corpus] Waiting for dependencies...', {
+
+            // Only log every `logInterval` iterations to avoid spammy logs
+            if (i % logInterval === 0) {
+                // Use console.debug so it's off by default in production consoles
+                console.debug('[Corpus] Waiting for dependencies...', {
                     jQuery: !!window.jQuery,
                     select2: !!(window.jQuery?.fn?.select2),
-                    Tagify: !!window.Tagify,
+                    tokenInput: !!(window.Tagify || window.TokenTab),
                     dataTable: !!(window.jQuery?.fn?.dataTable)
                 });
             }
-            
+
             await new Promise(resolve => setTimeout(resolve, checkInterval));
         }
-        
-        console.warn('⚠️ Timeout waiting for Corpus dependencies');
+
+        console.warn('⚠️ Timeout waiting for Corpus dependencies (proceeding with partial init)');
         return false;
     }
 
@@ -90,11 +98,12 @@ class CorpusApp {
 
         // Wait for dependencies to be ready
         if (!this.depsReady()) {
-            console.log('[Corpus] Dependencies not ready, waiting...');
-            const depsReady = await this.waitForDependencies();
-            if (!depsReady) {
-                console.error('❌ Failed to load Corpus dependencies');
-                return;
+            console.log('[Corpus] Dependencies not ready; waiting (quiet mode)...');
+            // Wait for dependencies but continue initializing audio manager even if some optional deps
+            // don't become available. This ensures basic features like audio playback are available.
+            await this.waitForDependencies({ maxAttempts: 50, checkInterval: 200, logInterval: 10 });
+            if (!this.depsReady()) {
+                console.warn('[Corpus] Dependencies still not ready after wait; proceeding with partial initialization');
             }
         }
 
@@ -109,15 +118,37 @@ class CorpusApp {
                 }
             }
 
-            // 1. Initialize Filters (Select2) - handles Turbo events internally
-            console.log('[Corpus] Step 1: Initializing Filters...');
+            // 1. Initialize Audio Manager (early) so Play buttons work even if other modules fail
+            console.log('[Corpus] Step 1: Initializing Audio Manager (early)');
+            try {
+                this.audio = new CorpusAudioManager();
+                this.audio.bindEvents();
+            } catch (err) {
+                console.warn('[Corpus] Audio Manager init error (non-fatal):', err);
+            }
+
+            // 2. Initialize Filters (Select2) - handles Turbo events internally
+            console.log('[Corpus] Step 2: Initializing Filters...');
             this.filters = new CorpusFiltersManager();
             this.filters.initialize();
 
-            // 2. Initialize Token Input (Tagify)
-            console.log('[Corpus] Step 2: Initializing Token Manager...');
-            this.tokens = new CorpusTokenManager();
-            this.tokens.initialize();
+            // 2. Initialize Token Input - if a legacy Tagify-based manager is present, initialize it
+            console.log('[Corpus] Step 2: Initializing Token Manager (Tagify if present)...');
+            try {
+                if (window.Tagify) {
+                    // Dynamically import the legacy Tagify token manager only when Tagify exists
+                    const { CorpusTokenManager } = await import('./tokens.js');
+                    this.tokens = new CorpusTokenManager();
+                    this.tokens.initialize();
+                } else if (window.TokenTab) {
+                    // token-tab is MD3-native and auto-initializes itself in `token-tab.js`
+                    console.log('[Corpus] TokenTab present (native MD3 chips). Tagify not required.');
+                } else {
+                    console.log('[Corpus] No token input manager found (Tagify or TokenTab). Token input disabled.');
+                }
+            } catch (err) {
+                console.warn('[Corpus] Token Manager init error (non-fatal):', err);
+            }
 
             // 3. Initialize Search Form (depends on filters)
             console.log('[Corpus] Step 3: Initializing Search Manager...');

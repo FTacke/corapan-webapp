@@ -79,13 +79,17 @@ def _cache_filename(filename: str, start: float, end: float, token_id: str | Non
     - Contexto (type='ctx'): corapan_{token_id}_contexto.mp3
     """
     if token_id and snippet_type:
-        # Build filename based on snippet type
+        # Build filename based on snippet type (use explicit _pal/_ctx suffixes)
         if snippet_type == "ctx":
-            # Contexto: corapan_{token_id}_contexto.mp3
-            return f"corapan_{token_id}_contexto.mp3"
+            # Contexto: corapan_{token_id}_ctx.mp3
+            return f"corapan_{token_id}_ctx.mp3"
+        elif snippet_type == "pal" or snippet_type == "palabra" or snippet_type == "result":
+            # Palabra/Resultado: corapan_{token_id}_pal.mp3
+            return f"corapan_{token_id}_pal.mp3"
         else:
-            # Palabra/Resultado (default): corapan_{token_id}.mp3
-            return f"corapan_{token_id}.mp3"
+            # Unknown snippet type: include it plainly
+            safe_type = ''.join(ch for ch in snippet_type if ch.isalnum() or ch in ('_', '-')).lower()
+            return f"corapan_{token_id}_{safe_type}.mp3"
     else:
         # Fallback: Hash-basiert für Abwärtskompatibilität
         digest = hashlib.sha256(f"{filename}:{start}:{end}".encode()).hexdigest()

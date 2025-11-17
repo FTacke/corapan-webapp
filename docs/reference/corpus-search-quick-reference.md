@@ -325,7 +325,8 @@ import { CorpusApp } from './modules/corpus/index.js'
 import { CorpusDatatablesManager } from './modules/corpus/datatables.js'
 import { CorpusFiltersManager } from './modules/corpus/filters.js'
 import { CorpusSearchManager } from './modules/corpus/search.js'
-import { CorpusTokenManager } from './modules/corpus/tokens.js'
+// Token tab (MD3 native chip UI)
+import './modules/corpus/token-tab.js'
 import { CorpusAudioManager } from './modules/corpus/audio.js'
 
 // Globale Instanz
@@ -378,8 +379,8 @@ table.settings()[0].json  // Letzter AJAX Response
 // Filters
 window.corpusApp.filters.getFilterValues()
 
-// Token Manager
-window.corpusApp.tokens.tagify.value  // Aktuelle Tokens
+// Token Manager (TokenTab)
+window.TokenTab.getTokenIds()  // Aktuelle Tokens
 
 // Search Query
 const params = new URLSearchParams(window.location.search)
@@ -427,7 +428,7 @@ SELECT COUNT(*) FROM tokens WHERE text LIKE '%palabra%'
 |---------|--------|--------|
 | "DataTable not found" | Modul nicht initialisiert | `DOMContentLoaded` warten, Dependencies prüfen |
 | Filter funktionieren nicht | Select2 nicht geladen | jQuery + Select2 CDN Skripte prüfen |
-| Token-Suche funktioniert nicht | Tagify nicht initialisiert | Tagify CDN und SortableJS prüfen |
+| Token-Suche funktioniert nicht | TokenTab nicht initialisiert | Prüfen ob `token-tab.js` geladen ist oder fallback aktiv | 
 | Sortierung funktioniert nicht | Column-Index falsch | Column-Index im column_map prüfen |
 | Keine Ergebnisse | Query zu restriktiv | Mit weniger Filtern testen |
 | Performance langsam | SQL-Index fehlt | Datenbankindizes prüfen: `CREATE INDEX idx_text ON tokens(text)` |

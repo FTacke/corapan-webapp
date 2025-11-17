@@ -317,10 +317,15 @@ export class CorpusDatatablesManager {
         const audioAvailable = row.audio_available;
         const filename = row.filename; // DB enthält jetzt MP3-Filenames direkt
         const tokenId = row.token_id;
-        const wordStart = row.start;
-        const wordEnd = row.end;
-        const ctxStart = row.context_start;
-        const ctxEnd = row.context_end;
+        const wordStartMs = row.start || row.start_ms || 0;
+        const wordEndMs = row.end || row.end_ms || 0;
+        const ctxStartMs = row.context_start || row.context_start_ms || wordStartMs;
+        const ctxEndMs = row.context_end || row.context_end_ms || wordEndMs;
+        // Convert to seconds with millisecond precision for backend
+        const startSec = (wordStartMs / 1000).toFixed(3);
+        const endSec = ((wordEndMs + 100) / 1000).toFixed(3); // extend 100ms padding
+        const contextStartSec = (ctxStartMs / 1000).toFixed(3);
+        const contextEndSec = (ctxEndMs / 1000).toFixed(3);
         
         if (!audioAvailable) {
             return '<span class="text-muted">-</span>';
@@ -330,19 +335,19 @@ export class CorpusDatatablesManager {
             <div class="md3-corpus-audio-buttons">
               <div class="md3-corpus-audio-row">
                 <span class="md3-corpus-audio-label">Res.:</span>
-                <a class="audio-button" data-filename="${filename}" data-start="${wordStart}" data-end="${wordEnd + 0.1}" data-token-id="${tokenId}" data-type="pal">
+                <a class="audio-button" data-filename="${filename}" data-start="${startSec}" data-end="${endSec}" data-token-id="${tokenId}" data-type="pal">
                   <i class="fa-solid fa-play"></i>
                 </a>
-                <a class="download-button" data-filename="${filename}" data-start="${wordStart}" data-end="${wordEnd + 0.1}" data-token-id="${tokenId}" data-type="pal">
+                <a class="download-button" data-filename="${filename}" data-start="${startSec}" data-end="${endSec}" data-token-id="${tokenId}" data-type="pal">
                   <i class="fa-solid fa-download"></i>
                 </a>
               </div>
               <div class="md3-corpus-audio-row">
                 <span class="md3-corpus-audio-label">Ctx:</span>
-                <a class="audio-button" data-filename="${filename}" data-start="${ctxStart}" data-end="${ctxEnd}" data-token-id="${tokenId}" data-type="ctx">
+                <a class="audio-button" data-filename="${filename}" data-start="${contextStartSec}" data-end="${contextEndSec}" data-token-id="${tokenId}" data-type="ctx">
                   <i class="fa-solid fa-play"></i>
                 </a>
-                <a class="download-button" data-filename="${filename}" data-start="${ctxStart}" data-end="${ctxEnd}" data-token-id="${tokenId}" data-type="ctx">
+                <a class="download-button" data-filename="${filename}" data-start="${contextStartSec}" data-end="${contextEndSec}" data-token-id="${tokenId}" data-type="ctx">
                   <i class="fa-solid fa-download"></i>
                 </a>
               </div>

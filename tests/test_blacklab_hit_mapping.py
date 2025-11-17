@@ -62,3 +62,27 @@ def test_docinfo_list_mapping_handles_list():
     mapped = _hit_to_canonical(SAMPLE_HIT_DOCINFO_LIST)
     assert mapped.get("country_code") == "arg"
     assert mapped.get("speaker_type") == "pro"
+
+
+def test_context_start_end_extraction_v5_with_end_ms():
+    SAMPLE = {
+        "docPid": "100",
+        "before": {"word": ["uno", "dos"], "start_ms": ["1000", "2000"]},
+        "match": {"word": ["casa"], "tokid": ["argx1"], "start_ms": ["3000"], "end_ms": ["3100"]},
+        "after": {"word": ["tres", "cuatro"], "end_ms": ["3200", "3300"]},
+    }
+    mapped = _hit_to_canonical(SAMPLE)
+    assert mapped.get("context_start") == 1000
+    assert mapped.get("context_end") == 3300
+
+
+def test_context_start_end_extraction_list_of_dicts():
+    SAMPLE = {
+        "docPid": "200",
+        "before": [{"word": ["en"], "start_ms": ["5000"]}, {"word": ["la"], "start_ms": ["5100"]}],
+        "match": {"word": ["casa"], "tokid": ["argx2"], "start_ms": ["5200"], "end_ms": ["5300"]},
+        "after": [{"word": ["algo"], "end_ms": ["5400"]}, {"word": ["mas"], "end_ms": ["5500"]}],
+    }
+    mapped = _hit_to_canonical(SAMPLE)
+    assert mapped.get("context_start") == 5000
+    assert mapped.get("context_end") == 5500

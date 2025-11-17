@@ -105,7 +105,7 @@
           </div>
         {% else %}
           {# Simple navigation item #}
-          {# Corpus needs full reload due to heavy external dependencies (DataTables, Select2, Tagify) #}
+          {# Corpus needs full reload due to heavy external dependencies (DataTables, Select2, Token input: TokenTab) #}
           {% set disable_boost = item.label in ['Corpus'] %}
           <a href="{{ item.href }}" 
              class="md3-navigation-drawer__item {{ 'md3-navigation-drawer__item--active' if is_active else '' }}"
@@ -227,7 +227,7 @@
         </div>
       {% else %}
         {# Simple navigation item #}
-        {# Corpus needs full reload due to heavy external dependencies (DataTables, Select2, Tagify) #}
+        {# Corpus needs full reload due to heavy external dependencies (DataTables, Select2, Token input: TokenTab) #}
         {% set disable_boost = item.label in ['Corpus'] %}
         <a href="{{ item.href }}" 
            class="md3-navigation-drawer__item {{ 'md3-navigation-drawer__item--active' if is_active else '' }}"

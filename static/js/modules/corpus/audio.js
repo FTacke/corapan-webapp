@@ -9,6 +9,7 @@ export class CorpusAudioManager {
     constructor() {
         this.currentAudio = null;
         this.currentPlayButton = null; // Store the DOM element, not jQuery object
+        console.log('[Corpus Audio] Constructor initialized');
     }
 
     /**
@@ -23,6 +24,7 @@ export class CorpusAudioManager {
      * Bind audio play button events
      */
     bindAudioButtons() {
+        console.log('[Corpus Audio] Binding audio buttons');
         // Use event delegation for dynamically created buttons
         $(document).off('click', '.audio-button').on('click', '.audio-button', (e) => {
             e.preventDefault();
@@ -43,8 +45,40 @@ export class CorpusAudioManager {
                 const tokenId = $btn.data('token-id');
                 const snippetType = $btn.data('type');
                 
+                console.log('[Corpus Audio] Play button clicked', { filename, start, end, tokenId, snippetType });
+                
                 this.playAudioSegment(filename, start, end, $btn, tokenId, snippetType);
             }
+        });
+
+        // Download buttons
+        $(document).off('click', '.download-button').on('click', '.download-button', (e) => {
+            e.preventDefault();
+            const $btn = $(e.currentTarget);
+            const filename = $btn.data('filename');
+            const start = parseFloat($btn.data('start'));
+            const end = parseFloat($btn.data('end'));
+            const tokenId = $btn.data('token-id');
+            const snippetType = $btn.data('type');
+
+            if (!allowTempMedia()) {
+                this.showAuthRequiredMessage();
+                return;
+            }
+
+            const timestamp = Date.now();
+            let downloadUrl = `${MEDIA_ENDPOINT}/play_audio/${filename}?start=${start}&end=${end}&t=${timestamp}&download=true`;
+            if (tokenId) downloadUrl += `&token_id=${encodeURIComponent(tokenId)}`;
+            if (snippetType) downloadUrl += `&type=${encodeURIComponent(snippetType)}`;
+
+            // Trigger download via temporary anchor to avoid popup blockers
+            const a = document.createElement('a');
+            a.href = downloadUrl;
+            a.target = '_blank';
+            a.rel = 'noopener noreferrer';
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
         });
     }
 
@@ -129,13 +163,28 @@ export class CorpusAudioManager {
         
         // Create new audio instance
         this.currentAudio = new Audio(audioUrl);
+        // Set default volume and CORS mode if needed
+        try {
+            this.currentAudio.volume = 1.0; // ensure audible
+            // console.log for debugging network issues
+            console.log('[Corpus Audio] Audio URL:', audioUrl);
+        } catch (e) {
+            console.warn('[Corpus Audio] Could not set audio properties', e);
+        }
         this.currentPlayButton = $button;
         
         // Update button to "stop" state
         $button.html('<i class="fa-solid fa-stop"></i>');
         
+        // Log when audio actually begins playing
+        this.currentAudio.addEventListener('playing', () => {
+            console.log('[Corpus Audio] Playing started');
+        });
+
         // Play audio
-        this.currentAudio.play().catch((error) => {
+        this.currentAudio.play().then(() => {
+            console.log('[Corpus Audio] play() resolved');
+        }).catch((error) => {
             console.error('Audio playback error:', error);
             alert('Audio konnte nicht abgespielt werden');
             $button.html('<i class="fa-solid fa-play"></i>');
