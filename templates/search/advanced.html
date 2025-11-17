@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 
-{% block page_title %}Búsqueda avanzada · CO.RA.PAN{% endblock %}
+{% block page_title %}Consultar corpus · CO.RA.PAN{% endblock %}
 
 {% block extra_head %}
 <!-- MD3 Core Styles -->
@@ -13,6 +13,7 @@
 <link rel="stylesheet" href="{{ url_for('static', filename='css/md3/components/tabs.css') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/md3/components/forms.css') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/md3/components/corpus.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/md3/components/token-chips.css') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/md3/components/cards.css') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/md3/components/alerts.css') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/md3/components/chips.css') }}">
@@ -24,17 +25,18 @@
 <link rel="stylesheet" href="{{ url_for('static', filename='css/md3/components/datatables-theme-lock.css') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/md3/components/advanced-search.css') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/md3/components/search-ui.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/md3/components/stats.css') }}">
 {% endblock %}
 
 {% block content %}
 <article class="md3-corpus-page">
   <!-- Hero Header -->
-  <section class="md3-hero md3-hero--container md3-hero--with-icon" aria-label="Búsqueda avanzada en el corpus">
+  <section class="md3-hero md3-hero--container md3-hero--with-icon" aria-label="Consultar corpus">
     <div class="md3-hero__container">
       <span class="material-symbols-rounded md3-hero__icon" aria-hidden="true">manage_search</span>
       <div class="md3-hero__content">
         <span class="md3-hero__eyebrow">Corpus</span>
-        <h1 class="md3-hero__title">Búsqueda avanzada</h1>
+        <h1 class="md3-hero__title">Consultar corpus</h1>
         <p class="md3-hero__intro">
           Búsqueda con CQL (Corpus Query Language) vía BlackLab. Secuencias, POS, lemas, filtros por metadatos.
         </p>
@@ -46,18 +48,17 @@
   <section class="md3-corpus-content">
     <!-- Tab Navigation -->
     <nav class="md3-tabs" role="tablist">
-      <a href="{{ url_for('corpus.corpus_home') }}" class="md3-tab" role="tab" aria-selected="false">Búsqueda simple</a>
-      <button type="button" class="md3-tab md3-tab--active" role="tab" aria-selected="true" data-tab="advanced">Búsqueda avanzada</button>
-      <a href="{{ url_for('corpus.corpus_home') }}#tab-token" class="md3-tab" role="tab" aria-selected="false">Token</a>
+      <button type="button" class="md3-tab md3-tab--active" role="tab" aria-selected="true" data-tab="advanced">Consultar corpus</button>
+      <button type="button" class="md3-tab" role="tab" aria-selected="false" data-tab="token">Token</button>
     </nav>
     
-    <!-- Advanced Search Container -->
-    <section class="md3-advanced">
+    <!-- Advanced Search Container (Tab: Consultar corpus) -->
+    <section id="tab-advanced" class="md3-tab-content md3-tab-content--active">
       <!-- ========================================
            SEARCH FORM CARD (MD3 Design)
            Estructura: A-F según especificación
            ======================================== -->
-      <form id="advanced-search-form" class="md3-search-card" role="search" aria-label="Búsqueda avanzada con filtros">
+      <form id="advanced-search-form" class="md3-search-card" role="search" aria-label="Consultar corpus con filtros">
           
           <!-- ========================================
                A: BASIS-QUERY
@@ -594,8 +595,9 @@
 
       <!-- ========================================
            SUB-TABS: RESULTADOS | ESTADÍSTICAS
+           Hidden by default, shown after successful search
            ======================================== -->
-      <div id="search-sub-tabs" role="tablist" class="md3-stats-tabs" style="margin-top: 1.5rem;">
+      <div id="search-sub-tabs" role="tablist" class="md3-stats-tabs" style="margin-top: 1.5rem; display: none;">
         <button type="button" role="tab" id="tab-resultados" class="md3-stats-tab md3-stats-tab--active" data-view="results" aria-controls="panel-resultados" aria-selected="true">
           <span class="material-symbols-rounded" aria-hidden="true">table</span>
           <span>Resultados</span>
@@ -621,8 +623,8 @@
           <!-- Content loaded via JS -->
         </div>
 
-        <!-- DataTables Container -->
-        <div class="md3-advanced__tablewrap md3-corpus-table-container">
+        <!-- DataTables Container (hidden until search performed) -->
+        <div id="datatable-container" class="md3-advanced__tablewrap md3-corpus-table-container" style="display: none;">
           <table id="advanced-table" class="md3-corpus-table" role="grid">
             <caption class="sr-only">
               Resultados de búsqueda avanzada. 
@@ -651,16 +653,217 @@
         </div>
       </div>
 
-      <!-- Statistics Panel (placeholder for future implementation) -->
+      <!-- Statistics Panel -->
       <div id="panel-estadisticas" role="tabpanel" aria-labelledby="tab-estadisticas" class="md3-view-content" hidden>
-        <div class="md3-placeholder-panel">
-          <span class="material-symbols-rounded md3-placeholder-panel__icon">bar_chart</span>
-          <h3 class="md3-placeholder-panel__title">Estadísticas</h3>
-          <p class="md3-placeholder-panel__text">
-            La funcionalidad de estadísticas se implementará en una fase posterior.
-          </p>
-        </div>
+        <section class="md3-stats-section">
+          <header class="md3-stats-header">
+            <div class="md3-stats-filter">
+              <label for="stats-country-filter" class="md3-stats-filter-label">Filtrar por país:</label>
+              <select id="stats-country-filter" class="md3-stats-filter-select">
+                <option value="">Todos los países</option>
+              </select>
+            </div>
+            <p id="stats-total" class="md3-body-medium" style="margin: 0.5rem 0 0 0; color: var(--md-sys-color-on-surface-variant);">
+              Tokens coincidentes: <strong style="color: var(--md-sys-color-primary);">—</strong>
+            </p>
+          </header>
+
+          <div id="stats-grid" class="md3-stats-charts-grid">
+            <!-- País -->
+            <article class="card card-elevated" data-chart="by_country">
+              <div class="md3-stats-card-header">
+                <div class="md3-stats-card-title-wrapper">
+                  <h3 class="md3-title-medium md3-stats-card-title">País</h3>
+                  <p class="md3-body-small" style="color: var(--md-sys-color-on-surface-variant); margin: 0;" data-meta="by_country">—</p>
+                </div>
+                <div class="md3-segmented" data-chart-id="country">
+                  <button class="md3-segmented-btn is-selected" data-mode="count" aria-pressed="true" aria-label="Mostrar números absolutos">
+                    <span class="material-symbols-rounded" aria-hidden="true">format_list_numbered</span>
+                  </button>
+                  <button class="md3-segmented-btn" data-mode="percent" aria-pressed="false" aria-label="Mostrar porcentajes">
+                    <span class="material-symbols-rounded" aria-hidden="true">percent</span>
+                  </button>
+                </div>
+              </div>
+              <div class="card-content">
+                <div class="chart-host" id="chart-country" aria-label="Distribución por país"></div>
+              </div>
+            </article>
+
+            <!-- Tipo de hablante -->
+            <article class="card card-elevated" data-chart="by_speaker_type">
+              <div class="md3-stats-card-header">
+                <div class="md3-stats-card-title-wrapper">
+                  <h3 class="md3-title-medium md3-stats-card-title">Tipo de hablante</h3>
+                  <p class="md3-body-small" style="color: var(--md-sys-color-on-surface-variant); margin: 0;" data-meta="by_speaker_type">—</p>
+                </div>
+                <div class="md3-segmented" data-chart-id="speaker">
+                  <button class="md3-segmented-btn is-selected" data-mode="count" aria-pressed="true" aria-label="Mostrar números absolutos">
+                    <span class="material-symbols-rounded" aria-hidden="true">format_list_numbered</span>
+                  </button>
+                  <button class="md3-segmented-btn" data-mode="percent" aria-pressed="false" aria-label="Mostrar porcentajes">
+                    <span class="material-symbols-rounded" aria-hidden="true">percent</span>
+                  </button>
+                </div>
+              </div>
+              <div class="card-content">
+                <div class="chart-host" id="chart-speaker" aria-label="Distribución por tipo de hablante"></div>
+              </div>
+            </article>
+
+            <!-- Sexo -->
+            <article class="card card-elevated" data-chart="by_sexo">
+              <div class="md3-stats-card-header">
+                <div class="md3-stats-card-title-wrapper">
+                  <h3 class="md3-title-medium md3-stats-card-title">Sexo</h3>
+                  <p class="md3-body-small" style="color: var(--md-sys-color-on-surface-variant); margin: 0;" data-meta="by_sexo">—</p>
+                </div>
+                <div class="md3-segmented" data-chart-id="sexo">
+                  <button class="md3-segmented-btn is-selected" data-mode="count" aria-pressed="true" aria-label="Mostrar números absolutos">
+                    <span class="material-symbols-rounded" aria-hidden="true">format_list_numbered</span>
+                  </button>
+                  <button class="md3-segmented-btn" data-mode="percent" aria-pressed="false" aria-label="Mostrar porcentajes">
+                    <span class="material-symbols-rounded" aria-hidden="true">percent</span>
+                  </button>
+                </div>
+              </div>
+              <div class="card-content">
+                <div class="chart-host" id="chart-sexo" aria-label="Distribución por sexo"></div>
+              </div>
+            </article>
+
+            <!-- Registro -->
+            <article class="card card-elevated" data-chart="by_modo">
+              <div class="md3-stats-card-header">
+                <div class="md3-stats-card-title-wrapper">
+                  <h3 class="md3-title-medium md3-stats-card-title">Modo de habla</h3>
+                  <p class="md3-body-small" style="color: var(--md-sys-color-on-surface-variant); margin: 0;" data-meta="by_modo">—</p>
+                </div>
+                <div class="md3-segmented" data-chart-id="modo">
+                  <button class="md3-segmented-btn is-selected" data-mode="count" aria-pressed="true" aria-label="Mostrar números absolutos">
+                    <span class="material-symbols-rounded" aria-hidden="true">format_list_numbered</span>
+                  </button>
+                  <button class="md3-segmented-btn" data-mode="percent" aria-pressed="false" aria-label="Mostrar porcentajes">
+                    <span class="material-symbols-rounded" aria-hidden="true">percent</span>
+                  </button>
+                </div>
+              </div>
+              <div class="card-content">
+                <div class="chart-host" id="chart-modo" aria-label="Distribución por modo de habla"></div>
+              </div>
+            </article>
+
+            <!-- Discurso -->
+            <article class="card card-elevated" data-chart="by_discourse">
+              <div class="md3-stats-card-header">
+                <div class="md3-stats-card-title-wrapper">
+                  <h3 class="md3-title-medium md3-stats-card-title">Discurso</h3>
+                  <p class="md3-body-small" style="color: var(--md-sys-color-on-surface-variant); margin: 0;" data-meta="by_discourse">—</p>
+                </div>
+                <div class="md3-segmented" data-chart-id="discourse">
+                  <button class="md3-segmented-btn is-selected" data-mode="count" aria-pressed="true" aria-label="Mostrar números absolutos">
+                    <span class="material-symbols-rounded" aria-hidden="true">format_list_numbered</span>
+                  </button>
+                  <button class="md3-segmented-btn" data-mode="percent" aria-pressed="false" aria-label="Mostrar porcentajes">
+                    <span class="material-symbols-rounded" aria-hidden="true">percent</span>
+                  </button>
+                </div>
+              </div>
+              <div class="card-content">
+                <div class="chart-host" id="chart-discourse" aria-label="Distribución por discurso"></div>
+              </div>
+            </article>
+          </div>
+        </section>
       </div>
+    </section>
+
+    <!-- Token Search Container (Tab: Token) -->
+    <section id="tab-token" class="md3-tab-content">
+      <!-- Token Search Form (MD3 Search Card) -->
+      <form id="token-search-form" class="md3-search-card" role="search" aria-label="Buscar por Token-IDs">
+        
+        <!-- Token Input Section -->
+        <div class="md3-search-card__section">
+          <h2 class="md3-search-card__heading">Buscar por Token-IDs</h2>
+          
+          <!-- Input Row -->
+          <div class="md3-search-card__query-row">
+            <div class="md3-outlined-textfield md3-outlined-textfield--flex">
+              <input 
+                type="text" 
+                id="tokid-input" 
+                class="md3-outlined-textfield__input"
+                placeholder=" "
+                autocomplete="off">
+              <label for="tokid-input" class="md3-outlined-textfield__label">Token-IDs</label>
+              <div class="md3-outlined-textfield__outline">
+                <div class="md3-outlined-textfield__outline-start"></div>
+                <div class="md3-outlined-textfield__outline-notch"></div>
+                <div class="md3-outlined-textfield__outline-end"></div>
+              </div>
+            </div>
+            
+            <button type="button" class="md3-button-filled" id="tokid-add-btn">
+              <span class="material-symbols-rounded">add</span>
+              <span>Añadir</span>
+            </button>
+          </div>
+          
+          <!-- Helper Text: token count moved into chip container -->
+          
+          <!-- Chip Container (active-filters style) -->
+          <div id="tokid-chip-container" class="tokid-chip-container md3-active-filters" aria-live="polite">
+            <span id="tokid-count" class="md3-active-filters__label tokid-count">0 IDs</span>
+            <div id="tokid-chip-items" class="md3-active-filters__chips"></div>
+          </div>
+        </div>
+
+        <!-- Actions Footer -->
+        <div class="md3-search-card__footer">
+          <button type="button" id="clear-tokens-btn" class="md3-button md3-button--outlined">
+            <span class="material-symbols-rounded">delete</span>
+            <span>Limpiar todo</span>
+          </button>
+          <button type="button" id="token-search-btn" class="md3-button md3-button--filled">
+            <span class="material-symbols-rounded">search</span>
+            <span>Buscar</span>
+          </button>
+        </div>
+      </form>
+      
+      <!-- Token Results Section -->
+      <section id="token-results" class="md3-view-content" style="display: none; margin-top: 2rem;">
+        <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem;">
+          <span class="material-symbols-rounded" style="font-size: 28px; color: var(--md-sys-color-primary, #1976d2);">token</span>
+          <h2 class="md3-results-title" style="margin: 0;">Resultados de Token-IDs</h2>
+        </div>
+        
+        <!-- DataTable Container -->
+        <div class="md3-corpus-table-container">
+          <table id="token-results-table" class="md3-corpus-table display nowrap" style="width:100%">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Ctx.←</th>
+                <th>Resultado</th>
+                <th>Ctx.→</th>
+                <th>Audio</th>
+                <th>País</th>
+                <th>Hablante</th>
+                <th>Sexo</th>
+                <th>Modo</th>
+                <th>Discurso</th>
+                <th>Token-ID</th>
+                <th>Archivo</th>
+              </tr>
+            </thead>
+            <tbody>
+              <!-- DataTables (Server-Side) will populate this dynamically -->
+            </tbody>
+          </table>
+        </div>
+      </section>
     </section>
   </section>
 </article>
@@ -673,12 +876,60 @@
 <script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.html5.min.js" defer></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js" defer></script>
 <script src="{{ url_for('static', filename='vendor/htmx-1.9.10.min.js') }}" defer></script>
+<!-- ECharts for statistics -->
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.5.1/dist/echarts.min.js"></script>
+<!-- Tab Switching Script -->
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const tabButtons = document.querySelectorAll('.md3-tabs [data-tab]');
+    const tabContents = document.querySelectorAll('.md3-tab-content');
+    
+    tabButtons.forEach(button => {
+      button.addEventListener('click', function() {
+        const tabName = this.getAttribute('data-tab');
+        
+        // Remove active class from all buttons and contents
+        tabButtons.forEach(btn => {
+          btn.classList.remove('md3-tab--active');
+          btn.setAttribute('aria-selected', 'false');
+        });
+        tabContents.forEach(content => {
+          content.classList.remove('md3-tab-content--active');
+        });
+        
+        // Add active class to clicked button and corresponding content
+        this.classList.add('md3-tab--active');
+        this.setAttribute('aria-selected', 'true');
+        const targetContent = document.getElementById('tab-' + tabName);
+        if (targetContent) {
+          targetContent.classList.add('md3-tab-content--active');
+        }
+      });
+    });
+  });
+</script>
 <!-- App modules -->
 <script src="{{ url_for('static', filename='js/modules/corpus/config.js') }}" type="module"></script>
 <script src="{{ url_for('static', filename='js/modules/search/filters.js') }}" type="module"></script>
 <script src="{{ url_for('static', filename='js/modules/search/patternBuilder.js') }}" type="module"></script>
 <script src="{{ url_for('static', filename='js/modules/search/searchUI.js') }}" type="module"></script>
 <script src="{{ url_for('static', filename='js/modules/advanced/initTable.js') }}" type="module"></script>
+<script src="{{ url_for('static', filename='js/modules/stats/renderBar.js') }}" type="module"></script>
+<!-- Token Tab Module -->
+<script type="module" src="{{ url_for('static', filename='js/modules/corpus/token-tab.js') }}"></script>
+<script type="module">
+  import { initStatsTabAdvanced, cleanupStats } from '{{ url_for("static", filename="js/modules/stats/initStatsTabAdvanced.js") }}';
+  
+  // Initialize stats tab when DOM is ready
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initStatsTabAdvanced);
+  } else {
+    initStatsTabAdvanced();
+  }
+  
+  // Cleanup on page unload
+  window.addEventListener('beforeunload', cleanupStats);
+</script>
 
 <!-- Regional checkbox toggle logic -->
 <script>

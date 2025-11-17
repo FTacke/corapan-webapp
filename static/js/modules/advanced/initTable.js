@@ -580,6 +580,18 @@ export function updateSummary(data, queryParams) {
   summaryBox.innerHTML = html;
   summaryBox.hidden = false;
   
+  // Show sub-tabs and datatable container after successful search with results
+  if (filtered > 0) {
+    const subTabs = document.getElementById('search-sub-tabs');
+    if (subTabs) {
+      subTabs.style.display = '';
+    }
+    const tableContainer = document.getElementById('datatable-container');
+    if (tableContainer) {
+      tableContainer.style.display = '';
+    }
+  }
+  
   console.log('[Summary] Updated:', filtered, 'results,', 'filters:', filtersActive);
 }
 

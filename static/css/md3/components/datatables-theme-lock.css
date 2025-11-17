@@ -173,7 +173,10 @@
 /* KWIC Context Columns */
 .md3-datatable__cell--context {
   color: var(--md-sys-color-on-surface-variant, #4A4F55) !important;
-  font-size: 0.95rem;
+  font-size: 0.95rem !important;
+  white-space: normal !important;
+  word-wrap: break-word !important;
+  word-break: break-word !important;
 }
 
 .md3-datatable__cell--match {

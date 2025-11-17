@@ -49,6 +49,35 @@
 }
 
 /* ============================================================================
+   Results Section
+   ============================================================================ */
+
+.md3-results-title {
+  font-family: var(--md-sys-typescale-headline-small-font, 'Roboto', sans-serif);
+  font-size: var(--md-sys-typescale-headline-small-size, 24px);
+  font-weight: var(--md-sys-typescale-headline-small-weight, 400);
+  line-height: var(--md-sys-typescale-headline-small-line-height, 32px);
+  color: var(--md-sys-color-on-surface, rgba(0, 0, 0, 0.87));
+  margin: 24px 0 16px 0;
+}
+
+.md3-view-content {
+  margin-top: 24px;
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ============================================================================
    Content Section
    ============================================================================ */
 

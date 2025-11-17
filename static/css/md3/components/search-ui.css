@@ -289,6 +289,23 @@
   margin-top: calc(-1 * var(--space-3, 0.75rem));
 }
 
+/* Ensure the active filters chip-bar negative margin is applied inside a search card */
+.md3-search-card .md3-active-filters {
+  /* Ensure the active filters chip-bar maintains a small vertical separation
+     from UI elements above. Use a positive margin to avoid overlap and ensure
+     consistent spacing across different layouts.
+  */
+  margin-top: var(--space-3, 0.75rem) !important;
+  transform: none !important;
+}
+
+/* For the token chips (in the token tab), ensure there is a clear separation from the
+   search UI above. This applies only to the token chips container. */
+#tokid-chip-container.md3-active-filters {
+  margin-top: var(--space-3, 0.75rem) !important;
+  transform: none !important;
+}
+
 .md3-active-filters[hidden] {
   display: none;
 }

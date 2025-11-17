@@ -579,6 +579,171 @@ def datatable_data():
         return jsonify(payload), 200  # Return 200 with error in JSON for DataTables compatibility
 
 
+@bp.route("/token/search", methods=["POST"])
+@limiter.limit("30 per minute")
+def token_search():
+    """
+    Token search endpoint - searches by token IDs using BlackLab.
+    
+    JSON parameters:
+        - draw: DataTables request sequence number
+        - start: Pagination offset
+        - length: Rows per page
+        - token_ids_raw: Comma/newline-separated token IDs
+        - context_size: Context words (default: 5)
+        
+    Returns:
+        JSON: {draw, recordsTotal, recordsFiltered, data: [...]}
+    """
+    # Extract parameters
+    draw = request.json.get("draw", 1) if request.json else 1
+    start = request.json.get("start", 0) if request.json else 0
+    length = request.json.get("length", 25) if request.json else 25
+    token_ids_raw = request.json.get("token_ids_raw", "") if request.json else ""
+    context_size = request.json.get("context_size", 5) if request.json else 5
+    
+    # Normalize and validate token IDs
+    token_ids = []
+    if token_ids_raw:
+        # Split by comma, newline, semicolon, whitespace
+        import re
+        raw_list = re.split(r'[,;\n\r\t\s]+', token_ids_raw)
+        # Trim and filter empty strings
+        token_ids = [tid.strip() for tid in raw_list if tid.strip()]
+    
+    # Limit token IDs (max 500 to prevent abuse)
+    MAX_TOKEN_IDS = 500
+    if len(token_ids) > MAX_TOKEN_IDS:
+        return jsonify({
+            "draw": draw,
+            "recordsTotal": 0,
+            "recordsFiltered": 0,
+            "data": [],
+            "error": "too_many_tokens",
+            "message": f"Too many token IDs (max {MAX_TOKEN_IDS}, received {len(token_ids)})"
+        }), 200
+    
+    if not token_ids:
+        return jsonify({
+            "draw": draw,
+            "recordsTotal": 0,
+            "recordsFiltered": 0,
+            "data": [],
+            "error": "no_tokens",
+            "message": "No token IDs provided"
+        }), 200
+    
+    # Build CQL pattern with tokid filter
+    if len(token_ids) == 1:
+        cql_pattern = f'[tokid="{token_ids[0]}"]'
+    else:
+        # Multiple IDs: [tokid="ID1" | tokid="ID2" | tokid="ID3"]
+        conditions = ' | '.join([f'tokid="{tid}"' for tid in token_ids])
+        cql_pattern = f'[{conditions}]'
+    
+    try:
+        # Build BlackLab request parameters
+        bls_params = {
+            "first": start,
+            "number": length,
+            "wordsaroundhit": context_size,
+            "listvalues": "tokid,start_ms,end_ms,word,lemma,pos,country_code,country_scope,country_parent_code,country_region_code,speaker_code,speaker_type,speaker_sex,speaker_mode,speaker_discourse,file_id,radio,city,date",
+        }
+        
+        # Call BlackLab via proxy
+        bls_url = f"/bls/corpora/corapan/hits"
+        
+        # Try CQL parameter names
+        http_client = get_http_client()
+        response = None
+        for param_name in ["patt", "cql", "cql_query"]:
+            try:
+                test_params = {**bls_params, param_name: cql_pattern}
+                response = _make_bls_request("/corpora/corapan/hits", test_params)
+                break
+            except httpx.HTTPStatusError as e:
+                if e.response.status_code != 400:
+                    raise
+                continue
+        
+        if response is None:
+            raise Exception("Could not determine BLS CQL parameter")
+        
+        data = response.json()
+        summary = data.get("summary", {})
+        hits = data.get("hits", [])
+        
+        # Get hit counts
+        results_stats = summary.get("resultsStats", {})
+        number_of_hits = results_stats.get("hits", 0)
+        
+        logger.info(f"Token search: {len(token_ids)} token IDs, {number_of_hits} hits found")
+        
+        # Process hits using same helper as advanced search
+        from ..services.blacklab_search import _hit_to_canonical as _hit2canon
+        processed_hits = [_hit2canon(hit) for hit in hits]
+        
+        # Enrich with docmeta
+        processed_hits = _enrich_hits_with_docmeta(processed_hits, hits, data.get('docInfos', {}) or {}, _DOCMETA_CACHE or {})
+        
+        # Return DataTables response
+        response_payload = {
+            "draw": draw,
+            "recordsTotal": number_of_hits,
+            "recordsFiltered": number_of_hits,
+            "data": processed_hits,
+        }
+        
+        if current_app.debug or current_app.config.get('DEBUG'):
+            response_payload['cql_debug'] = cql_pattern
+        
+        return jsonify(response_payload)
+        
+    except httpx.ConnectError:
+        logger.warning(f"Token search: BLS connection failed")
+        return jsonify({
+            "draw": draw,
+            "recordsTotal": 0,
+            "recordsFiltered": 0,
+            "data": [],
+            "error": "upstream_unavailable",
+            "message": f"Search backend (BlackLab) is not reachable"
+        }), 200
+        
+    except httpx.TimeoutException:
+        logger.error("Token search: BLS timeout")
+        return jsonify({
+            "draw": draw,
+            "recordsTotal": 0,
+            "recordsFiltered": 0,
+            "data": [],
+            "error": "upstream_timeout",
+            "message": "BlackLab Server timeout"
+        }), 200
+        
+    except httpx.HTTPStatusError as e:
+        logger.error(f"Token search: BLS HTTP {e.response.status_code}")
+        return jsonify({
+            "draw": draw,
+            "recordsTotal": 0,
+            "recordsFiltered": 0,
+            "data": [],
+            "error": "upstream_error",
+            "message": f"BlackLab Server error: {e.response.status_code}"
+        }), 200
+        
+    except Exception as e:
+        logger.exception("Token search: Unexpected error")
+        return jsonify({
+            "draw": draw,
+            "recordsTotal": 0,
+            "recordsFiltered": 0,
+            "data": [],
+            "error": "server_error",
+            "message": "An unexpected error occurred"
+        }), 200
+
+
 @bp.route("/export", methods=["GET"])
 @limiter.limit("6 per minute")  # Export rate limit: 6/min (separate from /data)
 def export_data():
@@ -883,3 +1048,261 @@ def export_data():
     except Exception as e:
         logger.exception("Unexpected error in export endpoint")
         return f"Export error: {type(e).__name__} - {str(e)}", 500
+
+
+@bp.route("/stats", methods=["GET"])
+@limiter.limit("30 per minute")
+def advanced_stats():
+    """
+    HIT-BASED Statistics aggregation endpoint for BlackLab advanced search.
+    
+    IMPORTANT: Stats are based on HITS (token occurrences), not documents.
+    Uses the EXACT same query logic as /data endpoint to ensure consistency.
+    
+    Aggregates metadata dimensions: country, speaker_type, sex, mode, discourse.
+    All metadata comes from token-level annotations in BlackLab index.
+    
+    Query parameters (identical to datatable_data):
+        - q or query: Search query
+        - search_type: 'forma' | 'forma_exacta' | 'lemma'
+        - sensitive: '1' (sensitive) | '0' (insensitive)
+        - mode: 'forma' | 'forma_exacta' | 'lemma' | 'cql'
+        - country_code[]: List of countries (optional, handled via include_regional)
+        - speaker_type[]: List of speaker types
+        - sex[]: List of sexes
+        - speech_mode[]: List of modes
+        - discourse[]: List of discourse types
+        - include_regional: '0' | '1'
+        - country_detail: Single country code to further filter stats (from dropdown)
+        
+    Returns:
+        JSON: {
+            total: number of hits,
+            by_country: [{key, n, p}, ...],
+            by_speaker_type: [...],
+            by_sexo: [...],
+            by_modo: [...],
+            by_discourse: [...]
+        }
+    """
+    try:
+        # === STEP 1: Extract and normalize parameters (IDENTICAL to datatable_data) ===
+        
+        # Compute country list with include_regional logic
+        countries = request.args.getlist('country_code')
+        include_regional_param = request.args.get('include_regional')
+        include_regional = include_regional_param == '1'
+        countries = resolve_countries_for_include_regional(countries, include_regional)
+        
+        # Optimization: Clear country filter if all national countries selected
+        ALL_NATIONAL_CODES = ['ARG', 'BOL', 'CHL', 'COL', 'CRI', 'CUB', 'ECU', 'ESP', 'GTM', 
+                              'HND', 'MEX', 'NIC', 'PAN', 'PRY', 'PER', 'DOM', 'SLV', 'URY', 'USA', 'VEN']
+        
+        if countries and include_regional_param is None:
+            countries_set = set(countries)
+            all_expected = set(ALL_NATIONAL_CODES)
+            if countries_set == all_expected:
+                countries = []
+        
+        # Build filters
+        filters = build_filters(request.args)
+        if countries:
+            filters['country_code'] = countries
+        
+        # Validate filters
+        try:
+            validate_filter_values(filters)
+        except CQLValidationError as e:
+            logger.warning(f"Stats: Filter validation failed: {e}")
+            return jsonify({
+                "error": "invalid_filter",
+                "message": str(e),
+                "total": 0,
+                "by_country": [],
+                "by_speaker_type": [],
+                "by_sexo": [],
+                "by_modo": [],
+                "by_discourse": []
+            }), 400
+        
+        # === STEP 2: Build BlackLab query (IDENTICAL to datatable_data) ===
+        
+        filter_query = filters_to_blacklab_query(filters)
+        
+        # BLS parameters: Get as many hits as possible for accurate stats
+        # Note: We request MORE than datatable_data to get better stats coverage
+        bls_params = {
+            "first": 0,
+            "number": 10000,  # BlackLab max hits per request (for stats aggregation)
+            "wordsaroundhit": 0,  # Don't need context for stats, saves bandwidth
+            "listvalues": "country_code,speaker_type,speaker_sex,speaker_mode,speaker_discourse",  # Only metadata fields needed
+            "waitfortotal": "true"
+        }
+        
+        if filter_query:
+            bls_params["filter"] = filter_query
+        
+        # Build CQL pattern
+        cql_filters = dict(filters)
+        if filter_query:
+            cql_filters.pop('country_code', None)
+        cql_pattern = build_cql_with_speaker_filter(request.args, cql_filters)
+        
+        # Validate CQL
+        try:
+            validate_cql_pattern(cql_pattern)
+        except CQLValidationError as e:
+            logger.warning(f"Stats: CQL validation failed: {e}")
+            return jsonify({
+                "error": "invalid_cql",
+                "message": str(e),
+                "total": 0,
+                "by_country": [],
+                "by_speaker_type": [],
+                "by_sexo": [],
+                "by_modo": [],
+                "by_discourse": []
+            }), 400
+        
+        # === STEP 3: Make BlackLab request ===
+        
+        cql_param_names = ["patt", "cql", "cql_query"]
+        response = None
+        last_error = None
+        
+        for param_name in cql_param_names:
+            try:
+                test_params = {**bls_params, param_name: cql_pattern}
+                response = _make_bls_request("/corpora/corapan/hits", test_params)
+                logger.debug(f"Stats: BLS request succeeded with param '{param_name}'")
+                break
+            except httpx.HTTPStatusError as e:
+                last_error = e
+                if e.response.status_code == 400:
+                    continue  # Try next param name
+                else:
+                    raise
+        
+        if response is None:
+            raise last_error or Exception("Could not determine BLS CQL parameter")
+        
+        # === STEP 4: Parse response and extract metadata ===
+        
+        data = response.json()
+        hits = data.get("hits", [])
+        summary = data.get("summary", {})
+        results_stats = summary.get("resultsStats", {})
+        total_hits = results_stats.get("hits", 0)
+        
+        logger.info(f"Stats: Retrieved {len(hits)} hits from BlackLab (total: {total_hits})")
+        
+        # === STEP 5: Aggregate metadata directly from BlackLab hits ===
+        # No SQL, no external enrichment needed - metadata is in token annotations!
+        
+        def aggregate_dimension(dimension_key: str) -> list:
+            """
+            Aggregate hits by metadata dimension.
+            Reads directly from BlackLab hit structure (token-level annotations).
+            """
+            counts = {}
+            
+            for hit in hits:
+                # BlackLab v5 structure: hit -> match -> [tokens]
+                match = hit.get("match", {})
+                
+                # Try to get metadata from first token in match
+                # (all tokens in same utterance have same metadata)
+                value = None
+                
+                if isinstance(match, dict):
+                    # Get value from match metadata (if available)
+                    value = match.get(dimension_key)
+                    
+                    # Fallback: check match.word array for metadata
+                    if not value and "word" in match:
+                        tokens = match.get("word", [])
+                        if tokens and isinstance(tokens, list) and len(tokens) > 0:
+                            # First token should have the metadata
+                            first_token = tokens[0]
+                            if isinstance(first_token, dict):
+                                value = first_token.get(dimension_key)
+                
+                # Fallback to 'Unknown' if no value found
+                value = value or 'Unknown'
+                
+                # Handle list values (take first element)
+                if isinstance(value, list):
+                    value = value[0] if value else 'Unknown'
+                
+                counts[value] = counts.get(value, 0) + 1
+            
+            # Sort by count descending
+            items = sorted(counts.items(), key=lambda x: x[1], reverse=True)
+            
+            # Calculate proportions
+            total_counted = sum(n for _, n in items)
+            
+            return [
+                {
+                    "key": key,
+                    "n": n,
+                    "p": round(n / total_counted, 3) if total_counted > 0 else 0
+                }
+                for key, n in items
+            ]
+        
+        # Apply country_detail filter if specified (post-aggregation filtering)
+        country_detail = request.args.get('country_detail', '').strip().upper()
+        
+        if country_detail:
+            # Re-filter hits by country_detail before aggregating
+            filtered_hits = []
+            for hit in hits:
+                match = hit.get("match", {})
+                country_code = match.get("country_code")
+                
+                if isinstance(country_code, list):
+                    country_code = country_code[0] if country_code else None
+                
+                if country_code and country_code.upper() == country_detail:
+                    filtered_hits.append(hit)
+            
+            hits = filtered_hits
+            total_hits = len(hits)
+            logger.info(f"Stats: Filtered to {total_hits} hits for country {country_detail}")
+        
+        # Aggregate all dimensions
+        result = {
+            "total": len(hits),  # Actual hits we aggregated (might be < total_hits due to pagination)
+            "total_available": total_hits,  # Total hits in BlackLab (might be more than we fetched)
+            "by_country": aggregate_dimension("country_code"),
+            "by_speaker_type": aggregate_dimension("speaker_type"),
+            "by_sexo": aggregate_dimension("speaker_sex"),
+            "by_modo": aggregate_dimension("speaker_mode"),
+            "by_discourse": aggregate_dimension("speaker_discourse")
+        }
+        
+        logger.info(f"Stats: Aggregated {result['total']} hits - "
+                   f"{len(result['by_country'])} countries, "
+                   f"{len(result['by_speaker_type'])} speaker types, "
+                   f"{len(result['by_sexo'])} sex values, "
+                   f"{len(result['by_modo'])} modes, "
+                   f"{len(result['by_discourse'])} discourse types")
+        
+        return jsonify(result), 200
+        
+    except httpx.ConnectError:
+        logger.error(f"Stats: BLS connection failed - unreachable at {BLS_BASE_URL}")
+        return jsonify({"error": "connection_error", "message": "BlackLab Server is not reachable"}), 502
+        
+    except httpx.TimeoutException:
+        logger.error("Stats: BLS timeout")
+        return jsonify({"error": "timeout", "message": "BlackLab Server timeout"}), 504
+        
+    except httpx.HTTPStatusError as e:
+        logger.error(f"Stats: BLS HTTP {e.response.status_code}")
+        return jsonify({"error": "bls_error", "message": f"BlackLab Server error {e.response.status_code}"}), 502
+        
+    except Exception as e:
+        logger.exception("Stats: Unexpected error")
+        return jsonify({"error": "server_error", "message": str(e)}), 500
