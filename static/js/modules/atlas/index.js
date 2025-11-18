@@ -80,7 +80,7 @@ function getInitialCenter() {
   return [1, -50];
 }
 
-function openLoginSheet() {
+function openLoginSheet(nextTarget = '') {
   if (loginSheet) {
     // Save current scroll position
     const scrollY = window.scrollY || window.pageYOffset;
@@ -98,8 +98,17 @@ function openLoginSheet() {
       input.focus({ preventScroll: true });
     }
   } else if (loginButtons.length) {
-    // Trigger the global open-login button (already has scroll handling)
-    loginButtons[0].click();
+    if (nextTarget) {
+      // Open login sheet with next param via HTMX
+      if (window.htmx) {
+        htmx.ajax('GET', `/auth/login_sheet?next=${encodeURIComponent(nextTarget)}`, { target: '#modal-root', swap: 'beforeend' });
+      } else {
+        window.location.href = `/auth/login?next=${encodeURIComponent(nextTarget)}`;
+      }
+    } else {
+      // Trigger the global open-login button (already has scroll handling)
+      loginButtons[0].click();
+    }
   }
 }
 
@@ -184,12 +193,11 @@ function handlePlayerLinkClick(event) {
       credentials: 'same-origin'
     }).then(() => {
       // Open login sheet after saving redirect URL
-      openLoginSheet();
+      openLoginSheet(playerUrl);
     }).catch(error => {
       console.error('Failed to save redirect URL:', error);
-      // Fallback: use sessionStorage
-      sessionStorage.setItem('_player_redirect_after_login', playerUrl);
-      openLoginSheet();
+      // Fall back to opening login sheet without storing redirect server-side
+      openLoginSheet(playerUrl);
     });
     return false;
   }

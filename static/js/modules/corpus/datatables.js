@@ -3,7 +3,7 @@
  * Verwaltet DataTables mit Server-Side Processing
  */
 
-import { MEDIA_ENDPOINT, allowTempMedia } from './config.js';
+import { MEDIA_ENDPOINT } from './config.js';
 
 // Global DataTable instance for external access
 let corpusTable = null;

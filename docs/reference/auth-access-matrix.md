@@ -50,7 +50,7 @@ Vollständige Inventur aller Flask-Routen mit Auth-Policy, CSRF-Anforderungen un
 | `/proyecto/estadisticas` | GET | PUBLIC | N/A | none | Statistiken |
 | `/proyecto/quienes-somos` | GET | PUBLIC | N/A | none | Team-Info |
 | `/proyecto/como-citar` | GET | PUBLIC | N/A | none | Zitationsinfo |
-| `/atlas` | GET | PUBLIC | N/A | none | Atlas-Startseite |
+| `/atlas` | GET | PUBLIC (optional-auth) | N/A | `@jwt_required(optional=True)` | Atlas-Startseite |
 | `/impressum` | GET | PUBLIC | N/A | none | Impressum |
 | `/privacy` | GET | PUBLIC | N/A | none | Datenschutz |
 | `/get_stats_all_from_db` | GET | PUBLIC | N/A | none | Statistik-JSON |
@@ -62,7 +62,7 @@ Vollständige Inventur aller Flask-Routen mit Auth-Policy, CSRF-Anforderungen un
 
 | Path | Methods | Access | CSRF | Decorator | Beschreibung |
 |------|---------|--------|------|-----------|--------------|
-| `/corpus/` | GET | PUBLIC | N/A | **~~@jwt_required(optional=True)~~** → **none** | Corpus-Startseite (DataTables) |
+| `/corpus/` | GET | PUBLIC (optional-auth) | N/A | `@jwt_required(optional=True)` | Corpus-Startseite (DataTables) |
 | `/corpus/search` | GET, POST | PUBLIC | NO (GET), YES (POST) | **~~@jwt_required(optional=True)~~** → **none** | Corpus-Suche |
 | `/corpus/search/datatables` | GET | PUBLIC | N/A | none | DataTables Server-Side Endpoint |
 | `/corpus/tokens` | GET | PUBLIC | N/A | none | Token-Detail-JSON |
@@ -75,7 +75,7 @@ Vollständige Inventur aller Flask-Routen mit Auth-Policy, CSRF-Anforderungen un
 
 | Path | Methods | Access | CSRF | Decorator | Beschreibung |
 |------|---------|--------|------|-----------|--------------|
-| `/search/advanced` | GET | PUBLIC | N/A | none | Advanced Search Form |
+| `/search/advanced` | GET | PUBLIC (optional-auth) | N/A | `@jwt_required(optional=True)` | Advanced Search Form |
 | `/search/advanced/results` | GET | PUBLIC | N/A | none | BlackLab KWIC Results Fragment |
 
 ---
@@ -84,7 +84,7 @@ Vollständige Inventur aller Flask-Routen mit Auth-Policy, CSRF-Anforderungen un
 
 | Path | Methods | Access | CSRF | Decorator | Beschreibung |
 |------|---------|--------|------|-----------|--------------|
-| `/search/advanced/data` | GET | PUBLIC | N/A | none | DataTables Server-Side (BlackLab) |
+| `/search/advanced/data` | GET | PUBLIC (optional-auth) | N/A | `@jwt_required(optional=True)` | DataTables Server-Side (BlackLab) |
 | `/search/advanced/export` | GET | PUBLIC | N/A | none | CSV/TSV Streaming Export |
 
 **Hinweis:** Rate-Limited via `@limiter.limit("30 per minute")`.
@@ -131,13 +131,13 @@ Vollständige Inventur aller Flask-Routen mit Auth-Policy, CSRF-Anforderungen un
 
 | Path | Methods | Access | CSRF | Decorator | Beschreibung |
 |------|---------|--------|------|-----------|--------------|
-| `/media/full/<filename>` | GET | PUBLIC* | N/A | **~~@jwt_required(optional=True)~~** → **none** | Full MP3 Files |
+| `/media/full/<filename>` | GET | PUBLIC* (optional-auth) | N/A | `@jwt_required(optional=True)` | Full MP3 Files |
 | `/media/split/<filename>` | GET | PROTECTED | N/A | @jwt_required() | Split MP3 Segments |
-| `/media/temp/<filename>` | GET | PUBLIC* | N/A | **~~@jwt_required(optional=True)~~** → **none** | Temp Audio Snippets |
-| `/media/snippet` | POST | PUBLIC* | YES | **~~@jwt_required(optional=True)~~** → **none** | Generate Audio Snippet |
-| `/media/transcripts/<filename>` | GET | PUBLIC | N/A | **~~@jwt_required(optional=True)~~** → **none** | Transcription JSON |
+| `/media/temp/<filename>` | GET | PUBLIC* (optional-auth) | N/A | `@jwt_required(optional=True)` | Temp Audio Snippets |
+| `/media/snippet` | POST | PUBLIC* (optional-auth) | YES | `@jwt_required(optional=True)` | Generate Audio Snippet |
+| `/media/transcripts/<filename>` | GET | PUBLIC | N/A | `@jwt_required(optional=True)` | Transcription JSON |
 | `/media/toggle/temp` | POST | ADMIN | YES | @jwt_required() | Toggle Public Temp Audio |
-| `/media/play_audio/<filename>` | GET | PUBLIC | N/A | **~~@jwt_required(optional=True)~~** → **none** | Audio Playback (Legacy) |
+| `/media/play_audio/<filename>` | GET | PUBLIC | N/A | none | Audio Playback (Legacy) |
 
 **PUBLIC\*:** Abhängig von `ALLOW_PUBLIC_TEMP_AUDIO` Config (Default: `True`).
 
@@ -224,8 +224,7 @@ Vollständige Inventur aller Flask-Routen mit Auth-Policy, CSRF-Anforderungen un
 - **LÖSUNG:** Public-Routen früh returnen **bevor** JWT-Prüfung:
 
 ```python
-PUBLIC_PREFIXES = ('/static/', '/corpus', '/search/advanced', '/api/search', 
-                   '/bls/', '/atlas/', '/favicon', '/robots.txt', '/health', '/')
+PUBLIC_PREFIXES = ('/static/', '/favicon', '/robots.txt', '/health')
 
 @blueprint.before_app_request
 def load_user_dimensions():

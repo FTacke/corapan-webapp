@@ -826,18 +826,24 @@
             <span>Limpiar todo</span>
           </button>
           <button type="button" id="token-search-btn" class="md3-button md3-button--filled">
-            <span class="material-symbols-rounded">search</span>
-            <span>Buscar</span>
+            <span class="material-symbols-rounded">table_view</span>
+            <span>Visualizar</span>
           </button>
         </div>
       </form>
       
       <!-- Token Results Section -->
       <section id="token-results" class="md3-view-content" style="display: none; margin-top: 2rem;">
-        <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem;">
-          <span class="material-symbols-rounded" style="font-size: 28px; color: var(--md-sys-color-primary, #1976d2);">token</span>
-          <h2 class="md3-results-title" style="margin: 0;">Resultados de Token-IDs</h2>
+        <!-- Token Sub-Tabs (Resultados | Estadísticas) -->
+        <div id="token-sub-tabs" role="tablist" class="md3-token-stats-tabs md3-stats-tabs" style="margin-top: 0.5rem; display: flex;">
+          <button type="button" role="tab" id="token-tab-resultados" class="md3-token-stats-tab md3-stats-tab md3-stats-tab--active" data-view="results" aria-controls="token-panel-resultados" aria-selected="true">
+            <span class="material-symbols-rounded" aria-hidden="true">table</span>
+            <span>Resultados</span>
+          </button>
         </div>
+
+        <div id="token-panel-resultados" role="tabpanel" aria-labelledby="token-tab-resultados" class="md3-view-content md3-view-content--active">
+
         
         <!-- DataTable Container -->
         <div class="md3-corpus-table-container">
@@ -862,6 +868,11 @@
               <!-- DataTables (Server-Side) will populate this dynamically -->
             </tbody>
           </table>
+        </div>
+        </div>
+
+        <div id="token-panel-estadisticas" role="tabpanel" aria-labelledby="token-tab-estadisticas" class="md3-view-content" hidden>
+          <div class="md3-body-medium" style="padding: 1rem;">Estadísticas no implementadas todavía.</div>
         </div>
       </section>
     </section>

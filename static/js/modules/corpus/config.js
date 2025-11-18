@@ -26,7 +26,6 @@ export const SELECT2_CONFIG = {
  * Check if public temp audio is allowed
  */
 export function allowTempMedia() {
-    return (window.__CORAPAN__?.allowPublicTempAudio === true) || 
-           (window.ALLOW_PUBLIC_TEMP_AUDIO === 'true') || 
-           (window.IS_AUTHENTICATED === 'true');
+    // All corpus audio snippets are public now; playback does not require authentication.
+    return true;
 }

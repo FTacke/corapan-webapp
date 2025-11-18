@@ -350,7 +350,8 @@ export class SearchUI {
    * Bind sub-tabs (Resultados / Estadísticas)
    */
   bindSubTabs() {
-    const tabs = document.querySelectorAll('.md3-stats-tab');
+    // Do not bind to token-sub-tabs in token-tab module; exclude them explicitly
+    const tabs = document.querySelectorAll('.md3-stats-tab:not(#token-sub-tabs .md3-stats-tab)');
     
     tabs.forEach(tab => {
       tab.addEventListener('click', () => {

@@ -31,9 +31,10 @@
       <div class="md3-admin-card__header">
         <i class="bi bi-headphones md3-admin-card__icon"></i>
         <div>
-          <h2 class="md3-admin-card__title md3-title-large">Acceso Público Temporal</h2>
+          <h2 class="md3-admin-card__title md3-title-large">Acceso Público Temporal (media/temp & media/snippet)</h2>
           <p class="md3-admin-card__subtitle md3-body-medium">
-            Controla si los visitantes anónimos pueden reproducir fragmentos temporales del corpus
+            Controla si los visitantes anónimos pueden reproducir fragmentos temporales generados por `/media/temp` y `/media/snippet`.
+            Este ajuste no afecta el endpoint `/media/play_audio`, que es siempre público.
           </p>
         </div>
       </div>
@@ -105,7 +106,7 @@
       <div class="md3-admin-card__body">
         <ul class="md3-admin-list md3-body-medium">
           <li>El conteo de accesos se desglosa por rol y se recalcula mensualmente</li>
-          <li>El interruptor actualiza <code>ALLOW_PUBLIC_TEMP_AUDIO</code> en caliente</li>
+            <li>El interruptor actualiza <code>ALLOW_PUBLIC_TEMP_AUDIO</code> en caliente (aplica a `/media/temp` y `/media/snippet`)</li>
           <li>Los datos se almacenan en <code>data/counters/</code> y pueden sincronizarse con el backend</li>
           <li>Los logs del sistema se encuentran en <code>logs/corapan.log</code></li>
         </ul>

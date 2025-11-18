@@ -14,7 +14,6 @@ Alle Komponenten aus `docs/search_ui/search_ui_spec.md` sind vollständig implem
 
 #### Templates
 - ✅ `templates/search/advanced.html` - Neues Such-Template
-- 📦 `templates/search/advanced_old.html` - Backup des alten Templates
 
 #### CSS
 - ✅ `static/css/md3/components/search-ui.css` - Alle neuen Styles (~850 Zeilen)
@@ -119,7 +118,7 @@ Du solltest sehen:
 - 1 geänderte Datei (`templates/search/advanced.html`)
 - 1 gelöschte Datei (`docs/search_ui/search_ui_masterplan`)
 
-### 3. Änderungen prüfen
+#### 3. Änderungen prüfen
 
 ```bash
 # Nur die Änderungen anschauen, noch NICHT committen
@@ -135,7 +134,6 @@ git diff templates/search/advanced.html  # Falls du das alte sehen willst
 git add static/css/md3/components/search-ui.css
 git add static/js/modules/search/*.js
 git add templates/search/advanced.html
-git add templates/search/advanced_old.html
 git add docs/search_ui/*.md
 
 # Commit erstellen
@@ -240,7 +238,7 @@ Bei Fragen oder Problemen:
    - Module geladen?
 
 3. **Backup verwenden:**
-   - `templates/search/advanced_old.html` - Altes Template zum Vergleich
+   - **Hinweis:** Das alte Template wurde entfernt; nutze stattdessen die Git-Historie oder `templates/search/advanced.html` für Referenz.
 
 ---
 

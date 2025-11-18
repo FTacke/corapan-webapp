@@ -105,10 +105,13 @@ async function verifyAuth() {
       console.log(`[Auth] ✅ Authenticated as: ${data.user}`);
       document.body.classList.add('authenticated');
       document.body.classList.remove('not-authenticated');
+      // Update global flag so other modules observe current auth state
+      try { window.IS_AUTHENTICATED = 'true'; } catch (e) { /* ignore */ }
     } else {
       console.log('[Auth] ℹ️  Not authenticated');
       document.body.classList.add('not-authenticated');
       document.body.classList.remove('authenticated');
+      try { window.IS_AUTHENTICATED = 'false'; } catch (e) { /* ignore */ }
     }
     
     return data;
@@ -125,6 +128,16 @@ if (document.readyState === 'loading') {
   verifyAuth();
 }
 
+// Also seed global IS_AUTHENTICATED from server-rendered DOM attributes if present
+try {
+  const headerRoot = document.querySelector('[data-element="top-app-bar"], [data-role="top-app-bar"]');
+  if (headerRoot && headerRoot.dataset && headerRoot.dataset.auth) {
+    window.IS_AUTHENTICATED = headerRoot.dataset.auth === 'true' ? 'true' : 'false';
+  }
+} catch (e) {
+  // Ignore non-critical DOM errors
+}
+
 // Re-verify after each Turbo navigation
 document.addEventListener('turbo:load', verifyAuth);
 
@@ -134,6 +147,31 @@ console.log('[Auth Setup] ✅ Session verification installed');
 // Export for use in other scripts
 // =============================================================================
 
+// Re-verify auth status after HTMX login attempts (refresh client-side state)
+document.addEventListener('htmx:afterRequest', function(evt) {
+  try {
+    const path = evt.detail.requestConfig.path || '';
+    if (path && path.includes('/auth/login')) {
+      // re-check auth state (will pick up new cookies if any)
+      verifyAuth();
+    }
+  } catch (e) {
+    // ignore
+  }
+});
+
+// After HTMX-auth, verify auth state so the client updates UI correctly
+document.addEventListener('htmx:afterRequest', function(evt) {
+  try {
+    const path = evt.detail.requestConfig.path || '';
+    if (path && path.includes('/auth/login')) {
+      // re-check auth state (will pick up new cookies if any)
+      verifyAuth();
+    }
+  } catch (e) {
+    // ignore
+  }
+});
 window.authSetup = {
   getCSRFToken: window.getCSRFToken,
   verifyAuth: verifyAuth

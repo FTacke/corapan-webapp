@@ -29,7 +29,7 @@ JWT-Error-Handler müssen optional-Routes erkennen:
 
 ```python
 # src/app/extensions/__init__.py
-OPTIONAL_AUTH_ROUTES = ['/corpus/', '/media/', '/auth/session', '/auth/logout']
+OPTIONAL_AUTH_ROUTES = ['/auth/session', '/auth/logout', '/static/', '/favicon', '/robots.txt', '/health']
 
 @jwt_manager.expired_token_loader
 def expired_token_callback(jwt_header, jwt_payload):

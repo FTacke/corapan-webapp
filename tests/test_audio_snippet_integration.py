@@ -129,5 +129,42 @@ def test_find_split_file_and_cache_naming():
         teardown_file(f)
 
 
+def test_play_audio_public_without_config_flag():
+    # If ALLOW_PUBLIC_TEMP_AUDIO is False, /media/play_audio should still work (public)
+    split_path = setup_test_split_file()
+    assert split_path.exists()
+
+    app = create_app()
+    app.config['TESTING'] = True
+    app.config['ALLOW_PUBLIC_TEMP_AUDIO'] = False
+    client = app.test_client()
+
+    filename = '2025-11-17_ARG_Test.mp3'
+    start = 2.0
+    end = 3.5
+
+    rv = client.get(f'/media/play_audio/{filename}?start={start}&end={end}&token_id=argx_demo&type=pal')
+    assert rv.status_code == 200
+    assert rv.content_type == 'audio/mpeg'
+
+
+def test_play_audio_download_public_without_config_flag():
+    split_path = setup_test_split_file()
+    assert split_path.exists()
+
+    app = create_app()
+    app.config['TESTING'] = True
+    app.config['ALLOW_PUBLIC_TEMP_AUDIO'] = False
+    client = app.test_client()
+
+    filename = '2025-11-17_ARG_Test.mp3'
+    start = 2.0
+    end = 3.5
+    rv = client.get(f'/media/play_audio/{filename}?start={start}&end={end}&token_id=argx_demo&type=pal&download=true')
+    assert rv.status_code == 200
+    content_disposition = rv.headers.get('Content-Disposition')
+    assert content_disposition and 'attachment' in content_disposition.lower()
+
+
 if __name__ == '__main__':
     test_build_snippet_and_play_audio_route(None)

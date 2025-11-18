@@ -80,6 +80,12 @@ def create_snippet():
     
     CSRF: Required for POST (via JWT-CSRF if user logged in).
     """
+    # Debug: log presence of JWT cookie and user context (always log, even if access denied)
+    jwt_cookie_name = current_app.config.get('JWT_ACCESS_COOKIE_NAME', 'access_token_cookie')
+    has_jwt = jwt_cookie_name in request.cookies
+    current_app.logger.debug(
+        f'[Media.play_audio] Attempt to play: JWT cookie present: {has_jwt}; cookie_keys: {list(request.cookies.keys())}; g.user: {getattr(g, "user", None)}; ALLOW_PUBLIC_TEMP_AUDIO: {current_app.config.get("ALLOW_PUBLIC_TEMP_AUDIO", False)}'
+    )
     if not _temp_access_allowed():
         abort(401)
     payload = request.get_json(silent=True) or {}
@@ -165,9 +171,12 @@ def toggle_temp_access():
 
 @blueprint.get("/play_audio/<path:filename>")
 def play_audio(filename: str):
-    """PUBLIC ROUTE (conditionally): Access controlled by ALLOW_PUBLIC_TEMP_AUDIO config.
+    """PUBLIC ROUTE: Audio snippet playback for the Corpus/Advanced search UI.
     
-    Legacy endpoint for audio playback with snippet generation.
+    This endpoint is intentionally public - it does NOT require authentication
+    and is always available for clients that can reach the server. It is only
+    responsible for building and returning the requested snippet. If you need
+    server-side toggles for other media endpoints, use `/media/temp` or `/media/snippet`.
     """
     start = request.args.get("start", type=float)
     end = request.args.get("end", type=float)
@@ -178,8 +187,10 @@ def play_audio(filename: str):
         abort(400, "Missing start/end parameters")
     if end <= start:
         abort(400, "End time must be greater than start time")
-    if not _temp_access_allowed():
-        abort(401)
+    # Log a simple request trace for diagnostics - but do not inspect g.user
+    jwt_cookie_name = current_app.config.get('JWT_ACCESS_COOKIE_NAME', 'access_token_cookie')
+    has_jwt = jwt_cookie_name in request.cookies
+    current_app.logger.debug(f'[Media.play_audio] Request received; JWT cookie present: {has_jwt}; cookies: {list(request.cookies.keys())}')
     try:
         snippet_path = audio_snippets.build_snippet(filename, start, end, token_id, snippet_type)
     except FileNotFoundError:

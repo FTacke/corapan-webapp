@@ -112,7 +112,7 @@ Die Neugestaltung der Suchoberfläche gemäß `search_ui_spec.md` wurde vollstä
 
 ### Templates
 - ✅ `templates/search/advanced.html` - Neues Such-Template (ersetzt altes)
-- 📦 `templates/search/advanced_old.html` - Backup des alten Templates
+{# Legacy backup removed: templates/search/advanced_old.html #}
 
 ### CSS
 - ✅ `static/css/md3/components/search-ui.css` - Alle neuen Styles:

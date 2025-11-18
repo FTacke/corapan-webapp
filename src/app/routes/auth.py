@@ -79,7 +79,8 @@ def check_session() -> Response:
     """
     try:
         # Manual token verification without decorator to avoid error handlers
-        verify_jwt_in_request(optional=True)
+        # Ensure we check cookies explicitly so fetch('/auth/session') inherits cookies
+        verify_jwt_in_request(optional=True, locations=["cookies"])
         token = get_jwt() or {}
         sub = token.get("sub")
         exp = token.get("exp")
@@ -224,6 +225,10 @@ def login_post() -> Response:
     
     # Get next URL from form, query param, or referrer
     next_raw = request.form.get("next") or request.args.get("next") or request.headers.get("Referer")
+    # Fallback: if the previous step saved a redirect in session, use it
+    if not next_raw and RETURN_URL_SESSION_KEY in session:
+        next_raw = session.pop(RETURN_URL_SESSION_KEY, None)
+        current_app.logger.debug(f'Login POST using session RETURN_URL_SESSION_KEY: {next_raw}')
     next_url = _safe_next(next_raw)
     
     # Validierung: Username existiert?
@@ -406,14 +411,16 @@ def load_user_dimensions():
     - Prevents error handlers from blocking public access
     """
     # Public route prefixes - NO JWT processing
+    # Only minimal infra/static routes bypass JWT entirely. Routes such as
+    # /corpus, /search/advanced, /atlas and /media/* are "optional auth" and
+    # should run `verify_jwt_in_request(optional=True)` so that `g.user` is
+    # populated when a valid token is present.
     PUBLIC_PREFIXES = (
-        '/static/', '/corpus', '/search/advanced', '/bls/', '/atlas/', 
-        '/auth/', '/favicon', '/robots.txt', '/health', '/', '/proyecto',
-        '/stats', '/impressum', '/privacy', '/media/transcripts', '/media/temp',
-        '/media/full', '/media/snippet', '/media/play_audio'
+        '/static/', '/favicon', '/robots.txt', '/health', '/media/play_audio',
     )
     
     path = request.path
+    current_app.logger.debug(f'[Auth.load_user_dimensions] Path: {path}; Public prefixes: {PUBLIC_PREFIXES}')
     
     # Early return for public routes - skip JWT entirely
     if path.startswith(PUBLIC_PREFIXES):
@@ -421,9 +428,10 @@ def load_user_dimensions():
         g.role = None
         return
     
-    # Protected routes: Standard JWT processing
+    # Protected routes: Standard JWT processing - verify JWT in cookies
     try:
-        verify_jwt_in_request(optional=True)
+        # Use cookie location explicitly to avoid header-only tokens in API tests
+        verify_jwt_in_request(optional=True, locations=["cookies"])
         token = get_jwt() or {}
         g.user = token.get("sub")
         role_value = token.get("role")
@@ -435,3 +443,6 @@ def load_user_dimensions():
         # Silently ignore - treat as no token
         g.user = None
         g.role = None
+        current_app.logger.debug(f'[Auth.load_user_dimensions] Token invalid or missing - g.user set to None for path {path}')
+    else:
+        current_app.logger.debug(f'[Auth.load_user_dimensions] g.user set to {g.user} for path {path}')

@@ -20,7 +20,7 @@ let allowPublicTempAudio = getInitialToggleState();
 function updateToggleVisual(state) {
   if (!toggleButton || !toggleLabel) return;
   toggleButton.setAttribute('aria-checked', state ? 'true' : 'false');
-  toggleLabel.textContent = state ? 'Acceso público activado' : 'Acceso público desactivado';
+  toggleLabel.textContent = state ? 'Acceso público activado (/media/temp, /media/snippet)' : 'Acceso público desactivado (/media/temp, /media/snippet)';
 }
 
 function summariseAccessMetric(data) {

@@ -485,8 +485,7 @@ document.addEventListener('submit', (event) => {
     
     console.log('[Auth] Login form submitted');
     
-    // Clear sessionStorage for cleanup
-    sessionStorage.removeItem('_player_redirect_after_login');
+    // No sessionStorage-based redirect mechanism used anymore
     
     // Visual feedback - close login sheet
     // Note: Sheet will be hidden by page navigation anyway
@@ -497,6 +496,8 @@ document.addEventListener('submit', (event) => {
     // Form submits naturally - browser handles redirect with cookies
   }
 });
+
+// No sessionStorage-based redirect mechanism used anymore; rely on server-side `save-redirect` and next/session fallback
 
 function getCookie(name) {
   return document.cookie

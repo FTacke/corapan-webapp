@@ -329,8 +329,72 @@ function initializeTokenTab() {
   
   // Initial render (leer)
   renderTokidChips();
+  // Initialize token sub-tabs if present
+  initializeTokenSubTabs();
   
   console.log('✅ Token Tab initialized');
+}
+
+/**
+ * Initialize token tab sub-tabs (Resultados | Estadísticas)
+ * Re-uses the same markup/styling as the advanced search sub-tabs
+ * The statistics tab is currently inactive (display a small message)
+ */
+function initializeTokenSubTabs() {
+  const sub = document.getElementById('token-sub-tabs');
+  if (!sub) return;
+
+  const btnResult = sub.querySelector('[data-view="results"]');
+  const btnStats = sub.querySelector('[data-view="stats"]');
+  const panelResults = document.getElementById('token-panel-resultados');
+  const panelStats = document.getElementById('token-panel-estadisticas');
+
+  // Ensure statistics tab remains inactive by default
+  if (btnStats) {
+    btnStats.setAttribute('aria-disabled', 'true');
+    btnStats.classList.remove('md3-stats-tab--active');
+  }
+
+  if (btnResult && panelResults) {
+    btnResult.addEventListener('click', () => {
+      // Activate Results / hide Stats
+      if (btnStats) btnStats.classList.remove('md3-stats-tab--active');
+      btnResult.classList.add('md3-stats-tab--active');
+      if (panelResults) {
+        panelResults.classList.add('md3-view-content--active');
+        panelResults.removeAttribute('hidden');
+      }
+      if (panelStats) {
+        panelStats.classList.remove('md3-view-content--active');
+        panelStats.setAttribute('hidden', '');
+      }
+    });
+  }
+
+  if (btnStats && panelStats) {
+    // Clicking stats shows a small message in the stats panel
+    btnStats.addEventListener('click', () => {
+      // If the button is aria-disabled, do nothing
+      if (btnStats.getAttribute('aria-disabled') === 'true') {
+        // Toggle a tooltip or temporary message to inform user that it's not implemented
+        panelStats.innerHTML = `<div class="md3-body-medium" style="padding: 1rem;">Estadísticas no implementadas todavía.</div>`;
+        // Show the small message briefly then switch back to results
+        panelStats.classList.add('md3-view-content--active');
+        panelStats.removeAttribute('hidden');
+        setTimeout(() => {
+          panelStats.classList.remove('md3-view-content--active');
+          panelStats.setAttribute('hidden', '');
+        }, 2000);
+        return;
+      }
+
+      // Normal behavior (not used currently)
+      btnResult.classList.remove('md3-stats-tab--active');
+      btnStats.classList.add('md3-stats-tab--active');
+      if (panelResults) panelResults.classList.remove('md3-view-content--active');
+      if (panelStats) panelStats.classList.add('md3-view-content--active');
+    });
+  }
 }
 
 // DOM ready

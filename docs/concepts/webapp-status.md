@@ -145,8 +145,8 @@ Die CO.RA.PAN Webapp ist eine moderne Flask-basierte Anwendung zur Exploration d
   - Rate Limiting (30 req/min für DataTables, 5 req/min für Export)
   - CQL Injection Prevention
   - Input Validation auf allen Endpoints
-  - Secure Audio Snippet Access Control
-  - `ALLOW_PUBLIC_TEMP_AUDIO` Toggle für Public/Private Modes
+  - Secure Audio Snippet Access Control (public snippet playback via `/media/play_audio` is always available)
+  - `ALLOW_PUBLIC_TEMP_AUDIO` Toggle controls access to `/media/temp` and `/media/snippet` (not `/media/play_audio`)
 - **Dokumentation**:
   - [CQL Escaping Rules](../reference/cql-escaping-rules.md)
   - [Rate Limiting Strategy](../operations/rate-limiting-strategy.md)

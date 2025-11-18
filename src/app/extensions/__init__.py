@@ -65,10 +65,10 @@ def register_jwt_handlers() -> None:
         - access_expired: Access token expired, try refresh
         - refresh_expired: Refresh token expired, user must login again
         """
-        # Safety check: Public routes should never reach here (handled by early-return)
-        PUBLIC_PREFIXES = ('/corpus', '/search/advanced', '/bls/', '/atlas/', '/static/', 
-                           '/media/transcripts', '/media/temp', '/media/full')
-        if request.path.startswith(PUBLIC_PREFIXES):
+        # Safety check: Public (infra) and optional-auth routes should not reach here
+        PUBLIC_PREFIXES = ('/static/', '/favicon', '/robots.txt', '/health')
+        OPTIONAL_PREFIXES = ('/corpus', '/search/advanced', '/atlas', '/media')
+        if request.path.startswith(PUBLIC_PREFIXES) or request.path.startswith(OPTIONAL_PREFIXES):
             # Fallback: return 200 for public routes (should not happen)
             return jsonify({'authenticated': False}), 200
         
@@ -114,10 +114,10 @@ def register_jwt_handlers() -> None:
         
         Returns machine-readable code for client-side handling.
         """
-        # Safety check: Public routes should never reach here (handled by early-return)
-        PUBLIC_PREFIXES = ('/corpus', '/search/advanced', '/bls/', '/atlas/', '/static/', 
-                           '/media/transcripts', '/media/temp', '/media/full')
-        if request.path.startswith(PUBLIC_PREFIXES):
+        # Safety check: Public (infra) and optional-auth routes should not reach here
+        PUBLIC_PREFIXES = ('/static/', '/favicon', '/robots.txt', '/health')
+        OPTIONAL_PREFIXES = ('/corpus', '/search/advanced', '/atlas', '/media')
+        if request.path.startswith(PUBLIC_PREFIXES) or request.path.startswith(OPTIONAL_PREFIXES):
             # Fallback: return 200 for public routes (should not happen)
             return jsonify({'authenticated': False}), 200
         
@@ -162,10 +162,10 @@ def register_jwt_handlers() -> None:
         
         Returns machine-readable code for client-side handling.
         """
-        # Safety check: Public routes should never reach here
-        PUBLIC_PREFIXES = ('/corpus', '/search/advanced', '/bls/', '/atlas/', '/static/', 
-                           '/media/transcripts', '/media/temp', '/media/full')
-        if request.path.startswith(PUBLIC_PREFIXES):
+        # Safety check: Public (infra) and optional-auth routes should never reach here
+        PUBLIC_PREFIXES = ('/static/', '/favicon', '/robots.txt', '/health')
+        OPTIONAL_PREFIXES = ('/corpus', '/search/advanced', '/atlas', '/media')
+        if request.path.startswith(PUBLIC_PREFIXES) or request.path.startswith(OPTIONAL_PREFIXES):
             # Fallback: return 200 for public routes (should not happen)
             return jsonify({'authenticated': False}), 200
         

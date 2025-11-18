@@ -16,7 +16,7 @@ Vollständige Neuimplementierung der Suchoberfläche gemäß `docs/search_ui/sea
 ### Templates
 ```
 templates/search/advanced.html          ← Neues Such-Template (ersetzt altes)
-templates/search/advanced_old.html      ← Backup des alten Templates
+{# Removed legacy backup `templates/search/advanced_old.html` #}
 ```
 
 ### CSS
@@ -447,7 +447,7 @@ Bei Problemen oder Fragen:
    - `TESTING_GUIDE.md`
    - `search_ui_spec.md`
 3. **Code-Kommentare** durchsuchen
-4. **Backup** verwenden: `templates/search/advanced_old.html`
+4. **Hinweis:** Das alte `templates/search/advanced_old.html` wurde entfernt; nutze Git History oder `templates/search/advanced.html` als Referenz.
 
 ---
 

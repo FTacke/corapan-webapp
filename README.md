@@ -20,7 +20,7 @@ GitLab: `git@gitlab.uni-marburg.de:tackef/corapan-new.git`
 
 - Python 3.12+, FFmpeg, and libsndfile are required locally.
 - Secrets (Flask key, JWT keys, hashed passwords) are provided via environment variables or mounted files.
-- The `ALLOW_PUBLIC_TEMP_AUDIO` flag controls whether anonymous users can access generated snippets (they remain available to authenticated roles).
+- The `ALLOW_PUBLIC_TEMP_AUDIO` flag controls whether anonymous users can access generated temporary snippets via `/media/temp` and `/media/snippet`. The legacy `/media/play_audio` endpoint is public and not controlled by this flag.
 
 ## Getting Started
 
