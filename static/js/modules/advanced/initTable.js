@@ -65,6 +65,11 @@ export function initAdvancedTable(queryParams) {
     pageLength: 50,
     lengthMenu: [25, 50, 100],
     
+    // Disable sorting for non-sortable columns
+    columnDefs: [
+      { orderable: false, targets: [0, 1, 3, 4, 10, 11] }
+    ],
+    
     // AJAX config
     ajax: {
       url: ajaxUrl,

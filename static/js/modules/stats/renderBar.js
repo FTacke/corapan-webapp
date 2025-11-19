@@ -110,6 +110,10 @@ export function renderBar(container, data, title, displayMode = 'absolute') {
   const additionalHeight = Math.max(0, (categories.length - 10) * 5);
   const height = Math.min(baseHeight + additionalHeight, 600);
   container.style.height = `${height}px`;
+  
+  // Dynamic bar width based on number of categories
+  // Fewer categories = wider bars (max 32), Many categories = thinner bars (min 16)
+  const barWidth = categories.length > 15 ? 16 : 32;
 
   // Initialize chart
   const chart = echarts.init(container, 'corapan', {
@@ -118,94 +122,108 @@ export function renderBar(container, data, title, displayMode = 'absolute') {
 
   // Chart configuration
   const option = {
+    backgroundColor: 'transparent',
+    animation: true,
+    animationDuration: 500,
     grid: {
-      left: '3%',
-      right: '4%',
-      bottom: needsDataZoom ? '15%' : '3%',
-      top: '3%',
-      containLabel: true,
+      top: 10,
+      bottom: 10,
+      left: 10,
+      right: 40, // Space for labels
+      containLabel: true
+    },
+    tooltip: {
+      trigger: 'axis',
+      axisPointer: {
+        type: 'shadow'
+      },
+      backgroundColor: getComputedStyle(document.documentElement).getPropertyValue('--md-sys-color-surface-container') || '#fff',
+      borderColor: getComputedStyle(document.documentElement).getPropertyValue('--md-sys-color-outline-variant') || '#ccc',
+      textStyle: {
+        color: textColor
+      },
+      formatter: function(params) {
+        const item = params[0];
+        const dataIndex = item.dataIndex;
+        const absVal = absoluteValues[dataIndex];
+        const pctVal = proportions[dataIndex];
+        
+        return `
+          <div style="font-weight: 500; margin-bottom: 4px;">${item.name}</div>
+          <div>${formatNumber(absVal)} hits</div>
+          <div style="opacity: 0.8;">${formatPercent(pctVal)}</div>
+        `;
+      }
     },
     xAxis: {
       type: 'value',
+      show: true, // Show X axis
+      splitLine: { 
+        show: true,
+        lineStyle: {
+          color: dividerColor,
+          type: 'dashed'
+        }
+      },
       axisLabel: {
         color: textColor,
         formatter: displayMode === 'percent' 
           ? (value) => `${value.toFixed(1)}%`
           : (value) => formatNumber(value),
-      },
-      splitLine: {
-        lineStyle: {
-          color: dividerColor,
-        },
-      },
-      max: displayMode === 'percent' ? 100 : null,
+      }
     },
     yAxis: {
       type: 'category',
       data: categories,
+      inverse: true, // Top to bottom
+      axisLine: { show: false },
+      axisTick: { show: false },
       axisLabel: {
         color: textColor,
-        rotate: shouldRotate ? 30 : 0,
-        fontSize: categories.length > 25 ? 11 : 12,
-      },
-      axisTick: {
-        alignWithLabel: true,
-      },
+        width: 140, // Limit label width
+        overflow: 'break', // Wrap text
+        interval: 0,
+        fontSize: 13,
+        fontFamily: 'system-ui, sans-serif'
+      }
     },
     series: [
       {
         name: title,
         type: 'bar',
         data: values,
-        large: true,
-        progressive: 800,
-        // Smooth grow-in animation
-        animation: true,
-        animationDuration: 600,
-        animationEasing: 'cubicOut',
-        animationDelay: (idx) => idx * 15, // Stagger bars
-        // Enable smooth transitions when switching n ↔ %
-        universalTransition: true,
+        barWidth: barWidth, // Dynamic bar width
         itemStyle: {
-          color: primaryColor,
           borderRadius: [0, 4, 4, 0],
+          color: function(params) {
+            // Use different colors for bars
+            const colors = [
+              '#006C4C', '#006D31', '#3E638B', '#6750A4', '#9A4058', 
+              '#9D4226', '#8B5000', '#725C00', '#566500', '#3A6900'
+            ];
+            return colors[params.dataIndex % colors.length];
+          }
         },
-        emphasis: {
-          itemStyle: {
-            color: primaryContainerColor,
+        label: {
+          show: true,
+          position: 'right',
+          formatter: function(params) {
+            if (displayMode === 'percent') {
+              return params.value.toFixed(1) + '%';
+            }
+            return formatNumber(params.value);
           },
+          color: textColor,
+          fontSize: 12
         },
-      },
-    ],
-    tooltip: {
-      trigger: 'axis',
-      axisPointer: {
-        type: 'shadow',
-      },
-      formatter: (params) => {
-        const item = params[0];
-        const index = item.dataIndex;
-        const n = absoluteValues[index];
-        const p = proportions[index];
-        return `
-          <div style="padding: 4px 8px;">
-            <div style="font-weight: 500; margin-bottom: 4px;">${item.name}</div>
-            <div>n: ${formatNumber(n)}</div>
-            <div>%: ${formatPercent(p)}</div>
-          </div>
-        `;
-      },
-    },
-    dataZoom: needsDataZoom ? [
-      {
-        type: 'slider',
-        yAxisIndex: 0,
-        start: 0,
-        end: Math.min(100, (30 / categories.length) * 100),
-        handleSize: 20,
-        showDetail: false,
-      },
-    ] : [],
+        // Background bar
+        showBackground: false,
+        backgroundStyle: {
+          color: 'transparent',
+          borderRadius: [0, 4, 4, 0]
+        }
+      }
+    ]
   };
 
   chart.setOption(option);

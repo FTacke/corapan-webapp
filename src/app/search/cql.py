@@ -254,14 +254,16 @@ def build_cql_with_speaker_filter(params: Dict, filters: Dict) -> str:
     
     # Use regex to find all [...] token patterns
     import re
-    token_pattern = re.compile(r'\[([^\]]+)\]')
+    token_pattern = re.compile(r'\[([^\]]*)\]')
     
     # Track if this is the first token (for metadata constraint)
     is_first_token = [True]  # Mutable to modify in nested function
     
     def add_constraints(match):
-        existing = match.group(1)
-        constraints = [existing]
+        existing = match.group(1).strip()
+        constraints = []
+        if existing:
+            constraints.append(existing)
         
         # Add speaker constraint to every token
         if speaker_constraint:
@@ -272,6 +274,9 @@ def build_cql_with_speaker_filter(params: Dict, filters: Dict) -> str:
             constraints.append(metadata_constraint)
             is_first_token[0] = False
         
+        if not constraints:
+            return '[]'
+            
         return f'[{" & ".join(constraints)}]'
     
     modified_cql = token_pattern.sub(add_constraints, base_cql)

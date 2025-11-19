@@ -472,10 +472,25 @@
   border: 1px solid var(--md-sys-color-outline-variant, #cac4d0);
   border-radius: var(--radius-md, 8px);
   margin-top: var(--space-4, 1rem);
+
+  /* Animation */
+  transition: all 0.3s ease-out;
+  opacity: 1;
+  max-height: 2000px; /* Arbitrary large value */
+  overflow: hidden;
+  transform-origin: top;
 }
 
 .md3-expert-area[hidden] {
-  display: none;
+  display: flex; /* Override UA style */
+  opacity: 0;
+  max-height: 0;
+  margin-top: 0;
+  padding-top: 0;
+  padding-bottom: 0;
+  border: none;
+  pointer-events: none;
+  visibility: hidden;
 }
 
 .md3-expert-section {

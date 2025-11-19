@@ -48,7 +48,8 @@
   display: flex;
   align-items: center;
   gap: var(--space-2);
-  margin-bottom: var(--space-3);
+  margin-bottom: var(--space-2); /* reduce spacing under header */
+  padding-bottom: var(--space-1);
   padding-bottom: var(--space-2);
   border-bottom: 1px solid var(--md-sys-color-outline-variant);
 }
@@ -1060,27 +1061,50 @@
   right: 0;
   bottom: 0;
   background: rgba(0, 0, 0, 0.4);
-  display: flex;
+  display: none; /* hidden by default, enabled when active */
   align-items: center;
   justify-content: center;
   z-index: 1000;
   opacity: 0;
   transition: opacity 0.2s ease;
+  pointer-events: none;
 }
 
 .md3-dialog-overlay.active {
+  display: flex;
   opacity: 1;
+  pointer-events: auto;
 }
 
 /* Dialog Container */
 .md3-dialog__container {
   display: flex;
-  align-items: center;
-  justify-content: center;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: flex-start;
   padding: var(--space-4);
   max-width: 90vw;
   max-height: 90vh;
+  overflow: hidden;
 }
+
+/* Native <dialog> handling: ensure we don't display dialogs by default
+   and only show them when the open attribute is present. This prevents
+   CSS class .md3-dialog from making native dialogs visible prematurely. */
+dialog.md3-dialog:not([open]) {
+  display: none;
+}
+
+dialog.md3-dialog[open] {
+  display: flex;
+  position: fixed;
+  inset: 0;
+  align-items: center;
+  justify-content: center;
+  z-index: var(--md3-z-dialog, 1300);
+}
+
+/* Note: Use .md3-dialog-overlay for global overlay/backdrop styling instead of <dialog>::backdrop */
 
 /* Dialog */
 .md3-dialog {
@@ -1099,34 +1123,14 @@
   transform: scale(1);
 }
 
-/* Dialog Title */
-.md3-dialog__title {
-  padding: var(--space-4) var(--space-4) var(--space-2);
-  font-size: 1.25rem;
-  font-weight: 600;
+/* Large variant for md3 dialogs — consistent across the site */
+.md3-dialog--large {
+  max-width: 900px;
+  width: min(900px, 95vw);
+  border-radius: var(--radius-lg);
+  background: var(--md-sys-color-surface);
   color: var(--md-sys-color-on-surface);
-  letter-spacing: 0.15px;
-}
-
-.md3-dialog--error .md3-dialog__title {
-  color: var(--md-sys-color-error);
-}
-
-/* Dialog Content */
-.md3-dialog__content {
-  padding: var(--space-2) var(--space-4) var(--space-4);
-  font-size: 0.875rem;
-  line-height: 1.5;
-  color: var(--md-sys-color-on-surface-variant);
-}
-
-/* Dialog Actions */
-.md3-dialog__actions {
-  padding: var(--space-3) var(--space-4);
-  display: flex;
-  justify-content: flex-end;
-  gap: var(--space-2);
-  border-top: 1px solid var(--md-sys-color-outline-variant);
+  box-shadow: var(--elev-4);
 }
 
 

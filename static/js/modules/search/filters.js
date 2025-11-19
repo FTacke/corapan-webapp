@@ -445,6 +445,33 @@ export class SearchFilters {
 
     return params;
   }
+
+  /**
+   * Restore filters from URL parameters
+   * @param {URLSearchParams} params 
+   */
+  restoreFiltersFromParams(params) {
+    this.filterFields.forEach((config, facet) => {
+      const paramName = config.hiddenSelect.name;
+      const values = params.getAll(paramName);
+      
+      if (values.length > 0) {
+        // Uncheck all first
+        config.checkboxes.forEach(cb => cb.checked = false);
+        
+        // Check matching values
+        values.forEach(val => {
+          const checkbox = Array.from(config.checkboxes).find(cb => cb.value === val);
+          if (checkbox) {
+            checkbox.checked = true;
+          }
+        });
+        
+        // Update UI
+        this.updateFilterField(facet);
+      }
+    });
+  }
 }
 
 // Auto-initialize on page load

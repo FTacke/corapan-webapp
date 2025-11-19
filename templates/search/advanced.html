@@ -17,6 +17,10 @@
 <link rel="stylesheet" href="{{ url_for('static', filename='css/md3/components/cards.css') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/md3/components/alerts.css') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/md3/components/chips.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/md3/components/player.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/md3/components/editor-edit.css') }}">
+<!-- Material Symbols (MD3-konform) -->
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
 <!-- External Libraries (CDN Base Styles BEFORE Project Overrides) -->
 <link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/jquery.dataTables.min.css">
 <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.2/css/buttons.dataTables.min.css">
@@ -25,7 +29,7 @@
 <link rel="stylesheet" href="{{ url_for('static', filename='css/md3/components/datatables-theme-lock.css') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/md3/components/advanced-search.css') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/md3/components/search-ui.css') }}">
-<link rel="stylesheet" href="{{ url_for('static', filename='css/md3/components/stats.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/md3/components/stats.css') }}"><!-- Material Symbols loaded for help icons -->
 {% endblock %}
 
 {% block content %}
@@ -74,7 +78,7 @@
                   id="q" 
                   name="q" 
                   class="md3-outlined-textfield__input" 
-                  placeholder="Suchwort oder Sequenz (z. B. casa blanca)"
+                  placeholder="  Consulta  de palabras o secuencias"
                   value="{{ request.args.get('q', '') }}"
                   required
                   aria-required="true">
@@ -411,14 +415,11 @@
                D: TOGGLE FÜR ADVANCED MODE
                ======================================== -->
           <div class="md3-search-card__section md3-search-card__section--toggle">
-            <label class="md3-switch-row">
-              <span class="md3-switch-row__label">Modo avanzado (CQL)</span>
-              <input type="checkbox" id="modo-avanzado" name="modo_avanzado" class="md3-switch-input" role="switch" aria-checked="false">
-              <span class="md3-switch">
-                <span class="md3-switch__track"></span>
-                <span class="md3-switch__thumb"></span>
-              </span>
-            </label>
+            <button type="button" id="advanced-mode-toggle" class="md3-button md3-button--outlined" aria-expanded="false" aria-controls="expert-area">
+              <span class="material-symbols-rounded">tune</span>
+              <span>Modo avanzado (CQL)</span>
+              <span class="material-symbols-rounded md3-button__icon--end" id="advanced-mode-icon">expand_more</span>
+            </button>
           </div>
 
           <!-- ========================================
@@ -427,8 +428,11 @@
           <div id="expert-area" class="md3-expert-area" hidden>
             
             <!-- E1: PATTERN BUILDER -->
-            <div class="md3-expert-section">
-              <h3 class="md3-expert-section__title">Patrones de palabras (CQL)</h3>
+            <div class="md3-expert-section" style="overflow: visible;">
+              <div class="md3-expert-header">
+                <h3 class="md3-expert-section__title">Patrones de palabras (CQL)</h3>
+                        <!-- Help tooltip deliberately removed — shows as dialog only via (Guía y prompt) link -->
+              </div>
               <p class="md3-expert-section__description">
                 Construye patrones como 'verbo + sustantivo' paso a paso sin escribir CQL a mano.
               </p>
@@ -549,7 +553,7 @@
                       <path class="md3-checkbox__checkmark-path" fill="none" stroke="white" d="M1.73,9.29 l4.75,4.75 l10.04,-10.04"></path>
                     </svg>
                   </span>
-                  <span class="md3-checkbox__label">Permitir editar manualmente</span>
+                  <span class="md3-checkbox__label">Permitir editar manualmente <a href="#" id="cql-guide-link" class="md3-link md3-link--inline">(Guía y prompt)</a></span>
                 </label>
 
                 <div id="cql-warning" class="md3-cql-warning" hidden>
@@ -592,6 +596,84 @@
           </div>
 
         </form>
+
+        <!-- CQL Guide Modal (MD3 overlay) -->
+        <div id="cql-guide-overlay" class="md3-dialog-overlay" aria-hidden="true">
+          <div id="cql-guide-dialog" class="md3-dialog md3-dialog--large" role="dialog" aria-modal="true" aria-labelledby="cql-guide-title" tabindex="-1">
+            <div class="md3-dialog__container">
+              <div class="md3-dialog__header">
+                <span class="material-symbols-rounded md3-dialog__icon">info</span>
+                <h2 class="md3-dialog__title" id="cql-guide-title">Ayuda CQL</h2>
+              </div>
+              <div class="md3-dialog__content">
+                <p class="md3-body-medium md3-text-variant">
+                  Sobre la sintaxis de Blacklab-CQL véase <a href="https://inl.github.io/BlackLab/corpus-query-language.html" target="_blank" rel="noopener noreferrer" class="md3-link">aquí</a>.
+                </p>
+                <div class="md3-prompt-container">
+                  <p class="md3-prompt-title">Prompt sugerido para generar consultas CQL en CORAPAN (BlackLab)</p>
+                  <p class="md3-prompt-subtitle">Copia y pega este prompt en el modelo de IA generativa y luego añade tu descripción al final:</p>
+                  <div class="md3-code-block md3-full-width">
+                    <pre class="highlight"><code id="cql-guide-prompt" class="language-plaintext">Actúa como generador de consultas CQL para un corpus de español hablado llamado CORAPAN, indexado en BlackLab.
+
+El corpus está anotado con los siguientes atributos a nivel de token (dentro de corchetes `[...]` en CQL):
+
+* `word`  → forma tal como aparece en la transcripción
+* `norm`  → forma normalizada (por ejemplo, en minúsculas)
+* `lemma` → lema
+* `pos`   → categoría gramatical (UD POS: NOUN, VERB, ADJ, ADV, PRON, DET, ADP, SCONJ, CCONJ, PART, AUX, etc.)
+* `tense` → tiempo verbal (por ejemplo: `Pres`, `Past`, `Fut`)
+* `mood`  → modo verbal (por ejemplo: `Ind`, `Subj`, `Imp`)
+* `person` → persona gramatical (`1`, `2`, `3`)
+* `number` → número gramatical (`Sing`, `Plur`)
+* `aspect` → aspecto verbal (si está presente)
+* `past_type` → tipo de pasado (si está anotado)
+* `future_type` → tipo de futuro (si está anotado)
+* `tokid` → identificador único de cada token
+
+Además, puedes usar metadatos de documento/segmento con BlackLab (por ejemplo mediante `within`), como:
+
+* `country_code` → código de país/variedad (por ejemplo `ARG`, `ESP`, `ARG-CBA`, `ESP-SEV`, etc.)
+* `file_id`      → identificador de archivo
+* `date`         → fecha de la grabación/transcripción
+* `radio`        → indica si el texto procede de radio sí/no (según cómo esté codificado)
+* `city`         → ciudad (si está disponible)
+* `sentence_id`, `utterance_id` → identificadores de oración y enunciado
+
+Tu tarea:
+
+1. Léeme la descripción en lenguaje natural que te daré.
+2. Genera **solo** una consulta CQL válida para BlackLab, sin explicaciones ni comentarios.
+3. Usa exclusivamente los atributos y metadatos listados arriba.
+4. Representa las palabras y rasgos morfológicos con patrones como:
+
+   * `[lemma="hablar"]`
+   * `[pos="VERB" & tense="Pres" & person="1" & number="Sing"]`
+   * `[pos="ADJ"][pos="NOUN"]` para un adjetivo seguido de un sustantivo.
+5. Si menciono restricciones de variedad, origen o tipo de texto, exprésalas con metadatos, por ejemplo:
+
+   * `within <country_code="ARG"> [...]`
+   * `within <radio="yes"> [...]` (ajusta el valor según la codificación real).
+6. Usa siempre comillas dobles `"..."` y la sintaxis CQL estándar de BlackLab.
+7. Si la descripción es ambigua, elige la interpretación más común en lingüística hispánica, pero **no inventes** atributos que no existen en la lista.
+
+Ahora convierte la siguiente descripción en una consulta CQL precisa para CORAPAN:
+
+«[ESCRIBE AQUÍ TU DESCRIPCIÓN EN ESPAÑOL]»</code></pre>
+                  </div>
+                </div>
+              </div>
+              <div class="md3-dialog__actions">
+                <button type="button" class="md3-button md3-button--text md3-dialog__close" id="cql-guide-close">Cerrar</button>
+                <button type="button" class="md3-button md3-button--filled" id="cql-guide-copy">
+                  <span class="material-symbols-rounded">content_copy</span>
+                  Copiar prompt
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+
 
       <!-- ========================================
            SUB-TABS: RESULTADOS | ESTADÍSTICAS
@@ -952,6 +1034,15 @@
   window.addEventListener('beforeunload', cleanupStats);
 </script>
 
+<script>
+  // Tooltip functions removed from Advanced Search template (use player page globals instead)
+</script>
+
+<script>
+  // Ensure that any tooltips are hidden on initial load to avoid visual flash
+  // No advanced page-specific tooltips to initialize
+</script>
+
 <!-- Regional checkbox toggle logic -->
 <script>
   document.addEventListener('DOMContentLoaded', function() {
@@ -991,3 +1082,5 @@
   });
 </script>
 {% endblock %}
+
+{# Styles moved to static/css/md3/components/advanced-search.css and md3/components/editor-edit.css #}

@@ -18,7 +18,7 @@ export function initTokenTable(tokenIds) {
   if (tokenTable && $.fn.dataTable.isDataTable('#token-results-table')) {
     try { tokenTable.destroy(); tokenTable = null; } catch (e) { console.warn('[Token DataTables] Destroy error:', e); }
   }
-  const requestBody = { token_ids_raw: tokenIds.join(','), context_size: 5 };
+  const requestBody = { token_ids_raw: tokenIds.join(','), context_size: 40 };
   const baseConfig = makeBaseConfig();
   const config = Object.assign({}, baseConfig, {
     ajax: {

@@ -250,6 +250,104 @@
   white-space: nowrap;
 }
 
+
+
+/* Dialog header layout: ensure icon + title are aligned */
+.md3-dialog__header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  margin-bottom: var(--space-4);
+}
+
+/* Dialog large variant tweaks */
+.md3-dialog--large {
+  max-width: 900px;
+  width: min(900px, 95vw);
+}
+
+/* Expert header layout: ensure title and help icon align and help icon floats to right */
+.md3-expert-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  width: 100%;
+  justify-content: space-between; /* title left, help icon right */
+}
+
+/* For code block in dialogs: cap height and allow vertical scroll */
+.md3-dialog__content .md3-code-block pre {
+  max-height: 56vh;
+  overflow-y: auto;
+  margin: 0;
+  padding: var(--space-4);
+  background: var(--md-sys-color-surface-container-low);
+  border: 1px solid var(--md-sys-color-outline-variant);
+  border-radius: var(--radius-md);
+}
+
+/* Prompt container styling - tight spacing for dialogs */
+.md3-prompt-container {
+  margin: var(--space-2) 0 0 0;
+}
+
+.md3-prompt-title {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--md-sys-color-on-surface);
+  margin: 0 0 var(--space-1) 0;
+}
+
+.md3-prompt-subtitle {
+  font-size: 0.8125rem;
+  color: var(--md-sys-color-on-surface-variant);
+  margin: 0 0 var(--space-2) 0;
+}
+
+/* Dialog Title */
+.md3-dialog__title {
+  margin: 0;
+  padding: var(--space-2) var(--space-4) var(--space-1);
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--md-sys-color-on-surface);
+  letter-spacing: 0.15px;
+}
+
+/* Dialog header — generic for all md3 dialogs */
+.md3-dialog__header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  margin-bottom: var(--space-2);
+}
+
+.md3-dialog--error .md3-dialog__title {
+  color: var(--md-sys-color-error);
+}
+
+/* Dialog Content */
+.md3-dialog__content {
+  padding: 0 0 var(--space-3) 0;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: var(--md-sys-color-on-surface-variant);
+  flex-grow: 1;
+  overflow-y: auto;
+}
+
+/* Dialog Actions */
+.md3-dialog__actions {
+  padding: var(--space-3) 0 0 0;
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-3);
+  border-top: 1px solid var(--md-sys-color-outline-variant);
+  margin-top: auto;
+  flex-shrink: 0;
+}
+
+
 .md3-badge--serverfilter[hidden] {
   display: none;
 }

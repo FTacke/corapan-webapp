@@ -21,6 +21,11 @@ performance:
   # (-1 to autodetect)
   maxThreadsPerSearch: -1
 
+# Search limits
+search:
+  maxHitsToCount: 20000
+  maxHitsToRetrieve: 20000
+
 # Settings for diagnosing problems
 debug:
   # A list of IPs that will run in debug mode

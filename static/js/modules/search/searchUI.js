@@ -39,28 +39,104 @@ export class SearchUI {
     // Bind sub-tabs
     this.bindSubTabs();
 
+    // Bind CQL Guide Dialog
+    this.bindCqlGuide();
+
+    // Restore state from URL or SessionStorage
+    this.restoreState();
+
     console.log('✅ Search UI initialized');
+  }
+
+  /**
+   * Restore state from URL or SessionStorage
+   */
+  restoreState() {
+    const params = new URLSearchParams(window.location.search);
+    
+    // If URL has params, use them (and save to session)
+    if (params.toString()) {
+      sessionStorage.setItem('lastSearch', params.toString());
+      this.restoreFormFromParams(params);
+      // Trigger search
+      this.performSearch(params);
+    } 
+    // If URL is empty but session has params, restore them
+    else {
+      const lastSearch = sessionStorage.getItem('lastSearch');
+      if (lastSearch) {
+        const savedParams = new URLSearchParams(lastSearch);
+        // Update URL without reloading
+        const newUrl = `${window.location.pathname}?${savedParams.toString()}`;
+        window.history.replaceState({ path: newUrl }, '', newUrl);
+        
+        this.restoreFormFromParams(savedParams);
+        this.performSearch(savedParams);
+      }
+    }
+  }
+
+  /**
+   * Restore form values from params
+   */
+  restoreFormFromParams(params) {
+    // Basic fields
+    const q = params.get('q');
+    if (q) {
+      const qInput = document.getElementById('q');
+      if (qInput) qInput.value = q;
+    }
+    
+    const type = params.get('search_type') || params.get('mode');
+    if (type) {
+      const typeSelect = document.getElementById('search_type');
+      if (typeSelect) typeSelect.value = type;
+    }
+
+    // Checkboxes
+    const sensitive = params.get('sensitive');
+    if (sensitive === '0') {
+      const ignoreAccents = document.getElementById('ignore-accents');
+      if (ignoreAccents) ignoreAccents.checked = true;
+    }
+
+    const regional = params.get('include_regional');
+    if (regional === '1' || regional === 'true') {
+      const regionalCheck = document.getElementById('include-regional');
+      if (regionalCheck) {
+        regionalCheck.checked = true;
+        // Trigger change event to show regional options
+        regionalCheck.dispatchEvent(new Event('change'));
+      }
+    }
+
+    // Restore filters (requires filter module support)
+    const searchFilters = getSearchFilters();
+    if (searchFilters && typeof searchFilters.restoreFiltersFromParams === 'function') {
+      searchFilters.restoreFiltersFromParams(params);
+    }
   }
 
   /**
    * Bind advanced mode toggle
    */
   bindAdvancedToggle() {
-    const toggle = document.getElementById('modo-avanzado');
+    const toggleBtn = document.getElementById('advanced-mode-toggle');
     const expertArea = document.getElementById('expert-area');
+    const icon = document.getElementById('advanced-mode-icon');
 
-    if (!toggle || !expertArea) return;
+    if (!toggleBtn || !expertArea) return;
 
-    // Ensure aria-checked reflects initial state
-    toggle.setAttribute('aria-checked', toggle.checked ? 'true' : 'false');
-
-    toggle.addEventListener('change', (e) => {
-      this.advancedMode = e.target.checked;
-      // Keep aria attribute in sync
-      toggle.setAttribute('aria-checked', e.target.checked ? 'true' : 'false');
-
+    toggleBtn.addEventListener('click', () => {
+      this.advancedMode = !this.advancedMode;
+      
+      // Update UI
+      toggleBtn.setAttribute('aria-expanded', this.advancedMode);
       if (this.advancedMode) {
         expertArea.removeAttribute('hidden');
+        toggleBtn.classList.add('md3-button--filled-tonal');
+        toggleBtn.classList.remove('md3-button--outlined');
+        if (icon) icon.textContent = 'expand_less';
         
         // Initialize pattern builder if not already done
         const patternBuilder = getPatternBuilder();
@@ -69,6 +145,9 @@ export class SearchUI {
         }
       } else {
         expertArea.setAttribute('hidden', '');
+        toggleBtn.classList.remove('md3-button--filled-tonal');
+        toggleBtn.classList.add('md3-button--outlined');
+        if (icon) icon.textContent = 'expand_more';
       }
     });
   }
@@ -211,8 +290,29 @@ export class SearchUI {
     try {
       if (summaryBox) {
         summaryBox.hidden = false;
-        summaryBox.innerHTML = '<span>Cargando resultados...</span>';
+        // MD3 Linear Progress Indicator
+        summaryBox.innerHTML = `
+          <div style="display: flex; flex-direction: column; gap: 8px; width: 100%;">
+            <span class="md3-body-medium">Cargando resultados...</span>
+            <div role="progressbar" class="md3-linear-progress md3-linear-progress--indeterminate" aria-label="Cargando resultados">
+              <div class="md3-linear-progress__buffer"></div>
+              <div class="md3-linear-progress__bar md3-linear-progress__primary-bar">
+                <span class="md3-linear-progress__bar-inner"></span>
+              </div>
+              <div class="md3-linear-progress__bar md3-linear-progress__secondary-bar">
+                <span class="md3-linear-progress__bar-inner"></span>
+              </div>
+            </div>
+          </div>
+        `;
       }
+
+      // Update URL with search params to allow persistence/bookmarks
+      const newUrl = `${window.location.pathname}?${queryParams.toString()}`;
+      window.history.pushState({ path: newUrl }, '', newUrl);
+      
+      // Save to session storage
+      sessionStorage.setItem('lastSearch', queryParams.toString());
 
       // Call existing advanced search handler
       // This should integrate with initTable.js
@@ -242,8 +342,17 @@ export class SearchUI {
       const subTabs = document.getElementById('search-sub-tabs');
       if (subTabs) subTabs.style.display = '';
 
+      // Force switch to "Resultados" tab
+      const resultsTab = document.getElementById('tab-resultados');
+      if (resultsTab) {
+        resultsTab.click();
+      }
+
       // Initialize DataTable (this would call existing initTable logic)
       this.initResultsTable(queryParams.toString());
+
+      // Dispatch search complete event
+      document.dispatchEvent(new Event('search:complete'));
 
       console.log('✅ Search completed:', data.recordsFiltered, 'results');
 
@@ -298,50 +407,44 @@ export class SearchUI {
     if (queryInput) queryInput.value = '';
     if (searchTypeSelect) searchTypeSelect.value = 'forma';
 
-    // Reset filters
-    const searchFilters = getSearchFilters();
-    if (searchFilters) {
-      searchFilters.clearAllFilters();
-    }
+    // Reset advanced filters
+    const advancedInputs = document.querySelectorAll('#advanced-search-options input, #advanced-search-options select');
+    advancedInputs.forEach(input => {
+      if (input.type === 'checkbox' || input.type === 'radio') {
+        input.checked = false;
+      } else if (input.tagName === 'SELECT') {
+        input.selectedIndex = -1;
+      } else {
+        input.value = '';
+      }
+    });
 
-    // Reset options
-    const includeRegional = document.getElementById('include-regional');
-    const ignoreAccents = document.getElementById('ignore-accents');
+    // Reset expert mode
+    const expertToggle = document.getElementById('expert-mode-toggle');
+    if (expertToggle && expertToggle.checked) {
+      expertToggle.click(); // Toggle off
+    }
     
-    if (includeRegional) includeRegional.checked = false;
-    if (ignoreAccents) ignoreAccents.checked = false;
-
-    // Reset advanced mode
-    const advancedToggle = document.getElementById('modo-avanzado');
-    const expertArea = document.getElementById('expert-area');
+    // Clear results
+    const resultsContainer = document.getElementById('results-container');
+    if (resultsContainer) resultsContainer.innerHTML = '';
     
-    if (advancedToggle) {
-      advancedToggle.checked = false;
-      this.advancedMode = false;
-    }
-    if (expertArea) {
-      expertArea.setAttribute('hidden', '');
-    }
+    const summaryBox = document.getElementById('search-summary');
+    if (summaryBox) summaryBox.innerHTML = '';
 
-    // Reset pattern builder
-    const patternBuilder = getPatternBuilder();
-    if (patternBuilder) {
-      patternBuilder.reset();
-    }
-
-    // Reset manual edit
-    const allowManualEdit = document.getElementById('allow-manual-edit');
-    const cqlPreview = document.getElementById('cql-preview');
-    const cqlWarning = document.getElementById('cql-warning');
+    // Hide containers
+    const tableContainer = document.getElementById('datatable-container');
+    if (tableContainer) tableContainer.style.display = 'none';
+    const subTabs = document.getElementById('search-sub-tabs');
+    if (subTabs) subTabs.style.display = 'none';
     
-    if (allowManualEdit) allowManualEdit.checked = false;
-    if (cqlPreview) {
-      cqlPreview.setAttribute('readonly', '');
-      cqlPreview.value = '';
-    }
-    if (cqlWarning) cqlWarning.setAttribute('hidden', '');
+    // Also clear the DataTable instance if possible, or at least the visual part
+    // Since we hid the container, that's good enough.
     
     this.manualCQLEdit = false;
+
+    // Dispatch reset event for other modules (like stats)
+    document.dispatchEvent(new Event('search:reset'));
 
     console.log('[SearchUI] Form reset');
   }
@@ -404,6 +507,43 @@ export class SearchUI {
   }
 
   /**
+   * Show copy feedback on button
+   */
+  showCopyFeedback(button) {
+    const originalText = button.innerHTML;
+    button.innerHTML = '<span class="material-symbols-rounded">check</span> Copiado';
+    setTimeout(() => {
+      button.innerHTML = originalText;
+    }, 2000);
+  }
+
+  /**
+   * Fallback copy method using textarea and execCommand
+   */
+  copyViaFallback(text, button) {
+    const textarea = document.createElement('textarea');
+    textarea.value = text;
+    textarea.style.position = 'fixed';
+    textarea.style.left = '-9999px';
+    textarea.style.top = '-9999px';
+    document.body.appendChild(textarea);
+    
+    try {
+      textarea.select();
+      const successful = document.execCommand('copy');
+      if (successful) {
+        this.showCopyFeedback(button);
+      } else {
+        console.warn('[SearchUI] Fallback copy failed: execCommand returned false');
+      }
+    } catch (err) {
+      console.error('[SearchUI] Fallback copy error:', err);
+    } finally {
+      document.body.removeChild(textarea);
+    }
+  }
+
+  /**
    * Escape HTML
    */
   escapeHtml(text) {
@@ -417,6 +557,68 @@ export class SearchUI {
     };
     return text.replace(/[&<>"']/g, m => map[m]);
   }
+
+  /**
+   * Bind CQL Guide Dialog
+   */
+  bindCqlGuide() {
+    const link = document.getElementById('cql-guide-link');
+    const overlay = document.getElementById('cql-guide-overlay');
+    const dialog = document.getElementById('cql-guide-dialog');
+    const closeBtn = document.getElementById('cql-guide-close');
+    const copyBtn = document.getElementById('cql-guide-copy');
+    const promptText = document.getElementById('cql-guide-prompt');
+
+    if (!link || !overlay || !dialog) return;
+
+    link.addEventListener('click', (e) => {
+      e.preventDefault();
+      overlay.classList.add('active');
+      overlay.removeAttribute('aria-hidden');
+      document.body.style.overflow = 'hidden';
+      dialog.focus();
+    });
+
+    if (closeBtn) {
+      closeBtn.addEventListener('click', () => {
+        overlay.classList.remove('active');
+        overlay.setAttribute('aria-hidden', 'true');
+        document.body.style.overflow = '';
+      });
+    }
+
+    if (copyBtn && promptText) {
+      copyBtn.addEventListener('click', () => {
+        // Get plain text from code block - trim whitespace
+        const textToCopy = (promptText.innerText || promptText.textContent || '').trim();
+        
+        if (!textToCopy) {
+          console.warn('[SearchUI] No text to copy');
+          return;
+        }
+        
+        // Always use fallback since it's more reliable in all contexts
+        this.copyViaFallback(textToCopy, copyBtn);
+      });
+    }
+
+    overlay.addEventListener('click', (e) => {
+      if (e.target === overlay) {
+        overlay.classList.remove('active');
+        overlay.setAttribute('aria-hidden', 'true');
+        document.body.style.overflow = '';
+      }
+    });
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && overlay.classList.contains('active')) {
+        overlay.classList.remove('active');
+        overlay.setAttribute('aria-hidden', 'true');
+        document.body.style.overflow = '';
+      }
+    });
+  }
+
 }
 
 // Auto-initialize

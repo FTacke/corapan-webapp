@@ -8,6 +8,7 @@
  */
 
 import { renderBar, updateChartMode, disposeChart, updateChartTheme } from './renderBar.js';
+import { getSearchFilters } from '../search/filters.js';
 
 // State management
 let isLoading = false;
@@ -277,6 +278,37 @@ export async function loadStats() {
 }
 
 /**
+ * Reset stats (clear charts and data)
+ */
+export function resetStats() {
+  cleanupStats();
+  const container = document.getElementById('stats-grid');
+  if (container) {
+    // Clear charts but keep structure if needed, or just hide
+    // Actually, the charts are inside articles. We should clear the chart hosts.
+    ['country', 'speaker', 'sexo', 'modo', 'discourse', 'radio'].forEach(id => {
+      const el = document.getElementById(`chart-${id}`);
+      if (el) {
+        const instance = window.echarts?.getInstanceByDom(el);
+        if (instance) instance.dispose();
+        el.innerHTML = '';
+      }
+      // Reset subtitles
+      const meta = document.querySelector(`[data-meta="by_${id === 'speaker' ? 'speaker_type' : id}"]`);
+      if (meta) meta.textContent = '—';
+    });
+  }
+  updateTotal(0);
+  
+  // Reset filter dropdown
+  const dropdown = document.getElementById('stats-country-filter');
+  if (dropdown) {
+    dropdown.innerHTML = '<option value="">Todos los países</option>';
+    dropdown.value = '';
+  }
+}
+
+/**
  * Initialize stats tab for advanced search
  */
 export function initStatsTabAdvanced() {
@@ -323,7 +355,21 @@ export function initStatsTabAdvanced() {
     });
   }
 
-  // Form submit handler removed - stats will be triggered externally after search completes
+  // Listen for reset event from searchUI
+  document.addEventListener('search:reset', () => {
+    resetStats();
+  });
+
+  // Listen for search complete event to update stats if tab is active
+  document.addEventListener('search:complete', () => {
+    const statsTab = document.getElementById('tab-estadisticas');
+    // Only load stats if the tab is currently active (visible)
+    // Since searchUI now forces switch to Results tab, this will typically be false,
+    // effectively deferring load until user clicks the tab.
+    if (statsTab && statsTab.getAttribute('aria-selected') === 'true') {
+      loadStats();
+    }
+  });
 
   // Setup theme change listener
   const themeToggle = document.querySelector('[data-theme-toggle]');
@@ -446,7 +492,7 @@ function populateCountryFilter(countries) {
   countriesToShow.forEach(item => {
     const option = document.createElement('option');
     option.value = item.key;
-    option.textContent = `${item.key} (${new Intl.NumberFormat('es-ES').format(item.n)})`;
+    option.textContent = `${item.key.toUpperCase()} (${new Intl.NumberFormat('es-ES').format(item.n)})`;
     dropdown.appendChild(option);
   });
   
