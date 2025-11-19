@@ -1,13 +1,11 @@
-/**
- * Corpus Filters Manager
- * Verwaltet Select2-Filter und Regional-Checkbox-Logik
- * Enhanced with Turbo Drive compatibility
- */
+// Deprecated: use js/modules/search/filters.js instead
+console.warn('[DEPRECATED] js/modules/corpus/filters.js is deprecated; use js/modules/search/filters.js');
 
-import { REGIONAL_OPTIONS, SELECT2_CONFIG } from './config.js';
+export default {};
+// Deprecated: use js/modules/search/filters.js instead
+console.warn('[DEPRECATED] js/modules/corpus/filters.js is deprecated; use js/modules/search/filters.js');
 
-export class CorpusFiltersManager {
-    constructor() {
+export default {};
         this.regionalCheckbox = document.getElementById('include-regional');
         this.countrySelect = document.getElementById('filter-country-national');
         this.filters = {

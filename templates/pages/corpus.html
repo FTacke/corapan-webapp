@@ -1,7 +1,6 @@
 {% extends 'base.html' %}
 
-{% block page_title %}Corpus · CO.RA.PAN{% endblock %}
-
+{% block page_title %}Corpus (Deprecated) - Redirecting to Advanced Search{% endblock %}
 {% block extra_head %}
 <!-- MD3 Core Styles -->
 <link rel="stylesheet" href="{{ url_for('static', filename='css/md3/tokens.css') }}">
@@ -23,6 +22,10 @@
 
 {% block content %}
 <article class="md3-corpus-page">
+  <script>
+    // Redirect legacy corpus page to Advanced Search
+    window.location.replace("{{ url_for('advanced_search.index') }}");
+  </script>
   <!-- Hero Header (Container Hero - Tonal with Icon) -->
   <section class="md3-hero md3-hero--container md3-hero--with-icon" role="main" aria-label="Búsqueda en el corpus">
     <div class="md3-hero__container">

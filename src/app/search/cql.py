@@ -186,14 +186,16 @@ def build_cql(params: Dict) -> str:
     query = params.get("q") or params.get("query", "")
     query = query.strip() if query else ""
     
+    # If query is empty, return a wildcard token that can be decorated with filters.
     if not query:
-        raise ValueError("Query cannot be empty")
+        return "[]"
     
     mode = params.get("mode", "forma")
     
     # Parse sensitive flag
     # sensitive can be string ('0', '1', 'true', 'false') or bool
-    sensitive_raw = params.get("sensitive", "1")
+    # Default to insensitive ('0') for forma mode, sensitive for others
+    sensitive_raw = params.get("sensitive", "0" if mode == "forma" else "1")
     sensitive = sensitive_raw not in ("0", "false", False)
     
     # Parse POS tags

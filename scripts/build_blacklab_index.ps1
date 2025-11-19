@@ -191,7 +191,6 @@ $dockerArgs = @(
     "/config/corapan-tsv.blf.yaml"
     "--linked-file-dir", "/data/export"
     "--threads", "1"
-    "--max-docs", "-1"
 )
 
 # Initialize build log

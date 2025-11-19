@@ -64,7 +64,7 @@
                A: BASIS-QUERY
                ======================================== -->
           <div class="md3-search-card__section">
-            <h2 class="md3-search-card__heading">Consulta</h2>
+            <h2 class="md3-search-card__heading">Consulta simple</h2>
             
             <div class="md3-search-card__query-row">
               <!-- Query Input -->
@@ -74,7 +74,7 @@
                   id="q" 
                   name="q" 
                   class="md3-outlined-textfield__input" 
-                  placeholder=" "
+                  placeholder="Suchwort oder Sequenz (z. B. casa blanca)"
                   value="{{ request.args.get('q', '') }}"
                   required
                   aria-required="true">
@@ -89,7 +89,7 @@
               <!-- Search Type Dropdown -->
               <div class="md3-outlined-textfield md3-outlined-textfield--fixed">
                 <select 
-                  name="search_type" 
+                  name="mode" 
                   id="search_type" 
                   class="md3-outlined-textfield__input md3-outlined-textfield__input--select">
                   <option value="forma" {% if request.args.get('search_type') == 'forma' or not request.args.get('search_type') %}selected{% endif %}>Forma</option>
@@ -110,7 +110,7 @@
                B: METADATEN-FILTER (Facettenleiste)
                ======================================== -->
           <div class="md3-search-card__section">
-            <h2 class="md3-search-card__heading">Filtros de metadatos</h2>
+            <h2 class="md3-search-card__heading">Filtros</h2>
             
             <div class="md3-filters-grid">
               <!-- País -->
@@ -872,7 +872,16 @@
         </div>
 
         <div id="token-panel-estadisticas" role="tabpanel" aria-labelledby="token-tab-estadisticas" class="md3-view-content" hidden>
-          <div class="md3-body-medium" style="padding: 1rem;">Estadísticas no implementadas todavía.</div>
+          <div class="md3-body-medium" style="padding: 1rem;">
+            <div id="stats-grid" class="md3-stats-grid">
+              <div id="chart-country"></div>
+              <div id="chart-speaker"></div>
+              <div id="chart-sexo"></div>
+              <div id="chart-modo"></div>
+              <div id="chart-discourse"></div>
+              <div id="chart-radio"></div>
+            </div>
+          </div>
         </div>
       </section>
     </section>
@@ -920,15 +929,15 @@
   });
 </script>
 <!-- App modules -->
-<script src="{{ url_for('static', filename='js/modules/corpus/config.js') }}" type="module"></script>
+<script src="{{ url_for('static', filename='js/modules/search/config.js') }}" type="module"></script>
 <script src="{{ url_for('static', filename='js/modules/search/filters.js') }}" type="module"></script>
 <script src="{{ url_for('static', filename='js/modules/search/patternBuilder.js') }}" type="module"></script>
 <script src="{{ url_for('static', filename='js/modules/search/searchUI.js') }}" type="module"></script>
 <script src="{{ url_for('static', filename='js/modules/advanced/initTable.js') }}" type="module"></script>
 <script src="{{ url_for('static', filename='js/modules/stats/renderBar.js') }}" type="module"></script>
 <!-- Token Tab Module -->
-<script type="module" src="{{ url_for('static', filename='js/modules/corpus/token-tab.js') }}"></script>
-<script type="module" src="{{ url_for('static', filename='js/modules/corpus/index.js') }}"></script>
+<script type="module" src="{{ url_for('static', filename='js/modules/search/token-tab.js') }}"></script>
+<script type="module" src="{{ url_for('static', filename='js/modules/advanced/index.js') }}"></script>
 <script type="module">
   import { initStatsTabAdvanced, cleanupStats } from '{{ url_for("static", filename="js/modules/stats/initStatsTabAdvanced.js") }}';
   

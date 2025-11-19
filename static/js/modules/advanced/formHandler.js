@@ -9,8 +9,9 @@
  */
 
 import { initAdvancedTable, updateExportButtons, updateSummary } from './initTable.js';
-import { CorpusFiltersManager } from '../corpus/filters.js';
-import { CorpusAudioManager } from '../corpus/audio.js';
+import { SearchFiltersManager } from '../search/filters.js';
+import { AdvancedAudioManager } from './audio.js';
+import { loadStats } from '../stats/initStatsTabAdvanced.js';
 
 let filtersManager = null;
 let resultsLoaded = false;
@@ -55,23 +56,23 @@ function buildQueryParams(form) {
   }
   params.append('q', query);
 
-  // Mode handling (null-safe)
-  const caseSensitive = qb(form, '[name="case_sensitive"]', false);
-  const ignoreAccents = qb(form, '[name="ignore_accents"]', true);
-  const normalizeDiacritics = qb(form, '[name="normalize_diacritics"]', true);
+  // Case sensitivity via ignore_accents: unchecked = sensitive=1, checked = insensitive=0
+  const ignoreAccentsCheckbox = form.querySelector('[name="ignore_accents"]');
+  const sensitive = (ignoreAccentsCheckbox && ignoreAccentsCheckbox.checked) ? '0' : '1';
+  params.set('sensitive', sensitive);
+
   const expertCql = qb(form, '[name="expert_cql"]', false);
 
   const modeEl = q(form, 'input[name="mode"]:checked') || q(form, 'select[name="mode"]');
-  const mode = modeEl?.value || 'simple';
+  const mode = modeEl?.value || 'forma';
 
-  if (expertCql) params.set('mode', 'cql');
-  else params.set('mode', mode);
+  if (expertCql) {
+    params.set('mode', 'cql');
+  } else {
+    params.set('mode', mode);
+  }
 
   // Query-type specific parameters
-  if (caseSensitive) params.set('case_sensitive', '1');
-  if (ignoreAccents) params.set('ignore_accents', '1');
-  if (normalizeDiacritics) params.set('normalize_diacritics', '1');
-
   // Metadata filters (country, speaker type, sex, speech mode, discourse)
   const filterMappings = [
     { param: 'country_code', selector: '#filter-country-code' },
@@ -145,6 +146,14 @@ async function loadSearchResults(queryParams) {
     
     resultsLoaded = true;
     console.log('✅ Results loaded:', data.recordsFiltered);
+    
+    // Trigger stats refresh if stats tab exists
+    // Stats will only actually load if the tab is active
+    const statsTab = document.getElementById('tab-estadisticas');
+    if (statsTab && statsTab.getAttribute('aria-selected') === 'true') {
+      console.log('[Advanced] Stats tab active, refreshing stats');
+      setTimeout(() => loadStats(), 300);
+    }
     
   } catch (error) {
     console.error('❌ Error loading results:', error);

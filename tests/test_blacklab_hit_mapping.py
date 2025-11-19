@@ -86,3 +86,57 @@ def test_context_start_end_extraction_list_of_dicts():
     mapped = _hit_to_canonical(SAMPLE)
     assert mapped.get("context_start") == 5000
     assert mapped.get("context_end") == 5500
+
+
+SAMPLE_HIT_WITH_SENTENCE_ID = {
+    "docPid": "42",
+    "start": 1, "end": 2,
+    "left": {
+        "word": ["Frase", "anterior.", "Palabra"],
+        "sentence_id": ["s1", "s1", "s2"],
+        "start_ms": ["100", "200", "300"],
+        "end_ms": ["150", "250", "350"]
+    },
+    "match": {
+        "word": ["clave"],
+        "sentence_id": ["s2"],
+        "start_ms": ["400"],
+        "end_ms": ["450"]
+    },
+    "right": {
+        "word": ["en", "contexto.", "Siguiente", "frase."],
+        "sentence_id": ["s2", "s2", "s3", "s3"],
+        "start_ms": ["500", "600", "700", "800"],
+        "end_ms": ["550", "650", "750", "850"]
+    },
+    "docInfo": {"country": "TEST"}
+}
+
+def test_sentence_context_logic():
+    """Test that sentence-based context is correctly extracted."""
+    mapped = _hit_to_canonical(SAMPLE_HIT_WITH_SENTENCE_ID)
+
+    # Check that context is limited to the sentence
+    assert mapped.get("context_left") == "Palabra"
+    assert mapped.get("context_right") == "en contexto."
+    
+    # Check that hit timing is correct
+    assert mapped.get("start_ms") == 400
+    assert mapped.get("end_ms") == 450
+
+    # Check that context timing spans the whole sentence
+    assert mapped.get("context_start") == 300
+    assert mapped.get("context_end") == 650
+
+def test_sentence_context_fallback_if_no_sentence_id():
+    """Test that it falls back to legacy context if sentence_id is missing."""
+    hit_no_sentence_id = SAMPLE_HIT_WITH_SENTENCE_ID.copy()
+    del hit_no_sentence_id["left"]["sentence_id"]
+    del hit_no_sentence_id["match"]["sentence_id"]
+    del hit_no_sentence_id["right"]["sentence_id"]
+    
+    mapped = _hit_to_canonical(hit_no_sentence_id)
+    
+    # Should revert to full left/right context
+    assert mapped.get("context_left") == "Frase anterior. Palabra"
+    assert mapped.get("context_right") == "en contexto. Siguiente frase."

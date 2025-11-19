@@ -14,10 +14,12 @@ import logging
 import os
 from pathlib import Path
 from typing import Generator, Optional
+from collections import Counter
 
 import httpx
 from flask import Blueprint, jsonify, request, Response, current_app
 
+from ..services.collocations import get_collocations
 from .cql import build_cql, build_filters, filters_to_blacklab_query, build_cql_with_speaker_filter, resolve_countries_for_include_regional
 from .cql_validator import validate_cql_pattern, validate_filter_values, CQLValidationError  # Punkt 3
 from .speaker_utils import map_speaker_attributes
@@ -32,6 +34,7 @@ bp = Blueprint("advanced_api", __name__, url_prefix="/search/advanced")
 # Limits and caps
 MAX_HITS_PER_PAGE = 5000  # Fetch all hits from BLS so Python can filter them properly
 GLOBAL_HITS_CAP = 50000
+MAX_WORDS_AROUND_HIT = 40
 
 
 
@@ -232,6 +235,55 @@ def _enrich_hits_with_docmeta(items: list, hits: list, docinfos: dict, docmeta_c
     return items
 
 
+def build_advanced_cql_and_filters_from_request(args):
+    """
+    Common helper to build CQL pattern and filters from request args.
+    Used by both /data and /stats endpoints to ensure consistency.
+    
+    Returns:
+        tuple: (cql_pattern, filter_query, filters)
+    """
+    # Get mode and query
+    mode = args.get('mode', 'forma')
+    query = args.get('q') or args.get('query', '')
+    sensitive = args.get('sensitive', '0')
+    
+    logger.info(f"Building CQL: mode={mode}, sensitive={sensitive}, q={query}")
+    
+    # Resolve countries with include_regional logic
+    countries = args.getlist('country_code')
+    include_regional_param = args.get('include_regional')
+    include_regional = include_regional_param == '1'
+    countries = resolve_countries_for_include_regional(countries, include_regional)
+    
+    # Optimization: Clear country filter if all national countries selected
+    ALL_NATIONAL_CODES = ['ARG', 'BOL', 'CHL', 'COL', 'CRI', 'CUB', 'ECU', 'ESP', 'GTM',
+                          'HND', 'MEX', 'NIC', 'PAN', 'PRY', 'PER', 'DOM', 'SLV', 'URY', 'USA', 'VEN']
+    
+    if countries and include_regional_param is None:
+        countries_set = set(countries)
+        all_expected = set(ALL_NATIONAL_CODES)
+        if countries_set == all_expected:
+            countries = []
+    
+    # Build filters
+    filters = build_filters(args)
+    if countries:
+        filters['country_code'] = countries
+    
+    # Build document filter
+    filter_query = filters_to_blacklab_query(filters)
+    
+    # Build CQL pattern with speaker filter
+    cql_filters = dict(filters)
+    if filter_query:
+        cql_filters.pop('country_code', None)
+    
+    cql_pattern = build_cql_with_speaker_filter(args, cql_filters)
+    
+    return cql_pattern, filter_query, filters
+
+
 @bp.route("/data", methods=["GET"])
 @limiter.limit("30 per minute")
 def datatable_data():
@@ -288,39 +340,29 @@ def datatable_data():
         # Clamp length to MAX_HITS_PER_PAGE
         length = min(length, MAX_HITS_PER_PAGE)
         
-        # Build filters first (needed for speaker-based CQL construction)
-        # But first compute include_regional-adjusted country list similar to corpus routes
-        # Compute country list using centralized logic
-        countries = request.args.getlist('country_code')
-        include_regional_param = request.args.get('include_regional')  # Can be None, '0', or '1'
-        include_regional = include_regional_param == '1'
-        countries = resolve_countries_for_include_regional(countries, include_regional)
+        # If it's an initial load with no query and no filters, return empty.
+        q_val = (request.args.get('q') or request.args.get('query') or '').strip()
+        has_query = bool(q_val)
         
-        # OPTIMIZATION: If ALL countries are selected (default case when no params sent),
-        # clear the country filter to avoid building inefficient CQL regex with 20-25 alternatives.
-        # This allows queries to match all documents without unnecessary country_code constraints.
-        # 
-        # IMPORTANT: Only apply this optimization when user has NOT explicitly set include_regional.
-        # If include_regional is explicitly set, we must keep the filter to exclude regional codes.
-        ALL_NATIONAL_CODES = ['ARG', 'BOL', 'CHL', 'COL', 'CRI', 'CUB', 'ECU', 'ESP', 'GTM', 
-                              'HND', 'MEX', 'NIC', 'PAN', 'PRY', 'PER', 'DOM', 'SLV', 'URY', 'USA', 'VEN']
-        ALL_REGIONAL_CODES = ['ARG-CHU', 'ARG-CBA', 'ARG-SDE', 'ESP-CAN', 'ESP-SEV']
-        
-        # Only optimize when include_regional param is NOT explicitly set
-        if countries and include_regional_param is None:
-            countries_set = set(countries)
-            all_expected = set(ALL_NATIONAL_CODES)  # When no param, defaults to national only
-            if countries_set == all_expected:
-                # All national countries selected and no explicit include_regional → no need to filter
-                countries = []
+        # Check if any filter parameters were actually passed in the request
+        filter_keys = ['country_code', 'speaker_type', 'sex', 'speech_mode', 'mode', 'discourse', 'city', 'radio', 'date', 'include_regional']
+        has_filters = any(key in request.args for key in filter_keys)
 
-        # Build filters from request.args and then override the country list computed above
-        filters = build_filters(request.args)
-        # Build_filters populates country_code as list if present; override it with our computed list
-        if countries:
-            filters['country_code'] = countries
+        if not has_query and not has_filters:
+            logger.info("Initial load detected (no query, no filters). Returning empty result set with initial_load flag.")
+            return jsonify({
+                "draw": draw,
+                "recordsTotal": 0,
+                "recordsFiltered": 0,
+                "data": [],
+                "initial_load": True
+            })
+
+        # Use shared CQL builder (same as /stats)
+        cql_pattern, filter_query, filters = build_advanced_cql_and_filters_from_request(request.args)
+        logger.info(f"DATA CQL: patt={cql_pattern}, filter_query={filter_query}, filters={filters}")
         
-        # Punkt 3: Validierung Filter Values
+        # Validate filters
         try:
             validate_filter_values(filters)
         except CQLValidationError as e:
@@ -332,86 +374,58 @@ def datatable_data():
                 "data": [],
                 "error": "invalid_filter",
                 "message": str(e)
-            }), 200  # Return 200 for DataTables compatibility
-        
-        # Build the initial BlackLab document filter from token-level filters
-        # (country, radio, city, date). We'll try to expand country_code filters
-        # into a doc-level file_id filter using document metadata when available.
-        filter_query = filters_to_blacklab_query(filters)
-        logger.info(f"BlackLab document filter (initial): {filter_query}")
-        
-        # CQL Pattern validation is performed after the pattern is built.
-        
-        logger.info(f"All filters: {filters}")
+            }), 200
         
         # BLS parameters
-        # Note: listvalues must include 'word' for KWIC display in BlackLab v5
-        # Include 'speaker_code' for speaker attribute mapping
-        # IMPORTANT: Fetch ALL hits here (first=0, number=MAX), then paginate in Python after filtering
-        # This ensures we can filter the full result set and paginate correctly
         bls_params = {
-            "first": 0,  # ← Start from beginning (pagination happens in Python)
-            "number": MAX_HITS_PER_PAGE,  # ← Max limit per request
-            "wordsaroundhit": 10,
-            # Include all token-level metadata needed for canonical mapping
-            "listvalues": "word,tokid,start_ms,end_ms,file_id,filename,country,country_code,speaker_type,sex,mode,discourse,radio,utterance_id,speaker_code",
+            "first": 0,
+            "number": MAX_HITS_PER_PAGE,
+            "wordsaroundhit": MAX_WORDS_AROUND_HIT,
+            "listvalues": "word,tokid,start_ms,end_ms,sentence_id,file_id,filename,country,country_code,speaker_type,speaker_sex,speaker_mode,speaker_discourse,radio,utterance_id,speaker_code",
         }
         
-        # IMPORTANT: Do NOT build file_id filter when all countries are selected.
-        # file_id is NOT indexed as document-level metadata (only as token annotation).
-        # Instead, rely on token-level country_code metadata (already built by filters_to_blacklab_query).
-        # 
-        # Skip file_id filter building entirely - it causes 0 results because file_id
-        # doesn't exist as doc-level metadata field in the BlackLab index.
-
         if filter_query:
             bls_params["filter"] = filter_query
 
-        # Build CQL with speaker filter integrated
-        # Important: pass filters with computed country_code and include_regional semantics
-        # If we build a doc-level BLS filter (file_id list), avoid adding token-level
-        # country_code constraints into the CQL (they can be redundant and cause mismatches).
-        cql_filters = dict(filters)  # copy to avoid mutating original
-        if filter_query:  # doc-level filter present
-            cql_filters.pop('country_code', None)
-        cql_pattern = build_cql_with_speaker_filter(request.args, cql_filters)
-        logger.info(f"Built CQL pattern: {cql_pattern} (mode={request.args.get('mode')}, q={request.args.get('q')})")
+        # Validate CQL pattern if we have one
+        if cql_pattern is not None:
+            try:
+                validate_cql_pattern(cql_pattern)
+            except CQLValidationError as e:
+                logger.warning(f"CQL validation failed: {e}")
+                return jsonify({
+                    "draw": draw,
+                    "recordsTotal": 0,
+                    "recordsFiltered": 0,
+                    "data": [],
+                    "error": "invalid_cql",
+                    "message": str(e)
+                }), 200  # Return 200 for DataTables compatibility
 
-        # Validate CQL pattern
-        try:
-            validate_cql_pattern(cql_pattern)
-        except CQLValidationError as e:
-            logger.warning(f"CQL validation failed: {e}")
-            return jsonify({
-                "draw": draw,
-                "recordsTotal": 0,
-                "recordsFiltered": 0,
-                "data": [],
-                "error": "invalid_cql",
-                "message": str(e)
-            }), 200  # Return 200 for DataTables compatibility
-
-        # Try CQL parameter names in order: patt, cql, cql_query
+        # If we have a CQL pattern, try the parameter names (patt, cql, cql_query)
         cql_param_names = ["patt", "cql", "cql_query"]
         response = None
         last_error = None
-        
-        for param_name in cql_param_names:
-            try:
-                test_params = {**bls_params, param_name: cql_pattern}
-                response = _make_bls_request("/corpora/corapan/hits", test_params)
-                logger.debug(f"CQL param '{param_name}' accepted")
-                logger.debug(f"BL request params: {test_params}")
-                break
-            except httpx.HTTPStatusError as e:
-                last_error = e
-                if e.response.status_code == 400:
-                    continue  # Try next param name
-                else:
-                    raise
-        
-        if response is None:
-            raise last_error or Exception("Could not determine BLS CQL parameter")
+        if cql_pattern:
+            for param_name in cql_param_names:
+                try:
+                    test_params = {**bls_params, param_name: cql_pattern}
+                    response = _make_bls_request("/corpora/corapan/hits", test_params)
+                    logger.debug(f"CQL param '{param_name}' accepted")
+                    logger.debug(f"BL request params: {test_params}")
+                    break
+                except httpx.HTTPStatusError as e:
+                    last_error = e
+                    if e.response and e.response.status_code == 400:
+                        continue  # Try next param name
+                    else:
+                        raise
+            
+            if response is None:
+                raise last_error or Exception("Could not determine BLS CQL parameter")
+
+        else: # No CQL pattern, make request with filters only
+            response = _make_bls_request("/corpora/corapan/hits", bls_params)
         
         # Parse response
         data = response.json()
@@ -1080,118 +1094,70 @@ def export_data():
 @limiter.limit("30 per minute")
 def advanced_stats():
     """
-    HIT-BASED Statistics aggregation endpoint for BlackLab advanced search.
+    Comprehensive BlackLab-native statistics aggregation endpoint.
     
-    IMPORTANT: Stats are based on HITS (token occurrences), not documents.
-    Uses the EXACT same query logic as /data endpoint to ensure consistency.
+    Aggregates hit-level metadata from BlackLab search results using the exact same
+    search query as the DataTables endpoint to ensure consistency.
     
-    Aggregates metadata dimensions: country, speaker_type, sex, mode, discourse.
-    All metadata comes from token-level annotations in BlackLab index.
+    Query Parameters:
+        All parameters from /search/advanced/data are supported:
+        - q, mode, sensitive: Search query parameters
+        - country_code[], speaker_type[], sex[], speech_mode[], discourse[]: Filters
+        - include_regional: Include regional broadcasts
+        - country_detail: Optional post-filter by specific country (for drill-down)
     
-    Query parameters (identical to datatable_data):
-        - q or query: Search query
-        - search_type: 'forma' | 'forma_exacta' | 'lemma'
-        - sensitive: '1' (sensitive) | '0' (insensitive)
-        - mode: 'forma' | 'forma_exacta' | 'lemma' | 'cql'
-        - country_code[]: List of countries (optional, handled via include_regional)
-        - speaker_type[]: List of speaker types
-        - sex[]: List of sexes
-        - speech_mode[]: List of modes
-        - discourse[]: List of discourse types
-        - include_regional: '0' | '1'
-        - country_detail: Single country code to further filter stats (from dropdown)
-        
     Returns:
         JSON: {
-            total: number of hits,
-            by_country: [{key, n, p}, ...],
-            by_speaker_type: [...],
-            by_sexo: [...],
-            by_modo: [...],
-            by_discourse: [...]
+            "total_hits": int,
+            "by_country": [{key, n, p}, ...],
+            "by_country_region": [{key, n, p}, ...],
+            "by_speaker_type": [{key, n, p}, ...],
+            "by_sexo": [{key, n, p}, ...],
+            "by_modo": [{key, n, p}, ...],
+            "by_discourse": [{key, n, p}, ...],
+            "by_radio": [{key, n, p}, ...],
+            "by_city": [{key, n, p}, ...],
+            "by_file_id": [{key, n, p}, ...]
         }
+        where:
+            key: Category value (e.g., "ARG", "m", "libre")
+            n: Absolute count of hits
+            p: Proportion (0.0-1.0)
+    
+    Implementation:
+        1. Builds identical CQL + filters as /data endpoint
+        2. Fetches up to MAX_STATS_HITS hits from BlackLab (no pagination)
+        3. Aggregates token-level annotations from hit.match field
+        4. Returns sorted statistics (descending by count, then ascending by key)
+    
+    Note:
+        - All aggregated fields are token annotations (in corapan-tsv.blf.yaml)
+        - BlackLab doesn't provide native grouping API, so we aggregate manually
+        - For queries with >MAX_STATS_HITS results, statistics are based on sample
     """
+    # Maximum hits to fetch for statistics (balance between accuracy and performance)
+    MAX_STATS_HITS = 50000
+    
     try:
-        # === STEP 1: Extract and normalize parameters (IDENTICAL to datatable_data) ===
+        # Build CQL and filters using same logic as /data endpoint
+        cql_pattern, filter_query, filters = build_advanced_cql_and_filters_from_request(request.args)
+        logger.info(f"STATS CQL: patt={cql_pattern}, filter={filter_query}")
         
-        # Compute country list with include_regional logic
-        countries = request.args.getlist('country_code')
-        include_regional_param = request.args.get('include_regional')
-        include_regional = include_regional_param == '1'
-        countries = resolve_countries_for_include_regional(countries, include_regional)
-        
-        # Optimization: Clear country filter if all national countries selected
-        ALL_NATIONAL_CODES = ['ARG', 'BOL', 'CHL', 'COL', 'CRI', 'CUB', 'ECU', 'ESP', 'GTM', 
-                              'HND', 'MEX', 'NIC', 'PAN', 'PRY', 'PER', 'DOM', 'SLV', 'URY', 'USA', 'VEN']
-        
-        if countries and include_regional_param is None:
-            countries_set = set(countries)
-            all_expected = set(ALL_NATIONAL_CODES)
-            if countries_set == all_expected:
-                countries = []
-        
-        # Build filters
-        filters = build_filters(request.args)
-        if countries:
-            filters['country_code'] = countries
-        
-        # Validate filters
-        try:
-            validate_filter_values(filters)
-        except CQLValidationError as e:
-            logger.warning(f"Stats: Filter validation failed: {e}")
-            return jsonify({
-                "error": "invalid_filter",
-                "message": str(e),
-                "total": 0,
-                "by_country": [],
-                "by_speaker_type": [],
-                "by_sexo": [],
-                "by_modo": [],
-                "by_discourse": []
-            }), 400
-        
-        # === STEP 2: Build BlackLab query (IDENTICAL to datatable_data) ===
-        
-        filter_query = filters_to_blacklab_query(filters)
-        
-        # BLS parameters: Get as many hits as possible for accurate stats
-        # Note: We request MORE than datatable_data to get better stats coverage
+        # BlackLab parameters for stats aggregation
         bls_params = {
             "first": 0,
-            "number": 10000,  # BlackLab max hits per request (for stats aggregation)
-            "wordsaroundhit": 0,  # Don't need context for stats, saves bandwidth
-            "listvalues": "country_code,speaker_type,speaker_sex,speaker_mode,speaker_discourse",  # Only metadata fields needed
-            "waitfortotal": "true"
+            "number": MAX_STATS_HITS,  # Fetch large sample for accurate statistics
+            "wordsaroundhit": 0,  # No context needed for stats
+            # Request all token annotations needed for aggregation
+            # NOTE: Field names match BlackLab index: speaker_sex, speaker_mode, speaker_discourse
+            "listvalues": "country_code,country_region_code,speaker_type,speaker_sex,speaker_mode,speaker_discourse,radio,city,file_id",
+            "waitfortotal": "true"  # Ensure we get accurate total count
         }
         
         if filter_query:
             bls_params["filter"] = filter_query
         
-        # Build CQL pattern
-        cql_filters = dict(filters)
-        if filter_query:
-            cql_filters.pop('country_code', None)
-        cql_pattern = build_cql_with_speaker_filter(request.args, cql_filters)
-        
-        # Validate CQL
-        try:
-            validate_cql_pattern(cql_pattern)
-        except CQLValidationError as e:
-            logger.warning(f"Stats: CQL validation failed: {e}")
-            return jsonify({
-                "error": "invalid_cql",
-                "message": str(e),
-                "total": 0,
-                "by_country": [],
-                "by_speaker_type": [],
-                "by_sexo": [],
-                "by_modo": [],
-                "by_discourse": []
-            }), 400
-        
-        # === STEP 3: Make BlackLab request ===
-        
+        # Try CQL parameter names (same fallback logic as /data)
         cql_param_names = ["patt", "cql", "cql_query"]
         response = None
         last_error = None
@@ -1200,11 +1166,11 @@ def advanced_stats():
             try:
                 test_params = {**bls_params, param_name: cql_pattern}
                 response = _make_bls_request("/corpora/corapan/hits", test_params)
-                logger.debug(f"Stats: BLS request succeeded with param '{param_name}'")
+                logger.debug(f"Stats: CQL param '{param_name}' accepted")
                 break
             except httpx.HTTPStatusError as e:
                 last_error = e
-                if e.response.status_code == 400:
+                if e.response and e.response.status_code == 400:
                     continue  # Try next param name
                 else:
                     raise
@@ -1212,81 +1178,40 @@ def advanced_stats():
         if response is None:
             raise last_error or Exception("Could not determine BLS CQL parameter")
         
-        # === STEP 4: Parse response and extract metadata ===
-        
+        # Parse BlackLab response
         data = response.json()
-        hits = data.get("hits", [])
         summary = data.get("summary", {})
         results_stats = summary.get("resultsStats", {})
+        
+        # Get total hit count from resultsStats (BlackLab v5)
         total_hits = results_stats.get("hits", 0)
         
-        logger.info(f"Stats: Retrieved {len(hits)} hits from BlackLab (total: {total_hits})")
+        # Get hits for aggregation
+        hits = data.get("hits", [])
         
-        # === STEP 5: Aggregate metadata directly from BlackLab hits ===
-        # No SQL, no external enrichment needed - metadata is in token annotations!
+        logger.info(f"Stats: Retrieved {len(hits)} of {total_hits} total hits from BlackLab")
         
-        def aggregate_dimension(dimension_key: str) -> list:
-            """
-            Aggregate hits by metadata dimension.
-            Reads directly from BlackLab hit structure (token-level annotations).
-            """
-            counts = {}
-            
-            for hit in hits:
-                # BlackLab v5 structure: hit -> match -> [tokens]
-                match = hit.get("match", {})
-                
-                # Try to get metadata from first token in match
-                # (all tokens in same utterance have same metadata)
-                value = None
-                
-                if isinstance(match, dict):
-                    # Get value from match metadata (if available)
-                    value = match.get(dimension_key)
-                    
-                    # Fallback: check match.word array for metadata
-                    if not value and "word" in match:
-                        tokens = match.get("word", [])
-                        if tokens and isinstance(tokens, list) and len(tokens) > 0:
-                            # First token should have the metadata
-                            first_token = tokens[0]
-                            if isinstance(first_token, dict):
-                                value = first_token.get(dimension_key)
-                
-                # Fallback to 'Unknown' if no value found
-                value = value or 'Unknown'
-                
-                # Handle list values (take first element)
-                if isinstance(value, list):
-                    value = value[0] if value else 'Unknown'
-                
-                counts[value] = counts.get(value, 0) + 1
-            
-            # Sort by count descending
-            items = sorted(counts.items(), key=lambda x: x[1], reverse=True)
-            
-            # Calculate proportions
-            total_counted = sum(n for _, n in items)
-            
-            return [
-                {
-                    "key": key,
-                    "n": n,
-                    "p": round(n / total_counted, 3) if total_counted > 0 else 0
-                }
-                for key, n in items
-            ]
+        # DEBUG: Log first hit structure to identify field names
+        if hits:
+            first_hit = hits[0]
+            match_data = first_hit.get("match", {})
+            logger.info(f"Stats DEBUG: First hit match fields: {list(match_data.keys())}")
+            logger.debug(f"Stats DEBUG: First hit match values: {match_data}")
         
-        # Apply country_detail filter if specified (post-aggregation filtering)
+        # Log sampling warning if we hit the limit
+        if len(hits) >= MAX_STATS_HITS and total_hits > MAX_STATS_HITS:
+            logger.warning(f"Stats: Sampled {len(hits)} of {total_hits} hits for aggregation")
+        
+        # Apply country_detail filter if specified (for drill-down by country)
         country_detail = request.args.get('country_detail', '').strip().upper()
         
         if country_detail:
-            # Re-filter hits by country_detail before aggregating
             filtered_hits = []
             for hit in hits:
                 match = hit.get("match", {})
                 country_code = match.get("country_code")
                 
+                # Extract first value if list
                 if isinstance(country_code, list):
                     country_code = country_code[0] if country_code else None
                 
@@ -1297,38 +1222,150 @@ def advanced_stats():
             total_hits = len(hits)
             logger.info(f"Stats: Filtered to {total_hits} hits for country {country_detail}")
         
+        # Aggregation function
+        def aggregate_dimension(dimension_key: str, fallback_key: str = None) -> list:
+            """
+            Aggregate hits by a token annotation field.
+            
+            Args:
+                dimension_key: Primary field name from hit.match (token annotation)
+                fallback_key: Alternative field name to try if primary is not found
+            
+            Returns:
+                List of {key, n, p} dicts sorted by count (desc) then key (asc)
+            """
+            counts = Counter()
+            
+            def is_empty_value(val):
+                """Check if value is None, empty list, empty string, or list containing only empty strings."""
+                if val is None or val == "" or val == []:
+                    return True
+                if isinstance(val, list):
+                    # Check if all elements are empty strings
+                    return all(v == "" or v is None for v in val)
+                return False
+            
+            for hit in hits:
+                # Extract value from hit.match (token-level annotation)
+                match = hit.get("match", {})
+                value = match.get(dimension_key)
+                
+                # Try fallback if primary key has no value
+                if is_empty_value(value) and fallback_key:
+                    value = match.get(fallback_key)
+                
+                # Skip empty values
+                if is_empty_value(value):
+                    continue
+                
+                # Handle list values (BlackLab returns token annotations as lists)
+                # Take FIRST non-empty value only (one count per hit!)
+                if isinstance(value, list):
+                    for v in value:
+                        if v is not None and str(v).strip():
+                            counts[str(v)] += 1
+                            break  # Only count once per hit
+                else:
+                    if value and str(value).strip():
+                        counts[str(value)] += 1
+            
+            # Calculate proportions
+            total = sum(counts.values())
+            
+            # Build sorted result
+            result = [
+                {
+                    "key": key,
+                    "n": count,
+                    "p": round(count / total, 3) if total > 0 else 0
+                }
+                for key, count in sorted(counts.items(), key=lambda x: (-x[1], x[0]))
+            ]
+            
+            return result
+        
+        # DEBUG: Log first 3 hits to see field structure
+        if hits and len(hits) > 0:
+            logger.info(f"Stats DEBUG: Inspecting first 3 hits...")
+            for i, hit in enumerate(hits[:3]):
+                match = hit.get("match", {})
+                logger.info(f"  Hit {i+1} match keys: {list(match.keys())}")
+                logger.info(f"  Hit {i+1} speaker_sex={match.get('speaker_sex')}, sex={match.get('sex')}")
+                logger.info(f"  Hit {i+1} speaker_mode={match.get('speaker_mode')}, mode={match.get('mode')}")
+                logger.info(f"  Hit {i+1} country_code={match.get('country_code')}")
+        
         # Aggregate all dimensions
+        # NOTE: Using fallback keys for backward compatibility (some indices may use "sex" instead of "speaker_sex")
+        by_country = aggregate_dimension("country_code", "country")
+        by_country_region = aggregate_dimension("country_region_code")
+        by_speaker_type = aggregate_dimension("speaker_type")
+        by_sex = aggregate_dimension("speaker_sex", "sex")  # Try speaker_sex first, fallback to sex
+        by_mode = aggregate_dimension("speaker_mode", "mode")  # Try speaker_mode first, fallback to mode
+        by_discourse = aggregate_dimension("speaker_discourse", "discourse")  # Try speaker_discourse first, fallback to discourse
+        by_radio = aggregate_dimension("radio")
+        by_city = aggregate_dimension("city")
+        by_file_id = aggregate_dimension("file_id")
+        
+        # Build response
         result = {
-            "total": len(hits),  # Actual hits we aggregated (might be < total_hits due to pagination)
-            "total_available": total_hits,  # Total hits in BlackLab (might be more than we fetched)
-            "by_country": aggregate_dimension("country_code"),
-            "by_speaker_type": aggregate_dimension("speaker_type"),
-            "by_sexo": aggregate_dimension("speaker_sex"),
-            "by_modo": aggregate_dimension("speaker_mode"),
-            "by_discourse": aggregate_dimension("speaker_discourse")
+            "total_hits": total_hits,
+            "by_country": by_country,
+            "by_country_region": by_country_region,
+            "by_speaker_type": by_speaker_type,
+            "by_sexo": by_sex,  # Frontend expects "by_sexo"
+            "by_modo": by_mode,  # Frontend expects "by_modo"
+            "by_discourse": by_discourse,
+            "by_radio": by_radio,
+            "by_city": by_city,
+            "by_file_id": by_file_id,
         }
         
-        logger.info(f"Stats: Aggregated {result['total']} hits - "
-                   f"{len(result['by_country'])} countries, "
-                   f"{len(result['by_speaker_type'])} speaker types, "
-                   f"{len(result['by_sexo'])} sex values, "
-                   f"{len(result['by_modo'])} modes, "
-                   f"{len(result['by_discourse'])} discourse types")
+        logger.info(
+            f"Stats: Aggregated {len(hits)} hits - "
+            f"{len(by_country)} countries, "
+            f"{len(by_country_region)} regions, "
+            f"{len(by_speaker_type)} speaker types, "
+            f"{len(by_sex)} sexes, "
+            f"{len(by_mode)} modes, "
+            f"{len(by_discourse)} discourse types, "
+            f"{len(by_radio)} radios, "
+            f"{len(by_city)} cities, "
+            f"{len(by_file_id)} files"
+        )
         
         return jsonify(result), 200
         
     except httpx.ConnectError:
-        logger.error(f"Stats: BLS connection failed - unreachable at {BLS_BASE_URL}")
-        return jsonify({"error": "connection_error", "message": "BlackLab Server is not reachable"}), 502
+        logger.error("Stats: BLS connection failed")
+        return jsonify({
+            "error": "connection_error",
+            "message": "BlackLab Server is not reachable"
+        }), 502
         
     except httpx.TimeoutException:
         logger.error("Stats: BLS timeout")
-        return jsonify({"error": "timeout", "message": "BlackLab Server timeout"}), 504
+        return jsonify({
+            "error": "timeout",
+            "message": "BlackLab Server request timeout"
+        }), 504
         
     except httpx.HTTPStatusError as e:
-        logger.error(f"Stats: BLS HTTP {e.response.status_code}")
-        return jsonify({"error": "bls_error", "message": f"BlackLab Server error {e.response.status_code}"}), 502
+        logger.error(f"Stats: BLS HTTP error {e.response.status_code}")
+        return jsonify({
+            "error": "bls_error",
+            "message": f"BlackLab Server returned error {e.response.status_code}"
+        }), 502
+        
+    except CQLValidationError as e:
+        logger.warning(f"Stats: CQL validation error - {e}")
+        return jsonify({
+            "error": "invalid_query",
+            "message": str(e)
+        }), 400
         
     except Exception as e:
         logger.exception("Stats: Unexpected error")
-        return jsonify({"error": "server_error", "message": str(e)}), 500
+        return jsonify({
+            "error": "server_error",
+            "message": "An unexpected error occurred"
+        }), 500

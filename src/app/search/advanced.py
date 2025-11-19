@@ -54,7 +54,15 @@ def results():
         
         # Build CQL pattern with integrated speaker and metadata filters
         from .cql import build_cql_with_speaker_filter
-        cql_pattern = build_cql_with_speaker_filter(request.args, filters)
+        # Determine q presence and raw CQL params
+        q_val = (request.args.get('q') or request.args.get('query') or '').strip()
+        raw_cql_present = any(request.args.get(p) for p in ("patt", "cql", "cql_query"))
+        cql_pattern = None
+        if q_val or raw_cql_present:
+            cql_pattern = build_cql_with_speaker_filter(request.args, filters)
+        else:
+            # No query provided: skip building CQL and call BlackLab with filters only
+            cql_pattern = None
         
         # Legacy filter query (deprecated, now integrated in CQL)
         filter_query = filters_to_blacklab_query(filters)
@@ -87,28 +95,33 @@ def results():
         # Use centrally configured HTTP client (proper timeout configuration)
         http_client = get_http_client()
         
-        for param_name in cql_param_names:
-            try:
-                test_params = {**bls_params, param_name: cql_pattern}
-                response = http_client.get(bls_url, params=test_params)
-                response.raise_for_status()
-                # Success - use this parameter name
-                # Log only on first successful detection (debug level to avoid spam)
-                current_app.logger.debug(f"BlackLab CQL parameter accepted: {param_name}")
-                break
-            except httpx.HTTPStatusError as e:
-                last_error = e
-                if e.response.status_code == 400:
-                    # Bad request - try next parameter name
-                    current_app.logger.debug(f"CQL parameter '{param_name}' not accepted, trying next")
-                    continue
+        # If we have a CQL pattern, try the parameter names; otherwise call BL with filters only
+        if cql_pattern is not None:
+            for param_name in cql_param_names:
+                try:
+                    test_params = {**bls_params, param_name: cql_pattern}
+                    response = http_client.get(bls_url, params=test_params)
+                    response.raise_for_status()
+                    current_app.logger.debug(f"BlackLab CQL parameter accepted: {param_name}")
+                    break
+                except httpx.HTTPStatusError as e:
+                    last_error = e
+                    if e.response.status_code == 400:
+                        # Bad request - try next parameter name
+                        current_app.logger.debug(f"CQL parameter '{param_name}' not accepted, trying next")
+                        continue
                 else:
                     # Other error - re-raise
                     raise
         
-        if response is None:
+        if cql_pattern is not None and response is None:
             # All parameter names failed
             raise last_error or Exception("Could not determine BlackLab CQL parameter name")
+        
+        if cql_pattern is None:
+            # No CQL — call BlackLab with filters only
+            response = http_client.get(bls_url, params=bls_params)
+            response.raise_for_status()
         
         # Parse JSON response
         data = response.json()

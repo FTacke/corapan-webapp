@@ -1,7 +1,7 @@
 // Shared DataTables base configuration factory
 // Exports: makeBaseConfig() -> returns an object with defaults
 
-import { MEDIA_ENDPOINT } from '../corpus/config.js';
+import { MEDIA_ENDPOINT } from '../search/config.js';
 
 export function escapeHtml(text) {
   if (!text) return '';

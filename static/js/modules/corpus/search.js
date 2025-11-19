@@ -42,7 +42,7 @@ export class CorpusSearchManager {
             const params = this.buildSearchParams();
             
             // Navigate to search results
-            window.location.href = '/corpus/search?' + params.toString();
+            window.location.href = '/search/advanced?' + params.toString();
         });
     }
 

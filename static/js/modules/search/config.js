@@ -1,9 +1,6 @@
 /**
- * Corpus Configuration & Constants
- * Zentrale Konfiguration für das Corpus-Modul
+ * Search (Advanced) Configuration & Constants
  */
-
-// Deprecated corpus config - moved to static/js/modules/search/config.js
 export const MEDIA_ENDPOINT = "/media";
 
 export const REGIONAL_OPTIONS = [
@@ -23,10 +20,6 @@ export const SELECT2_CONFIG = {
     }
 };
 
-/**
- * Check if public temp audio is allowed
- */
 export function allowTempMedia() {
-    // Deprecated - please use search/config.allowTempMedia() instead.
     return true;
 }

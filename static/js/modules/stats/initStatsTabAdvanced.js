@@ -22,6 +22,7 @@ let charts = {
   sexo: null,
   modo: null,
   discourse: null,
+  radio: null,
 };
 
 /**
@@ -105,20 +106,20 @@ function buildStatsUrl() {
     params.append('q', query);
   }
 
-  // Search type (forma, forma_exacta, lema)
-  const searchType = form.querySelector('select[name="search_type"]')?.value || 'forma';
-  params.append('search_type', searchType);
-
-  // Case sensitivity
-  const caseSensitive = form.querySelector('input[name="case_sensitive"]')?.checked ? '1' : '0';
-  params.append('sensitive', caseSensitive);
+  // Case sensitivity via ignore_accents: unchecked = sensitive=1, checked = insensitive=0
+  const ignoreAccentsCheckbox = form.querySelector('input[name="ignore_accents"]');
+  const sensitive = (ignoreAccentsCheckbox && ignoreAccentsCheckbox.checked) ? '0' : '1';
+  params.append('sensitive', sensitive);
 
   // Mode (CQL or simple)
-  const modoAvanzado = form.querySelector('#modo-avanzado')?.checked;
-  if (modoAvanzado) {
+  const expertCql = form.querySelector('#modo-avanzado')?.checked;
+  const modeEl = form.querySelector('input[name="mode"]:checked') || form.querySelector('select[name="mode"]');
+  const mode = modeEl?.value || 'forma';
+
+  if (expertCql) {
     params.append('mode', 'cql');
   } else {
-    params.append('mode', searchType);
+    params.append('mode', mode);
   }
 
   // Country filters
@@ -177,10 +178,10 @@ function renderCharts(data) {
     if (chart) disposeChart(chart);
   });
 
-  // Update total
-  updateTotal(data.total || 0);
+  // Update total (backend returns total_hits)
+  updateTotal(data.total_hits || data.total || 0);
 
-  // Render country chart (default: absolute mode)
+  // Render country chart
   const countryContainer = document.getElementById('chart-country');
   if (countryContainer) {
     charts.country = renderBar(countryContainer, data.by_country, 'País', 'absolute');
@@ -213,6 +214,13 @@ function renderCharts(data) {
   if (discourseContainer) {
     charts.discourse = renderBar(discourseContainer, data.by_discourse, 'Discurso', 'absolute');
     updateCategoryCount('by_discourse', data.by_discourse?.length || 0);
+  }
+
+  // Render radio chart
+  const radioContainer = document.getElementById('chart-radio');
+  if (radioContainer) {
+    charts.radio = renderBar(radioContainer, data.by_radio, 'Radio', 'absolute');
+    updateCategoryCount('by_radio', data.by_radio?.length || 0);
   }
   
   // Store original countries on first load (when no filter is active)
@@ -295,10 +303,8 @@ export function initStatsTabAdvanced() {
       resultsPanel.hidden = true;
       resultsPanel.classList.remove('md3-view-content--active');
 
-      // Load stats if not already loaded
-      if (!currentData) {
-        loadStats();
-      }
+      // Always load fresh stats when tab is clicked
+      loadStats();
     });
 
     // Results tab click
@@ -317,22 +323,7 @@ export function initStatsTabAdvanced() {
     });
   }
 
-  // Setup form submit listener to invalidate stats and reload if tab is active
-  const form = document.getElementById('advanced-search-form');
-  if (form) {
-    form.addEventListener('submit', (e) => {
-      // When form is submitted, invalidate stats data
-      currentData = null;
-      currentCountryFilter = '';
-      originalCountries = [];
-      
-      // If stats tab is currently active, reload stats after a delay
-      const statsTab = document.getElementById('tab-estadisticas');
-      if (statsTab && statsTab.getAttribute('aria-selected') === 'true') {
-        setTimeout(() => loadStats(), 500);
-      }
-    });
-  }
+  // Form submit handler removed - stats will be triggered externally after search completes
 
   // Setup theme change listener
   const themeToggle = document.querySelector('[data-theme-toggle]');

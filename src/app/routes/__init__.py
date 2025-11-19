@@ -3,14 +3,13 @@ from __future__ import annotations
 
 from flask import Flask
 
-from . import admin, auth, corpus, media, public, atlas, player, editor, stats, bls_proxy
+from . import admin, auth, media, public, atlas, player, editor, stats, bls_proxy
 from ..search import advanced, advanced_api
 
 
 BLUEPRINTS = [
     public.blueprint,
     auth.blueprint,
-    corpus.blueprint,
     media.blueprint,
     admin.blueprint,
     atlas.blueprint,  # New versioned API: /api/v1/atlas/*

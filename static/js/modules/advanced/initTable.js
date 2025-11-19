@@ -77,6 +77,14 @@ export function initAdvancedTable(queryParams) {
       dataSrc: function(json) {
         console.log('[DataTables dataSrc] Response received:', json);
         
+        // Handle initial load: don't show "0 results"
+        if (json.initial_load) {
+          console.log('[DataTables] Initial load detected, hiding summary and table.');
+          updateSummary(json, queryParams, true); // Pass initial_load flag
+          updateExportButtons(queryParams);
+          return []; // Return empty data
+        }
+
         // Check for backend error in response body (e.g., BLS unreachable)
         if (json && json.error) {
           console.warn(`[DataTables] Backend error detected: ${json.error}`);
@@ -483,10 +491,23 @@ export function updateExportButtons(queryParams) {
  * 
  * @param {Object} data - DataTables response data
  * @param {string} queryParams - Current query parameters
+ * @param {boolean} initialLoad - Flag to indicate initial page load
  */
-export function updateSummary(data, queryParams) {
+export function updateSummary(data, queryParams, initialLoad = false) {
   const summaryBox = document.getElementById('adv-summary');
   if (!summaryBox) return;
+
+  // On initial load, clear summary and hide everything.
+  if (initialLoad) {
+    summaryBox.innerHTML = '';
+    summaryBox.hidden = true;
+    const subTabs = document.getElementById('search-sub-tabs');
+    if (subTabs) subTabs.style.display = 'none';
+    const tableContainer = document.getElementById('datatable-container');
+    if (tableContainer) tableContainer.style.display = 'none';
+    console.log('[Summary] Initial load: summary and results hidden.');
+    return;
+  }
 
   const filtered = data.recordsFiltered || 0;
   const total = data.recordsTotal || 0;
@@ -508,36 +529,37 @@ export function updateSummary(data, queryParams) {
     <span class="md3-advanced__summary-count">${filtered.toLocaleString('es-ES')}</span>
     <span class="md3-advanced__summary-total">resultados`;
   
-  if (total > 0) {
-    html += ` de ${total.toLocaleString('es-ES')} documentos`;
+  if (filtersActive) {
+    const activeFilters = [];
+    
+    // Collect active filters for display
+    if (params.get('include_regional') === '1') {
+      activeFilters.push('Regional');
+    }
+    if (params.get('country_code')) {
+      activeFilters.push(`País: ${params.get('country_code')}`);
+    }
+    if (params.get('speaker_type')) {
+      activeFilters.push(`Tipo de hablante: ${params.get('speaker_type')}`);
+    }
+    if (params.get('sex')) {
+      activeFilters.push(`Sexo: ${params.get('sex')}`);
+    }
+    if (params.get('speech_mode')) {
+      activeFilters.push(`Modo de habla: ${params.get('speech_mode')}`);
+    }
+    if (params.get('discourse')) {
+      activeFilters.push(`Discurso: ${params.get('discourse')}`);
+    }
+    
+    html += `, <span class="md3-advanced__summary-filters">${activeFilters.join(', ')}</span>`;
   }
   
   html += `</span>`;
   
-  // Serverfilter badge removed - not needed
-  
+  // Update summary box content
   summaryBox.innerHTML = html;
   summaryBox.hidden = false;
   
-  // Show sub-tabs and datatable container after successful search with results
-  if (filtered > 0) {
-    const subTabs = document.getElementById('search-sub-tabs');
-    if (subTabs) {
-      subTabs.style.display = '';
-    }
-    const tableContainer = document.getElementById('datatable-container');
-    if (tableContainer) {
-      tableContainer.style.display = '';
-    }
-  }
-  
-  console.log('[Summary] Updated:', filtered, 'results,', 'filters:', filtersActive);
+  console.log('[Summary] Updated:', { filtered, total, query, filtersActive });
 }
-
-/**
- * Escape HTML entities
- */
-// escapeHtml, renderAudioButtons and renderFileLink are provided by datatableFactory
-
-// Export for external use
-export { advancedTable };

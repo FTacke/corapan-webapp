@@ -1,7 +1,7 @@
-/**
- * Corpus DataTables Manager
- * Verwaltet DataTables mit Server-Side Processing
- */
+// Deprecated - datatables implementation moved to modules/advanced/datatableFactory.js
+console.warn('[DEPRECATED] js/modules/corpus/datatables.js is deprecated; use js/modules/advanced/datatableFactory.js');
+
+export default {};
 
 import { MEDIA_ENDPOINT } from './config.js';
 
@@ -43,7 +43,7 @@ export class CorpusDatatablesManager {
             
             // AJAX Configuration
             ajax: {
-                url: '/corpus/search/datatables',
+                url: '/search/advanced/data',
                 type: 'GET',
                 data: (d) => this.buildAjaxData(d),
                 traditional: true,  // CRITICAL: Use traditional parameter serialization for arrays

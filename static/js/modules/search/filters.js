@@ -1,4 +1,90 @@
 /**
+ * Search Filters Manager (copy of corpus filters adapted for advanced search)
+ */
+import { REGIONAL_OPTIONS, SELECT2_CONFIG } from './config.js';
+
+export class SearchFiltersManager {
+    constructor() {
+        this.regionalCheckbox = document.getElementById('include-regional');
+        this.countrySelect = document.getElementById('filter-country-national');
+        this.filters = {
+            speaker: document.getElementById('filter-speaker'),
+            sex: document.getElementById('filter-sex'),
+            mode: document.getElementById('filter-mode'),
+            discourse: document.getElementById('filter-discourse')
+        };
+        this.isInitialized = false;
+    }
+    depsReady() {
+        return !!(window.jQuery && window.jQuery.fn && window.jQuery.fn.select2);
+    }
+    initialize() {
+        if (!this.countrySelect) return;
+        this.setupTurboHandlers();
+        this.enhanceFilters();
+        console.log('✅ Search filters initialized');
+    }
+    setupTurboHandlers() {
+        document.addEventListener('turbo:before-render', (e) => {
+            const newBody = e.detail.newBody;
+            const grid = newBody.querySelector('.md3-corpus-filter-grid');
+            if (!grid) return;
+            newBody.classList.add('corpus-hydrating');
+            grid.querySelectorAll('select[data-enhance]').forEach(select => {
+                select.removeAttribute('data-enhanced');
+                select.setAttribute('data-enhance-pending', '');
+            });
+        });
+        document.addEventListener('turbo:load', () => {
+            this.isInitialized = false;
+            this.updateReferences();
+            this.enhanceFilters();
+        });
+        document.addEventListener('turbo:before-cache', () => { this.cleanupForCache(); });
+        window.addEventListener('pageshow', (e) => { if (e.persisted) { this.updateReferences(); this.enhanceFilters(); } });
+    }
+    updateReferences() {
+        this.regionalCheckbox = document.getElementById('include-regional');
+        this.countrySelect = document.getElementById('filter-country-national');
+        this.filters = {
+            speaker: document.getElementById('filter-speaker'),
+            sex: document.getElementById('filter-sex'),
+            mode: document.getElementById('filter-mode'),
+            discourse: document.getElementById('filter-discourse')
+        };
+    }
+    enhanceFilters() {
+        const grid = document.querySelector('.md3-corpus-filter-grid');
+        if (!grid) return;
+        if (!document.documentElement.hasAttribute('data-filters-ready')) {
+            document.addEventListener('corpus:filters-ready', () => this.enhanceFilters(), { once: true });
+            const allSelects = [this.countrySelect, ...Object.values(this.filters)].filter(Boolean);
+            const allReady = allSelects.every(s => s && s.options.length > 1);
+            if (allReady) document.documentElement.setAttribute('data-filters-ready', '');
+            return;
+        }
+        if (typeof window.$ === 'undefined' || typeof window.jQuery === 'undefined') {
+            console.error('[Filters] jQuery not loaded');
+            return;
+        }
+        if (typeof $.fn.select2 === 'undefined') { console.error('[Filters] Select2 not loaded'); return; }
+        if (this.isInitialized) return;
+        const allSelects = [this.countrySelect, ...Object.values(this.filters)].filter(Boolean);
+        allSelects.forEach(select => {
+            if (!select || select.hasAttribute('data-enhanced')) return;
+            if ($(select).data('select2')) return;
+            const placeholder = select.dataset.placeholder || 'Seleccionar';
+            try { $(select).select2({ ...SELECT2_CONFIG, width: '100%', placeholder, allowClear: true, dropdownAutoWidth: true }); select.setAttribute('data-enhanced', ''); select.removeAttribute('data-enhance-pending'); } catch (e) { console.error('Error enhancing select', e); }
+        });
+        this.isInitialized = true; document.body.classList.remove('corpus-hydrating'); this.setupRegionalToggle(); }
+    cleanupForCache() { document.body.classList.remove('corpus-hydrating'); if (typeof window.$ === 'undefined' || typeof $.fn.select2 === 'undefined') { this.isInitialized=false; return; } const allSelects = document.querySelectorAll('.md3-corpus-filter-grid select[data-enhance][data-enhanced]'); allSelects.forEach(select => { try { if ($(select).data('select2')) { $(select).select2('destroy'); } select.removeAttribute('data-enhanced'); select.removeAttribute('data-enhance-pending'); } catch (error) { console.warn('Error destroying Select2:', error); } }); this.isInitialized=false; }
+    setupRegionalToggle() { if (!this.regionalCheckbox || !this.countrySelect) return; $(this.regionalCheckbox).on('change', () => { const isChecked = $(this.regionalCheckbox).is(':checked'); const currentValues = $(this.countrySelect).val() || []; if (isChecked) { REGIONAL_OPTIONS.forEach(opt => { if ($(this.countrySelect).find(`option[value="${opt.value}"]`).length === 0) { const newOption = new Option(opt.text, opt.value, false, false); $(this.countrySelect).append(newOption); } }); } else { REGIONAL_OPTIONS.forEach(opt => { $(this.countrySelect).find(`option[value="${opt.value}"]`).remove(); }); const filteredValues = currentValues.filter(val => !REGIONAL_OPTIONS.some(r => r.value === val)); $(this.countrySelect).val(filteredValues); } $(this.countrySelect).trigger('change'); }); if ($(this.regionalCheckbox).is(':checked')) { $(this.regionalCheckbox).trigger('change'); } }
+    getFilterValues() { const values = {}; if (this.countrySelect) { values.countries = $(this.countrySelect).val() || []; values.includeRegional = $(this.regionalCheckbox).is(':checked'); } Object.entries(this.filters).forEach(([key, element]) => { if (element) values[key] = $(element).val() || []; }); return values; }
+    reset() { Object.values(this.filters).forEach(filter => { if (filter) { $(filter).val(null).trigger('change'); } }); if (this.countrySelect) { $(this.countrySelect).val(null).trigger('change'); } if (this.regionalCheckbox) { $(this.regionalCheckbox).prop('checked', false).trigger('change'); } console.log('✅ Filters reset'); }
+    destroy() { if (typeof window.$ === 'undefined' || typeof $.fn.select2 === 'undefined') { return; } Object.values(this.filters).forEach(filter => { if (filter && $(filter).data('select2')) { $(filter).select2('destroy'); } }); if (this.countrySelect && $(this.countrySelect).data('select2')) { $(this.countrySelect).select2('destroy'); } }
+    cleanup() { this.destroy(); }
+}
+/**
  * Search UI Filters Module
  * Handles MD3 filter fields and active filter chips
  * 

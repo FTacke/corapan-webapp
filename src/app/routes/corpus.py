@@ -1,7 +1,7 @@
 """Corpus routes and search endpoints."""
 from __future__ import annotations
 
-from flask import Blueprint, Response, current_app, g, jsonify, render_template, request
+from flask import Blueprint, Response, current_app, g, jsonify, render_template, request, redirect, url_for
 
 from ..services.corpus_search import SearchParams, search_tokens
 from ..services.blacklab_search import search_blacklab
@@ -70,8 +70,8 @@ def corpus_home() -> Response:
     PUBLIC ROUTE: No authentication required.
     User info available via g.user (set by load_user_dimensions if logged in).
     """
-    context = _default_context()
-    return render_template("pages/corpus.html", **context)
+    # Legacy route: redirect to advanced search for now
+    return redirect(url_for('advanced_search.index'))
 
 
 @blueprint.route("/search", methods=["GET", "POST"])
@@ -86,9 +86,11 @@ def search() -> Response:
     """
     # Just render the corpus page without results
     # All searches now happen via AJAX (DataTables) through BlackLab
-    context = _default_context()
-    context["active_tab"] = "tab-token"  # Default to token tab
-    return _render_corpus(context)
+    # Deprecated - redirect to advanced search UI with params preserved
+    params = request.args.to_dict(flat=False)
+    q = request.args.get('q') or ''
+    query_str = '' if not params else ('?' + '&'.join([f"{k}={v[0]}" for k, v in params.items()]))
+    return redirect(url_for('advanced_search.index') + query_str)
 
 
 @blueprint.get("/search/datatables")
@@ -102,15 +104,8 @@ def search_datatables() -> Response:
     
     Returns error to inform clients to use new endpoints.
     """
-    draw = _safe_int(request.args.get("draw"), 1)
-    return jsonify({
-        "draw": draw,
-        "recordsTotal": 0,
-        "recordsFiltered": 0,
-        "data": [],
-        "error": "deprecated",
-        "message": "This endpoint has been deprecated. Please use /search/advanced/data for advanced search or /search/advanced/token/search for token search."
-    })
+    # Redirect to new advanced DataTables endpoint for compatibility
+    return redirect(url_for('advanced_api.data'))
 
 
 @blueprint.get("/tokens")
@@ -122,7 +117,8 @@ def token_lookup() -> Response:
     import sqlite3
     from ..services.corpus_search import CANON_COLS, _get_select_columns
     
-    token_ids_param = request.args.get("token_ids", "")
+    # Deprecated token lookup route - redirect to advanced token search endpoint
+    return redirect(url_for('advanced_api.token_search'))
     token_ids = [token.strip() for token in token_ids_param.split(",") if token.strip()]
     if not token_ids:
         return jsonify([])

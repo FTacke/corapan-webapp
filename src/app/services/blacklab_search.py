@@ -54,6 +54,92 @@ def _build_simple_cql(query: str, search_mode: str, sensitive: int) -> str:
     return " ".join(parts)
 
 
+def build_sentence_context(hit: dict[str, Any]) -> dict[str, Any] | None:
+    """
+    Build sentence-based context for a BlackLab hit.
+
+    Returns a dictionary with sentence-based context, or None if it fails.
+    """
+    try:
+        match = hit.get("match", {})
+        left = hit.get("left", {}) or hit.get("before", {})
+        right = hit.get("right", {}) or hit.get("after", {})
+
+        def arr(side, key):
+            if isinstance(side, dict):
+                return side.get(key, []) or []
+            return []
+
+        left_words, left_sent_ids, left_start, left_end = arr(left, "word"), arr(left, "sentence_id"), arr(left, "start_ms"), arr(left, "end_ms")
+        match_words, match_sent_ids, match_start, match_end = arr(match, "word"), arr(match, "sentence_id"), arr(match, "start_ms"), arr(match, "end_ms")
+        right_words, right_sent_ids, right_start, right_end = arr(right, "word"), arr(right, "sentence_id"), arr(right, "start_ms"), arr(right, "end_ms")
+
+        if not match_words or not match_sent_ids:
+            return None
+
+        sent_id = match_sent_ids[0]
+        if not sent_id:
+            return None
+
+        tokens = []
+        for i, w in enumerate(left_words):
+            tokens.append({
+                "zone": "left", "word": w,
+                "sentence_id": left_sent_ids[i] if i < len(left_sent_ids) else None,
+                "start_ms": int(left_start[i]) if i < len(left_start) and left_start[i] is not None else None,
+                "end_ms": int(left_end[i]) if i < len(left_end) and left_end[i] is not None else None,
+            })
+        for i, w in enumerate(match_words):
+            tokens.append({
+                "zone": "match", "word": w,
+                "sentence_id": match_sent_ids[i] if i < len(match_sent_ids) else None,
+                "start_ms": int(match_start[i]) if i < len(match_start) and match_start[i] is not None else None,
+                "end_ms": int(match_end[i]) if i < len(match_end) and match_end[i] is not None else None,
+            })
+        for i, w in enumerate(right_words):
+            tokens.append({
+                "zone": "right", "word": w,
+                "sentence_id": right_sent_ids[i] if i < len(right_sent_ids) else None,
+                "start_ms": int(right_start[i]) if i < len(right_start) and right_start[i] is not None else None,
+                "end_ms": int(right_end[i]) if i < len(right_end) and right_end[i] is not None else None,
+            })
+
+        sentence_tokens = [t for t in tokens if t["sentence_id"] == sent_id]
+        if not sentence_tokens:
+            return None
+
+        match_indices = [i for i, t in enumerate(sentence_tokens) if t["zone"] == "match"]
+        if not match_indices:
+            return None
+
+        first_match_idx = min(match_indices)
+        last_match_idx = max(match_indices)
+
+        left_tokens = sentence_tokens[:first_match_idx]
+        right_tokens = sentence_tokens[last_match_idx + 1:]
+
+        context_left = " ".join(t["word"] for t in left_tokens)
+        context_right = " ".join(t["word"] for t in right_tokens)
+
+        hit_start_ms = int(match_start[0]) if match_start and match_start[0] is not None else 0
+        hit_end_ms = int(match_end[-1]) if match_end and match_end[-1] is not None else hit_start_ms
+
+        context_start = min((t["start_ms"] for t in sentence_tokens if t["start_ms"] is not None), default=hit_start_ms)
+        context_end = max((t["end_ms"] for t in sentence_tokens if t["end_ms"] is not None), default=hit_end_ms)
+
+        return {
+            "context_left": context_left,
+            "context_right": context_right,
+            "hit_start_ms": hit_start_ms,
+            "hit_end_ms": hit_end_ms,
+            "context_start": context_start,
+            "context_end": context_end,
+        }
+    except Exception as e:
+        logger.error(f"Error in build_sentence_context: {e}")
+        return None
+
+
 def _hit_to_canonical(hit: dict[str, Any]) -> dict[str, Any]:
     """Map a BlackLab hit to canonical CANON_COLS keys.
 
@@ -100,94 +186,87 @@ def _hit_to_canonical(hit: dict[str, Any]) -> dict[str, Any]:
     speaker_mode = _safe_first(match.get("speaker_mode", [])) or _safe_first(match.get("mode", [])) or ""
     speaker_discourse = _safe_first(match.get("speaker_discourse", [])) or _safe_first(match.get("discourse", [])) or ""
 
-    # left/right may be dicts with 'word' arrays OR plain arrays of words (v5)
-    def _extract_context(side):
-        if not side:
+    # New sentence-based context logic
+    sentence_context = build_sentence_context(hit)
+
+    if sentence_context:
+        context_left = sentence_context["context_left"]
+        context_right = sentence_context["context_right"]
+        start_ms = sentence_context["hit_start_ms"]
+        end_ms = sentence_context["hit_end_ms"]
+        context_start = sentence_context["context_start"]
+        context_end = sentence_context["context_end"]
+    else:
+        # Fallback to legacy N-word-window logic
+        def _extract_context(side):
+            if not side:
+                return ""
+            if isinstance(side, dict) and side.get("word"):
+                return " ".join(side.get("word", []))
+            if isinstance(side, list) and all(isinstance(x, str) for x in side):
+                return " ".join(side)
+            if isinstance(side, list) and side and isinstance(side[0], dict) and side[0].get("word"):
+                words = []
+                for elem in side:
+                    w = elem.get("word")
+                    if isinstance(w, list):
+                        words.extend(w)
+                    elif isinstance(w, str):
+                        words.append(w)
+                return " ".join(words)
             return ""
-        # Case: dict with 'word' key
-        if isinstance(side, dict) and side.get("word"):
-            return " ".join(side.get("word", []))
-        # Case: list of words
-        if isinstance(side, list) and all(isinstance(x, str) for x in side):
-            return " ".join(side)
-        # Case: list of dicts with 'word'
-        if isinstance(side, list) and side and isinstance(side[0], dict) and side[0].get("word"):
-            words = []
-            for elem in side:
-                w = elem.get("word")
-                if isinstance(w, list):
-                    words.extend(w)
-                elif isinstance(w, str):
-                    words.append(w)
-            return " ".join(words)
-        # Fallback: empty
-        return ""
 
-    context_left = _extract_context(left)
-    context_right = _extract_context(right)
+        context_left = _extract_context(left)
+        context_right = _extract_context(right)
 
-    # Start/End times: prefer start_ms/end_ms in match arrays (milliseconds),
-    # fall back to top-level start/end if present (could be token offsets).
-    def _get_first_int(arr_name: str, default: int = 0) -> int:
-        if isinstance(match.get(arr_name), list) and match.get(arr_name):
+        def _get_first_int(arr_name: str, default: int = 0) -> int:
+            if isinstance(match.get(arr_name), list) and match.get(arr_name):
+                try:
+                    return int(match.get(arr_name)[0])
+                except Exception:
+                    return default
+            return int(hit.get(arr_name.replace('_ms', ''), default))
+
+        start_ms = _get_first_int("start_ms", 0)
+        end_ms = _get_first_int("end_ms", 0)
+
+        def _to_int(val, default=0):
             try:
-                return int(match.get(arr_name)[0])
+                return int(val)
             except Exception:
                 return default
-        return int(hit.get(arr_name.replace('_ms', ''), default))
 
-    start_ms = _get_first_int("start_ms", 0)
-    end_ms = _get_first_int("end_ms", 0)
+        def _safe_last(arr):
+            return arr[-1] if isinstance(arr, list) and arr else ""
 
-    def _to_int(val, default=0):
-        try:
-            return int(val)
-        except Exception:
-            return default
+        def _get_context_start(side) -> int:
+            try:
+                if isinstance(side, dict) and side.get("start_ms"):
+                    return _to_int(_safe_first(side.get("start_ms", [])))
+                if isinstance(side, list) and side and isinstance(side[0], dict):
+                    return _to_int(_safe_first(side[0].get("start_ms", [])))
+                if isinstance(side, dict) and side.get("end_ms"):
+                    return _to_int(_safe_first(side.get("end_ms", [])))
+            except Exception:
+                pass
+            return 0
 
-    # Helper: safely extract first/last ms values from 'left'/'right' sides
-    def _safe_last(arr):
-        return arr[-1] if isinstance(arr, list) and arr else ""
-
-    def _get_context_start(side) -> int:
-        """Return the first start_ms value from a side (dict or list-of-dicts).
-
-        side may be a dict with 'start_ms' list, a list of dicts, or a list of strings.
-        """
-        try:
-            # Case: dict with start_ms
-            if isinstance(side, dict) and side.get("start_ms"):
-                return _to_int(_safe_first(side.get("start_ms", [])))
-            # Case: list of dicts (v5 sometimes contains list of elements with start_ms)
-            if isinstance(side, list) and side and isinstance(side[0], dict):
-                # Take first element's start_ms
-                return _to_int(_safe_first(side[0].get("start_ms", [])))
-            # Fallback: if start_ms missing but end_ms present, use first end_ms
-            if isinstance(side, dict) and side.get("end_ms"):
-                return _to_int(_safe_first(side.get("end_ms", [])))
-        except Exception:
-            pass
-        return 0
-
-    def _get_context_end(side) -> int:
-        """Return the last end_ms value from a side (dict or list-of-dicts).
-
-        side may be a dict with 'end_ms' list, a list of dicts, or a list of strings.
-        """
-        try:
-            # Prefer explicit end_ms when present
-            if isinstance(side, dict) and side.get("end_ms"):
-                return _to_int(_safe_last(side.get("end_ms", [])))
-            if isinstance(side, list) and side and isinstance(side[-1], dict) and side[-1].get("end_ms"):
-                return _to_int(_safe_last(side[-1].get("end_ms", [])))
-            # Fallback: if end_ms missing, use last start_ms as end
-            if isinstance(side, dict) and side.get("start_ms"):
-                return _to_int(_safe_last(side.get("start_ms", [])))
-            if isinstance(side, list) and side and isinstance(side[-1], dict) and side[-1].get("start_ms"):
-                return _to_int(_safe_last(side[-1].get("start_ms", [])))
-        except Exception:
-            pass
-        return 0
+        def _get_context_end(side) -> int:
+            try:
+                if isinstance(side, dict) and side.get("end_ms"):
+                    return _to_int(_safe_last(side.get("end_ms", [])))
+                if isinstance(side, list) and side and isinstance(side[-1], dict) and side[-1].get("end_ms"):
+                    return _to_int(_safe_last(side[-1].get("end_ms", [])))
+                if isinstance(side, dict) and side.get("start_ms"):
+                    return _to_int(_safe_last(side.get("start_ms", [])))
+                if isinstance(side, list) and side and isinstance(side[-1], dict) and side[-1].get("start_ms"):
+                    return _to_int(_safe_last(side[-1].get("start_ms", [])))
+            except Exception:
+                pass
+            return 0
+        
+        context_start = _get_context_start(left)
+        context_end = _get_context_end(right)
 
     return {
         "token_id": token_id,
@@ -211,8 +290,8 @@ def _hit_to_canonical(hit: dict[str, Any]) -> dict[str, Any]:
         "end_ms": end_ms,
         "context_left": context_left,
         "context_right": context_right,
-        "context_start": _get_context_start(left),
-        "context_end": _get_context_end(right),
+        "context_start": context_start,
+        "context_end": context_end,
         "lemma": lemma,
     }
 
