@@ -243,9 +243,13 @@
 
 /* Letter Marking (Player Feature) */
 .md3-speaker-text .word .highlight {
-  background: rgba(255, 215, 0, 0.65);
-  padding: 0.1rem 0.2rem;
-  border-radius: 2px;
+  position: absolute;
+  inset: -0.05em 0;              /* minimal größer als der Text, aber ohne Layout-Shift */
+  border-radius: 6px;            /* MD3-typisch etwas weicher */
+  background: rgba(255, 215, 0, 0.18); /* dezente „surface“-Farbe */
+  box-shadow: 0 0 0 1px rgba(255, 215, 0, 0.35); /* Ton-in-Ton-Outline statt Border */
+  pointer-events: none;
+  z-index: -1;
 }
 
 /* ============================================
