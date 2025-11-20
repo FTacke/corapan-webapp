@@ -710,6 +710,35 @@ export class WordEditor {
   }
 
   /**
+   * Map speaker code to attributes
+   * @param {string} code - Speaker code (e.g. 'lib-pm')
+   * @returns {Object} Speaker attributes
+   * @private
+   */
+  _mapSpeakerAttributes(code) {
+    const mapping = {
+      'lib-pm':  { type: 'pro', sex: 'm', mode: 'libre', discourse: 'general' },
+      'lib-pf':  { type: 'pro', sex: 'f', mode: 'libre', discourse: 'general' },
+      'lib-om':  { type: 'otro', sex: 'm', mode: 'libre', discourse: 'general' },
+      'lib-of':  { type: 'otro', sex: 'f', mode: 'libre', discourse: 'general' },
+      'lec-pm':  { type: 'pro', sex: 'm', mode: 'lectura', discourse: 'general' },
+      'lec-pf':  { type: 'pro', sex: 'f', mode: 'lectura', discourse: 'general' },
+      'lec-om':  { type: 'otro', sex: 'm', mode: 'lectura', discourse: 'general' },
+      'lec-of':  { type: 'otro', sex: 'f', mode: 'lectura', discourse: 'general' },
+      'pre-pm':  { type: 'pro', sex: 'm', mode: 'pre', discourse: 'general' },
+      'pre-pf':  { type: 'pro', sex: 'f', mode: 'pre', discourse: 'general' },
+      'tie-pm':  { type: 'pro', sex: 'm', mode: 'n/a', discourse: 'tiempo' },
+      'tie-pf':  { type: 'pro', sex: 'f', mode: 'n/a', discourse: 'tiempo' },
+      'traf-pm': { type: 'pro', sex: 'm', mode: 'n/a', discourse: 'tránsito' },
+      'traf-pf': { type: 'pro', sex: 'f', mode: 'n/a', discourse: 'tránsito' },
+      'foreign': { type: 'n/a', sex: 'n/a', mode: 'n/a', discourse: 'foreign' },
+      'none':    { type: '', sex: '', mode: '', discourse: '' }
+    };
+    
+    return mapping[code] || { type: '', sex: '', mode: '', discourse: '' };
+  }
+
+  /**
    * Confirm speaker change
    */
   confirmSpeakerChange() {
@@ -733,12 +762,18 @@ export class WordEditor {
     // Record the change
     this._recordSpeakerChange(this.currentSpeakerSegment, oldSpeakerCode, newSpeakerCode);
 
-    // Update data (set speaker_code, not speaker)
+    // Update data (set speaker_code AND speaker object)
     segment.speaker_code = newSpeakerCode;
-    // Remove old speaker field if it exists
-    if ('speaker' in segment) {
-      delete segment.speaker;
-    }
+    
+    // Map attributes and update speaker object
+    const attrs = this._mapSpeakerAttributes(newSpeakerCode);
+    segment.speaker = {
+      code: newSpeakerCode,
+      speaker_type: attrs.type,
+      speaker_sex: attrs.sex,
+      speaker_mode: attrs.mode,
+      speaker_discourse: attrs.discourse
+    };
 
     // Update UI
     this._updateSpeakerDisplay(this.currentSpeakerSegment, newSpeakerCode);
@@ -800,8 +835,25 @@ export class WordEditor {
       return;
     }
 
-    // Update text content (speaker_code is displayed directly)
-    speakerNameEl.textContent = newSpeakerCode;
+    // Use TranscriptionManager to generate the new content with chips
+    if (this.transcription && typeof this.transcription._createSpeakerName === 'function') {
+        const segment = this.data.segments[segmentIndex];
+        const words = segment ? segment.words : [];
+        
+        // Generate new element structure
+        const newNameEl = this.transcription._createSpeakerName(newSpeakerCode, words, segmentIndex);
+        
+        // Clear existing content
+        speakerNameEl.innerHTML = '';
+        
+        // Move children from new element to existing one
+        while (newNameEl.firstChild) {
+            speakerNameEl.appendChild(newNameEl.firstChild);
+        }
+    } else {
+        // Fallback: Update text content
+        speakerNameEl.textContent = newSpeakerCode;
+    }
     
     // Add modified-speaker class to show it was changed
     speakerNameEl.classList.add('modified-speaker');

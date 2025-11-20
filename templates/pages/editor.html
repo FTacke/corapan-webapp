@@ -5,25 +5,29 @@
 {% block extra_head %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/md3/tokens.css') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/md3/components/transcription-shared.css') }}">
-<link rel="stylesheet" href="{{ url_for('static', filename='css/md3/components/editor-edit.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/md3/components/editor.css') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/md3/components/audio-player.css') }}">
 {% endblock %}
 
 {% block content %}
 <div class="md3-player-page">
-  <!-- Header with File Info -->
-  <div class="md3-player-header">
-    <a href="{{ url_for('editor.overview') }}" class="back-link">
-      <i class="bi bi-chevron-left"></i>
-    </a>
-    <h1 class="document-title">{{ country }}/{{ filename }}</h1>
-  </div>
-
   <!-- Main Container: Transcript + Sidebar -->
   <div class="md3-player-container">
     <!-- Left Column: Transcript -->
     <div class="md3-player-transcript">
+      <!-- Header with File Info (Moved inside transcript column) -->
+      <div class="md3-player-header">
+        <a href="{{ url_for('editor.overview') }}" class="back-link">
+          <i class="bi bi-chevron-left"></i>
+        </a>
+        <h1 class="document-title">{{ country }}/{{ filename }}</h1>
+      </div>
+
       <div id="transcriptionContainer"></div>
+
+      <!-- Audio Player Component (Moved inside transcript column for alignment) -->
+      {% from 'partials/audio-player.html' import render_audio_player %}
+      {{ render_audio_player() }}
     </div>
 
     <!-- Right Column: Sidebar -->
@@ -127,10 +131,6 @@
       </section>
     </aside>
   </div>
-
-  <!-- Audio Player Component -->
-  {% from 'partials/audio-player.html' import render_audio_player %}
-  {{ render_audio_player() }}
 </div>
 
 <!-- Configuration for JavaScript -->

@@ -748,7 +748,12 @@
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  background: var(--md-sys-color-background);
+  background: var(--md-sys-color-surface); /* White background */
+}
+
+/* Force white background on body for Editor Page */
+body.app-shell {
+  background-color: var(--md-sys-color-surface) !important;
 }
 
 /* Player Header */
@@ -759,9 +764,23 @@
   padding: var(--space-4) var(--space-6);
   background: var(--md-sys-color-surface-container);
   border-bottom: 1px solid var(--md-sys-color-outline-variant);
+  box-shadow: var(--elev-1);
+  transition: box-shadow 0.2s cubic-bezier(0.2, 0, 0, 1);
   position: sticky;
-  top: 0; /* Ganz oben, unter Top App Bar */
-  z-index: 998; /* Unter Dropdown (1001) und Avatar (1002), aber über restlichem Content */
+  top: 0; /* Sticky at top of transcript container */
+  z-index: 2;
+  border-radius: var(--radius-md);
+  margin-bottom: var(--space-4); /* Space between header and first turn */
+}
+
+/* Desktop: Narrower and centered transcription */
+@media (min-width: 992px) {
+  #transcriptionContainer,
+  .md3-player-header {
+    width: 85%;
+    margin-left: auto;
+    margin-right: auto;
+  }
 }
 
 .md3-player-header .back-link {
@@ -799,6 +818,7 @@
   margin: 0 auto;
   width: 100%;
   align-items: start; /* Sidebar startet oben */
+  background: var(--md-sys-color-surface); /* White background */
 }
 
 /* Player Sidebar - Fixed beim Scrollen */
@@ -830,6 +850,14 @@
   gap: var(--space-6);
 }
 
+/* Desktop: Narrower and centered transcription */
+@media (min-width: 992px) {
+  #transcriptionContainer {
+    width: 85%;
+    margin: 0 auto;
+  }
+}
+
 /* ============================================
    SPEAKER TURNS - Neue MD3-Struktur
    ============================================ */
@@ -837,13 +865,13 @@
 .md3-speaker-turn {
   padding: var(--space-3);
   border-radius: var(--radius-md);
-  border: 1px solid var(--md-sys-color-outline-variant);
-  background: var(--md-sys-color-surface-container-low); /* Wie tonal-low Card */
+  border: none; /* Angepasst an Player (war 1px solid) */
+  background: transparent; /* Angepasst an Player (war surface-container-low) */
   transition: background 0.15s ease;
 }
 
 .md3-speaker-turn:hover {
-  background: var(--md-sys-color-surface-container);
+  background: var(--md-sys-color-surface-container-lowest); /* Angepasst an Player */
 }
 
 /* Speaker Header - Zeile 1: Edit-Icon | Name | Time */
@@ -859,10 +887,11 @@
 /* Edit Icon (links) */
 .md3-speaker-edit-icon {
   color: var(--md-sys-color-primary);
-  font-size: 0.875rem;
+  font-size: 0.75rem; /* Angepasst an Player (war 0.875rem) */
   cursor: pointer;
   transition: color 0.15s ease;
   flex-shrink: 0;
+  position: relative;
 }
 
 .md3-speaker-edit-icon:hover {
@@ -871,16 +900,14 @@
 
 /* Speaker Name */
 .md3-speaker-name {
-  font-size: 0.875rem;
-  font-weight: 600;
-  font-family: 'Arial Narrow', Arial, sans-serif;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--md-sys-color-primary);
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  flex: 1;
+  font-family: inherit;
+  font-size: inherit;
   cursor: pointer;
   user-select: none;
-  transition: opacity 0.15s ease;
-  flex: 1;
 }
 
 .md3-speaker-name:hover {
@@ -888,49 +915,10 @@
 }
 
 /* Speaker Time (rechts) */
-.md3-speaker-time {
-  font-size: 0.75rem;
-  font-family: 'Consolas', 'Courier New', monospace;
-  color: var(--md-sys-color-on-surface-variant);
-  letter-spacing: 0.05em;
-  font-variant-numeric: tabular-nums;
-  flex-shrink: 0;
-  margin-left: auto;
-}
+/* Inherited from transcription-shared.css */
 
 /* Speaker Text - Zeile 2: Monospace Text mit Word-Highlighting */
-.md3-speaker-text {
-  font-family: 'Consolas', 'Courier New', monospace;
-  font-size: 1rem; /* Größer für Desktop/Tablet (war 0.875rem) */
-  line-height: 1.6;
-  color: var(--md-sys-color-on-surface);
-  word-wrap: break-word;
-}
-
-/* Word Elements - für Highlighting (UNVERÄNDERT) */
-.md3-speaker-text .word {
-  display: inline;
-  cursor: pointer;
-  padding: 0.1rem 0.2rem;
-  border-radius: 2px;
-  transition: background 0.2s ease-out, opacity 0.2s ease-out;
-}
-
-.md3-speaker-text .word:hover {
-  background: var(--md-sys-color-primary-container);
-}
-
-.md3-speaker-text .word.current-word {
-  background: var(--md-sys-color-primary);
-  color: var(--md-sys-color-on-primary);
-  font-weight: 700;
-  padding: 0.2rem 0.4rem;
-  border-radius: var(--radius-sm);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-  transform: scale(1.05);
-  position: relative;
-  z-index: 1;
-}
+/* Styles are inherited from transcription-shared.css */
 
 .md3-speaker-text .word.modified-word {
   background: rgba(76, 175, 80, 0.2); /* Grüner Hintergrund für geänderte Wörter */
@@ -993,19 +981,19 @@
    RESPONSIVE - Player Page
    ============================================ */
 
-/* Tablet: Sidebar unter Transcript */
-@media (max-width: 899px) {
+/* Tablet: Sidebar über Transcript */
+@media (max-width: 1360px) {
   .md3-player-container {
     grid-template-columns: 1fr;
     grid-template-rows: auto auto;
   }
 
   .md3-player-transcript {
-    order: 1;
+    order: 2;
   }
 
   .player-sidebar {
-    order: 2;
+    order: 1;
     position: static; /* Kein Sticky auf Tablet */
     max-height: none;
   }

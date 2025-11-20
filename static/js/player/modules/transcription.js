@@ -17,6 +17,7 @@ export class TranscriptionManager {
     this.isPlaying = false;
     this.animationFrameId = null;
     this.lastActiveGroup = null;
+    this.lastActiveSegmentIndex = null; // Track active segment for coloring
     this.deactivateTimeout = null;
     this.DEACTIVATE_DELAY = 0.35; // Seconds delay for smoother transitions
     
@@ -274,23 +275,120 @@ export class TranscriptionManager {
   }
 
   /**
-   * Create speaker name element
+   * Map speaker code to attributes
+   * @private
+   */
+  _getSpeakerAttributes(code) {
+    const mapping = {
+        'lib-pm':  { type: 'pro', sex: 'm', mode: 'libre', discourse: 'general' },
+        'lib-pf':  { type: 'pro', sex: 'f', mode: 'libre', discourse: 'general' },
+        'lib-om':  { type: 'otro', sex: 'm', mode: 'libre', discourse: 'general' },
+        'lib-of':  { type: 'otro', sex: 'f', mode: 'libre', discourse: 'general' },
+        'lec-pm':  { type: 'pro', sex: 'm', mode: 'lectura', discourse: 'general' },
+        'lec-pf':  { type: 'pro', sex: 'f', mode: 'lectura', discourse: 'general' },
+        'lec-om':  { type: 'otro', sex: 'm', mode: 'lectura', discourse: 'general' },
+        'lec-of':  { type: 'otro', sex: 'f', mode: 'lectura', discourse: 'general' },
+        'pre-pm':  { type: 'pro', sex: 'm', mode: 'pre', discourse: 'general' },
+        'pre-pf':  { type: 'pro', sex: 'f', mode: 'pre', discourse: 'general' },
+        'tie-pm':  { type: 'pro', sex: 'm', mode: 'n/a', discourse: 'tiempo' },
+        'tie-pf':  { type: 'pro', sex: 'f', mode: 'n/a', discourse: 'tiempo' },
+        'traf-pm': { type: 'pro', sex: 'm', mode: 'n/a', discourse: 'tránsito' },
+        'traf-pf': { type: 'pro', sex: 'f', mode: 'n/a', discourse: 'tránsito' },
+        'foreign': { type: 'n/a', sex: 'n/a', mode: 'n/a', discourse: 'foreign' },
+        'none':    { type: '', sex: '', mode: '', discourse: '' }
+    };
+    return mapping[code] || { type: 'otro', sex: '?', mode: '?', discourse: '?' };
+  }
+
+  /**
+   * Create speaker name element with chips
    * @private
    */
   _createSpeakerName(speakerCode, words, segmentIndex) {
-    const nameSpan = document.createElement('span');
-    nameSpan.classList.add('md3-speaker-name');
-    nameSpan.textContent = speakerCode;
-    nameSpan.setAttribute('data-segment-index', segmentIndex); // Für Speaker-Änderungen
+    const nameContainer = document.createElement('div');
+    nameContainer.classList.add('md3-speaker-name');
+    nameContainer.setAttribute('data-segment-index', segmentIndex);
     
-    // Speaker name is always clickable to play segment audio (even in editor mode)
-    nameSpan.style.cursor = 'pointer';
-    nameSpan.addEventListener('click', () => {
+    // Speaker name is always clickable to play segment audio
+    nameContainer.style.cursor = 'pointer';
+    nameContainer.addEventListener('click', () => {
       this._playSegment(words[0].start, words[words.length - 1].end, true);
       console.log(`Speaker: ${speakerCode} Start: ${words[0].start} End: ${words[words.length - 1].end}`);
     });
+
+    const attrs = this._getSpeakerAttributes(speakerCode);
+
+    // Chip 1: Type + Sex
+    if (attrs.type && attrs.sex && attrs.type !== 'n/a') {
+        const chip1 = document.createElement('span');
+        chip1.classList.add('md3-speaker-chip');
+        
+        let typeLabel = attrs.type === 'pro' ? 'Hablante profesional' : 'Hablante no profesional';
+        let sexLabel = attrs.sex === 'm' ? 'masculino' : (attrs.sex === 'f' ? 'femenino' : attrs.sex);
+        
+        chip1.textContent = `${typeLabel}, ${sexLabel}`;
+        
+        // Color variant based on type
+        if (attrs.type === 'pro') {
+            chip1.classList.add('md3-speaker-chip--type-pro');
+            // Add sex class for differentiation
+            if (attrs.sex) {
+                chip1.classList.add(`md3-speaker-chip--sex-${attrs.sex}`);
+            }
+        } else {
+            chip1.classList.add('md3-speaker-chip--type-otro');
+        }
+        nameContainer.appendChild(chip1);
+    } else if (speakerCode === 'foreign') {
+         const chip1 = document.createElement('span');
+         chip1.classList.add('md3-speaker-chip', 'md3-speaker-chip--type-otro');
+         chip1.textContent = 'Foreign / Unknown';
+         nameContainer.appendChild(chip1);
+    }
+
+    // Chip 2: Mode
+    if (attrs.mode && attrs.mode !== 'n/a') {
+        const chip2 = document.createElement('span');
+        chip2.classList.add('md3-speaker-chip', 'md3-speaker-chip--mode');
+        
+        // Add specific class for mode value to handle tonal variations
+        chip2.classList.add(`md3-speaker-chip--mode-${attrs.mode}`);
+        
+        let modeLabel = attrs.mode;
+        if (attrs.mode === 'libre') modeLabel = 'Habla libre';
+        if (attrs.mode === 'pre') modeLabel = 'Habla pregrabada';
+        if (attrs.mode === 'lectura') modeLabel = 'Lectura';
+        
+        chip2.textContent = modeLabel;
+        nameContainer.appendChild(chip2);
+    }
+
+    // Chip 3: Discourse
+    if (attrs.discourse && attrs.discourse !== 'n/a') {
+        const chip3 = document.createElement('span');
+        chip3.classList.add('md3-speaker-chip', 'md3-speaker-chip--discourse');
+        
+        // Add specific class for discourse value
+        chip3.classList.add(`md3-speaker-chip--discourse-${attrs.discourse}`);
+        
+        let discLabel = `Discurso: ${attrs.discourse}`;
+        if (attrs.discourse === 'general') discLabel = 'Discurso: general';
+        if (attrs.discourse === 'traf') discLabel = 'Discurso: tránsito';
+        if (attrs.discourse === 'tie') discLabel = 'Discurso: tiempo';
+        
+        chip3.textContent = discLabel;
+        nameContainer.appendChild(chip3);
+    }
     
-    return nameSpan;
+    // Fallback if no chips (e.g. unknown code)
+    if (nameContainer.children.length === 0) {
+        const chipFallback = document.createElement('span');
+        chipFallback.classList.add('md3-speaker-chip', 'md3-speaker-chip--type-otro');
+        chipFallback.textContent = speakerCode;
+        nameContainer.appendChild(chipFallback);
+    }
+    
+    return nameContainer;
   }
 
   /**
@@ -643,66 +741,99 @@ export class TranscriptionManager {
   updateWordsHighlight() {
     const currentTime = this.audioPlayer.getCurrentTime();
     const allWords = document.querySelectorAll('.word');
-    let currentActiveGroup = null;
     let currentActiveWord = null;
+    let activeSegmentIndex = null;
     
-    // Find currently active word
-    allWords.forEach(word => {
-      const start = parseFloat(word.dataset.start);
-      const end = parseFloat(word.dataset.end);
-      if (currentTime >= start && currentTime <= end) {
-        currentActiveWord = word;
-        currentActiveGroup = word.dataset.groupIndex;
-      }
-    });
-    
-    // Highlight all words in active group
-    if (currentActiveGroup !== null) {
-      // Clear any pending deactivation
-      if (this.deactivateTimeout) {
-        clearTimeout(this.deactivateTimeout);
-        this.deactivateTimeout = null;
-      }
-      
-      allWords.forEach(word => {
-        if (word.dataset.groupIndex === currentActiveGroup) {
-          word.classList.add('playing');
-          
-          // Scroll to currently spoken word (not entire group)
-          if (word === currentActiveWord) {
-            const rect = word.getBoundingClientRect();
-            // Scroll if word is close to bottom of viewport
-            if (window.innerHeight - rect.bottom < 300) {
-              word.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    // 1. Find currently active word and segment
+    // Optimization: We could cache words, but for now we iterate.
+    // We iterate to find the word that matches the current time.
+    for (const word of allWords) {
+        const start = parseFloat(word.dataset.start);
+        const end = parseFloat(word.dataset.end);
+        
+        if (currentTime >= start && currentTime <= end) {
+            currentActiveWord = word;
+            // Extract segment index from groupIndex "seg-grp"
+            // Note: groupIndex is set as `${segmentIndex}-${groupIndex}`
+            const parts = word.dataset.groupIndex.split('-');
+            activeSegmentIndex = parts[0];
+            break;
+        }
+    }
+
+    // 2. Handle Segment Coloring (Past/Current/Future)
+    if (activeSegmentIndex !== null) {
+        // If segment changed, clear the previous one
+        if (this.lastActiveSegmentIndex !== null && this.lastActiveSegmentIndex !== activeSegmentIndex) {
+            const prevSegment = document.querySelector(`.md3-speaker-turn[data-segment-index="${this.lastActiveSegmentIndex}"]`);
+            if (prevSegment) {
+                const prevWords = prevSegment.querySelectorAll('.word');
+                prevWords.forEach(w => w.classList.remove('is-past', 'is-current', 'is-future', 'playing', 'is-active-group-context', 'is-preview-group'));
             }
-          }
-        } else {
-          // Remove playing class from other groups
-          word.classList.remove('playing', 'playing-preview');
         }
-      });
-      
-      // Preview for next group (format: "segmentIndex-groupIndex")
-      const [segIdx, grpIdx] = currentActiveGroup.split('-').map(Number);
-      const nextGroupIndex = `${segIdx}-${grpIdx + 1}`;
-      allWords.forEach(word => {
-        if (word.dataset.groupIndex === nextGroupIndex) {
-          word.classList.add('playing-preview');
+        this.lastActiveSegmentIndex = activeSegmentIndex;
+
+        // Determine current group and next group indices
+        const currentGroupIndex = currentActiveWord ? currentActiveWord.dataset.groupIndex : null;
+        let nextGroupIndex = null;
+        if (currentGroupIndex) {
+            const [segIdx, grpIdx] = currentGroupIndex.split('-').map(Number);
+            nextGroupIndex = `${segIdx}-${grpIdx + 1}`;
         }
-      });
-      
-      this.lastActiveGroup = currentActiveGroup;
-    } else if (this.lastActiveGroup !== null) {
-      // No active word - delayed deactivation for smoother transitions
-      if (!this.deactivateTimeout) {
-        this.deactivateTimeout = setTimeout(() => {
-          allWords.forEach(word => {
-            word.classList.remove('playing', 'playing-preview');
-          });
-          this.lastActiveGroup = null;
-          this.deactivateTimeout = null;
-        }, this.DEACTIVATE_DELAY * 1000);
-      }
+
+        // Update words in current segment
+        const activeSegment = document.querySelector(`.md3-speaker-turn[data-segment-index="${activeSegmentIndex}"]`);
+        if (activeSegment) {
+            const wordsInSegment = activeSegment.querySelectorAll('.word');
+            let foundCurrent = false;
+            
+            wordsInSegment.forEach(word => {
+                // Reset classes first
+                word.classList.remove('is-past', 'is-current', 'is-future', 'playing', 'playing-preview', 'is-active-group-context', 'is-preview-group');
+                
+                // Apply Group Highlighting Logic
+                if (word.dataset.groupIndex === currentGroupIndex && word !== currentActiveWord) {
+                    word.classList.add('is-active-group-context');
+                } else if (word.dataset.groupIndex === nextGroupIndex) {
+                    word.classList.add('is-preview-group');
+                }
+
+                // Apply Past/Current/Future Logic
+                if (word === currentActiveWord) {
+                    word.classList.add('is-current', 'playing');
+                    foundCurrent = true;
+                    
+                    // Scroll logic
+                    const rect = word.getBoundingClientRect();
+                    if (window.innerHeight - rect.bottom < 300) {
+                        word.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }
+                } else if (foundCurrent) {
+                    // After current word -> Future
+                    word.classList.add('is-future');
+                } else {
+                    // Before current word -> Past
+                    word.classList.add('is-past');
+                }
+            });
+        }
+    } else {
+        // No active word (silence or between segments)
+        // Optionally: maintain state of last active segment or clear?
+        // For now, we keep the last state until a new segment becomes active, 
+        // or we could clear if the silence is long.
+        // But to avoid flickering during short pauses, we do nothing here.
+        // If we wanted to clear:
+        /*
+        if (this.lastActiveSegmentIndex !== null) {
+             const prevSegment = document.querySelector(`.md3-speaker-turn[data-segment-index="${this.lastActiveSegmentIndex}"]`);
+             if (prevSegment) {
+                 const prevWords = prevSegment.querySelectorAll('.word');
+                 prevWords.forEach(w => w.classList.remove('is-past', 'is-current', 'is-future', 'playing'));
+             }
+             this.lastActiveSegmentIndex = null;
+        }
+        */
     }
   }
 }

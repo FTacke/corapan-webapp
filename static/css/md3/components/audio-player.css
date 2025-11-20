@@ -38,7 +38,7 @@
   position: fixed;
   bottom: 20px;
   left: 50%;
-  transform: translateX(-50%);
+  transform: translateX(-25%);
   width: 90%;
   max-width: 800px;
   background: rgba(255, 255, 255, 0.95);
@@ -50,6 +50,16 @@
   z-index: 1000;
   padding: 16px 20px;
   box-sizing: border-box;
+}
+
+/* Desktop: Align with transcription container */
+@media (min-width: 992px) {
+  .custom-audio-player {
+    /* Width and position are synchronized with #transcriptionContainer via JS */
+    /* Fallback values if JS fails */
+    width: 60%; 
+    max-width: 900px;
+  }
 }
 
 /* Player Controls Container */
@@ -300,13 +310,13 @@
 }
 
 /* ============================================================================
-   MOBILE STYLES (< 600px)
+   MOBILE & TABLET STYLES (< 840px)
    ============================================================================
-   Brutale Overrides für volle Breite am unteren Bildschirmrand
+   Matches Navigation Drawer Breakpoint (840px)
    ============================================================================ */
 
-@media (max-width: 600px) {
-  /* ALLE Player-Selektoren - NUCLEAR OPTION! */
+@media (max-width: 839px) {
+  /* ALLE Player-Selektoren */
   .custom-audio-player,
   .custom-audio-player.mobile-player,
   .mobile-layout .custom-audio-player,
@@ -326,49 +336,40 @@
     
     /* MARGINS: ALLE auf 0! */
     margin: 0 !important;
-    margin-left: 0 !important;
-    margin-right: 0 !important;
-    margin-top: 0 !important;
-    margin-bottom: 0 !important;
     
-    /* TRANSFORM: KEINE! (kann Breite beeinflussen) */
+    /* TRANSFORM: KEINE! */
     transform: none !important;
     -webkit-transform: none !important;
     
     /* PADDING: Nur innen */
-    padding: 0.5rem !important;
-    padding-left: 0.5rem !important;
-    padding-right: 0.5rem !important;
+    padding: 12px 16px !important;
     
     /* BOX-SIZING: Border-box für echte 100vw */
     box-sizing: border-box !important;
     -webkit-box-sizing: border-box !important;
     
-    /* BACKGROUND: Solid, KEIN Glassmorphism */
-    background: #e8f0f3 !important;
-    background-color: #e8f0f3 !important;
-    backdrop-filter: none !important;
-    -webkit-backdrop-filter: none !important;
+    /* BACKGROUND: Glassmorphism (wie Desktop) */
+    background: rgba(255, 255, 255, 0.95) !important;
+    backdrop-filter: blur(10px) !important;
+    -webkit-backdrop-filter: blur(10px) !important;
     
-    /* BORDER: Nur oben, KEINE Radius */
+    /* BORDER: Nur oben, Radius oben */
     border: none !important;
-    border-top: 2px solid #0a5981 !important;
+    border-top: 1px solid rgba(0, 0, 0, 0.05) !important;
     border-radius: 0 !important;
-    border-top-left-radius: 0 !important;
-    border-top-right-radius: 0 !important;
-    border-bottom-left-radius: 0 !important;
-    border-bottom-right-radius: 0 !important;
+    border-top-left-radius: 16px !important;
+    border-top-right-radius: 16px !important;
     
     /* Z-INDEX: MAXIMAL! */
     z-index: 99999 !important;
     
     /* SHADOW: Stark für Sichtbarkeit */
-    box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.2) !important;
+    box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.15) !important;
     
-    /* HEIGHT: Auto, mindestens 100px (4 Zeilen!) */
-    min-height: 100px !important;
-    max-height: 200px !important;
+    /* HEIGHT: Auto */
     height: auto !important;
+    min-height: auto !important;
+    max-height: none !important;
     
     /* ISOLATION: Eigener Context */
     isolation: isolate !important;
@@ -376,14 +377,14 @@
     /* DISPLAY: Flex */
     display: flex !important;
     flex-direction: column !important;
-    gap: 0.5rem !important;
+    gap: 12px !important;
   }
 
   /* ==========================================================================
-     PLAYER CONTROLS: 4-ZEILEN LAYOUT (BRUTAL OVERRIDE!)
+     PLAYER CONTROLS: CLEANER LAYOUT
      ========================================================================== */
   
-  /* Player Controls Container: FLEX WRAP für 4 Zeilen */
+  /* Player Controls Container */
   .mobile-layout .player-controls,
   body.mobile-layout .custom-audio-player .player-controls,
   .custom-audio-player .player-controls {
@@ -393,177 +394,154 @@
     padding: 0 !important;
     box-sizing: border-box !important;
     
-    /* WICHTIG: Grid für 4 Zeilen! */
-    display: grid !important;
-    grid-template-columns: 1fr !important;
-    grid-template-rows: auto auto auto auto !important;
-    gap: 0.4rem !important;
+    /* Flex Column Layout */
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 12px !important;
   }
   
   /* ZEILE 1: Fortschrittsbalken (player-controls-top) */
   .mobile-layout .player-controls-top,
   .custom-audio-player .player-controls-top {
-    grid-row: 1 !important; /* ERSTE Zeile */
     width: 100% !important;
     display: flex !important;
     align-items: center !important;
     gap: 0 !important;
   }
   
-  /* ZEILE 2-4: player-controls-bottom wird aufgeteilt! */
+  /* ZEILE 2: Controls Bottom (Time, Play, Speed) - FLEX for better spacing on small screens */
   .mobile-layout .player-controls-bottom,
   .custom-audio-player .player-controls-bottom {
-    /* Bottom wird KOMPLETT umgebaut */
-    grid-row: 2 / 5 !important; /* Zeilen 2, 3, 4 */
     width: 100% !important;
-    display: grid !important;
-    grid-template-columns: 1fr !important;
-    grid-template-rows: auto auto auto !important;
-    gap: 0.4rem !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important; /* Distribute space evenly */
+    gap: 8px !important;
   }
   
-  /* ZEILE 2: Zeit (innerhalb von player-controls-bottom) */
+  /* Time Display (Left) */
   .mobile-layout .time-display,
   .custom-audio-player .time-display {
-    grid-row: 1 !important; /* Erste Zeile in Bottom = Gesamt Zeile 2 */
-    width: 100% !important;
-    text-align: center !important;
-    font-size: 0.7rem !important;
-    color: #777 !important;
-    font-family: 'Consolas, Inconsolata', monospace !important;
+    text-align: left !important;
+    font-size: 0.75rem !important;
+    color: #555 !important;
+    font-family: 'Consolas', monospace !important;
     margin: 0 !important;
     padding: 0 !important;
+    min-width: 60px !important; /* Ensure minimum width */
   }
   
-  /* ZEILE 3: Play-Container (innerhalb von player-controls-bottom) */
-  .mobile-layout .play-container,
-  .custom-audio-player .play-container {
-    grid-row: 2 !important; /* Zweite Zeile in Bottom = Gesamt Zeile 3 */
-    width: 100% !important;
-    display: flex !important;
-    justify-content: center !important;
-    align-items: center !important;
-    gap: 0.5rem !important;
-  }
-  
-  /* ZEILE 4: Speed-Control (innerhalb von player-controls-bottom) */
-  .mobile-layout .speed-control-container,
-  .custom-audio-player .speed-control-container {
-    grid-row: 3 !important; /* Dritte Zeile in Bottom = Gesamt Zeile 4 */
-    width: 100% !important;
-    display: flex !important;
-    justify-content: center !important;
-    align-items: center !important;
-    gap: 0.5rem !important;
-  }
-
-  /* Play Container - zentriert */
+  /* Play Container (Center) */
   .mobile-layout .play-container,
   .custom-audio-player .play-container {
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
-    gap: 0.5rem !important;
+    gap: 16px !important;
+    width: auto !important;
+    flex: 1 !important; /* Take available space */
   }
   
-  /* Play button (kompakter) */
+  /* Play button */
   .mobile-layout .play-icon,
   .custom-audio-player .play-icon {
-    font-size: 2em !important;
-    width: 40px !important;
-    height: 40px !important;
-    flex-shrink: 0 !important;
-    margin: 0 !important;
-  }
-
-  /* Progress bar container - 100% Breite */
-  .mobile-layout .progress-container,
-  .custom-audio-player .progress-container {
-    flex: 1 !important;
-    width: 100% !important;
-    height: 3px !important;
-    margin: 0 !important;
-    padding: 0 !important;
-  }
-
-  .mobile-layout #progressBar,
-  .custom-audio-player #progressBar,
-  .custom-audio-player .progress-bar {
-    width: 100% !important;
-    height: 3px !important;
+    font-size: 2.5rem !important;
+    width: auto !important;
+    height: auto !important;
+    color: var(--md-sys-color-primary) !important;
     cursor: pointer !important;
-    margin: 0 !important;
   }
 
-  /* Skip Controls (kompakter) */
+  /* Skip Controls */
   .mobile-layout .skip-control,
   .custom-audio-player .skip-control {
     display: flex !important;
     flex-direction: column !important;
     align-items: center !important;
-    gap: 0.15rem !important;
+    gap: 2px !important;
     cursor: pointer !important;
   }
   
   .mobile-layout .skip-icon,
   .custom-audio-player .skip-icon {
-    font-size: 1.2rem !important;
-    color: #0a5981 !important;
+    font-size: 1.25rem !important;
+    color: var(--md-sys-color-primary) !important;
   }
   
   .mobile-layout .skip-label,
   .custom-audio-player .skip-label {
-    font-size: 0.65rem !important;
-    color: #777 !important;
+    font-size: 0.7rem !important;
+    color: var(--md-sys-color-on-surface-variant) !important;
   }
 
-  /* Volume Control: KOMPLETT AUSBLENDEN auf Mobile */
+  /* Volume Control: Hide on Mobile/Tablet */
   .mobile-layout .volume-control-container,
   .custom-audio-player .volume-control-container {
-    display: none !important; /* NICHT SICHTBAR */
+    display: none !important;
   }
 
-  /* Speed Control Slider kompakter */
+  /* Speed Control Container (Right) */
+  .mobile-layout .speed-control-container,
+  .custom-audio-player .speed-control-container {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: flex-end !important; /* Align to right */
+    gap: 4px !important;
+    min-width: auto !important;
+  }
+
+  /* Speed Control Slider */
   .mobile-layout .speed-control,
   .mobile-layout #speedControlSlider,
   .custom-audio-player #speedControlSlider,
   .custom-audio-player .speed-control {
-    flex: 1 !important;
-    max-width: 150px !important; /* Etwas breiter */
+    width: 60px !important;
+    max-width: 60px !important;
   }
 
   .mobile-layout .speed-display,
   .custom-audio-player .speed-display {
     font-size: 0.75rem !important;
-    min-width: 36px !important;
-    text-align: center !important;
+    min-width: 32px !important;
+    text-align: right !important;
+    color: var(--md-sys-color-on-surface-variant) !important;
   }
 
   .mobile-layout .speed-icon,
   .custom-audio-player .speed-icon {
-    font-size: 0.875rem !important;
-    color: #777 !important;
+    font-size: 1rem !important;
+    color: var(--md-sys-color-on-surface-variant) !important;
   }
 
   /* ==========================================================================
-     SPACING & PADDING (Kompakter!)
+     SPACING & PADDING
      ========================================================================== */
   
   /* Add bottom padding to content to avoid player overlap */
   .mobile-layout .player-transcript,
   .mobile-layout .md3-player-transcript {
-    padding-bottom: 120px !important; /* 100px player + 20px gap */
+    padding-bottom: 140px !important;
   }
 }
 
 /* ============================================================================
-   TABLET BREAKPOINT (601px - 900px)
+   INTERMEDIATE DESKTOP STYLES (840px - 1360px)
+   ============================================================================
+   Optimize Desktop Player for smaller screens where it might be too narrow
    ============================================================================ */
-
-@media (min-width: 601px) and (max-width: 900px) {
-  /* Player optimizations */
+@media (min-width: 840px) and (max-width: 1360px) {
   .custom-audio-player {
-    max-width: 600px;
+    /* Increase width to use more available space */
+    max-width: 1000px !important; /* Allow it to grow wider */
+  }
+  
+  /* Ensure controls fit */
+  .volume-control-container {
+    width: 100px; /* Reduce volume slider width */
+  }
+  
+  .volume-control {
+    width: 60px;
   }
 }
 

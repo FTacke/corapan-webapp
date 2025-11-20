@@ -1,6 +1,6 @@
 /* ============================================
    CO.RA.PAN Player Page - MD3 Design System
-   Übernommen von editor-edit.css
+   Übernommen von editor.css
    
    Layout, Speaker-Turns, Sidebar-Cards
    ============================================ */
@@ -14,7 +14,12 @@
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  background: var(--md-sys-color-background);
+  background: var(--md-sys-color-surface); /* White background */
+}
+
+/* Force white background on body for Player Page */
+body.app-shell {
+  background-color: var(--md-sys-color-surface) !important;
 }
 
 /* Player Header */
@@ -25,11 +30,26 @@
   padding: var(--space-4) var(--space-6);
   background: var(--md-sys-color-surface-container);
   border-bottom: 1px solid var(--md-sys-color-outline-variant);
+  box-shadow: var(--elev-1);
+  transition: box-shadow 0.2s cubic-bezier(0.2, 0, 0, 1);
   position: sticky;
-  top: 0; /* Ganz oben, unter Top App Bar */
-  z-index: 998; /* Unter Dropdown (1001) und Avatar (1002), aber über restlichem Content */
+  top: 0; /* Sticky at top of transcript container */
+  z-index: 2;
+  border-radius: var(--radius-md);
+  margin-bottom: var(--space-4); /* Space between header and first turn */
 }
 
+/* Desktop: Narrower and centered transcription */
+@media (min-width: 992px) {
+  #transcriptionContainer,
+  .md3-player-header {
+    width: 85%;
+    margin-left: auto;
+    margin-right: auto;
+  }
+}
+
+/* Back Link in Header */
 .md3-player-header .back-link {
   color: var(--md-sys-color-primary);
   font-size: 1.5rem;
@@ -43,6 +63,7 @@
   color: var(--md-sys-color-on-surface);
 }
 
+/* Document Title in Header */
 .md3-player-header .document-title {
   flex: 1;
   font-size: 1.125rem;
@@ -65,6 +86,7 @@
   margin: 0 auto;
   width: 100%;
   align-items: start; /* Sidebar startet oben */
+  background: var(--md-sys-color-surface); /* White background */
 }
 
 /* Player Sidebar - Fixed beim Scrollen */
@@ -72,7 +94,7 @@
   position: sticky;
   top: 0; /* Oben bündig mit Transcript */
   max-height: 100vh;
-  overflow-y: auto;
+  overflow-y: none;
   background: transparent; /* Kein weißer Hintergrund */
   border: none; /* Keine Border */
   padding: 0;
@@ -94,6 +116,14 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-6);
+}
+
+/* Desktop: Narrower and centered transcription */
+@media (min-width: 992px) {
+  #transcriptionContainer {
+    width: 85%;
+    margin: 0 auto;
+  }
 }
 
 /* ============================================
@@ -571,21 +601,27 @@
    RESPONSIVE - Player Page
    ============================================ */
 
-/* Tablet: Sidebar unter Transcript */
-@media (max-width: 899px) {
+/* Tablet: Sidebar über Transcript */
+@media (max-width: 1360px) {
   .md3-player-container {
     grid-template-columns: 1fr;
     grid-template-rows: auto auto;
   }
 
   .md3-player-transcript {
-    order: 1;
+    order: 2;
   }
 
   .player-sidebar {
-    order: 2;
+    order: 1;
     position: static; /* Kein Sticky auf Tablet */
     max-height: none;
+  }
+
+  /* Hide specific sidebar cards on smaller displays (Tablet/Mobile) */
+  .card-shortcuts,
+  .card-export {
+    display: none;
   }
 }
 

@@ -96,7 +96,7 @@ def edit_file():
     audio_path = f"{country}/{mp3_filename}"
     
     return render_template(
-        "pages/editor_edit.html",
+        "pages/editor.html",
         transcript_file=file_path,
         audio_file=audio_path,
         country=country,

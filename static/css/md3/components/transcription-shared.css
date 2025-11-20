@@ -16,12 +16,13 @@
 .md3-speaker-turn {
   padding: var(--space-3);
   border-radius: var(--radius-md);
-  border: 1px solid var(--md-sys-color-outline-variant);
+  border: none; /* No border as requested */
   transition: background 0.15s ease;
 }
 
 .md3-speaker-turn:hover {
-  background: var(--md-sys-color-surface-container);
+  /* Subtle hover effect as requested */
+  background: var(--md-sys-color-surface-container-lowest); 
 }
 
 /* Speaker Header - Row: Edit-Icon | Name | Time */
@@ -37,7 +38,7 @@
 /* Edit Icon (left) */
 .md3-speaker-edit-icon {
   color: var(--md-sys-color-primary);
-  font-size: 0.875rem;
+  font-size: 0.75rem; /* Smaller icon */
   cursor: pointer;
   transition: color 0.15s ease;
   flex-shrink: 0;
@@ -48,28 +49,102 @@
   color: var(--md-sys-color-on-surface);
 }
 
-/* Speaker Name (center) */
+/* Speaker Name (center) - Container for Chips */
 .md3-speaker-name {
-  font-size: 0.875rem;
-  font-weight: 600;
-  font-family: 'Arial Narrow', Arial, sans-serif;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--md-sys-color-primary);
-  cursor: pointer;
-  user-select: none;
-  transition: opacity 0.15s ease;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
   flex: 1;
+  /* Reset previous text styles as it now contains chips */
+  font-family: inherit;
+  font-size: inherit;
+  font-weight: normal;
+  letter-spacing: normal;
+  text-transform: none;
+  color: inherit;
 }
 
-.md3-speaker-name:hover {
-  opacity: 0.7;
+/* MD3 Speaker Chips */
+.md3-speaker-chip {
+  display: inline-flex;
+  align-items: center;
+  height: 20px; /* Smaller height */
+  padding: 0 6px; /* Smaller padding */
+  border-radius: 6px; /* Smaller radius */
+  font-family: 'Roboto', sans-serif; /* MD3 default */
+  font-size: 0.65rem; /* Smaller font size */
+  font-weight: 500;
+  line-height: 1;
+  white-space: nowrap;
+  user-select: none;
+  border: 1px solid transparent;
+}
+
+/* Chip 1: Type + Sex (Primary Family - Blueish) */
+.md3-speaker-chip--type-pro {
+  background-color: var(--md-sys-color-primary);
+  color: var(--md-sys-color-on-primary);
+}
+
+/* Male Professional: Standard Primary (Blue) */
+.md3-speaker-chip--type-pro.md3-speaker-chip--sex-m {
+  background-color: var(--md-sys-color-primary);
+  color: var(--md-sys-color-on-primary);
+}
+
+/* Female Professional: Custom Vibrant Pink/Purple */
+.md3-speaker-chip--type-pro.md3-speaker-chip--sex-f {
+  background-color: #E91E63; /* Pink 500 */
+  color: #FFFFFF;
+}
+
+.md3-speaker-chip--type-otro {
+  background-color: var(--md-sys-color-primary-container);
+  color: var(--md-sys-color-on-primary-container);
+}
+
+/* Chip 2: Mode (Tertiary Family - Pink/Red-ish) */
+.md3-speaker-chip--mode-lectura {
+  background-color: var(--md-sys-color-tertiary);
+  color: var(--md-sys-color-on-tertiary);
+}
+
+.md3-speaker-chip--mode-libre {
+  background-color: var(--md-sys-color-tertiary-container);
+  color: var(--md-sys-color-on-tertiary-container);
+}
+
+.md3-speaker-chip--mode-pre {
+  /* Very light tertiary tint */
+  background-color: color-mix(in srgb, var(--md-sys-color-tertiary-container), var(--md-sys-color-surface) 60%);
+  color: var(--md-sys-color-on-tertiary-container);
+  border: 1px solid var(--md-sys-color-outline-variant);
+}
+
+/* Chip 3: Discourse (Secondary Family - Teal/Cyan-ish) */
+.md3-speaker-chip--discourse-tie,
+.md3-speaker-chip--discourse-tiempo {
+  /* Distinct color for Time (Tiempo) - Error Container (Soft Red/Pink) */
+  background-color: var(--md-sys-color-error-container);
+  color: var(--md-sys-color-on-error-container);
+}
+
+.md3-speaker-chip--discourse-traf {
+  background-color: var(--md-sys-color-secondary-container);
+  color: var(--md-sys-color-on-secondary-container);
+}
+
+.md3-speaker-chip--discourse-general {
+  /* Very light secondary tint */
+  background-color: color-mix(in srgb, var(--md-sys-color-secondary-container), var(--md-sys-color-surface) 60%);
+  color: var(--md-sys-color-on-secondary-container);
+  border: 1px solid var(--md-sys-color-outline-variant);
 }
 
 /* Speaker Time (right) */
 .md3-speaker-time {
-  font-size: 0.75rem;
-  font-family: 'Consolas', 'Courier New', monospace;
+  font-size: 0.7rem; /* Significantly smaller */
+  font-family: 'Roboto', sans-serif; /* MD3 default */
   color: var(--md-sys-color-on-surface-variant);
   letter-spacing: 0.05em;
   font-variant-numeric: tabular-nums;
@@ -80,8 +155,8 @@
 /* Speaker Text - Monospace Text with Word Elements */
 .md3-speaker-text {
   font-family: 'Consolas', 'Courier New', monospace;
-  font-size: 1rem;
-  line-height: 1.6;
+  font-size: 0.875rem; /* approx 14px */
+  line-height: 1.5;
   color: var(--md-sys-color-on-surface);
   word-wrap: break-word;
 }
@@ -105,16 +180,42 @@
 }
 
 /* Currently Playing Word - Bright Yellow Highlight */
-.md3-speaker-text .word.playing {
+.md3-speaker-text .word.playing,
+.md3-speaker-text .word.is-current {
   background: #ffeb3b; /* Material Yellow 500 */
-  color: #000000;
+  color: #000000 !important; /* Force black text for contrast on yellow */
   font-weight: 700;
   padding: 0.1rem 0.2rem;
   border-radius: 0; /* Sharp corners for emphasis */
   box-sizing: border-box;
+  opacity: 1;
 }
 
-/* Preview Next Word Group */
+/* Past Words - Normal Text Color */
+.md3-speaker-text .word.is-past {
+  color: var(--md-sys-color-on-surface);
+  opacity: 1;
+}
+
+/* Future Words - Dimmed/Greyed Out */
+.md3-speaker-text .word.is-future {
+  color: var(--md-sys-color-on-surface-variant); /* Darker than outline-variant */
+  opacity: 0.6; /* Adjust opacity to make it distinct but visible */
+}
+
+/* Active Group Context (Words in same group as current word) */
+.md3-speaker-text .word.is-active-group-context {
+  background-color: color-mix(in srgb, var(--md-sys-color-primary-container), transparent 70%);
+  border-radius: 2px;
+}
+
+/* Preview Next Group */
+.md3-speaker-text .word.is-preview-group {
+  background-color: color-mix(in srgb, var(--md-sys-color-surface-variant), transparent 50%);
+  border-radius: 2px;
+}
+
+/* Preview Next Word Group - Deprecated/Overridden by is-future but kept for safety */
 .md3-speaker-text .word.playing-preview {
   background: var(--md-sys-color-primary-container);
   opacity: 0.7;
@@ -165,23 +266,25 @@
 /* Word in Edit Mode */
 .md3-speaker-text .word.editing {
   background: #ffeb3b !important;
-  color: #000000;
+  color: #000000 !important; /* Ensure text is black */
   font-weight: 700;
   padding: 0.2rem 0.4rem;
   border-radius: var(--radius-sm);
   border: 2px solid #f57f17;
   outline: none;
   box-sizing: border-box;
+  opacity: 1 !important; /* Override any opacity from is-future */
 }
 
 /* Word Modified (Changed by Editor) */
 .md3-speaker-text .word.modified-word {
   background: #81c784 !important; /* Green highlight for changes */
-  color: #000000;
+  color: #000000 !important; /* Ensure text is black */
   font-weight: 600;
   padding: 0.1rem 0.2rem;
   border-radius: 2px;
   box-sizing: border-box;
+  opacity: 1 !important; /* Override any opacity from is-future */
 }
 
 /* Word Modified with ::before indicator */

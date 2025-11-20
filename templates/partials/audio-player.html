@@ -59,4 +59,54 @@
 <audio id="audioPlayer" preload="auto" style="display: none;">
   Your browser does not support the audio element.
 </audio>
+
+<script>
+  /**
+   * Synchronize Audio Player position and width with #transcriptionContainer
+   * This ensures the floating player aligns perfectly with the text content on desktop.
+   */
+  document.addEventListener('DOMContentLoaded', () => {
+    const player = document.querySelector('.custom-audio-player');
+    const target = document.getElementById('transcriptionContainer');
+    
+    if (!player || !target) return;
+    
+    function alignPlayer() {
+      // Only align on desktop (match the media query min-width: 992px)
+      if (window.innerWidth >= 992) {
+        const rect = target.getBoundingClientRect();
+        
+        // Apply target dimensions and position to the fixed player
+        player.style.left = rect.left + 'px';
+        player.style.width = rect.width + 'px';
+        
+        // Reset centering transforms and constraints
+        player.style.transform = 'none';
+        player.style.maxWidth = 'none'; 
+      } else {
+        // Reset to CSS defaults for mobile (centered, 90% width)
+        player.style.left = '';
+        player.style.width = '';
+        player.style.transform = '';
+        player.style.maxWidth = '';
+      }
+    }
+    
+    // Initial alignment
+    alignPlayer();
+    
+    // Update on resize
+    window.addEventListener('resize', alignPlayer);
+    
+    // Update periodically in case of layout shifts (e.g. sidebar toggle)
+    // Using a ResizeObserver on the target is more robust
+    if (window.ResizeObserver) {
+      const resizeObserver = new ResizeObserver(() => {
+        alignPlayer();
+      });
+      resizeObserver.observe(target);
+      resizeObserver.observe(document.body); // Check for general layout changes
+    }
+  });
+</script>
 {% endmacro %}
