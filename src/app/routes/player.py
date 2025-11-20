@@ -66,6 +66,7 @@ def player_page():
         transcription=transcription,
         audio=audio,
         token_id=token_id or "",
+        page_name="player"
     )
     
     # Add cache control headers to prevent serving cached "logged out" page

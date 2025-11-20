@@ -586,4 +586,28 @@ html:not([data-anim-ready="1"]) .md3-navigation-drawer__chevron {
   --drawer-transition-easing: cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+/* ============================================
+   Drawer Slide-In Animation (triggered via JS)
+   ============================================ */
+
+@keyframes drawerSlideIn {
+  from { 
+    transform: translateX(-100%);
+    opacity: 0;
+  }
+  to { 
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.md3-navigation-drawer--standard.pending-slide-in {
+  transform: translateX(-100%);
+  opacity: 0;
+}
+
+.md3-navigation-drawer--standard.animate-slide-in {
+  animation: drawerSlideIn 0.6s cubic-bezier(0.2, 0, 0, 1) forwards;
+}
+
 

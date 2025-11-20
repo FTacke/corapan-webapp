@@ -290,10 +290,10 @@ export class TranscriptionManager {
         'lec-of':  { type: 'otro', sex: 'f', mode: 'lectura', discourse: 'general' },
         'pre-pm':  { type: 'pro', sex: 'm', mode: 'pre', discourse: 'general' },
         'pre-pf':  { type: 'pro', sex: 'f', mode: 'pre', discourse: 'general' },
-        'tie-pm':  { type: 'pro', sex: 'm', mode: 'n/a', discourse: 'tiempo' },
-        'tie-pf':  { type: 'pro', sex: 'f', mode: 'n/a', discourse: 'tiempo' },
-        'traf-pm': { type: 'pro', sex: 'm', mode: 'n/a', discourse: 'tránsito' },
-        'traf-pf': { type: 'pro', sex: 'f', mode: 'n/a', discourse: 'tránsito' },
+        'tie-pm':  { type: 'pro', sex: 'm', mode: 'n/a', discourse: 'tie' },
+        'tie-pf':  { type: 'pro', sex: 'f', mode: 'n/a', discourse: 'tie' },
+        'traf-pm': { type: 'pro', sex: 'm', mode: 'n/a', discourse: 'traf' },
+        'traf-pf': { type: 'pro', sex: 'f', mode: 'n/a', discourse: 'traf' },
         'foreign': { type: 'n/a', sex: 'n/a', mode: 'n/a', discourse: 'foreign' },
         'none':    { type: '', sex: '', mode: '', discourse: '' }
     };
@@ -331,12 +331,13 @@ export class TranscriptionManager {
         // Color variant based on type
         if (attrs.type === 'pro') {
             chip1.classList.add('md3-speaker-chip--type-pro');
-            // Add sex class for differentiation
-            if (attrs.sex) {
-                chip1.classList.add(`md3-speaker-chip--sex-${attrs.sex}`);
-            }
         } else {
             chip1.classList.add('md3-speaker-chip--type-otro');
+        }
+
+        // Add sex class for differentiation
+        if (attrs.sex) {
+            chip1.classList.add(`md3-speaker-chip--sex-${attrs.sex}`);
         }
         nameContainer.appendChild(chip1);
     } else if (speakerCode === 'foreign') {

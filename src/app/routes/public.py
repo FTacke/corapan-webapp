@@ -21,7 +21,7 @@ def track_visits():
 @blueprint.get("/")
 def landing_page():
     """Render the landing page with embedded quick search."""
-    return render_template("pages/index.html")
+    return render_template("pages/index.html", page_name="index")
 
 
 @blueprint.get("/health")

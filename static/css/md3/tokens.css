@@ -74,6 +74,97 @@
   
   /* Typography helpers */
   --md-typography-heading-accent: var(--md-sys-color-primary);
+
+  /* Extended Colors (Light Mode) */
+  --md-sys-color-success: #006e1c;
+  --md-sys-color-on-success: #ffffff;
+  --md-sys-color-success-container: #94f990;
+  --md-sys-color-on-success-container: #002204;
+
+  --md-sys-color-warning: #7a5900;
+  --md-sys-color-on-warning: #ffffff;
+  --md-sys-color-warning-container: #ffdea3;
+  --md-sys-color-on-warning-container: #261900;
+
+  --md-sys-color-info: #006874;
+  --md-sys-color-on-info: #ffffff;
+  --md-sys-color-info-container: #97f0ff;
+  --md-sys-color-on-info-container: #001f24;
+
+  --md-sys-color-neutral: #5e5e5e;
+  --md-sys-color-on-neutral: #ffffff;
+  --md-sys-color-neutral-container: #e2e2e2;
+  --md-sys-color-on-neutral-container: #1b1b1b;
+
+  --md-sys-color-rose: #9c4146;
+  --md-sys-color-on-rose: #ffffff;
+  --md-sys-color-rose-container: #ffdad9;
+  --md-sys-color-on-rose-container: #40000a;
+
+  --md-sys-color-orange: #8b5000;
+  --md-sys-color-on-orange: #ffffff;
+  --md-sys-color-orange-container: #ffdcbe;
+  --md-sys-color-on-orange-container: #2c1600;
+
+  --md-sys-color-lime: #566500;
+  --md-sys-color-on-lime: #ffffff;
+  --md-sys-color-lime-container: #d8ed7c;
+  --md-sys-color-on-lime-container: #191e00;
+
+  --md-sys-color-cyan: #006876;
+  --md-sys-color-on-cyan: #ffffff;
+  --md-sys-color-cyan-container: #a6eeff;
+  --md-sys-color-on-cyan-container: #001f25;
+
+  --md-sys-color-violet: #7d4e7d;
+  --md-sys-color-on-violet: #ffffff;
+  --md-sys-color-violet-container: #ffd7f9;
+  --md-sys-color-on-violet-container: #320936;
+
+  --md-sys-color-purple: #7d4c9e;
+  --md-sys-color-on-purple: #ffffff;
+  --md-sys-color-purple-container: #f2daff;
+  --md-sys-color-on-purple-container: #2e004e;
+
+  --md-sys-color-teal: #006a60;
+  --md-sys-color-on-teal: #ffffff;
+  --md-sys-color-teal-container: #74f8e5;
+  --md-sys-color-on-teal-container: #00201c;
+
+  --md-sys-color-brown: #86533e;
+  --md-sys-color-on-brown: #ffffff;
+  --md-sys-color-brown-container: #ffdbd0;
+  --md-sys-color-on-brown-container: #361206;
+
+  --md-sys-color-indigo: #3F51B5;
+  --md-sys-color-on-indigo: #ffffff;
+  --md-sys-color-indigo-container: #E8EAF6;
+  --md-sys-color-on-indigo-container: #1A237E;
+
+  --md-sys-color-pink: #E91E63;
+  --md-sys-color-on-pink: #ffffff;
+  --md-sys-color-pink-container: #FCE4EC;
+  --md-sys-color-on-pink-container: #880E4F;
+
+  --md-sys-color-gold: #FFD700;
+  --md-sys-color-on-gold: #000000;
+  --md-sys-color-gold-container: #FFF9C4;
+  --md-sys-color-on-gold-container: #332b00;
+
+  --md-sys-color-mint: #00E676;
+  --md-sys-color-on-mint: #000000;
+  --md-sys-color-mint-container: #B9F6CA;
+  --md-sys-color-on-mint-container: #00331a;
+
+  --md-sys-color-slate: #607D8B;
+  --md-sys-color-on-slate: #ffffff;
+  --md-sys-color-slate-container: #CFD8DC;
+  --md-sys-color-on-slate-container: #263238;
+
+  --md-sys-color-crimson: #DC143C;
+  --md-sys-color-on-crimson: #ffffff;
+  --md-sys-color-crimson-container: #FFCDD2;
+  --md-sys-color-on-crimson-container: #4a000e;
 }
 
 /* Fallback für Browser ohne OKLab/color-mix Unterstützung */
@@ -143,4 +234,95 @@
   /* Inverse surface (dark → light) */
   --md-sys-color-inverse-surface: #F4EFF4;
   --md-sys-color-inverse-on-surface: #313033;
+
+  /* Extended Colors (Dark Mode) */
+  --md-sys-color-success: #78dc77;
+  --md-sys-color-on-success: #00390a;
+  --md-sys-color-success-container: #005313;
+  --md-sys-color-on-success-container: #94f990;
+
+  --md-sys-color-warning: #fbc02d;
+  --md-sys-color-on-warning: #412d00;
+  --md-sys-color-warning-container: #5d4200;
+  --md-sys-color-on-warning-container: #ffdea3;
+
+  --md-sys-color-info: #4fd8eb;
+  --md-sys-color-on-info: #00363d;
+  --md-sys-color-info-container: #004f58;
+  --md-sys-color-on-info-container: #97f0ff;
+
+  --md-sys-color-neutral: #c6c6c6;
+  --md-sys-color-on-neutral: #303030;
+  --md-sys-color-neutral-container: #474747;
+  --md-sys-color-on-neutral-container: #e2e2e2;
+
+  --md-sys-color-rose: #ffb3b6;
+  --md-sys-color-on-rose: #5f131c;
+  --md-sys-color-rose-container: #7e2a30;
+  --md-sys-color-on-rose-container: #ffdad9;
+
+  --md-sys-color-orange: #ffb870;
+  --md-sys-color-on-orange: #4a2800;
+  --md-sys-color-orange-container: #6a3b00;
+  --md-sys-color-on-orange-container: #ffdcbe;
+
+  --md-sys-color-lime: #bcd063;
+  --md-sys-color-on-lime: #2c3400;
+  --md-sys-color-lime-container: #404c00;
+  --md-sys-color-on-lime-container: #d8ed7c;
+
+  --md-sys-color-cyan: #83d2e3;
+  --md-sys-color-on-cyan: #00363d;
+  --md-sys-color-cyan-container: #004f58;
+  --md-sys-color-on-cyan-container: #a6eeff;
+
+  --md-sys-color-violet: #edb7ec;
+  --md-sys-color-on-violet: #4a204c;
+  --md-sys-color-violet-container: #633664;
+  --md-sys-color-on-violet-container: #ffd7f9;
+
+  --md-sys-color-purple: #e1b6ff;
+  --md-sys-color-on-purple: #4c166c;
+  --md-sys-color-purple-container: #643284;
+  --md-sys-color-on-purple-container: #f2daff;
+
+  --md-sys-color-teal: #53dbca;
+  --md-sys-color-on-teal: #003731;
+  --md-sys-color-teal-container: #005048;
+  --md-sys-color-on-teal-container: #74f8e5;
+
+  --md-sys-color-brown: #ffb59d;
+  --md-sys-color-on-brown: #502414;
+  --md-sys-color-brown-container: #6b3b28;
+  --md-sys-color-on-brown-container: #ffdbd0;
+
+  --md-sys-color-indigo: #7986CB;
+  --md-sys-color-on-indigo: #000000;
+  --md-sys-color-indigo-container: #283593;
+  --md-sys-color-on-indigo-container: #E8EAF6;
+
+  --md-sys-color-pink: #F06292;
+  --md-sys-color-on-pink: #000000;
+  --md-sys-color-pink-container: #880E4F;
+  --md-sys-color-on-pink-container: #FCE4EC;
+
+  --md-sys-color-gold: #FFF176;
+  --md-sys-color-on-gold: #000000;
+  --md-sys-color-gold-container: #F57F17;
+  --md-sys-color-on-gold-container: #FFF9C4;
+
+  --md-sys-color-mint: #69F0AE;
+  --md-sys-color-on-mint: #000000;
+  --md-sys-color-mint-container: #004D40;
+  --md-sys-color-on-mint-container: #B9F6CA;
+
+  --md-sys-color-slate: #90A4AE;
+  --md-sys-color-on-slate: #000000;
+  --md-sys-color-slate-container: #37474F;
+  --md-sys-color-on-slate-container: #CFD8DC;
+
+  --md-sys-color-crimson: #EF5350;
+  --md-sys-color-on-crimson: #000000;
+  --md-sys-color-crimson-container: #B71C1C;
+  --md-sys-color-on-crimson-container: #FFCDD2;
 }

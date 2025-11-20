@@ -108,4 +108,28 @@
   margin-top: auto;
 }
 
+/* ============================================
+   Index Page Specific Overrides
+   ============================================ */
+
+/* Hide Hamburger Menu on Index Page */
+body[data-page="index"] .md3-top-app-bar__navigation-icon {
+  display: none !important;
+}
+
+/* Hide Standard Drawer on Index Page (Desktop) */
+body[data-page="index"] #navigation-drawer {
+  display: none !important;
+}
+
+/* Adjust Grid Layout on Index Page (Desktop) */
+@media (min-width: 840px) {
+  body[data-page="index"].app-shell {
+    grid-template-areas:
+      "main"
+      "footer" !important;
+    grid-template-columns: 1fr !important;
+  }
+}
+
 

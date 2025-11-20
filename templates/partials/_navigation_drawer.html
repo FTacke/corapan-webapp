@@ -280,3 +280,17 @@
   </nav>
 </aside>
 
+{# Inline Script to prevent FOUC (Flash of Un-animated Content) #}
+<script>
+  (function() {
+    try {
+      if (new URLSearchParams(window.location.search).get('drawer_animate') === '1') {
+        var drawer = document.getElementById('navigation-drawer-standard');
+        if (drawer) {
+          drawer.classList.add('pending-slide-in');
+        }
+      }
+    } catch (e) { console.error(e); }
+  })();
+</script>
+

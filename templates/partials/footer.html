@@ -19,8 +19,8 @@
     <!-- Navigation -->
     <nav class="md3-footer__nav md3-body-small" aria-label="Rechtliches">
       <ul class="md3-footer__list">
-        <li><a href="{{ url_for('public.impressum_page') }}">Impressum</a></li>
-        <li><a href="{{ url_for('public.privacy_page') }}">Datenschutz</a></li>
+        <li><a href="{{ url_for('public.impressum_page', drawer_animate=1 if page_name == 'index' else None) }}">Impressum</a></li>
+        <li><a href="{{ url_for('public.privacy_page', drawer_animate=1 if page_name == 'index' else None) }}">Datenschutz</a></li>
       </ul>
     </nav>
 

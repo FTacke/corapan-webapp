@@ -674,3 +674,25 @@ document.addEventListener('DOMContentLoaded', initMobileCollapsibles);
 
 // Run on page load - wait for DOM to be fully loaded
 document.addEventListener('DOMContentLoaded', markActiveNavLink);
+
+// ============================================
+// Drawer Animation Handler (from Index Page)
+// ============================================
+document.addEventListener('DOMContentLoaded', () => {
+  const urlParams = new URLSearchParams(window.location.search);
+  if (urlParams.get('drawer_animate') === '1') {
+    const drawer = document.querySelector('.md3-navigation-drawer--standard');
+    if (drawer) {
+      // Force reflow to ensure the browser knows it was hidden
+      void drawer.offsetWidth;
+      
+      drawer.classList.remove('pending-slide-in');
+      drawer.classList.add('animate-slide-in');
+      
+      // Clean up URL
+      const newUrl = new URL(window.location);
+      newUrl.searchParams.delete('drawer_animate');
+      window.history.replaceState({}, '', newUrl);
+    }
+  }
+});

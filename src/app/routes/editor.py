@@ -100,7 +100,8 @@ def edit_file():
         transcript_file=file_path,
         audio_file=audio_path,
         country=country,
-        filename=full_path.name
+        filename=full_path.name,
+        page_name="editor"
     )
 
 

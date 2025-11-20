@@ -979,34 +979,9 @@ Ahora convierte la siguiente descripción en una consulta CQL precisa para CORAP
 <!-- ECharts for statistics -->
 <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.1/dist/echarts.min.js"></script>
 <!-- Tab Switching Script -->
-<script>
-  document.addEventListener('DOMContentLoaded', function() {
-    const tabButtons = document.querySelectorAll('.md3-tabs [data-tab]');
-    const tabContents = document.querySelectorAll('.md3-tab-content');
-    
-    tabButtons.forEach(button => {
-      button.addEventListener('click', function() {
-        const tabName = this.getAttribute('data-tab');
-        
-        // Remove active class from all buttons and contents
-        tabButtons.forEach(btn => {
-          btn.classList.remove('md3-tab--active');
-          btn.setAttribute('aria-selected', 'false');
-        });
-        tabContents.forEach(content => {
-          content.classList.remove('md3-tab-content--active');
-        });
-        
-        // Add active class to clicked button and corresponding content
-        this.classList.add('md3-tab--active');
-        this.setAttribute('aria-selected', 'true');
-        const targetContent = document.getElementById('tab-' + tabName);
-        if (targetContent) {
-          targetContent.classList.add('md3-tab-content--active');
-        }
-      });
-    });
-  });
+<script type="module">
+  import { initTabs } from "{{ url_for('static', filename='js/modules/search/tabs.js') }}";
+  document.addEventListener('DOMContentLoaded', initTabs);
 </script>
 <!-- App modules -->
 <script src="{{ url_for('static', filename='js/modules/search/config.js') }}" type="module"></script>
@@ -1032,52 +1007,12 @@ Ahora convierte la siguiente descripción en una consulta CQL precisa para CORAP
   window.addEventListener('beforeunload', cleanupStats);
 </script>
 
-<script>
-  // Tooltip functions removed from Advanced Search template (use player page globals instead)
-</script>
 
-<script>
-  // Ensure that any tooltips are hidden on initial load to avoid visual flash
-  // No advanced page-specific tooltips to initialize
-</script>
 
 <!-- Regional checkbox toggle logic -->
-<script>
-  document.addEventListener('DOMContentLoaded', function() {
-    const includeRegionalCheckbox = document.getElementById('include-regional');
-    const regionalOptions = document.querySelectorAll('.md3-filter-option--regional');
-    
-    function toggleRegionalOptions() {
-      const isChecked = includeRegionalCheckbox?.checked || false;
-      regionalOptions.forEach(option => {
-        option.style.display = isChecked ? '' : 'none';
-        // Uncheck regional options when hiding them
-        if (!isChecked) {
-          const checkbox = option.querySelector('input[type="checkbox"]');
-          if (checkbox) {
-            checkbox.checked = false;
-          }
-        }
-      });
-    }
-    
-    // Initial state
-    if (includeRegionalCheckbox) {
-      toggleRegionalOptions();
-      includeRegionalCheckbox.addEventListener('change', toggleRegionalOptions);
-    }
-    
-    // Re-bind after HTMX swaps
-    document.addEventListener('htmx:afterSwap', function() {
-      const checkbox = document.getElementById('include-regional');
-      const regionals = document.querySelectorAll('.md3-filter-option--regional');
-      if (checkbox && regionals.length > 0) {
-        toggleRegionalOptions();
-        checkbox.removeEventListener('change', toggleRegionalOptions);
-        checkbox.addEventListener('change', toggleRegionalOptions);
-      }
-    });
-  });
+<script type="module">
+  import { initRegionalToggle } from "{{ url_for('static', filename='js/modules/search/regional-toggle.js') }}";
+  document.addEventListener('DOMContentLoaded', initRegionalToggle);
 </script>
 {% endblock %}
 
