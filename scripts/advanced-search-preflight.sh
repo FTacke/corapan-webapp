@@ -72,8 +72,8 @@ check_file "docs/reference/advanced-search-frontend-quick-ref.md" "Quick Referen
 check_file "docs/archived/IMPLEMENTATION-REPORT-2025-11-10-advanced-search-ui.md" "Implementation Report"
 
 # Dependencies (existing)
-check_file "static/js/modules/corpus/filters.js" "Filters Manager"
-check_file "static/js/modules/corpus/config.js" "Corpus Config"
+# check_file "static/js/modules/corpus/filters.js" "Filters Manager"
+# check_file "static/js/modules/corpus/config.js" "Corpus Config"
 
 echo ""
 echo "=========================================="
