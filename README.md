@@ -24,6 +24,7 @@ Diese Anwendung dient als Frontend und API-Layer für das CO.RA.PAN-Projekt. Sie
   - Statistik-Dashboard (ECharts) für Frequenzanalysen.
 - **Export:**
   - CSV/TSV-Export von Suchergebnissen (Streaming-Support für große Datenmengen).
+  - CSV-Export von Statistiken (inkl. Metadaten und Filter-Infos).
 - **Administration:**
   - Rollenbasiertes Zugriffssystem (User, Editor, Admin).
   - JSON-Editor für Transkripte.

@@ -736,17 +736,31 @@ Ahora convierte la siguiente descripción en una consulta CQL precisa para CORAP
       <!-- Statistics Panel -->
       <div id="panel-estadisticas" role="tabpanel" aria-labelledby="tab-estadisticas" class="md3-view-content" hidden>
         <section class="md3-stats-section">
-          <header class="md3-stats-header">
-            <div class="md3-stats-filter">
-              <label for="stats-country-filter" class="md3-stats-filter-label">Filtrar por país:</label>
-              <select id="stats-country-filter" class="md3-stats-filter-select">
-                <option value="">Todos los países</option>
-              </select>
+          <header class="md3-stats-header" style="display: block;">
+            <!-- Summary Line (same style as results) -->
+            <div id="stats-summary" class="md3-advanced__summary" role="status" aria-live="polite" aria-atomic="true" style="margin-bottom: var(--space-4);">
+                <span class="md3-advanced__summary-query" id="stats-summary-query"></span>: 
+                <span class="md3-advanced__summary-count" id="stats-summary-count">—</span>
+                <span class="md3-advanced__summary-total">resultados</span>
             </div>
-            <p id="stats-total" class="md3-body-medium mt-2 text-on-surface-variant">
-              Tokens coincidentes: <strong class="text-primary">—</strong>
-            </p>
+
+            <!-- Controls Line -->
+            <div style="display: flex; align-items: center; gap: var(--space-4); flex-wrap: wrap;">
+                <div class="md3-stats-filter" style="margin: 0;">
+                  <label for="stats-country-filter" class="md3-stats-filter-label" style="margin: 0;">Seleccionar:</label>
+                  <select id="stats-country-filter" class="md3-stats-filter-select">
+                    <option value="">Todos los países</option>
+                  </select>
+                </div>
+                
+                <button type="button" id="btn-download-stats-csv" class="md3-button md3-button--outlined" style="margin-left: auto;">
+                    <span class="material-symbols-rounded md3-button__icon">download</span>
+                    <span class="md3-button__label">Descargar CSV</span>
+                </button>
+            </div>
           </header>
+
+
 
           <div id="stats-grid" class="md3-stats-charts-grid">
             <!-- País -->

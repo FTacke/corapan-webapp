@@ -786,3 +786,38 @@ Starte mit PLAN (DRY RUN). Nach Freigabe: APPLY und REPORT.
 - [CHANGELOG](CHANGELOG.md) - Dokumentations-Änderungen
 - [Advanced Search UI Finalization](how-to/advanced-search-ui-finalization.md) - Frontend Implementation Example (2025-11-11)
 - [Divio Documentation System](https://documentation.divio.com/) - Externe Referenz
+
+---
+
+## Entwicklung: Statistik-CSV-Export
+
+Der CSV-Export für Statistiken (`/search/advanced/stats/csv`) wurde implementiert, um Nutzern die Weiterverarbeitung der Daten zu ermöglichen.
+
+### Technische Umsetzung
+
+*   **Endpoint:** `GET /search/advanced/stats/csv`
+*   **Streaming:** Die Response wird gestreamt (`yield`), um Speicher zu sparen. Es werden keine temporären Dateien angelegt.
+*   **Datenquelle:** Nutzt dieselben BlackLab-Abfragen wie die Statistik-Anzeige (`bls_group_by_field`).
+
+### CSV-Format
+
+Die Datei beginnt mit einem Metadaten-Block (Kommentare mit `#`), gefolgt von der Datentabelle.
+
+```text
+# corpus=CO.RA.PAN
+# date_generated=2025-11-21T...
+# query_type=CQL
+# query=[lemma="casa"]
+# filters={"country_code": ["ARG"]}
+# total_hits=1234
+# stats_type=all_charts
+chart_id,chart_label,dimension,count,relative_frequency
+by_country,Por país,ARG,1234,1.0
+...
+```
+
+### Erweiterung
+
+Um neue Statistik-Typen hinzuzufügen:
+1.  In `src/app/search/advanced_api.py` die `dimensions`-Map in `stats_csv` erweitern.
+2.  Sicherstellen, dass das Feld in `BLS_FIELDS` definiert ist.
