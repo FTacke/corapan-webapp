@@ -23,76 +23,176 @@ Das Projekt verfügt bereits über eine solide Basis für MD3:
 
 **Bewertung:** Das Fundament steht, die Durchdringung ist jedoch inkonsistent (Mischbetrieb mit Legacy-Styles).
 
-## 3. Inline-Styles & Layout-Anti-Patterns
+## 3. Token-Konformitätsanalyse
 
-Die Analyse der Templates zeigt signifikante Unterschiede in der Code-Qualität:
+### 3.1 Farb-Token-Konsistenz (Farbrollen-Analyse)
 
-### Problemzonen (High Priority)
-- **`templates/auth/login.html`:** Massive Nutzung von Inline-Styles für Layout und Farben.
-  - *Beispiel:* `style="background: linear-gradient(...); color: #1a1a1a;"`
-  - *Problem:* Ignoriert das zentrale Theme, schwer wartbar, kein Dark-Mode-Support.
+| MD3-Farbrolle | Status | Korrekte Nutzung (Beispiele) | Inkonsistente / Falsche Nutzung |
+| :--- | :--- | :--- | :--- |
+| **Primary** (`--md-sys-color-primary`) | ✅ Gut | Advanced Search Buttons, Active Tabs | `login.html` (nutzt `#667eea`, `#5568d3`) |
+| **Surface** (`--md-sys-color-surface`) | ⚠️ Teils | `layout.css` (Body Background) | `base.html` (Fallback `#fff`), `login.html` (`#fee`) |
+| **On-Surface** (`--md-sys-color-on-surface`) | ✅ Gut | Text in `typography.css` | `login.html` (`color: #1a1a1a`), `advanced.html` (Inline `color: var(...)`) |
+| **Error** (`--md-sys-color-error`) | ❌ Schlecht | Kaum genutzt | `login.html` (`#f44336`, `#c62828` für Fehler) |
+| **Outline** (`--md-sys-color-outline`) | ⚠️ Teils | Input Borders (Search) | `login.html` (`border: 1px solid #ddd`) |
 
-### Mittlere Auffälligkeiten
-- **`templates/search/advanced.html`:**
-  - Viele `style="display: none;"` (akzeptabel für JS-Toggles, aber Utility-Klasse `hidden` wäre besser).
-  - Layout-Korrekturen via `style="margin-top: 1.5rem;"` oder `style="overflow: visible;"`.
-  - *Empfehlung:* Ersetzen durch MD3-Spacing-Klassen oder spezifische CSS-Regeln.
+**Befund:** `login.html` ist ein kompletter Ausreißer und ignoriert das Token-System vollständig.
 
-### Layout-Konsistenz
-- Es fehlen teilweise Utility-Klassen für Spacing (Margins/Paddings). Oft wird Abstand durch Ad-hoc-Styles erzeugt.
+### 3.2 Typografie-Token-Konsistenz
 
-## 4. Farb-Handling (Tokens vs. Hardcoded)
+Das System definiert Klassen wie `.md3-display-*`, `.md3-headline-*`, `.md3-body-*` in `typography.css`.
 
-### Token-konforme Bereiche
-- **Advanced Search UI:** Nutzt weitgehend `--md-sys-color-*` Variablen (z.B. `var(--md-sys-color-primary)`).
-- **General Layout:** `layout.css` nutzt Tokens für Hintergründe und Textfarben.
+| Bereich | Status | Problem |
+| :--- | :--- | :--- |
+| **Headings** | ✅ OK | Meist korrekt via CSS-Klassen gelöst. |
+| **Icons** | ⚠️ Warnung | `index.html`: `style="font-size: 0.9rem;"` auf `material-symbols-rounded`. Sollte via Utility-Klasse gelöst werden. |
+| **Body Text** | ⚠️ Warnung | `advanced.html`: `class="md3-body-medium"` oft kombiniert mit Inline-Styles für Margins. |
 
-### Hardcoded-Farben-Bereiche (Legacy)
-| Datei / Bereich | Befund | Beispiel |
-|-----------------|--------|----------|
-| `templates/auth/login.html` | Hardcoded Hex-Werte überall | `#667eea`, `#f44336`, `#fee` |
-| `templates/base.html` | Meta-Tags & Fallbacks | `#ffffff`, `#14141A` (in Meta-Tags ok, in CSS vermeiden) |
-| `templates/pages/proyecto_como_citar.html` | Badge-Farben | In URL-Parametern (schwer zu vermeiden, aber dokumentierenswert) |
+### 3.3 Spacing-Token-Konsistenz
 
-**Risiko:** Inkonsistentes Erscheinungsbild, insbesondere bei zukünftigen Theme-Anpassungen oder Dark-Mode-Optimierungen.
+MD3 nutzt ein 4px-Grid (0.25rem). `layout.css` bietet `.md3-space-*`.
 
-## 5. JS-Struktur (Inline vs. Module)
+| Template | Befund | Empfehlung |
+| :--- | :--- | :--- |
+| `advanced.html` | `style="margin-top: 1.5rem;"`, `style="margin: 0.5rem..."`, `style="padding: 1rem;"` | Ersetzen durch `.md3-space-6`, `.md3-space-2`, `.md3-space-4` oder Utility-Klassen (`mt-6`, `p-4`). |
+| `login.html` | Unbekannte Spacing-Werte via CSS/Inline. | Komplettes Refactoring auf MD3-Grid. |
+| `player.html` | Inline-Styles für Positionierung. | Flexbox/Grid-Klassen nutzen. |
 
-Das Projekt befindet sich im Übergang zu einer modernen ES-Module-Architektur.
+## 4. Design-Drift – Vergleich gegen Soll-Architektur
 
-### Positiv: Modulare Struktur
-- `static/js/modules/` ist gut strukturiert (`search/`, `advanced/`, `stats/`).
-- `templates/search/advanced.html` importiert diese Module sauber als `type="module"`.
+### 4.1 MD3-Komponenten-Check
 
-### Negativ: Legacy & Inline-Logik
-- **Inline-Event-Handler:**
-  - `templates/pages/player.html`: `onmouseover="showTooltip(event)"`, `onmouseout="..."`. Veraltetes Pattern.
-  - `templates/auth/_login_sheet.html`: `onclick="document.getElementById(...).remove()"`.
-- **Inline-Skripte (Glue Code):**
-  - `templates/search/advanced.html`: Enthält mehrere `<script type="module">` Blöcke, die Logik direkt im HTML definieren, statt sie nur zu importieren.
-  - `templates/partials/_navigation_drawer.html`: Inline-Script für UI-Interaktion.
-  - `templates/partials/audio-player.html`: Inline-Script für Player-Steuerung.
+| Komponente | Status | Implementierung | Anmerkung |
+| :--- | :--- | :--- | :--- |
+| **Buttons** | ⚠️ Mixed | `.md3-button` (CSS) vs. Bootstrap-Reste | Alte `btn`-Klassen teilweise noch sichtbar. |
+| **Cards** | ⚠️ Mixed | `.md3-card` (CSS) vs. `div style="..."` | Login-Sheet ist eine "Fake-Card". |
+| **Navigation Drawer** | ✅ Gut | `_navigation_drawer.html` | Nutzt sauberes HTML/CSS. |
+| **Top App Bar** | ✅ Gut | `_top_app_bar.html` | MD3-konform. |
+| **Search Bar** | ✅ Gut | Advanced Search | Nutzt Tokens und MD3-Struktur. |
+| **Dialogs/Modals** | ❌ Legacy | `_login_sheet.html` | Eigenbau-Overlay, kein natives `<dialog>` oder MD3-Modal. |
 
-## 6. Template-Tauglichkeit & Wiederverwendbarkeit
+### 4.2 Theming-Durchdringung
 
-- **Partials:** Gute Nutzung von `templates/partials/` (z.B. `_navigation_drawer.html`, `audio-player.html`).
-- **Monolithen:** `templates/search/advanced.html` ist sehr groß und enthält Markup, Styles und JS-Glue-Code. Könnte weiter in Partials zerlegt werden (z.B. `_search_filters.html`, `_results_table.html`).
-- **Komponenten:** Es fehlt eine klare Bibliothek an UI-Komponenten (Buttons, Cards, Inputs) als Jinja-Macros oder Includes. Oft wird HTML kopiert.
+- **Vollständig Tokenisiert:** `search/advanced.html` (bis auf Layout-Hacks), `partials/_navigation_drawer.html`.
+- **Teilweise Tokenisiert:** `base.html`, `pages/index.html`.
+- **Nicht Tokenisiert (Legacy):** `auth/login.html`, `auth/_login_sheet.html`.
 
-## 7. Handlungsempfehlungen & Priorisierung
+## 5. JS-Audit
+
+### 5.1 Liste aller Inline-Event-Handler
+
+Diese Handler müssen in Event-Listener (`addEventListener`) in separaten JS-Dateien umgewandelt werden.
+
+| Template | Event | Funktion / Code | Schweregrad |
+| :--- | :--- | :--- | :--- |
+| `pages/player.html` | `onmouseover` | `showTooltip(event)` | **MEDIUM** |
+| `pages/player.html` | `onmouseout` | `hideTooltip(event)` | **MEDIUM** |
+| `auth/_login_sheet.html` | `onclick` | `document.getElementById('login-sheet').remove()` | **HIGH** (Logik im HTML) |
+| `search/advanced.html` | `onclick` | (Diverse Toggle-Logik via `aria-controls` ist ok, aber JS-Fallback prüfen) | **LOW** |
+
+### 5.2 Liste aller Inline `<script>`-Blöcke
+
+| Template | Art der Logik | Ziel-Modul (`static/js/modules/...`) |
+| :--- | :--- | :--- |
+| `search/advanced.html` | Glue-Code (Imports, Init) | `search/controller.js` oder `advanced/main.js` |
+| `partials/_navigation_drawer.html` | UI-Interaktion (Drawer Toggle) | `layout/drawer.js` |
+| `partials/audio-player.html` | Player-Steuerung & State | `player/audio-controller.js` |
+| `pages/proyecto_estadisticas.html` | ECharts Init | `stats/charts-init.js` |
+
+### 5.3 Glue-Code-Hotspots
+
+- **`advanced.html`:** Enthält ~50 Zeilen Inline-JS (Module Imports und Initialisierung). Das Template fungiert als Controller.
+  - *Lösung:* Ein einziges Entry-Point-Skript (`<script type="module" src=".../advanced-search.js">`) einbinden.
+- **`audio-player.html`:** Vermischt HTML-Struktur mit Playback-Logik.
+  - *Lösung:* Custom Element (`<audio-player>`) oder reines JS-Binding.
+
+## 6. Komponenten-/Template-Struktur-Audit
+
+### 6.1 Partial-Analyse
+
+| Partial | Inhalt | Status |
+| :--- | :--- | :--- |
+| `_navigation_drawer.html` | Hauptmenü | ✅ Gut, wiederverwendbar. |
+| `_top_app_bar.html` | Header | ✅ Gut. |
+| `audio-player.html` | Globaler Player | ⚠️ Enthält Inline-JS. |
+| `_login_sheet.html` | Login Overlay | ❌ Legacy-Struktur, Inline-Events. |
+
+### 6.2 Komponenten-Potenzial (Jinja Macros)
+
+Folgende UI-Elemente werden oft kopiert und sollten zentralisiert werden:
+
+1.  **Icon-Button:** `<button class="md3-icon-button">...</button>`
+2.  **Filter-Chip:** `<label class="md3-filter-chip">...</label>`
+3.  **Data-Card:** Container für Statistiken/Ergebnisse.
+4.  **Section-Header:** Einheitliche Überschriften mit Spacing.
+
+### 6.3 Template-Tauglichkeits-Score
+
+| Template | Score | Begründung |
+| :--- | :--- | :--- |
+| `search/advanced.html` | **B-** | Gute MD3-Basis, aber zu viel Inline-JS/CSS und zu monolithisch. |
+| `auth/login.html` | **D** | Veraltet, Hardcoded Styles, nicht wartbar. |
+| `pages/index.html` | **C+** | Solide, aber kleine Inkonsistenzen (Icons). |
+| `base.html` | **B** | Gute Struktur, Meta-Tags ok, wenig Inline-Styles. |
+
+## 7. SOLL-ARCHITEKTUR (Template-Frontend)
+
+Für alle zukünftigen Refactorings gilt folgende Architektur als Zielbild:
+
+1.  **Strict Separation:**
+    - **HTML (Jinja2):** Nur Struktur und Daten-Binding. Keine `style="..."`, keine `on...="..."`.
+    - **CSS:** Ausschließlich Klassen. Werte nur über Tokens (`var(--md-sys-color-...)`).
+    - **JS:** Ausschließlich ES-Module in `static/js/`. Bindung an HTML nur über IDs/Klassen (`querySelector`).
+
+2.  **Design System (MD3):**
+    - **Farben:** 100% Abdeckung durch Tokens. Keine Hex-Codes im Code.
+    - **Spacing:** Nutzung der MD3-Skala (4px Grid).
+    - **Typografie:** Nutzung der globalen Klassen (`md3-body-large`, etc.).
+
+3.  **Komponentisierung:**
+    - Wiederkehrende UI-Patterns werden als **Jinja-Macros** (`templates/macros/ui.html`) definiert.
+    - Große Blöcke werden in **Partials** ausgelagert.
+
+4.  **Theming:**
+    - Ein zentrales `theme.css` (oder `tokens.css`) steuert das gesamte Look & Feel.
+    - Dark Mode Support ist implizit durch Token-Variablen gegeben.
+
+## 8. Handlungsempfehlungen & Priorisierung
 
 ### Prio A: Kurzfristig / High Impact (Quick Wins)
-1.  **Refactor `login.html`:** Vollständige Entfernung der Inline-Styles. Ersetzen durch MD3-Klassen und Nutzung der Tokens aus `tokens.css`.
-2.  **Inline-Events entfernen:** `onmouseover`/`onclick` in `player.html` und `_login_sheet.html` durch Event-Listener in separaten JS-Dateien ersetzen.
+
+1.  **Refactor `login.html`**
+    - *Aufwand:* Medium
+    - *Risiko:* Low
+    - *Mehrwert:* 5/5 (Beseitigt größten Legacy-Schuldner, ermöglicht Dark Mode).
+    - *Action:* Inline-Styles entfernen, MD3-Klassen anwenden, Tokens nutzen.
+
+2.  **Inline-Events entfernen (`player.html`, `_login_sheet.html`)**
+    - *Aufwand:* Low
+    - *Risiko:* Low
+    - *Mehrwert:* 4/5 (Saubere CSP-Compliance, bessere Wartbarkeit).
+    - *Action:* Event-Listener in JS-Dateien auslagern.
 
 ### Prio B: Mittelfristig (Stabilisierung)
-1.  **Glue-Code auslagern:** Die Inline-Skripte in `advanced.html` und `audio-player.html` in dedizierte Controller-Skripte unter `static/js/modules/` verschieben.
-2.  **Hardcoded Colors eliminieren:** Suche nach Hex-Codes in `static/css/` (außer `tokens.css`) und Ersetzung durch Variablen.
+
+1.  **Glue-Code auslagern (`advanced.html`)**
+    - *Aufwand:* Medium
+    - *Risiko:* Medium (Funktionalität sicherstellen)
+    - *Mehrwert:* 4/5 (Template wird lesbar, Logik testbar).
+    - *Action:* `advanced-search-init.js` erstellen.
+
+2.  **Hardcoded Colors eliminieren**
+    - *Aufwand:* Medium (Suchen & Ersetzen)
+    - *Risiko:* Low
+    - *Mehrwert:* 3/5 (Konsistentes Design).
 
 ### Prio C: Langfristig (Architektur)
-1.  **Komponenten-Bibliothek:** Erstellung von wiederverwendbaren Jinja-Macros für Standard-Elemente (Buttons, Inputs), um Konsistenz zu erzwingen.
-2.  **Utility-Klassen:** Einführung eines kleinen Sets an Spacing-Utilities (z.B. basierend auf MD3-Spacing-Scale), um `style="margin: ..."` zu vermeiden.
 
-## Fazit
+1.  **Komponenten-Bibliothek (Macros) einführen**
+    - *Aufwand:* High
+    - *Risiko:* Medium
+    - *Mehrwert:* 5/5 (Langfristige Entwicklungsgeschwindigkeit).
 
-Das Frontend ist funktional und auf einem guten Weg (MD3-Ansatz, ES-Modules). Die größte technische Schuld liegt in isolierten Legacy-Templates (`login.html`) und verstreutem Inline-JS. Eine gezielte Bereinigung dieser Bereiche wird die Wartbarkeit massiv erhöhen.
+2.  **Utility-Klassen für Spacing**
+    - *Aufwand:* Low
+    - *Risiko:* Low
+    - *Mehrwert:* 3/5 (Ersetzt Inline-Margins).
