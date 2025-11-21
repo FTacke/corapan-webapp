@@ -17,6 +17,7 @@ from pathlib import Path
 from typing import Generator, Optional
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import time
+from datetime import datetime, timezone
 
 import httpx
 from flask import Blueprint, jsonify, request, Response, current_app
@@ -1061,6 +1062,119 @@ def stats_data():
 
     except Exception as e:
         logger.exception("Stats error")
+        return jsonify({"error": str(e)}), 500
+
+
+@bp.route("/stats/csv", methods=["GET"])
+@limiter.limit("10 per minute")
+def stats_csv():
+    """
+    Streaming CSV export of statistics.
+    """
+    try:
+        query_info = build_blacklab_query_from_request(request.args)
+        patt = query_info["patt"]
+        filter_cql = query_info["filter"]
+        params_base = query_info["params_base"]
+
+        # Get total hits first
+        count_params = params_base.copy()
+        if patt:
+            count_params["patt"] = patt
+        if filter_cql:
+            count_params["filter"] = filter_cql
+        count_params["number"] = 0
+        count_params["waitfortotal"] = "true"
+
+        # Execute total count request
+        count_resp = _make_bls_request("/corpora/corapan/hits", count_params)
+        count_data = count_resp.json()
+        total_hits = count_data.get("summary", {}).get("numberOfHits", 0)
+        if not total_hits:
+            total_hits = (
+                count_data.get("summary", {}).get("resultsStats", {}).get("hits", 0)
+            )
+
+        # Define dimensions to group by
+        dimensions = {
+            "by_country": {"field": BLS_FIELDS["country"], "label": "Por país"},
+            "by_speaker_type": {"field": BLS_FIELDS["speaker_type"], "label": "Por tipo de hablante"},
+            "by_sex": {"field": BLS_FIELDS["sex"], "label": "Por sexo"},
+            "by_modo": {"field": BLS_FIELDS["mode"], "label": "Por modo"},
+            "by_discourse": {"field": BLS_FIELDS["discourse"], "label": "Por discurso"},
+            "by_radio": {"field": BLS_FIELDS["radio"], "label": "Por emisora"},
+            "by_city": {"field": BLS_FIELDS["city"], "label": "Por ciudad"},
+            "by_file_id": {"field": BLS_FIELDS["file_id"], "label": "Por archivo"},
+        }
+
+        # Execute grouping requests in parallel
+        stats_results = {}
+        with ThreadPoolExecutor(max_workers=8) as executor:
+            future_to_dim = {
+                executor.submit(
+                    bls_group_by_field, info["field"], patt, filter_cql, params_base
+                ): dim
+                for dim, info in dimensions.items()
+            }
+
+            for future in as_completed(future_to_dim):
+                dim = future_to_dim[future]
+                try:
+                    stats_results[dim] = future.result()
+                except Exception as exc:
+                    logger.error(f"Stats dimension {dim} generated an exception: {exc}")
+                    stats_results[dim] = []
+
+        # Capture args for generator to avoid context issues
+        req_args = request.args.copy()
+
+        def generate():
+            # Metadata header
+            yield f"# corpus=CO.RA.PAN\n"
+            yield f"# date_generated={datetime.now(timezone.utc).isoformat()}\n"
+            yield f"# query_type=CQL\n"
+            yield f"# query={patt or '*'}\n"
+            
+            # Filters as JSON string
+            filters_dict = {k: v for k, v in req_args.items() if k not in ['q', 'mode', 'patt', 'cql']}
+            yield f"# filters={json.dumps(filters_dict, ensure_ascii=False)}\n"
+            
+            yield f"# total_hits={total_hits}\n"
+            yield f"# stats_type=all_charts\n"
+            
+            # CSV Header
+            output = io.StringIO()
+            writer = csv.writer(output)
+            writer.writerow(["chart_id", "chart_label", "dimension", "count", "relative_frequency"])
+            yield output.getvalue()
+            output.seek(0)
+            output.truncate(0)
+
+            # Data rows
+            for dim_key, results in stats_results.items():
+                chart_label = dimensions[dim_key]["label"]
+                for row in results:
+                    count = row["n"]
+                    rel_freq = count / total_hits if total_hits > 0 else 0
+                    writer.writerow([
+                        dim_key,
+                        chart_label,
+                        row["key"],
+                        count,
+                        f"{rel_freq:.6f}"
+                    ])
+                    yield output.getvalue()
+                    output.seek(0)
+                    output.truncate(0)
+
+        return Response(
+            generate(),
+            mimetype="text/csv",
+            headers={"Content-Disposition": "attachment; filename=estadisticas_busqueda.csv"}
+        )
+
+    except Exception as e:
+        logger.exception("Stats CSV export error")
         return jsonify({"error": str(e)}), 500
 
 

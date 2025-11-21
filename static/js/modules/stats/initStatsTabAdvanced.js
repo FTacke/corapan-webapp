@@ -41,6 +41,8 @@ function showLoading() {
     container.style.opacity = "0.5";
     container.style.pointerEvents = "none";
   }
+  const btn = document.getElementById("btn-download-stats-csv");
+  if (btn) btn.disabled = true;
 }
 
 /**
@@ -53,6 +55,8 @@ function hideLoading() {
     container.style.opacity = "1";
     container.style.pointerEvents = "auto";
   }
+  const btn = document.getElementById("btn-download-stats-csv");
+  if (btn) btn.disabled = false;
 }
 
 /**
@@ -77,9 +81,18 @@ function showError() {
  * Update total count display
  */
 function updateTotal(total) {
-  const totalEl = document.querySelector("#stats-total strong");
-  if (totalEl) {
-    totalEl.textContent = new Intl.NumberFormat("es-ES").format(total);
+  // Update count
+  const countEl = document.getElementById("stats-summary-count");
+  if (countEl) {
+    countEl.textContent = new Intl.NumberFormat("es-ES").format(total);
+  }
+
+  // Update query text
+  const queryEl = document.getElementById("stats-summary-query");
+  if (queryEl) {
+    const form = document.getElementById("advanced-search-form");
+    const query = form?.querySelector("#q")?.value?.trim() || "*";
+    queryEl.textContent = `"${query}"`;
   }
 }
 
@@ -483,6 +496,12 @@ export function resetStats() {
     dropdown.innerHTML = '<option value="">Todos los países</option>';
     dropdown.value = "";
   }
+  
+  // Reset summary
+  const countEl = document.getElementById("stats-summary-count");
+  if (countEl) countEl.textContent = "—";
+  const queryEl = document.getElementById("stats-summary-query");
+  if (queryEl) queryEl.textContent = "";
 }
 
 /**
@@ -571,6 +590,24 @@ export function initStatsTabAdvanced() {
   // Setup segmented buttons for each chart
   setupSegmentedButtons();
 
+  // Setup CSV download button
+  const csvBtn = document.getElementById("btn-download-stats-csv");
+  if (csvBtn) {
+    csvBtn.addEventListener("click", () => {
+      const url = buildStatsUrl();
+      if (url) {
+        const csvUrl = url.replace("/stats", "/stats/csv");
+        // Use a temporary link to trigger download without navigating
+        const link = document.createElement("a");
+        link.href = csvUrl;
+        link.download = "estadisticas_busqueda.csv";
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      }
+    });
+  }
+
   console.log("Advanced stats tab initialized");
 }
 
@@ -646,7 +683,7 @@ function getDataKeyForChart(chartId) {
   const mapping = {
     country: "by_country",
     speaker: "by_speaker_type",
-    sexo: "by_sexo",
+    sexo: "by_sex",
     modo: "by_modo",
     discourse: "by_discourse",
   };
