@@ -3,14 +3,7 @@
 /* Base font-family applied universally */
 html,
 body {
-  font-family:
-    "Roboto",
-    "Noto Sans",
-    -apple-system,
-    BlinkMacSystemFont,
-    "Segoe UI",
-    system-ui,
-    sans-serif;
+  font-family: var(--md-sys-typescale-base-font-family);
 }
 
 /* Apply to all MD3 page containers to ensure font inheritance */
@@ -21,88 +14,111 @@ body {
 .md3-editor-page,
 .md3-index-page,
 .app-shell {
-  font-family:
-    "Roboto",
-    "Noto Sans",
-    -apple-system,
-    BlinkMacSystemFont,
-    "Segoe UI",
-    system-ui,
-    sans-serif;
+  font-family: var(--md-sys-typescale-base-font-family);
 }
 
 .md3-display-large {
-  font-size: 57px;
-  line-height: 64px;
-  font-weight: 400;
+  font-family: var(--md-sys-typescale-display-large-font-family);
+  font-weight: var(--md-sys-typescale-display-large-font-weight);
+  font-size: var(--md-sys-typescale-display-large-font-size);
+  line-height: var(--md-sys-typescale-display-large-line-height);
+  letter-spacing: var(--md-sys-typescale-display-large-letter-spacing);
 }
 .md3-display-medium {
-  font-size: 45px;
-  line-height: 52px;
-  font-weight: 400;
+  font-family: var(--md-sys-typescale-display-medium-font-family);
+  font-weight: var(--md-sys-typescale-display-medium-font-weight);
+  font-size: var(--md-sys-typescale-display-medium-font-size);
+  line-height: var(--md-sys-typescale-display-medium-line-height);
+  letter-spacing: var(--md-sys-typescale-display-medium-letter-spacing);
 }
 .md3-display-small {
-  font-size: 36px;
-  line-height: 44px;
-  font-weight: 400;
+  font-family: var(--md-sys-typescale-display-small-font-family);
+  font-weight: var(--md-sys-typescale-display-small-font-weight);
+  font-size: var(--md-sys-typescale-display-small-font-size);
+  line-height: var(--md-sys-typescale-display-small-line-height);
+  letter-spacing: var(--md-sys-typescale-display-small-letter-spacing);
 }
 .md3-headline-large {
-  font-size: 32px;
-  line-height: 40px;
-  font-weight: 400;
+  font-family: var(--md-sys-typescale-headline-large-font-family);
+  font-weight: var(--md-sys-typescale-headline-large-font-weight);
+  font-size: var(--md-sys-typescale-headline-large-font-size);
+  line-height: var(--md-sys-typescale-headline-large-line-height);
+  letter-spacing: var(--md-sys-typescale-headline-large-letter-spacing);
 }
 .md3-headline-medium {
-  font-size: 28px;
-  line-height: 36px;
-  font-weight: 400;
+  font-family: var(--md-sys-typescale-headline-medium-font-family);
+  font-weight: var(--md-sys-typescale-headline-medium-font-weight);
+  font-size: var(--md-sys-typescale-headline-medium-font-size);
+  line-height: var(--md-sys-typescale-headline-medium-line-height);
+  letter-spacing: var(--md-sys-typescale-headline-medium-letter-spacing);
 }
 .md3-headline-small {
-  font-size: 24px;
-  line-height: 32px;
-  font-weight: 400;
+  font-family: var(--md-sys-typescale-headline-small-font-family);
+  font-weight: var(--md-sys-typescale-headline-small-font-weight);
+  font-size: var(--md-sys-typescale-headline-small-font-size);
+  line-height: var(--md-sys-typescale-headline-small-line-height);
+  letter-spacing: var(--md-sys-typescale-headline-small-letter-spacing);
 }
 .md3-title-large {
-  font-size: 22px;
-  line-height: 28px;
-  font-weight: 500;
+  font-family: var(--md-sys-typescale-title-large-font-family);
+  font-weight: var(--md-sys-typescale-title-large-font-weight);
+  font-size: var(--md-sys-typescale-title-large-font-size);
+  line-height: var(--md-sys-typescale-title-large-line-height);
+  letter-spacing: var(--md-sys-typescale-title-large-letter-spacing);
 }
 .md3-title-medium {
-  font-size: 16px;
-  line-height: 24px;
-  font-weight: 500;
+  font-family: var(--md-sys-typescale-title-medium-font-family);
+  font-weight: var(--md-sys-typescale-title-medium-font-weight);
+  font-size: var(--md-sys-typescale-title-medium-font-size);
+  line-height: var(--md-sys-typescale-title-medium-line-height);
+  letter-spacing: var(--md-sys-typescale-title-medium-letter-spacing);
 }
 .md3-title-small {
-  font-size: 14px;
-  line-height: 20px;
-  font-weight: 500;
+  font-family: var(--md-sys-typescale-title-small-font-family);
+  font-weight: var(--md-sys-typescale-title-small-font-weight);
+  font-size: var(--md-sys-typescale-title-small-font-size);
+  line-height: var(--md-sys-typescale-title-small-line-height);
+  letter-spacing: var(--md-sys-typescale-title-small-letter-spacing);
 }
 .md3-body-large {
-  font-size: 16px;
-  line-height: 24px;
-  font-weight: 400;
+  font-family: var(--md-sys-typescale-body-large-font-family);
+  font-weight: var(--md-sys-typescale-body-large-font-weight);
+  font-size: var(--md-sys-typescale-body-large-font-size);
+  line-height: var(--md-sys-typescale-body-large-line-height);
+  letter-spacing: var(--md-sys-typescale-body-large-letter-spacing);
 }
 .md3-body-medium {
-  font-size: 14px;
-  line-height: 20px;
-  font-weight: 400;
+  font-family: var(--md-sys-typescale-body-medium-font-family);
+  font-weight: var(--md-sys-typescale-body-medium-font-weight);
+  font-size: var(--md-sys-typescale-body-medium-font-size);
+  line-height: var(--md-sys-typescale-body-medium-line-height);
+  letter-spacing: var(--md-sys-typescale-body-medium-letter-spacing);
 }
 .md3-body-small {
-  font-size: 12px;
-  line-height: 16px;
-  font-weight: 400;
+  font-family: var(--md-sys-typescale-body-small-font-family);
+  font-weight: var(--md-sys-typescale-body-small-font-weight);
+  font-size: var(--md-sys-typescale-body-small-font-size);
+  line-height: var(--md-sys-typescale-body-small-line-height);
+  letter-spacing: var(--md-sys-typescale-body-small-letter-spacing);
 }
 .md3-label-large {
-  font-size: 14px;
-  line-height: 20px;
-  font-weight: 500;
+  font-family: var(--md-sys-typescale-label-large-font-family);
+  font-weight: var(--md-sys-typescale-label-large-font-weight);
+  font-size: var(--md-sys-typescale-label-large-font-size);
+  line-height: var(--md-sys-typescale-label-large-line-height);
+  letter-spacing: var(--md-sys-typescale-label-large-letter-spacing);
 }
 .md3-label-medium {
-  font-size: 12px;
-  line-height: 16px;
-  font-weight: 500;
+  font-family: var(--md-sys-typescale-label-medium-font-family);
+  font-weight: var(--md-sys-typescale-label-medium-font-weight);
+  font-size: var(--md-sys-typescale-label-medium-font-size);
+  line-height: var(--md-sys-typescale-label-medium-line-height);
+  letter-spacing: var(--md-sys-typescale-label-medium-letter-spacing);
 }
 .md3-label-small {
-  font-size: 11px;
-  line-height: 16px;
-  font-weight: 500;
+  font-family: var(--md-sys-typescale-label-small-font-family);
+  font-weight: var(--md-sys-typescale-label-small-font-weight);
+  font-size: var(--md-sys-typescale-label-small-font-size);
+  line-height: var(--md-sys-typescale-label-small-line-height);
+  letter-spacing: var(--md-sys-typescale-label-small-letter-spacing);
 }
