@@ -23,7 +23,7 @@
     <div class="player-controls-top">
       <input type="range" id="progressBar" min="0" max="100" value="0" class="progress-bar" aria-label="Audio progress">
       <div class="volume-control-container">
-        <i id="muteBtn" class="fa-solid fa-volume-high volume-icon" aria-label="Mute/Unmute"></i>
+        <span id="muteBtn" class="material-symbols-rounded volume-icon" aria-label="Mute/Unmute">volume_up</span>
         <input type="range" id="volumeControl" min="0" max="1" step="0.01" value="1.0" class="volume-control" aria-label="Volume">
       </div>
     </div>
@@ -34,20 +34,20 @@
       
       <div class="play-container">
         <div class="skip-control" id="rewindBtn" role="button" aria-label="Rewind 3 seconds">
-          <i class="fa-solid fa-rotate-left skip-icon"></i>
+          <span class="material-symbols-rounded skip-icon">rotate_left</span>
           <span class="skip-label">-3s</span>
         </div>
         
-        <i id="playPauseBtn" class="bi bi-play-circle-fill play-icon" role="button" aria-label="Play/Pause"></i>
+        <span id="playPauseBtn" class="material-symbols-rounded play-icon" role="button" aria-label="Play/Pause">play_circle</span>
         
         <div class="skip-control" id="forwardBtn" role="button" aria-label="Forward 3 seconds">
-          <i class="fa-solid fa-rotate-right skip-icon"></i>
+          <span class="material-symbols-rounded skip-icon">rotate_right</span>
           <span class="skip-label">+3s</span>
         </div>
       </div>
       
       <div class="speed-control-container">
-        <i class="bi bi-speedometer2 speed-icon" aria-label="Playback speed"></i>
+        <span class="material-symbols-rounded speed-icon" aria-label="Playback speed">speed</span>
         <input type="range" id="speedControlSlider" min="0.5" max="2" step="0.1" value="1.0" class="speed-control" aria-label="Speed control">
         <div id="speedDisplay" class="speed-display">1.0x</div>
       </div>

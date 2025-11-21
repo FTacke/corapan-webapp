@@ -10,7 +10,7 @@
 <div class="md3-error-page">
   <div class="md3-error-container">
     <div class="md3-error-icon">
-      <i class="bi bi-lock"></i>
+      <span class="material-symbols-rounded">lock</span>
     </div>
     
     <h1 class="md3-error-code md3-display-large">401</h1>
@@ -24,12 +24,12 @@
       <a hx-get="{{ url_for('auth.login_sheet', next=request.url) }}"
          hx-target="body"
          hx-swap="beforeend"
-         class="md3-button-filled">
-        <i class="bi bi-box-arrow-in-right"></i>
+         class="md3-button--filled">
+        <span class="material-symbols-rounded">login</span>
         <span>Iniciar sesión</span>
       </a>
-      <a href="{{ url_for('public.landing_page') }}" class="md3-button-outlined">
-        <i class="bi bi-house-door"></i>
+      <a href="{{ url_for('public.landing_page') }}" class="md3-button--outlined">
+        <span class="material-symbols-rounded">home</span>
         <span>Volver al inicio</span>
       </a>
     </div>

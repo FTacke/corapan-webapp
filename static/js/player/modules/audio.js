@@ -242,11 +242,9 @@ export class AudioPlayer {
    */
   _updatePlayPauseButton() {
     if (this.audioElement.paused || this.audioElement.ended) {
-      this.controls.playPause.classList.remove("bi-pause-circle-fill");
-      this.controls.playPause.classList.add("bi-play-circle-fill");
+      this.controls.playPause.textContent = "play_circle";
     } else {
-      this.controls.playPause.classList.remove("bi-play-circle-fill");
-      this.controls.playPause.classList.add("bi-pause-circle-fill");
+      this.controls.playPause.textContent = "pause_circle";
     }
   }
 
@@ -256,11 +254,9 @@ export class AudioPlayer {
    */
   _updateVolumeIcon(volume) {
     if (this.audioElement.muted || parseFloat(volume) === 0) {
-      this.controls.mute.classList.remove("fa-volume-high");
-      this.controls.mute.classList.add("fa-volume-xmark");
+      this.controls.mute.textContent = "volume_off";
     } else {
-      this.controls.mute.classList.remove("fa-volume-xmark");
-      this.controls.mute.classList.add("fa-volume-high");
+      this.controls.mute.textContent = "volume_up";
     }
   }
 
@@ -283,10 +279,10 @@ export class AudioPlayer {
    * @private
    */
   _animateButton(button) {
-    button.classList.add("fa-fade");
+    button.style.opacity = "0.5";
     setTimeout(() => {
-      button.classList.remove("fa-fade");
-    }, 1000);
+      button.style.opacity = "1";
+    }, 200);
   }
 
   /**

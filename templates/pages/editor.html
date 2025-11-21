@@ -18,7 +18,7 @@
       <!-- Header with File Info (Moved inside transcript column) -->
       <div class="md3-player-header">
         <a href="{{ url_for('editor.overview') }}" class="back-link">
-          <i class="bi bi-chevron-left"></i>
+          <span class="material-symbols-rounded">arrow_back</span>
         </a>
         <h1 class="document-title">{{ country }}/{{ filename }}</h1>
       </div>
@@ -37,18 +37,18 @@
           <!-- Status Card (NEUE Card ganz oben) -->
           <div class="md3-editor-card">
             <div class="md3-editor-card-header">
-              <i class="bi bi-info-circle"></i>
+              <span class="material-symbols-rounded">info</span>
               <h2 class="md3-editor-card-title">Status</h2>
             </div>
             <span id="save-indicator" class="md3-editor-status-badge md3-editor-status-saved">
-              <i class="bi bi-check-circle"></i> Gespeichert
+              <span class="material-symbols-rounded">check_circle</span> Gespeichert
             </span>
           </div>
 
           <!-- Bearbeitung Card -->
           <div class="md3-editor-card">
             <div class="md3-editor-card-header">
-              <i class="bi bi-pencil"></i>
+              <span class="material-symbols-rounded">edit</span>
               <h2 class="md3-editor-card-title">Bearbeitung</h2>
             </div>
 
@@ -59,10 +59,10 @@
               </div>
               <div class="md3-editor-actions-inline">
                 <button id="undo-btn" class="md3-editor-btn-icon" disabled title="Rückgängig (CTRL+Z)">
-                  <i class="bi bi-arrow-counterclockwise"></i>
+                  <span class="material-symbols-rounded">undo</span>
                 </button>
                 <button id="redo-btn" class="md3-editor-btn-icon" disabled title="Wiederholen (CTRL+Y)">
-                  <i class="bi bi-arrow-clockwise"></i>
+                  <span class="material-symbols-rounded">redo</span>
                 </button>
               </div>
             </div>
@@ -72,7 +72,7 @@
               <p id="current-word" class="md3-editor-current-word"></p>
               <div class="md3-editor-edit-actions">
                 <button id="cancel-edit-btn" class="md3-editor-btn md3-editor-btn-sm md3-editor-btn-tonal" title="ESC">
-                  <i class="bi bi-x"></i> Abbrechen
+                  <span class="material-symbols-rounded">close</span> Abbrechen
                 </button>
               </div>
             </div>
@@ -84,20 +84,20 @@
               </select>
               <div class="md3-editor-speaker-actions">
                 <button id="confirm-speaker-btn" class="md3-editor-btn md3-editor-btn-sm md3-editor-btn-primary">
-                  <i class="bi bi-check"></i> Speichern
+                  <span class="material-symbols-rounded">check</span> Speichern
                 </button>
                 <button id="cancel-speaker-btn" class="md3-editor-btn md3-editor-btn-sm md3-editor-btn-tonal">
-                  <i class="bi bi-x"></i> Abbrechen
+                  <span class="material-symbols-rounded">close</span> Abbrechen
                 </button>
               </div>
             </div>
 
             <div class="md3-editor-cta-row">
               <button id="save-btn" class="md3-editor-btn md3-editor-btn-primary md3-editor-btn-block">
-                <i class="bi bi-save"></i> speichern
+                <span class="material-symbols-rounded">save</span> speichern
               </button>
               <button id="discard-btn" class="md3-editor-btn md3-editor-btn-error md3-editor-btn-block">
-                <i class="bi bi-trash"></i> verwerfen
+                <span class="material-symbols-rounded">delete</span> verwerfen
               </button>
             </div>
           </div>
@@ -105,11 +105,11 @@
           <!-- Bookmarks Card -->
           <div class="md3-editor-card">
             <div class="md3-editor-card-header">
-              <i class="bi bi-bookmark-check"></i>
+              <span class="material-symbols-rounded">bookmark</span>
               <h2 class="md3-editor-card-title">Bookmarks</h2>
             </div>
             <button id="bookmark-btn" class="md3-editor-bookmark-btn" title="Bookmark hinzufügen">
-              <i class="bi bi-bookmark-plus"></i>
+              <span class="material-symbols-rounded">bookmark_add</span>
               Bookmark
             </button>
             <div id="bookmark-list" class="md3-editor-bookmark-list">
@@ -120,7 +120,7 @@
           <!-- History Card -->
           <div class="md3-editor-card">
             <div class="md3-editor-card-header">
-              <i class="bi bi-clock-history"></i>
+              <span class="material-symbols-rounded">history</span>
               <h2 class="md3-editor-card-title">Änderungshistorie</h2>
             </div>
             <div id="history-panel" class="md3-editor-history-panel">

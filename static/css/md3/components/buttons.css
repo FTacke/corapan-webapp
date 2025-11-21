@@ -1,114 +1,15 @@
 /* ============================================================================
-   MD3 Buttons - From Legacy md3-components.css
+   MD3 Buttons - Canonical Implementation
    ============================================================================
-   TRANSFERRED FROM: static/css/md3-components.css (Lines 646-800)
-   STATUS: ⚠️ Uses legacy MD3 tokens (--md3-*), needs migration to --md-sys-*
-   PRESERVED: All original hover/active states and transitions
+   Strict MD3 Button implementation per specification.
+   - Uses --md-sys-color-* tokens
+   - Uses --md-sys-typescale-* tokens
+   - Uses --space-* tokens
+   - No aliases or backward compatibility variables allowed.
    ============================================================================ */
 
-.md3-button-filled {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--space-2);
-  padding: var(--space-3) var(--space-6);
-  border-radius: 9999px;
-  border: none;
-  background: var(--md-sys-color-primary);
-  color: var(--md-sys-color-on-primary);
-  font-size: 14px;
-  font-weight: 500;
-  letter-spacing: 0.1px;
-  text-decoration: none;
-  cursor: pointer;
-  transition: opacity 200ms ease;
-  position: relative;
-}
-
-.md3-button-filled:hover {
-  opacity: 0.92;
-}
-
-/* Tonal Button - Mittlere Betonung (MD3 Standard) */
-.md3-button-tonal {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--space-2);
-  padding: var(--space-3) var(--space-6);
-  border-radius: 9999px;
-  border: none;
-  background: var(--md-sys-color-primary-container);
-  color: var(--md-sys-color-on-primary-container);
-  font-size: 14px;
-  font-weight: 500;
-  letter-spacing: 0.1px;
-  text-decoration: none;
-  cursor: pointer;
-  transition: opacity 200ms ease;
-  position: relative;
-}
-
-.md3-button-tonal:hover {
-  opacity: 0.92;
-}
-
-/* Outlined Button - Niedrige Betonung */
-.md3-button-outlined {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--space-2);
-  padding: var(--space-3) var(--space-6);
-  border-radius: 9999px;
-  border: 1px solid var(--md-sys-color-outline-variant);
-  background: transparent;
-  color: var(--md-sys-color-primary);
-  font-size: 14px;
-  font-weight: 500;
-  letter-spacing: 0.1px;
-  text-decoration: none;
-  cursor: pointer;
-  transition:
-    border-color 200ms ease,
-    opacity 200ms ease;
-  position: relative;
-}
-
-.md3-button-outlined:hover {
-  opacity: 0.92;
-  border-color: var(--md-sys-color-primary);
-}
-
-/* Text Button */
-.md3-button-text {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--space-2);
-  padding: var(--space-2) var(--space-4);
-  border-radius: 9999px;
-  border: none;
-  background: transparent;
-  color: var(--md-sys-color-primary);
-  font-size: 14px;
-  font-weight: 500;
-  letter-spacing: 0.1px;
-  text-decoration: none;
-  cursor: pointer;
-  transition: opacity 200ms ease;
-  position: relative;
-}
-
-.md3-button-text:hover {
-  opacity: 0.92;
-}
-
-/* ============================================================================
-   Button Aliases (.btn-* for consistency with templates)
-   ============================================================================ */
-
-.btn-filled {
+/* Filled Button - High Emphasis */
+.md3-button--filled {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -128,20 +29,22 @@
   min-height: 48px;
 }
 
-.btn-filled:hover {
-  background: color-mix(
+.md3-button--filled:hover {
+  background-color: color-mix(
     in srgb,
     var(--md-sys-color-primary) 92%,
     var(--md-sys-color-on-primary) 8%
-  );
+  ) !important;
+  box-shadow: var(--elev-1);
 }
 
-.btn-filled:focus-visible {
+.md3-button--filled:focus-visible {
   outline: 2px solid var(--md-sys-color-primary);
   outline-offset: 2px;
 }
 
-.btn-tonal {
+/* Tonal Button - Medium Emphasis */
+.md3-button--tonal {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -161,20 +64,22 @@
   min-height: 48px;
 }
 
-.btn-tonal:hover {
-  background: color-mix(
+.md3-button--tonal:hover {
+  background-color: color-mix(
     in srgb,
     var(--md-sys-color-primary-container) 92%,
     var(--md-sys-color-on-primary-container) 8%
-  );
+  ) !important;
+  box-shadow: var(--elev-1);
 }
 
-.btn-tonal:focus-visible {
+.md3-button--tonal:focus-visible {
   outline: 2px solid var(--md-sys-color-primary);
   outline-offset: 2px;
 }
 
-.btn-outlined {
+/* Outlined Button - Low Emphasis */
+.md3-button--outlined {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -196,17 +101,18 @@
   min-height: 48px;
 }
 
-.btn-outlined:hover {
-  background: color-mix(in srgb, var(--md-sys-color-primary) 8%, transparent);
+.md3-button--outlined:hover {
+  background-color: color-mix(in srgb, var(--md-sys-color-primary) 8%, transparent);
   border-color: var(--md-sys-color-primary);
 }
 
-.btn-outlined:focus-visible {
+.md3-button--outlined:focus-visible {
   outline: 2px solid var(--md-sys-color-primary);
   outline-offset: 2px;
 }
 
-.btn-text {
+/* Text Button - Lowest Emphasis */
+.md3-button--text {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -226,16 +132,17 @@
   min-height: 48px;
 }
 
-.btn-text:hover {
-  background: color-mix(in srgb, var(--md-sys-color-primary) 12%, transparent);
+.md3-button--text:hover {
+  background-color: color-mix(in srgb, var(--md-sys-color-primary) 12%, transparent);
 }
 
-.btn-text:focus-visible {
+.md3-button--text:focus-visible {
   outline: 2px solid var(--md-sys-color-primary);
   outline-offset: 2px;
 }
 
-.btn-danger {
+/* Danger Button (Error State) */
+.md3-button--danger {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -255,15 +162,40 @@
   min-height: 48px;
 }
 
-.btn-danger:hover {
-  background: color-mix(
+.md3-button--danger:hover {
+  background-color: color-mix(
     in srgb,
     var(--md-sys-color-error) 92%,
     var(--md-sys-color-on-error) 8%
-  );
+  ) !important;
+  box-shadow: var(--elev-1);
 }
 
-.btn-danger:focus-visible {
+.md3-button--danger:focus-visible {
   outline: 2px solid var(--md-sys-color-error);
   outline-offset: 2px;
+}
+
+/* Button Icon */
+.md3-button__icon {
+  font-size: 18px;
+  width: 18px;
+  height: 18px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Disabled State */
+.md3-button--disabled,
+.md3-button--filled:disabled,
+.md3-button--tonal:disabled,
+.md3-button--outlined:disabled,
+.md3-button--text:disabled,
+.md3-button--danger:disabled {
+  background: rgba(28, 27, 31, 0.12) !important;
+  color: rgba(28, 27, 31, 0.38) !important;
+  border-color: transparent !important;
+  cursor: not-allowed;
+  pointer-events: none;
 }

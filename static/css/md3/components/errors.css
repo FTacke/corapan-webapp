@@ -35,6 +35,12 @@ body {
   justify-content: center;
 }
 
+.md3-error-icon .material-symbols-rounded {
+  font-size: 80px;
+  width: 80px;
+  height: 80px;
+}
+
 .md3-error-code {
   color: var(--md-sys-color-primary);
   margin: 0;
