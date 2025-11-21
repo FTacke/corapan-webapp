@@ -426,7 +426,7 @@
           <div id="expert-area" class="md3-expert-area" hidden>
             
             <!-- E1: PATTERN BUILDER -->
-            <div class="md3-expert-section" style="overflow: visible;">
+            <div class="md3-expert-section overflow-visible">
               <div class="md3-expert-header">
                 <h3 class="md3-expert-section__title">Patrones de palabras (CQL)</h3>
                         <!-- Help tooltip deliberately removed — shows as dialog only via (Guía y prompt) link -->
@@ -677,7 +677,7 @@ Ahora convierte la siguiente descripción en una consulta CQL precisa para CORAP
            SUB-TABS: RESULTADOS | ESTADÍSTICAS
            Hidden by default, shown after successful search
            ======================================== -->
-      <div id="search-sub-tabs" role="tablist" class="md3-stats-tabs" style="margin-top: 1.5rem; display: none;">
+      <div id="search-sub-tabs" role="tablist" class="md3-stats-tabs mt-6 hidden">
         <button type="button" role="tab" id="tab-resultados" class="md3-stats-tab md3-stats-tab--active" data-view="results" aria-controls="panel-resultados" aria-selected="true">
           <span class="material-symbols-rounded" aria-hidden="true">table</span>
           <span>Resultados</span>
@@ -704,7 +704,7 @@ Ahora convierte la siguiente descripción en una consulta CQL precisa para CORAP
         </div>
 
         <!-- DataTables Container (hidden until search performed) -->
-        <div id="datatable-container" class="md3-advanced__tablewrap md3-corpus-table-container" style="display: none;">
+        <div id="datatable-container" class="md3-advanced__tablewrap md3-corpus-table-container hidden">
           <table id="advanced-table" class="md3-corpus-table" role="grid">
             <caption class="sr-only">
               Resultados de búsqueda avanzada. 
@@ -743,8 +743,8 @@ Ahora convierte la siguiente descripción en una consulta CQL precisa para CORAP
                 <option value="">Todos los países</option>
               </select>
             </div>
-            <p id="stats-total" class="md3-body-medium" style="margin: 0.5rem 0 0 0; color: var(--md-sys-color-on-surface-variant);">
-              Tokens coincidentes: <strong style="color: var(--md-sys-color-primary);">—</strong>
+            <p id="stats-total" class="md3-body-medium mt-2 text-on-surface-variant">
+              Tokens coincidentes: <strong class="text-primary">—</strong>
             </p>
           </header>
 
@@ -754,7 +754,7 @@ Ahora convierte la siguiente descripción en una consulta CQL precisa para CORAP
               <div class="md3-stats-card-header">
                 <div class="md3-stats-card-title-wrapper">
                   <h3 class="md3-title-medium md3-stats-card-title">País</h3>
-                  <p class="md3-body-small" style="color: var(--md-sys-color-on-surface-variant); margin: 0;" data-meta="by_country">—</p>
+                  <p class="md3-body-small text-on-surface-variant m-0" data-meta="by_country">—</p>
                 </div>
                 <div class="md3-segmented" data-chart-id="country">
                   <button class="md3-segmented-btn is-selected" data-mode="count" aria-pressed="true" aria-label="Mostrar números absolutos">
@@ -775,7 +775,7 @@ Ahora convierte la siguiente descripción en una consulta CQL precisa para CORAP
               <div class="md3-stats-card-header">
                 <div class="md3-stats-card-title-wrapper">
                   <h3 class="md3-title-medium md3-stats-card-title">Tipo de hablante</h3>
-                  <p class="md3-body-small" style="color: var(--md-sys-color-on-surface-variant); margin: 0;" data-meta="by_speaker_type">—</p>
+                  <p class="md3-body-small text-on-surface-variant m-0" data-meta="by_speaker_type">—</p>
                 </div>
                 <div class="md3-segmented" data-chart-id="speaker">
                   <button class="md3-segmented-btn is-selected" data-mode="count" aria-pressed="true" aria-label="Mostrar números absolutos">
@@ -796,7 +796,7 @@ Ahora convierte la siguiente descripción en una consulta CQL precisa para CORAP
               <div class="md3-stats-card-header">
                 <div class="md3-stats-card-title-wrapper">
                   <h3 class="md3-title-medium md3-stats-card-title">Sexo</h3>
-                  <p class="md3-body-small" style="color: var(--md-sys-color-on-surface-variant); margin: 0;" data-meta="by_sex">—</p>
+                  <p class="md3-body-small text-on-surface-variant m-0" data-meta="by_sex">—</p>
                 </div>
                 <div class="md3-segmented" data-chart-id="sexo">
                   <button class="md3-segmented-btn is-selected" data-mode="count" aria-pressed="true" aria-label="Mostrar números absolutos">
@@ -817,7 +817,7 @@ Ahora convierte la siguiente descripción en una consulta CQL precisa para CORAP
               <div class="md3-stats-card-header">
                 <div class="md3-stats-card-title-wrapper">
                   <h3 class="md3-title-medium md3-stats-card-title">Modo de habla</h3>
-                  <p class="md3-body-small" style="color: var(--md-sys-color-on-surface-variant); margin: 0;" data-meta="by_modo">—</p>
+                  <p class="md3-body-small text-on-surface-variant m-0" data-meta="by_modo">—</p>
                 </div>
                 <div class="md3-segmented" data-chart-id="modo">
                   <button class="md3-segmented-btn is-selected" data-mode="count" aria-pressed="true" aria-label="Mostrar números absolutos">
@@ -838,7 +838,7 @@ Ahora convierte la siguiente descripción en una consulta CQL precisa para CORAP
               <div class="md3-stats-card-header">
                 <div class="md3-stats-card-title-wrapper">
                   <h3 class="md3-title-medium md3-stats-card-title">Discurso</h3>
-                  <p class="md3-body-small" style="color: var(--md-sys-color-on-surface-variant); margin: 0;" data-meta="by_discourse">—</p>
+                  <p class="md3-body-small text-on-surface-variant m-0" data-meta="by_discourse">—</p>
                 </div>
                 <div class="md3-segmented" data-chart-id="discourse">
                   <button class="md3-segmented-btn is-selected" data-mode="count" aria-pressed="true" aria-label="Mostrar números absolutos">
@@ -913,9 +913,9 @@ Ahora convierte la siguiente descripción en una consulta CQL precisa para CORAP
       </form>
       
       <!-- Token Results Section -->
-      <section id="token-results" class="md3-view-content" style="display: none; margin-top: 2rem;">
+      <section id="token-results" class="md3-view-content hidden mt-8">
         <!-- Token Sub-Tabs (Resultados | Estadísticas) -->
-        <div id="token-sub-tabs" role="tablist" class="md3-token-stats-tabs md3-stats-tabs" style="margin-top: 0.5rem; display: flex;">
+        <div id="token-sub-tabs" role="tablist" class="md3-token-stats-tabs md3-stats-tabs mt-2 flex">
           <button type="button" role="tab" id="token-tab-resultados" class="md3-token-stats-tab md3-stats-tab md3-stats-tab--active" data-view="results" aria-controls="token-panel-resultados" aria-selected="true">
             <span class="material-symbols-rounded" aria-hidden="true">table</span>
             <span>Resultados</span>
@@ -927,7 +927,7 @@ Ahora convierte la siguiente descripción en una consulta CQL precisa para CORAP
         
         <!-- DataTable Container -->
         <div class="md3-corpus-table-container">
-          <table id="token-results-table" class="md3-corpus-table" style="width:100%">
+          <table id="token-results-table" class="md3-corpus-table w-full">
             <thead>
               <tr>
                 <th>#</th>
@@ -952,7 +952,7 @@ Ahora convierte la siguiente descripción en una consulta CQL precisa para CORAP
         </div>
 
         <div id="token-panel-estadisticas" role="tabpanel" aria-labelledby="token-tab-estadisticas" class="md3-view-content" hidden>
-          <div class="md3-body-medium" style="padding: 1rem;">
+          <div class="md3-body-medium p-4">
             <div id="stats-grid" class="md3-stats-grid">
               <div id="chart-country"></div>
               <div id="chart-speaker"></div>

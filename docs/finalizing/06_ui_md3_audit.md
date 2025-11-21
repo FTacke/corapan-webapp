@@ -1,7 +1,7 @@
 # UI, MD3 & Template Audit Report
 
 **Datum:** 21.11.2025
-**Status:** Audit Complete
+**Status:** Audit Complete & Refactoring in Progress
 **Fokus:** Design-System-Konsistenz, Frontend-Architektur, Template-Qualität
 
 ## 1. Ziel und Umfang des Audits
@@ -29,13 +29,13 @@ Das Projekt verfügt bereits über eine solide Basis für MD3:
 
 | MD3-Farbrolle | Status | Korrekte Nutzung (Beispiele) | Inkonsistente / Falsche Nutzung |
 | :--- | :--- | :--- | :--- |
-| **Primary** (`--md-sys-color-primary`) | ✅ Gut | Advanced Search Buttons, Active Tabs | `login.html` (nutzt `#667eea`, `#5568d3`) |
-| **Surface** (`--md-sys-color-surface`) | ⚠️ Teils | `layout.css` (Body Background) | `base.html` (Fallback `#fff`), `login.html` (`#fee`) |
-| **On-Surface** (`--md-sys-color-on-surface`) | ✅ Gut | Text in `typography.css` | `login.html` (`color: #1a1a1a`), `advanced.html` (Inline `color: var(...)`) |
-| **Error** (`--md-sys-color-error`) | ❌ Schlecht | Kaum genutzt | `login.html` (`#f44336`, `#c62828` für Fehler) |
-| **Outline** (`--md-sys-color-outline`) | ⚠️ Teils | Input Borders (Search) | `login.html` (`border: 1px solid #ddd`) |
+| **Primary** (`--md-sys-color-primary`) | ✅ Gut | Advanced Search Buttons, Active Tabs | - |
+| **Surface** (`--md-sys-color-surface`) | ⚠️ Teils | `layout.css` (Body Background) | `base.html` (Fallback `#fff`) |
+| **On-Surface** (`--md-sys-color-on-surface`) | ✅ Gut | Text in `typography.css` | `advanced.html` (Inline `color: var(...)`) |
+| **Error** (`--md-sys-color-error`) | ✅ Gut | Error Pages | - |
+| **Outline** (`--md-sys-color-outline`) | ⚠️ Teils | Input Borders (Search) | - |
 
-**Befund:** `login.html` ist ein kompletter Ausreißer und ignoriert das Token-System vollständig.
+**Befund:** `login.html` wurde entfernt. Error-Pages wurden refactored.
 
 ### 3.2 Typografie-Token-Konsistenz
 
@@ -44,7 +44,7 @@ Das System definiert Klassen wie `.md3-display-*`, `.md3-headline-*`, `.md3-body
 | Bereich | Status | Problem |
 | :--- | :--- | :--- |
 | **Headings** | ✅ OK | Meist korrekt via CSS-Klassen gelöst. |
-| **Icons** | ⚠️ Warnung | `index.html`: `style="font-size: 0.9rem;"` auf `material-symbols-rounded`. Sollte via Utility-Klasse gelöst werden. |
+| **Icons** | ✅ OK | `index.html`: Icon-Größe via CSS korrigiert. |
 | **Body Text** | ⚠️ Warnung | `advanced.html`: `class="md3-body-medium"` oft kombiniert mit Inline-Styles für Margins. |
 
 ### 3.3 Spacing-Token-Konsistenz
@@ -54,7 +54,6 @@ MD3 nutzt ein 4px-Grid (0.25rem). `layout.css` bietet `.md3-space-*`.
 | Template | Befund | Empfehlung |
 | :--- | :--- | :--- |
 | `advanced.html` | `style="margin-top: 1.5rem;"`, `style="margin: 0.5rem..."`, `style="padding: 1rem;"` | Ersetzen durch `.md3-space-6`, `.md3-space-2`, `.md3-space-4` oder Utility-Klassen (`mt-6`, `p-4`). |
-| `login.html` | Unbekannte Spacing-Werte via CSS/Inline. | Komplettes Refactoring auf MD3-Grid. |
 | `player.html` | Inline-Styles für Positionierung. | Flexbox/Grid-Klassen nutzen. |
 
 ## 4. Design-Drift – Vergleich gegen Soll-Architektur
@@ -68,13 +67,13 @@ MD3 nutzt ein 4px-Grid (0.25rem). `layout.css` bietet `.md3-space-*`.
 | **Navigation Drawer** | ✅ Gut | `_navigation_drawer.html` | Nutzt sauberes HTML/CSS. |
 | **Top App Bar** | ✅ Gut | `_top_app_bar.html` | MD3-konform. |
 | **Search Bar** | ✅ Gut | Advanced Search | Nutzt Tokens und MD3-Struktur. |
-| **Dialogs/Modals** | ❌ Legacy | `_login_sheet.html` | Eigenbau-Overlay, kein natives `<dialog>` oder MD3-Modal. |
+| **Dialogs/Modals** | ⚠️ Mixed | `_login_sheet.html` | Eigenbau-Overlay, refactored auf JS-Module. |
 
 ### 4.2 Theming-Durchdringung
 
-- **Vollständig Tokenisiert:** `search/advanced.html` (bis auf Layout-Hacks), `partials/_navigation_drawer.html`.
+- **Vollständig Tokenisiert:** `search/advanced.html` (bis auf Layout-Hacks), `partials/_navigation_drawer.html`, `errors/*.html`.
 - **Teilweise Tokenisiert:** `base.html`, `pages/index.html`.
-- **Nicht Tokenisiert (Legacy):** `auth/login.html`, `auth/_login_sheet.html`.
+- **Nicht Tokenisiert (Legacy):** -
 
 ## 5. JS-Audit
 
@@ -84,9 +83,9 @@ Diese Handler müssen in Event-Listener (`addEventListener`) in separaten JS-Dat
 
 | Template | Event | Funktion / Code | Schweregrad |
 | :--- | :--- | :--- | :--- |
-| `pages/player.html` | `onmouseover` | `showTooltip(event)` | **MEDIUM** |
-| `pages/player.html` | `onmouseout` | `hideTooltip(event)` | **MEDIUM** |
-| `auth/_login_sheet.html` | `onclick` | `document.getElementById('login-sheet').remove()` | **HIGH** (Logik im HTML) |
+| `pages/player.html` | `onmouseover` | `showTooltip(event)` | **FIXED** |
+| `pages/player.html` | `onmouseout` | `hideTooltip(event)` | **FIXED** |
+| `auth/_login_sheet.html` | `onclick` | `document.getElementById('login-sheet').remove()` | **FIXED** |
 | `search/advanced.html` | `onclick` | (Diverse Toggle-Logik via `aria-controls` ist ok, aber JS-Fallback prüfen) | **LOW** |
 
 ### 5.2 Liste aller Inline `<script>`-Blöcke
@@ -114,7 +113,7 @@ Diese Handler müssen in Event-Listener (`addEventListener`) in separaten JS-Dat
 | `_navigation_drawer.html` | Hauptmenü | ✅ Gut, wiederverwendbar. |
 | `_top_app_bar.html` | Header | ✅ Gut. |
 | `audio-player.html` | Globaler Player | ⚠️ Enthält Inline-JS. |
-| `_login_sheet.html` | Login Overlay | ❌ Legacy-Struktur, Inline-Events. |
+| `_login_sheet.html` | Login Overlay | ✅ Refactored. |
 
 ### 6.2 Komponenten-Potenzial (Jinja Macros)
 
@@ -130,9 +129,10 @@ Folgende UI-Elemente werden oft kopiert und sollten zentralisiert werden:
 | Template | Score | Begründung |
 | :--- | :--- | :--- |
 | `search/advanced.html` | **B-** | Gute MD3-Basis, aber zu viel Inline-JS/CSS und zu monolithisch. |
-| `auth/login.html` | **D** | Veraltet, Hardcoded Styles, nicht wartbar. |
-| `pages/index.html` | **C+** | Solide, aber kleine Inkonsistenzen (Icons). |
+| `auth/login.html` | **-** | **REMOVED** (Unused). |
+| `pages/index.html` | **B** | Solide, Icons gefixt. |
 | `base.html` | **B** | Gute Struktur, Meta-Tags ok, wenig Inline-Styles. |
+| `errors/*.html` | **A** | Vollständig MD3-konform. |
 
 ## 7. SOLL-ARCHITEKTUR (Template-Frontend)
 
@@ -160,17 +160,13 @@ Für alle zukünftigen Refactorings gilt folgende Architektur als Zielbild:
 
 ### Prio A: Kurzfristig / High Impact (Quick Wins)
 
-1.  **Refactor `login.html`**
-    - *Aufwand:* Medium
-    - *Risiko:* Low
-    - *Mehrwert:* 5/5 (Beseitigt größten Legacy-Schuldner, ermöglicht Dark Mode).
-    - *Action:* Inline-Styles entfernen, MD3-Klassen anwenden, Tokens nutzen.
-
-2.  **Inline-Events entfernen (`player.html`, `_login_sheet.html`)**
-    - *Aufwand:* Low
-    - *Risiko:* Low
+1.  **Inline-Events entfernen (`player.html`, `_login_sheet.html`)**
+    - *Status:* **DONE**
     - *Mehrwert:* 4/5 (Saubere CSP-Compliance, bessere Wartbarkeit).
-    - *Action:* Event-Listener in JS-Dateien auslagern.
+
+2.  **Refactor `login.html`**
+    - *Status:* **DONE** (Removed)
+    - *Mehrwert:* 5/5 (Beseitigt größten Legacy-Schuldner).
 
 ### Prio B: Mittelfristig (Stabilisierung)
 
@@ -181,8 +177,7 @@ Für alle zukünftigen Refactorings gilt folgende Architektur als Zielbild:
     - *Action:* `advanced-search-init.js` erstellen.
 
 2.  **Hardcoded Colors eliminieren**
-    - *Aufwand:* Medium (Suchen & Ersetzen)
-    - *Risiko:* Low
+    - *Status:* **IN PROGRESS** (Editor fixed, others pending)
     - *Mehrwert:* 3/5 (Konsistentes Design).
 
 ### Prio C: Langfristig (Architektur)
@@ -196,3 +191,37 @@ Für alle zukünftigen Refactorings gilt folgende Architektur als Zielbild:
     - *Aufwand:* Low
     - *Risiko:* Low
     - *Mehrwert:* 3/5 (Ersetzt Inline-Margins).
+
+## 9. Completed Refactorings (2025-11-21)
+
+The following actions have been completed on branch `md3`:
+
+1.  **Foundation:**
+    - Centralized global background color as `--app-background` in `static/css/app-tokens.css`.
+    - Updated `base.html` to use this token, preserving flash prevention logic.
+    - Ensured `player` and `editor` pages retain their specific backgrounds.
+
+2.  **Login & Auth:**
+    - Removed unused `templates/auth/login.html`.
+    - Refactored `templates/auth/_login_sheet.html` to remove inline events and use `static/js/modules/auth/login-sheet.js`.
+    - Fixed close button behavior in login sheet when triggered from nav drawer.
+    - Login UI is now fully tokenized and supports dark mode.
+
+3.  **Player:**
+    - Removed inline `onmouseover`/`onmouseout` handlers from `templates/pages/player.html`.
+    - Implemented tooltip visibility via CSS `:hover` in `static/css/md3/components/player.css`.
+    - Refactored `templates/partials/audio-player.html` to move layout logic to `static/js/modules/player/audio-player-layout.js`.
+
+4.  **Global Cleanup & Fixes:**
+    - **Index:** Restored icon size in `index.css` to match original design.
+    - **Editor:** Replaced hardcoded status colors with `--app-color-success` in `editor.css`.
+    - **Search:** Fixed visibility bug where results were hidden after refactor (updated `searchUI.js` and `initTable.js` to toggle `.hidden` class).
+    - **Error Pages:** Refactored all error templates (400, 401, 403, 404, 500) to use MD3 styling and `errors.css`.
+    - **Utility Classes:** Added `.hidden`, `.text-primary`, `.mt-*` to `layout.css`.
+
+5.  **Status:**
+    - `login.html`: **REMOVED**
+    - `_login_sheet.html`: **A** (MD3 compliant, no inline JS)
+    - `player.html`: **B+** (No inline events, cleaner CSS)
+    - `advanced.html`: **B+** (Reduced inline styles significantly)
+    - `errors/*.html`: **A** (MD3 compliant)

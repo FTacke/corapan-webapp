@@ -1,0 +1,17 @@
+:root {
+  --app-background: #ffffff;
+  
+  /* App specific tokens */
+  --app-color-login-bg: #f0f2f5; /* Example, will refine later */
+  --app-color-success: #1b5e20;
+  --app-color-on-success: #ffffff;
+  --app-color-success-container: #bdfcc9; /* Example light green */
+  --app-color-on-success-container: #002200;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --app-background: #14141A;
+    --app-color-login-bg: #14141A;
+  }
+}

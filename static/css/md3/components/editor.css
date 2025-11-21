@@ -640,9 +640,9 @@
 }
 
 .md3-editor-status-saved {
-  background: #1b5e20; /* Grün – deutlich als "OK/Gespeichert" */
-  color: #ffffff;
-  border-color: #1b5e20;
+  background: var(--app-color-success);
+  color: var(--app-color-on-success);
+  border-color: var(--app-color-success);
 }
 
 .md3-editor-status-unsaved {
