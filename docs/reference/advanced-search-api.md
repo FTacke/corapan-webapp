@@ -86,3 +86,24 @@ Bei Fehlern (z.B. ungültiges CQL) gibt die API einen HTTP 400 oder 500 Status z
   "details": "..."
 }
 ```
+
+---
+
+## Statistics Endpoint
+
+`GET /search/advanced/api/stats`
+
+Dieser Endpoint liefert aggregierte Statistiken für die Diagramme.
+
+- **Parameter**: Identisch zu den Suchparametern (Query, Filter).
+- **Funktionsweise**: Führt parallele `group`-Abfragen an BlackLab aus.
+- **Details**: Siehe [Statistics Generation Documentation](../dev/statistics_generation.md).
+
+**Response Format:**
+```json
+{
+  "total_hits": 1500,
+  "by_country": [{"key": "ES", "n": 1000}, ...],
+  "by_speaker_type": [{"key": "native", "n": 1200}, ...]
+}
+```
