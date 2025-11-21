@@ -92,7 +92,10 @@
 .md3-index-card__title {
   margin: var(--space-2) 0;
   color: var(--md-sys-color-primary);
-  font-size: var(--md-sys-typescale-title-large);
+  font-size: var(--md-sys-typescale-title-large-font-size);
+  font-weight: var(--md-sys-typescale-title-large-font-weight);
+  line-height: var(--md-sys-typescale-title-large-line-height);
+  letter-spacing: var(--md-sys-typescale-title-large-letter-spacing);
 }
 
 .md3-index-card__text {

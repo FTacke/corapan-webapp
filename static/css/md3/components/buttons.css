@@ -118,8 +118,10 @@
   border: none;
   background: var(--md-sys-color-primary);
   color: var(--md-sys-color-on-primary);
-  font-size: var(--md-sys-typescale-label-large);
-  font-weight: 600;
+  font-size: var(--md-sys-typescale-label-large-font-size);
+  font-weight: var(--md-sys-typescale-label-large-font-weight);
+  line-height: var(--md-sys-typescale-label-large-line-height);
+  letter-spacing: var(--md-sys-typescale-label-large-letter-spacing);
   text-decoration: none;
   cursor: pointer;
   transition: background-color 200ms ease;
@@ -149,8 +151,10 @@
   border: none;
   background: var(--md-sys-color-primary-container);
   color: var(--md-sys-color-on-primary-container);
-  font-size: var(--md-sys-typescale-label-large);
-  font-weight: 600;
+  font-size: var(--md-sys-typescale-label-large-font-size);
+  font-weight: var(--md-sys-typescale-label-large-font-weight);
+  line-height: var(--md-sys-typescale-label-large-line-height);
+  letter-spacing: var(--md-sys-typescale-label-large-letter-spacing);
   text-decoration: none;
   cursor: pointer;
   transition: background-color 200ms ease;
@@ -180,8 +184,10 @@
   border: 1px solid var(--md-sys-color-outline);
   background: transparent;
   color: var(--md-sys-color-primary);
-  font-size: var(--md-sys-typescale-label-large);
-  font-weight: 600;
+  font-size: var(--md-sys-typescale-label-large-font-size);
+  font-weight: var(--md-sys-typescale-label-large-font-weight);
+  line-height: var(--md-sys-typescale-label-large-line-height);
+  letter-spacing: var(--md-sys-typescale-label-large-letter-spacing);
   text-decoration: none;
   cursor: pointer;
   transition:
@@ -210,8 +216,10 @@
   border: none;
   background: transparent;
   color: var(--md-sys-color-primary);
-  font-size: var(--md-sys-typescale-label-large);
-  font-weight: 600;
+  font-size: var(--md-sys-typescale-label-large-font-size);
+  font-weight: var(--md-sys-typescale-label-large-font-weight);
+  line-height: var(--md-sys-typescale-label-large-line-height);
+  letter-spacing: var(--md-sys-typescale-label-large-letter-spacing);
   text-decoration: none;
   cursor: pointer;
   transition: background-color 200ms ease;
@@ -237,8 +245,10 @@
   border: none;
   background: var(--md-sys-color-error);
   color: var(--md-sys-color-on-error);
-  font-size: var(--md-sys-typescale-label-large);
-  font-weight: 600;
+  font-size: var(--md-sys-typescale-label-large-font-size);
+  font-weight: var(--md-sys-typescale-label-large-font-weight);
+  line-height: var(--md-sys-typescale-label-large-line-height);
+  letter-spacing: var(--md-sys-typescale-label-large-letter-spacing);
   text-decoration: none;
   cursor: pointer;
   transition: background-color 200ms ease;

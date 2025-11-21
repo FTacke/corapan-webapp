@@ -9,7 +9,10 @@
 }
 
 .card .card-title {
-  font-size: var(--md-sys-typescale-title-medium);
+  font-size: var(--md-sys-typescale-title-medium-font-size);
+  font-weight: var(--md-sys-typescale-title-medium-font-weight);
+  line-height: var(--md-sys-typescale-title-medium-line-height);
+  letter-spacing: var(--md-sys-typescale-title-medium-letter-spacing);
   margin: 0 0 var(--space-2) 0;
 }
 
