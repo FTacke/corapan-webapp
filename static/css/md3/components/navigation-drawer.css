@@ -80,9 +80,11 @@
   border: none;
   background: transparent;
   color: var(--md-sys-color-on-surface);
-  font-family: var(--font-body);
-  font-size: var(--md-sys-typescale-body-large);
-  font-weight: 500;
+  font-family: var(--md-sys-typescale-body-large-font-family);
+  font-size: var(--md-sys-typescale-body-large-font-size);
+  font-weight: var(--md-sys-typescale-body-large-font-weight);
+  line-height: var(--md-sys-typescale-body-large-line-height);
+  letter-spacing: var(--md-sys-typescale-body-large-letter-spacing);
   text-decoration: none;
   text-align: left;
   cursor: pointer;

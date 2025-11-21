@@ -33,35 +33,38 @@
 
 /* Hero Eyebrow (Context Label) */
 .md3-hero__eyebrow {
-  font-size: var(--md-sys-typescale-label-large);
-  letter-spacing: 0.5px;
+  font-size: var(--md-sys-typescale-label-large-font-size);
+  font-weight: var(--md-sys-typescale-label-large-font-weight);
+  line-height: var(--md-sys-typescale-label-large-line-height);
+  letter-spacing: var(--md-sys-typescale-label-large-letter-spacing);
   color: var(--md-sys-color-on-surface-variant);
-  margin-bottom: 8px;
+  margin-bottom: var(--space-2);
   display: block;
   text-transform: uppercase;
 }
 
 /* Hero Title (H1) */
 .md3-hero__title {
-  font-size: var(--md-sys-typescale-display-small);
-  font-weight: 400;
-  line-height: 1.2;
+  font-size: var(--md-sys-typescale-display-small-font-size);
+  font-weight: var(--md-sys-typescale-display-small-font-weight);
+  line-height: var(--md-sys-typescale-display-small-line-height);
   color: var(--md-sys-color-primary);
-  margin: 0 0 16px 0;
+  margin: 0 0 var(--space-4) 0;
 }
 
 .md3-hero__title--large {
-  font-size: var(--md-sys-typescale-display-small);
-  line-height: 1.2;
+  font-size: var(--md-sys-typescale-display-small-font-size);
+  line-height: var(--md-sys-typescale-display-small-line-height);
 }
 
 /* Hero Intro Text */
 .md3-hero__intro {
-  font-size: var(--md-sys-typescale-body-large);
-  letter-spacing: 0.25px;
-  line-height: 1.5;
+  font-size: var(--md-sys-typescale-body-large-font-size);
+  font-weight: var(--md-sys-typescale-body-large-font-weight);
+  line-height: var(--md-sys-typescale-body-large-line-height);
+  letter-spacing: var(--md-sys-typescale-body-large-letter-spacing);
   color: var(--md-sys-color-on-surface);
-  margin: 0 0 24px 0;
+  margin: 0 0 var(--space-6) 0;
   max-width: 65ch;
 }
 

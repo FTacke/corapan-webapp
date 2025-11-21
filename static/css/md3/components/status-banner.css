@@ -67,10 +67,11 @@
 /* Form Title (inside header) */
 .md3-login-sheet__title {
   margin: 0;
-  font-size: var(--md-sys-typescale-title-large);
-  font-weight: 500;
+  font-size: var(--md-sys-typescale-title-large-font-size);
+  font-weight: var(--md-sys-typescale-title-large-font-weight);
+  line-height: var(--md-sys-typescale-title-large-line-height);
+  letter-spacing: var(--md-sys-typescale-title-large-letter-spacing);
   color: var(--md-sys-color-primary);
-  line-height: 1.2;
   flex-grow: 1;
 }
 
@@ -224,8 +225,10 @@
   color: var(--md-sys-color-on-primary);
   border: none;
   border-radius: var(--radius-sm);
-  font-size: var(--md-sys-typescale-label-large);
-  font-weight: 500;
+  font-size: var(--md-sys-typescale-label-large-font-size);
+  font-weight: var(--md-sys-typescale-label-large-font-weight);
+  line-height: var(--md-sys-typescale-label-large-line-height);
+  letter-spacing: var(--md-sys-typescale-label-large-letter-spacing);
   cursor: pointer;
   transition: all 200ms ease;
   margin-top: var(--space-2);

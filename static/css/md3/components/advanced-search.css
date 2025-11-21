@@ -157,7 +157,7 @@
 }
 
 .md3-advanced__expert::before {
-  content: "";
+  content: '';
   display: block;
   width: 52px;
   height: 32px;
@@ -174,7 +174,7 @@
 }
 
 .md3-advanced__expert::after {
-  content: "";
+  content: '';
   position: absolute;
   left: var(--space-2, 0.5rem);
   width: 20px;
@@ -190,8 +190,9 @@
 }
 
 .md3-advanced__expert span {
-  font: var(--md-sys-typescale-body-medium, 0.95rem) system-ui;
-  color: var(--md-sys-color-on-surface, #1c1b1f);
+  font-size: var(--md-sys-typescale-body-medium-font-size);
+  font-family: var(--md-sys-typescale-base-font-family);
+  color: var(--md-sys-color-on-surface);
 }
 
 /* ========================================
@@ -199,13 +200,14 @@
    ======================================== */
 
 .md3-advanced__summary {
-  margin-block: var(--space-4, 1rem);
-  padding: var(--space-3, 0.75rem) var(--space-4, 1rem);
-  background-color: var(--md-sys-color-surface-container-low, #f9f9fb);
-  border-left: 4px solid var(--md-sys-color-primary, #0a5981);
-  border-radius: var(--radius-sm, 8px);
-  color: var(--md-sys-color-on-surface-variant, #4a4f55);
-  font: var(--md-sys-typescale-body-large, 1rem) system-ui;
+  margin-block: var(--space-4);
+  padding: var(--space-3) var(--space-4);
+  background-color: var(--md-sys-color-surface-container-low);
+  border-left: 4px solid var(--md-sys-color-primary);
+  border-radius: var(--radius-sm);
+  color: var(--md-sys-color-on-surface-variant);
+  font-size: var(--md-sys-typescale-body-large-font-size);
+  font-family: var(--md-sys-typescale-base-font-family);
 }
 
 .md3-advanced__summary[hidden] {
@@ -238,110 +240,16 @@
 .md3-badge--serverfilter {
   display: inline-flex;
   align-items: center;
-  gap: var(--space-1, 0.25rem);
-  padding: var(--space-1, 0.25rem) var(--space-2, 0.5rem);
-  margin-inline-start: var(--space-2, 0.5rem);
+  gap: var(--space-1);
+  padding: var(--space-1) var(--space-2);
+  margin-inline-start: var(--space-2);
   border-radius: 999px;
-  background-color: var(--md-sys-color-secondary-container, #8c9aa9);
-  color: var(--md-sys-color-on-secondary-container, #000000);
-  font: var(--md-sys-typescale-label-small, 0.75rem) system-ui;
+  background-color: var(--md-sys-color-secondary-container);
+  color: var(--md-sys-color-on-secondary-container);
+  font-size: var(--md-sys-typescale-label-small-font-size);
+  font-family: var(--md-sys-typescale-base-font-family);
   font-weight: 500;
   white-space: nowrap;
-}
-
-/* Dialog header layout: ensure icon + title are aligned */
-.md3-dialog__header {
-  display: flex;
-  align-items: center;
-  gap: var(--space-4);
-  margin-bottom: var(--space-4);
-}
-
-/* Dialog large variant tweaks */
-.md3-dialog--large {
-  max-width: 900px;
-  width: min(900px, 95vw);
-}
-
-/* Expert header layout: ensure title and help icon align and help icon floats to right */
-.md3-expert-header {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-  width: 100%;
-  justify-content: space-between; /* title left, help icon right */
-}
-
-/* For code block in dialogs: cap height and allow vertical scroll */
-.md3-dialog__content .md3-code-block pre {
-  max-height: 56vh;
-  overflow-y: auto;
-  margin: 0;
-  padding: var(--space-4);
-  background: var(--md-sys-color-surface-container-low);
-  border: 1px solid var(--md-sys-color-outline-variant);
-  border-radius: var(--radius-md);
-}
-
-/* Prompt container styling - tight spacing for dialogs */
-.md3-prompt-container {
-  margin: var(--space-2) 0 0 0;
-}
-
-.md3-prompt-title {
-  font-size: 0.875rem;
-  font-weight: 500;
-  color: var(--md-sys-color-on-surface);
-  margin: 0 0 var(--space-1) 0;
-}
-
-.md3-prompt-subtitle {
-  font-size: 0.8125rem;
-  color: var(--md-sys-color-on-surface-variant);
-  margin: 0 0 var(--space-2) 0;
-}
-
-/* Dialog Title */
-.md3-dialog__title {
-  margin: 0;
-  padding: var(--space-2) var(--space-4) var(--space-1);
-  font-size: 1.25rem;
-  font-weight: 600;
-  color: var(--md-sys-color-on-surface);
-  letter-spacing: 0.15px;
-}
-
-/* Dialog header — generic for all md3 dialogs */
-.md3-dialog__header {
-  display: flex;
-  align-items: center;
-  gap: var(--space-4);
-  margin-bottom: var(--space-2);
-}
-
-.md3-dialog--error .md3-dialog__title {
-  color: var(--md-sys-color-error);
-}
-
-/* Dialog Content */
-.md3-dialog__content {
-  padding: 0 0 var(--space-3) 0;
-  font-size: 0.875rem;
-  line-height: 1.5;
-  color: var(--md-sys-color-on-surface-variant);
-  flex-grow: 1;
-  overflow-y: auto;
-}
-
-/* Dialog Actions */
-.md3-dialog__actions {
-  padding: var(--space-3) 0 0 0;
-  display: flex;
-  justify-content: flex-end;
-  gap: var(--space-3);
-  border-top: 1px solid var(--md-sys-color-outline-variant);
-  margin-top: auto;
-  flex-shrink: 0;
 }
 
 .md3-badge--serverfilter[hidden] {
@@ -456,13 +364,14 @@
 .md3-advanced__checkbox-label {
   display: flex;
   align-items: center;
-  gap: var(--space-2, 0.5rem);
+  gap: var(--space-2);
   cursor: pointer;
-  font: var(--md-sys-typescale-body-medium, 0.95rem) system-ui;
-  color: var(--md-sys-color-on-surface, #1c1b1f);
+  font-size: var(--md-sys-typescale-body-medium-font-size);
+  font-family: var(--md-sys-typescale-base-font-family);
+  color: var(--md-sys-color-on-surface);
 }
 
-.md3-advanced__checkbox-label input[type="checkbox"] {
+.md3-advanced__checkbox-label input[type='checkbox'] {
   width: 20px;
   height: 20px;
   accent-color: var(--md-sys-color-primary, #0a5981);
@@ -629,140 +538,4 @@
   border-top: 1px solid var(--md-sys-color-outline-variant);
   margin-top: auto;
   flex-shrink: 0;
-}
-
-.md3-badge--serverfilter[hidden] {
-  display: none;
-}
-
-.md3-badge--serverfilter .material-symbols-rounded {
-  font-size: 1rem;
-}
-
-/* ========================================
-   TOOLBAR (Export Buttons)
-   ======================================== */
-
-.md3-advanced__toolbar {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2, 0.5rem);
-  margin-block-end: var(--space-3, 0.75rem);
-  padding-block: var(--space-2, 0.5rem);
-}
-
-.md3-advanced__toolbar-spacer {
-  flex: 1;
-}
-
-.md3-advanced__exports {
-  display: flex;
-  gap: var(--space-2, 0.5rem);
-}
-
-/* Export buttons inherit from global .md3-button-tonal/.md3-button-outlined */
-
-/* ========================================
-   TABLE WRAPPER
-   ======================================== */
-
-.md3-advanced__tablewrap {
-  overflow-x: auto;
-  overflow-y: visible;
-  border-radius: var(--radius-md, 12px);
-  border: 1px solid var(--md-sys-color-outline-variant, #cac4d0);
-  background-color: var(--md-sys-color-surface, #ffffff);
-}
-
-/* Table: Use existing .md3-corpus-table or .md3-datatable */
-.md3-advanced__tablewrap .md3-corpus-table,
-.md3-advanced__tablewrap .md3-datatable {
-  width: 100%;
-  border-collapse: collapse;
-}
-
-/* ========================================
-   RESPONSIVE: Mobile optimizations
-   ======================================== */
-
-@media (max-width: 600px) {
-  .md3-advanced {
-    padding-inline: var(--space-2, 0.5rem);
-  }
-
-  .md3-advanced__toolbar {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .md3-advanced__exports {
-    flex-direction: column;
-  }
-
-  .md3-advanced__exports .md3-button-tonal,
-  .md3-advanced__exports .md3-button-outlined {
-    width: 100%;
-  }
-}
-
-/* ========================================
-   ACCESSIBILITY
-   ======================================== */
-
-/* Screen-reader only class */
-.sr-only {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
-  border: 0;
-}
-
-/* Focus visible improvements */
-.md3-advanced__form input:focus-visible,
-.md3-advanced__form select:focus-visible {
-  outline: 2px solid var(--md-sys-color-primary, #0a5981);
-  outline-offset: 2px;
-}
-
-/* ========================================
-   FILTER CHECKBOXES (include_regional, sensitive)
-   ======================================== */
-
-.md3-advanced__checkboxes {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2, 0.5rem);
-  padding-block: var(--space-2, 0.5rem);
-}
-
-.md3-advanced__checkbox-label {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2, 0.5rem);
-  cursor: pointer;
-  font: var(--md-sys-typescale-body-medium, 0.95rem) system-ui;
-  color: var(--md-sys-color-on-surface, #1c1b1f);
-}
-
-.md3-advanced__checkbox-label input[type="checkbox"] {
-  width: 20px;
-  height: 20px;
-  accent-color: var(--md-sys-color-primary, #0a5981);
-  cursor: pointer;
-}
-
-/* ========================================
-   FORM ACTIONS (Submit + Reset Buttons)
-   ======================================== */
-
-.md3-form-actions {
-  display: flex !important;
-  gap: var(--space-3, 0.75rem);
-  margin-block-start: var(--space-4, 1rem);
-  flex-wrap: wrap;
 }

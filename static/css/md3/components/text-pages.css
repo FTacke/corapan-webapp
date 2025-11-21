@@ -56,7 +56,7 @@
   width: 100%;
   box-sizing: border-box;
   /* NO horizontal padding - Edge-Padding comes from page wrapper */
-  padding: 0 0 var(--space-16);
+  padding: 0 0 var(--space-12);
 }
 
 .md3-text-section {

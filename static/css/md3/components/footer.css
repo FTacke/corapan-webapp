@@ -10,31 +10,31 @@
   border-top: 0px solid var(--md-sys-color-outline-variant);
   background: var(--md-sys-color-background);
   color: var(--md-sys-color-on-surface-variant);
-  margin-top: var(--space-16);
+  margin-top: var(--space-12);
   /* ~64px margin top for spacing from content */
 
-  padding-block: 1rem;
+  padding-block: var(--space-4);
   /* ~16px vertical padding (mobile), scale up responsively */
 }
 
 /* Tablet: 20px vertical (1.25rem) */
 @media (min-width: 600px) {
   .md3-footer {
-    padding-block: 1.25rem;
+    padding-block: var(--space-5);
   }
 }
 
 /* Desktop/Large: 24px vertical (1.5rem) */
 @media (min-width: 840px) {
   .md3-footer {
-    padding-block: 1.5rem;
+    padding-block: var(--space-6);
   }
 }
 
 /* Force white background on Editor and Player pages */
 body[data-page="editor"] .md3-footer,
 body[data-page="player"] .md3-footer {
-  background: #ffffff;
+  background: var(--md-sys-color-surface);
 }
 
 /* Dark mode override for Editor/Player if needed (assuming they stay light or handle dark mode differently) */

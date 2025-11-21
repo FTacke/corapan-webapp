@@ -1,3 +1,14 @@
+/* 
+ * MD3 Token System - Canonical Definition
+ * 
+ * API:
+ * - Colors: --md-sys-color-* (MD3) + --app-* (Project specific)
+ * - Typography: --md-sys-typescale-*-{font-family, font-weight, font-size, line-height, letter-spacing}
+ * - Spacing: --space-{1,2,3,4,5,6,8,10,12}
+ * 
+ * Note: No aliases or backward compatibility variables allowed.
+ */
+
 /* MD3 Farb-Tokens — generiert und gepflegt mit generate-tokens.py */
 
 :root {
@@ -31,6 +42,9 @@
   --md-sys-color-outline-variant: #cac4d0;
   --md-sys-color-background: #c7d5d8;
   --md-sys-color-on-background: #000000;
+  
+  /* App Background - Canonical Definition */
+  --app-background: var(--md-sys-color-background);
 
   /* Surface containers for tonal cards (light theme) — derived from preview */
   --md-sys-color-surface-container-lowest: color-mix(
@@ -196,27 +210,6 @@
   /* Typography helpers */
   --md-typography-heading-accent: var(--md-sys-color-primary);
 
-  /* Typography Aliases (Backward Compatibility for Font Size) */
-  --md-sys-typescale-display-large: var(--md-sys-typescale-display-large-font-size);
-  --md-sys-typescale-display-medium: var(--md-sys-typescale-display-medium-font-size);
-  --md-sys-typescale-display-small: var(--md-sys-typescale-display-small-font-size);
-
-  --md-sys-typescale-headline-large: var(--md-sys-typescale-headline-large-font-size);
-  --md-sys-typescale-headline-medium: var(--md-sys-typescale-headline-medium-font-size);
-  --md-sys-typescale-headline-small: var(--md-sys-typescale-headline-small-font-size);
-
-  --md-sys-typescale-title-large: var(--md-sys-typescale-title-large-font-size);
-  --md-sys-typescale-title-medium: var(--md-sys-typescale-title-medium-font-size);
-  --md-sys-typescale-title-small: var(--md-sys-typescale-title-small-font-size);
-
-  --md-sys-typescale-body-large: var(--md-sys-typescale-body-large-font-size);
-  --md-sys-typescale-body-medium: var(--md-sys-typescale-body-medium-font-size);
-  --md-sys-typescale-body-small: var(--md-sys-typescale-body-small-font-size);
-
-  --md-sys-typescale-label-large: var(--md-sys-typescale-label-large-font-size);
-  --md-sys-typescale-label-medium: var(--md-sys-typescale-label-medium-font-size);
-  --md-sys-typescale-label-small: var(--md-sys-typescale-label-small-font-size);
-
   /* Extended Colors (Light Mode) */
   --md-sys-color-success: #006e1c;
   --md-sys-color-on-success: #ffffff;
@@ -364,6 +357,9 @@
   --md-sys-color-on-background: #e7e7ea;
   --md-sys-color-surface: #14141a;
   --md-sys-color-on-surface: #e6e1e5;
+  
+  /* App Background - Canonical Definition */
+  --app-background: var(--md-sys-color-background);
   --md-sys-color-surface-variant: #2a2a30;
   --md-sys-color-on-surface-variant: #c6c6ca;
   --_on-surface-variant-static: #c6c6ca;
