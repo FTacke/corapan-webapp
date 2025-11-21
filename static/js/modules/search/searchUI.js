@@ -362,9 +362,15 @@ export class SearchUI {
 
       // Ensure UI container is visible (in case DataTables is initialized while hidden)
       const tableContainer = document.getElementById("datatable-container");
-      if (tableContainer) tableContainer.style.display = "";
+      if (tableContainer) {
+        tableContainer.style.display = "";
+        tableContainer.classList.remove("hidden");
+      }
       const subTabs = document.getElementById("search-sub-tabs");
-      if (subTabs) subTabs.style.display = "";
+      if (subTabs) {
+        subTabs.style.display = "";
+        subTabs.classList.remove("hidden");
+      }
 
       // Force switch to "Resultados" tab
       const resultsTab = document.getElementById("tab-resultados");
@@ -465,9 +471,15 @@ export class SearchUI {
 
     // Hide containers
     const tableContainer = document.getElementById("datatable-container");
-    if (tableContainer) tableContainer.style.display = "none";
+    if (tableContainer) {
+      tableContainer.style.display = "none";
+      tableContainer.classList.add("hidden");
+    }
     const subTabs = document.getElementById("search-sub-tabs");
-    if (subTabs) subTabs.style.display = "none";
+    if (subTabs) {
+      subTabs.style.display = "none";
+      subTabs.classList.add("hidden");
+    }
 
     // Hide stats panel explicitly
     const statsPanel = document.getElementById("panel-estadisticas");

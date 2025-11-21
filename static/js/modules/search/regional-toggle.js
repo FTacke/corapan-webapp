@@ -10,7 +10,11 @@ export function initRegionalToggle() {
   function toggleRegionalOptions() {
     const isChecked = includeRegionalCheckbox?.checked || false;
     regionalOptions.forEach((option) => {
-      option.style.display = isChecked ? "" : "none";
+      if (isChecked) {
+        option.classList.remove("hidden");
+      } else {
+        option.classList.add("hidden");
+      }
       // Uncheck regional options when hiding them
       if (!isChecked) {
         const checkbox = option.querySelector('input[type="checkbox"]');

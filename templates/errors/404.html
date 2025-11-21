@@ -2,6 +2,10 @@
 
 {% block page_title %}404 - Página No Encontrada | CO.RA.PAN{% endblock %}
 
+{% block extra_head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/md3/components/errors.css') }}">
+{% endblock %}
+
 {% block content %}
 <div class="md3-error-page">
   <div class="md3-error-container">
@@ -27,27 +31,18 @@
     </div>
     
     <div class="md3-error-actions">
-      <a href="{{ url_for('public.landing_page') }}" class="md3-button-filled">
+      <a href="{{ url_for('public.landing_page') }}" class="md3-button md3-button--filled">
         <i class="bi bi-house-door"></i>
         <span>Volver al inicio</span>
       </a>
-      <a href="javascript:history.back()" class="md3-button-outlined">
+      <a href="javascript:history.back()" class="md3-button md3-button--outlined">
         <i class="bi bi-arrow-left"></i>
         <span>Página anterior</span>
       </a>
     </div>
   </div>
 </div>
-
-<style>
-/* MD3 Error Page Layout */
-.md3-error-page {
-  min-height: 70vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: var(--md3-space-8) var(--md3-space-4);
-}
+{% endblock %}
 
 .md3-error-container {
   max-width: 580px;

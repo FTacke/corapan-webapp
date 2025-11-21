@@ -351,3 +351,28 @@ h6:focus[tabindex="-1"] {
     grid-template-columns: 1fr;
   }
 }
+
+/* Utility Classes */
+.hidden {
+  display: none !important;
+}
+
+.text-primary {
+  color: var(--md-sys-color-primary) !important;
+}
+
+.text-on-surface-variant {
+  color: var(--md-sys-color-on-surface-variant) !important;
+}
+
+.mt-2 { margin-top: 0.5rem !important; }
+.mt-4 { margin-top: 1rem !important; }
+.mt-6 { margin-top: 1.5rem !important; }
+.mt-8 { margin-top: 2rem !important; }
+
+.m-0 { margin: 0 !important; }
+.overflow-visible { overflow: visible !important; }
+.flex { display: flex !important; }
+.w-full { width: 100% !important; }
+
+.p-4 { padding: 1rem !important; }

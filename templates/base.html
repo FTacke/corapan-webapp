@@ -10,19 +10,24 @@
     <!-- Critical inline CSS: Prevent flash during page load -->
     <style>
       /* Base colors - prevent flash during navigation */
+      :root {
+        --app-background: #ffffff;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --app-background: #14141A;
+        }
+      }
+
       html, body {
-        background: #fff;
+        background: var(--app-background);
         color-scheme: light dark;
         transition: none !important; /* Prevent any transition flash */
         /* Disable tap highlight on touch devices (prevents blue flash on mobile) */
         -webkit-tap-highlight-color: transparent;
         tap-highlight-color: transparent;
       }
-      @media (prefers-color-scheme: dark) {
-        html, body {
-          background: #14141A;
-        }
-      }
+
       
       /* Hide selects during hydration to prevent options flash */
       .corpus-hydrating .md3-corpus-filter-grid select[data-enhance]:not([data-enhanced]),
@@ -59,8 +64,10 @@
     <!-- Preload critical resources to prevent FOUC -->
     <link rel="preload" href="{{ url_for('static', filename='css/layout.css') }}" as="style">
     <link rel="preload" href="{{ url_for('static', filename='css/md3/tokens.css') }}" as="style">
+    <link rel="preload" href="{{ url_for('static', filename='css/app-tokens.css') }}" as="style">
     <!-- Stylesheets -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/layout.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/app-tokens.css') }}">
     <!-- Font Awesome 6.7.1 (fixes glyph bbox warnings) - async loaded -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.1/css/all.min.css" integrity="sha512-5Hs3dF2AEPkpNAR7UiOHba+lRSJNeM2ECkwxUIxC1Q/FLycGTbNapWXB4tP889k5T5Ju8fs4b1P5z/iB4nMfSQ==" crossorigin="anonymous" referrerpolicy="no-referrer" media="print" onload="this.media='all'; this.onload=null;">
     <noscript><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.1/css/all.min.css"></noscript>

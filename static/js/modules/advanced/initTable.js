@@ -549,9 +549,15 @@ export function updateSummary(data, queryParams, initialLoad = false) {
     summaryBox.innerHTML = "";
     summaryBox.hidden = true;
     const subTabs = document.getElementById("search-sub-tabs");
-    if (subTabs) subTabs.style.display = "none";
+    if (subTabs) {
+      subTabs.style.display = "none";
+      subTabs.classList.add("hidden");
+    }
     const tableContainer = document.getElementById("datatable-container");
-    if (tableContainer) tableContainer.style.display = "none";
+    if (tableContainer) {
+      tableContainer.style.display = "none";
+      tableContainer.classList.add("hidden");
+    }
     console.log("[Summary] Initial load: summary and results hidden.");
     return;
   }
