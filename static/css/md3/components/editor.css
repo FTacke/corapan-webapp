@@ -869,6 +869,7 @@ body.app-shell {
   border: none; /* Angepasst an Player (war 1px solid) */
   background: transparent; /* Angepasst an Player (war surface-container-low) */
   transition: background 0.15s ease;
+  border-left: 1px solid var(--md-sys-color-outline-variant);
 }
 
 .md3-speaker-turn:hover {
@@ -884,7 +885,6 @@ body.app-shell {
   gap: var(--space-2);
   margin-bottom: var(--space-2);
   padding-bottom: var(--space-2);
-  border-bottom: 1px solid var(--md-sys-color-outline-variant);
 }
 
 /* Edit Icon (links) */

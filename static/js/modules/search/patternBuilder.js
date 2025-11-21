@@ -61,6 +61,52 @@ export class PatternBuilder {
 
     // Initialize first token from DOM
     this.initializeExistingTokens();
+
+    // Bind query sync
+    this.bindQuerySync();
+  }
+
+  /**
+   * Bind query input to first token value
+   */
+  bindQuerySync() {
+    const queryInput = document.getElementById("q");
+    const advancedToggle = document.getElementById("advanced-mode-toggle");
+    
+    if (queryInput) {
+      // Sync on input
+      queryInput.addEventListener("input", () => {
+        this.syncQueryToFirstToken(queryInput.value);
+      });
+    }
+
+    if (advancedToggle) {
+      // Sync when opening advanced mode
+      advancedToggle.addEventListener("click", () => {
+        if (queryInput) {
+           setTimeout(() => this.syncQueryToFirstToken(queryInput.value), 0);
+        }
+      });
+    }
+  }
+
+  /**
+   * Sync query value to first token
+   */
+  syncQueryToFirstToken(value) {
+    // Find the first token row (usually index 0)
+    // We look for the first row in the container to be safe
+    const tokensContainer = document.getElementById("pattern-tokens");
+    if (!tokensContainer) return;
+    
+    const firstRow = tokensContainer.querySelector('.md3-token-row');
+    if (!firstRow) return;
+
+    const valueInput = firstRow.querySelector('.token-value-input');
+    if (valueInput) {
+      valueInput.value = value;
+      this.updateCQLPreview();
+    }
   }
 
   /**

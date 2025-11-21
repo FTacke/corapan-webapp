@@ -125,7 +125,10 @@ function initializeTokenDataTable() {
   }
   initTokenTable(tokIds);
   const resultsSection = document.getElementById("token-results");
-  if (resultsSection) resultsSection.style.display = "block";
+  if (resultsSection) {
+    resultsSection.classList.remove("hidden");
+    resultsSection.style.display = "block";
+  }
 }
 function initializeEventHandlers() {
   const addBtn = document.getElementById("tokid-add-btn");

@@ -14,16 +14,6 @@ import MobileHandler from "./modules/mobile.js";
 
 console.log("[Player Init] Module loaded");
 
-// Get configuration from backend
-const config = window.PLAYER_CONFIG || {};
-// Store original and normalized (lowercased) token_id for robust matching
-const rawTokenId = (config.token_id || "").toString();
-const tokenIdOriginal = rawTokenId.trim();
-const tokenIdLower = tokenIdOriginal.toLowerCase();
-config.token_id_original = tokenIdOriginal;
-config.token_id = tokenIdLower; // normalized, lower-case token id
-console.log("[Player Init] Config:", config);
-
 // Store instances globally
 let audioPlayer = null;
 let transcriptionManager = null;
@@ -37,6 +27,17 @@ let mobileHandler = null;
  * Load and render transcription
  */
 async function initializePlayer() {
+  // Get configuration from backend (read at runtime)
+  const config = window.PLAYER_CONFIG || {};
+  
+  // Store original and normalized (lowercased) token_id for robust matching
+  const rawTokenId = (config.token_id || "").toString();
+  const tokenIdOriginal = rawTokenId.trim();
+  const tokenIdLower = tokenIdOriginal.toLowerCase();
+  config.token_id_original = tokenIdOriginal;
+  config.token_id = tokenIdLower; // normalized, lower-case token id
+  console.log("[Player Init] Config:", config);
+
   if (!config.transcription) {
     console.error("[Player Init] No transcription URL provided");
     return;

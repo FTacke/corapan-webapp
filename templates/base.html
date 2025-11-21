@@ -94,11 +94,7 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/md3/components/stats.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/md3/components/como-citar.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/player-mobile.css') }}">
-    <script>
-      window.__CORAPAN__ = {
-        allowPublicTempAudio: {{ 'true' if allow_public_temp_audio else 'false' }},
-      };
-    </script>
+    
     <!-- Global Theme Controller - muss vor allen anderen Scripts laden -->
     <script src="{{ url_for('static', filename='js/theme.js') }}"></script>
     <script src="{{ url_for('static', filename='js/auth-setup.js') }}" defer></script>
@@ -106,73 +102,10 @@
     <script src="{{ url_for('static', filename='js/drawer-logo.js') }}" defer></script>
     <!-- htmx for progressive enhancement -->
     <script src="{{ url_for('static', filename='vendor/htmx.min.js') }}" defer></script>
-    <!-- CSRF Token Hook for htmx mutations -->
-    <script>
-      (function(){
-        /**
-         * CSRF Protection for HTMX Requests (2025-11-11)
-         * 
-         * Flask-JWT-Extended sets two CSRF tokens:
-         * - csrf_access_token: Used when access_token is present
-         * - csrf_refresh_token: Used when refresh_token is present
-         * 
-         * This hook injects the appropriate CSRF token into all HTMX POST/PUT/DELETE requests.
-         * GET requests are exempt from CSRF protection (by design).
-         */
-        function getCookie(name) {
-          const cookies = document.cookie.split("; ");
-          const cookie = cookies.find(c => c.startsWith(name + "="));
-          return cookie ? cookie.split("=")[1] : null;
-        }
-        
-        document.addEventListener("DOMContentLoaded", function(){
-          document.body.addEventListener("htmx:configRequest", function(evt){
-            // Only add CSRF token for mutating requests (POST/PUT/DELETE/PATCH)
-            const method = evt.detail.verb?.toUpperCase();
-            if (!method || method === 'GET' || method === 'HEAD' || method === 'OPTIONS') {
-              return; // Skip GET requests
-            }
-            
-            // Try csrf_access_token first, then csrf_refresh_token as fallback
-            const csrf = getCookie("csrf_access_token") || getCookie("csrf_refresh_token");
-            if (csrf) {
-              evt.detail.headers["X-CSRF-TOKEN"] = csrf;
-              console.debug('[CSRF] Injected token for', method, evt.detail.path);
-            } else {
-              console.warn('[CSRF] No CSRF token found for', method, evt.detail.path);
-            }
-          });
-        });
-      })();
-    </script>
-    <!-- 401 Handler: Open Login Sheet on Authentication Errors -->
-    <script>
-      document.addEventListener("DOMContentLoaded", function(){
-        document.body.addEventListener("htmx:responseError", function(evt){
-          if (evt.detail.xhr && evt.detail.xhr.status === 401) {
-            // Fetch login sheet and inject into modal-root
-            htmx.ajax("GET", "/auth/login?sheet=1", {
-              target: "#modal-root",
-              swap: "innerHTML"
-            });
-          }
-        });
-
-        // Open login sheet on page load if ?login=1 is present (from 401 redirect)
-        const params = new URLSearchParams(location.search);
-        if (params.get("login") === "1") {
-          htmx.ajax("GET", "/auth/login?sheet=1", {
-            target: "#modal-root",
-            swap: "innerHTML"
-          });
-          // Remove ?login=1 from URL (clean history)
-          history.replaceState({}, "", location.pathname + location.hash);
-        }
-      });
-    </script>
+    
     {% block extra_head %}{% endblock %}
   </head>
-  <body class="app-shell" {% if page_name %}data-page="{{ page_name }}"{% endif %}>
+  <body class="app-shell" {% if page_name %}data-page="{{ page_name }}"{% endif %} data-config='{"allowPublicTempAudio": {{ "true" if allow_public_temp_audio else "false" }}}'>
     {# MD3 Navigation System #}
     {% include 'partials/status_banner.html' %}
     
@@ -198,144 +131,11 @@
     <footer id="site-footer" class="md3-footer">
       {% include 'partials/footer.html' %}
     </footer>
-    <script type="module" src="{{ url_for('static', filename='js/main.js') }}" defer></script>
     
-    {# Global Page Router: Initialize page-specific modules on load #}
-    <script type="module">
-      /**
-       * Page Router: Dynamically initialize page-specific modules
-       * based on data-page attribute on <body> tag.
-       * 
-       * Pages can define async init() functions in static/js/pages/{name}.js
-       * Example: 
-       *   <body data-page="atlas">
-       *   → Loads /static/js/pages/atlas.js and calls init()
-       */
-      const pageInits = {
-        atlas: async () => {
-          try {
-            const mod = await import('{{ url_for("static", filename="js/pages/atlas.js") }}');
-            if (mod?.init) {
-              await mod.init();
-              console.log('[page-router] Atlas initialized');
-            }
-          } catch (err) {
-            console.error('[page-router] Failed to initialize atlas:', err);
-          }
-        }
-        // Register additional page initializers here
-      };
-
-      // Run on DOM ready
-      document.addEventListener('DOMContentLoaded', () => {
-        const page = document.body.dataset.page;
-        if (!page) return;
-        
-        const init = pageInits[page];
-        if (init) {
-          console.log('[page-router] Initializing page:', page);
-          init();
-        }
-      });
-    </script>
-    
-    {# Preload Guard: Disable transitions on initial render, re-enable after first paint #}
-    <script>
-      document.body.classList.add('preload');
-      requestAnimationFrame(() => {
-        document.body.classList.remove('preload');
-        document.documentElement.setAttribute('data-anim-ready', '1');
-      });
-      // Also enable on first user interaction (fallback for slow browsers)
-      window.addEventListener('pointerdown', () => {
-        document.documentElement.setAttribute('data-anim-ready', '1');
-      }, { once: true });
-    </script>
-    
-    {# Auto-trigger login sheet if ?login=1 is set #}
-    <script>
-      (function(){
-        const p = new URLSearchParams(location.search);
-        if (p.get("login") === "1" && window.htmx) {
-          const next = p.get("next") || "";
-          const url = "/auth/login_sheet" + (next ? "?next=" + encodeURIComponent(next) : "");
-          htmx.ajax('GET', url, { target: 'body', swap: 'beforeend' });
-        }
-      })();
-    </script>
+    <!-- Core Entry Point (handles Router, Auth, UI, CSRF) -->
+    <script type="module" src="{{ url_for('static', filename='js/modules/core/entry.js') }}" defer></script>
     
     {% block extra_scripts %}
     {% endblock %}
-
-    <script>
-    (function() {
-      if (window.__pageTitleInit) return;
-      window.__pageTitleInit = true;
-
-      const SUFFIX = 'CO.RA.PAN';
-
-      function pickTitle() {
-        const main = document.querySelector('main');
-        const fromAttr = main?.getAttribute('data-page-title')?.trim();
-        if (fromAttr) return fromAttr;
-        const h1 = main?.querySelector('h1,[data-h1]');
-        if (h1 && h1.textContent.trim()) return h1.textContent.trim();
-        const noSuffix = document.title.replace(/\s*\|\s*CO\.RA\.PAN\s*$/i, '');
-        return noSuffix || 'CO.RA.PAN';
-      }
-
-      function applyTitle() {
-        const t = pickTitle();
-        const el = document.querySelector('[data-page-title-el]');
-        if (el) el.textContent = t;
-        document.title = t ? `${t} | ${SUFFIX}` : SUFFIX;
-      }
-
-      function applyScroll() {
-        const thr = 8;
-        if (window.scrollY > thr) {
-          document.body.setAttribute('data-scrolled', 'true');
-        } else {
-          document.body.removeAttribute('data-scrolled');
-        }
-      }
-
-      applyTitle();
-      applyScroll();
-      window.addEventListener('scroll', applyScroll, { passive: true });
-
-      if (window.htmx) {
-        document.body.addEventListener('htmx:afterSwap', function() {
-          applyTitle();
-          applyScroll();
-        });
-        document.body.addEventListener('htmx:afterSettle', function() {
-          applyTitle();
-          applyScroll();
-        });
-        document.body.addEventListener('htmx:historyRestore', function() {
-          applyTitle();
-          applyScroll();
-        });
-      }
-
-      if (window.Turbo) {
-        document.addEventListener('turbo:render', function() {
-          applyTitle();
-          applyScroll();
-        });
-      }
-
-      window.addEventListener('popstate', function() {
-        applyTitle();
-        applyScroll();
-      });
-
-      document.addEventListener('DOMContentLoaded', function() {
-        applyTitle();
-        applyScroll();
-      });
-    })();
-    </script>
   </body>
 </html>
