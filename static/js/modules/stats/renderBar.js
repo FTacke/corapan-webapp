@@ -10,16 +10,7 @@
 import corapanTheme from './theme/corapanTheme.js';
 
 // ECharts is loaded globally from CDN
-const echarts = window.echarts;
-
-if (!echarts) {
-  console.error('ECharts not loaded! Include ECharts CDN in the HTML.');
-}
-
-// Register CO.RA.PAN theme
-if (echarts) {
-  echarts.registerTheme('corapan', corapanTheme);
-}
+// We access it dynamically inside functions to ensure it's available
 
 /**
  * Format number with Spanish locale
@@ -54,12 +45,27 @@ function getTextColor() {
  * @param {Array<{key: string, n: number, p: number}>} data - Chart data
  * @param {string} title - Chart title (Spanish)
  * @param {string} displayMode - Display mode: 'absolute' (default) or 'percent'
+ * @param {string} orientation - 'horizontal' (default) or 'vertical'
  * @returns {echarts.ECharts} Chart instance
  */
-export function renderBar(container, data, title, displayMode = 'absolute') {
+export function renderBar(container, data, title, displayMode = 'absolute', orientation = 'horizontal') {
   if (!container) {
     console.error('renderBar: container is null or undefined');
     return null;
+  }
+
+  const echarts = window.echarts;
+  if (!echarts) {
+    console.error('ECharts not loaded! Include ECharts CDN in the HTML.');
+    container.innerHTML = '<div class="chart-error">Error: ECharts library not loaded.</div>';
+    return null;
+  }
+
+  // Register theme if not already registered
+  try {
+      echarts.registerTheme('corapan', corapanTheme);
+  } catch (e) {
+      // Ignore if already registered
   }
 
   // Handle empty data
@@ -74,13 +80,14 @@ export function renderBar(container, data, title, displayMode = 'absolute') {
     existingInstance.dispose();
   }
 
+  // Initialize chart
+  const chart = echarts.init(container, 'corapan', {
+    renderer: 'canvas',
+    useDirtyRect: false
+  });
+
   // Get current text color (supports light/dark mode)
   const textColor = getTextColor();
-  
-  // Get divider color from CSS (supports dark mode)
-  const dividerColor = getComputedStyle(document.documentElement)
-    .getPropertyValue('--md-sys-color-outline-variant')
-    .trim() || 'rgba(0, 0, 0, 0.12)';
   
   // Get primary color from CSS (supports dark mode)
   const primaryColor = getComputedStyle(document.documentElement)
@@ -91,34 +98,27 @@ export function renderBar(container, data, title, displayMode = 'absolute') {
     .getPropertyValue('--md-sys-color-primary-container')
     .trim() || '#5A7FA3';
 
+  // Calculate total for percentages if not provided
+  const total = data.reduce((sum, item) => sum + item.n, 0);
+
   // Extract categories and values based on display mode
-  const categories = data.map(item => item.key);
-  const values = displayMode === 'percent' 
-    ? data.map(item => item.p * 100) // Convert to percentage (0-100 scale)
-    : data.map(item => item.n);
-  const absoluteValues = data.map(item => item.n);
-  const proportions = data.map(item => item.p);
-
-  // Determine if axis labels should be rotated
-  const shouldRotate = categories.length > 20;
-
-  // Determine if dataZoom is needed
-  const needsDataZoom = categories.length > 30;
-
-  // Calculate container height based on data length
-  const baseHeight = 360;
-  const additionalHeight = Math.max(0, (categories.length - 10) * 5);
-  const height = Math.min(baseHeight + additionalHeight, 600);
-  container.style.height = `${height}px`;
+  const categories = data.map(item => item.label || item.key);
   
-  // Dynamic bar width based on number of categories
-  // Fewer categories = wider bars (max 32), Many categories = thinner bars (min 16)
-  const barWidth = categories.length > 15 ? 16 : 32;
-
-  // Initialize chart
-  const chart = echarts.init(container, 'corapan', {
-    renderer: 'canvas',
+  // Ensure p is calculated if missing
+  const processedData = data.map(item => {
+      const p = item.p !== undefined ? item.p : (total > 0 ? item.n / total : 0);
+      return { ...item, p };
   });
+
+  const values = displayMode === 'percent' 
+    ? processedData.map(item => item.p * 100) // Convert to percentage (0-100 scale)
+    : processedData.map(item => item.n);
+    
+  const absoluteValues = processedData.map(item => item.n);
+  const proportions = processedData.map(item => item.p);
+
+  // Determine layout based on orientation
+  const isVertical = orientation === 'vertical';
 
   // Chart configuration
   const option = {
@@ -126,16 +126,16 @@ export function renderBar(container, data, title, displayMode = 'absolute') {
     animation: true,
     animationDuration: 500,
     grid: {
-      top: 10,
-      bottom: 10,
-      left: 10,
-      right: 40, // Space for labels
+      top: 30,
+      bottom: isVertical ? 30 : 10,
+      left: isVertical ? 40 : 10,
+      right: isVertical ? 10 : 60, // Space for labels in horizontal
       containLabel: true
     },
     tooltip: {
       trigger: 'axis',
       axisPointer: {
-        type: 'shadow'
+        type: 'shadow',
       },
       backgroundColor: getComputedStyle(document.documentElement).getPropertyValue('--md-sys-color-surface-container') || '#fff',
       borderColor: getComputedStyle(document.documentElement).getPropertyValue('--md-sys-color-outline-variant') || '#ccc',
@@ -144,35 +144,65 @@ export function renderBar(container, data, title, displayMode = 'absolute') {
       },
       formatter: function(params) {
         const item = params[0];
-        const dataIndex = item.dataIndex;
-        const absVal = absoluteValues[dataIndex];
-        const pctVal = proportions[dataIndex];
+        const index = item.dataIndex;
+        const absVal = formatNumber(absoluteValues[index]);
+        const p = proportions[index];
+        const percentStr = `(${formatPercent(p)})`;
         
         return `
-          <div style="font-weight: 500; margin-bottom: 4px;">${item.name}</div>
-          <div>${formatNumber(absVal)} hits</div>
-          <div style="opacity: 0.8;">${formatPercent(pctVal)}</div>
+          <div style="font-family: Roboto, sans-serif;">
+            <strong>${item.name}</strong><br/>
+            <span style="display:inline-block;margin-right:4px;border-radius:10px;width:10px;height:10px;background-color:${item.color};"></span>
+            ${absVal} hits ${percentStr}
+          </div>
         `;
       }
     },
-    xAxis: {
+    xAxis: isVertical ? {
+      type: 'category',
+      data: categories,
+      axisLine: { show: false },
+      axisTick: { show: false },
+      axisLabel: {
+        color: textColor,
+        fontFamily: 'Roboto, sans-serif',
+        interval: 0,
+        rotate: categories.length > 5 ? 45 : 0 // Rotate if many categories
+      }
+    } : {
       type: 'value',
-      show: true, // Show X axis
-      splitLine: { 
+      show: true, // Show value axis
+      splitLine: {
         show: true,
         lineStyle: {
-          color: dividerColor,
+          color: 'rgba(128, 128, 128, 0.2)',
           type: 'dashed'
         }
       },
       axisLabel: {
         color: textColor,
         formatter: displayMode === 'percent' 
-          ? (value) => `${value.toFixed(1)}%`
-          : (value) => formatNumber(value),
+          ? (val) => `${val}%`
+          : (val) => formatNumber(val)
       }
     },
-    yAxis: {
+    yAxis: isVertical ? {
+      type: 'value',
+      show: true, // Show value axis
+      splitLine: {
+        show: true,
+        lineStyle: {
+          color: 'rgba(128, 128, 128, 0.2)',
+          type: 'dashed'
+        }
+      },
+      axisLabel: {
+        color: textColor,
+        formatter: displayMode === 'percent' 
+          ? (val) => `${val}%`
+          : (val) => formatNumber(val)
+      }
+    } : {
       type: 'category',
       data: categories,
       inverse: true, // Top to bottom
@@ -180,11 +210,10 @@ export function renderBar(container, data, title, displayMode = 'absolute') {
       axisTick: { show: false },
       axisLabel: {
         color: textColor,
-        width: 140, // Limit label width
-        overflow: 'break', // Wrap text
-        interval: 0,
-        fontSize: 13,
-        fontFamily: 'system-ui, sans-serif'
+        fontFamily: 'Roboto, sans-serif',
+        width: 140, // Fixed width for labels
+        overflow: 'truncate', // Truncate if too long
+        interval: 0
       }
     },
     series: [
@@ -192,38 +221,38 @@ export function renderBar(container, data, title, displayMode = 'absolute') {
         name: title,
         type: 'bar',
         data: values,
-        barWidth: barWidth, // Dynamic bar width
-        itemStyle: {
-          borderRadius: [0, 4, 4, 0],
-          color: function(params) {
-            // Use different colors for bars
-            const colors = [
-              '#006C4C', '#006D31', '#3E638B', '#6750A4', '#9A4058', 
-              '#9D4226', '#8B5000', '#725C00', '#566500', '#3A6900'
-            ];
-            return colors[params.dataIndex % colors.length];
-          }
-        },
         label: {
           show: true,
-          position: 'right',
+          position: isVertical ? 'top' : 'right',
           formatter: function(params) {
-            if (displayMode === 'percent') {
-              return params.value.toFixed(1) + '%';
-            }
-            return formatNumber(params.value);
+             const index = params.dataIndex;
+             const absVal = formatNumber(absoluteValues[index]);
+             return absVal;
           },
-          color: textColor,
-          fontSize: 12
+          color: textColor
         },
-        // Background bar
-        showBackground: false,
-        backgroundStyle: {
-          color: 'transparent',
-          borderRadius: [0, 4, 4, 0]
-        }
-      }
-    ]
+        itemStyle: {
+          color: function(params) {
+             // Use a palette for vertical charts to make them look nicer
+             if (isVertical) {
+                 const palette = [
+                     '#1B5E9F', '#006C4C', '#9A4058', '#6750A4', '#8B5000'
+                 ];
+                 return palette[params.dataIndex % palette.length];
+             }
+             return primaryColor;
+          },
+          borderRadius: isVertical ? [4, 4, 0, 0] : [0, 4, 4, 0], // Rounded top or right
+        },
+        emphasis: {
+          itemStyle: {
+            color: primaryContainerColor,
+          },
+        },
+        barWidth: isVertical ? '60%' : undefined, // Dynamic width for vertical bars
+        barMaxWidth: isVertical ? 120 : 40 // Limit bar thickness
+      },
+    ],
   };
 
   chart.setOption(option);
@@ -280,21 +309,41 @@ export function updateChartMode(chart, data, displayMode) {
     ? data.map(item => item.p * 100)
     : data.map(item => item.n);
 
-  // Update with smooth transition (universalTransition handles the morphing)
+  // Determine orientation from current option
+  const option = chart.getOption();
+  const isVertical = option.xAxis[0].type === 'category';
+
+  // Update axis formatter
+  const axisFormatter = usePercent 
+    ? (val) => `${val}%`
+    : (val) => formatNumber(val);
+
+  const axisUpdate = {};
+  if (isVertical) {
+    axisUpdate.yAxis = {
+      axisLabel: { formatter: axisFormatter }
+    };
+  } else {
+    axisUpdate.xAxis = {
+      axisLabel: { formatter: axisFormatter }
+    };
+  }
+
+  // Update with smooth transition
   chart.setOption({
-    xAxis: {
-      max: usePercent ? 100 : null,
-      axisLabel: {
-        color: textColor,
-        formatter: usePercent 
-          ? (value) => `${value.toFixed(1)}%`
-          : (value) => formatNumber(value),
-      },
-    },
+    ...axisUpdate,
     series: [{
       data: values,
+      label: {
+        formatter: function(params) {
+          if (usePercent) {
+            return params.value.toFixed(1) + '%';
+          }
+          return formatNumber(params.value);
+        }
+      }
     }],
-  }, { notMerge: false }); // Important: notMerge:false enables universalTransition
+  });
 }
 
 /**

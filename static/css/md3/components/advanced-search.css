@@ -225,7 +225,6 @@
 .md3-advanced__summary-count {
   font-weight: 700;
   color: var(--md-sys-color-primary, #0a5981);
-  font-size: 1.125rem;
 }
 
 .md3-advanced__summary-total {

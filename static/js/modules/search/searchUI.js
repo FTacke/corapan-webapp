@@ -12,7 +12,7 @@
 
 import { getSearchFilters } from './filters.js';
 import { getPatternBuilder } from './patternBuilder.js';
-import { initAdvancedTable } from '../advanced/initTable.js';
+import { initAdvancedTable, destroyAdvancedTable } from '../advanced/initTable.js';
 
 export class SearchUI {
   constructor() {
@@ -284,6 +284,9 @@ export class SearchUI {
    * Perform search with given parameters
    */
   async performSearch(queryParams) {
+    // Dispatch search start event
+    document.dispatchEvent(new Event('search:start'));
+
     const resultsSection = document.getElementById('results-section');
     const summaryBox = document.getElementById('adv-summary');
 
@@ -431,6 +434,12 @@ export class SearchUI {
     
     const summaryBox = document.getElementById('search-summary');
     if (summaryBox) summaryBox.innerHTML = '';
+    
+    const advSummaryBox = document.getElementById('adv-summary');
+    if (advSummaryBox) {
+      advSummaryBox.innerHTML = '';
+      advSummaryBox.hidden = true;
+    }
 
     // Hide containers
     const tableContainer = document.getElementById('datatable-container');
@@ -438,8 +447,15 @@ export class SearchUI {
     const subTabs = document.getElementById('search-sub-tabs');
     if (subTabs) subTabs.style.display = 'none';
     
-    // Also clear the DataTable instance if possible, or at least the visual part
-    // Since we hid the container, that's good enough.
+    // Hide stats panel explicitly
+    const statsPanel = document.getElementById('panel-estadisticas');
+    if (statsPanel) {
+      statsPanel.hidden = true;
+      statsPanel.classList.remove('md3-view-content--active');
+    }
+    
+    // Destroy DataTable
+    destroyAdvancedTable();
     
     this.manualCQLEdit = false;
 

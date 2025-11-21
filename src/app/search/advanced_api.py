@@ -15,6 +15,8 @@ import os
 from pathlib import Path
 from typing import Generator, Optional
 from collections import Counter
+from concurrent.futures import ThreadPoolExecutor, as_completed
+import time
 
 import httpx
 from flask import Blueprint, jsonify, request, Response, current_app
@@ -28,6 +30,20 @@ from ..extensions.http_client import get_http_client, BLS_BASE_URL
 from ..services.database import open_db
 
 logger = logging.getLogger(__name__)
+
+# Central mapping for BlackLab index fields
+BLS_FIELDS = {
+    "country": "country_code",
+    "region": "country_region_code",
+    "scope": "country_scope",
+    "file_id": "file_id",
+    "speaker_type": "speaker_type",
+    "sex": "speaker_sex",
+    "mode": "speaker_mode",
+    "discourse": "speaker_discourse",
+    "radio": "radio",
+    "city": "city",
+}
 
 bp = Blueprint("advanced_api", __name__, url_prefix="/search/advanced")
 
@@ -235,53 +251,7 @@ def _enrich_hits_with_docmeta(items: list, hits: list, docinfos: dict, docmeta_c
     return items
 
 
-def build_advanced_cql_and_filters_from_request(args):
-    """
-    Common helper to build CQL pattern and filters from request args.
-    Used by both /data and /stats endpoints to ensure consistency.
-    
-    Returns:
-        tuple: (cql_pattern, filter_query, filters)
-    """
-    # Get mode and query
-    mode = args.get('mode', 'forma')
-    query = args.get('q') or args.get('query', '')
-    sensitive = args.get('sensitive', '0')
-    
-    logger.info(f"Building CQL: mode={mode}, sensitive={sensitive}, q={query}")
-    
-    # Resolve countries with include_regional logic
-    countries = args.getlist('country_code')
-    include_regional_param = args.get('include_regional')
-    include_regional = include_regional_param == '1'
-    countries = resolve_countries_for_include_regional(countries, include_regional)
-    
-    # Optimization: Clear country filter if all national countries selected
-    ALL_NATIONAL_CODES = ['ARG', 'BOL', 'CHL', 'COL', 'CRI', 'CUB', 'ECU', 'ESP', 'GTM',
-                          'HND', 'MEX', 'NIC', 'PAN', 'PRY', 'PER', 'DOM', 'SLV', 'URY', 'USA', 'VEN']
-    
-    if countries and include_regional_param is None:
-        countries_set = set(countries)
-        all_expected = set(ALL_NATIONAL_CODES)
-        if countries_set == all_expected:
-            countries = []
-    
-    # Build filters
-    filters = build_filters(args)
-    if countries:
-        filters['country_code'] = countries
-    
-    # Build document filter
-    filter_query = filters_to_blacklab_query(filters)
-    
-    # Build CQL pattern with speaker filter
-    cql_filters = dict(filters)
-    if filter_query:
-        cql_filters.pop('country_code', None)
-    
-    cql_pattern = build_cql_with_speaker_filter(args, cql_filters)
-    
-    return cql_pattern, filter_query, filters
+
 
 
 @bp.route("/data", methods=["GET"])
@@ -289,67 +259,31 @@ def build_advanced_cql_and_filters_from_request(args):
 def datatable_data():
     """
     DataTables Server-Side processing endpoint.
-    
-    Query parameters (from DataTables):
-        - draw: Request sequence number
-        - start: Pagination offset (0-based)
-        - length: Rows per page (capped at MAX_HITS_PER_PAGE)
-        - q or query: Search query
-        - mode: 'forma_exacta' | 'forma' | 'lemma' | 'cql'
-        - sensitive: '1' (sensitive) | '0' (insensitive)
-        - country_code[]: List of countries
-        - speaker_type[]: List of speaker types
-        - sex[]: List of sexes
-        - speech_mode[]: List of modes
-        - discourse[]: List of discourse types
-        - include_regional: '0' | '1'
-        
-    Returns:
-        JSON: {draw, recordsTotal, recordsFiltered, data: [...]}
     """
-    # Parameter extraction helpers (safe, handle missing/invalid values)
-    def get_str(name: str, default: str = "") -> str:
-        """Safely extract string parameter."""
-        val = request.args.get(name, default, type=str)
-        return (val or default).strip()
-    
+    # Parameter extraction helpers
     def get_int(name: str, default: int = 0) -> int:
-        """Safely extract integer parameter with fallback."""
         try:
             val = request.args.get(name, type=int)
             return val if val is not None else default
         except (ValueError, TypeError):
             return default
     
-    def get_bool(name: str, default: bool = False) -> bool:
-        """Safely extract boolean parameter (checks for '1', 'true', 'on', 'yes')."""
-        val = request.args.get(name, "").lower()
-        return val in ("1", "true", "on", "yes") if val else default
-    
-    def get_list(name: str) -> list:
-        """Safely extract list parameter (handles both param[] and comma-separated)."""
-        vals = request.args.getlist(name)
-        return [v.strip() for v in vals if v and v.strip()]
-    
+    def get_str(name: str, default: str = "") -> str:
+        val = request.args.get(name, default, type=str)
+        return (val or default).strip()
+
     try:
-        # Extract DataTables parameters with safe helpers
         draw = get_int("draw", 1)
         start = get_int("start", 0)
         length = get_int("length", 50)
-        
-        # Clamp length to MAX_HITS_PER_PAGE
         length = min(length, MAX_HITS_PER_PAGE)
         
-        # If it's an initial load with no query and no filters, return empty.
+        # Initial load check
         q_val = (request.args.get('q') or request.args.get('query') or '').strip()
-        has_query = bool(q_val)
-        
-        # Check if any filter parameters were actually passed in the request
         filter_keys = ['country_code', 'speaker_type', 'sex', 'speech_mode', 'mode', 'discourse', 'city', 'radio', 'date', 'include_regional']
         has_filters = any(key in request.args for key in filter_keys)
 
-        if not has_query and not has_filters:
-            logger.info("Initial load detected (no query, no filters). Returning empty result set with initial_load flag.")
+        if not q_val and not has_filters:
             return jsonify({
                 "draw": draw,
                 "recordsTotal": 0,
@@ -358,341 +292,94 @@ def datatable_data():
                 "initial_load": True
             })
 
-        # Use shared CQL builder (same as /stats)
-        cql_pattern, filter_query, filters = build_advanced_cql_and_filters_from_request(request.args)
-        logger.info(f"DATA CQL: patt={cql_pattern}, filter_query={filter_query}, filters={filters}")
+        # Build query using shared logic
+        query_info = build_blacklab_query_from_request(request.args)
+        cql_pattern = query_info["patt"]
+        filter_query = query_info["filter"]
+        params = query_info["params_base"].copy()
         
-        # Validate filters
-        try:
-            validate_filter_values(filters)
-        except CQLValidationError as e:
-            logger.warning(f"Filter validation failed: {e}")
-            return jsonify({
-                "draw": draw,
-                "recordsTotal": 0,
-                "recordsFiltered": 0,
-                "data": [],
-                "error": "invalid_filter",
-                "message": str(e)
-            }), 200
+        # Add DataTables specific params
+        params.update({
+            "first": start,
+            "number": length,
+            "waitfortotal": "true",
+            "listvalues": ",".join([
+                "word", "tokid", "start_ms", "end_ms", "sentence_id",
+                BLS_FIELDS["country"],
+                BLS_FIELDS["speaker_type"],
+                BLS_FIELDS["sex"],
+                BLS_FIELDS["mode"],
+                BLS_FIELDS["discourse"],
+                BLS_FIELDS["file_id"],
+                BLS_FIELDS["radio"],
+                BLS_FIELDS["city"],
+                "utterance_id",
+                "speaker_code"
+            ])
+        })
         
-        # BLS parameters
-        bls_params = {
-            "first": 0,
-            "number": MAX_HITS_PER_PAGE,
-            "wordsaroundhit": MAX_WORDS_AROUND_HIT,
-            "listvalues": "word,tokid,start_ms,end_ms,sentence_id,file_id,filename,country,country_code,speaker_type,speaker_sex,speaker_mode,speaker_discourse,radio,utterance_id,speaker_code",
-            "waitfortotal": "true", # Ensure we get accurate total count
-        }
+        if cql_pattern:
+            params["patt"] = cql_pattern
+        if filter_query:
+            params["filter"] = filter_query
 
         # Handle sorting
-        # DataTables sends order[0][column] and order[0][dir]
-        # Column mapping:
-        # 5: country_code
-        # 6: speaker_type
-        # 7: sex
-        # 8: mode
-        # 9: discourse
-        # 10: tokid
-        # 11: filename
         order_col_idx = get_int("order[0][column]", -1)
         order_dir = get_str("order[0][dir]", "asc")
         
-        sort_field = None
-        if order_col_idx == 5:
-            sort_field = "country_code"
-        elif order_col_idx == 6:
-            sort_field = "speaker_type"
-        elif order_col_idx == 7:
-            sort_field = "speaker_sex"
-        elif order_col_idx == 8:
-            sort_field = "speaker_mode"
-        elif order_col_idx == 9:
-            sort_field = "speaker_discourse"
-        elif order_col_idx == 10:
-            sort_field = "tokid" # BLS might not support sorting by tokid directly, but let's try
-        elif order_col_idx == 11:
-            sort_field = "filename" # or file_id
+        # Map column index to field name
+        # For sorting by annotation values (metadata on tokens), we use "hit:<field>"
+        column_map = {
+            2: "hit:word",
+            5: f"hit:{BLS_FIELDS['country']}",
+            6: f"hit:{BLS_FIELDS['speaker_type']}",
+            7: f"hit:{BLS_FIELDS['sex']}",
+            8: f"hit:{BLS_FIELDS['mode']}",
+            9: f"hit:{BLS_FIELDS['discourse']}",
+            10: "hit:tokid",
+            11: f"hit:{BLS_FIELDS['file_id']}"
+        }
         
-        if sort_field:
-            # BLS sort syntax: field or -field for descending
+        if order_col_idx in column_map:
+            sort_field = column_map[order_col_idx]
             if order_dir == "desc":
-                bls_params["sort"] = f"-{sort_field}"
+                params["sort"] = f"-{sort_field}"
             else:
-                bls_params["sort"] = sort_field
-        
-        if filter_query:
-            bls_params["filter"] = filter_query
+                params["sort"] = sort_field
 
-        # Validate CQL pattern if we have one
-        if cql_pattern is not None:
-            try:
-                validate_cql_pattern(cql_pattern)
-            except CQLValidationError as e:
-                logger.warning(f"CQL validation failed: {e}")
-                return jsonify({
-                    "draw": draw,
-                    "recordsTotal": 0,
-                    "recordsFiltered": 0,
-                    "data": [],
-                    "error": "invalid_cql",
-                    "message": str(e)
-                }), 200  # Return 200 for DataTables compatibility
-
-        # If we have a CQL pattern, try the parameter names (patt, cql, cql_query)
-        cql_param_names = ["patt", "cql", "cql_query"]
-        response = None
-        last_error = None
-        if cql_pattern:
-            for param_name in cql_param_names:
-                try:
-                    test_params = {**bls_params, param_name: cql_pattern}
-                    response = _make_bls_request("/corpora/corapan/hits", test_params)
-                    logger.debug(f"CQL param '{param_name}' accepted")
-                    logger.debug(f"BL request params: {test_params}")
-                    break
-                except httpx.HTTPStatusError as e:
-                    last_error = e
-                    if e.response and e.response.status_code == 400:
-                        continue  # Try next param name
-                    else:
-                        raise
-            
-            if response is None:
-                raise last_error or Exception("Could not determine BLS CQL parameter")
-
-        else: # No CQL pattern, make request with filters only
-            response = _make_bls_request("/corpora/corapan/hits", bls_params)
-        
-        # Parse response
+        # Execute request
+        response = _make_bls_request("/corpora/corapan/hits", params)
         data = response.json()
         summary = data.get("summary", {})
         hits = data.get("hits", [])
-        # Temporary debug: log BL summary and counts for troubleshooting
-        try:
-            logger.debug(f"BLS summary keys: {list(summary.keys())}")
-            logger.debug(f"BLS resultsStats: {summary.get('resultsStats')}")
-            logger.debug(f"BLS numberOfHits: {summary.get('numberOfHits')}")
-            logger.debug(f"BLS hits count (len): {len(hits)}")
-        except Exception:
-            logger.exception("Error logging BLS summary for debug")
         
-        # DEBUG: Log first hit structure
-        if hits:
-            logger.debug(f"First hit structure: {json.dumps(hits[0], indent=2)[:500]}")
-        
-        # Punkt 2: Konsistenz - beide immer = numberOfHits (Server-Side Filtering)
-        # Doc-Zahlen (numberOfDocs, docsRetrieved) nur für Summary-Badge nutzen
-        # BlackLab v5: resultsStats.hits (nicht numberOfHits)
         results_stats = summary.get("resultsStats", {})
-        number_of_hits = results_stats.get("hits", 0)
-        docs_retrieved = results_stats.get("documents", 0)  # v5: documents statt docsRetrieved
-        number_of_docs = results_stats.get("documents", 0)
-        
-        # Punkt 8: Logging von Trefferzahl
-        logger.info(f"DataTables query: hits={number_of_hits}, docs_retrieved={docs_retrieved}, "
-                   f"number_of_docs={number_of_docs}, filter={'yes' if filter_query else 'no'}")
-        
-        # Process hits for DataTable: map to canonical keys via blacklab_search helper
+        total_hits = summary.get("numberOfHits", 0)
+        if not total_hits:
+             total_hits = results_stats.get("hits", 0)
+             
+        # Process hits
         from ..services.blacklab_search import _hit_to_canonical as _hit2canon
         processed_hits = [_hit2canon(hit) for hit in hits]
-
-        # Enrich processed hits using helper
+        
+        # Enrich hits
         processed_hits = _enrich_hits_with_docmeta(processed_hits, hits, data.get('docInfos', {}) or {}, _DOCMETA_CACHE or {})
-        if current_app.debug or current_app.config.get('DEBUG'):
-            try:
-                sample = processed_hits[:5]
-                logger.debug(f"Sample processed hits after enrichment: {json.dumps(sample, default=str)[:1000]}")
-            except Exception:
-                logger.exception("Error logging sample processed hits")
-        
-        # Apply country filter (post-processing since metadata is document-level)
-        def _matches_country_filter(item, filters):
-            """Ultra-simple 3-case country filter: checkbox OR exact whitelist."""
-            include_regional = filters.get("include_regional", False)
-            selected_codes = [c.upper() for c in filters.get("country_code", [])]
-            
-            # Try to get country code from item, fallback to doc metadata if available
-            code = (item.get("country_code") or "").upper()
-            
-            # If code is missing in item, try to find it in docInfos using docPid/file_id if available
-            # (This is already done in _enrich_hits_with_docmeta but let's be safe)
-            
-            scope = (item.get("country_scope") or "").lower()  # "national" / "regional" / ""
-            
-            # Reject documents without country_code
-            if not code:
-                # If we can't determine country, we can't filter safely. 
-                # However, if no specific country filter is active, maybe we should include it?
-                # But the logic below relies on scope/code.
-                return False
-            
-            # CASE 3: País-Dropdown has selections → exact whitelist (checkbox irrelevant)
-            if selected_codes:
-                selected_set = set(selected_codes)
-                return code in selected_set
-            
-            # CASE 1+2: No país selection → checkbox controls behavior
-            
-            # Checkbox off: only national documents
-            if not include_regional:
-                # If scope is missing but we have a code, we might infer scope or default to national?
-                # For now, strict check.
-                return scope == "national"
-            
-            # Checkbox on: national + regional (all documents)
-            return True
-        
-        # Apply filter
-        filtered_hits = [h for h in processed_hits if _matches_country_filter(h, filters)]
-        
-        # --- Sorting Logic ---
-        # Extract sorting parameters
-        order_column_idx = get_int("order[0][column]", -1)
-        order_dir = get_str("order[0][dir]", "asc")
-        
-        # Map column index to field name
-        # 0: #, 1: CtxL, 2: Match, 3: CtxR, 4: Audio, 5: Country, 6: Speaker, 7: Sex, 8: Mode, 9: Discourse, 10: TokID, 11: File
-        column_map = {
-            2: "match_word",      # Resultado
-            5: "country_code",    # País (Fixed: use country_code)
-            6: "speaker_type",    # Hablante
-            7: "speaker_sex",     # Sexo
-            8: "speaker_mode",    # Modo
-            9: "speaker_discourse", # Discurso
-            10: "tokid",
-            11: "filename"
-        }
-        
-        if order_column_idx in column_map:
-            sort_field = column_map[order_column_idx]
-            reverse = (order_dir == "desc")
-            
-            def sort_key(item):
-                val = item.get(sort_field, "")
-                return val.lower() if isinstance(val, str) else str(val)
-                
-            filtered_hits.sort(key=sort_key, reverse=reverse)
-        # ---------------------
 
-        # Apply pagination to filtered hits
-        paginated_hits = filtered_hits[start:start + length]
-        
-        # Simple count logic: backend filter is the only filter
-        records_total = len(filtered_hits)
-        records_filtered = len(filtered_hits)
-        
-        response_payload = {
+        return jsonify({
             "draw": draw,
-            "recordsTotal": records_total,
-            "recordsFiltered": records_filtered,
-            "data": paginated_hits,
-        }
-        # Debug helper: include CQL when running in debug mode
-        # Prefer Flask app.debug flag; ENV config may be missing in some configurations
-        if current_app.debug or current_app.config.get('DEBUG'):
-            response_payload['cql_debug'] = cql_pattern
-            response_payload['filter_debug'] = filter_query or ''
-            # Include a small sample of processed hits for debugging
-            response_payload['hit_sample'] = processed_hits[:5]
-        # Temporary debug: include BLS summary and hit counts to inspect responses
-        response_payload['bls_summary'] = summary
-        response_payload['bls_hits_len'] = len(hits)
+            "recordsTotal": total_hits,
+            "recordsFiltered": total_hits,
+            "data": processed_hits,
+            "bls_summary": summary
+        })
 
-        return jsonify(response_payload)
-        
-    except ValueError as e:
-        # CQL validation error (from build_cql)
-        logger.warning(f"CQL validation: {e}")
-        return jsonify({
-            "draw": draw,
-            "recordsTotal": 0,
-            "recordsFiltered": 0,
-            "data": [],
-            "error": "invalid_cql",
-            "message": str(e)
-        }), 200  # Return 200 with error in JSON for DataTables compatibility
-        
-    except httpx.ConnectError:
-        # Connection refused, DNS lookup failed, or BlackLab unreachable
-        # This is a clear, actionable error for the user
-        logger.warning(f"BLS connection failed (server not reachable at {BLS_BASE_URL})")
-        return jsonify({
-            "draw": draw,
-            "recordsTotal": 0,
-            "recordsFiltered": 0,
-            "data": [],
-            "error": "upstream_unavailable",
-            "message": f"Search backend (BlackLab) is currently not reachable. Please check that the BlackLab server is running at {BLS_BASE_URL}."
-        }), 200  # Return 200 with error in JSON for DataTables compatibility
-        
-    except httpx.TimeoutException:
-        logger.error("BLS timeout during DataTables request")
-        return jsonify({
-            "draw": draw,
-            "recordsTotal": 0,
-            "recordsFiltered": 0,
-            "data": [],
-            "error": "upstream_timeout",
-            "message": "BlackLab Server did not respond in time. Please try again later."
-        }), 200  # Return 200 with error in JSON for DataTables compatibility
-        
-    except httpx.HTTPStatusError as e:
-        if e.response.status_code == 400:
-            # CQL syntax error
-            try:
-                bls_error = e.response.json().get("error", {})
-                detail = bls_error.get("message", str(e))
-            except:
-                detail = e.response.text[:200]
-            logger.warning(f"BLS CQL error: {detail}")
-            return jsonify({
-                "draw": draw,
-                "recordsTotal": 0,
-                "recordsFiltered": 0,
-                "data": [],
-                "error": "invalid_cql",
-                "message": f"CQL syntax error: {detail}"
-            }), 200  # Return 200 with error in JSON for DataTables compatibility
-        else:
-            logger.error(f"BLS HTTP {e.response.status_code}: {e.response.text[:200]}")
-            return jsonify({
-                "draw": draw,
-                "recordsTotal": 0,
-                "recordsFiltered": 0,
-                "data": [],
-                "error": "upstream_error",
-                "message": f"BlackLab Server error: {e.response.status_code}"
-            }), 200  # Return 200 with error in JSON for DataTables compatibility
-            
     except Exception as e:
-        logger.exception("Unexpected error in DataTables endpoint")
-        msg = str(e)
-        # include small debug payload for troubleshooting
-        debug_payload = {}
-        try:
-            debug_payload['request_args'] = dict(request.args)
-            if 'cql_pattern' in locals():
-                debug_payload['cql_pattern'] = cql_pattern
-            if 'filter_query' in locals():
-                debug_payload['filter_query'] = filter_query
-            if 'bls_params' in locals():
-                debug_payload['bls_params'] = bls_params
-        except Exception:
-            pass
-        payload = {
-            "draw": draw if 'draw' in locals() else 1,
-            "recordsTotal": 0,
-            "recordsFiltered": 0,
-            "data": [],
-            "error": "server_error",
-            "message": "An unexpected error occurred",
-        }
-        # Include error details and debug payload only when debug is enabled
-        if current_app.debug or current_app.config.get('DEBUG'):
-            payload['error_details'] = msg
-            payload['debug'] = debug_payload
-        return jsonify(payload), 200  # Return 200 with error in JSON for DataTables compatibility
+        logger.exception("DataTables error")
+        return jsonify({
+            "draw": get_int("draw", 1),
+            "error": str(e),
+            "data": []
+        })
 
 
 @bp.route("/token/search", methods=["POST"])
@@ -1187,284 +874,237 @@ def export_data():
 
 @bp.route("/stats", methods=["GET"])
 @limiter.limit("30 per minute")
-def advanced_stats():
+def stats_data():
     """
-    Comprehensive BlackLab-native statistics aggregation endpoint.
-    
-    Aggregates hit-level metadata from BlackLab search results using the exact same
-    search query as the DataTables endpoint to ensure consistency.
-    
-    Query Parameters:
-        All parameters from /search/advanced/data are supported:
-        - q, mode, sensitive: Search query parameters
-        - country_code[], speaker_type[], sex[], speech_mode[], discourse[]: Filters
-        - include_regional: Include regional broadcasts
-        - country_detail: Optional post-filter by specific country (for drill-down)
-    
-    Returns:
-        JSON: {
-            "total_hits": int,
-            "by_country": [{key, n, p}, ...],
-            "by_country_region": [{key, n, p}, ...],
-            "by_speaker_type": [{key, n, p}, ...],
-            "by_sexo": [{key, n, p}, ...],
-            "by_modo": [{key, n, p}, ...],
-            "by_discourse": [{key, n, p}, ...],
-            "by_radio": [{key, n, p}, ...],
-            "by_city": [{key, n, p}, ...],
-            "by_file_id": [{key, n, p}, ...]
-        }
-        where:
-            key: Category value (e.g., "ARG", "m", "libre")
-            n: Absolute count of hits
-            p: Proportion (0.0-1.0)
-    
-    Implementation:
-        1. Builds identical CQL + filters as /data endpoint
-        2. Fetches up to MAX_STATS_HITS hits from BlackLab (no pagination)
-        3. Aggregates token-level annotations from hit.match field
-        4. Returns sorted statistics (descending by count, then ascending by key)
-    
-    Note:
-        - All aggregated fields are token annotations (in corapan-tsv.blf.yaml)
-        - BlackLab doesn't provide native grouping API, so we aggregate manually
-        - For queries with >MAX_STATS_HITS results, statistics are based on sample
+    Statistics endpoint using BlackLab grouping.
     """
-    # Maximum hits to fetch for statistics (balance between accuracy and performance)
-    MAX_STATS_HITS = 50000
-    
     try:
-        # Build CQL and filters using same logic as /data endpoint
-        cql_pattern, filter_query, filters = build_advanced_cql_and_filters_from_request(request.args)
-        logger.info(f"STATS CQL: patt={cql_pattern}, filter={filter_query}")
+        query_info = build_blacklab_query_from_request(request.args)
+        patt = query_info["patt"]
+        filter_cql = query_info["filter"]
+        params_base = query_info["params_base"]
         
-        # BlackLab parameters for stats aggregation
-        bls_params = {
-            "first": 0,
-            "number": MAX_STATS_HITS,  # Fetch large sample for accurate statistics
-            "wordsaroundhit": 0,  # No context needed for stats
-            # Request all token annotations needed for aggregation
-            # NOTE: Field names match BlackLab index: speaker_sex, speaker_mode, speaker_discourse
-            "listvalues": "country_code,country_region_code,speaker_type,speaker_sex,speaker_mode,speaker_discourse,radio,city,file_id",
-            "waitfortotal": "true"  # Ensure we get accurate total count
+        # Get total hits first
+        count_params = params_base.copy()
+        if patt: count_params["patt"] = patt
+        if filter_cql: count_params["filter"] = filter_cql
+        count_params["number"] = 0
+        count_params["waitfortotal"] = "true"
+        
+        # Execute total count request
+        count_resp = _make_bls_request("/corpora/corapan/hits", count_params)
+        count_data = count_resp.json()
+        total_hits = count_data.get("summary", {}).get("numberOfHits", 0)
+        if not total_hits:
+             total_hits = count_data.get("summary", {}).get("resultsStats", {}).get("hits", 0)
+
+        # Define dimensions to group by
+        dimensions = {
+            "by_country": BLS_FIELDS["country"],
+            "by_speaker_type": BLS_FIELDS["speaker_type"],
+            "by_sex": BLS_FIELDS["sex"],
+            "by_modo": BLS_FIELDS["mode"],
+            "by_discourse": BLS_FIELDS["discourse"],
+            "by_radio": BLS_FIELDS["radio"],
+            "by_city": BLS_FIELDS["city"],
+            "by_file_id": BLS_FIELDS["file_id"],
         }
         
-        if filter_query:
-            bls_params["filter"] = filter_query
+        stats = {"total_hits": total_hits}
         
-        # Ensure filters are applied to the CQL pattern if needed (e.g. speaker filters)
-        # build_advanced_cql_and_filters_from_request already handles this by returning
-        # a cql_pattern that includes speaker filters if they can't be in filter_query
+        # Execute grouping requests in parallel
+        logger.info(f"STATS QUERY: patt={patt}, filter={filter_cql}")
         
-        # Try CQL parameter names (same fallback logic as /data)
-        cql_param_names = ["patt", "cql", "cql_query"]
-        response = None
-        last_error = None
-        
-        for param_name in cql_param_names:
-            try:
-                test_params = {**bls_params, param_name: cql_pattern}
-                response = _make_bls_request("/corpora/corapan/hits", test_params)
-                logger.debug(f"Stats: CQL param '{param_name}' accepted")
-                break
-            except httpx.HTTPStatusError as e:
-                last_error = e
-                if e.response and e.response.status_code == 400:
-                    continue  # Try next param name
-                else:
-                    raise
-        
-        if response is None:
-            raise last_error or Exception("Could not determine BLS CQL parameter")
-        
-        # Parse BlackLab response
-        data = response.json()
-        summary = data.get("summary", {})
-        results_stats = summary.get("resultsStats", {})
-        
-        # Get total hit count from resultsStats (BlackLab v5)
-        total_hits = results_stats.get("hits", 0)
-        
-        # Get hits for aggregation
-        hits = data.get("hits", [])
-        
-        logger.info(f"Stats: Retrieved {len(hits)} of {total_hits} total hits from BlackLab")
-        
-        # DEBUG: Log first hit structure to identify field names
-        if hits:
-            first_hit = hits[0]
-            match_data = first_hit.get("match", {})
-            logger.info(f"Stats DEBUG: First hit match fields: {list(match_data.keys())}")
-            logger.debug(f"Stats DEBUG: First hit match values: {match_data}")
-        
-        # Log sampling warning if we hit the limit
-        if len(hits) >= MAX_STATS_HITS and total_hits > MAX_STATS_HITS:
-            logger.warning(f"Stats: Sampled {len(hits)} of {total_hits} hits for aggregation")
-        
-        # Apply country_detail filter if specified (for drill-down by country)
-        country_detail = request.args.get('country_detail', '').strip().upper()
-        
-        if country_detail:
-            filtered_hits = []
-            for hit in hits:
-                match = hit.get("match", {})
-                country_code = match.get("country_code")
-                
-                # Extract first value if list
-                if isinstance(country_code, list):
-                    country_code = country_code[0] if country_code else None
-                
-                if country_code and country_code.upper() == country_detail:
-                    filtered_hits.append(hit)
+        with ThreadPoolExecutor(max_workers=8) as executor:
+            future_to_dim = {
+                executor.submit(bls_group_by_field, field, patt, filter_cql, params_base): dim 
+                for dim, field in dimensions.items()
+            }
             
-            hits = filtered_hits
-            total_hits = len(hits)
-            logger.info(f"Stats: Filtered to {total_hits} hits for country {country_detail}")
+            for future in as_completed(future_to_dim):
+                dim = future_to_dim[future]
+                try:
+                    stats[dim] = future.result()
+                except Exception as exc:
+                    logger.error(f"Stats dimension {dim} generated an exception: {exc}")
+                    stats[dim] = []
         
-        # Aggregation function
-        def aggregate_dimension(dimension_key: str, fallback_key: str = None) -> list:
-            """
-            Aggregate hits by a token annotation field.
-            
-            Args:
-                dimension_key: Primary field name from hit.match (token annotation)
-                fallback_key: Alternative field name to try if primary is not found
-            
-            Returns:
-                List of {key, n, p} dicts sorted by count (desc) then key (asc)
-            """
-            counts = Counter()
-            
-            def is_empty_value(val):
-                """Check if value is None, empty list, empty string, or list containing only empty strings."""
-                if val is None or val == "" or val == []:
-                    return True
-                if isinstance(val, list):
-                    # Check if all elements are empty strings
-                    return all(v == "" or v is None for v in val)
-                return False
-            
-            for hit in hits:
-                # Extract value from hit.match (token-level annotation)
-                match = hit.get("match", {})
-                value = match.get(dimension_key)
-                
-                # Try fallback if primary key has no value
-                if is_empty_value(value) and fallback_key:
-                    value = match.get(fallback_key)
-                
-                # Skip empty values
-                if is_empty_value(value):
-                    continue
-                
-                # Handle list values (BlackLab returns token annotations as lists)
-                # Take FIRST non-empty value only (one count per hit!)
-                if isinstance(value, list):
-                    for v in value:
-                        if v is not None and str(v).strip():
-                            counts[str(v)] += 1
-                            break  # Only count once per hit
-                else:
-                    if value and str(value).strip():
-                        counts[str(value)] += 1
-            
-            # Calculate proportions
-            total = sum(counts.values())
-            
-            # Build sorted result
-            result = [
-                {
-                    "key": key,
-                    "n": count,
-                    "p": round(count / total, 3) if total > 0 else 0
-                }
-                for key, count in sorted(counts.items(), key=lambda x: (-x[1], x[0]))
-            ]
-            
-            return result
-        
-        # DEBUG: Log first 3 hits to see field structure
-        if hits and len(hits) > 0:
-            logger.info(f"Stats DEBUG: Inspecting first 3 hits...")
-            for i, hit in enumerate(hits[:3]):
-                match = hit.get("match", {})
-                logger.info(f"  Hit {i+1} match keys: {list(match.keys())}")
-                logger.info(f"  Hit {i+1} speaker_sex={match.get('speaker_sex')}, sex={match.get('sex')}")
-                logger.info(f"  Hit {i+1} speaker_mode={match.get('speaker_mode')}, mode={match.get('mode')}")
-                logger.info(f"  Hit {i+1} country_code={match.get('country_code')}")
-        
-        # Aggregate all dimensions
-        # NOTE: Using fallback keys for backward compatibility (some indices may use "sex" instead of "speaker_sex")
-        by_country = aggregate_dimension("country_code", "country")
-        by_country_region = aggregate_dimension("country_region_code")
-        by_speaker_type = aggregate_dimension("speaker_type")
-        by_sex = aggregate_dimension("speaker_sex", "sex")  # Try speaker_sex first, fallback to sex
-        by_mode = aggregate_dimension("speaker_mode", "mode")  # Try speaker_mode first, fallback to mode
-        by_discourse = aggregate_dimension("speaker_discourse", "discourse")  # Try speaker_discourse first, fallback to discourse
-        by_radio = aggregate_dimension("radio")
-        by_city = aggregate_dimension("city")
-        by_file_id = aggregate_dimension("file_id")
-        
-        # Build response
-        result = {
-            "total_hits": total_hits,
-            "by_country": by_country,
-            "by_country_region": by_country_region,
-            "by_speaker_type": by_speaker_type,
-            "by_sexo": by_sex,  # Frontend expects "by_sexo"
-            "by_modo": by_mode,  # Frontend expects "by_modo"
-            "by_discourse": by_discourse,
-            "by_radio": by_radio,
-            "by_city": by_city,
-            "by_file_id": by_file_id,
-        }
-        
-        logger.info(
-            f"Stats: Aggregated {len(hits)} hits - "
-            f"{len(by_country)} countries, "
-            f"{len(by_country_region)} regions, "
-            f"{len(by_speaker_type)} speaker types, "
-            f"{len(by_sex)} sexes, "
-            f"{len(by_mode)} modes, "
-            f"{len(by_discourse)} discourse types, "
-            f"{len(by_radio)} radios, "
-            f"{len(by_city)} cities, "
-            f"{len(by_file_id)} files"
-        )
-        
-        return jsonify(result), 200
-        
-    except httpx.ConnectError:
-        logger.error("Stats: BLS connection failed")
-        return jsonify({
-            "error": "connection_error",
-            "message": "BlackLab Server is not reachable"
-        }), 502
-        
-    except httpx.TimeoutException:
-        logger.error("Stats: BLS timeout")
-        return jsonify({
-            "error": "timeout",
-            "message": "BlackLab Server request timeout"
-        }), 504
-        
-    except httpx.HTTPStatusError as e:
-        logger.error(f"Stats: BLS HTTP error {e.response.status_code}")
-        return jsonify({
-            "error": "bls_error",
-            "message": f"BlackLab Server returned error {e.response.status_code}"
-        }), 502
-        
-    except CQLValidationError as e:
-        logger.warning(f"Stats: CQL validation error - {e}")
-        return jsonify({
-            "error": "invalid_query",
-            "message": str(e)
-        }), 400
+        return jsonify(stats)
         
     except Exception as e:
-        logger.exception("Stats: Unexpected error")
-        return jsonify({
-            "error": "server_error",
-            "message": "An unexpected error occurred"
-        }), 500
+        logger.exception("Stats error")
+        return jsonify({"error": str(e)}), 500
+
+
+def build_cql_with_direct_filters(params, filters):
+    """
+    Build CQL pattern with direct field constraints (no speaker_code mapping).
+    Uses BLS_FIELDS to map filter keys to index field names.
+    """
+    base_cql = build_cql(params)
+    
+    constraints = []
+    
+    # Map filter keys to BLS fields
+    # filters keys: speaker_type, sex, mode, discourse, country_code, radio, city, date
+    
+    # Speaker fields
+    for filter_key, bls_field in [
+        ("speaker_type", BLS_FIELDS["speaker_type"]),
+        ("sex", BLS_FIELDS["sex"]),
+        ("mode", BLS_FIELDS["mode"]),
+        ("discourse", BLS_FIELDS["discourse"]),
+    ]:
+        vals = filters.get(filter_key, [])
+        if vals:
+            if len(vals) == 1:
+                constraints.append(f'{bls_field}="{vals[0]}"')
+            else:
+                constraints.append(f'{bls_field}="({"|".join(vals)})"')
+
+    # Document/Metadata fields (as token annotations)
+    # country_code
+    vals = filters.get("country_code", [])
+    if vals:
+        if len(vals) == 1:
+            constraints.append(f'{BLS_FIELDS["country"]}="{vals[0]}"')
+        else:
+            constraints.append(f'{BLS_FIELDS["country"]}="({"|".join(vals)})"')
+            
+    # country_scope
+    val = filters.get("country_scope")
+    if val:
+        constraints.append(f'{BLS_FIELDS["scope"]}="{val}"')
+
+    # radio
+    val = filters.get("radio")
+    if val:
+        constraints.append(f'{BLS_FIELDS["radio"]}="{val}"')
+        
+    # city
+    val = filters.get("city")
+    if val:
+        constraints.append(f'{BLS_FIELDS["city"]}="{val}"')
+        
+    # date
+    val = filters.get("date")
+    if val:
+        constraints.append(f'date="{val}"')
+
+    if not constraints:
+        return base_cql
+        
+    # Apply constraints to every token in the CQL pattern
+    import re
+    token_pattern = re.compile(r'\[([^\]]*)\]')
+    
+    constraint_str = " & ".join(constraints)
+    
+    def add_constraints(match):
+        existing = match.group(1).strip()
+        if existing:
+            return f'[{existing} & {constraint_str}]'
+        return f'[{constraint_str}]'
+    
+    modified_cql = token_pattern.sub(add_constraints, base_cql)
+    logger.info(f"CQL with direct filters: {modified_cql}")
+    return modified_cql
+
+
+def build_blacklab_query_from_request(req_args) -> dict:
+    """
+    Liest die HTTP-Parameter und erzeugt ein dict mit:
+    - patt (CQL-Pattern)
+    - filter (CQL-Filter oder "")
+    - params_base (dict mit fixen BLS-Parametern, ohne paging / grouping)
+    """
+    # Get mode and query
+    mode = req_args.get('mode', 'forma')
+    query = req_args.get('q') or req_args.get('query', '')
+    sensitive = req_args.get('sensitive', '0')
+    
+    # Resolve countries with include_regional logic
+    countries = req_args.getlist('country_code')
+    include_regional_param = req_args.get('include_regional')
+    include_regional = include_regional_param == '1'
+    
+    # Build filters
+    filters = build_filters(req_args)
+    if countries:
+        filters['country_code'] = countries
+        
+    # Handle country_scope default logic
+    # If no explicit countries selected and include_regional is False, enforce national scope
+    if not countries and 'country_scope' not in filters:
+        if not include_regional:
+            filters['country_scope'] = 'national'
+    
+    # Build document filter (likely empty now, but kept for structure)
+    filter_query = filters_to_blacklab_query(filters)
+    
+    # Build CQL pattern with direct filters
+    # We pass filters to build_cql_with_direct_filters which adds them to the CQL
+    cql_pattern = build_cql_with_direct_filters(req_args, filters)
+    
+    params_base = {
+        "wordsaroundhit": MAX_WORDS_AROUND_HIT,
+    }
+    
+    return {
+        "patt": cql_pattern,
+        "filter": filter_query,
+        "params_base": params_base
+    }
+
+
+def bls_group_by_field(field_name: str, patt: str, filter_cql: str, base_params: dict) -> list[dict]:
+    """
+    Ruft BlackLab mit group=hit:<field_name> auf und gibt eine Liste von
+    {'key': <groupValue>, 'n': <size>} zurück.
+    """
+    params = base_params.copy()
+    if patt:
+        params["patt"] = patt
+    if filter_cql:
+        params["filter"] = filter_cql
+        
+    # Use 'hit:' grouping since all our metadata are stored as token annotations
+    params["group"] = f"hit:{field_name}"
+    params["number"] = 1000  # Limit number of groups, not hits
+    params["waitfortotal"] = "true"
+    
+    try:
+        start_time = time.time()
+        # Log the actual params being sent for debugging
+        logger.debug(f"Grouping request {field_name}: params={params}")
+        
+        response = _make_bls_request("/corpora/corapan/hits", params)
+        duration = time.time() - start_time
+        
+        data = response.json()
+        groups = data.get("hitGroups", [])
+        
+        logger.debug(f"Grouping {field_name}: {len(groups)} groups in {duration:.2f}s")
+        
+        result = []
+        for g in groups:
+            identity = g.get("identity", "")
+            # identity for hit: grouping is usually just the value
+            # but sometimes it might be "cql:..." depending on version
+            val = identity
+            if ":" in str(val) and not str(val).startswith("http"): # Avoid splitting URLs if any
+                # Heuristic: if it looks like cql:field:value, take last part
+                parts = str(val).split(":")
+                if len(parts) > 1:
+                     val = parts[-1]
+            
+            result.append({
+                "key": val,
+                "n": g.get("size", 0)
+            })
+            
+        return result
+        
+    except Exception as e:
+        logger.error(f"Grouping failed for {field_name}: {e}")
+        return []

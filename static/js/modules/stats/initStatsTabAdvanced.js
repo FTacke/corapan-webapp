@@ -115,7 +115,12 @@ function buildStatsUrl() {
   // Mode (CQL or simple)
   const expertCql = form.querySelector('#modo-avanzado')?.checked;
   const modeEl = form.querySelector('input[name="mode"]:checked') || form.querySelector('select[name="mode"]');
-  const mode = modeEl?.value || 'forma';
+  let mode = modeEl?.value || 'forma';
+
+  // Map spanish UI 'lema' to backend 'lemma'
+  if (mode === 'lema') {
+    mode = 'lemma';
+  }
 
   if (expertCql) {
     params.append('mode', 'cql');
@@ -124,45 +129,112 @@ function buildStatsUrl() {
   }
 
   // Country filters
-  const countryCheckboxes = form.querySelectorAll('input[name="country_code"]:checked');
-  countryCheckboxes.forEach(cb => {
-    params.append('country_code', cb.value);
-  });
+  // If we have a specific country filter from the dropdown, use ONLY that
+  if (currentCountryFilter) {
+    params.append('country_code', currentCountryFilter);
+  } else {
+    // Otherwise use the checkboxes from the form
+    // Note: The UI uses checkboxes with name="pais_ui", but we want to send "country_code"
+    const countryCheckboxes = form.querySelectorAll('input[name="pais_ui"]:checked');
+    countryCheckboxes.forEach(cb => {
+      params.append('country_code', cb.value);
+    });
+  }
 
   // Include regional checkbox
   const includeRegional = form.querySelector('#include-regional')?.checked;
   params.append('include_regional', includeRegional ? '1' : '0');
 
   // Speaker type filters
-  const speakerCheckboxes = form.querySelectorAll('input[name="speaker_type"]:checked');
+  const speakerCheckboxes = form.querySelectorAll('input[name="hablante_ui"]:checked');
   speakerCheckboxes.forEach(cb => {
     params.append('speaker_type', cb.value);
   });
 
   // Sex filters
-  const sexCheckboxes = form.querySelectorAll('input[name="sex"]:checked');
+  const sexCheckboxes = form.querySelectorAll('input[name="sexo_ui"]:checked');
   sexCheckboxes.forEach(cb => {
     params.append('sex', cb.value);
   });
 
   // Mode filters (registro)
-  const modeCheckboxes = form.querySelectorAll('input[name="speech_mode"]:checked');
+  const modeCheckboxes = form.querySelectorAll('input[name="modo_ui"]:checked');
   modeCheckboxes.forEach(cb => {
     params.append('speech_mode', cb.value);
   });
 
   // Discourse filters
-  const discourseCheckboxes = form.querySelectorAll('input[name="discourse"]:checked');
+  const discourseCheckboxes = form.querySelectorAll('input[name="discurso_ui"]:checked');
   discourseCheckboxes.forEach(cb => {
     params.append('discourse', cb.value);
   });
 
-  // Country detail filter (from dropdown)
-  if (currentCountryFilter) {
-    params.append('country_detail', currentCountryFilter);
-  }
-
   return `/search/advanced/stats?${params.toString()}`;
+}
+
+/**
+ * Process and enrich stats data
+ * - Calculates percentages
+ * - Maps labels (e.g. 'otro' -> 'no-pro')
+ */
+function processStatsData(data) {
+  const total = data.total_hits || data.total || 0;
+  
+  const processList = (list, mapping = {}) => {
+    if (!list) return [];
+    return list.map(item => {
+      // Calculate percentage
+      const p = total > 0 ? item.n / total : 0;
+      
+      // Map key if needed
+      let key = item.key;
+      if (mapping[key]) {
+        key = mapping[key];
+      } else if (key === 'otro') {
+        key = 'no-pro'; // Default mapping for 'otro'
+      }
+      
+      return {
+        ...item,
+        key: key,
+        p: p
+      };
+    });
+  };
+
+  // Mappings
+  const speakerMapping = {
+    'pro': 'Profesional',
+    'otro': 'No-Profesional'
+  };
+  
+  const sexMapping = {
+    'm': 'Masculino',
+    'f': 'Femenino',
+    'u': 'Desconocido'
+  };
+
+  const modeMapping = {
+    'e': 'Espontáneo',
+    'p': 'Preparado',
+    'l': 'Lectura' // Assuming 'l' for lectura based on common codes
+  };
+
+  // Process country list with uppercase keys
+  const byCountry = processList(data.by_country).map(item => ({
+    ...item,
+    key: item.key.toUpperCase()
+  }));
+
+  return {
+    ...data,
+    by_country: byCountry,
+    by_speaker_type: processList(data.by_speaker_type, speakerMapping),
+    by_sex: processList(data.by_sex, sexMapping),
+    by_modo: processList(data.by_modo, modeMapping),
+    by_discourse: processList(data.by_discourse),
+    by_radio: processList(data.by_radio),
+  };
 }
 
 /**
@@ -182,45 +254,45 @@ function renderCharts(data) {
   // Update total (backend returns total_hits)
   updateTotal(data.total_hits || data.total || 0);
 
-  // Render country chart
+  // Render country chart (Horizontal)
   const countryContainer = document.getElementById('chart-country');
   if (countryContainer) {
-    charts.country = renderBar(countryContainer, data.by_country, 'País', 'absolute');
+    charts.country = renderBar(countryContainer, data.by_country, 'País', 'absolute', 'horizontal');
     updateCategoryCount('by_country', data.by_country?.length || 0);
   }
 
-  // Render speaker type chart
+  // Render speaker type chart (Vertical)
   const speakerContainer = document.getElementById('chart-speaker');
   if (speakerContainer) {
-    charts.speaker = renderBar(speakerContainer, data.by_speaker_type, 'Tipo de hablante', 'absolute');
+    charts.speaker = renderBar(speakerContainer, data.by_speaker_type, 'Tipo de hablante', 'absolute', 'vertical');
     updateCategoryCount('by_speaker_type', data.by_speaker_type?.length || 0);
   }
 
-  // Render sexo chart
+  // Render sexo chart (Vertical)
   const sexoContainer = document.getElementById('chart-sexo');
   if (sexoContainer) {
-    charts.sexo = renderBar(sexoContainer, data.by_sexo, 'Sexo', 'absolute');
-    updateCategoryCount('by_sexo', data.by_sexo?.length || 0);
+    charts.sexo = renderBar(sexoContainer, data.by_sex, 'Sexo', 'absolute', 'vertical');
+    updateCategoryCount('by_sex', data.by_sex?.length || 0);
   }
 
-  // Render modo chart
+  // Render modo chart (Vertical)
   const modoContainer = document.getElementById('chart-modo');
   if (modoContainer) {
-    charts.modo = renderBar(modoContainer, data.by_modo, 'Modo de habla', 'absolute');
+    charts.modo = renderBar(modoContainer, data.by_modo, 'Modo de habla', 'absolute', 'vertical');
     updateCategoryCount('by_modo', data.by_modo?.length || 0);
   }
   
-  // Render discourse chart
+  // Render discourse chart (Vertical)
   const discourseContainer = document.getElementById('chart-discourse');
   if (discourseContainer) {
-    charts.discourse = renderBar(discourseContainer, data.by_discourse, 'Discurso', 'absolute');
+    charts.discourse = renderBar(discourseContainer, data.by_discourse, 'Discurso', 'absolute', 'vertical');
     updateCategoryCount('by_discourse', data.by_discourse?.length || 0);
   }
 
-  // Render radio chart
+  // Render radio chart (Horizontal - many radios)
   const radioContainer = document.getElementById('chart-radio');
   if (radioContainer) {
-    charts.radio = renderBar(radioContainer, data.by_radio, 'Radio', 'absolute');
+    charts.radio = renderBar(radioContainer, data.by_radio, 'Radio', 'absolute', 'horizontal');
     updateCategoryCount('by_radio', data.by_radio?.length || 0);
   }
   
@@ -238,6 +310,45 @@ function renderCharts(data) {
     btn.classList.toggle('is-selected', isCount);
     btn.setAttribute('aria-pressed', isCount ? 'true' : 'false');
   });
+}
+
+/**
+ * Populate country filter dropdown from stats data
+ * IMPORTANT: Preserve original countries list to show all options after filtering
+ */
+function populateCountryFilter(countries) {
+  const dropdown = document.getElementById('stats-country-filter');
+  if (!dropdown) return;
+  
+  // Remember current selection
+  const currentSelection = dropdown.value;
+  
+  // Use originalCountries if available (all countries from initial load)
+  // This ensures dropdown always shows all countries, not just filtered ones
+  const countriesToShow = originalCountries.length > 0 ? originalCountries : countries;
+  
+  // Clear existing options
+  dropdown.innerHTML = '<option value="">Todos los países</option>';
+  
+  // Add country options from original list
+  countriesToShow.forEach(item => {
+    const option = document.createElement('option');
+    option.value = item.key;
+    option.textContent = `${item.key.toUpperCase()} (${new Intl.NumberFormat('es-ES').format(item.n)})`;
+    dropdown.appendChild(option);
+  });
+  
+  // Restore selection if still valid
+  if (currentSelection && [...dropdown.options].some(opt => opt.value === currentSelection)) {
+    dropdown.value = currentSelection;
+  }
+}
+
+/**
+ * Format number helper
+ */
+function formatNumber(n) {
+  return new Intl.NumberFormat('es-ES').format(n);
 }
 
 /**
@@ -265,10 +376,13 @@ export async function loadStats() {
     }
 
     const data = await response.json();
-    currentData = data;
+    
+    // Process data (calculate percentages, map labels)
+    const processedData = processStatsData(data);
+    currentData = processedData;
 
     hideLoading();
-    renderCharts(data);
+    renderCharts(processedData);
 
   } catch (error) {
     console.error('Failed to load stats:', error);
@@ -294,7 +408,11 @@ export function resetStats() {
         el.innerHTML = '';
       }
       // Reset subtitles
-      const meta = document.querySelector(`[data-meta="by_${id === 'speaker' ? 'speaker_type' : id}"]`);
+      let metaKey = `by_${id}`;
+      if (id === 'speaker') metaKey = 'by_speaker_type';
+      if (id === 'sexo') metaKey = 'by_sex';
+      
+      const meta = document.querySelector(`[data-meta="${metaKey}"]`);
       if (meta) meta.textContent = '—';
     });
   }
@@ -358,6 +476,11 @@ export function initStatsTabAdvanced() {
   // Listen for reset event from searchUI
   document.addEventListener('search:reset', () => {
     resetStats();
+  });
+
+  // Listen for search start event to cleanup old stats state
+  document.addEventListener('search:start', () => {
+    cleanupStats();
   });
 
   // Listen for search complete event to update stats if tab is active
@@ -468,38 +591,6 @@ function getDataKeyForChart(chartId) {
     'discourse': 'by_discourse',
   };
   return mapping[chartId];
-}
-
-/**
- * Populate country filter dropdown from stats data
- * IMPORTANT: Preserve original countries list to show all options after filtering
- */
-function populateCountryFilter(countries) {
-  const dropdown = document.getElementById('stats-country-filter');
-  if (!dropdown) return;
-  
-  // Remember current selection
-  const currentSelection = dropdown.value;
-  
-  // Use originalCountries if available (all countries from initial load)
-  // This ensures dropdown always shows all countries, not just filtered ones
-  const countriesToShow = originalCountries.length > 0 ? originalCountries : countries;
-  
-  // Clear existing options
-  dropdown.innerHTML = '<option value="">Todos los países</option>';
-  
-  // Add country options from original list
-  countriesToShow.forEach(item => {
-    const option = document.createElement('option');
-    option.value = item.key;
-    option.textContent = `${item.key.toUpperCase()} (${new Intl.NumberFormat('es-ES').format(item.n)})`;
-    dropdown.appendChild(option);
-  });
-  
-  // Restore selection if still valid
-  if (currentSelection && [...dropdown.options].some(opt => opt.value === currentSelection)) {
-    dropdown.value = currentSelection;
-  }
 }
 
 /**

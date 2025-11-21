@@ -568,3 +568,22 @@ export function updateSummary(data, queryParams, initialLoad = false) {
   
   console.log('[Summary] Updated:', { filtered, total, query, filtersActive });
 }
+
+/**
+ * Destroy the advanced table instance
+ */
+export function destroyAdvancedTable() {
+  if (advancedTable && $.fn.dataTable.isDataTable('#advanced-table')) {
+    try {
+      advancedTable.destroy();
+      advancedTable = null;
+      // Also clear the table body to remove old rows visually
+      const tableBody = document.querySelector('#advanced-table tbody');
+      if (tableBody) tableBody.innerHTML = '';
+    } catch (e) {
+      console.warn('[DataTables] Destroy error:', e);
+    }
+  }
+}
+
+function focusTokenResults() { const resultsSection = document.getElementById('token-results'); if (resultsSection) { setTimeout(() => { resultsSection.focus(); resultsSection.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 100); } }
