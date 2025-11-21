@@ -11,7 +11,7 @@ Die Phasen 1 bis 5 der Projekt-Überarbeitung sind abgeschlossen. Das Repository
 
 - **Phase 1 (Audit):** Bestandsaufnahme aller Dateien, Identifikation von Legacy-Code und "Müll".
 - **Phase 2 (Struktur):**
-  - Auflösung des `LOKAL/` Ordners (relevante Teile nach `scripts/` oder `docs/` migriert).
+  - Bereinigung des `LOKAL/` Ordners (und Definition als Tabuzone für Automatisierung).
   - Konsolidierung von Skripten in `scripts/`.
   - Bereinigung von Build-Artefakten.
 - **Phase 3 (Code Quality):**
