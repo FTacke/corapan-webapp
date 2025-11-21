@@ -74,10 +74,21 @@ class AccessCounter(CounterStore):
         self.persist()
 
 
-class SimpleCounter(CounterStore):
+class DetailedCounter(CounterStore):
     def increment(self, amount: int = 1) -> None:
         payload = self.load()
+        now = datetime.utcnow()
+        month_key = now.strftime("%Y-%m")
+        day_value = now.strftime("%Y-%m-%d")
+
         payload["overall"] = payload.get("overall", 0) + amount
+        
+        monthly = payload.setdefault("monthly", {})
+        monthly[month_key] = monthly.get(month_key, 0) + amount
+        
+        days = payload.setdefault("days", {})
+        days[day_value] = days.get(day_value, 0) + amount
+        
         self.persist()
 
 
@@ -90,12 +101,12 @@ counter_access = AccessCounter(
     },
 )
 
-counter_visits = SimpleCounter(
+counter_visits = DetailedCounter(
     filename="counter_visits.json",
-    default={"overall": 0},
+    default={"overall": 0, "monthly": {}, "days": {}},
 )
 
-counter_search = SimpleCounter(
+counter_search = DetailedCounter(
     filename="counter_search.json",
-    default={"overall": 0},
+    default={"overall": 0, "monthly": {}, "days": {}},
 )

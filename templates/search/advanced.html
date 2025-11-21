@@ -884,7 +884,7 @@ Ahora convierte la siguiente descripción en una consulta CQL precisa para CORAP
               </div>
             </div>
             
-            <button type="button" class="md3-button-filled" id="tokid-add-btn">
+            <button type="button" class="md3-button md3-button--filled" id="tokid-add-btn">
               <span class="material-symbols-rounded">add</span>
               <span>Añadir</span>
             </button>
@@ -978,42 +978,9 @@ Ahora convierte la siguiente descripción en una consulta CQL precisa para CORAP
 <script src="{{ url_for('static', filename='vendor/htmx-1.9.10.min.js') }}" defer></script>
 <!-- ECharts for statistics -->
 <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.1/dist/echarts.min.js"></script>
-<!-- Tab Switching Script -->
-<script type="module">
-  import { initTabs } from "{{ url_for('static', filename='js/modules/search/tabs.js') }}";
-  document.addEventListener('DOMContentLoaded', initTabs);
-</script>
-<!-- App modules -->
-<script src="{{ url_for('static', filename='js/modules/search/config.js') }}" type="module"></script>
-<script src="{{ url_for('static', filename='js/modules/search/filters.js') }}" type="module"></script>
-<script src="{{ url_for('static', filename='js/modules/search/patternBuilder.js') }}" type="module"></script>
-<script src="{{ url_for('static', filename='js/modules/search/searchUI.js') }}" type="module"></script>
-<script src="{{ url_for('static', filename='js/modules/advanced/initTable.js') }}" type="module"></script>
-<script src="{{ url_for('static', filename='js/modules/stats/renderBar.js') }}" type="module"></script>
-<!-- Token Tab Module -->
-<script type="module" src="{{ url_for('static', filename='js/modules/search/token-tab.js') }}"></script>
-<script type="module" src="{{ url_for('static', filename='js/modules/advanced/index.js') }}"></script>
-<script type="module">
-  import { initStatsTabAdvanced, cleanupStats } from '{{ url_for("static", filename="js/modules/stats/initStatsTabAdvanced.js") }}';
-  
-  // Initialize stats tab when DOM is ready
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initStatsTabAdvanced);
-  } else {
-    initStatsTabAdvanced();
-  }
-  
-  // Cleanup on page unload
-  window.addEventListener('beforeunload', cleanupStats);
-</script>
 
-
-
-<!-- Regional checkbox toggle logic -->
-<script type="module">
-  import { initRegionalToggle } from "{{ url_for('static', filename='js/modules/search/regional-toggle.js') }}";
-  document.addEventListener('DOMContentLoaded', initRegionalToggle);
-</script>
+<!-- Advanced Search Entry Point -->
+<script type="module" src="{{ url_for('static', filename='js/modules/search/advanced_entry.js') }}"></script>
 {% endblock %}
 
 {# Styles moved to static/css/md3/components/advanced-search.css and md3/components/editor-edit.css #}

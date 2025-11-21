@@ -10,45 +10,16 @@
 <link rel="stylesheet" href="{{ url_for('static', filename='css/md3/components/audio-player.css') }}">
 <!-- Material Symbols (MD3-konform) -->
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
-<!-- Pass URLs and token_id from backend to frontend -->
-<script>
-  window.PLAYER_CONFIG = {
-    transcription: '{{ transcription if transcription else "" }}',
-    audio: '{{ audio if audio else "" }}',
-    token_id: '{{ token_id if token_id else "" }}'
-  };
-  console.log('[Player] Config from backend:', window.PLAYER_CONFIG);
-  
-  // Global error handler for module loading
-  window.addEventListener('error', function(event) {
-    console.error('[Player] Global error:', event.error);
-  });
-  
-  window.addEventListener('unhandledrejection', function(event) {
-    console.error('[Player] Unhandled rejection:', event.reason);
-  });
-  
-  // Initialize player immediately (don't wait for DOMContentLoaded)
-  // This runs synchronously and is ready when the module loads
-  console.log('[Player] Starting inline initialization');
-  
-  // Import and run initialization synchronously
-  import('{{ url_for("static", filename="js/player/player-init.js") }}')
-    .then(module => {
-      console.log('[Player] Module loaded, initializing player');
-      // The module exports an init function
-      if (module.initializePlayer) {
-        module.initializePlayer();
-      }
-    })
-    .catch(err => {
-      console.error('[Player] Failed to load module:', err);
-    });
-</script>
+
+<!-- Player Entry Point -->
+<script type="module" src="{{ url_for('static', filename='js/modules/player/entry.js') }}" defer></script>
 {% endblock %}
 
 {% block content %}
-<div class="md3-player-page">
+<div id="player-page-root" class="md3-player-page"
+     data-transcription="{{ transcription if transcription else '' }}"
+     data-audio="{{ audio if audio else '' }}"
+     data-token-id="{{ token_id if token_id else '' }}">
   <!-- Hauptcontainer: Transkript + Sidebar -->
   <div class="md3-player-container">
     <!-- Linke Spalte: Transkript -->

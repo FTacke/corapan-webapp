@@ -152,18 +152,5 @@
 }
 </script>
 
-<script type="module">
-  import { EditorPlayer } from '{{ url_for("static", filename="js/editor/editor-player.js") }}';
-  import { DialogUtils } from '{{ url_for("static", filename="js/editor/dialog-utils.js") }}';
-  
-  // Make dialog utilities globally available
-  window.DialogUtils = DialogUtils;
-  
-  // Initialize editor when DOM is ready
-  document.addEventListener('DOMContentLoaded', async () => {
-    const config = JSON.parse(document.getElementById('editor-config').textContent);
-    const editor = new EditorPlayer(config);
-    await editor.init();
-  });
-</script>
+<script type="module" src="{{ url_for('static', filename='js/modules/editor/entry.js') }}"></script>
 {% endblock %}
