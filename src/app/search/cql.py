@@ -330,6 +330,33 @@ def build_filters(params: Dict) -> Dict[str, any]:
     ) or params.get("include_regionales") in ("1", "true", "on", True)
     filters["include_regional"] = include_regional
 
+    # Country scope
+    filters["country_scope"] = params.get("country_scope")
+
+    # Country parent codes
+    raw_parents = []
+    if hasattr(params, "getlist"):
+        raw_parents = params.getlist("country_parent_code")
+    else:
+        val = params.get("country_parent_code")
+        if isinstance(val, list):
+            raw_parents = val
+        elif isinstance(val, str):
+            raw_parents = [val]
+    filters["country_parent_code"] = [c.strip().upper() for c in raw_parents if c and c.strip()]
+
+    # Country region codes
+    raw_regions = []
+    if hasattr(params, "getlist"):
+        raw_regions = params.getlist("country_region_code")
+    else:
+        val = params.get("country_region_code")
+        if isinstance(val, list):
+            raw_regions = val
+        elif isinstance(val, str):
+            raw_regions = [val]
+    filters["country_region_code"] = [c.strip().upper() for c in raw_regions if c and c.strip()]
+
     # Country codes: exact whitelist (can be national like ARG or regional like ARG-CBA)
     raw_codes = []
     if hasattr(params, "getlist"):
@@ -460,6 +487,9 @@ def build_metadata_cql_constraints(filters: Dict) -> str:
     country_scope = filters.get("country_scope")
     if country_scope:
         parts.append(f'country_scope="{country_scope}"')
+    elif not filters.get("include_regional", False):
+        # If not explicitly including regional, and no scope specified, default to national
+        parts.append('country_scope="national"')
 
     # Country parent codes (multi-select, OR within) - no lowercasing
     country_parent_codes = filters.get("country_parent_code", [])

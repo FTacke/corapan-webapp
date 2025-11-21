@@ -208,6 +208,9 @@ def _enrich_hits_with_docmeta(
             file_id = os.path.splitext(base)[0]
             if file_id:
                 pid_to_file_id[str(pid)] = file_id
+        # Fix: Ensure file_id is added even if it came from metadata directly
+        if file_id:
+            pid_to_file_id[str(pid)] = file_id
 
     def _enrich_item(item, hit):
         # Determine file_id: prefer docInfos mapping if filename is numeric docPid
@@ -314,7 +317,6 @@ def datatable_data():
             "speaker_type",
             "sex",
             "speech_mode",
-            "mode",
             "discourse",
             "city",
             "radio",
@@ -1097,6 +1099,12 @@ def build_cql_with_direct_filters(params, filters):
         else:
             constraints.append(f'{BLS_FIELDS["country"]}="({"|".join(vals)})"')
 
+    # exclude_country_code
+    vals = filters.get("exclude_country_code", [])
+    if vals:
+        for val in vals:
+            constraints.append(f'{BLS_FIELDS["country"]}!="{val}"')
+
     # country_scope
     val = filters.get("country_scope")
     if val:
@@ -1136,6 +1144,7 @@ def build_cql_with_direct_filters(params, filters):
     modified_cql = token_pattern.sub(add_constraints, base_cql)
     logger.info(f"CQL with direct filters: {modified_cql}")
     return modified_cql
+    return modified_cql
 
 
 def build_blacklab_query_from_request(req_args) -> dict:
@@ -1159,9 +1168,11 @@ def build_blacklab_query_from_request(req_args) -> dict:
 
     # Handle country_scope default logic
     # If no explicit countries selected and include_regional is False, enforce national scope
-    if not countries and "country_scope" not in filters:
+    if not countries and not filters.get("country_scope"):
         if not include_regional:
             filters["country_scope"] = "national"
+            # Explicitly exclude known regional codes to be safe against missing scope tags
+            filters["exclude_country_code"] = ["ARG-CHU", "ARG-CBA", "ARG-SDE", "ESP-CAN", "ESP-SEV"]
 
     # Build document filter (likely empty now, but kept for structure)
     filter_query = filters_to_blacklab_query(filters)
