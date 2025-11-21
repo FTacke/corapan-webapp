@@ -12,7 +12,7 @@
 <div class="md3-editor-overview">
   <header class="md3-editor-header">
     <h1 class="md3-headline-large">
-      <i class="bi bi-pencil-square"></i>
+      <span class="material-symbols-rounded">edit_note</span>
       Editor de Transcripciones
     </h1>
     <p class="md3-editor-subtitle md3-body-large">Gestionar y editar archivos JSON del corpus</p>
@@ -73,7 +73,7 @@
                 <td>
                   <a href="{{ url_for('editor.edit_file', file=country + '/' + file.filename) }}" 
                      class="md3-edit-btn">
-                    <i class="bi bi-pencil-square"></i> Edit
+                    <span class="material-symbols-rounded">edit</span> Edit
                   </a>
                 </td>
               </tr>
@@ -84,7 +84,7 @@
     {% endfor %}
   {% else %}
     <div class="md3-empty-state">
-      <i class="bi bi-folder2-open"></i>
+      <span class="material-symbols-rounded">folder_open</span>
       <p class="md3-body-large">No hay archivos de transcripción disponibles.</p>
     </div>
   {% endif %}

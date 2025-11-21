@@ -172,7 +172,7 @@
     </script>
     {% block extra_head %}{% endblock %}
   </head>
-  <body class="app-shell bg-page text-ink" {% if page_name %}data-page="{{ page_name }}"{% endif %}>
+  <body class="app-shell" {% if page_name %}data-page="{{ page_name }}"{% endif %}>
     {# MD3 Navigation System #}
     {% include 'partials/status_banner.html' %}
     

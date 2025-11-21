@@ -309,7 +309,7 @@ export class SearchUI {
         summaryBox.hidden = false;
         // MD3 Linear Progress Indicator
         summaryBox.innerHTML = `
-          <div style="display: flex; flex-direction: column; gap: 8px; width: 100%;">
+          <div style="display: flex; flex-direction: column; gap: 8px; width: 100%; align-items: center; justify-content: center; min-height: 60px;">
             <span class="md3-body-medium">Cargando resultados...</span>
             <div role="progressbar" class="md3-linear-progress md3-linear-progress--indeterminate" aria-label="Cargando resultados">
               <div class="md3-linear-progress__buffer"></div>

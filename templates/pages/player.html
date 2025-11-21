@@ -56,7 +56,7 @@
       <!-- Header mit Zurück-Button und Dokumenttitel (Moved inside transcript column) -->
       <div class="md3-player-header">
         <a href="javascript:history.back()" class="back-link">
-          <i class="bi bi-chevron-left"></i>
+          <span class="material-symbols-rounded">arrow_back</span>
         </a>
         <h1 id="documentName" class="document-title"></h1>
       </div>
@@ -75,7 +75,7 @@
         <!-- Metadaten Card -->
         <div class="md3-player-card card-metadata">
           <div class="md3-player-card-header">
-            <i class="bi bi-info-circle"></i>
+            <span class="material-symbols-rounded">info</span>
             <h2 class="md3-player-card-title">Metadatos</h2>
           </div>
           <div class="md3-player-metadata-list">
@@ -90,7 +90,7 @@
         <!-- Buchstabenmarkierung Card -->
         <div class="md3-player-card card-letters">
           <div class="md3-player-card-header">
-            <i class="bi bi-fonts"></i>
+            <span class="material-symbols-rounded">text_fields</span>
             <h2 class="md3-player-card-title">Marcar letras</h2>
             <span class="sidebar-help-wrapper">
               <span class="material-symbols-outlined sidebar-help-icon">help</span>
@@ -109,7 +109,7 @@
         <!-- Token Collector Card -->
         <div class="md3-player-card card-tokens">
           <div class="md3-player-card-header">
-            <i class="bi bi-tag"></i>
+            <span class="material-symbols-rounded">label</span>
             <h2 class="md3-player-card-title">Atajos de teclado</h2>
             <span class="sidebar-help-wrapper">
               <span class="material-symbols-outlined sidebar-help-icon">help</span>
@@ -123,15 +123,15 @@
           </div>
           <textarea id="tokenCollectorInput" class="md3-player-token-input" placeholder="Token IDs ..." readonly></textarea>
           <div class="md3-player-token-icons">
-            <i id="copyTokenIdsBtn" class="fa-regular fa-copy token-icon" title="Copiar al portapapeles"></i>
-            <i id="resetTokenCollectorBtn" class="fa-regular fa-trash-can token-icon" title="Borrar lista de tokens"></i>
+            <span id="copyTokenIdsBtn" class="material-symbols-rounded token-icon" title="Copiar al portapapeles">content_copy</span>
+            <span id="resetTokenCollectorBtn" class="material-symbols-rounded token-icon" title="Borrar lista de tokens">delete</span>
           </div>
         </div>
 
         <!-- Shortcuts Card -->
         <div class="md3-player-card card-shortcuts">
           <div class="md3-player-card-header">
-            <i class="bi bi-keyboard"></i>
+            <span class="material-symbols-rounded">keyboard</span>
             <h2 class="md3-player-card-title">Shortcuts/Audio</h2>
           </div>
           <div class="md3-player-shortcuts-list">
@@ -146,7 +146,7 @@
         <!-- Export Card -->
         <div class="md3-player-card card-export">
           <div class="md3-player-card-header">
-            <i class="bi bi-download"></i>
+            <span class="material-symbols-rounded">download</span>
             <h2 class="md3-player-card-title">Exportar</h2>
             <span class="sidebar-help-wrapper">
               <span class="material-symbols-outlined sidebar-help-icon">help</span>
@@ -160,13 +160,13 @@
           </div>
           <div class="md3-player-export-icons">
             <a id="downloadMP3" class="download-link" title="Descargar MP3">
-              <i class="bi bi-filetype-mp3"></i>
+              <span class="material-symbols-rounded">audio_file</span>
             </a>
             <a id="downloadJSON" class="download-link" title="Descargar JSON">
-              <i class="bi bi-filetype-json"></i>
+              <span class="material-symbols-rounded">data_object</span>
             </a>
             <a id="downloadTXT" class="download-link" title="Descargar TXT">
-              <i class="bi bi-filetype-txt"></i>
+              <span class="material-symbols-rounded">description</span>
             </a>
           </div>
         </div>
@@ -176,8 +176,8 @@
   </div>
 
   <!-- Scroll to top button -->
-  <button id="scrollToTopBtn" class="scroll-to-top" style="display: none;">
-    <i class="bi bi-chevron-up"></i>
+  <button id="scrollToTopBtn" class="scroll-to-top hidden">
+    <span class="material-symbols-rounded">arrow_upward</span>
   </button>
 </div>
 {% endblock %}
