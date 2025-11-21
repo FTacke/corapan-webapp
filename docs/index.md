@@ -9,7 +9,7 @@ Willkommen zur CO.RA.PAN Dokumentation. Diese Übersicht hilft dir, die richtige
 **Neu hier?** Starte mit diesen Dokumenten:
 1. **[Architecture Overview](concepts/architecture.md)** - Verstehe die Systemarchitektur
 2. **[Development Setup](operations/development-setup.md)** - Entwicklungsumgebung einrichten
-3. **[Authentication Flow](concepts/authentication-flow.md)** - Wie Auth funktioniert
+3. **[Authentication Guide](guides/authentication.md)** - Umfassender Guide zur Authentifizierung
 
 ---
 
@@ -32,6 +32,7 @@ Konzeptuelle Übersichten und Architektur-Entscheidungen.
 
 Schritt-für-Schritt-Anleitungen für häufige Aufgaben.
 
+- **[Authentication Guide](guides/authentication.md)** - Alles über Auth: User Experience, Technik, Config (NEW)
 - **[Advanced Search Dev Setup](how-to/advanced-search-dev-setup.md)** - BlackLab konfigurieren, starten, debuggen (NEW 2025-11-13)
 - **[Token Input Usage](how-to/token-input-usage.md)** - Multi-Paste-Feature für Corpus-Tokens
 - **[Build BlackLab Index](how-to/build-blacklab-index.md)** - Index-Build, CLI-Optionen, Validierung
