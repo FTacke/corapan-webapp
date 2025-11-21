@@ -28,7 +28,7 @@ def test_basic_lemma_search():
     filters = build_filters(params)
     cql = build_cql_with_speaker_filter(params, filters)
     print(f"CQL: {cql}")
-    assert '[lemma="casa"]' in cql, "Basic lemma search failed"
+    assert '[lemma="casa" & country_scope="national"]' in cql, "Basic lemma search failed"
     print("✓ PASS")
 
 
@@ -46,7 +46,7 @@ def test_national_country_filter():
     cql = build_cql_with_speaker_filter(params, filters)
     print(f"Filters: {filters}")
     print(f"CQL: {cql}")
-    assert 'country_parent_code="arg"' in cql, "Country filter failed"
+    assert 'country_code="ARG"' in cql, "Country filter failed"
     print("✓ PASS")
 
 
@@ -67,8 +67,8 @@ def test_regional_country_filter():
     print(f"Filters: {filters}")
     print(f"CQL: {cql}")
     assert 'country_scope="regional"' in cql, "Country scope filter failed"
-    assert 'country_parent_code="arg"' in cql, "Parent code filter failed"
-    assert 'country_region_code="cba"' in cql, "Region code filter failed"
+    assert 'country_parent_code="ARG"' in cql, "Parent code filter failed"
+    assert 'country_region_code="CBA"' in cql, "Region code filter failed"
     print("✓ PASS")
 
 
@@ -108,7 +108,7 @@ def test_combined_filters():
     cql = build_cql_with_speaker_filter(params, filters)
     print(f"Filters: {filters}")
     print(f"CQL: {cql}")
-    assert 'country_parent_code="arg"' in cql, "Country filter failed"
+    assert 'country_code="ARG"' in cql, "Country filter failed"
     assert "speaker_code=" in cql, "Speaker filter failed"
     print("✓ PASS")
 
@@ -128,8 +128,7 @@ def test_multiple_countries():
     print(f"Filters: {filters}")
     print(f"CQL: {cql}")
     # Should use regex alternation for multiple countries
-    assert "country_parent_code=" in cql, "Country filter failed"
-    assert "(arg|esp)" in cql or "arg" in cql, "Multiple countries failed"
+    assert 'country_code="(ARG|ESP)"' in cql, "Country filter failed"
     print("✓ PASS")
 
 
