@@ -1,16 +1,16 @@
 /**
  * JWT Token Auto-Refresh Module
- * 
+ *
  * Automatically refreshes access tokens when they expire (401 responses).
  * Shows MD3 Snackbar only when refresh token expires.
  * Supports proactive refresh based on token expiration time.
- * 
+ *
  * Usage:
  *   import { setupTokenRefresh } from './modules/auth/token-refresh.js';
  *   setupTokenRefresh();
  */
 
-import { showAuthExpiredSnackbar } from './snackbar.js';
+import { showAuthExpiredSnackbar } from "./snackbar.js";
 
 // Store original fetch FIRST before we override it
 const originalFetch = window.fetch;
@@ -40,7 +40,7 @@ function processQueue(error, token = null) {
 function updateAuthState(isAuthenticated) {
   const topAppBar = document.querySelector('[data-element="top-app-bar"]');
   if (topAppBar) {
-    topAppBar.dataset.auth = isAuthenticated ? 'true' : 'false';
+    topAppBar.dataset.auth = isAuthenticated ? "true" : "false";
   }
 }
 
@@ -51,37 +51,37 @@ function updateAuthState(isAuthenticated) {
 async function refreshAccessToken() {
   try {
     // Use ORIGINAL fetch to avoid recursion
-    const response = await originalFetch('/auth/refresh', {
-      method: 'POST',
-      credentials: 'same-origin',
+    const response = await originalFetch("/auth/refresh", {
+      method: "POST",
+      credentials: "same-origin",
       headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
       },
     });
 
     if (!response.ok) {
       const data = await response.json().catch(() => ({}));
-      
+
       // Check if refresh token expired
-      if (data.code === 'refresh_expired') {
-        console.log('❌ Refresh token expired - user must login');
+      if (data.code === "refresh_expired") {
+        console.log("❌ Refresh token expired - user must login");
         showAuthExpiredSnackbar();
         updateAuthState(false);
       } else {
-        console.error('❌ Token refresh failed:', data.code || response.status);
+        console.error("❌ Token refresh failed:", data.code || response.status);
       }
-      
+
       return false;
     }
 
-    console.log('✅ Access token refreshed successfully');
-    
+    console.log("✅ Access token refreshed successfully");
+
     // Setup next proactive refresh
     setupProactiveRefresh();
-    
+
     return true;
   } catch (error) {
-    console.error('❌ Token refresh error:', error);
+    console.error("❌ Token refresh error:", error);
     return false;
   }
 }
@@ -96,7 +96,7 @@ async function fetchWithTokenRefresh(url, options = {}) {
   // First attempt - use ORIGINAL fetch to avoid recursion
   const response = await originalFetch(url, {
     ...options,
-    credentials: options.credentials || 'same-origin',
+    credentials: options.credentials || "same-origin",
   });
 
   // If not 401, return response as-is
@@ -108,16 +108,16 @@ async function fetchWithTokenRefresh(url, options = {}) {
   let shouldRefresh = false;
   try {
     const data = await response.clone().json();
-    if (data.code === 'access_expired') {
+    if (data.code === "access_expired") {
       shouldRefresh = true;
-      console.log('🔄 Access token expired, attempting refresh...');
-    } else if (data.code === 'refresh_expired') {
-      console.log('❌ Refresh token expired - showing snackbar');
+      console.log("🔄 Access token expired, attempting refresh...");
+    } else if (data.code === "refresh_expired") {
+      console.log("❌ Refresh token expired - showing snackbar");
       showAuthExpiredSnackbar();
       updateAuthState(false);
       return response;
     } else {
-      console.log('❌ Unauthorized:', data.code);
+      console.log("❌ Unauthorized:", data.code);
       return response;
     }
   } catch (e) {
@@ -135,7 +135,10 @@ async function fetchWithTokenRefresh(url, options = {}) {
       failedQueue.push({
         resolve: () => {
           // Retry original request after refresh - use ORIGINAL fetch
-          originalFetch(url, { ...options, credentials: options.credentials || 'same-origin' })
+          originalFetch(url, {
+            ...options,
+            credentials: options.credentials || "same-origin",
+          })
             .then(resolve)
             .catch(reject);
         },
@@ -150,7 +153,7 @@ async function fetchWithTokenRefresh(url, options = {}) {
     const refreshSuccess = await refreshAccessToken();
 
     if (!refreshSuccess) {
-      processQueue(new Error('Token refresh failed'), null);
+      processQueue(new Error("Token refresh failed"), null);
       isRefreshing = false;
       return response; // Return original 401 response
     }
@@ -162,7 +165,7 @@ async function fetchWithTokenRefresh(url, options = {}) {
     // Retry original request with new token - use ORIGINAL fetch
     return originalFetch(url, {
       ...options,
-      credentials: options.credentials || 'same-origin',
+      credentials: options.credentials || "same-origin",
     });
   } catch (error) {
     processQueue(error, null);
@@ -183,47 +186,52 @@ async function setupProactiveRefresh() {
   }
 
   try {
-    const response = await originalFetch('/auth/session', {
-      credentials: 'same-origin',
-      cache: 'no-store'
+    const response = await originalFetch("/auth/session", {
+      credentials: "same-origin",
+      cache: "no-store",
     });
 
     // Defensive: Only proceed if response is OK
     if (!response.ok) {
-      console.warn('[Auth] Session check returned non-OK status:', response.status);
+      console.warn(
+        "[Auth] Session check returned non-OK status:",
+        response.status,
+      );
       return;
     }
 
     // Defensive: Check content-type before parsing JSON
-    const contentType = response.headers.get('content-type') || '';
-    if (!contentType.includes('application/json')) {
-      console.warn('[Auth] Session check returned non-JSON response');
+    const contentType = response.headers.get("content-type") || "";
+    if (!contentType.includes("application/json")) {
+      console.warn("[Auth] Session check returned non-JSON response");
       return;
     }
 
     const data = await response.json();
-    
+
     if (data.authenticated && data.exp) {
       const now = Math.floor(Date.now() / 1000); // Unix timestamp in seconds
       const expiresIn = data.exp - now;
-      
+
       // Refresh 60 seconds before expiration
       const refreshIn = Math.max(0, (expiresIn - 60) * 1000); // Convert to milliseconds
-      
+
       if (refreshIn > 0) {
-        console.log(`[Auth] Will refresh token in ${Math.floor(refreshIn / 1000)}s`);
-        
+        console.log(
+          `[Auth] Will refresh token in ${Math.floor(refreshIn / 1000)}s`,
+        );
+
         proactiveRefreshTimer = setTimeout(async () => {
-          console.log('[Auth] Proactive token refresh triggered');
+          console.log("[Auth] Proactive token refresh triggered");
           await refreshAccessToken();
         }, refreshIn);
       } else {
-        console.log('[Auth] Token already expired or expires soon');
+        console.log("[Auth] Token already expired or expires soon");
       }
     }
   } catch (error) {
     // Silently handle errors - proactive refresh is a nice-to-have
-    console.warn('[Auth] Could not setup proactive refresh:', error);
+    console.warn("[Auth] Could not setup proactive refresh:", error);
   }
 }
 
@@ -241,11 +249,11 @@ export function setupTokenRefresh() {
     // - Static assets
     // - External URLs
     if (
-      typeof url === 'string' &&
-      (url === '/auth/refresh' ||
-        url.startsWith('/static/') ||
-        url.startsWith('http://') ||
-        url.startsWith('https://'))
+      typeof url === "string" &&
+      (url === "/auth/refresh" ||
+        url.startsWith("/static/") ||
+        url.startsWith("http://") ||
+        url.startsWith("https://"))
     ) {
       return originalFetch.apply(this, args);
     }
@@ -254,13 +262,13 @@ export function setupTokenRefresh() {
     return fetchWithTokenRefresh(url, options);
   };
 
-  console.log('✅ JWT Token auto-refresh enabled');
-  
+  console.log("✅ JWT Token auto-refresh enabled");
+
   // Setup proactive refresh
   setupProactiveRefresh();
-  
+
   // Re-setup on Turbo navigation
-  document.addEventListener('turbo:load', () => {
+  document.addEventListener("turbo:load", () => {
     setupProactiveRefresh();
   });
 }
@@ -270,11 +278,11 @@ export function setupTokenRefresh() {
  * @param {string} name - Cookie name
  * @returns {string|null}
  */
-export function getCsrfToken(name = 'csrf_access_token') {
+export function getCsrfToken(name = "csrf_access_token") {
   const value = `; ${document.cookie}`;
   const parts = value.split(`; ${name}=`);
   if (parts.length === 2) {
-    return parts.pop().split(';').shift();
+    return parts.pop().split(";").shift();
   }
   return null;
 }
@@ -289,7 +297,7 @@ export function addCsrfHeader(headers = {}) {
   if (csrfToken) {
     return {
       ...headers,
-      'X-CSRF-TOKEN': csrfToken,
+      "X-CSRF-TOKEN": csrfToken,
     };
   }
   return headers;

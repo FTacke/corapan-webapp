@@ -1,4 +1,5 @@
 """Blueprint registration."""
+
 from __future__ import annotations
 
 from flask import Flask

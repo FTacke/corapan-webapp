@@ -25,15 +25,15 @@
 }
 
 /* DOI Resource Card - ensures equal height and proper padding */
-.doi-resource-card { 
+.doi-resource-card {
   display: flex;
   flex-direction: column;
   height: 100%;
   min-width: 0; /* Allow cards to shrink below content width */
 }
 
-.doi-resource-card .card-body { 
-  padding: 0; 
+.doi-resource-card .card-body {
+  padding: 0;
   flex: 1 1 auto;
   min-width: 0; /* Allow content to shrink */
 }
@@ -51,7 +51,7 @@
 
 /* Token tooltip styling for inline code */
 .tooltip-token {
-  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  font-family: "Monaco", "Menlo", "Ubuntu Mono", monospace;
   font-size: 0.9em;
   background: var(--md-sys-color-surface-container-low);
   padding: 0.125rem 0.375rem;
@@ -80,5 +80,3 @@
   max-width: 100%;
   height: auto;
 }
-
-

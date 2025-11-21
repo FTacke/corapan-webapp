@@ -12,7 +12,7 @@
   color: var(--md-sys-color-on-surface-variant);
   margin-top: var(--space-16);
   /* ~64px margin top for spacing from content */
-  
+
   padding-block: 1rem;
   /* ~16px vertical padding (mobile), scale up responsively */
 }
@@ -41,7 +41,9 @@ body[data-page="player"] .md3-footer {
 @media (prefers-color-scheme: dark) {
   body[data-page="editor"] .md3-footer,
   body[data-page="player"] .md3-footer {
-    background: var(--md-sys-color-surface); /* Or keep it white if that's the design intent, but usually surface in dark mode */
+    background: var(
+      --md-sys-color-surface
+    ); /* Or keep it white if that's the design intent, but usually surface in dark mode */
   }
 }
 
@@ -49,21 +51,21 @@ body[data-page="player"] .md3-footer {
 .md3-footer__content {
   max-width: 72rem;
   /* ~1200px container width, standard for content */
-  
+
   margin-inline: auto;
   /* Center container horizontally (RTL-safe) */
-  
+
   padding-inline: 1rem;
   /* 16px horizontal padding base */
-  
+
   display: grid;
   gap: 0.75rem;
   /* Gap between grid items */
-  
+
   align-items: center;
   justify-items: center;
   text-align: center;
-  
+
   /* Always stacked vertically (no responsive layout changes) */
   grid-template-areas:
     "logo"
@@ -81,10 +83,10 @@ body[data-page="player"] .md3-footer {
   align-items: center;
   justify-self: center;
   /* Center always */
-  
+
   min-height: 24px;
   /* WCAG 2.2 AA minimum target size */
-  
+
   text-decoration: none;
   transition: all 200ms cubic-bezier(0.2, 0, 0, 1);
   border-radius: var(--radius-sm);
@@ -159,7 +161,7 @@ body[data-page="player"] .md3-footer {
   align-items: center;
   min-height: 24px;
   /* WCAG 2.2 AA minimum target size */
-  
+
   color: var(--md-sys-color-on-surface-variant);
   text-decoration: none;
   transition: all 200ms cubic-bezier(0.2, 0, 0, 1);
@@ -197,7 +199,7 @@ body[data-page="player"] .md3-footer {
   .md3-footer__content {
     gap: 1.5rem;
   }
-  
+
   .md3-footer__list {
     column-gap: 1.25rem;
     row-gap: 0.5rem;
@@ -235,13 +237,13 @@ body[data-page="player"] .md3-footer {
   color: var(--md-sys-color-on-surface-variant);
   padding-block: 0.5rem;
   padding-inline: 1rem;
-  
+
   display: flex;
   gap: 0.75rem;
   justify-content: center;
   flex-wrap: wrap;
   align-items: center;
-  
+
   font-size: 0.75rem;
   /* Compact typography */
 }
@@ -269,5 +271,3 @@ body[data-page="player"] .md3-footer {
   margin-inline: 0.25rem;
   color: var(--md-sys-color-outline-variant);
 }
-
-

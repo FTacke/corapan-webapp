@@ -19,10 +19,10 @@ function onTurbo(event, fn) {
  */
 function ensureStyles(href) {
   if (!document.querySelector(`link[rel="stylesheet"][href="${href}"]`)) {
-    const link = document.createElement('link');
-    link.rel = 'stylesheet';
+    const link = document.createElement("link");
+    link.rel = "stylesheet";
     link.href = href;
-    link.setAttribute('data-turbo-track', 'dynamic');
+    link.setAttribute("data-turbo-track", "dynamic");
     document.head.appendChild(link);
   }
 }
@@ -32,9 +32,9 @@ function ensureStyles(href) {
  */
 async function ensureScript(src) {
   if (document.querySelector(`script[src="${src}"]`)) return;
-  
+
   return new Promise((resolve, reject) => {
-    const script = document.createElement('script');
+    const script = document.createElement("script");
     script.src = src;
     script.defer = true;
     script.onload = resolve;
@@ -54,50 +54,49 @@ let atlasModule = null;
  * Initialize Atlas page with lazy-loaded dependencies
  */
 async function initAtlas() {
-  const mapEl = document.getElementById('atlas-map');
+  const mapEl = document.getElementById("atlas-map");
   if (!mapEl) return;
 
-  console.log('[Atlas] Initializing...');
+  console.log("[Atlas] Initializing...");
 
   try {
     // 1) Load external dependencies
-    ensureStyles('https://unpkg.com/leaflet@1.9.4/dist/leaflet.css');
-    ensureStyles('/static/css/md3/components/atlas.css');
-    await ensureScript('https://unpkg.com/leaflet@1.9.4/dist/leaflet.js');
+    ensureStyles("https://unpkg.com/leaflet@1.9.4/dist/leaflet.css");
+    ensureStyles("/static/css/md3/components/atlas.css");
+    await ensureScript("https://unpkg.com/leaflet@1.9.4/dist/leaflet.js");
 
     // 2) Prevent double initialization
     if (atlasMap) {
-      console.log('[Atlas] Map already exists, removing...');
+      console.log("[Atlas] Map already exists, removing...");
       try {
         atlasMap.remove();
       } catch (e) {
-        console.warn('[Atlas] Error removing map:', e);
+        console.warn("[Atlas] Error removing map:", e);
       }
       atlasMap = null;
     }
 
     // 3) Wait for Leaflet to be available
     if (!window.L) {
-      console.error('[Atlas] Leaflet not loaded');
+      console.error("[Atlas] Leaflet not loaded");
       return;
     }
 
     // 4) Dynamically import Atlas module
     if (!atlasModule) {
-      atlasModule = await import('/static/js/modules/atlas/index.js');
-      console.log('[Atlas] Module loaded');
+      atlasModule = await import("/static/js/modules/atlas/index.js");
+      console.log("[Atlas] Module loaded");
     }
 
     // 5) Initialize Atlas (module should export init function)
     if (atlasModule.init) {
       atlasMap = atlasModule.init();
-      console.log('[Atlas] Initialized successfully');
+      console.log("[Atlas] Initialized successfully");
     } else {
-      console.warn('[Atlas] No init function exported from module');
+      console.warn("[Atlas] No init function exported from module");
     }
-
   } catch (error) {
-    console.error('[Atlas] Initialization failed:', error);
+    console.error("[Atlas] Initialization failed:", error);
   }
 }
 
@@ -106,11 +105,11 @@ async function initAtlas() {
  */
 function teardownAtlas() {
   if (atlasMap) {
-    console.log('[Atlas] Tearing down...');
+    console.log("[Atlas] Tearing down...");
     try {
       atlasMap.remove();
     } catch (e) {
-      console.warn('[Atlas] Error during teardown:', e);
+      console.warn("[Atlas] Error during teardown:", e);
     }
     atlasMap = null;
   }
@@ -120,22 +119,22 @@ function teardownAtlas() {
 // Turbo Drive Lifecycle Hooks
 // =============================================================================
 
-onTurbo('turbo:load', () => {
-  console.log('[Turbo] Page loaded');
+onTurbo("turbo:load", () => {
+  console.log("[Turbo] Page loaded");
   initAtlas();
 });
 
-onTurbo('turbo:before-cache', () => {
-  console.log('[Turbo] Before cache');
+onTurbo("turbo:before-cache", () => {
+  console.log("[Turbo] Before cache");
   teardownAtlas();
 });
 
-onTurbo('turbo:before-render', () => {
-  console.log('[Turbo] Before render');
+onTurbo("turbo:before-render", () => {
+  console.log("[Turbo] Before render");
 });
 
 // =============================================================================
 // Initial Load
 // =============================================================================
 
-console.log('[App] Initialized');
+console.log("[App] Initialized");

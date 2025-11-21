@@ -47,6 +47,7 @@ The documentation follows "Docs as Code" principles with a clear 8-category taxo
 - **[Troubleshooting](docs/troubleshooting/)** - Common problems & solutions
 
 ### Quick Links
+- **[Quick Start (Windows)](docs/how-to/quickstart-windows.md)** - Setup for Windows Developers
 - **[Deployment Guide](docs/operations/deployment.md)** - Production server setup
 - **[Architecture Overview](docs/concepts/architecture.md)** - Technical architecture
 - **[Database Maintenance](docs/reference/database-maintenance.md)** - DB operations

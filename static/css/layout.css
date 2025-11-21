@@ -12,7 +12,14 @@ body {
 body.app-shell {
   margin: 0 !important;
   padding: 0 !important;
-  font-family: 'Roboto', 'Noto Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  font-family:
+    "Roboto",
+    "Noto Sans",
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    system-ui,
+    sans-serif;
   font-size: 0;
   background: var(--md-sys-color-background);
   color: var(--md-sys-color-on-background);
@@ -45,24 +52,30 @@ body.overflow-hidden {
 
 /* Turbo Loading Indicator - Subtil am oberen Rand */
 body.turbo-loading::before {
-  content: '';
+  content: "";
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   height: 3px;
-  background: linear-gradient(90deg, 
-    transparent 0%, 
-    var(--md-sys-color-primary) 50%, 
-    transparent 100%);
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    var(--md-sys-color-primary) 50%,
+    transparent 100%
+  );
   background-size: 200% 100%;
   animation: turbo-progress 1s ease-in-out infinite;
   z-index: 9999;
 }
 
 @keyframes turbo-progress {
-  0% { background-position: 200% 0; }
-  100% { background-position: -200% 0; }
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
 }
 
 /* On mobile (<840px), we need position: fixed to prevent scroll */
@@ -107,7 +120,7 @@ main.site-main,
   grid-area: main;
   width: 100%;
   margin: 0 auto;
-  padding: 0;  /* No padding on main, containers define their own */
+  padding: 0; /* No padding on main, containers define their own */
   font-size: 1rem;
   display: block;
   background: transparent; /* Prevent color flash on first paint */
@@ -149,7 +162,7 @@ h6:focus[tabindex="-1"] {
 }
 
 .page-eyebrow {
-  margin: 1.0rem 0 0.5rem 0;
+  margin: 1rem 0 0.5rem 0;
   font-size: 0.8rem;
   letter-spacing: 0.2em;
   text-transform: uppercase;
@@ -260,7 +273,9 @@ h6:focus[tabindex="-1"] {
   color: var(--color-text);
   border-top: 1px solid rgba(47, 95, 115, 0.35);
   --tw-shadow: var(--shadow-elevated);
-  box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
+  box-shadow:
+    var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000),
+    var(--tw-shadow);
   font-size: 1rem;
 }
 
@@ -275,7 +290,9 @@ h6:focus[tabindex="-1"] {
   padding: clamp(2rem, 5vw, 3rem);
   border-radius: var(--radius-md);
   --tw-shadow: var(--shadow-elevated);
-  box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
+  box-shadow:
+    var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000),
+    var(--tw-shadow);
   text-align: center;
   display: grid;
   gap: var(--space-md);
@@ -321,7 +338,9 @@ h6:focus[tabindex="-1"] {
   border-radius: var(--radius-md);
   border: 1px solid rgba(47, 95, 115, 0.35);
   --tw-shadow: var(--shadow-elevated);
-  box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
+  box-shadow:
+    var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000),
+    var(--tw-shadow);
   display: grid;
   gap: var(--space-sm);
   color: var(--color-text);

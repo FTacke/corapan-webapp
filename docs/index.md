@@ -25,6 +25,7 @@ Konzeptuelle Übersichten und Architektur-Entscheidungen.
 - **[BlackLab Indexing Architecture](concepts/blacklab-indexing.md)** - Corpus Search Engine, Export→Index→Proxy Pipeline
 - **[Advanced Search Architecture](concepts/advanced-search-architecture.md)** - Security hardening, streaming design, performance
 - **[Search Unification Plan](concepts/search-unification-plan.md)** - Simple vs. Advanced Search, 3-Phasen-Plan, Unified Mapping ⭐ NEU (2025-11-13)
+- **[Audio Playback](concepts/audio-playback.md)** - Konzept der Audio-Wiedergabe und 4-Minuten-Splits
 
 ---
 
@@ -32,11 +33,13 @@ Konzeptuelle Übersichten und Architektur-Entscheidungen.
 
 Schritt-für-Schritt-Anleitungen für häufige Aufgaben.
 
+- **[Quick Start (Windows)](how-to/quickstart-windows.md)** - Schnelleinrichtung für Windows-Entwickler ⭐ NEU
 - **[Authentication Guide](guides/authentication.md)** - Alles über Auth: User Experience, Technik, Config (NEW)
 - **[Advanced Search Dev Setup](how-to/advanced-search-dev-setup.md)** - BlackLab konfigurieren, starten, debuggen (NEW 2025-11-13)
 - **[Token Input Usage](how-to/token-input-usage.md)** - Multi-Paste-Feature für Corpus-Tokens
 - **[Build BlackLab Index](how-to/build-blacklab-index.md)** - Index-Build, CLI-Optionen, Validierung
 - **[Execute BlackLab Stage 2-3](how-to/execute-blacklab-stage-2-3.md)** - Index-Build ausführen, Tests durchführen (NEW)
+- **[E2E Testing Guide](how-to/e2e-testing.md)** - End-to-End Tests durchführen
 
 ---
 

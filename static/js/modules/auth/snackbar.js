@@ -1,6 +1,6 @@
 /**
  * MD3 Snackbar Module - Auth Expiration Notification
- * 
+ *
  * Shows Material Design 3 Snackbar when refresh token expires.
  */
 
@@ -10,16 +10,16 @@
  */
 export function showAuthExpiredSnackbar() {
   // Check if snackbar already exists
-  if (document.querySelector('.md3-snackbar--auth-expired')) {
+  if (document.querySelector(".md3-snackbar--auth-expired")) {
     return; // Don't show multiple snackbars
   }
 
   // Create snackbar container
-  const snackbar = document.createElement('div');
-  snackbar.className = 'md3-snackbar md3-snackbar--auth-expired';
-  snackbar.setAttribute('role', 'status');
-  snackbar.setAttribute('aria-live', 'polite');
-  
+  const snackbar = document.createElement("div");
+  snackbar.className = "md3-snackbar md3-snackbar--auth-expired";
+  snackbar.setAttribute("role", "status");
+  snackbar.setAttribute("aria-live", "polite");
+
   // Create content
   snackbar.innerHTML = `
     <div class="md3-snackbar__surface">
@@ -36,34 +36,34 @@ export function showAuthExpiredSnackbar() {
       </div>
     </div>
   `;
-  
+
   // Add to DOM
   document.body.appendChild(snackbar);
-  
+
   // Animate in
   requestAnimationFrame(() => {
-    snackbar.classList.add('md3-snackbar--visible');
+    snackbar.classList.add("md3-snackbar--visible");
   });
-  
+
   // Handle action button (open login)
   const actionButton = snackbar.querySelector('[data-action="open-login"]');
   if (actionButton) {
-    actionButton.addEventListener('click', () => {
+    actionButton.addEventListener("click", () => {
       // Open login dialog/sheet
       const loginTrigger = document.querySelector('[data-action="open-login"]');
       if (loginTrigger && loginTrigger !== actionButton) {
         loginTrigger.click();
       }
-      
+
       // Close snackbar
       dismissSnackbar(snackbar);
     });
   }
-  
+
   // Handle dismiss button
-  const dismissButton = snackbar.querySelector('.md3-snackbar__dismiss');
+  const dismissButton = snackbar.querySelector(".md3-snackbar__dismiss");
   if (dismissButton) {
-    dismissButton.addEventListener('click', () => {
+    dismissButton.addEventListener("click", () => {
       dismissSnackbar(snackbar);
     });
   }
@@ -74,8 +74,8 @@ export function showAuthExpiredSnackbar() {
  * @param {HTMLElement} snackbar
  */
 function dismissSnackbar(snackbar) {
-  snackbar.classList.remove('md3-snackbar--visible');
-  
+  snackbar.classList.remove("md3-snackbar--visible");
+
   // Remove from DOM after animation
   setTimeout(() => {
     snackbar.remove();
@@ -87,12 +87,12 @@ function dismissSnackbar(snackbar) {
  * This should ideally be in your CSS files, but included here for completeness
  */
 export function injectSnackbarStyles() {
-  if (document.getElementById('md3-snackbar-styles')) {
+  if (document.getElementById("md3-snackbar-styles")) {
     return; // Styles already injected
   }
-  
-  const style = document.createElement('style');
-  style.id = 'md3-snackbar-styles';
+
+  const style = document.createElement("style");
+  style.id = "md3-snackbar-styles";
   style.textContent = `
     .md3-snackbar {
       position: fixed;
@@ -209,7 +209,7 @@ export function injectSnackbarStyles() {
       font-size: 24px;
     }
   `;
-  
+
   document.head.appendChild(style);
 }
 

@@ -1,4 +1,5 @@
-﻿"""Atlas routes - API v1."""
+"""Atlas routes - API v1."""
+
 from __future__ import annotations
 
 from flask import Blueprint, jsonify, redirect, url_for
@@ -51,6 +52,7 @@ def locations():
 # Legacy Routes (Backwards Compatibility)
 # ========================================
 # Redirect old /atlas/* endpoints to /api/v1/atlas/*
+
 
 @legacy_blueprint.get("/overview")
 def legacy_overview():

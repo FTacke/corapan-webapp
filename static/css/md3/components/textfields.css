@@ -57,7 +57,7 @@
     padding-right: var(--space-8);
     min-height: 40px;
   }
-  
+
   .md3-corpus-search-row .md3-outlined-textfield__label--select {
     font-size: 0.75rem;
   }
@@ -71,7 +71,7 @@
     padding-right: var(--space-7);
     min-height: 36px;
   }
-  
+
   .md3-corpus-search-row .md3-outlined-textfield__label--select {
     font-size: 0.7rem;
   }
@@ -89,7 +89,10 @@
   color: var(--md-sys-color-on-surface-variant);
   font-size: 16px;
   /* Use the surface container background explicitly so the outlined border does not show through */
-  background: var(--md-sys-color-surface-container, var(--md-sys-color-surface, #fff));
+  background: var(
+    --md-sys-color-surface-container,
+    var(--md-sys-color-surface, #fff)
+  );
   padding: 0 var(--space-2);
   pointer-events: none;
   transition: all 200ms cubic-bezier(0.2, 0, 0, 1);
@@ -102,16 +105,23 @@
   color: var(--md-sys-color-on-surface-variant);
   transform: translateY(0);
   /* Make label background match the parent field's background */
-  background: var(--md-sys-color-surface-container, var(--md-sys-color-surface, #fff));
+  background: var(
+    --md-sys-color-surface-container,
+    var(--md-sys-color-surface, #fff)
+  );
 }
 
 .md3-outlined-textfield__input:focus ~ .md3-outlined-textfield__label,
-.md3-outlined-textfield__input:not(:placeholder-shown) ~ .md3-outlined-textfield__label {
+.md3-outlined-textfield__input:not(:placeholder-shown)
+  ~ .md3-outlined-textfield__label {
   top: -10px;
   font-size: 12px;
   color: var(--md-sys-color-on-surface-variant);
   transform: translateY(0);
-  background: var(--md-sys-color-surface-container, var(--md-sys-color-surface, #fff));
+  background: var(
+    --md-sys-color-surface-container,
+    var(--md-sys-color-surface, #fff)
+  );
   padding: 0 var(--space-2);
 }
 
@@ -141,16 +151,18 @@
   border-right: none;
   border-radius: var(--radius-sm) 0 0 var(--radius-sm);
   width: var(--space-3);
-  transition: border-color 200ms cubic-bezier(0.2, 0, 0, 1),
-              border-width 200ms cubic-bezier(0.2, 0, 0, 1);
+  transition:
+    border-color 200ms cubic-bezier(0.2, 0, 0, 1),
+    border-width 200ms cubic-bezier(0.2, 0, 0, 1);
 }
 
 .md3-outlined-textfield__outline-notch {
   border-top: 1px solid var(--md-sys-color-outline-variant);
   border-bottom: 1px solid var(--md-sys-color-outline-variant);
   min-width: 8px;
-  transition: border-color 200ms cubic-bezier(0.2, 0, 0, 1),
-              border-width 200ms cubic-bezier(0.2, 0, 0, 1);
+  transition:
+    border-color 200ms cubic-bezier(0.2, 0, 0, 1),
+    border-width 200ms cubic-bezier(0.2, 0, 0, 1);
 }
 
 .md3-outlined-textfield__outline-end {
@@ -158,23 +170,36 @@
   border-left: none;
   border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
   flex: 1;
-  transition: border-color 200ms cubic-bezier(0.2, 0, 0, 1),
-              border-width 200ms cubic-bezier(0.2, 0, 0, 1);
+  transition:
+    border-color 200ms cubic-bezier(0.2, 0, 0, 1),
+    border-width 200ms cubic-bezier(0.2, 0, 0, 1);
 }
 
-.md3-outlined-textfield__input:hover ~ .md3-outlined-textfield__outline .md3-outlined-textfield__outline-start,
-.md3-outlined-textfield__input:hover ~ .md3-outlined-textfield__outline .md3-outlined-textfield__outline-notch,
-.md3-outlined-textfield__input:hover ~ .md3-outlined-textfield__outline .md3-outlined-textfield__outline-end {
+.md3-outlined-textfield__input:hover
+  ~ .md3-outlined-textfield__outline
+  .md3-outlined-textfield__outline-start,
+.md3-outlined-textfield__input:hover
+  ~ .md3-outlined-textfield__outline
+  .md3-outlined-textfield__outline-notch,
+.md3-outlined-textfield__input:hover
+  ~ .md3-outlined-textfield__outline
+  .md3-outlined-textfield__outline-end {
   border-color: var(--md-sys-color-on-surface);
 }
 
-.md3-outlined-textfield__input:focus ~ .md3-outlined-textfield__outline .md3-outlined-textfield__outline-start,
-.md3-outlined-textfield__input:focus ~ .md3-outlined-textfield__outline .md3-outlined-textfield__outline-end {
+.md3-outlined-textfield__input:focus
+  ~ .md3-outlined-textfield__outline
+  .md3-outlined-textfield__outline-start,
+.md3-outlined-textfield__input:focus
+  ~ .md3-outlined-textfield__outline
+  .md3-outlined-textfield__outline-end {
   border-color: var(--md-sys-color-primary);
   border-width: 2px;
 }
 
-.md3-outlined-textfield__input:focus ~ .md3-outlined-textfield__outline .md3-outlined-textfield__outline-notch {
+.md3-outlined-textfield__input:focus
+  ~ .md3-outlined-textfield__outline
+  .md3-outlined-textfield__outline-notch {
   border-color: var(--md-sys-color-primary);
   border-top-width: 2px;
   border-bottom-width: 2px;
@@ -198,7 +223,8 @@
   font-size: 14px;
 }
 
-.md3-outlined-textfield--compact .md3-outlined-textfield__input--select[multiple] {
+.md3-outlined-textfield--compact
+  .md3-outlined-textfield__input--select[multiple] {
   min-height: 48px;
   max-height: 120px;
   padding-top: 8px;
@@ -243,17 +269,13 @@
   .md3-outlined-textfield--compact {
     min-height: 44px;
   }
-  
+
   .md3-outlined-textfield--compact .md3-outlined-textfield__input {
     padding: var(--space-2) var(--space-3);
     font-size: 14px;
   }
-  
+
   .md3-outlined-textfield--compact .md3-outlined-textfield__label {
     font-size: 11px;
   }
 }
-
-
-
-

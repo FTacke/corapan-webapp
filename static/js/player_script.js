@@ -1,17 +1,15 @@
 const MEDIA_ENDPOINT = "/media";
 
-
 /**
  * @file player_script.js
  * @description Player-Logik mit Token-ID-Sammler, Download, Audio-Steuerung, Transkript-Laden, Wortmarkierung, Tooltip und Footer-Statistik.
  */
 
-'use strict';
+("use strict");
 
-import { formatMorphLeipzig } from './morph_formatter.js';
+import { formatMorphLeipzig } from "./morph_formatter.js";
 
 (function () {
-
   // ===========================================================================
   // Hilfsfunktionen
   // ===========================================================================
@@ -22,7 +20,7 @@ import { formatMorphLeipzig } from './morph_formatter.js';
    * @returns {string}
    */
   function pad(num) {
-    return num < 10 ? '0' + num : num.toString();
+    return num < 10 ? "0" + num : num.toString();
   }
 
   /**
@@ -43,7 +41,7 @@ import { formatMorphLeipzig } from './morph_formatter.js';
    * @returns {string}
    */
   function formatNumber(number) {
-    return number.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+    return number.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
   }
 
   /**
@@ -56,7 +54,8 @@ import { formatMorphLeipzig } from './morph_formatter.js';
     return (
       rect.top >= 0 &&
       rect.left >= 0 &&
-      rect.bottom <= (window.innerHeight || document.documentElement.clientHeight) &&
+      rect.bottom <=
+        (window.innerHeight || document.documentElement.clientHeight) &&
       rect.right <= (window.innerWidth || document.documentElement.clientWidth)
     );
   }
@@ -84,52 +83,53 @@ import { formatMorphLeipzig } from './morph_formatter.js';
    * Aktualisiert die Anzeige der gesammelten Token-IDs.
    */
   function updateTokenCollectorDisplay() {
-    const input = document.getElementById('tokenCollectorInput');
-    input.value = collectedTokenIds.join(', ');
-    input.style.height = 'auto'; // zurücksetzen
-    input.style.height = input.scrollHeight + 'px'; // neu anpassen
+    const input = document.getElementById("tokenCollectorInput");
+    input.value = collectedTokenIds.join(", ");
+    input.style.height = "auto"; // zurücksetzen
+    input.style.height = input.scrollHeight + "px"; // neu anpassen
   }
 
   /**
    * Setzt die Liste der Token-IDs zurück.
    */
   function resetTokenCollector() {
-  collectedTokenIds = [];
-  updateTokenCollectorDisplay();
-  resetCopyIconToDefault();
+    collectedTokenIds = [];
+    updateTokenCollectorDisplay();
+    resetCopyIconToDefault();
   }
 
   /**
    * Kopiert die Token-IDs in die Zwischenablage.
    */
   function copyTokenListToClipboard() {
-    const input = document.getElementById('tokenCollectorInput');
-    navigator.clipboard.writeText(input.value)
+    const input = document.getElementById("tokenCollectorInput");
+    navigator.clipboard
+      .writeText(input.value)
       .then(() => {
-        showCopyTooltip('Copiado al portapapeles');
+        showCopyTooltip("Copiado al portapapeles");
         setCopyIconToCheck();
       })
-      .catch(err => console.error('Fehler beim Kopieren:', err));
+      .catch((err) => console.error("Fehler beim Kopieren:", err));
   }
 
   function setCopyIconToCheck() {
-    const icon = document.getElementById('copyTokenList');
+    const icon = document.getElementById("copyTokenList");
     if (icon) {
-      icon.classList.remove('fa-copy');
-      icon.classList.add('fa-check');
-      icon.classList.remove('fa-regular');
-      icon.classList.add('fa-solid');
+      icon.classList.remove("fa-copy");
+      icon.classList.add("fa-check");
+      icon.classList.remove("fa-regular");
+      icon.classList.add("fa-solid");
     }
   }
 
-function resetCopyIconToDefault() {
-  const icon = document.getElementById('copyTokenList');
-  if (icon) {
-    icon.classList.remove('fa-check');
-    icon.classList.add('fa-copy');
-    icon.classList.remove('fa-solid');
-    icon.classList.add('fa-regular');
-  }
+  function resetCopyIconToDefault() {
+    const icon = document.getElementById("copyTokenList");
+    if (icon) {
+      icon.classList.remove("fa-check");
+      icon.classList.add("fa-copy");
+      icon.classList.remove("fa-solid");
+      icon.classList.add("fa-regular");
+    }
   }
 
   /**
@@ -137,9 +137,9 @@ function resetCopyIconToDefault() {
    * @param {string} text
    */
   function showCopyTooltip(text) {
-    const icon = document.getElementById('copyTokenList');
-    const tooltip = document.createElement('div');
-    tooltip.className = 'tooltip-text-pop';
+    const icon = document.getElementById("copyTokenList");
+    const tooltip = document.createElement("div");
+    tooltip.className = "tooltip-text-pop";
     tooltip.innerText = text;
     document.body.appendChild(tooltip);
 
@@ -149,12 +149,12 @@ function resetCopyIconToDefault() {
 
     // Einblenden per Klasse
     requestAnimationFrame(() => {
-      tooltip.classList.add('visible');
+      tooltip.classList.add("visible");
     });
 
     // Nach 1.5s sanft ausblenden
     setTimeout(() => {
-      tooltip.classList.remove('visible');
+      tooltip.classList.remove("visible");
       setTimeout(() => tooltip.remove(), 500); // Nach Übergang löschen
     }, 1500);
   }
@@ -181,28 +181,32 @@ function resetCopyIconToDefault() {
    * Erstellt und startet den Download einer Textdatei mit Metadaten und Transkript.
    */
   function downloadTxtFile() {
-    const metaContainer = document.getElementById('sidebarContainer-meta');
-    const transcriptionContainer = document.getElementById('transcriptionContainer');
-    
+    const metaContainer = document.getElementById("sidebarContainer-meta");
+    const transcriptionContainer = document.getElementById(
+      "transcriptionContainer",
+    );
+
     if (!metaContainer || !transcriptionContainer) {
-      console.warn('[Player] Cannot download TXT - required elements not found');
+      console.warn(
+        "[Player] Cannot download TXT - required elements not found",
+      );
       return;
     }
-    
+
     const metaInfo = metaContainer.innerText;
     const transcriptionContent = transcriptionContainer.innerText;
     const fullText = metaInfo + "\n\n" + transcriptionContent;
 
-    const audioPlayer = document.getElementById('visualAudioPlayer');
-    let filename = 'export';
+    const audioPlayer = document.getElementById("visualAudioPlayer");
+    let filename = "export";
     if (audioPlayer) {
       const audioUrl = audioPlayer.src;
       if (audioUrl) {
-        filename = audioUrl.split('/').pop().split('.').slice(0, -1).join('.');
+        filename = audioUrl.split("/").pop().split(".").slice(0, -1).join(".");
       }
     }
 
-    const textBlob = new Blob([fullText], { type: 'text/plain' });
+    const textBlob = new Blob([fullText], { type: "text/plain" });
     const downloadLink = document.createElement("a");
     downloadLink.download = `${filename}.txt`;
     downloadLink.href = window.URL.createObjectURL(textBlob);
@@ -222,37 +226,40 @@ function resetCopyIconToDefault() {
    * @returns {HTMLAudioElement}
    */
   function initAudioPlayer(audioFile) {
-    const playPauseBtn = document.getElementById('playPauseBtn');
-    const rewindBtn = document.getElementById('rewindBtn');
-    const forwardBtn = document.getElementById('forwardBtn');
-    const progressBar = document.getElementById('progressBar');
-    const volumeControl = document.getElementById('volumeControl');
-    const speedControlSlider = document.getElementById('speedControlSlider');
-    const muteBtn = document.getElementById('muteBtn');
-    const timeDisplay = document.getElementById('timeDisplay');
-    const speedDisplay = document.getElementById('speedDisplay');
+    const playPauseBtn = document.getElementById("playPauseBtn");
+    const rewindBtn = document.getElementById("rewindBtn");
+    const forwardBtn = document.getElementById("forwardBtn");
+    const progressBar = document.getElementById("progressBar");
+    const volumeControl = document.getElementById("volumeControl");
+    const speedControlSlider = document.getElementById("speedControlSlider");
+    const muteBtn = document.getElementById("muteBtn");
+    const timeDisplay = document.getElementById("timeDisplay");
+    const speedDisplay = document.getElementById("speedDisplay");
 
-    const visualAudioPlayer = document.createElement('audio');
-    visualAudioPlayer.id = 'visualAudioPlayer';
-    
+    const visualAudioPlayer = document.createElement("audio");
+    visualAudioPlayer.id = "visualAudioPlayer";
+
     // Audio-Pfad korrekt konstruieren mit MEDIA_ENDPOINT
-    const audioPath = audioFile.startsWith('/') || audioFile.startsWith('http') 
-      ? audioFile 
-      : `${MEDIA_ENDPOINT}/${audioFile}`;
-    
-    visualAudioPlayer.src = audioPath;
-    console.log('[Audio] Loading audio from:', audioPath);
-    
-    // Error Handling für Audio-Ladefehler
-    visualAudioPlayer.addEventListener('error', (e) => {
-      console.error('[Audio] Failed to load:', audioPath);
-      console.error('[Audio] Error details:', e);
-      alert(`Audio konnte nicht geladen werden.\nPfad: ${audioPath}\n\nBitte prüfe, ob die Datei existiert.`);
-    });
-    
-    document.querySelector('.custom-audio-player').prepend(visualAudioPlayer);
+    const audioPath =
+      audioFile.startsWith("/") || audioFile.startsWith("http")
+        ? audioFile
+        : `${MEDIA_ENDPOINT}/${audioFile}`;
 
-    visualAudioPlayer.addEventListener('loadedmetadata', () => {
+    visualAudioPlayer.src = audioPath;
+    console.log("[Audio] Loading audio from:", audioPath);
+
+    // Error Handling für Audio-Ladefehler
+    visualAudioPlayer.addEventListener("error", (e) => {
+      console.error("[Audio] Failed to load:", audioPath);
+      console.error("[Audio] Error details:", e);
+      alert(
+        `Audio konnte nicht geladen werden.\nPfad: ${audioPath}\n\nBitte prüfe, ob die Datei existiert.`,
+      );
+    });
+
+    document.querySelector(".custom-audio-player").prepend(visualAudioPlayer);
+
+    visualAudioPlayer.addEventListener("loadedmetadata", () => {
       const durationMinutes = Math.floor(visualAudioPlayer.duration / 60) || 0;
       const durationSeconds = Math.floor(visualAudioPlayer.duration % 60) || 0;
       if (timeDisplay) {
@@ -263,15 +270,15 @@ function resetCopyIconToDefault() {
 
     function updatePlayPauseButton() {
       if (visualAudioPlayer.paused || visualAudioPlayer.ended) {
-        playPauseBtn.classList.remove('bi-pause-circle-fill');
-        playPauseBtn.classList.add('bi-play-circle-fill');
+        playPauseBtn.classList.remove("bi-pause-circle-fill");
+        playPauseBtn.classList.add("bi-play-circle-fill");
       } else {
-        playPauseBtn.classList.remove('bi-play-circle-fill');
-        playPauseBtn.classList.add('bi-pause-circle-fill');
+        playPauseBtn.classList.remove("bi-play-circle-fill");
+        playPauseBtn.classList.add("bi-pause-circle-fill");
       }
     }
 
-    playPauseBtn.addEventListener('click', () => {
+    playPauseBtn.addEventListener("click", () => {
       if (visualAudioPlayer.paused) {
         visualAudioPlayer.play();
       } else {
@@ -280,56 +287,70 @@ function resetCopyIconToDefault() {
       updatePlayPauseButton();
     });
 
-    visualAudioPlayer.addEventListener('play', updatePlayPauseButton);
-    visualAudioPlayer.addEventListener('pause', updatePlayPauseButton);
+    visualAudioPlayer.addEventListener("play", updatePlayPauseButton);
+    visualAudioPlayer.addEventListener("pause", updatePlayPauseButton);
 
-    rewindBtn.addEventListener('click', () => {
-      visualAudioPlayer.currentTime = Math.max(0, visualAudioPlayer.currentTime - 3);
-      animateButton(rewindBtn, 'fa-rotate-left');
+    rewindBtn.addEventListener("click", () => {
+      visualAudioPlayer.currentTime = Math.max(
+        0,
+        visualAudioPlayer.currentTime - 3,
+      );
+      animateButton(rewindBtn, "fa-rotate-left");
     });
-    forwardBtn.addEventListener('click', () => {
-      visualAudioPlayer.currentTime = Math.min(visualAudioPlayer.duration, visualAudioPlayer.currentTime + 3);
-      animateButton(forwardBtn, 'fa-rotate-right');
+    forwardBtn.addEventListener("click", () => {
+      visualAudioPlayer.currentTime = Math.min(
+        visualAudioPlayer.duration,
+        visualAudioPlayer.currentTime + 3,
+      );
+      animateButton(forwardBtn, "fa-rotate-right");
     });
-    document.addEventListener('keydown', (event) => {
-      if (event.ctrlKey && event.key === ',') {
-        visualAudioPlayer.currentTime = Math.max(0, visualAudioPlayer.currentTime - 3);
+    document.addEventListener("keydown", (event) => {
+      if (event.ctrlKey && event.key === ",") {
+        visualAudioPlayer.currentTime = Math.max(
+          0,
+          visualAudioPlayer.currentTime - 3,
+        );
       }
-      if (event.ctrlKey && event.key === '.') {
-        visualAudioPlayer.currentTime = Math.min(visualAudioPlayer.duration, visualAudioPlayer.currentTime + 3);
+      if (event.ctrlKey && event.key === ".") {
+        visualAudioPlayer.currentTime = Math.min(
+          visualAudioPlayer.duration,
+          visualAudioPlayer.currentTime + 3,
+        );
       }
     });
 
-    volumeControl.addEventListener('input', function () {
+    volumeControl.addEventListener("input", function () {
       visualAudioPlayer.volume = parseFloat(this.value);
       updateVolumeIcon(this.value);
     });
-    muteBtn.addEventListener('click', () => {
+    muteBtn.addEventListener("click", () => {
       visualAudioPlayer.muted = !visualAudioPlayer.muted;
       updateVolumeIcon(volumeControl.value);
     });
     function updateVolumeIcon(volume) {
       if (parseFloat(volume) > 0) {
-        muteBtn.classList.remove('fa-volume-xmark');
-        muteBtn.classList.add('fa-volume-high');
+        muteBtn.classList.remove("fa-volume-xmark");
+        muteBtn.classList.add("fa-volume-high");
       } else {
-        muteBtn.classList.remove('fa-volume-high');
-        muteBtn.classList.add('fa-volume-xmark');
+        muteBtn.classList.remove("fa-volume-high");
+        muteBtn.classList.add("fa-volume-xmark");
       }
     }
 
-    speedControlSlider.addEventListener('input', function () {
+    speedControlSlider.addEventListener("input", function () {
       const speed = parseFloat(this.value);
       visualAudioPlayer.playbackRate = speed;
       speedDisplay.textContent = `${speed.toFixed(1)}x`;
     });
 
-    visualAudioPlayer.addEventListener('timeupdate', () => {
-      progressBar.value = (visualAudioPlayer.currentTime / visualAudioPlayer.duration) * 100;
+    visualAudioPlayer.addEventListener("timeupdate", () => {
+      progressBar.value =
+        (visualAudioPlayer.currentTime / visualAudioPlayer.duration) * 100;
       updateTimeDisplay();
     });
-    progressBar.addEventListener('input', function () {
-      visualAudioPlayer.currentTime = (this.value / 100) * visualAudioPlayer.duration;
+    progressBar.addEventListener("input", function () {
+      visualAudioPlayer.currentTime =
+        (this.value / 100) * visualAudioPlayer.duration;
     });
 
     function updateTimeDisplay() {
@@ -341,15 +362,15 @@ function resetCopyIconToDefault() {
     }
 
     function animateButton(button, baseClass) {
-      button.classList.add('fa-fade');
+      button.classList.add("fa-fade");
       setTimeout(() => {
-        button.classList.remove('fa-fade');
+        button.classList.remove("fa-fade");
       }, 1000);
     }
 
     let ctrlSpaceActive = false;
-    document.addEventListener('keydown', (event) => {
-      if (event.ctrlKey && event.code === 'Space' && !ctrlSpaceActive) {
+    document.addEventListener("keydown", (event) => {
+      if (event.ctrlKey && event.code === "Space" && !ctrlSpaceActive) {
         ctrlSpaceActive = true;
         if (visualAudioPlayer.paused) {
           visualAudioPlayer.play();
@@ -360,8 +381,8 @@ function resetCopyIconToDefault() {
         updatePlayPauseButton();
       }
     });
-    document.addEventListener('keyup', (event) => {
-      if (event.code === 'Space') {
+    document.addEventListener("keyup", (event) => {
+      if (event.code === "Space") {
         ctrlSpaceActive = false;
         event.preventDefault();
         updatePlayPauseButton();
@@ -381,13 +402,15 @@ function resetCopyIconToDefault() {
    * @param {HTMLAudioElement} visualAudioPlayer
    */
   function loadTranscription(transcriptionFile, visualAudioPlayer) {
-    const filenameElement = document.getElementById('filename');
-    const countryElement = document.getElementById('country');
-    const cityElement = document.getElementById('city');
-    const radioElement = document.getElementById('radio');
-    const dateElement = document.getElementById('date');
-    const revisionElement = document.getElementById('revision');
-    const transcriptionContainer = document.getElementById('transcriptionContainer');
+    const filenameElement = document.getElementById("filename");
+    const countryElement = document.getElementById("country");
+    const cityElement = document.getElementById("city");
+    const radioElement = document.getElementById("radio");
+    const dateElement = document.getElementById("date");
+    const revisionElement = document.getElementById("revision");
+    const transcriptionContainer = document.getElementById(
+      "transcriptionContainer",
+    );
     const urlParams = new URLSearchParams(window.location.search);
     const targetTokenId = urlParams.get("token_id");
     // Mapping für die Sprecher-Codes
@@ -430,66 +453,77 @@ function resetCopyIconToDefault() {
                  <span class="tooltip-high">Sexo: </span>masculino<br>`,
       "traf-pf": `<span class="tooltip-high">Discurso: </span>informaciones de tránsito<br>
                  <span class="tooltip-high">Hablante: </span>profesional<br>
-                 <span class="tooltip-high">Sexo: </span>femenino<br>`
-    };    
+                 <span class="tooltip-high">Sexo: </span>femenino<br>`,
+    };
 
     fetch(transcriptionFile)
-      .then(response => response.json())
-      .then(transcriptionData => {
+      .then((response) => response.json())
+      .then((transcriptionData) => {
         // Metadaten aktualisieren
-        document.getElementById('documentName').textContent = transcriptionData.filename;
-  countryElement.innerHTML = `País: <span class="meta-value meta-value--primary">${transcriptionData.country || 'Unbekanntes Land'}</span>`;
-  radioElement.innerHTML = `Emisora: <span class="meta-value">${transcriptionData.radio || 'Unbekannter Radiosender'}</span>`;
-  cityElement.innerHTML = `Ciudad: <span class="meta-value">${transcriptionData.city || 'Unbekannte Stadt'}</span>`;
-  revisionElement.innerHTML = `Revisión: <span class="meta-value">${transcriptionData.revision || 'Unbekannte Revision'}</span>`;
-  dateElement.innerHTML = `Fecha: <span class="meta-value">${transcriptionData.date || 'Unbekanntes Datum'}</span>`;
+        document.getElementById("documentName").textContent =
+          transcriptionData.filename;
+        countryElement.innerHTML = `País: <span class="meta-value meta-value--primary">${transcriptionData.country || "Unbekanntes Land"}</span>`;
+        radioElement.innerHTML = `Emisora: <span class="meta-value">${transcriptionData.radio || "Unbekannter Radiosender"}</span>`;
+        cityElement.innerHTML = `Ciudad: <span class="meta-value">${transcriptionData.city || "Unbekannte Stadt"}</span>`;
+        revisionElement.innerHTML = `Revisión: <span class="meta-value">${transcriptionData.revision || "Unbekannte Revision"}</span>`;
+        dateElement.innerHTML = `Fecha: <span class="meta-value">${transcriptionData.date || "Unbekanntes Datum"}</span>`;
 
         // Vorherigen Inhalt löschen
-        transcriptionContainer.innerHTML = '';
+        transcriptionContainer.innerHTML = "";
 
         transcriptionData.segments.forEach((segment, segmentIndex) => {
           const speakerId = segment.speaker;
           const words = segment.words;
           if (!speakerId || !words || words.length === 0) {
-            console.warn(`Segment ${segmentIndex} wird übersprungen (fehlende Sprecher- oder Wortdaten).`);
+            console.warn(
+              `Segment ${segmentIndex} wird übersprungen (fehlende Sprecher- oder Wortdaten).`,
+            );
             return;
           }
-        
+
           // Erstelle den Hauptcontainer für diesen Sprecherabschnitt (zwei Spalten)
-          const segmentContainer = document.createElement('div');
-          segmentContainer.classList.add('speaker-turn');
-        
+          const segmentContainer = document.createElement("div");
+          segmentContainer.classList.add("speaker-turn");
+
           // Linke Spalte: Sprechername
-          const speakerBlock = document.createElement('div');
-          speakerBlock.classList.add('speaker-name');
-          speakerBlock.style.position = 'relative'; // Wichtig für die absolute Positionierung des Tooltips
-          const speakerInfo = transcriptionData.speakers.find(s => s.spkid === speakerId);
+          const speakerBlock = document.createElement("div");
+          speakerBlock.classList.add("speaker-name");
+          speakerBlock.style.position = "relative"; // Wichtig für die absolute Positionierung des Tooltips
+          const speakerInfo = transcriptionData.speakers.find(
+            (s) => s.spkid === speakerId,
+          );
           const speakerName = speakerInfo ? speakerInfo.name : "otro";
           speakerBlock.textContent = speakerName;
-          speakerBlock.style.cursor = 'pointer';
-          speakerBlock.addEventListener('click', () => {
-            playVisualAudioSegment(words[0].start, words[words.length - 1].end, true);
-            console.log(`Speaker: ${speakerName} Start: ${words[0].start} End: ${words[words.length - 1].end}`);
+          speakerBlock.style.cursor = "pointer";
+          speakerBlock.addEventListener("click", () => {
+            playVisualAudioSegment(
+              words[0].start,
+              words[words.length - 1].end,
+              true,
+            );
+            console.log(
+              `Speaker: ${speakerName} Start: ${words[0].start} End: ${words[words.length - 1].end}`,
+            );
           });
 
           // Erstelle das User-Icon und Tooltip
-          const userIcon = document.createElement('i');
-          userIcon.classList.add('fa-solid', 'fa-circle-user');
-          userIcon.style.color = '#053c96';
-          userIcon.style.marginLeft = '5px';
-          userIcon.style.cursor = 'pointer';
+          const userIcon = document.createElement("i");
+          userIcon.classList.add("fa-solid", "fa-circle-user");
+          userIcon.style.color = "#053c96";
+          userIcon.style.marginLeft = "5px";
+          userIcon.style.cursor = "pointer";
 
-          const tooltip = document.createElement('span');
-          tooltip.classList.add('tooltip-text');
+          const tooltip = document.createElement("span");
+          tooltip.classList.add("tooltip-text");
           // Nutze innerHTML, damit HTML-Tags im Mapping übernommen werden
           tooltip.innerHTML = speakerAltMapping[speakerName] || "";
 
           // Tooltip anzeigen/verstecken beim Mouseover auf dem Icon
-          userIcon.addEventListener('mouseover', () => {
-            tooltip.classList.add('visible');
+          userIcon.addEventListener("mouseover", () => {
+            tooltip.classList.add("visible");
           });
-          userIcon.addEventListener('mouseout', () => {
-            tooltip.classList.remove('visible');
+          userIcon.addEventListener("mouseout", () => {
+            tooltip.classList.remove("visible");
           });
 
           // Füge Icon und Tooltip dem Sprecherblock hinzu
@@ -497,34 +531,34 @@ function resetCopyIconToDefault() {
           speakerBlock.appendChild(tooltip);
 
           // Rechte Spalte: Container für Zeit und Text
-          const contentContainer = document.createElement('div');
-          contentContainer.classList.add('speaker-content');
+          const contentContainer = document.createElement("div");
+          contentContainer.classList.add("speaker-content");
 
           // Oben: Sprecherzeit (als eigene Zeile über dem Textblock)
-          const speakerTimeElement = document.createElement('div');
-          speakerTimeElement.classList.add('speaker-time');
+          const speakerTimeElement = document.createElement("div");
+          speakerTimeElement.classList.add("speaker-time");
           const speakerStartTime = formatTime(words[0].start);
           const speakerEndTime = formatTime(words[words.length - 1].end);
           speakerTimeElement.textContent = `${speakerStartTime} - ${speakerEndTime}`;
 
           // Darunter: Transkript (Wörter)
-          const transcriptBlock = document.createElement('div');
-          transcriptBlock.classList.add('speaker-text');
+          const transcriptBlock = document.createElement("div");
+          transcriptBlock.classList.add("speaker-text");
 
           // Gruppiere Wörter basierend auf Pausen und max. Gruppengröße
           const PAUSE_THRESHOLD = 0.25; // Reduziert für kleinere Gruppen
-          const MAX_GROUP_SIZE = 3;     // Max. Wörter pro Gruppe
+          const MAX_GROUP_SIZE = 3; // Max. Wörter pro Gruppe
           const wordGroups = [];
           let currentGroup = [];
-          
+
           words.forEach((word, idx) => {
             currentGroup.push({ word, idx });
-            
+
             // Prüfe ob Pause zum nächsten Wort ODER max. Gruppengröße erreicht
             if (idx < words.length - 1) {
               const pauseToNext = words[idx + 1].start - word.end;
               const groupIsFull = currentGroup.length >= MAX_GROUP_SIZE;
-              
+
               if (pauseToNext >= PAUSE_THRESHOLD || groupIsFull) {
                 wordGroups.push([...currentGroup]);
                 currentGroup = [];
@@ -537,65 +571,67 @@ function resetCopyIconToDefault() {
 
           // Weise jedem Wort seine Gruppe zu mit eindeutigem Identifier pro Segment
           words.forEach((word, idx) => {
-            const wordElement = document.createElement('span');
-            wordElement.textContent = word.text + ' ';
-            wordElement.classList.add('word');
+            const wordElement = document.createElement("span");
+            wordElement.textContent = word.text + " ";
+            wordElement.classList.add("word");
             wordElement.dataset.start = word.start;
             wordElement.dataset.end = word.end;
             wordElement.dataset.tokenId = word.token_id;
-            wordElement.style.cursor = 'pointer';
-            
+            wordElement.style.cursor = "pointer";
+
             // Finde Gruppe für dieses Wort und erstelle eindeutigen Identifier mit segmentIndex
-            const groupIndex = wordGroups.findIndex(group => 
-              group.some(item => item.idx === idx)
+            const groupIndex = wordGroups.findIndex((group) =>
+              group.some((item) => item.idx === idx),
             );
             wordElement.dataset.groupIndex = `${segmentIndex}-${groupIndex}`;
 
             if (targetTokenId && word.token_id === targetTokenId) {
-              wordElement.classList.add('word-token-id');
-            
+              wordElement.classList.add("word-token-id");
+
               setTimeout(() => {
-                wordElement.scrollIntoView({ behavior: "smooth", block: "center" });
-            
+                wordElement.scrollIntoView({
+                  behavior: "smooth",
+                  block: "center",
+                });
+
                 const startTime = parseFloat(word.start) - 0.25;
                 if (!isNaN(startTime)) {
                   visualAudioPlayer.currentTime = Math.max(0, startTime);
                 }
               }, 300);
             }
-                       
+
             const morphInfo = formatMorphLeipzig(word.pos, word.morph);
 
-              const tooltipText = `
+            const tooltipText = `
               <span class="tooltip-high">lemma:</span> <span class="tooltip-bold">${word.lemma}</span><br>
               <span class="tooltip-high">pos:</span> ${word.pos}, ${morphInfo}<br>
-              <span class="tooltip-high">dep:</span> ${ (word.dep||'').toUpperCase() }<br>
+              <span class="tooltip-high">dep:</span> ${(word.dep || "").toUpperCase()}<br>
               <span class="tooltip-high">head_text:</span> <span class="tooltip-italic">${word.head_text}</span><br>
               <span class="tooltip-high">token_id:</span> <span class="tooltip-token">${word.token_id}</span><br>
 
             `;
             wordElement.dataset.tooltip = tooltipText;
-            
 
             // Tooltip anzeigen
-            wordElement.addEventListener('mouseenter', event => {
-              const tooltip = document.createElement('div');
-              tooltip.className = 'tooltip-text';
+            wordElement.addEventListener("mouseenter", (event) => {
+              const tooltip = document.createElement("div");
+              tooltip.className = "tooltip-text";
               tooltip.innerHTML = event.target.dataset.tooltip;
               document.body.appendChild(tooltip);
 
               setTimeout(() => {
                 const rect = event.target.getBoundingClientRect();
-                tooltip.style.position = 'absolute';
+                tooltip.style.position = "absolute";
                 tooltip.style.top = `${rect.bottom + window.scrollY + 6}px`;
-                tooltip.style.left = `${rect.left + window.scrollX + rect.width / 2 - tooltip.offsetWidth / 2}px`;                
-                tooltip.classList.add('visible');
+                tooltip.style.left = `${rect.left + window.scrollX + rect.width / 2 - tooltip.offsetWidth / 2}px`;
+                tooltip.classList.add("visible");
               }, 0);
 
               event.target._tooltipElement = tooltip;
             });
 
-            wordElement.addEventListener('mouseleave', event => {
+            wordElement.addEventListener("mouseleave", (event) => {
               const tooltip = event.target._tooltipElement;
               if (tooltip) {
                 tooltip.remove();
@@ -603,21 +639,34 @@ function resetCopyIconToDefault() {
               }
             });
 
-            wordElement.addEventListener('click', (event) => {
+            wordElement.addEventListener("click", (event) => {
               if (event.ctrlKey) {
-                const startPrev = idx > 0 ? parseFloat(words[idx - 1].start) : parseFloat(word.start);
+                const startPrev =
+                  idx > 0
+                    ? parseFloat(words[idx - 1].start)
+                    : parseFloat(word.start);
                 const endNext = parseFloat(wordElement.dataset.end);
                 playVisualAudioSegment(startPrev, endNext, false);
-                console.log(`Start-Play: ${wordElement.textContent} Start: ${startPrev} End: ${endNext}`);
+                console.log(
+                  `Start-Play: ${wordElement.textContent} Start: ${startPrev} End: ${endNext}`,
+                );
               } else {
-                const startPrev = idx >= 2 ? parseFloat(words[idx - 2].start) : parseFloat(words[0].start);
-                const endNext = idx < words.length - 1 ? parseFloat(words[idx + 2].end) : parseFloat(word.end);
+                const startPrev =
+                  idx >= 2
+                    ? parseFloat(words[idx - 2].start)
+                    : parseFloat(words[0].start);
+                const endNext =
+                  idx < words.length - 1
+                    ? parseFloat(words[idx + 2].end)
+                    : parseFloat(word.end);
                 playVisualAudioSegment(startPrev, endNext, true);
                 if (!event.ctrlKey) {
                   wordElement.dataset.start = startPrev;
                   wordElement.dataset.end = endNext;
                 }
-                console.log(`Word: ${wordElement.textContent} Start: ${startPrev} End: ${endNext}`);
+                console.log(
+                  `Word: ${wordElement.textContent} Start: ${startPrev} End: ${endNext}`,
+                );
               }
               addTokenId(word.token_id);
             });
@@ -643,28 +692,37 @@ function resetCopyIconToDefault() {
                 if (visualAudioPlayer.currentTime >= endTime) {
                   if (shouldPause) {
                     visualAudioPlayer.pause();
-                    visualAudioPlayer.removeEventListener('timeupdate', onTimeUpdate);
+                    visualAudioPlayer.removeEventListener(
+                      "timeupdate",
+                      onTimeUpdate,
+                    );
                   }
                 }
               };
-              visualAudioPlayer.addEventListener('timeupdate', onTimeUpdate);
+              visualAudioPlayer.addEventListener("timeupdate", onTimeUpdate);
             }
           }
         });
 
-        fetch(transcriptionData.audioFile || visualAudioPlayer.src, { headers: { 'Range': 'bytes=0-99999' } })
-          .then(response => {
+        fetch(transcriptionData.audioFile || visualAudioPlayer.src, {
+          headers: { Range: "bytes=0-99999" },
+        })
+          .then((response) => {
             if (!response.ok && response.status !== 206) {
-              throw new Error('Fehler beim Laden des Audios.');
+              throw new Error("Fehler beim Laden des Audios.");
             }
             return response.arrayBuffer();
           })
-          .then(buffer => {
+          .then((buffer) => {
             // audioBuffer steht zur weiteren Verarbeitung bereit (falls benötigt)
           })
-          .catch(error => console.error('Fehler beim Laden des Audios:', error));
+          .catch((error) =>
+            console.error("Fehler beim Laden des Audios:", error),
+          );
       })
-      .catch(error => console.error('Fehler beim Laden der Transkription:', error));
+      .catch((error) =>
+        console.error("Fehler beim Laden der Transkription:", error),
+      );
   }
 
   // ===========================================================================
@@ -675,35 +733,39 @@ function resetCopyIconToDefault() {
 
   function markLetters() {
     console.log("markLetters wird aufgerufen.");
-    const markInput = document.getElementById('markInput');
+    const markInput = document.getElementById("markInput");
     let searchInput = markInput.value.trim().toLowerCase();
     if (!searchInput) return;
 
-    let markType = 'exact';
+    let markType = "exact";
     let searchQuery = searchInput;
     let separatorRegex = /[ ,.?;]/;
 
-    if (searchInput.endsWith('_')) {
-      markType = 'separator';
+    if (searchInput.endsWith("_")) {
+      markType = "separator";
       searchQuery = searchInput.slice(0, -1);
       separatorRegex = /\s/;
-    } else if (searchInput.endsWith('#')) {
-      markType = 'punctuation';
+    } else if (searchInput.endsWith("#")) {
+      markType = "punctuation";
       searchQuery = searchInput.slice(0, -1);
       separatorRegex = /[.,;!?]/;
     }
 
-    const words = document.querySelectorAll('.word');
+    const words = document.querySelectorAll(".word");
     matchCounts[searchInput] = 0;
 
-    words.forEach(word => {
+    words.forEach((word) => {
       const wordText = word.textContent.toLowerCase();
       if (wordText.includes(searchQuery)) {
         for (let i = 0; i < wordText.length; i++) {
-          const isExactMatch = wordText.substring(i, i + searchQuery.length) === searchQuery;
+          const isExactMatch =
+            wordText.substring(i, i + searchQuery.length) === searchQuery;
           if (isExactMatch) {
-            const nextChar = wordText[i + searchQuery.length] || ' ';
-            const isValid = (markType === 'separator' || markType === 'punctuation') ? separatorRegex.test(nextChar) : true;
+            const nextChar = wordText[i + searchQuery.length] || " ";
+            const isValid =
+              markType === "separator" || markType === "punctuation"
+                ? separatorRegex.test(nextChar)
+                : true;
             if (isValid) {
               markWordLetters(word, searchInput, markType);
               matchCounts[searchInput]++;
@@ -712,35 +774,40 @@ function resetCopyIconToDefault() {
           }
         }
       }
-    });    
+    });
 
     if (!document.getElementById(`button-${searchInput}`)) {
       createResetButton(searchInput);
     }
-    markInput.value = '';
+    markInput.value = "";
     checkResetButtonVisibility();
   }
 
   function markWordLetters(word, searchLetters, markType) {
     let innerHTML = word.innerHTML;
-    let searchQuery = (searchLetters.endsWith('_') || searchLetters.endsWith('#'))
-      ? searchLetters.slice(0, -1)
-      : searchLetters;
-    const separatorRegex = searchLetters.endsWith('_') ? /\s/ : /[.,;!?]/;
-    const isSpecial = searchLetters.endsWith('_') || searchLetters.endsWith('#');
+    let searchQuery =
+      searchLetters.endsWith("_") || searchLetters.endsWith("#")
+        ? searchLetters.slice(0, -1)
+        : searchLetters;
+    const separatorRegex = searchLetters.endsWith("_") ? /\s/ : /[.,;!?]/;
+    const isSpecial =
+      searchLetters.endsWith("_") || searchLetters.endsWith("#");
     let i = 0;
 
     while (i < innerHTML.length) {
-      const regex = new RegExp(`${searchQuery}(?![^<]*>|[^<>]*</)`, 'ig');
+      const regex = new RegExp(`${searchQuery}(?![^<]*>|[^<>]*</)`, "ig");
       const match = regex.exec(innerHTML.slice(i));
       if (match) {
         const matchStart = i + match.index;
         const matchEnd = matchStart + match[0].length;
-        const nextChar = innerHTML[matchEnd] || ' ';
+        const nextChar = innerHTML[matchEnd] || " ";
         const isValid = isSpecial ? separatorRegex.test(nextChar) : true;
         if (isValid) {
           const highlightSpan = `<span class="highlight">${match[0]}</span>`;
-          innerHTML = innerHTML.slice(0, matchStart) + highlightSpan + innerHTML.slice(matchEnd);
+          innerHTML =
+            innerHTML.slice(0, matchStart) +
+            highlightSpan +
+            innerHTML.slice(matchEnd);
           i = matchStart + highlightSpan.length;
         } else {
           i = matchEnd;
@@ -753,30 +820,30 @@ function resetCopyIconToDefault() {
   }
 
   function createResetButton(searchLetters) {
-    const resetButton = document.createElement('button');
+    const resetButton = document.createElement("button");
     resetButton.id = `button-${searchLetters}`;
-    resetButton.classList.add('letra');
+    resetButton.classList.add("letra");
     resetButton.innerHTML = `${searchLetters} <span class="result-count">(${matchCounts[searchLetters] || 0})</span>`;
-    resetButton.addEventListener('click', () => {
+    resetButton.addEventListener("click", () => {
       resetMarkingByLetters(searchLetters);
       resetButton.remove();
       checkResetButtonVisibility();
     });
-    const buttonsContainer = document.getElementById('buttonsContainer');
+    const buttonsContainer = document.getElementById("buttonsContainer");
     buttonsContainer.appendChild(resetButton);
     checkResetButtonVisibility();
   }
 
   function resetMarkings() {
     console.log("Reset der Markierungen");
-    const words = document.querySelectorAll('.word');
-    words.forEach(word => resetWordMarkings(word));
+    const words = document.querySelectorAll(".word");
+    words.forEach((word) => resetWordMarkings(word));
     resetAllButtons();
     checkResetButtonVisibility();
   }
 
   function resetAllButtons() {
-    const buttonsContainer = document.getElementById('buttonsContainer');
+    const buttonsContainer = document.getElementById("buttonsContainer");
     while (buttonsContainer.firstChild) {
       buttonsContainer.removeChild(buttonsContainer.firstChild);
     }
@@ -788,45 +855,56 @@ function resetCopyIconToDefault() {
   }
 
   function resetMarkingByLetters(searchLetters) {
-    const words = document.querySelectorAll('.word');
-    words.forEach(word => resetWordMarkingsByLetters(word, searchLetters));
+    const words = document.querySelectorAll(".word");
+    words.forEach((word) => resetWordMarkingsByLetters(word, searchLetters));
     checkResetButtonVisibility();
   }
 
   function resetWordMarkingsByLetters(word, searchLetters) {
     let searchQuery = searchLetters.toLowerCase();
-    let markType = 'exact';
-    if (searchQuery.endsWith('_')) {
+    let markType = "exact";
+    if (searchQuery.endsWith("_")) {
       searchQuery = searchQuery.slice(0, -1);
-      markType = 'separator';
-    } else if (searchQuery.endsWith('#')) {
+      markType = "separator";
+    } else if (searchQuery.endsWith("#")) {
       searchQuery = searchQuery.slice(0, -1);
-      markType = 'punctuation';
+      markType = "punctuation";
     }
     let wordHTML = word.innerHTML;
-    let newContent = '';
+    let newContent = "";
     let currentIndex = 0;
 
     while (currentIndex < wordHTML.length) {
-      const spanStart = wordHTML.indexOf('<span class="highlight">', currentIndex);
-      const spanEnd = spanStart >= 0 ? wordHTML.indexOf('</span>', spanStart) : -1;
+      const spanStart = wordHTML.indexOf(
+        '<span class="highlight">',
+        currentIndex,
+      );
+      const spanEnd =
+        spanStart >= 0 ? wordHTML.indexOf("</span>", spanStart) : -1;
       if (spanStart === -1) {
         newContent += wordHTML.substring(currentIndex);
         break;
       } else {
         newContent += wordHTML.substring(currentIndex, spanStart);
       }
-      const highlightedTextStart = spanStart + '<span class="highlight">'.length;
+      const highlightedTextStart =
+        spanStart + '<span class="highlight">'.length;
       const highlightedText = wordHTML.substring(highlightedTextStart, spanEnd);
       let shouldRemove = highlightedText.toLowerCase() === searchQuery;
-      if (markType !== 'exact') {
-        const nextChar = wordHTML.substring(spanEnd + '</span>'.length, spanEnd + '</span>'.length + 1);
-        const valid = (markType === 'separator' && /\s/.test(nextChar)) ||
-                      (markType === 'punctuation' && /[.,;!?]/.test(nextChar));
+      if (markType !== "exact") {
+        const nextChar = wordHTML.substring(
+          spanEnd + "</span>".length,
+          spanEnd + "</span>".length + 1,
+        );
+        const valid =
+          (markType === "separator" && /\s/.test(nextChar)) ||
+          (markType === "punctuation" && /[.,;!?]/.test(nextChar));
         shouldRemove = shouldRemove && valid;
       }
-      newContent += shouldRemove ? highlightedText : `<span class="highlight">${highlightedText}</span>`;
-      currentIndex = spanEnd + '</span>'.length;
+      newContent += shouldRemove
+        ? highlightedText
+        : `<span class="highlight">${highlightedText}</span>`;
+      currentIndex = spanEnd + "</span>".length;
     }
     word.innerHTML = newContent;
   }
@@ -846,8 +924,8 @@ function resetCopyIconToDefault() {
    */
   function showTooltip(event) {
     const tooltip = event.target.nextElementSibling;
-    if (tooltip && tooltip.classList.contains('tooltip-text')) {
-      tooltip.classList.add('visible');
+    if (tooltip && tooltip.classList.contains("tooltip-text")) {
+      tooltip.classList.add("visible");
     }
   }
 
@@ -857,8 +935,8 @@ function resetCopyIconToDefault() {
    */
   function hideTooltip(event) {
     const tooltip = event.target.nextElementSibling;
-    if (tooltip && tooltip.classList.contains('tooltip-text')) {
-      tooltip.classList.remove('visible');
+    if (tooltip && tooltip.classList.contains("tooltip-text")) {
+      tooltip.classList.remove("visible");
     }
   }
 
@@ -871,21 +949,21 @@ function resetCopyIconToDefault() {
    * Wird nur ausgeführt, wenn Footer-Elemente vorhanden sind.
    */
   function loadFooterStats() {
-    const totalWordCountElement = document.getElementById('totalWordCount');
-    const totalDurationElement = document.getElementById('totalDuration');
+    const totalWordCountElement = document.getElementById("totalWordCount");
+    const totalDurationElement = document.getElementById("totalDuration");
 
     // Nur ausführen, wenn Footer-Elemente existieren (nicht auf Player-Seite)
     if (!totalWordCountElement || !totalDurationElement) {
-      console.log('[Footer Stats] Skipped - No footer elements on this page');
+      console.log("[Footer Stats] Skipped - No footer elements on this page");
       return;
     }
 
-    fetch('/get_stats_all_from_db')
-      .then(response => response.json())
-      .then(data => {
+    fetch("/get_stats_all_from_db")
+      .then((response) => response.json())
+      .then((data) => {
         updateTotalStats(data.total_word_count, data.total_duration_all);
       })
-      .catch(error => console.error('Error fetching footer stats:', error));
+      .catch((error) => console.error("Error fetching footer stats:", error));
 
     /**
      * Aktualisiert die Anzeige der Gesamtstatistik.
@@ -893,8 +971,8 @@ function resetCopyIconToDefault() {
      * @param {string} totalDuration
      */
     function updateTotalStats(totalWordCount, totalDuration) {
-  totalDurationElement.innerHTML = `<span class="meta-value meta-value--primary">${totalDuration}</span> horas de audio`;
-  totalWordCountElement.innerHTML = `<span class="meta-value meta-value--primary">${formatNumber(totalWordCount)}</span> palabras transcritas`;
+      totalDurationElement.innerHTML = `<span class="meta-value meta-value--primary">${totalDuration}</span> horas de audio`;
+      totalWordCountElement.innerHTML = `<span class="meta-value meta-value--primary">${formatNumber(totalWordCount)}</span> palabras transcritas`;
     }
   }
 
@@ -902,34 +980,34 @@ function resetCopyIconToDefault() {
   // Initialisierung
   // ===========================================================================
 
-  document.addEventListener('DOMContentLoaded', function () {
+  document.addEventListener("DOMContentLoaded", function () {
     const urlParams = new URLSearchParams(window.location.search);
-    const transcriptionFile = urlParams.get('transcription');
-    const audioFile = urlParams.get('audio');
+    const transcriptionFile = urlParams.get("transcription");
+    const audioFile = urlParams.get("audio");
 
-    console.log('[Player] Initializing...');
-    console.log('[Player] Transcription file:', transcriptionFile);
-    console.log('[Player] Audio file (raw):', audioFile);
-    
+    console.log("[Player] Initializing...");
+    console.log("[Player] Transcription file:", transcriptionFile);
+    console.log("[Player] Audio file (raw):", audioFile);
+
     if (!transcriptionFile || !audioFile) {
-      console.error('[Player] Missing required URL parameters!');
-      alert('Fehler: Transkriptions- oder Audio-Datei fehlt in der URL.');
+      console.error("[Player] Missing required URL parameters!");
+      alert("Fehler: Transkriptions- oder Audio-Datei fehlt in der URL.");
       return;
     }
 
-    createDownloadLink('downloadMp3', audioFile, 'mp3');
-    createDownloadLink('downloadJson', transcriptionFile, 'json');
-    
+    createDownloadLink("downloadMp3", audioFile, "mp3");
+    createDownloadLink("downloadJson", transcriptionFile, "json");
+
     // Only bind if elements exist
-    const downloadTxtBtn = document.getElementById('downloadTxt');
+    const downloadTxtBtn = document.getElementById("downloadTxt");
     if (downloadTxtBtn) {
-      downloadTxtBtn.addEventListener('click', downloadTxtFile);
+      downloadTxtBtn.addEventListener("click", downloadTxtFile);
     }
 
-    const markInput = document.getElementById('markInput');
+    const markInput = document.getElementById("markInput");
     if (markInput) {
-      markInput.addEventListener('keyup', function (event) {
-        if (event.key === 'Enter') {
+      markInput.addEventListener("keyup", function (event) {
+        if (event.key === "Enter") {
           markLetters();
         }
       });
@@ -940,13 +1018,13 @@ function resetCopyIconToDefault() {
     loadTranscription(transcriptionFile, visualAudioPlayer);
 
     // Event Listener für Token-Buttons hinzufügen
-    const copyTokenBtn = document.getElementById('copyTokenList');
+    const copyTokenBtn = document.getElementById("copyTokenList");
     if (copyTokenBtn) {
-      copyTokenBtn.addEventListener('click', copyTokenListToClipboard);
+      copyTokenBtn.addEventListener("click", copyTokenListToClipboard);
     }
-    const resetTokenBtn = document.getElementById('resetTokenList');
+    const resetTokenBtn = document.getElementById("resetTokenList");
     if (resetTokenBtn) {
-      resetTokenBtn.addEventListener('click', resetTokenCollector);
+      resetTokenBtn.addEventListener("click", resetTokenCollector);
     }
 
     loadFooterStats();
@@ -954,7 +1032,10 @@ function resetCopyIconToDefault() {
     const scrollToTopBtn = document.getElementById("scrollToTopBtn");
     if (scrollToTopBtn) {
       window.addEventListener("scroll", function () {
-        if (document.body.scrollTop > 100 || document.documentElement.scrollTop > 100) {
+        if (
+          document.body.scrollTop > 100 ||
+          document.documentElement.scrollTop > 100
+        ) {
           scrollToTopBtn.style.display = "block";
         } else {
           scrollToTopBtn.style.display = "none";
@@ -968,16 +1049,16 @@ function resetCopyIconToDefault() {
 
     let isPlaying = false;
     let animationFrameId = null;
-    
-    visualAudioPlayer.addEventListener('play', function () {
+
+    visualAudioPlayer.addEventListener("play", function () {
       isPlaying = true;
       startWordHighlighting();
     });
-    visualAudioPlayer.addEventListener('pause', function () {
+    visualAudioPlayer.addEventListener("pause", function () {
       isPlaying = false;
       stopWordHighlighting();
     });
-    visualAudioPlayer.addEventListener('ended', function () {
+    visualAudioPlayer.addEventListener("ended", function () {
       isPlaying = false;
       stopWordHighlighting();
     });
@@ -987,13 +1068,13 @@ function resetCopyIconToDefault() {
      */
     function startWordHighlighting() {
       if (animationFrameId) return; // Bereits aktiv
-      
+
       function animate() {
         if (!isPlaying) return;
         updateWordsHighlight();
         animationFrameId = requestAnimationFrame(animate);
       }
-      
+
       animationFrameId = requestAnimationFrame(animate);
     }
 
@@ -1014,15 +1095,15 @@ function resetCopyIconToDefault() {
     const DEACTIVATE_DELAY = 0.35; // Sekunden Verzögerung beim Entmarkieren (erhöht für flüssigeren Übergang)
     let lastActiveGroup = null;
     let deactivateTimeout = null;
-    
+
     function updateWordsHighlight() {
       const currentTime = visualAudioPlayer.currentTime;
-      const allWords = document.querySelectorAll('.word');
+      const allWords = document.querySelectorAll(".word");
       let currentActiveGroup = null;
       let currentActiveWord = null;
-      
+
       // Finde aktuell aktives Wort
-      allWords.forEach(word => {
+      allWords.forEach((word) => {
         const start = parseFloat(word.dataset.start);
         const end = parseFloat(word.dataset.end);
         if (currentTime >= start && currentTime <= end) {
@@ -1030,7 +1111,7 @@ function resetCopyIconToDefault() {
           currentActiveGroup = word.dataset.groupIndex;
         }
       });
-      
+
       // Markiere alle Wörter der aktiven Gruppe
       if (currentActiveGroup !== null) {
         // Clear any pending deactivation
@@ -1038,39 +1119,39 @@ function resetCopyIconToDefault() {
           clearTimeout(deactivateTimeout);
           deactivateTimeout = null;
         }
-        
-        allWords.forEach(word => {
+
+        allWords.forEach((word) => {
           if (word.dataset.groupIndex === currentActiveGroup) {
-            word.classList.add('playing');
+            word.classList.add("playing");
             // Scroll zum aktuell gesprochenen Wort (nicht zur ganzen Gruppe)
             if (word === currentActiveWord) {
               const rect = word.getBoundingClientRect();
               if (window.innerHeight - rect.bottom < 300) {
-                word.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                word.scrollIntoView({ behavior: "smooth", block: "center" });
               }
             }
           } else {
             // Entferne playing Klasse von anderen Gruppen
-            word.classList.remove('playing', 'playing-preview');
+            word.classList.remove("playing", "playing-preview");
           }
         });
-        
+
         // Preview für nächste Gruppe (berücksichtige das Format "segmentIndex-groupIndex")
-        const [segIdx, grpIdx] = currentActiveGroup.split('-').map(Number);
+        const [segIdx, grpIdx] = currentActiveGroup.split("-").map(Number);
         const nextGroupIndex = `${segIdx}-${grpIdx + 1}`;
-        allWords.forEach(word => {
+        allWords.forEach((word) => {
           if (word.dataset.groupIndex === nextGroupIndex) {
-            word.classList.add('playing-preview');
+            word.classList.add("playing-preview");
           }
         });
-        
+
         lastActiveGroup = currentActiveGroup;
       } else if (lastActiveGroup !== null) {
         // Kein aktives Wort - verzögerte Entmarkierung
         if (!deactivateTimeout) {
           deactivateTimeout = setTimeout(() => {
-            allWords.forEach(word => {
-              word.classList.remove('playing', 'playing-preview');
+            allWords.forEach((word) => {
+              word.classList.remove("playing", "playing-preview");
             });
             lastActiveGroup = null;
             deactivateTimeout = null;
@@ -1088,5 +1169,4 @@ function resetCopyIconToDefault() {
   window.resetMarkings = resetMarkings;
   window.showTooltip = showTooltip;
   window.hideTooltip = hideTooltip;
-
 })();

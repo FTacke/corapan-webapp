@@ -4,6 +4,7 @@ Check that all TSV files in data/blacklab_export/tsv/ share the same header and 
 
 Usage: python scripts/check_tsv_schema.py
 """
+
 from pathlib import Path
 import sys
 
@@ -34,7 +35,7 @@ for h, files in headers.items():
     for f in files[:5]:
         print("  ", f)
     if len(files) > 5:
-        print(f"  ... and {len(files)-5} more files")
+        print(f"  ... and {len(files) - 5} more files")
     print()
 
 if bad:
@@ -44,7 +45,9 @@ if bad:
     sys.exit(1)
 
 if len(headers) > 1:
-    print("ERROR: Multiple distinct TSV headers found. Please fix exporter or specific TSVs.")
+    print(
+        "ERROR: Multiple distinct TSV headers found. Please fix exporter or specific TSVs."
+    )
     sys.exit(1)
 
 print("All TSV files share identical header schema.")

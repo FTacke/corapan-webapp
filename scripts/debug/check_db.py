@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Check database structure."""
+
 import sqlite3
 
 conn = sqlite3.connect("data/db/transcription.db")
@@ -15,11 +16,11 @@ if "tokens" in tables:
     print("\n=== tokens TABLE SCHEMA ===")
     cursor.execute("PRAGMA table_info(tokens)")
     for row in cursor.fetchall():
-        print(f"  {row[1]:20} {row[2]:15} (nullable={row[3]==0})")
-    
+        print(f"  {row[1]:20} {row[2]:15} (nullable={row[3] == 0})")
+
     cursor.execute("SELECT COUNT(*) FROM tokens")
     print(f"\nTotal rows: {cursor.fetchone()[0]:,}")
-    
+
     # Sample row
     cursor.execute("SELECT * FROM tokens LIMIT 1")
     sample = cursor.fetchone()

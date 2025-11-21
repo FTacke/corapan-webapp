@@ -1,6 +1,6 @@
 /**
  * WordEditor - Handles inline word editing with change tracking
- * 
+ *
  * Features:
  * - Click-to-edit words
  * - Enter to save, ESC to cancel
@@ -20,13 +20,13 @@ export class WordEditor {
     this.currentlyEditingElement = null;
     this.originalValue = null;
     this.transcription = null;
-    
+
     // Store original speaker codes for change detection
     this.originalSpeakers = {};
     this.data.segments?.forEach((seg, idx) => {
       this.originalSpeakers[idx] = seg.speaker_code || seg.speaker;
     });
-    
+
     this.initializeUI();
   }
 
@@ -35,49 +35,54 @@ export class WordEditor {
    */
   attachToTranscription(transcription) {
     this.transcription = transcription;
-    console.log('[WordEditor] Attached to transcription manager');
+    console.log("[WordEditor] Attached to transcription manager");
   }
 
   /**
    * Initialize UI elements
    */
   initializeUI() {
-    this.saveBtn = document.getElementById('save-btn');
-    this.discardBtn = document.getElementById('discard-btn');
-    this.cancelEditBtn = document.getElementById('cancel-edit-btn');
-    this.undoBtn = document.getElementById('undo-btn');
-    this.redoBtn = document.getElementById('redo-btn');
-    this.modifiedCountEl = document.getElementById('modified-count');
-    this.saveIndicator = document.getElementById('save-indicator');
-    this.wordEditInfo = document.getElementById('word-edit-info');
-    this.currentWordDisplay = document.getElementById('current-word');
+    this.saveBtn = document.getElementById("save-btn");
+    this.discardBtn = document.getElementById("discard-btn");
+    this.cancelEditBtn = document.getElementById("cancel-edit-btn");
+    this.undoBtn = document.getElementById("undo-btn");
+    this.redoBtn = document.getElementById("redo-btn");
+    this.modifiedCountEl = document.getElementById("modified-count");
+    this.saveIndicator = document.getElementById("save-indicator");
+    this.wordEditInfo = document.getElementById("word-edit-info");
+    this.currentWordDisplay = document.getElementById("current-word");
 
     // Button handlers
-    this.saveBtn?.addEventListener('click', () => this.saveAllChanges());
-    this.discardBtn?.addEventListener('click', () => this.discardAllChanges());
-    this.cancelEditBtn?.addEventListener('click', () => this.cancelCurrentEdit());
-    this.undoBtn?.addEventListener('click', () => this.undo());
-    this.redoBtn?.addEventListener('click', () => this.redo());
+    this.saveBtn?.addEventListener("click", () => this.saveAllChanges());
+    this.discardBtn?.addEventListener("click", () => this.discardAllChanges());
+    this.cancelEditBtn?.addEventListener("click", () =>
+      this.cancelCurrentEdit(),
+    );
+    this.undoBtn?.addEventListener("click", () => this.undo());
+    this.redoBtn?.addEventListener("click", () => this.redo());
 
     // Keyboard shortcuts
-    document.addEventListener('keydown', (e) => {
+    document.addEventListener("keydown", (e) => {
       // Enter to finish editing
-      if (e.key === 'Enter' && this.currentlyEditingElement) {
+      if (e.key === "Enter" && this.currentlyEditingElement) {
         e.preventDefault();
         this.finishEditing();
       }
       // ESC to cancel editing
-      if (e.key === 'Escape' && this.currentlyEditingElement) {
+      if (e.key === "Escape" && this.currentlyEditingElement) {
         e.preventDefault();
         this.cancelCurrentEdit();
       }
       // CTRL+Z for undo (when not editing)
-      if (e.ctrlKey && e.key === 'z' && !this.currentlyEditingElement) {
+      if (e.ctrlKey && e.key === "z" && !this.currentlyEditingElement) {
         e.preventDefault();
         this.undo();
       }
       // CTRL+Y or CTRL+Shift+Z for redo (when not editing)
-      if ((e.ctrlKey && e.key === 'y') || (e.ctrlKey && e.shiftKey && e.key === 'Z')) {
+      if (
+        (e.ctrlKey && e.key === "y") ||
+        (e.ctrlKey && e.shiftKey && e.key === "Z")
+      ) {
         if (!this.currentlyEditingElement) {
           e.preventDefault();
           this.redo();
@@ -92,23 +97,23 @@ export class WordEditor {
    * Attach event listeners to word elements
    */
   attachEventListeners() {
-    const transcriptContainer = document.getElementById('transcript-content');
-    
+    const transcriptContainer = document.getElementById("transcript-content");
+
     // Delegate click events to word spans
-    transcriptContainer.addEventListener('click', (e) => {
-      const wordSpan = e.target.closest('.word');
-      if (wordSpan && !wordSpan.classList.contains('editing')) {
+    transcriptContainer.addEventListener("click", (e) => {
+      const wordSpan = e.target.closest(".word");
+      if (wordSpan && !wordSpan.classList.contains("editing")) {
         this.startEditing(wordSpan);
       }
     });
 
     // Global keyboard shortcuts
-    document.addEventListener('keydown', (e) => {
+    document.addEventListener("keydown", (e) => {
       if (this.currentlyEditingElement) {
-        if (e.key === 'Enter') {
+        if (e.key === "Enter") {
           e.preventDefault();
           this.finishEditing();
-        } else if (e.key === 'Escape') {
+        } else if (e.key === "Escape") {
           e.preventDefault();
           this.cancelCurrentEdit();
         }
@@ -129,8 +134,8 @@ export class WordEditor {
     this.originalValue = wordSpan.textContent;
 
     // Visual state
-    wordSpan.classList.add('editing');
-    wordSpan.contentEditable = 'true';
+    wordSpan.classList.add("editing");
+    wordSpan.contentEditable = "true";
     wordSpan.focus();
 
     // Select all text
@@ -141,7 +146,7 @@ export class WordEditor {
     selection.addRange(range);
 
     // Update UI
-    this.wordEditInfo.classList.remove('hidden');
+    this.wordEditInfo.classList.remove("hidden");
     this.currentWordDisplay.textContent = this.originalValue;
 
     console.log(`[Editor] Started editing: "${this.originalValue}"`);
@@ -156,37 +161,39 @@ export class WordEditor {
     const wordSpan = this.currentlyEditingElement;
     const newValue = wordSpan.textContent.trim();
     const tokenId = wordSpan.dataset.tokenId;
-    
+
     // Extract segment and word indices from groupIndex (format: "segmentIndex-groupIndex")
     const groupIndex = wordSpan.dataset.groupIndex;
     if (!groupIndex) {
-      console.error('[Editor] No groupIndex found in word element');
+      console.error("[Editor] No groupIndex found in word element");
       this.cancelCurrentEdit();
       return;
     }
-    
-    const [segmentIndexStr, _] = groupIndex.split('-');
+
+    const [segmentIndexStr, _] = groupIndex.split("-");
     const segmentIndex = parseInt(segmentIndexStr);
-    
+
     // Find word index within segment by matching token_id
     let wordIndex = -1;
     const segment = this.data.segments[segmentIndex];
     if (segment && segment.words) {
-      wordIndex = segment.words.findIndex(w => w.token_id === tokenId);
+      wordIndex = segment.words.findIndex((w) => w.token_id === tokenId);
     }
 
-    console.log(`[Editor] finishEditing - segmentIndex: ${segmentIndex}, wordIndex: ${wordIndex}, tokenId: ${tokenId}`);
+    console.log(
+      `[Editor] finishEditing - segmentIndex: ${segmentIndex}, wordIndex: ${wordIndex}, tokenId: ${tokenId}`,
+    );
 
     // Validate
     if (segmentIndex < 0 || wordIndex < 0) {
-      console.error('[Editor] Could not determine segment/word indices');
+      console.error("[Editor] Could not determine segment/word indices");
       this.cancelCurrentEdit();
       return;
     }
 
     // Validate: not empty
     if (!newValue) {
-      alert('Word darf nicht leer sein!');
+      alert("Word darf nicht leer sein!");
       wordSpan.textContent = this.originalValue;
       this.cancelCurrentEdit();
       return;
@@ -196,7 +203,9 @@ export class WordEditor {
     if (newValue !== this.originalValue) {
       // Get the original value from history (if exists) or use current original
       const existingChange = this.editHistory.get(tokenId);
-      const veryOriginalValue = existingChange ? existingChange.original : this.originalValue;
+      const veryOriginalValue = existingChange
+        ? existingChange.original
+        : this.originalValue;
 
       // Record action for undo (6 parameters: tokenId, segIdx, wordIdx, oldVal, newVal, origVal)
       this._recordAction(
@@ -204,8 +213,8 @@ export class WordEditor {
         segmentIndex,
         wordIndex,
         this.originalValue, // old value (before this edit)
-        newValue,            // new value (after this edit)
-        veryOriginalValue    // original value (before any edits)
+        newValue, // new value (after this edit)
+        veryOriginalValue, // original value (before any edits)
       );
 
       // Track change in history
@@ -214,31 +223,31 @@ export class WordEditor {
         modified: newValue,
         segmentIndex,
         wordIndex,
-        tokenId
+        tokenId,
       });
 
       // Update underlying data (JSON uses "text" not "word")
       const wordObj = this.data.segments[segmentIndex].words[wordIndex];
-      if ('text' in wordObj) {
+      if ("text" in wordObj) {
         wordObj.text = newValue;
       } else {
         wordObj.word = newValue;
       }
 
       // Visual feedback - grüne Markierung
-      wordSpan.classList.add('modified-word');
-      
+      wordSpan.classList.add("modified-word");
+
       console.log(`[Editor] Changed "${this.originalValue}" -> "${newValue}"`);
-      
+
       this.updateUI();
     }
 
     // Cleanup
-    wordSpan.classList.remove('editing');
-    wordSpan.contentEditable = 'false';
+    wordSpan.classList.remove("editing");
+    wordSpan.contentEditable = "false";
     this.currentlyEditingElement = null;
     this.originalValue = null;
-    this.wordEditInfo.classList.add('hidden');
+    this.wordEditInfo.classList.add("hidden");
   }
 
   /**
@@ -248,17 +257,17 @@ export class WordEditor {
     if (!this.currentlyEditingElement) return;
 
     const wordSpan = this.currentlyEditingElement;
-    
+
     // Restore original value
     wordSpan.textContent = this.originalValue;
-    wordSpan.classList.remove('editing');
-    wordSpan.contentEditable = 'false';
+    wordSpan.classList.remove("editing");
+    wordSpan.contentEditable = "false";
 
     this.currentlyEditingElement = null;
     this.originalValue = null;
-    this.wordEditInfo.classList.add('hidden');
+    this.wordEditInfo.classList.add("hidden");
 
-    console.log('[Editor] Edit cancelled');
+    console.log("[Editor] Edit cancelled");
   }
 
   /**
@@ -275,18 +284,26 @@ export class WordEditor {
     // Restore original word values
     this.editHistory.forEach((change, tokenId) => {
       // Find word element by token_id: prefer original case (data-token-id) then fallback to lowercased attribute
-      const escaped = CSS.escape(String(tokenId || '').trim());
-      const escapedLower = CSS.escape(String(tokenId || '').trim().toLowerCase());
+      const escaped = CSS.escape(String(tokenId || "").trim());
+      const escapedLower = CSS.escape(
+        String(tokenId || "")
+          .trim()
+          .toLowerCase(),
+      );
       let wordSpan = document.querySelector(`[data-token-id="${escaped}"]`);
-      if (!wordSpan) wordSpan = document.querySelector(`[data-token-id-lower="${escapedLower}"]`);
+      if (!wordSpan)
+        wordSpan = document.querySelector(
+          `[data-token-id-lower="${escapedLower}"]`,
+        );
       if (wordSpan) {
         wordSpan.textContent = change.original;
-        wordSpan.classList.remove('modified-word');
+        wordSpan.classList.remove("modified-word");
       }
 
       // Restore in data (JSON uses "text" not "word")
-      const wordObj = this.data.segments[change.segmentIndex].words[change.wordIndex];
-      if ('text' in wordObj) {
+      const wordObj =
+        this.data.segments[change.segmentIndex].words[change.wordIndex];
+      if ("text" in wordObj) {
         wordObj.text = change.original;
       } else {
         wordObj.word = change.original;
@@ -294,18 +311,18 @@ export class WordEditor {
     });
 
     // Restore original speaker codes
-    this.undoStack.forEach(action => {
-      if (action.type === 'speaker_change') {
+    this.undoStack.forEach((action) => {
+      if (action.type === "speaker_change") {
         const { segmentIndex, oldValue } = action;
         this.data.segments[segmentIndex].speaker_code = oldValue;
         // Remove old speaker field if it exists
-        if ('speaker' in this.data.segments[segmentIndex]) {
+        if ("speaker" in this.data.segments[segmentIndex]) {
           delete this.data.segments[segmentIndex].speaker;
         }
-        
+
         // Restore original speakers map
         this.originalSpeakers[segmentIndex] = oldValue;
-        
+
         // Update UI
         this._updateSpeakerDisplay(segmentIndex, oldValue);
       }
@@ -315,18 +332,20 @@ export class WordEditor {
     this.editHistory.clear();
     this.undoStack = [];
     this.redoStack = [];
-    
+
     // Remove all modified classes
-    document.querySelectorAll('.word.modified').forEach(el => {
-      el.classList.remove('modified-word');
+    document.querySelectorAll(".word.modified").forEach((el) => {
+      el.classList.remove("modified-word");
     });
-    document.querySelectorAll('.speaker-name.modified-speaker').forEach(el => {
-      el.classList.remove('modified-speaker');
-    });
-    
+    document
+      .querySelectorAll(".speaker-name.modified-speaker")
+      .forEach((el) => {
+        el.classList.remove("modified-speaker");
+      });
+
     this.updateUI();
 
-    console.log('[Editor] All changes discarded');
+    console.log("[Editor] All changes discarded");
   }
 
   /**
@@ -337,89 +356,102 @@ export class WordEditor {
     if (totalChanges === 0) return;
 
     this.saveBtn.disabled = true;
-    this.saveIndicator.innerHTML = '<i class="bi bi-hourglass-split"></i> Speichert...';
-    this.saveIndicator.className = 'status-badge status-saving';
+    this.saveIndicator.innerHTML =
+      '<i class="bi bi-hourglass-split"></i> Speichert...';
+    this.saveIndicator.className = "status-badge status-saving";
 
     try {
       // Prepare changes payload (word changes only for changes array)
-      const changes = Array.from(this.editHistory.values()).map(change => ({
+      const changes = Array.from(this.editHistory.values()).map((change) => ({
         token_id: change.tokenId,
         segment_index: change.segmentIndex,
         word_index: change.wordIndex,
         old_value: change.original,
-        new_value: change.modified
+        new_value: change.modified,
       }));
 
       // Add speaker changes from undoStack (speaker_code is used directly)
-      const speakerChanges = this.undoStack.filter(action => action.type === 'speaker_change');
-      speakerChanges.forEach(action => {
+      const speakerChanges = this.undoStack.filter(
+        (action) => action.type === "speaker_change",
+      );
+      speakerChanges.forEach((action) => {
         changes.push({
-          type: 'speaker_change',
+          type: "speaker_change",
           segment_index: action.segmentIndex,
           old_value: action.oldValue,
-          new_value: action.newValue
+          new_value: action.newValue,
         });
       });
 
       const response = await fetch(this.config.apiEndpoints.saveEdits, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json'
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           file: this.config.transcriptFile,
           changes: changes,
-          transcript_data: this.data // Full updated transcript (includes speaker changes)
-        })
+          transcript_data: this.data, // Full updated transcript (includes speaker changes)
+        }),
       });
 
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.message || 'Save failed');
+        throw new Error(error.message || "Save failed");
       }
 
       const result = await response.json();
-      
+
       // Clear edit history and remove visual markers
       this.editHistory.forEach((change, tokenId) => {
-        const escaped = CSS.escape(String(tokenId || '').trim());
-        const escapedLower = CSS.escape(String(tokenId || '').trim().toLowerCase());
+        const escaped = CSS.escape(String(tokenId || "").trim());
+        const escapedLower = CSS.escape(
+          String(tokenId || "")
+            .trim()
+            .toLowerCase(),
+        );
         let wordSpan = document.querySelector(`[data-token-id="${escaped}"]`);
-        if (!wordSpan) wordSpan = document.querySelector(`[data-token-id-lower="${escapedLower}"]`);
+        if (!wordSpan)
+          wordSpan = document.querySelector(
+            `[data-token-id-lower="${escapedLower}"]`,
+          );
         if (wordSpan) {
-          wordSpan.classList.remove('modified-word');
+          wordSpan.classList.remove("modified-word");
         }
       });
-      
+
       this.editHistory.clear();
-      
+
       // Clear undo/redo stacks (changes have been saved)
       this.undoStack = [];
       this.redoStack = [];
-      
+
       // Reset original speakers to current state
       this.data.segments?.forEach((seg, idx) => {
         this.originalSpeakers[idx] = seg.speaker_code || seg.speaker;
       });
-      
+
       // Remove modified-speaker classes
-      document.querySelectorAll('.speaker-name').forEach(el => {
-        el.classList.remove('modified-speaker');
+      document.querySelectorAll(".speaker-name").forEach((el) => {
+        el.classList.remove("modified-speaker");
       });
-      
-      this.saveIndicator.innerHTML = '<i class="bi bi-check-circle"></i> Gespeichert';
-      this.saveIndicator.className = 'md3-editor-status-badge md3-editor-status-saved';
-      
-      console.log('[Editor] Changes saved:', result);
-      
+
+      this.saveIndicator.innerHTML =
+        '<i class="bi bi-check-circle"></i> Gespeichert';
+      this.saveIndicator.className =
+        "md3-editor-status-badge md3-editor-status-saved";
+
+      console.log("[Editor] Changes saved:", result);
+
       this.updateUI();
-      
     } catch (error) {
-      console.error('[Editor] Save failed:', error);
-      
-      this.saveIndicator.innerHTML = '<i class="bi bi-exclamation-triangle"></i> Fehler';
-      this.saveIndicator.className = 'md3-editor-status-badge md3-editor-status-error';
-      
+      console.error("[Editor] Save failed:", error);
+
+      this.saveIndicator.innerHTML =
+        '<i class="bi bi-exclamation-triangle"></i> Fehler';
+      this.saveIndicator.className =
+        "md3-editor-status-badge md3-editor-status-error";
+
       alert(`Speichern fehlgeschlagen: ${error.message}`);
     } finally {
       this.saveBtn.disabled = false;
@@ -437,7 +469,9 @@ export class WordEditor {
     let totalChanges = this.editHistory.size;
 
     // Count speaker changes from undoStack
-    const speakerChanges = this.undoStack.filter(a => a.type === 'speaker_change').length;
+    const speakerChanges = this.undoStack.filter(
+      (a) => a.type === "speaker_change",
+    ).length;
     totalChanges += speakerChanges;
 
     return totalChanges;
@@ -446,17 +480,21 @@ export class WordEditor {
   updateUI() {
     const totalChanges = this.getTotalChanges();
     const hasChanges = totalChanges > 0;
-    
+
     this.saveBtn.disabled = !hasChanges;
     this.discardBtn.disabled = !hasChanges;
     this.modifiedCountEl.textContent = totalChanges;
-    
+
     if (hasChanges) {
-      this.saveIndicator.innerHTML = '<i class="bi bi-exclamation-circle"></i> Ungespeichert';
-      this.saveIndicator.className = 'md3-editor-status-badge md3-editor-status-unsaved';
+      this.saveIndicator.innerHTML =
+        '<i class="bi bi-exclamation-circle"></i> Ungespeichert';
+      this.saveIndicator.className =
+        "md3-editor-status-badge md3-editor-status-unsaved";
     } else {
-      this.saveIndicator.innerHTML = '<i class="bi bi-check-circle"></i> Gespeichert';
-      this.saveIndicator.className = 'md3-editor-status-badge md3-editor-status-saved';
+      this.saveIndicator.innerHTML =
+        '<i class="bi bi-check-circle"></i> Gespeichert';
+      this.saveIndicator.className =
+        "md3-editor-status-badge md3-editor-status-saved";
     }
 
     this.updateUndoRedoButtons();
@@ -479,12 +517,12 @@ export class WordEditor {
    */
   undo() {
     if (this.undoStack.length === 0) {
-      console.log('[Editor] Nothing to undo');
+      console.log("[Editor] Nothing to undo");
       return;
     }
 
     const action = this.undoStack.pop();
-    console.log('[Editor] Undoing action:', action);
+    console.log("[Editor] Undoing action:", action);
 
     // Apply undo
     this._applyAction(action, true);
@@ -505,12 +543,12 @@ export class WordEditor {
    */
   redo() {
     if (this.redoStack.length === 0) {
-      console.log('[Editor] Nothing to redo');
+      console.log("[Editor] Nothing to redo");
       return;
     }
 
     const action = this.redoStack.pop();
-    console.log('[Editor] Redoing action:', action);
+    console.log("[Editor] Redoing action:", action);
 
     // Apply redo (inverse of undo)
     this._applyAction(action, false);
@@ -529,21 +567,23 @@ export class WordEditor {
    */
   _applyAction(action, isUndo) {
     // Handle speaker changes
-    if (action.type === 'speaker_change') {
+    if (action.type === "speaker_change") {
       const { segmentIndex, oldValue, newValue } = action;
       const valueToApply = isUndo ? oldValue : newValue;
 
       // Update data (use speaker_code)
       this.data.segments[segmentIndex].speaker_code = valueToApply;
       // Remove old speaker field if it exists
-      if ('speaker' in this.data.segments[segmentIndex]) {
+      if ("speaker" in this.data.segments[segmentIndex]) {
         delete this.data.segments[segmentIndex].speaker;
       }
 
       // Update UI
       this._updateSpeakerDisplay(segmentIndex, valueToApply);
 
-      console.log(`[Editor] Applied speaker change via undo/redo for segment ${segmentIndex}`);
+      console.log(
+        `[Editor] Applied speaker change via undo/redo for segment ${segmentIndex}`,
+      );
       return;
     }
 
@@ -552,12 +592,19 @@ export class WordEditor {
     const valueToApply = isUndo ? oldValue : newValue;
 
     // Find word element
-    const escaped = CSS.escape(String(tokenId || '').trim());
-    const escapedLower = CSS.escape(String(tokenId || '').trim().toLowerCase());
+    const escaped = CSS.escape(String(tokenId || "").trim());
+    const escapedLower = CSS.escape(
+      String(tokenId || "")
+        .trim()
+        .toLowerCase(),
+    );
     let wordSpan = document.querySelector(`[data-token-id="${escaped}"]`);
-    if (!wordSpan) wordSpan = document.querySelector(`[data-token-id-lower="${escapedLower}"]`);
+    if (!wordSpan)
+      wordSpan = document.querySelector(
+        `[data-token-id-lower="${escapedLower}"]`,
+      );
     if (!wordSpan) {
-      console.warn('[Editor] Word element not found for undo/redo:', tokenId);
+      console.warn("[Editor] Word element not found for undo/redo:", tokenId);
       return;
     }
 
@@ -566,7 +613,7 @@ export class WordEditor {
 
     // Update data
     const wordObj = this.data.segments[segmentIndex].words[wordIndex];
-    if ('text' in wordObj) {
+    if ("text" in wordObj) {
       wordObj.text = valueToApply;
     } else {
       wordObj.word = valueToApply;
@@ -577,14 +624,14 @@ export class WordEditor {
       // If undoing and value matches original, remove from history
       if (valueToApply === action.originalValue) {
         this.editHistory.delete(tokenId);
-        wordSpan.classList.remove('modified-word');
+        wordSpan.classList.remove("modified-word");
       } else {
         // Update history entry
         const historyEntry = this.editHistory.get(tokenId);
         if (historyEntry) {
           historyEntry.modified = valueToApply;
         }
-        wordSpan.classList.add('modified');
+        wordSpan.classList.add("modified");
       }
     } else {
       // Redoing - add/update history
@@ -594,12 +641,12 @@ export class WordEditor {
           modified: valueToApply,
           segmentIndex,
           wordIndex,
-          tokenId
+          tokenId,
         });
-        wordSpan.classList.add('modified');
+        wordSpan.classList.add("modified");
       } else {
         this.editHistory.delete(tokenId);
-        wordSpan.classList.remove('modified-word');
+        wordSpan.classList.remove("modified-word");
       }
     }
   }
@@ -614,7 +661,14 @@ export class WordEditor {
    * @param {string} originalValue - The very first value before any edits
    * @private
    */
-  _recordAction(tokenId, segmentIndex, wordIndex, oldValue, newValue, originalValue) {
+  _recordAction(
+    tokenId,
+    segmentIndex,
+    wordIndex,
+    oldValue,
+    newValue,
+    originalValue,
+  ) {
     const action = {
       tokenId,
       segmentIndex,
@@ -622,7 +676,7 @@ export class WordEditor {
       oldValue,
       newValue,
       originalValue,
-      timestamp: Date.now()
+      timestamp: Date.now(),
     };
 
     this.undoStack.push(action);
@@ -635,7 +689,7 @@ export class WordEditor {
     // Clear redo stack when new action is performed
     this.redoStack = [];
 
-    console.log('[Editor] Action recorded:', action);
+    console.log("[Editor] Action recorded:", action);
   }
 
   /**
@@ -646,7 +700,7 @@ export class WordEditor {
       totalChanges: this.editHistory.size,
       isEditing: !!this.currentlyEditingElement,
       undoAvailable: this.undoStack.length,
-      redoAvailable: this.redoStack.length
+      redoAvailable: this.redoStack.length,
     };
   }
 
@@ -655,37 +709,54 @@ export class WordEditor {
    * Uses standardized speaker codes directly (no speakers array needed)
    */
   initializeSpeakerSelection() {
-    const speakerSelect = document.getElementById('speaker-select');
+    const speakerSelect = document.getElementById("speaker-select");
     if (!speakerSelect) return;
 
     // Valid speaker codes (standardized)
     const VALID_SPEAKER_CODES = [
-      'lib-pm', 'lib-pf', 'lib-om', 'lib-of',
-      'lec-pm', 'lec-pf', 'lec-om', 'lec-of',
-      'pre-pm', 'pre-pf',
-      'tie-pm', 'tie-pf',
-      'traf-pm', 'traf-pf',
-      'rev'
+      "lib-pm",
+      "lib-pf",
+      "lib-om",
+      "lib-of",
+      "lec-pm",
+      "lec-pf",
+      "lec-om",
+      "lec-of",
+      "pre-pm",
+      "pre-pf",
+      "tie-pm",
+      "tie-pf",
+      "traf-pm",
+      "traf-pf",
+      "rev",
     ];
 
     // Populate speaker options
-    VALID_SPEAKER_CODES.forEach(code => {
-      const option = document.createElement('option');
+    VALID_SPEAKER_CODES.forEach((code) => {
+      const option = document.createElement("option");
       option.value = code;
       option.textContent = code;
       speakerSelect.appendChild(option);
     });
 
     // Event listeners
-    document.getElementById('confirm-speaker-btn')?.addEventListener('click', () => {
-      this.confirmSpeakerChange();
-    });
+    document
+      .getElementById("confirm-speaker-btn")
+      ?.addEventListener("click", () => {
+        this.confirmSpeakerChange();
+      });
 
-    document.getElementById('cancel-speaker-btn')?.addEventListener('click', () => {
-      this.cancelSpeakerChange();
-    });
+    document
+      .getElementById("cancel-speaker-btn")
+      ?.addEventListener("click", () => {
+        this.cancelSpeakerChange();
+      });
 
-    console.log('[Editor] Speaker selection initialized with', VALID_SPEAKER_CODES.length, 'codes');
+    console.log(
+      "[Editor] Speaker selection initialized with",
+      VALID_SPEAKER_CODES.length,
+      "codes",
+    );
   }
 
   /**
@@ -697,16 +768,18 @@ export class WordEditor {
     this.currentSpeakerSegment = segmentIndex;
     this.currentSpeakerValue = currentSpeakerCode;
 
-    const speakerSelect = document.getElementById('speaker-select');
-    const speakerSelection = document.getElementById('speaker-selection');
+    const speakerSelect = document.getElementById("speaker-select");
+    const speakerSelection = document.getElementById("speaker-selection");
 
     if (speakerSelect && speakerSelection) {
       speakerSelect.value = currentSpeakerCode;
-      speakerSelection.classList.remove('hidden');
+      speakerSelection.classList.remove("hidden");
       speakerSelect.focus();
     }
 
-    console.log(`[Editor] Speaker selection opened for segment ${segmentIndex}, current: ${currentSpeakerCode}`);
+    console.log(
+      `[Editor] Speaker selection opened for segment ${segmentIndex}, current: ${currentSpeakerCode}`,
+    );
   }
 
   /**
@@ -717,32 +790,52 @@ export class WordEditor {
    */
   _mapSpeakerAttributes(code) {
     const mapping = {
-      'lib-pm':  { type: 'pro', sex: 'm', mode: 'libre', discourse: 'general' },
-      'lib-pf':  { type: 'pro', sex: 'f', mode: 'libre', discourse: 'general' },
-      'lib-om':  { type: 'otro', sex: 'm', mode: 'libre', discourse: 'general' },
-      'lib-of':  { type: 'otro', sex: 'f', mode: 'libre', discourse: 'general' },
-      'lec-pm':  { type: 'pro', sex: 'm', mode: 'lectura', discourse: 'general' },
-      'lec-pf':  { type: 'pro', sex: 'f', mode: 'lectura', discourse: 'general' },
-      'lec-om':  { type: 'otro', sex: 'm', mode: 'lectura', discourse: 'general' },
-      'lec-of':  { type: 'otro', sex: 'f', mode: 'lectura', discourse: 'general' },
-      'pre-pm':  { type: 'pro', sex: 'm', mode: 'pre', discourse: 'general' },
-      'pre-pf':  { type: 'pro', sex: 'f', mode: 'pre', discourse: 'general' },
-      'tie-pm':  { type: 'pro', sex: 'm', mode: 'n/a', discourse: 'tiempo' },
-      'tie-pf':  { type: 'pro', sex: 'f', mode: 'n/a', discourse: 'tiempo' },
-      'traf-pm': { type: 'pro', sex: 'm', mode: 'n/a', discourse: 'tránsito' },
-      'traf-pf': { type: 'pro', sex: 'f', mode: 'n/a', discourse: 'tránsito' },
-      'foreign': { type: 'n/a', sex: 'n/a', mode: 'n/a', discourse: 'foreign' },
-      'none':    { type: '', sex: '', mode: '', discourse: '' }
+      "lib-pm": { type: "pro", sex: "m", mode: "libre", discourse: "general" },
+      "lib-pf": { type: "pro", sex: "f", mode: "libre", discourse: "general" },
+      "lib-om": { type: "otro", sex: "m", mode: "libre", discourse: "general" },
+      "lib-of": { type: "otro", sex: "f", mode: "libre", discourse: "general" },
+      "lec-pm": {
+        type: "pro",
+        sex: "m",
+        mode: "lectura",
+        discourse: "general",
+      },
+      "lec-pf": {
+        type: "pro",
+        sex: "f",
+        mode: "lectura",
+        discourse: "general",
+      },
+      "lec-om": {
+        type: "otro",
+        sex: "m",
+        mode: "lectura",
+        discourse: "general",
+      },
+      "lec-of": {
+        type: "otro",
+        sex: "f",
+        mode: "lectura",
+        discourse: "general",
+      },
+      "pre-pm": { type: "pro", sex: "m", mode: "pre", discourse: "general" },
+      "pre-pf": { type: "pro", sex: "f", mode: "pre", discourse: "general" },
+      "tie-pm": { type: "pro", sex: "m", mode: "n/a", discourse: "tiempo" },
+      "tie-pf": { type: "pro", sex: "f", mode: "n/a", discourse: "tiempo" },
+      "traf-pm": { type: "pro", sex: "m", mode: "n/a", discourse: "tránsito" },
+      "traf-pf": { type: "pro", sex: "f", mode: "n/a", discourse: "tránsito" },
+      foreign: { type: "n/a", sex: "n/a", mode: "n/a", discourse: "foreign" },
+      none: { type: "", sex: "", mode: "", discourse: "" },
     };
-    
-    return mapping[code] || { type: '', sex: '', mode: '', discourse: '' };
+
+    return mapping[code] || { type: "", sex: "", mode: "", discourse: "" };
   }
 
   /**
    * Confirm speaker change
    */
   confirmSpeakerChange() {
-    const speakerSelect = document.getElementById('speaker-select');
+    const speakerSelect = document.getElementById("speaker-select");
     const newSpeakerCode = speakerSelect?.value;
 
     if (!newSpeakerCode || this.currentSpeakerSegment === undefined) {
@@ -760,11 +853,15 @@ export class WordEditor {
     }
 
     // Record the change
-    this._recordSpeakerChange(this.currentSpeakerSegment, oldSpeakerCode, newSpeakerCode);
+    this._recordSpeakerChange(
+      this.currentSpeakerSegment,
+      oldSpeakerCode,
+      newSpeakerCode,
+    );
 
     // Update data (set speaker_code AND speaker object)
     segment.speaker_code = newSpeakerCode;
-    
+
     // Map attributes and update speaker object
     const attrs = this._mapSpeakerAttributes(newSpeakerCode);
     segment.speaker = {
@@ -772,7 +869,7 @@ export class WordEditor {
       speaker_type: attrs.type,
       speaker_sex: attrs.sex,
       speaker_mode: attrs.mode,
-      speaker_discourse: attrs.discourse
+      speaker_discourse: attrs.discourse,
     };
 
     // Update UI
@@ -782,15 +879,17 @@ export class WordEditor {
     this.cancelSpeakerChange();
     this.updateUI();
 
-    console.log(`[Editor] Speaker changed from ${oldSpeakerCode} to ${newSpeakerCode} for segment ${this.currentSpeakerSegment}`);
+    console.log(
+      `[Editor] Speaker changed from ${oldSpeakerCode} to ${newSpeakerCode} for segment ${this.currentSpeakerSegment}`,
+    );
   }
 
   /**
    * Cancel speaker selection
    */
   cancelSpeakerChange() {
-    const speakerSelection = document.getElementById('speaker-selection');
-    speakerSelection?.classList.add('hidden');
+    const speakerSelection = document.getElementById("speaker-selection");
+    speakerSelection?.classList.add("hidden");
 
     this.currentSpeakerSegment = undefined;
     this.currentSpeakerValue = null;
@@ -802,11 +901,11 @@ export class WordEditor {
    */
   _recordSpeakerChange(segmentIndex, oldSpeaker, newSpeaker) {
     const action = {
-      type: 'speaker_change',
+      type: "speaker_change",
       segmentIndex,
       oldValue: oldSpeaker,
       newValue: newSpeaker,
-      timestamp: Date.now()
+      timestamp: Date.now(),
     };
 
     this.undoStack.push(action);
@@ -825,40 +924,55 @@ export class WordEditor {
    */
   _updateSpeakerDisplay(segmentIndex, newSpeakerCode) {
     // Find the speaker-name element (try both MD3 and legacy class names)
-    let speakerNameEl = document.querySelector(`.md3-speaker-name[data-segment-index="${segmentIndex}"]`);
+    let speakerNameEl = document.querySelector(
+      `.md3-speaker-name[data-segment-index="${segmentIndex}"]`,
+    );
     if (!speakerNameEl) {
-      speakerNameEl = document.querySelector(`.speaker-name[data-segment-index="${segmentIndex}"]`);
+      speakerNameEl = document.querySelector(
+        `.speaker-name[data-segment-index="${segmentIndex}"]`,
+      );
     }
-    
+
     if (!speakerNameEl) {
-      console.warn(`[Editor] Could not find speaker-name element for segment ${segmentIndex}`);
+      console.warn(
+        `[Editor] Could not find speaker-name element for segment ${segmentIndex}`,
+      );
       return;
     }
 
     // Use TranscriptionManager to generate the new content with chips
-    if (this.transcription && typeof this.transcription._createSpeakerName === 'function') {
-        const segment = this.data.segments[segmentIndex];
-        const words = segment ? segment.words : [];
-        
-        // Generate new element structure
-        const newNameEl = this.transcription._createSpeakerName(newSpeakerCode, words, segmentIndex);
-        
-        // Clear existing content
-        speakerNameEl.innerHTML = '';
-        
-        // Move children from new element to existing one
-        while (newNameEl.firstChild) {
-            speakerNameEl.appendChild(newNameEl.firstChild);
-        }
-    } else {
-        // Fallback: Update text content
-        speakerNameEl.textContent = newSpeakerCode;
-    }
-    
-    // Add modified-speaker class to show it was changed
-    speakerNameEl.classList.add('modified-speaker');
+    if (
+      this.transcription &&
+      typeof this.transcription._createSpeakerName === "function"
+    ) {
+      const segment = this.data.segments[segmentIndex];
+      const words = segment ? segment.words : [];
 
-    console.log(`[Editor] Updated speaker display for segment ${segmentIndex} to ${newSpeakerCode}`);
+      // Generate new element structure
+      const newNameEl = this.transcription._createSpeakerName(
+        newSpeakerCode,
+        words,
+        segmentIndex,
+      );
+
+      // Clear existing content
+      speakerNameEl.innerHTML = "";
+
+      // Move children from new element to existing one
+      while (newNameEl.firstChild) {
+        speakerNameEl.appendChild(newNameEl.firstChild);
+      }
+    } else {
+      // Fallback: Update text content
+      speakerNameEl.textContent = newSpeakerCode;
+    }
+
+    // Add modified-speaker class to show it was changed
+    speakerNameEl.classList.add("modified-speaker");
+
+    console.log(
+      `[Editor] Updated speaker display for segment ${segmentIndex} to ${newSpeakerCode}`,
+    );
   }
 
   /**
@@ -873,7 +987,9 @@ export class WordEditor {
 
     // Check if any speakers have been modified (use speaker_code)
     for (let segIdx in this.originalSpeakers) {
-      const currentSpeaker = this.data.segments[segIdx].speaker_code || this.data.segments[segIdx].speaker;
+      const currentSpeaker =
+        this.data.segments[segIdx].speaker_code ||
+        this.data.segments[segIdx].speaker;
       if (currentSpeaker !== this.originalSpeakers[segIdx]) {
         return true;
       }
@@ -882,4 +998,3 @@ export class WordEditor {
     return false;
   }
 }
-

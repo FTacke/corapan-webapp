@@ -1,4 +1,5 @@
-﻿"""Media storage helpers with intelligent country subfolder detection."""
+"""Media storage helpers with intelligent country subfolder detection."""
+
 from __future__ import annotations
 
 from pathlib import Path
@@ -27,20 +28,20 @@ def extract_country_code(filename: str) -> Optional[str]:
         "VEN/2022-01-18_VEN_RCR.mp3" -> "VEN" (already has path)
     """
     # If filename already contains a path separator, extract from path
-    if '/' in filename or '\\' in filename:
+    if "/" in filename or "\\" in filename:
         path_parts = Path(filename).parts
         if len(path_parts) > 1:
             return path_parts[0]
-    
+
     # Extract from filename pattern: YYYY-MM-DD_CODE_*
     # Supports all normalized ISO 3166-1 alpha-3 codes:
-    # - 3-letter codes: ARG, BOL, CHL, COL, CRI, CUB, DOM, ECU, ESP, GTM, HND, 
+    # - 3-letter codes: ARG, BOL, CHL, COL, CRI, CUB, DOM, ECU, ESP, GTM, HND,
     #                   MEX, NIC, PAN, PER, PRY, SLV, URY, VEN, USA
     # - Regional codes: ARG-CBA, ARG-CHU, ARG-SDE, ESP-CAN, ESP-SEV
-    match = re.match(r'\d{4}-\d{2}-\d{2}_([A-Z]{3}(?:-[A-Z]{3})?)', Path(filename).name)
+    match = re.match(r"\d{4}-\d{2}-\d{2}_([A-Z]{3}(?:-[A-Z]{3})?)", Path(filename).name)
     if match:
         return match.group(1)
-    
+
     return None
 
 
@@ -60,14 +61,17 @@ def ensure_within(base: Path, target: Path) -> None:
     """Raise ValueError if target is outside base directory."""
     base_resolved = base.resolve()
     target_resolved = target.resolve()
-    if base_resolved not in target_resolved.parents and target_resolved != base_resolved:
+    if (
+        base_resolved not in target_resolved.parents
+        and target_resolved != base_resolved
+    ):
         raise ValueError("Attempted path traversal outside of media root")
 
 
 def safe_audio_full_path(filename: str) -> Optional[Path]:
     """
     Find audio file in mp3-full, with intelligent country subfolder detection.
-    
+
     Tries:
     1. Direct path if filename contains '/' (e.g., "VEN/2022-01-18_VEN_RCR.mp3")
     2. With country code subfolder (e.g., "2022-01-18_VEN_RCR.mp3" -> "VEN/...")
@@ -79,7 +83,7 @@ def safe_audio_full_path(filename: str) -> Optional[Path]:
         ensure_within(MP3_FULL_DIR, candidate)
         if candidate.exists():
             return candidate
-        
+
         # Try 2: With country subfolder
         country_code = extract_country_code(filename)
         if country_code:
@@ -105,7 +109,7 @@ def safe_audio_split_path(filename: str) -> Optional[Path]:
         ensure_within(MP3_SPLIT_DIR, candidate)
         if candidate.exists():
             return candidate
-        
+
         # Try 2: With country subfolder
         country_code = extract_country_code(filename)
         if country_code:
@@ -129,7 +133,7 @@ def safe_transcript_path(filename: str) -> Optional[Path]:
         ensure_within(TRANSCRIPTS_DIR, candidate)
         if candidate.exists():
             return candidate
-        
+
         # Try 2: With country subfolder
         country_code = extract_country_code(filename)
         if country_code:

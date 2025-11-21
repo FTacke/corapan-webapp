@@ -22,13 +22,13 @@
 /* Base Hero Wrapper - Centering & Max-Width (NO horizontal padding) */
 .md3-hero {
   max-width: 900px;
-  margin: var(--space-6) auto 0;  /* Centered with auto margins */
+  margin: var(--space-6) auto 0; /* Centered with auto margins */
   position: relative;
 }
 
 /* Hero Container - Inner padding for content */
 .md3-hero__container {
-  padding: var(--space-6) 0 0;  /* Only top padding, no horizontal */
+  padding: var(--space-6) 0 0; /* Only top padding, no horizontal */
 }
 
 /* Hero Eyebrow (Context Label) */
@@ -114,9 +114,9 @@
 
 @media (max-width: 599px) {
   .md3-hero--container {
-    border-radius: var(--radius-sm);  /* Smaller radius on mobile */
+    border-radius: var(--radius-sm); /* Smaller radius on mobile */
   }
-  
+
   .md3-hero--container .md3-hero__container {
     /* Reduce inner padding on mobile */
     padding: var(--space-4);
@@ -149,13 +149,13 @@
 }
 
 .md3-hero--minimal .md3-hero__container {
-  padding-top: var(--space-8);  /* Extra top padding for minimal variant */
+  padding-top: var(--space-8); /* Extra top padding for minimal variant */
   padding-bottom: var(--space-6);
 }
 
 /* Variant E: Full-Width Hero */
 .md3-hero--full-width .md3-hero__container {
-  max-width: 100%;  /* Full width, but still has padding */
+  max-width: 100%; /* Full width, but still has padding */
 }
 
 /* ============================================================================
@@ -167,16 +167,16 @@
   .md3-hero__title {
     font-size: 1.75rem;
   }
-  
+
   .md3-hero__title--large {
     font-size: 2rem;
   }
-  
+
   .md3-hero__intro {
     font-size: 0.95rem;
     margin-bottom: 20px;
   }
-  
+
   .md3-hero__actions {
     margin-bottom: 12px;
   }
@@ -192,13 +192,13 @@
 /* Expanded (Desktop) - Wider content */
 @media (min-width: 1025px) {
   .md3-hero__container {
-    padding-top: var(--space-6);  /* Consistent top padding on desktop (24px) */
+    padding-top: var(--space-6); /* Consistent top padding on desktop (24px) */
   }
-  
+
   .md3-hero__title {
     max-width: 85%;
   }
-  
+
   .md3-hero__intro {
     max-width: 70ch;
   }
@@ -240,7 +240,7 @@
     flex-direction: column;
     gap: var(--space-3);
   }
-  
+
   .md3-hero__icon {
     font-size: 48px;
     width: 48px;
@@ -261,5 +261,3 @@
 [dir="rtl"] .md3-hero__actions {
   flex-direction: row-reverse;
 }
-
-

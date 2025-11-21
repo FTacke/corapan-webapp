@@ -28,7 +28,7 @@
 }
 
 .md3-tab::before {
-  content: '';
+  content: "";
   position: absolute;
   inset: 0;
   background: var(--md-sys-color-on-surface);
@@ -45,7 +45,7 @@
 }
 
 .md3-tab--active::after {
-  content: '';
+  content: "";
   position: absolute;
   bottom: 0;
   left: 0;
@@ -137,7 +137,8 @@
 }
 
 @keyframes pulse {
-  0%, 100% {
+  0%,
+  100% {
     opacity: 1;
   }
   50% {
@@ -161,7 +162,7 @@
   .md3-tabs {
     gap: var(--space-1);
   }
-  
+
   .md3-tab {
     padding: var(--space-3) var(--space-4);
     font-size: 12px;
@@ -176,7 +177,7 @@
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
   }
-  
+
   .md3-tab {
     padding: var(--space-2) var(--space-3);
     font-size: 11px;
@@ -184,6 +185,3 @@
     flex-shrink: 0;
   }
 }
-
-
-

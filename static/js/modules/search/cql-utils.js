@@ -1,6 +1,6 @@
 /**
  * CQL (Corpus Query Language) Utilities
- * 
+ *
  * Helper functions for escaping and building CQL patterns.
  * Used by advanced search form validation.
  */
@@ -11,14 +11,14 @@
  * @returns {string} CQL-safe escaped string
  */
 export function escapeCQL(text) {
-  if (typeof text !== 'string') return '';
-  
+  if (typeof text !== "string") return "";
+
   // Order matters: backslash first, then quotes, then brackets
   return text
-    .replace(/\\/g, '\\\\')
+    .replace(/\\/g, "\\\\")
     .replace(/"/g, '\\"')
-    .replace(/\[/g, '\\[')
-    .replace(/\]/g, '\\]');
+    .replace(/\[/g, "\\[")
+    .replace(/\]/g, "\\]");
 }
 
 /**
@@ -27,12 +27,12 @@ export function escapeCQL(text) {
  * @returns {string[]} Array of tokens
  */
 export function tokenize(query) {
-  if (typeof query !== 'string') return [];
-  
+  if (typeof query !== "string") return [];
+
   return query
     .split(/\s+/)
-    .map(t => t.trim())
-    .filter(t => t.length > 0);
+    .map((t) => t.trim())
+    .filter((t) => t.length > 0);
 }
 
 /**
@@ -51,14 +51,14 @@ export function quoteString(text) {
  */
 export function validateQuery(query) {
   if (!query || query.trim().length === 0) {
-    return { valid: false, error: 'La consulta no puede estar vacía' };
+    return { valid: false, error: "La consulta no puede estar vacía" };
   }
-  
+
   const tokens = tokenize(query);
   if (tokens.length === 0) {
-    return { valid: false, error: 'La consulta no contiene tokens válidos' };
+    return { valid: false, error: "La consulta no contiene tokens válidos" };
   }
-  
+
   return { valid: true };
 }
 
@@ -73,48 +73,52 @@ export function validateQuery(query) {
  * @returns {string} CQL pattern preview
  */
 export function buildCQLPreview(params) {
-  const tokens = tokenize(params.q || '');
-  if (tokens.length === 0) return '';
-  
-  const mode = params.mode || 'forma';
+  const tokens = tokenize(params.q || "");
+  if (tokens.length === 0) return "";
+
+  const mode = params.mode || "forma";
   const ci = params.ci || false;
   const da = params.da || false;
-  const posList = (params.pos || '').split(',').map(p => p.trim()).filter(p => p);
-  
+  const posList = (params.pos || "")
+    .split(",")
+    .map((p) => p.trim())
+    .filter((p) => p);
+
   const cqlTokens = tokens.map((token, i) => {
     let field, value;
-    
-    if (mode === 'forma_exacta') {
-      field = 'word';
+
+    if (mode === "forma_exacta") {
+      field = "word";
       value = token;
-    } else if (mode === 'lemma') {
-      field = 'lemma';
+    } else if (mode === "lemma") {
+      field = "lemma";
       value = token.toLowerCase();
-    } else { // forma
+    } else {
+      // forma
       if (ci || da) {
-        field = 'norm';
+        field = "norm";
         value = token.toLowerCase();
       } else {
-        field = 'word';
+        field = "word";
         value = token;
       }
     }
-    
+
     let constraint = `${field}=${quoteString(value)}`;
-    
+
     // Add POS if available
     if (posList[i]) {
       constraint += ` & pos=${quoteString(posList[i].toUpperCase())}`;
     }
-    
+
     return `[${constraint}]`;
   });
-  
-  return cqlTokens.join(' ');
+
+  return cqlTokens.join(" ");
 }
 
 // Attach to window for global access (if needed)
-if (typeof window !== 'undefined') {
+if (typeof window !== "undefined") {
   window.CQLUtils = {
     escapeCQL,
     tokenize,

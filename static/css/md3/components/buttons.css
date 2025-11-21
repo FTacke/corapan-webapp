@@ -69,7 +69,9 @@
   letter-spacing: 0.1px;
   text-decoration: none;
   cursor: pointer;
-  transition: border-color 200ms ease, opacity 200ms ease;
+  transition:
+    border-color 200ms ease,
+    opacity 200ms ease;
   position: relative;
 }
 
@@ -125,7 +127,11 @@
 }
 
 .btn-filled:hover {
-  background: color-mix(in srgb, var(--md-sys-color-primary) 92%, var(--md-sys-color-on-primary) 8%);
+  background: color-mix(
+    in srgb,
+    var(--md-sys-color-primary) 92%,
+    var(--md-sys-color-on-primary) 8%
+  );
 }
 
 .btn-filled:focus-visible {
@@ -152,7 +158,11 @@
 }
 
 .btn-tonal:hover {
-  background: color-mix(in srgb, var(--md-sys-color-primary-container) 92%, var(--md-sys-color-on-primary-container) 8%);
+  background: color-mix(
+    in srgb,
+    var(--md-sys-color-primary-container) 92%,
+    var(--md-sys-color-on-primary-container) 8%
+  );
 }
 
 .btn-tonal:focus-visible {
@@ -174,7 +184,9 @@
   font-weight: 600;
   text-decoration: none;
   cursor: pointer;
-  transition: background-color 200ms ease, border-color 200ms ease;
+  transition:
+    background-color 200ms ease,
+    border-color 200ms ease;
   min-height: 48px;
 }
 
@@ -234,16 +246,14 @@
 }
 
 .btn-danger:hover {
-  background: color-mix(in srgb, var(--md-sys-color-error) 92%, var(--md-sys-color-on-error) 8%);
+  background: color-mix(
+    in srgb,
+    var(--md-sys-color-error) 92%,
+    var(--md-sys-color-on-error) 8%
+  );
 }
 
 .btn-danger:focus-visible {
   outline: 2px solid var(--md-sys-color-error);
   outline-offset: 2px;
 }
-
-
-
-
-
-

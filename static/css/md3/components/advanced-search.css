@@ -112,7 +112,7 @@
   .md3-advanced__row--query {
     grid-template-columns: 1fr !important;
   }
-  
+
   .md3-advanced__row--filters {
     grid-template-columns: 1fr 1fr !important;
   }
@@ -122,7 +122,7 @@
   .md3-advanced__row--filters {
     grid-template-columns: 1fr !important;
   }
-  
+
   .md3-advanced__form {
     padding: var(--space-3, 0.75rem);
     gap: var(--space-3, 0.75rem);
@@ -157,12 +157,12 @@
 }
 
 .md3-advanced__expert::before {
-  content: '';
+  content: "";
   display: block;
   width: 52px;
   height: 32px;
   background-color: var(--md-sys-color-surface-variant, #f3edf7);
-  border: 2px solid var(--md-sys-color-outline, #79747E);
+  border: 2px solid var(--md-sys-color-outline, #79747e);
   border-radius: 16px;
   position: relative;
   transition: all 0.2s ease;
@@ -174,12 +174,12 @@
 }
 
 .md3-advanced__expert::after {
-  content: '';
+  content: "";
   position: absolute;
   left: var(--space-2, 0.5rem);
   width: 20px;
   height: 20px;
-  background-color: var(--md-sys-color-outline, #79747E);
+  background-color: var(--md-sys-color-outline, #79747e);
   border-radius: 50%;
   transition: all 0.2s ease;
 }
@@ -204,7 +204,7 @@
   background-color: var(--md-sys-color-surface-container-low, #f9f9fb);
   border-left: 4px solid var(--md-sys-color-primary, #0a5981);
   border-radius: var(--radius-sm, 8px);
-  color: var(--md-sys-color-on-surface-variant, #4A4F55);
+  color: var(--md-sys-color-on-surface-variant, #4a4f55);
   font: var(--md-sys-typescale-body-large, 1rem) system-ui;
 }
 
@@ -228,7 +228,7 @@
 }
 
 .md3-advanced__summary-total {
-  color: var(--md-sys-color-on-surface-variant, #4A4F55);
+  color: var(--md-sys-color-on-surface-variant, #4a4f55);
 }
 
 /* ========================================
@@ -248,8 +248,6 @@
   font-weight: 500;
   white-space: nowrap;
 }
-
-
 
 /* Dialog header layout: ensure icon + title are aligned */
 .md3-dialog__header {
@@ -346,7 +344,6 @@
   flex-shrink: 0;
 }
 
-
 .md3-badge--serverfilter[hidden] {
   display: none;
 }
@@ -405,16 +402,16 @@
   .md3-advanced {
     padding-inline: var(--space-2, 0.5rem);
   }
-  
+
   .md3-advanced__toolbar {
     flex-direction: column;
     align-items: stretch;
   }
-  
+
   .md3-advanced__exports {
     flex-direction: column;
   }
-  
+
   .md3-advanced__exports .md3-button-tonal,
   .md3-advanced__exports .md3-button-outlined {
     width: 100%;
@@ -634,7 +631,6 @@
   flex-shrink: 0;
 }
 
-
 .md3-badge--serverfilter[hidden] {
   display: none;
 }
@@ -693,16 +689,16 @@
   .md3-advanced {
     padding-inline: var(--space-2, 0.5rem);
   }
-  
+
   .md3-advanced__toolbar {
     flex-direction: column;
     align-items: stretch;
   }
-  
+
   .md3-advanced__exports {
     flex-direction: column;
   }
-  
+
   .md3-advanced__exports .md3-button-tonal,
   .md3-advanced__exports .md3-button-outlined {
     width: 100%;

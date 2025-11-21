@@ -126,7 +126,7 @@
 .md3-filter-field__trigger[aria-expanded="true"] {
   border-color: var(--md-sys-color-primary, #6750a4);
   /* Keep border width and padding stable to avoid layout shifts; apply subtle ring instead */
-  box-shadow: 0 0 0 4px rgba(103,80,164,0.06);
+  box-shadow: 0 0 0 4px rgba(103, 80, 164, 0.06);
 }
 
 .md3-filter-field__label {
@@ -234,7 +234,7 @@
 
 /* custom checkbox using the label span pseudo element */
 .md3-filter-option span::before {
-  content: '';
+  content: "";
   position: absolute;
   left: -28px; /* align with label padding */
   top: 50%;
@@ -244,11 +244,13 @@
   border: 2px solid var(--md-sys-color-outline-variant, #cac4d0);
   border-radius: 2px;
   background: transparent;
-  transition: background 0.12s ease, border-color 0.12s ease;
+  transition:
+    background 0.12s ease,
+    border-color 0.12s ease;
 }
 
 .md3-filter-option span::after {
-  content: '';
+  content: "";
   position: absolute;
   left: -24px; /* align checkmark inside box */
   top: 50%;
@@ -263,7 +265,7 @@
 }
 
 .md3-filter-option input[type="checkbox"]:checked + span::after {
-  content: '\2713'; /* check mark */
+  content: "\2713"; /* check mark */
   transform: translateY(-50%) scale(1);
   color: var(--md-sys-color-on-primary, #fff);
 }
@@ -378,7 +380,9 @@
 
 .md3-filter-chip__close {
   font-size: 18px;
-  font-variation-settings: 'FILL' 1, 'wght' 400;
+  font-variation-settings:
+    "FILL" 1,
+    "wght" 400;
   margin-left: 2px;
 }
 
@@ -456,7 +460,7 @@
   width: 20px;
   height: 20px;
   top: 4px;
-  border: 1px solid rgba(255,255,255,0.1); /* keep contrast on colored track */
+  border: 1px solid rgba(255, 255, 255, 0.1); /* keep contrast on colored track */
 }
 
 /* ========================================
@@ -607,7 +611,7 @@
   border: 2px solid var(--md-sys-color-on-surface-variant, #49454f);
   border-radius: 50%;
   transition: all 0.2s ease;
-  box-shadow: 0 1px 2px rgba(0,0,0,0.06);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
 }
 
 .md3-radio-container input[type="radio"] {
@@ -627,7 +631,7 @@
 }
 
 .md3-radio::after {
-  content: '';
+  content: "";
   position: absolute;
   left: 50%;
   top: 50%;
@@ -661,7 +665,7 @@
 .md3-cql-textarea {
   width: 100%;
   padding: 12px 16px;
-  font-family: 'Courier New', monospace;
+  font-family: "Courier New", monospace;
   font-size: 14px;
   line-height: 1.5;
   color: var(--md-sys-color-on-surface, #1c1b1f);
@@ -805,20 +809,20 @@
   .md3-search-card__query-row {
     grid-template-columns: 1fr;
   }
-  
+
   .md3-token-row {
     grid-template-columns: 1fr;
     gap: var(--space-2, 0.5rem);
   }
-  
+
   .md3-token-row__number {
     padding-bottom: 0;
   }
-  
+
   .md3-search-card__footer {
     flex-direction: column-reverse;
   }
-  
+
   .md3-search-card__footer button {
     width: 100%;
   }
