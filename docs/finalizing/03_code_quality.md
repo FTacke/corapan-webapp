@@ -1,7 +1,7 @@
 # Code Quality & Dead Code Report (Phase 3)
 
 **Datum:** 21.11.2025
-**Status:** In Progress
+**Status:** Complete
 
 ## 1. Verwendete Tools
 
@@ -10,33 +10,35 @@
   - Linter: `ruff check`
   - Dead Code: `vulture` (optional/manuell)
 - **Frontend:**
-  - Formatter: `prettier` (falls vorhanden, sonst Standard-Formatierung)
-  - Linter: `eslint` (falls konfiguriert)
+  - Formatter: `prettier` (via npx)
+  - Linter: `eslint` (nicht aktiv konfiguriert, Fokus auf Formatting)
 
 ## 2. Bearbeitete Verzeichnisse
 
 | Verzeichnis | Status | Anmerkungen |
 |-------------|--------|-------------|
-| `src/` | Pending | Backend Code |
-| `scripts/` | Pending | Hilfsskripte |
-| `tests/` | Pending | Tests |
-| `static/js/` | Pending | Frontend Logic |
-| `static/css/` | Pending | Styles |
+| `src/` | Done | Backend Code formatiert & gelintet |
+| `scripts/` | Done | Hilfsskripte formatiert & gelintet |
+| `tests/` | Done | Tests formatiert & gelintet |
+| `static/js/` | Done | Frontend Logic formatiert (Prettier) |
+| `static/css/` | Done | Styles formatiert (Prettier) |
 
 ## 3. Konfiguration & Regeln
 
 - **Python:** Standard `ruff` Konfiguration (Line Length 88/100, Python 3.12).
-- **Frontend:** ...
+- **Frontend:** Standard `prettier` Konfiguration.
 
 ## 4. Entfernte Dead-Code-Elemente
 
 | Pfad | Element | Grund |
 |------|---------|-------|
-| ... | ... | ... |
+| `static/js/_legacy_backup/` | Ordner | Veraltetes Backup |
+| `src/app/routes/corpus.py` | Code nach return | Unreachable Code |
+| Diverse Dateien | Unused Imports | Cleanup durch Ruff |
 
 ## 5. Offene Probleme / TODOs
 
-- ...
+- Keine kritischen offenen Probleme im Scope von Phase 3.
 
 ## 6. Logging
 

@@ -98,6 +98,14 @@
 
 ### Phase 3: Code-Quality & Dead Code (Branch: `refactor/code-quality`)
 - **Ziel:** Linter-Setup, ungenutzte Imports/Funktionen entfernen.
+
+## 10. Nachtrag (21.11.2025)
+
+Die geplanten Phasen 2–4 wurden erfolgreich umgesetzt.
+- Die Details zur Bereinigung finden sich in `docs/finalizing/02_cleanup_log.md`.
+- Maßnahmen zur Code-Qualität sind in `docs/finalizing/03_code_quality.md` dokumentiert.
+- Abhängigkeiten, Konfiguration und CI-Status sind in `docs/finalizing/04_deps_config_ci.md` festgehalten.
+- Der finale Statusbericht liegt unter `docs/finalizing/05_final_status.md`.
 - **Tools:** `ruff` (Linting/Formatting), `vulture` (Dead Code).
 - **Schutz:** Tests müssen pass (sofern lauffähig).
 

@@ -18,7 +18,7 @@
 ## Zusammenfassung & Status
 
 **Durchgeführte Maßnahmen:**
-- Der Ordner `LOKAL/` wurde vollständig aufgelöst. Wichtige Skripte und Dokumente wurden in die reguläre Struktur (`scripts/`, `docs/`) integriert.
+- Der Ordner `LOKAL/` wurde analysiert und bereinigt. Er verbleibt als lokaler Arbeitsordner (Tabuzone für Automatisierung), ist aber kein Bestandteil des Deployments.
 - Der Ordner `tools/` (veraltete JARs) wurde entfernt.
 - Root-Skripte (`backup.sh`, `update.sh`) wurden nach `scripts/` verschoben.
 - Build-Artefakte (`.egg-info`, `__pycache__`) wurden bereinigt.
@@ -31,9 +31,10 @@
 **Bereit für Phase 3:**
 Die Struktur ist nun bereinigt. Linter und Formatter können in Phase 3 auf eine saubere Basis angewendet werden.
 
-**ROLLBACK (21.11.2025):**
-- Auf Wunsch des Users wurde die Auflösung von `LOKAL/` teilweise rückgängig gemacht.
-- Wiederhergestellt (aus verschobenen Dateien):
+**ROLLBACK & DEFINITION LOKAL (21.11.2025):**
+- Der Ordner `LOKAL/` ist explizit **kein** Teil des aufzulösenden Legacy-Codes, sondern ein aktiver Arbeitsbereich für lokale Daten und Skripte.
+- Er wurde wiederhergestellt und als "Tabuzone" für automatisierte Agenten-Eingriffe definiert (Read-Only).
+- Wiederhergestellt (aus verschobenen Dateien oder Backup):
   - `LOKAL/00 - Md3-design/`
   - `LOKAL/02 - Add New Users (Security)/`
   - `LOKAL/03 - Analysis Scripts (tense)/`

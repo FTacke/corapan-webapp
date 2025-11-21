@@ -7,26 +7,28 @@
 
 ### Python
 - **Dateien:** `requirements.txt`, `pyproject.toml`
-- **Status:** Analyse läuft...
+- **Status:** Bereinigt. Lokale Pfade aus `requirements.txt` entfernt.
 
 ### Node.js (Frontend)
-- **Dateien:** `package.json` (falls vorhanden)
-- **Status:** Analyse läuft...
+- **Dateien:** `package.json` (nicht vorhanden/nicht benötigt für Runtime)
+- **Status:** Frontend-Dependencies werden aktuell via Vendor-Files in `static/vendor` oder CDN gelöst.
 
 ## 2. Config & Environment Story
 
 - **Ziel:** `.env` Datei für lokale Entwicklung, `.env.example` als Template.
-- **Status:** Analyse läuft...
+- **Status:** Umgesetzt. `.env.example` erstellt. `passwords.env` dient weiterhin als lokale Referenz, sollte aber mittelfristig migriert werden.
 
 ## 3. Tests
 
-- **Kommando:** `pytest` (geplant)
-- **Status:** Analyse läuft...
+- **Kommando:** `pytest`
+- **Status:** Test-Suite strukturiert und lauffähig.
+  - Aktueller Run: 55 passed, 1 skipped.
+  - Abdeckung: API, Suche, Basic Routes.
 
 ## 4. CI Pipeline
 
-- **System:** GitHub Actions (geplant)
-- **Status:** Analyse läuft...
+- **System:** GitHub Actions
+- **Status:** Workflow `.github/workflows/ci.yml` erstellt. Führt Linting und Tests aus.
 
 ## 5. Änderungsprotokoll
 
