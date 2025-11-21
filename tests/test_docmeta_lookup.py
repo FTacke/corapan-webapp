@@ -1,11 +1,12 @@
 """Test docmeta lookup logic."""
+
 import json
 from pathlib import Path
 
 # Load docmeta
 docmeta_path = Path("data/blacklab_export/docmeta.jsonl")
 docmeta = {}
-with open(docmeta_path, 'r', encoding='utf-8') as f:
+with open(docmeta_path, "r", encoding="utf-8") as f:
     for line in f:
         doc = json.loads(line)
         file_id = doc.get("file_id")

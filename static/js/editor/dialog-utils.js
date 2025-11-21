@@ -9,13 +9,13 @@ export class DialogUtils {
    * @param {string} message - Message to display
    * @param {string} title - Dialog title (optional)
    */
-  static alert(message, title = 'Hinweis') {
+  static alert(message, title = "Hinweis") {
     this._showDialog({
       title,
       message,
       buttons: [
-        { text: 'OK', primary: true, action: () => this._closeDialog() }
-      ]
+        { text: "OK", primary: true, action: () => this._closeDialog() },
+      ],
     });
   }
 
@@ -25,14 +25,25 @@ export class DialogUtils {
    * @param {Function} onConfirm - Callback when confirmed
    * @param {string} title - Dialog title (optional)
    */
-  static confirm(message, onConfirm, title = 'Bestätigen') {
+  static confirm(message, onConfirm, title = "Bestätigen") {
     this._showDialog({
       title,
       message,
       buttons: [
-        { text: 'Abbrechen', primary: false, action: () => this._closeDialog() },
-        { text: 'OK', primary: true, action: () => { this._closeDialog(); onConfirm(); } }
-      ]
+        {
+          text: "Abbrechen",
+          primary: false,
+          action: () => this._closeDialog(),
+        },
+        {
+          text: "OK",
+          primary: true,
+          action: () => {
+            this._closeDialog();
+            onConfirm();
+          },
+        },
+      ],
     });
   }
 
@@ -41,14 +52,14 @@ export class DialogUtils {
    * @param {string} message - Error message
    * @param {string} title - Dialog title (optional)
    */
-  static error(message, title = 'Fehler') {
+  static error(message, title = "Fehler") {
     this._showDialog({
       title,
       message,
       isError: true,
       buttons: [
-        { text: 'OK', primary: true, action: () => this._closeDialog() }
-      ]
+        { text: "OK", primary: true, action: () => this._closeDialog() },
+      ],
     });
   }
 
@@ -61,51 +72,53 @@ export class DialogUtils {
     this._closeDialog();
 
     // Create overlay
-    const overlay = document.createElement('div');
-    overlay.className = 'md3-dialog-overlay';
-    overlay.id = 'md3-dialog-overlay';
+    const overlay = document.createElement("div");
+    overlay.className = "md3-dialog-overlay";
+    overlay.id = "md3-dialog-overlay";
 
     // Create dialog container
-    const container = document.createElement('div');
-    container.className = 'md3-dialog__container';
+    const container = document.createElement("div");
+    container.className = "md3-dialog__container";
 
     // Create dialog
-    const dialog = document.createElement('div');
-    dialog.className = 'md3-dialog';
+    const dialog = document.createElement("div");
+    dialog.className = "md3-dialog";
     if (config.isError) {
-      dialog.classList.add('md3-dialog--error');
+      dialog.classList.add("md3-dialog--error");
     }
 
     // Title
-    const title = document.createElement('div');
-    title.className = 'md3-dialog__title';
+    const title = document.createElement("div");
+    title.className = "md3-dialog__title";
     title.textContent = config.title;
     dialog.appendChild(title);
 
     // Content
-    const content = document.createElement('div');
-    content.className = 'md3-dialog__content';
+    const content = document.createElement("div");
+    content.className = "md3-dialog__content";
     content.textContent = config.message;
     dialog.appendChild(content);
 
     // Actions
-    const actions = document.createElement('div');
-    actions.className = 'md3-dialog__actions';
-    
-    config.buttons.forEach(btn => {
-      const button = document.createElement('button');
-      button.className = btn.primary ? 'md3-editor-btn md3-editor-btn-primary' : 'md3-editor-btn md3-editor-btn-tonal';
+    const actions = document.createElement("div");
+    actions.className = "md3-dialog__actions";
+
+    config.buttons.forEach((btn) => {
+      const button = document.createElement("button");
+      button.className = btn.primary
+        ? "md3-editor-btn md3-editor-btn-primary"
+        : "md3-editor-btn md3-editor-btn-tonal";
       button.textContent = btn.text;
-      button.addEventListener('click', btn.action);
+      button.addEventListener("click", btn.action);
       actions.appendChild(button);
     });
-    
+
     dialog.appendChild(actions);
     container.appendChild(dialog);
     overlay.appendChild(container);
 
     // Close on overlay click
-    overlay.addEventListener('click', (e) => {
+    overlay.addEventListener("click", (e) => {
       if (e.target === overlay) {
         this._closeDialog();
       }
@@ -115,7 +128,7 @@ export class DialogUtils {
     document.body.appendChild(overlay);
 
     // Trigger animation
-    setTimeout(() => overlay.classList.add('active'), 10);
+    setTimeout(() => overlay.classList.add("active"), 10);
   }
 
   /**
@@ -123,9 +136,9 @@ export class DialogUtils {
    * @private
    */
   static _closeDialog() {
-    const overlay = document.getElementById('md3-dialog-overlay');
+    const overlay = document.getElementById("md3-dialog-overlay");
     if (overlay) {
-      overlay.classList.remove('active');
+      overlay.classList.remove("active");
       setTimeout(() => overlay.remove(), 200);
     }
   }

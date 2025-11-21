@@ -25,8 +25,8 @@
 .md3-corpus-table-container,
 .table-container {
   width: 100%;
-  max-width: 100%;  /* Match parent width, don't overflow */
-  overflow-x: auto;  /* Scroll if table is too wide */
+  max-width: 100%; /* Match parent width, don't overflow */
+  overflow-x: auto; /* Scroll if table is too wide */
   overflow-y: visible;
   border: 1px solid #dee2e6;
   border-radius: 0.5rem;
@@ -49,8 +49,8 @@
   max-width: 100%;
   font-size: 0.8125rem;
   background: var(--md-sys-color-surface, white);
-  table-layout: auto;  /* Auto layout for natural column widths */
-  margin: 0 !important;  /* Prevent margin expansion */
+  table-layout: auto; /* Auto layout for natural column widths */
+  margin: 0 !important; /* Prevent margin expansion */
 }
 
 #corpus-table thead th,
@@ -109,7 +109,7 @@
   font-weight: 600;
   color: var(--md-sys-color-on-surface-variant);
   min-width: 28px;
-  font-family: 'Courier New', monospace;
+  font-family: "Courier New", monospace;
   letter-spacing: -0.5px;
 }
 
@@ -164,8 +164,8 @@
 
 /* Cell content styling */
 .token-id {
-  font-family: 'Consolas', 'Courier New', monospace;
-  font-size: 0.775rem;  /* Smaller like tooltip-token */
+  font-family: "Consolas", "Courier New", monospace;
+  font-size: 0.775rem; /* Smaller like tooltip-token */
   color: var(--md-sys-color-on-surface-variant);
   font-weight: 400;
 }
@@ -184,34 +184,37 @@
 }
 
 .palabra-buscada {
-.md3-corpus-keyword {
-  display: inline-block;
-  background: var(--md-sys-color-primary, #0a5981);
-  color: var(--md-sys-color-on-primary, #fff);
-  padding: 0.1rem 0.35rem;
-  border-radius: 0.35rem;
-  font-weight: 700;
-  font-size: 0.95rem;
-  line-height: 1;
-  transition: transform 120ms ease, box-shadow 120ms ease, opacity 120ms ease;
-  cursor: pointer;
-  text-decoration: none;
-}
-.md3-corpus-keyword mark {
-  background: transparent !important;
-  color: inherit !important;
-  padding: 0 !important;
-}
-.md3-corpus-keyword:hover,
-.md3-corpus-keyword:focus {
-  transform: translateY(-1px);
-  box-shadow: 0 6px 12px rgba(10,89,129,0.12);
-  opacity: 0.98;
-}
+  .md3-corpus-keyword {
+    display: inline-block;
+    background: var(--md-sys-color-primary, #0a5981);
+    color: var(--md-sys-color-on-primary, #fff);
+    padding: 0.1rem 0.35rem;
+    border-radius: 0.35rem;
+    font-weight: 700;
+    font-size: 0.95rem;
+    line-height: 1;
+    transition:
+      transform 120ms ease,
+      box-shadow 120ms ease,
+      opacity 120ms ease;
+    cursor: pointer;
+    text-decoration: none;
+  }
+  .md3-corpus-keyword mark {
+    background: transparent !important;
+    color: inherit !important;
+    padding: 0 !important;
+  }
+  .md3-corpus-keyword:hover,
+  .md3-corpus-keyword:focus {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 12px rgba(10, 89, 129, 0.12);
+    opacity: 0.98;
+  }
 
-.md3-corpus-keyword:active {
-  transform: translateY(0);
-}
+  .md3-corpus-keyword:active {
+    transform: translateY(0);
+  }
   font-weight: 700;
   color: var(--md-sys-color-primary);
   cursor: pointer;
@@ -233,7 +236,7 @@
   gap: 0.75rem;
   flex-wrap: wrap;
   padding: 0.5rem 0.75rem;
-  margin-bottom: 0.0rem;
+  margin-bottom: 0rem;
   background: var(--md-sys-color-surface-container);
   border-radius: var(--radius-sm) var(--radius-sm) 0 0;
   font-size: 0.875rem;
@@ -276,8 +279,18 @@
 }
 
 /* Hide potential duplicated header text only for token table sizing helper */
-.md3-corpus-table-container .dataTables_scrollHead table thead th .dataTables_sizing,
-.md3-corpus-table-container .dataTables_scrollHead table thead th .dataTables_sizing {
+.md3-corpus-table-container
+  .dataTables_scrollHead
+  table
+  thead
+  th
+  .dataTables_sizing,
+.md3-corpus-table-container
+  .dataTables_scrollHead
+  table
+  thead
+  th
+  .dataTables_sizing {
   display: none !important;
 }
 
@@ -289,7 +302,8 @@
 }
 
 /* Force parity between Advanced and Token columns (context + match) */
-#advanced-table th, #token-results-table th {
+#advanced-table th,
+#token-results-table th {
   font-size: 0.75rem !important;
   color: #495057 !important;
   font-weight: 600 !important;
@@ -300,7 +314,7 @@
   white-space: normal !important;
   word-break: break-word !important;
   word-wrap: break-word !important;
-  color: var(--md-sys-color-on-surface-variant, #4A4F55) !important;
+  color: var(--md-sys-color-on-surface-variant, #4a4f55) !important;
 }
 
 #advanced-table td.md3-datatable__cell--match,
@@ -313,7 +327,7 @@
 #advanced-table tbody td,
 #token-results-table tbody td {
   font-size: 0.8125rem !important;
-  color: var(--md-sys-color-on-surface, rgba(0,0,0,0.87)) !important;
+  color: var(--md-sys-color-on-surface, rgba(0, 0, 0, 0.87)) !important;
   padding: 0.5rem 0.375rem !important;
   vertical-align: middle !important;
   line-height: 1.4 !important;
@@ -321,7 +335,7 @@
 
 #token-results-table_wrapper .dataTables_scrollBody table tbody td,
 #token-results-table tbody td {
-  color: var(--md-sys-color-on-surface, rgba(0,0,0,0.87)) !important;
+  color: var(--md-sys-color-on-surface, rgba(0, 0, 0, 0.87)) !important;
   font-size: 0.8125rem !important;
 }
 
@@ -331,11 +345,19 @@
 }
 
 /* If DataTables inserts a sizing TR with height:0, ensure it's not rendered (token table only) */
-#token-results-table_wrapper .dataTables_scrollHead table thead tr[style*="height: 0px"] {
+#token-results-table_wrapper
+  .dataTables_scrollHead
+  table
+  thead
+  tr[style*="height: 0px"] {
   display: none !important;
   visibility: hidden !important;
 }
-#token-results-table_wrapper .dataTables_scrollHead table thead tr:not(:last-child) {
+#token-results-table_wrapper
+  .dataTables_scrollHead
+  table
+  thead
+  tr:not(:last-child) {
   display: none !important;
   height: 0 !important;
   visibility: hidden !important;
@@ -343,7 +365,11 @@
   padding: 0 !important;
 }
 
-#token-results-table_wrapper .dataTables_scrollHeadInner table thead tr:not(:last-child) {
+#token-results-table_wrapper
+  .dataTables_scrollHeadInner
+  table
+  thead
+  tr:not(:last-child) {
   display: none !important;
   height: 0 !important;
   visibility: hidden !important;
@@ -351,7 +377,12 @@
   padding: 0 !important;
 }
 
-#token-results-table_wrapper .dataTables_scrollHead table thead tr[style*="height: 0px"] th {
+#token-results-table_wrapper
+  .dataTables_scrollHead
+  table
+  thead
+  tr[style*="height: 0px"]
+  th {
   display: none !important;
   padding: 0 !important;
   margin: 0 !important;
@@ -479,7 +510,7 @@
 
 /* Hover overlay for active button */
 .dataTables_wrapper .dataTables_paginate .paginate_button.current::before {
-  content: '' !important;
+  content: "" !important;
   position: absolute !important;
   inset: 0 !important;
   border-radius: var(9999px) !important;
@@ -495,12 +526,16 @@
   color: var(--md-sys-color-on-primary) !important;
 }
 
-.dataTables_wrapper .dataTables_paginate .paginate_button.current:hover::before {
+.dataTables_wrapper
+  .dataTables_paginate
+  .paginate_button.current:hover::before {
   opacity: 0.08 !important;
 }
 
 /* Hover for inactive buttons */
-.dataTables_wrapper .dataTables_paginate .paginate_button:not(.current):not(.disabled):hover {
+.dataTables_wrapper
+  .dataTables_paginate
+  .paginate_button:not(.current):not(.disabled):hover {
   background: var(--md-sys-color-primary-container) !important;
   border-color: var(--md-sys-color-primary) !important;
   color: var(--md-sys-color-on-primary-container) !important;
@@ -516,7 +551,9 @@
 }
 
 .dataTables_wrapper .dataTables_paginate .paginate_button.disabled::before,
-.dataTables_wrapper .dataTables_paginate .paginate_button.disabled:hover::before {
+.dataTables_wrapper
+  .dataTables_paginate
+  .paginate_button.disabled:hover::before {
   display: none !important;
 }
 
@@ -636,12 +673,12 @@
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
   }
-  
+
   .md3-corpus-table,
   #corpus-table {
     font-size: 0.8125rem;
   }
-  
+
   #corpus-table th,
   #corpus-table td {
     padding: var(--space-2);
@@ -658,7 +695,7 @@
 
 /* Token ID Label */
 .tokid-chip__label {
-  font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+  font-family: "Consolas", "Monaco", "Courier New", monospace;
   font-size: 0.8125rem;
   font-weight: 600;
   letter-spacing: 0.01em;

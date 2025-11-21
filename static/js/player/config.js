@@ -16,7 +16,7 @@ export const PLAYER_CONFIG = {
   DEFAULT_VOLUME: 1.0,
 
   // Media endpoints
-  MEDIA_ENDPOINT: '/media',
+  MEDIA_ENDPOINT: "/media",
 
   // Responsive breakpoints
   MOBILE_SMALL: 400,
@@ -32,14 +32,14 @@ export const PLAYER_CONFIG = {
   MOBILE_PLAYER_HEIGHT: 60,
 
   // Highlight colors
-  HIGHLIGHT_COLOR: 'rgba(255, 215, 0, 0.65)',
+  HIGHLIGHT_COLOR: "rgba(255, 215, 0, 0.65)",
 
   // Keyboard shortcuts
   KEYS: {
-    SPACE: ' ',
-    CTRL_SPACE: 'Control+ ',
-    CTRL_COMMA: 'Control+,',
-    CTRL_PERIOD: 'Control+.',
+    SPACE: " ",
+    CTRL_SPACE: "Control+ ",
+    CTRL_COMMA: "Control+,",
+    CTRL_PERIOD: "Control+.",
   },
 
   // Timeouts

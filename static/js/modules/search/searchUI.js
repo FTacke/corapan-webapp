@@ -1,7 +1,7 @@
 /**
  * Main Search UI Module
  * Coordinates all search UI components
- * 
+ *
  * Features:
  * - Advanced mode toggle
  * - Manual CQL editing
@@ -10,16 +10,19 @@
  * - Integration with filters and pattern builder
  */
 
-import { getSearchFilters } from './filters.js';
-import { getPatternBuilder } from './patternBuilder.js';
-import { initAdvancedTable, destroyAdvancedTable } from '../advanced/initTable.js';
+import { getSearchFilters } from "./filters.js";
+import { getPatternBuilder } from "./patternBuilder.js";
+import {
+  initAdvancedTable,
+  destroyAdvancedTable,
+} from "../advanced/initTable.js";
 
 export class SearchUI {
   constructor() {
     this.advancedMode = false;
     this.manualCQLEdit = false;
-    this.currentView = 'results';
-    
+    this.currentView = "results";
+
     this.init();
   }
 
@@ -45,7 +48,7 @@ export class SearchUI {
     // Restore state from URL or SessionStorage
     this.restoreState();
 
-    console.log('✅ Search UI initialized');
+    console.log("✅ Search UI initialized");
   }
 
   /**
@@ -53,23 +56,23 @@ export class SearchUI {
    */
   restoreState() {
     const params = new URLSearchParams(window.location.search);
-    
+
     // If URL has params, use them (and save to session)
     if (params.toString()) {
-      sessionStorage.setItem('lastSearch', params.toString());
+      sessionStorage.setItem("lastSearch", params.toString());
       this.restoreFormFromParams(params);
       // Trigger search
       this.performSearch(params);
-    } 
+    }
     // If URL is empty but session has params, restore them
     else {
-      const lastSearch = sessionStorage.getItem('lastSearch');
+      const lastSearch = sessionStorage.getItem("lastSearch");
       if (lastSearch) {
         const savedParams = new URLSearchParams(lastSearch);
         // Update URL without reloading
         const newUrl = `${window.location.pathname}?${savedParams.toString()}`;
-        window.history.replaceState({ path: newUrl }, '', newUrl);
-        
+        window.history.replaceState({ path: newUrl }, "", newUrl);
+
         this.restoreFormFromParams(savedParams);
         this.performSearch(savedParams);
       }
@@ -81,38 +84,41 @@ export class SearchUI {
    */
   restoreFormFromParams(params) {
     // Basic fields
-    const q = params.get('q');
+    const q = params.get("q");
     if (q) {
-      const qInput = document.getElementById('q');
+      const qInput = document.getElementById("q");
       if (qInput) qInput.value = q;
     }
-    
-    const type = params.get('search_type') || params.get('mode');
+
+    const type = params.get("search_type") || params.get("mode");
     if (type) {
-      const typeSelect = document.getElementById('search_type');
+      const typeSelect = document.getElementById("search_type");
       if (typeSelect) typeSelect.value = type;
     }
 
     // Checkboxes
-    const sensitive = params.get('sensitive');
-    if (sensitive === '0') {
-      const ignoreAccents = document.getElementById('ignore-accents');
+    const sensitive = params.get("sensitive");
+    if (sensitive === "0") {
+      const ignoreAccents = document.getElementById("ignore-accents");
       if (ignoreAccents) ignoreAccents.checked = true;
     }
 
-    const regional = params.get('include_regional');
-    if (regional === '1' || regional === 'true') {
-      const regionalCheck = document.getElementById('include-regional');
+    const regional = params.get("include_regional");
+    if (regional === "1" || regional === "true") {
+      const regionalCheck = document.getElementById("include-regional");
       if (regionalCheck) {
         regionalCheck.checked = true;
         // Trigger change event to show regional options
-        regionalCheck.dispatchEvent(new Event('change'));
+        regionalCheck.dispatchEvent(new Event("change"));
       }
     }
 
     // Restore filters (requires filter module support)
     const searchFilters = getSearchFilters();
-    if (searchFilters && typeof searchFilters.restoreFiltersFromParams === 'function') {
+    if (
+      searchFilters &&
+      typeof searchFilters.restoreFiltersFromParams === "function"
+    ) {
       searchFilters.restoreFiltersFromParams(params);
     }
   }
@@ -121,33 +127,33 @@ export class SearchUI {
    * Bind advanced mode toggle
    */
   bindAdvancedToggle() {
-    const toggleBtn = document.getElementById('advanced-mode-toggle');
-    const expertArea = document.getElementById('expert-area');
-    const icon = document.getElementById('advanced-mode-icon');
+    const toggleBtn = document.getElementById("advanced-mode-toggle");
+    const expertArea = document.getElementById("expert-area");
+    const icon = document.getElementById("advanced-mode-icon");
 
     if (!toggleBtn || !expertArea) return;
 
-    toggleBtn.addEventListener('click', () => {
+    toggleBtn.addEventListener("click", () => {
       this.advancedMode = !this.advancedMode;
-      
+
       // Update UI
-      toggleBtn.setAttribute('aria-expanded', this.advancedMode);
+      toggleBtn.setAttribute("aria-expanded", this.advancedMode);
       if (this.advancedMode) {
-        expertArea.removeAttribute('hidden');
-        toggleBtn.classList.add('md3-button--filled-tonal');
-        toggleBtn.classList.remove('md3-button--outlined');
-        if (icon) icon.textContent = 'expand_less';
-        
+        expertArea.removeAttribute("hidden");
+        toggleBtn.classList.add("md3-button--filled-tonal");
+        toggleBtn.classList.remove("md3-button--outlined");
+        if (icon) icon.textContent = "expand_less";
+
         // Initialize pattern builder if not already done
         const patternBuilder = getPatternBuilder();
         if (patternBuilder) {
           patternBuilder.updateCQLPreview();
         }
       } else {
-        expertArea.setAttribute('hidden', '');
-        toggleBtn.classList.remove('md3-button--filled-tonal');
-        toggleBtn.classList.add('md3-button--outlined');
-        if (icon) icon.textContent = 'expand_more';
+        expertArea.setAttribute("hidden", "");
+        toggleBtn.classList.remove("md3-button--filled-tonal");
+        toggleBtn.classList.add("md3-button--outlined");
+        if (icon) icon.textContent = "expand_more";
       }
     });
   }
@@ -156,22 +162,22 @@ export class SearchUI {
    * Bind manual CQL edit checkbox
    */
   bindManualEditToggle() {
-    const checkbox = document.getElementById('allow-manual-edit');
-    const cqlPreview = document.getElementById('cql-preview');
-    const cqlWarning = document.getElementById('cql-warning');
+    const checkbox = document.getElementById("allow-manual-edit");
+    const cqlPreview = document.getElementById("cql-preview");
+    const cqlWarning = document.getElementById("cql-warning");
 
     if (!checkbox || !cqlPreview || !cqlWarning) return;
 
-    checkbox.addEventListener('change', (e) => {
+    checkbox.addEventListener("change", (e) => {
       this.manualCQLEdit = e.target.checked;
 
       if (this.manualCQLEdit) {
-        cqlPreview.removeAttribute('readonly');
-        cqlWarning.removeAttribute('hidden');
+        cqlPreview.removeAttribute("readonly");
+        cqlWarning.removeAttribute("hidden");
       } else {
-        cqlPreview.setAttribute('readonly', '');
-        cqlWarning.setAttribute('hidden', '');
-        
+        cqlPreview.setAttribute("readonly", "");
+        cqlWarning.setAttribute("hidden", "");
+
         // Regenerate CQL from builder
         const patternBuilder = getPatternBuilder();
         if (patternBuilder) {
@@ -185,15 +191,18 @@ export class SearchUI {
    * Bind form submission
    */
   bindFormSubmit() {
-    const form = document.getElementById('advanced-search-form');
+    const form = document.getElementById("advanced-search-form");
     if (!form) return;
 
-    form.addEventListener('submit', (e) => {
+    form.addEventListener("submit", (e) => {
       e.preventDefault();
-      
+
       const queryParams = this.buildQueryParams();
-      console.log('[SearchUI] Submitting search:', Object.fromEntries(queryParams));
-      
+      console.log(
+        "[SearchUI] Submitting search:",
+        Object.fromEntries(queryParams),
+      );
+
       // Here you would typically call the existing search handler
       // For now, we'll log the parameters
       this.performSearch(queryParams);
@@ -206,56 +215,61 @@ export class SearchUI {
   buildQueryParams() {
     const params = new URLSearchParams();
     // Read sensitivity early so we can adjust CQL generation
-    const ignoreAccentsEarly = document.getElementById('ignore-accents');
-    const sensitiveFlag = ignoreAccentsEarly && ignoreAccentsEarly.checked ? '0' : '1';
-    params.set('sensitive', sensitiveFlag);
+    const ignoreAccentsEarly = document.getElementById("ignore-accents");
+    const sensitiveFlag =
+      ignoreAccentsEarly && ignoreAccentsEarly.checked ? "0" : "1";
+    params.set("sensitive", sensitiveFlag);
 
     // A: Basic query
-    const queryInput = document.getElementById('q');
-    const searchTypeSelect = document.getElementById('search_type');
+    const queryInput = document.getElementById("q");
+    const searchTypeSelect = document.getElementById("search_type");
 
     if (queryInput && queryInput.value.trim()) {
       // If advanced mode is active and manual CQL or pattern builder has content, use CQL
       if (this.advancedMode) {
-        const cqlPreview = document.getElementById('cql-preview');
+        const cqlPreview = document.getElementById("cql-preview");
         if (cqlPreview && cqlPreview.value.trim()) {
           let cqlStr = cqlPreview.value.trim();
           // Map sensitivity: if insensitive (0) and not manual edit, substitute word -> norm
           const sensitive = sensitiveFlag;
-          const allowManualCql = document.getElementById('allow-manual-edit');
+          const allowManualCql = document.getElementById("allow-manual-edit");
           const manualEdit = allowManualCql && allowManualCql.checked;
-          if (sensitive === '0' && !manualEdit) {
+          if (sensitive === "0" && !manualEdit) {
             // Simple transformation: replace word="..." -> norm="..."
-            cqlStr = cqlStr.replace(/\bword=/g, 'norm=');
+            cqlStr = cqlStr.replace(/\bword=/g, "norm=");
           }
-          params.set('q', cqlStr);
-          params.set('mode', 'cql');
+          params.set("q", cqlStr);
+          params.set("mode", "cql");
         } else {
           // Fallback to basic query
-          params.set('q', queryInput.value.trim());
-          const uiSearchType = searchTypeSelect ? searchTypeSelect.value : 'forma';
-          params.set('search_type', uiSearchType);
+          params.set("q", queryInput.value.trim());
+          const uiSearchType = searchTypeSelect
+            ? searchTypeSelect.value
+            : "forma";
+          params.set("search_type", uiSearchType);
           // Map spanish UI 'lema' to backend 'lemma'
-          if (uiSearchType === 'lema') {
-            params.set('mode', 'lemma');
-          } else if (uiSearchType === 'forma') {
-            params.set('mode', 'forma');
-          } else if (uiSearchType === 'forma_exacta') {
-            params.set('mode', 'forma_exacta');
+          if (uiSearchType === "lema") {
+            params.set("mode", "lemma");
+          } else if (uiSearchType === "forma") {
+            params.set("mode", "forma");
+          } else if (uiSearchType === "forma_exacta") {
+            params.set("mode", "forma_exacta");
           }
         }
       } else {
         // Simple mode
-        params.set('q', queryInput.value.trim());
-        const uiSearchType = searchTypeSelect ? searchTypeSelect.value : 'forma';
-        params.set('search_type', uiSearchType);
+        params.set("q", queryInput.value.trim());
+        const uiSearchType = searchTypeSelect
+          ? searchTypeSelect.value
+          : "forma";
+        params.set("search_type", uiSearchType);
         // Map Spanish to canonical backend modes for advanced search
-        if (uiSearchType === 'lema') {
-          params.set('mode', 'lemma');
-        } else if (uiSearchType === 'forma') {
-          params.set('mode', 'forma');
-        } else if (uiSearchType === 'forma_exacta') {
-          params.set('mode', 'forma_exacta');
+        if (uiSearchType === "lema") {
+          params.set("mode", "lemma");
+        } else if (uiSearchType === "forma") {
+          params.set("mode", "forma");
+        } else if (uiSearchType === "forma_exacta") {
+          params.set("mode", "forma_exacta");
         }
       }
     }
@@ -270,9 +284,9 @@ export class SearchUI {
     }
 
     // C: Options
-    const includeRegional = document.getElementById('include-regional');
+    const includeRegional = document.getElementById("include-regional");
     if (includeRegional && includeRegional.checked) {
-      params.set('include_regional', '1');
+      params.set("include_regional", "1");
     }
 
     // (sensitivity already set earlier)
@@ -285,10 +299,10 @@ export class SearchUI {
    */
   async performSearch(queryParams) {
     // Dispatch search start event
-    document.dispatchEvent(new Event('search:start'));
+    document.dispatchEvent(new Event("search:start"));
 
-    const resultsSection = document.getElementById('results-section');
-    const summaryBox = document.getElementById('adv-summary');
+    const resultsSection = document.getElementById("results-section");
+    const summaryBox = document.getElementById("adv-summary");
 
     try {
       if (summaryBox) {
@@ -312,24 +326,31 @@ export class SearchUI {
 
       // Update URL with search params to allow persistence/bookmarks
       const newUrl = `${window.location.pathname}?${queryParams.toString()}`;
-      window.history.pushState({ path: newUrl }, '', newUrl);
-      
+      window.history.pushState({ path: newUrl }, "", newUrl);
+
       // Save to session storage
-      sessionStorage.setItem('lastSearch', queryParams.toString());
+      sessionStorage.setItem("lastSearch", queryParams.toString());
 
       // Call existing advanced search handler
       // This should integrate with initTable.js
-      const response = await fetch(`/search/advanced/data?${queryParams.toString()}`);
-      
+      const response = await fetch(
+        `/search/advanced/data?${queryParams.toString()}`,
+      );
+
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}`);
       }
 
       const data = await response.json();
-      
+
       // Debug: if the server returned the generated CQL, log it
       if (data && data.cql_debug) {
-        console.debug('[SearchUI] Server CQL Debug:', data.cql_debug, 'filter:', data.filter_debug || '');
+        console.debug(
+          "[SearchUI] Server CQL Debug:",
+          data.cql_debug,
+          "filter:",
+          data.filter_debug || "",
+        );
       }
 
       // Update summary
@@ -340,13 +361,13 @@ export class SearchUI {
       }
 
       // Ensure UI container is visible (in case DataTables is initialized while hidden)
-      const tableContainer = document.getElementById('datatable-container');
-      if (tableContainer) tableContainer.style.display = '';
-      const subTabs = document.getElementById('search-sub-tabs');
-      if (subTabs) subTabs.style.display = '';
+      const tableContainer = document.getElementById("datatable-container");
+      if (tableContainer) tableContainer.style.display = "";
+      const subTabs = document.getElementById("search-sub-tabs");
+      if (subTabs) subTabs.style.display = "";
 
       // Force switch to "Resultados" tab
-      const resultsTab = document.getElementById('tab-resultados');
+      const resultsTab = document.getElementById("tab-resultados");
       if (resultsTab) {
         resultsTab.click();
       }
@@ -355,12 +376,11 @@ export class SearchUI {
       this.initResultsTable(queryParams.toString());
 
       // Dispatch search complete event
-      document.dispatchEvent(new Event('search:complete'));
+      document.dispatchEvent(new Event("search:complete"));
 
-      console.log('✅ Search completed:', data.recordsFiltered, 'results');
-
+      console.log("✅ Search completed:", data.recordsFiltered, "results");
     } catch (error) {
-      console.error('❌ Search error:', error);
+      console.error("❌ Search error:", error);
       if (summaryBox) {
         summaryBox.innerHTML = `
           <span style="color: var(--md-sys-color-error);">
@@ -377,13 +397,13 @@ export class SearchUI {
   initResultsTable(queryString) {
     // This should integrate with the existing advanced/initTable.js
     // For now, we'll just log
-    console.log('[SearchUI] Would initialize table with query:', queryString);
-    
+    console.log("[SearchUI] Would initialize table with query:", queryString);
+
     // Initialize DataTable with current query string
     try {
       initAdvancedTable(queryString);
     } catch (e) {
-      console.error('[SearchUI] Could not init advanced table:', e);
+      console.error("[SearchUI] Could not init advanced table:", e);
     }
   }
 
@@ -391,10 +411,10 @@ export class SearchUI {
    * Bind reset button
    */
   bindResetButton() {
-    const resetBtn = document.getElementById('reset-form-btn');
+    const resetBtn = document.getElementById("reset-form-btn");
     if (!resetBtn) return;
 
-    resetBtn.addEventListener('click', () => {
+    resetBtn.addEventListener("click", () => {
       this.resetForm();
     });
   }
@@ -404,65 +424,67 @@ export class SearchUI {
    */
   resetForm() {
     // Reset basic query
-    const queryInput = document.getElementById('q');
-    const searchTypeSelect = document.getElementById('search_type');
-    
-    if (queryInput) queryInput.value = '';
-    if (searchTypeSelect) searchTypeSelect.value = 'forma';
+    const queryInput = document.getElementById("q");
+    const searchTypeSelect = document.getElementById("search_type");
+
+    if (queryInput) queryInput.value = "";
+    if (searchTypeSelect) searchTypeSelect.value = "forma";
 
     // Reset advanced filters
-    const advancedInputs = document.querySelectorAll('#advanced-search-options input, #advanced-search-options select');
-    advancedInputs.forEach(input => {
-      if (input.type === 'checkbox' || input.type === 'radio') {
+    const advancedInputs = document.querySelectorAll(
+      "#advanced-search-options input, #advanced-search-options select",
+    );
+    advancedInputs.forEach((input) => {
+      if (input.type === "checkbox" || input.type === "radio") {
         input.checked = false;
-      } else if (input.tagName === 'SELECT') {
+      } else if (input.tagName === "SELECT") {
         input.selectedIndex = -1;
       } else {
-        input.value = '';
+        input.value = "";
       }
     });
 
     // Reset expert mode
-    const expertToggle = document.getElementById('expert-mode-toggle');
+    const expertToggle = document.getElementById("expert-mode-toggle");
     if (expertToggle && expertToggle.checked) {
       expertToggle.click(); // Toggle off
     }
-    
+
     // Clear results
-    const resultsContainer = document.getElementById('results-container');
-    if (resultsContainer) resultsContainer.innerHTML = '';
-    
-    const summaryBox = document.getElementById('search-summary');
-    if (summaryBox) summaryBox.innerHTML = '';
-    
-    const advSummaryBox = document.getElementById('adv-summary');
+    const resultsContainer = document.getElementById("results-container");
+    if (resultsContainer) resultsContainer.innerHTML = "";
+
+    const summaryBox = document.getElementById("search-summary");
+    if (summaryBox) summaryBox.innerHTML = "";
+
+    const advSummaryBox = document.getElementById("adv-summary");
     if (advSummaryBox) {
-      advSummaryBox.innerHTML = '';
+      advSummaryBox.innerHTML = "";
       advSummaryBox.hidden = true;
     }
 
     // Hide containers
-    const tableContainer = document.getElementById('datatable-container');
-    if (tableContainer) tableContainer.style.display = 'none';
-    const subTabs = document.getElementById('search-sub-tabs');
-    if (subTabs) subTabs.style.display = 'none';
-    
+    const tableContainer = document.getElementById("datatable-container");
+    if (tableContainer) tableContainer.style.display = "none";
+    const subTabs = document.getElementById("search-sub-tabs");
+    if (subTabs) subTabs.style.display = "none";
+
     // Hide stats panel explicitly
-    const statsPanel = document.getElementById('panel-estadisticas');
+    const statsPanel = document.getElementById("panel-estadisticas");
     if (statsPanel) {
       statsPanel.hidden = true;
-      statsPanel.classList.remove('md3-view-content--active');
+      statsPanel.classList.remove("md3-view-content--active");
     }
-    
+
     // Destroy DataTable
     destroyAdvancedTable();
-    
+
     this.manualCQLEdit = false;
 
     // Dispatch reset event for other modules (like stats)
-    document.dispatchEvent(new Event('search:reset'));
+    document.dispatchEvent(new Event("search:reset"));
 
-    console.log('[SearchUI] Form reset');
+    console.log("[SearchUI] Form reset");
   }
 
   /**
@@ -470,10 +492,12 @@ export class SearchUI {
    */
   bindSubTabs() {
     // Do not bind to token-sub-tabs in token-tab module; exclude them explicitly
-    const tabs = document.querySelectorAll('.md3-stats-tab:not(#token-sub-tabs .md3-stats-tab)');
-    
-    tabs.forEach(tab => {
-      tab.addEventListener('click', () => {
+    const tabs = document.querySelectorAll(
+      ".md3-stats-tab:not(#token-sub-tabs .md3-stats-tab)",
+    );
+
+    tabs.forEach((tab) => {
+      tab.addEventListener("click", () => {
         const view = tab.dataset.view;
         this.switchView(view);
       });
@@ -487,37 +511,37 @@ export class SearchUI {
     this.currentView = view;
 
     // Update tab active states
-    document.querySelectorAll('.md3-stats-tab').forEach(tab => {
+    document.querySelectorAll(".md3-stats-tab").forEach((tab) => {
       if (tab.dataset.view === view) {
-        tab.classList.add('md3-stats-tab--active');
-        tab.setAttribute('aria-selected', 'true');
+        tab.classList.add("md3-stats-tab--active");
+        tab.setAttribute("aria-selected", "true");
       } else {
-        tab.classList.remove('md3-stats-tab--active');
-        tab.setAttribute('aria-selected', 'false');
+        tab.classList.remove("md3-stats-tab--active");
+        tab.setAttribute("aria-selected", "false");
       }
     });
 
     // Update panel visibility
-    const panelResultados = document.getElementById('panel-resultados');
-    const panelEstadisticas = document.getElementById('panel-estadisticas');
+    const panelResultados = document.getElementById("panel-resultados");
+    const panelEstadisticas = document.getElementById("panel-estadisticas");
 
-    if (view === 'results') {
+    if (view === "results") {
       if (panelResultados) {
-        panelResultados.classList.add('md3-view-content--active');
-        panelResultados.removeAttribute('hidden');
+        panelResultados.classList.add("md3-view-content--active");
+        panelResultados.removeAttribute("hidden");
       }
       if (panelEstadisticas) {
-        panelEstadisticas.classList.remove('md3-view-content--active');
-        panelEstadisticas.setAttribute('hidden', '');
+        panelEstadisticas.classList.remove("md3-view-content--active");
+        panelEstadisticas.setAttribute("hidden", "");
       }
-    } else if (view === 'stats') {
+    } else if (view === "stats") {
       if (panelResultados) {
-        panelResultados.classList.remove('md3-view-content--active');
-        panelResultados.setAttribute('hidden', '');
+        panelResultados.classList.remove("md3-view-content--active");
+        panelResultados.setAttribute("hidden", "");
       }
       if (panelEstadisticas) {
-        panelEstadisticas.classList.add('md3-view-content--active');
-        panelEstadisticas.removeAttribute('hidden');
+        panelEstadisticas.classList.add("md3-view-content--active");
+        panelEstadisticas.removeAttribute("hidden");
       }
     }
   }
@@ -527,7 +551,8 @@ export class SearchUI {
    */
   showCopyFeedback(button) {
     const originalText = button.innerHTML;
-    button.innerHTML = '<span class="material-symbols-rounded">check</span> Copiado';
+    button.innerHTML =
+      '<span class="material-symbols-rounded">check</span> Copiado';
     setTimeout(() => {
       button.innerHTML = originalText;
     }, 2000);
@@ -537,23 +562,25 @@ export class SearchUI {
    * Fallback copy method using textarea and execCommand
    */
   copyViaFallback(text, button) {
-    const textarea = document.createElement('textarea');
+    const textarea = document.createElement("textarea");
     textarea.value = text;
-    textarea.style.position = 'fixed';
-    textarea.style.left = '-9999px';
-    textarea.style.top = '-9999px';
+    textarea.style.position = "fixed";
+    textarea.style.left = "-9999px";
+    textarea.style.top = "-9999px";
     document.body.appendChild(textarea);
-    
+
     try {
       textarea.select();
-      const successful = document.execCommand('copy');
+      const successful = document.execCommand("copy");
       if (successful) {
         this.showCopyFeedback(button);
       } else {
-        console.warn('[SearchUI] Fallback copy failed: execCommand returned false');
+        console.warn(
+          "[SearchUI] Fallback copy failed: execCommand returned false",
+        );
       }
     } catch (err) {
-      console.error('[SearchUI] Fallback copy error:', err);
+      console.error("[SearchUI] Fallback copy error:", err);
     } finally {
       document.body.removeChild(textarea);
     }
@@ -563,85 +590,88 @@ export class SearchUI {
    * Escape HTML
    */
   escapeHtml(text) {
-    if (!text) return '';
+    if (!text) return "";
     const map = {
-      '&': '&amp;',
-      '<': '&lt;',
-      '>': '&gt;',
-      '"': '&quot;',
-      "'": '&#039;'
+      "&": "&amp;",
+      "<": "&lt;",
+      ">": "&gt;",
+      '"': "&quot;",
+      "'": "&#039;",
     };
-    return text.replace(/[&<>"']/g, m => map[m]);
+    return text.replace(/[&<>"']/g, (m) => map[m]);
   }
 
   /**
    * Bind CQL Guide Dialog
    */
   bindCqlGuide() {
-    const link = document.getElementById('cql-guide-link');
-    const overlay = document.getElementById('cql-guide-overlay');
-    const dialog = document.getElementById('cql-guide-dialog');
-    const closeBtn = document.getElementById('cql-guide-close');
-    const copyBtn = document.getElementById('cql-guide-copy');
-    const promptText = document.getElementById('cql-guide-prompt');
+    const link = document.getElementById("cql-guide-link");
+    const overlay = document.getElementById("cql-guide-overlay");
+    const dialog = document.getElementById("cql-guide-dialog");
+    const closeBtn = document.getElementById("cql-guide-close");
+    const copyBtn = document.getElementById("cql-guide-copy");
+    const promptText = document.getElementById("cql-guide-prompt");
 
     if (!link || !overlay || !dialog) return;
 
-    link.addEventListener('click', (e) => {
+    link.addEventListener("click", (e) => {
       e.preventDefault();
-      overlay.classList.add('active');
-      overlay.removeAttribute('aria-hidden');
-      document.body.style.overflow = 'hidden';
+      overlay.classList.add("active");
+      overlay.removeAttribute("aria-hidden");
+      document.body.style.overflow = "hidden";
       dialog.focus();
     });
 
     if (closeBtn) {
-      closeBtn.addEventListener('click', () => {
-        overlay.classList.remove('active');
-        overlay.setAttribute('aria-hidden', 'true');
-        document.body.style.overflow = '';
+      closeBtn.addEventListener("click", () => {
+        overlay.classList.remove("active");
+        overlay.setAttribute("aria-hidden", "true");
+        document.body.style.overflow = "";
       });
     }
 
     if (copyBtn && promptText) {
-      copyBtn.addEventListener('click', () => {
+      copyBtn.addEventListener("click", () => {
         // Get plain text from code block - trim whitespace
-        const textToCopy = (promptText.innerText || promptText.textContent || '').trim();
-        
+        const textToCopy = (
+          promptText.innerText ||
+          promptText.textContent ||
+          ""
+        ).trim();
+
         if (!textToCopy) {
-          console.warn('[SearchUI] No text to copy');
+          console.warn("[SearchUI] No text to copy");
           return;
         }
-        
+
         // Always use fallback since it's more reliable in all contexts
         this.copyViaFallback(textToCopy, copyBtn);
       });
     }
 
-    overlay.addEventListener('click', (e) => {
+    overlay.addEventListener("click", (e) => {
       if (e.target === overlay) {
-        overlay.classList.remove('active');
-        overlay.setAttribute('aria-hidden', 'true');
-        document.body.style.overflow = '';
+        overlay.classList.remove("active");
+        overlay.setAttribute("aria-hidden", "true");
+        document.body.style.overflow = "";
       }
     });
 
-    document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape' && overlay.classList.contains('active')) {
-        overlay.classList.remove('active');
-        overlay.setAttribute('aria-hidden', 'true');
-        document.body.style.overflow = '';
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && overlay.classList.contains("active")) {
+        overlay.classList.remove("active");
+        overlay.setAttribute("aria-hidden", "true");
+        document.body.style.overflow = "";
       }
     });
   }
-
 }
 
 // Auto-initialize
 let searchUIInstance = null;
 
-document.addEventListener('DOMContentLoaded', () => {
-  const form = document.getElementById('advanced-search-form');
+document.addEventListener("DOMContentLoaded", () => {
+  const form = document.getElementById("advanced-search-form");
   if (form) {
     searchUIInstance = new SearchUI();
   }

@@ -13,7 +13,9 @@
    historical Tagify-related styles. */
 
 /* MD3-styled Chips für ausgewählte Optionen */
-.select2-container--default .select2-selection--multiple .select2-selection__choice {
+.select2-container--default
+  .select2-selection--multiple
+  .select2-selection__choice {
   background: var(--md-sys-color-primary) !important;
   border: none !important;
   color: #ffffff !important;
@@ -31,12 +33,16 @@
   transition: opacity 200ms cubic-bezier(0.2, 0, 0, 1) !important;
 }
 
-.select2-container--default .select2-selection--multiple .select2-selection__choice:hover {
+.select2-container--default
+  .select2-selection--multiple
+  .select2-selection__choice:hover {
   opacity: 0.85 !important;
 }
 
 /* Remove-Button (unsichtbar, aber klickbar über gesamten Chip) */
-.select2-container--default .select2-selection--multiple .select2-selection__choice__remove {
+.select2-container--default
+  .select2-selection--multiple
+  .select2-selection__choice__remove {
   position: absolute !important;
   inset: 0 !important;
   width: 100% !important;
@@ -46,7 +52,9 @@
   font-size: 0 !important;
 }
 
-.select2-container--default .select2-selection--multiple .select2-selection__choice__display {
+.select2-container--default
+  .select2-selection--multiple
+  .select2-selection__choice__display {
   position: relative !important;
   pointer-events: none !important;
 }
@@ -57,7 +65,9 @@
 }
 
 /* Search Field innerhalb Select2 */
-.select2-container--default .select2-selection--multiple .select2-search__field {
+.select2-container--default
+  .select2-selection--multiple
+  .select2-search__field {
   font-size: 16px !important;
   color: var(--md-sys-color-on-surface) !important;
   padding: var(--space-1) !important;
@@ -129,5 +139,6 @@
 }
 
 .select2-container .select2-search--inline .select2-search__field {
-    height: 22px;
-    font-size: 14px !important;}
+  height: 22px;
+  font-size: 14px !important;
+}

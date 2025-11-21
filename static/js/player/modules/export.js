@@ -21,20 +21,20 @@ export class ExportManager {
    * @private
    */
   _setupEventListeners() {
-    const downloadMP3Button = document.getElementById('downloadMP3');
-    const downloadJSONButton = document.getElementById('downloadJSON');
-    const downloadTXTButton = document.getElementById('downloadTXT');
+    const downloadMP3Button = document.getElementById("downloadMP3");
+    const downloadJSONButton = document.getElementById("downloadJSON");
+    const downloadTXTButton = document.getElementById("downloadTXT");
 
     if (downloadMP3Button) {
-      downloadMP3Button.addEventListener('click', () => this.downloadMP3());
+      downloadMP3Button.addEventListener("click", () => this.downloadMP3());
     }
 
     if (downloadJSONButton) {
-      downloadJSONButton.addEventListener('click', () => this.downloadJSON());
+      downloadJSONButton.addEventListener("click", () => this.downloadJSON());
     }
 
     if (downloadTXTButton) {
-      downloadTXTButton.addEventListener('click', () => this.downloadTXT());
+      downloadTXTButton.addEventListener("click", () => this.downloadTXT());
     }
   }
 
@@ -43,28 +43,28 @@ export class ExportManager {
    */
   async downloadMP3() {
     const urlParams = new URLSearchParams(window.location.search);
-    const audioPath = urlParams.get('audio');
+    const audioPath = urlParams.get("audio");
 
     if (!audioPath) {
-      alert('Kein Audio-Pfad gefunden.');
+      alert("Kein Audio-Pfad gefunden.");
       return;
     }
 
     try {
       // Add download parameter for proper Content-Disposition
-      const downloadUrl = `${audioPath}${audioPath.includes('?') ? '&' : '?'}download=true`;
-      
-      const link = document.createElement('a');
+      const downloadUrl = `${audioPath}${audioPath.includes("?") ? "&" : "?"}download=true`;
+
+      const link = document.createElement("a");
       link.href = downloadUrl;
       link.download = this._getFilenameFromPath(audioPath);
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
 
-      console.log('[Export] MP3 download initiated:', downloadUrl);
+      console.log("[Export] MP3 download initiated:", downloadUrl);
     } catch (error) {
-      console.error('[Export] Failed to download MP3:', error);
-      alert('Fehler beim Download der MP3-Datei.');
+      console.error("[Export] Failed to download MP3:", error);
+      alert("Fehler beim Download der MP3-Datei.");
     }
   }
 
@@ -73,28 +73,32 @@ export class ExportManager {
    */
   async downloadJSON() {
     if (!this.transcriptionManager.transcriptionData) {
-      alert('Keine Transkriptionsdaten verfügbar.');
+      alert("Keine Transkriptionsdaten verfügbar.");
       return;
     }
 
     try {
-      const jsonString = JSON.stringify(this.transcriptionManager.transcriptionData, null, 2);
-      const blob = new Blob([jsonString], { type: 'application/json' });
+      const jsonString = JSON.stringify(
+        this.transcriptionManager.transcriptionData,
+        null,
+        2,
+      );
+      const blob = new Blob([jsonString], { type: "application/json" });
       const url = URL.createObjectURL(blob);
 
-      const link = document.createElement('a');
+      const link = document.createElement("a");
       link.href = url;
-      link.download = `${this.transcriptionManager.transcriptionData.filename || 'transcription'}.json`;
+      link.download = `${this.transcriptionManager.transcriptionData.filename || "transcription"}.json`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
 
       URL.revokeObjectURL(url);
 
-      console.log('[Export] JSON download initiated');
+      console.log("[Export] JSON download initiated");
     } catch (error) {
-      console.error('[Export] Failed to download JSON:', error);
-      alert('Fehler beim Download der JSON-Datei.');
+      console.error("[Export] Failed to download JSON:", error);
+      alert("Fehler beim Download der JSON-Datei.");
     }
   }
 
@@ -103,28 +107,28 @@ export class ExportManager {
    */
   async downloadTXT() {
     if (!this.transcriptionManager.transcriptionData) {
-      alert('Keine Transkriptionsdaten verfügbar.');
+      alert("Keine Transkriptionsdaten verfügbar.");
       return;
     }
 
     try {
       const txtContent = this._generateTextContent();
-      const blob = new Blob([txtContent], { type: 'text/plain' });
+      const blob = new Blob([txtContent], { type: "text/plain" });
       const url = URL.createObjectURL(blob);
 
-      const link = document.createElement('a');
+      const link = document.createElement("a");
       link.href = url;
-      link.download = `${this.transcriptionManager.transcriptionData.filename || 'transcription'}.txt`;
+      link.download = `${this.transcriptionManager.transcriptionData.filename || "transcription"}.txt`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
 
       URL.revokeObjectURL(url);
 
-      console.log('[Export] TXT download initiated');
+      console.log("[Export] TXT download initiated");
     } catch (error) {
-      console.error('[Export] Failed to download TXT:', error);
-      alert('Fehler beim Download der TXT-Datei.');
+      console.error("[Export] Failed to download TXT:", error);
+      alert("Fehler beim Download der TXT-Datei.");
     }
   }
 
@@ -135,17 +139,17 @@ export class ExportManager {
    */
   _generateTextContent() {
     const data = this.transcriptionManager.transcriptionData;
-    let content = '';
+    let content = "";
 
     // Header
     content += `CO.RA.PAN Transcription\n`;
     content += `========================\n\n`;
-    content += `File: ${data.filename || 'Unknown'}\n`;
-    content += `Country: ${data.country || 'Unknown'}\n`;
-    content += `City: ${data.city || 'Unknown'}\n`;
-    content += `Radio: ${data.radio || 'Unknown'}\n`;
-    content += `Date: ${data.date || 'Unknown'}\n`;
-    content += `Revision: ${data.revision || 'Unknown'}\n\n`;
+    content += `File: ${data.filename || "Unknown"}\n`;
+    content += `Country: ${data.country || "Unknown"}\n`;
+    content += `City: ${data.city || "Unknown"}\n`;
+    content += `Radio: ${data.radio || "Unknown"}\n`;
+    content += `Date: ${data.date || "Unknown"}\n`;
+    content += `Revision: ${data.revision || "Unknown"}\n\n`;
     content += `========================\n\n`;
 
     // Segments
@@ -159,7 +163,7 @@ export class ExportManager {
       const endTime = this._formatTime(words[words.length - 1].end);
 
       content += `[${speakerCode}] ${startTime} - ${endTime}\n`;
-      content += words.map(w => w.text).join(' ') + '\n\n';
+      content += words.map((w) => w.text).join(" ") + "\n\n";
     });
 
     return content;
@@ -170,7 +174,7 @@ export class ExportManager {
    * @private
    */
   _getFilenameFromPath(path) {
-    return path.split('/').pop().split('?')[0];
+    return path.split("/").pop().split("?")[0];
   }
 
   /**
@@ -181,7 +185,7 @@ export class ExportManager {
     const hours = Math.floor(timeInSeconds / 3600);
     const minutes = Math.floor((timeInSeconds % 3600) / 60);
     const seconds = Math.round(timeInSeconds % 60);
-    const pad = (num) => num < 10 ? '0' + num : num.toString();
+    const pad = (num) => (num < 10 ? "0" + num : num.toString());
     return `${pad(hours)}:${pad(minutes)}:${pad(seconds)}`;
   }
 }

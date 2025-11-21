@@ -239,7 +239,7 @@
   border-radius: var(--radius-xs);
   font-size: 0.875em;
   color: var(--md-sys-color-primary);
-  font-family: 'Courier New', monospace;
+  font-family: "Courier New", monospace;
 }
 
 /* ============================================
@@ -257,20 +257,20 @@
   .md3-admin-content {
     padding: var(--space-6) var(--space-4);
   }
-  
+
   .md3-admin-card {
     padding: var(--space-5);
   }
-  
+
   .md3-metric-card {
     flex-direction: column;
     text-align: center;
   }
-  
+
   .md3-metric-card__icon {
     font-size: 2rem;
   }
-  
+
   .md3-switch {
     flex-direction: column;
     text-align: center;
@@ -283,7 +283,11 @@
 
 .md3-admin-metrics.is-error .md3-metric-card {
   border-color: var(--md-sys-color-error);
-  background: color-mix(in srgb, var(--md-sys-color-error) 5%, var(--md-sys-color-surface-container-low));
+  background: color-mix(
+    in srgb,
+    var(--md-sys-color-error) 5%,
+    var(--md-sys-color-surface-container-low)
+  );
 }
 
 .md3-admin-metrics.is-error .md3-metric-card__icon {
@@ -293,5 +297,3 @@
 .md3-admin-metrics.is-error .md3-metric-card__delta {
   color: var(--md-sys-color-error);
 }
-
-

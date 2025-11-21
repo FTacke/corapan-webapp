@@ -1,4 +1,5 @@
 """Counter services for access, visits, and search telemetry."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass, field
@@ -48,19 +49,27 @@ class AccessCounter(CounterStore):
 
         total = payload.setdefault("total", {"overall": 0, "monthly": {}, "days": []})
         total["overall"] += 1
-        total.setdefault("monthly", {})[month_key] = total["monthly"].get(month_key, 0) + 1
+        total.setdefault("monthly", {})[month_key] = (
+            total["monthly"].get(month_key, 0) + 1
+        )
         total.setdefault("days", []).append(day_value)
 
         roles = payload.setdefault("roles", {})
         role_bucket = roles.setdefault(role, {"overall": 0, "monthly": {}, "days": []})
         role_bucket["overall"] += 1
-        role_bucket.setdefault("monthly", {})[month_key] = role_bucket["monthly"].get(month_key, 0) + 1
+        role_bucket.setdefault("monthly", {})[month_key] = (
+            role_bucket["monthly"].get(month_key, 0) + 1
+        )
         role_bucket.setdefault("days", []).append(day_value)
 
         accounts = payload.setdefault("accounts", {})
-        account_bucket = accounts.setdefault(account, {"overall": 0, "monthly": {}, "days": []})
+        account_bucket = accounts.setdefault(
+            account, {"overall": 0, "monthly": {}, "days": []}
+        )
         account_bucket["overall"] += 1
-        account_bucket.setdefault("monthly", {})[month_key] = account_bucket["monthly"].get(month_key, 0) + 1
+        account_bucket.setdefault("monthly", {})[month_key] = (
+            account_bucket["monthly"].get(month_key, 0) + 1
+        )
         account_bucket.setdefault("days", []).append(day_value)
         self.persist()
 
@@ -74,7 +83,11 @@ class SimpleCounter(CounterStore):
 
 counter_access = AccessCounter(
     filename="counter_access.json",
-    default={"total": {"overall": 0, "monthly": {}, "days": []}, "roles": {}, "accounts": {}},
+    default={
+        "total": {"overall": 0, "monthly": {}, "days": []},
+        "roles": {},
+        "accounts": {},
+    },
 )
 
 counter_visits = SimpleCounter(

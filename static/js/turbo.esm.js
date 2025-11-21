@@ -27,7 +27,7 @@ Copyright © 2024 37signals LLC
  */
 
 (function (prototype) {
-  if (typeof prototype.requestSubmit == "function") return
+  if (typeof prototype.requestSubmit == "function") return;
 
   prototype.requestSubmit = function (submitter) {
     if (submitter) {
@@ -44,23 +44,39 @@ Copyright © 2024 37signals LLC
   };
 
   function validateSubmitter(submitter, form) {
-    submitter instanceof HTMLElement || raise(TypeError, "parameter 1 is not of type 'HTMLElement'");
-    submitter.type == "submit" || raise(TypeError, "The specified element is not a submit button");
+    submitter instanceof HTMLElement ||
+      raise(TypeError, "parameter 1 is not of type 'HTMLElement'");
+    submitter.type == "submit" ||
+      raise(TypeError, "The specified element is not a submit button");
     submitter.form == form ||
-      raise(DOMException, "The specified element is not owned by this form element", "NotFoundError");
+      raise(
+        DOMException,
+        "The specified element is not owned by this form element",
+        "NotFoundError",
+      );
   }
 
   function raise(errorConstructor, message, name) {
-    throw new errorConstructor("Failed to execute 'requestSubmit' on 'HTMLFormElement': " + message + ".", name)
+    throw new errorConstructor(
+      "Failed to execute 'requestSubmit' on 'HTMLFormElement': " +
+        message +
+        ".",
+      name,
+    );
   }
 })(HTMLFormElement.prototype);
 
 const submittersByForm = new WeakMap();
 
 function findSubmitterFromClickTarget(target) {
-  const element = target instanceof Element ? target : target instanceof Node ? target.parentElement : null;
+  const element =
+    target instanceof Element
+      ? target
+      : target instanceof Node
+        ? target.parentElement
+        : null;
   const candidate = element ? element.closest("input, button") : null;
-  return candidate?.type == "submit" ? candidate : null
+  return candidate?.type == "submit" ? candidate : null;
 }
 
 function clickCaptured(event) {
@@ -72,7 +88,7 @@ function clickCaptured(event) {
 }
 
 (function () {
-  if ("submitter" in Event.prototype) return
+  if ("submitter" in Event.prototype) return;
 
   let prototype = window.Event.prototype;
   // Certain versions of Safari 15 have a bug where they won't
@@ -81,10 +97,13 @@ function clickCaptured(event) {
   if ("SubmitEvent" in window) {
     const prototypeOfSubmitEvent = window.SubmitEvent.prototype;
 
-    if (/Apple Computer/.test(navigator.vendor) && !("submitter" in prototypeOfSubmitEvent)) {
+    if (
+      /Apple Computer/.test(navigator.vendor) &&
+      !("submitter" in prototypeOfSubmitEvent)
+    ) {
       prototype = prototypeOfSubmitEvent;
     } else {
-      return // polyfill not needed
+      return; // polyfill not needed
     }
   }
 
@@ -93,15 +112,15 @@ function clickCaptured(event) {
   Object.defineProperty(prototype, "submitter", {
     get() {
       if (this.type == "submit" && this.target instanceof HTMLFormElement) {
-        return submittersByForm.get(this.target)
+        return submittersByForm.get(this.target);
       }
-    }
+    },
   });
 })();
 
 const FrameLoadingStyle = {
   eager: "eager",
-  lazy: "lazy"
+  lazy: "lazy",
 };
 
 /**
@@ -121,12 +140,12 @@ const FrameLoadingStyle = {
  *   </turbo-frame>
  */
 class FrameElement extends HTMLElement {
-  static delegateConstructor = undefined
+  static delegateConstructor = undefined;
 
-  loaded = Promise.resolve()
+  loaded = Promise.resolve();
 
   static get observedAttributes() {
-    return ["disabled", "loading", "src"]
+    return ["disabled", "loading", "src"];
   }
 
   constructor() {
@@ -143,7 +162,7 @@ class FrameElement extends HTMLElement {
   }
 
   reload() {
-    return this.delegate.sourceURLReloaded()
+    return this.delegate.sourceURLReloaded();
   }
 
   attributeChangedCallback(name) {
@@ -160,7 +179,7 @@ class FrameElement extends HTMLElement {
    * Gets the URL to lazily load source HTML from
    */
   get src() {
-    return this.getAttribute("src")
+    return this.getAttribute("src");
   }
 
   /**
@@ -178,7 +197,7 @@ class FrameElement extends HTMLElement {
    * Gets the refresh mode for the frame.
    */
   get refresh() {
-    return this.getAttribute("refresh")
+    return this.getAttribute("refresh");
   }
 
   /**
@@ -193,14 +212,14 @@ class FrameElement extends HTMLElement {
   }
 
   get shouldReloadWithMorph() {
-    return this.src && this.refresh === "morph"
+    return this.src && this.refresh === "morph";
   }
 
   /**
    * Determines if the element is loading
    */
   get loading() {
-    return frameLoadingStyleFromString(this.getAttribute("loading") || "")
+    return frameLoadingStyleFromString(this.getAttribute("loading") || "");
   }
 
   /**
@@ -220,7 +239,7 @@ class FrameElement extends HTMLElement {
    * If disabled, no requests will be intercepted by the frame.
    */
   get disabled() {
-    return this.hasAttribute("disabled")
+    return this.hasAttribute("disabled");
   }
 
   /**
@@ -242,7 +261,7 @@ class FrameElement extends HTMLElement {
    * If true, the frame will be scrolled into view automatically on update.
    */
   get autoscroll() {
-    return this.hasAttribute("autoscroll")
+    return this.hasAttribute("autoscroll");
   }
 
   /**
@@ -262,7 +281,7 @@ class FrameElement extends HTMLElement {
    * Determines if the element has finished loading
    */
   get complete() {
-    return !this.delegate.isLoading
+    return !this.delegate.isLoading;
   }
 
   /**
@@ -271,7 +290,7 @@ class FrameElement extends HTMLElement {
    * If inactive, source changes will not be observed.
    */
   get isActive() {
-    return this.ownerDocument === document && !this.isPreview
+    return this.ownerDocument === document && !this.isPreview;
   }
 
   /**
@@ -280,37 +299,85 @@ class FrameElement extends HTMLElement {
    * If inactive, source changes will not be observed.
    */
   get isPreview() {
-    return this.ownerDocument?.documentElement?.hasAttribute("data-turbo-preview")
+    return this.ownerDocument?.documentElement?.hasAttribute(
+      "data-turbo-preview",
+    );
   }
 }
 
 function frameLoadingStyleFromString(style) {
   switch (style.toLowerCase()) {
     case "lazy":
-      return FrameLoadingStyle.lazy
+      return FrameLoadingStyle.lazy;
     default:
-      return FrameLoadingStyle.eager
+      return FrameLoadingStyle.eager;
   }
 }
 
 const drive = {
   enabled: true,
   progressBarDelay: 500,
-  unvisitableExtensions: new Set(
-    [
-      ".7z", ".aac", ".apk", ".avi", ".bmp", ".bz2", ".css", ".csv", ".deb", ".dmg", ".doc",
-      ".docx", ".exe", ".gif", ".gz", ".heic", ".heif", ".ico", ".iso", ".jpeg", ".jpg",
-      ".js", ".json", ".m4a", ".mkv", ".mov", ".mp3", ".mp4", ".mpeg", ".mpg", ".msi",
-      ".ogg", ".ogv", ".pdf", ".pkg", ".png", ".ppt", ".pptx", ".rar", ".rtf",
-      ".svg", ".tar", ".tif", ".tiff", ".txt", ".wav", ".webm", ".webp", ".wma", ".wmv",
-      ".xls", ".xlsx", ".xml", ".zip"
-    ]
-  )
+  unvisitableExtensions: new Set([
+    ".7z",
+    ".aac",
+    ".apk",
+    ".avi",
+    ".bmp",
+    ".bz2",
+    ".css",
+    ".csv",
+    ".deb",
+    ".dmg",
+    ".doc",
+    ".docx",
+    ".exe",
+    ".gif",
+    ".gz",
+    ".heic",
+    ".heif",
+    ".ico",
+    ".iso",
+    ".jpeg",
+    ".jpg",
+    ".js",
+    ".json",
+    ".m4a",
+    ".mkv",
+    ".mov",
+    ".mp3",
+    ".mp4",
+    ".mpeg",
+    ".mpg",
+    ".msi",
+    ".ogg",
+    ".ogv",
+    ".pdf",
+    ".pkg",
+    ".png",
+    ".ppt",
+    ".pptx",
+    ".rar",
+    ".rtf",
+    ".svg",
+    ".tar",
+    ".tif",
+    ".tiff",
+    ".txt",
+    ".wav",
+    ".webm",
+    ".webp",
+    ".wma",
+    ".wmv",
+    ".xls",
+    ".xlsx",
+    ".xml",
+    ".zip",
+  ]),
 };
 
 function activateScriptElement(element) {
   if (element.getAttribute("data-turbo-eval") == "false") {
-    return element
+    return element;
   } else {
     const createdScriptElement = document.createElement("script");
     const cspNonce = getMetaContent("csp-nonce");
@@ -320,7 +387,7 @@ function activateScriptElement(element) {
     createdScriptElement.textContent = element.textContent;
     createdScriptElement.async = false;
     copyElementAttributes(createdScriptElement, element);
-    return createdScriptElement
+    return createdScriptElement;
   }
 }
 
@@ -333,7 +400,7 @@ function copyElementAttributes(destinationElement, sourceElement) {
 function createDocumentFragment(html) {
   const template = document.createElement("template");
   template.innerHTML = html;
-  return template.content
+  return template.content;
 }
 
 function dispatch(eventName, { target, cancelable, detail } = {}) {
@@ -341,7 +408,7 @@ function dispatch(eventName, { target, cancelable, detail } = {}) {
     cancelable,
     bubbles: true,
     composed: true,
-    detail
+    detail,
   });
 
   if (target && target.isConnected) {
@@ -350,7 +417,7 @@ function dispatch(eventName, { target, cancelable, detail } = {}) {
     document.documentElement.dispatchEvent(event);
   }
 
-  return event
+  return event;
 }
 
 function cancelEvent(event) {
@@ -360,68 +427,72 @@ function cancelEvent(event) {
 
 function nextRepaint() {
   if (document.visibilityState === "hidden") {
-    return nextEventLoopTick()
+    return nextEventLoopTick();
   } else {
-    return nextAnimationFrame()
+    return nextAnimationFrame();
   }
 }
 
 function nextAnimationFrame() {
-  return new Promise((resolve) => requestAnimationFrame(() => resolve()))
+  return new Promise((resolve) => requestAnimationFrame(() => resolve()));
 }
 
 function nextEventLoopTick() {
-  return new Promise((resolve) => setTimeout(() => resolve(), 0))
+  return new Promise((resolve) => setTimeout(() => resolve(), 0));
 }
 
 function nextMicrotask() {
-  return Promise.resolve()
+  return Promise.resolve();
 }
 
 function parseHTMLDocument(html = "") {
-  return new DOMParser().parseFromString(html, "text/html")
+  return new DOMParser().parseFromString(html, "text/html");
 }
 
 function unindent(strings, ...values) {
   const lines = interpolate(strings, values).replace(/^\n/, "").split("\n");
   const match = lines[0].match(/^\s+/);
   const indent = match ? match[0].length : 0;
-  return lines.map((line) => line.slice(indent)).join("\n")
+  return lines.map((line) => line.slice(indent)).join("\n");
 }
 
 function interpolate(strings, values) {
   return strings.reduce((result, string, i) => {
     const value = values[i] == undefined ? "" : values[i];
-    return result + string + value
-  }, "")
+    return result + string + value;
+  }, "");
 }
 
 function uuid() {
   return Array.from({ length: 36 })
     .map((_, i) => {
       if (i == 8 || i == 13 || i == 18 || i == 23) {
-        return "-"
+        return "-";
       } else if (i == 14) {
-        return "4"
+        return "4";
       } else if (i == 19) {
-        return (Math.floor(Math.random() * 4) + 8).toString(16)
+        return (Math.floor(Math.random() * 4) + 8).toString(16);
       } else {
-        return Math.floor(Math.random() * 15).toString(16)
+        return Math.floor(Math.random() * 15).toString(16);
       }
     })
-    .join("")
+    .join("");
 }
 
 function getAttribute(attributeName, ...elements) {
-  for (const value of elements.map((element) => element?.getAttribute(attributeName))) {
-    if (typeof value == "string") return value
+  for (const value of elements.map((element) =>
+    element?.getAttribute(attributeName),
+  )) {
+    if (typeof value == "string") return value;
   }
 
-  return null
+  return null;
 }
 
 function hasAttribute(attributeName, ...elements) {
-  return elements.some((element) => element && element.hasAttribute(attributeName))
+  return elements.some(
+    (element) => element && element.hasAttribute(attributeName),
+  );
 }
 
 function markAsBusy(...elements) {
@@ -454,36 +525,36 @@ function waitForLoad(element, timeoutInMilliseconds = 2000) {
     element.addEventListener("load", onComplete, { once: true });
     element.addEventListener("error", onComplete, { once: true });
     setTimeout(resolve, timeoutInMilliseconds);
-  })
+  });
 }
 
 function getHistoryMethodForAction(action) {
   switch (action) {
     case "replace":
-      return history.replaceState
+      return history.replaceState;
     case "advance":
     case "restore":
-      return history.pushState
+      return history.pushState;
   }
 }
 
 function isAction(action) {
-  return action == "advance" || action == "replace" || action == "restore"
+  return action == "advance" || action == "replace" || action == "restore";
 }
 
 function getVisitAction(...elements) {
   const action = getAttribute("data-turbo-action", ...elements);
 
-  return isAction(action) ? action : null
+  return isAction(action) ? action : null;
 }
 
 function getMetaElement(name) {
-  return document.querySelector(`meta[name="${name}"]`)
+  return document.querySelector(`meta[name="${name}"]`);
 }
 
 function getMetaContent(name) {
   const element = getMetaElement(name);
-  return element && element.content
+  return element && element.content;
 }
 
 function setMetaContent(name, content) {
@@ -498,25 +569,36 @@ function setMetaContent(name, content) {
 
   element.setAttribute("content", content);
 
-  return element
+  return element;
 }
 
 function findClosestRecursively(element, selector) {
   if (element instanceof Element) {
     return (
-      element.closest(selector) || findClosestRecursively(element.assignedSlot || element.getRootNode()?.host, selector)
-    )
+      element.closest(selector) ||
+      findClosestRecursively(
+        element.assignedSlot || element.getRootNode()?.host,
+        selector,
+      )
+    );
   }
 }
 
 function elementIsFocusable(element) {
-  const inertDisabledOrHidden = "[inert], :disabled, [hidden], details:not([open]), dialog:not([open])";
+  const inertDisabledOrHidden =
+    "[inert], :disabled, [hidden], details:not([open]), dialog:not([open])";
 
-  return !!element && element.closest(inertDisabledOrHidden) == null && typeof element.focus == "function"
+  return (
+    !!element &&
+    element.closest(inertDisabledOrHidden) == null &&
+    typeof element.focus == "function"
+  );
 }
 
 function queryAutofocusableElement(elementOrDocumentFragment) {
-  return Array.from(elementOrDocumentFragment.querySelectorAll("[autofocus]")).find(elementIsFocusable)
+  return Array.from(
+    elementOrDocumentFragment.querySelectorAll("[autofocus]"),
+  ).find(elementIsFocusable);
 }
 
 async function around(callback, reader) {
@@ -528,29 +610,32 @@ async function around(callback, reader) {
 
   const after = reader();
 
-  return [before, after]
+  return [before, after];
 }
 
 function doesNotTargetIFrame(name) {
   if (name === "_blank") {
-    return false
+    return false;
   } else if (name) {
     for (const element of document.getElementsByName(name)) {
-      if (element instanceof HTMLIFrameElement) return false
+      if (element instanceof HTMLIFrameElement) return false;
     }
 
-    return true
+    return true;
   } else {
-    return true
+    return true;
   }
 }
 
 function findLinkFromClickTarget(target) {
-  return findClosestRecursively(target, "a[href]:not([target^=_]):not([download])")
+  return findClosestRecursively(
+    target,
+    "a[href]:not([target^=_]):not([download])",
+  );
 }
 
 function getLocationForLink(link) {
-  return expandURL(link.getAttribute("href") || "")
+  return expandURL(link.getAttribute("href") || "");
 }
 
 function debounce(fn, delay) {
@@ -560,37 +645,37 @@ function debounce(fn, delay) {
     const callback = () => fn.apply(this, args);
     clearTimeout(timeoutId);
     timeoutId = setTimeout(callback, delay);
-  }
+  };
 }
 
 const submitter = {
   "aria-disabled": {
-    beforeSubmit: submitter => {
+    beforeSubmit: (submitter) => {
       submitter.setAttribute("aria-disabled", "true");
       submitter.addEventListener("click", cancelEvent);
     },
 
-    afterSubmit: submitter => {
+    afterSubmit: (submitter) => {
       submitter.removeAttribute("aria-disabled");
       submitter.removeEventListener("click", cancelEvent);
-    }
+    },
   },
 
-  "disabled": {
-    beforeSubmit: submitter => submitter.disabled = true,
-    afterSubmit: submitter => submitter.disabled = false
-  }
+  disabled: {
+    beforeSubmit: (submitter) => (submitter.disabled = true),
+    afterSubmit: (submitter) => (submitter.disabled = false),
+  },
 };
 
 class Config {
-  #submitter = null
+  #submitter = null;
 
   constructor(config) {
     Object.assign(this, config);
   }
 
   get submitter() {
-    return this.#submitter
+    return this.#submitter;
   }
 
   set submitter(value) {
@@ -600,74 +685,82 @@ class Config {
 
 const forms = new Config({
   mode: "on",
-  submitter: "disabled"
+  submitter: "disabled",
 });
 
 const config = {
   drive,
-  forms
+  forms,
 };
 
 function expandURL(locatable) {
-  return new URL(locatable.toString(), document.baseURI)
+  return new URL(locatable.toString(), document.baseURI);
 }
 
 function getAnchor(url) {
   let anchorMatch;
   if (url.hash) {
-    return url.hash.slice(1)
+    return url.hash.slice(1);
     // eslint-disable-next-line no-cond-assign
   } else if ((anchorMatch = url.href.match(/#(.*)$/))) {
-    return anchorMatch[1]
+    return anchorMatch[1];
   }
 }
 
 function getAction$1(form, submitter) {
-  const action = submitter?.getAttribute("formaction") || form.getAttribute("action") || form.action;
+  const action =
+    submitter?.getAttribute("formaction") ||
+    form.getAttribute("action") ||
+    form.action;
 
-  return expandURL(action)
+  return expandURL(action);
 }
 
 function getExtension(url) {
-  return (getLastPathComponent(url).match(/\.[^.]*$/) || [])[0] || ""
+  return (getLastPathComponent(url).match(/\.[^.]*$/) || [])[0] || "";
 }
 
 function isPrefixedBy(baseURL, url) {
   const prefix = getPrefix(url);
-  return baseURL.href === expandURL(prefix).href || baseURL.href.startsWith(prefix)
+  return (
+    baseURL.href === expandURL(prefix).href || baseURL.href.startsWith(prefix)
+  );
 }
 
 function locationIsVisitable(location, rootLocation) {
-  return isPrefixedBy(location, rootLocation) && !config.drive.unvisitableExtensions.has(getExtension(location))
+  return (
+    isPrefixedBy(location, rootLocation) &&
+    !config.drive.unvisitableExtensions.has(getExtension(location))
+  );
 }
 
 function getRequestURL(url) {
   const anchor = getAnchor(url);
-  return anchor != null ? url.href.slice(0, -(anchor.length + 1)) : url.href
+  return anchor != null ? url.href.slice(0, -(anchor.length + 1)) : url.href;
 }
 
 function toCacheKey(url) {
-  return getRequestURL(url)
+  return getRequestURL(url);
 }
 
 function urlsAreEqual(left, right) {
-  return expandURL(left).href == expandURL(right).href
+  return expandURL(left).href == expandURL(right).href;
 }
 
 function getPathComponents(url) {
-  return url.pathname.split("/").slice(1)
+  return url.pathname.split("/").slice(1);
 }
 
 function getLastPathComponent(url) {
-  return getPathComponents(url).slice(-1)[0]
+  return getPathComponents(url).slice(-1)[0];
 }
 
 function getPrefix(url) {
-  return addTrailingSlash(url.origin + url.pathname)
+  return addTrailingSlash(url.origin + url.pathname);
 }
 
 function addTrailingSlash(value) {
-  return value.endsWith("/") ? value : value + "/"
+  return value.endsWith("/") ? value : value + "/";
 }
 
 class FetchResponse {
@@ -676,55 +769,60 @@ class FetchResponse {
   }
 
   get succeeded() {
-    return this.response.ok
+    return this.response.ok;
   }
 
   get failed() {
-    return !this.succeeded
+    return !this.succeeded;
   }
 
   get clientError() {
-    return this.statusCode >= 400 && this.statusCode <= 499
+    return this.statusCode >= 400 && this.statusCode <= 499;
   }
 
   get serverError() {
-    return this.statusCode >= 500 && this.statusCode <= 599
+    return this.statusCode >= 500 && this.statusCode <= 599;
   }
 
   get redirected() {
-    return this.response.redirected
+    return this.response.redirected;
   }
 
   get location() {
-    return expandURL(this.response.url)
+    return expandURL(this.response.url);
   }
 
   get isHTML() {
-    return this.contentType && this.contentType.match(/^(?:text\/([^\s;,]+\b)?html|application\/xhtml\+xml)\b/)
+    return (
+      this.contentType &&
+      this.contentType.match(
+        /^(?:text\/([^\s;,]+\b)?html|application\/xhtml\+xml)\b/,
+      )
+    );
   }
 
   get statusCode() {
-    return this.response.status
+    return this.response.status;
   }
 
   get contentType() {
-    return this.header("Content-Type")
+    return this.header("Content-Type");
   }
 
   get responseText() {
-    return this.response.clone().text()
+    return this.response.clone().text();
   }
 
   get responseHTML() {
     if (this.isHTML) {
-      return this.response.clone().text()
+      return this.response.clone().text();
     } else {
-      return Promise.resolve(undefined)
+      return Promise.resolve(undefined);
     }
   }
 
   header(name) {
-    return this.response.headers.get(name)
+    return this.response.headers.get(name);
   }
 }
 
@@ -756,22 +854,22 @@ function fetchWithTurboHeaders(url, options = {}) {
 
   return nativeFetch(url, {
     ...options,
-    headers: modifiedHeaders
-  })
+    headers: modifiedHeaders,
+  });
 }
 
 function fetchMethodFromString(method) {
   switch (method.toLowerCase()) {
     case "get":
-      return FetchMethod.get
+      return FetchMethod.get;
     case "post":
-      return FetchMethod.post
+      return FetchMethod.post;
     case "put":
-      return FetchMethod.put
+      return FetchMethod.put;
     case "patch":
-      return FetchMethod.patch
+      return FetchMethod.patch;
     case "delete":
-      return FetchMethod.delete
+      return FetchMethod.delete;
   }
 }
 
@@ -780,32 +878,44 @@ const FetchMethod = {
   post: "post",
   put: "put",
   patch: "patch",
-  delete: "delete"
+  delete: "delete",
 };
 
 function fetchEnctypeFromString(encoding) {
   switch (encoding.toLowerCase()) {
     case FetchEnctype.multipart:
-      return FetchEnctype.multipart
+      return FetchEnctype.multipart;
     case FetchEnctype.plain:
-      return FetchEnctype.plain
+      return FetchEnctype.plain;
     default:
-      return FetchEnctype.urlEncoded
+      return FetchEnctype.urlEncoded;
   }
 }
 
 const FetchEnctype = {
   urlEncoded: "application/x-www-form-urlencoded",
   multipart: "multipart/form-data",
-  plain: "text/plain"
+  plain: "text/plain",
 };
 
 class FetchRequest {
-  abortController = new AbortController()
-  #resolveRequestPromise = (_value) => {}
+  abortController = new AbortController();
+  #resolveRequestPromise = (_value) => {};
 
-  constructor(delegate, method, location, requestBody = new URLSearchParams(), target = null, enctype = FetchEnctype.urlEncoded) {
-    const [url, body] = buildResourceAndBody(expandURL(location), method, requestBody, enctype);
+  constructor(
+    delegate,
+    method,
+    location,
+    requestBody = new URLSearchParams(),
+    target = null,
+    enctype = FetchEnctype.urlEncoded,
+  ) {
+    const [url, body] = buildResourceAndBody(
+      expandURL(location),
+      method,
+      requestBody,
+      enctype,
+    );
 
     this.delegate = delegate;
     this.url = url;
@@ -817,22 +927,29 @@ class FetchRequest {
       headers: { ...this.defaultHeaders },
       body: body,
       signal: this.abortSignal,
-      referrer: this.delegate.referrer?.href
+      referrer: this.delegate.referrer?.href,
     };
     this.enctype = enctype;
   }
 
   get method() {
-    return this.fetchOptions.method
+    return this.fetchOptions.method;
   }
 
   set method(value) {
-    const fetchBody = this.isSafe ? this.url.searchParams : this.fetchOptions.body || new FormData();
+    const fetchBody = this.isSafe
+      ? this.url.searchParams
+      : this.fetchOptions.body || new FormData();
     const fetchMethod = fetchMethodFromString(value) || FetchMethod.get;
 
     this.url.search = "";
 
-    const [url, body] = buildResourceAndBody(this.url, fetchMethod, fetchBody, this.enctype);
+    const [url, body] = buildResourceAndBody(
+      this.url,
+      fetchMethod,
+      fetchBody,
+      this.enctype,
+    );
 
     this.url = url;
     this.fetchOptions.body = body;
@@ -840,7 +957,7 @@ class FetchRequest {
   }
 
   get headers() {
-    return this.fetchOptions.headers
+    return this.fetchOptions.headers;
   }
 
   set headers(value) {
@@ -849,9 +966,9 @@ class FetchRequest {
 
   get body() {
     if (this.isSafe) {
-      return this.url.searchParams
+      return this.url.searchParams;
     } else {
-      return this.fetchOptions.body
+      return this.fetchOptions.body;
     }
   }
 
@@ -860,15 +977,15 @@ class FetchRequest {
   }
 
   get location() {
-    return this.url
+    return this.url;
   }
 
   get params() {
-    return this.url.searchParams
+    return this.url.searchParams;
   }
 
   get entries() {
-    return this.body ? Array.from(this.body.entries()) : []
+    return this.body ? Array.from(this.body.entries()) : [];
   }
 
   cancel() {
@@ -889,13 +1006,13 @@ class FetchRequest {
       }
 
       const response = await this.response;
-      return await this.receive(response)
+      return await this.receive(response);
     } catch (error) {
       if (error.name !== "AbortError") {
         if (this.#willDelegateErrorHandling(error)) {
           this.delegate.requestErrored(this, error);
         }
-        throw error
+        throw error;
       }
     } finally {
       this.delegate.requestFinished(this);
@@ -907,7 +1024,7 @@ class FetchRequest {
     const event = dispatch("turbo:before-fetch-response", {
       cancelable: true,
       detail: { fetchResponse },
-      target: this.target
+      target: this.target,
     });
     if (event.defaultPrevented) {
       this.delegate.requestPreventedHandlingResponse(this, fetchResponse);
@@ -916,21 +1033,21 @@ class FetchRequest {
     } else {
       this.delegate.requestFailedWithResponse(this, fetchResponse);
     }
-    return fetchResponse
+    return fetchResponse;
   }
 
   get defaultHeaders() {
     return {
-      Accept: "text/html, application/xhtml+xml"
-    }
+      Accept: "text/html, application/xhtml+xml",
+    };
   }
 
   get isSafe() {
-    return isSafe(this.method)
+    return isSafe(this.method);
   }
 
   get abortSignal() {
-    return this.abortController.signal
+    return this.abortController.signal;
   }
 
   acceptResponseType(mimeType) {
@@ -938,47 +1055,51 @@ class FetchRequest {
   }
 
   async #allowRequestToBeIntercepted(fetchOptions) {
-    const requestInterception = new Promise((resolve) => (this.#resolveRequestPromise = resolve));
+    const requestInterception = new Promise(
+      (resolve) => (this.#resolveRequestPromise = resolve),
+    );
     const event = dispatch("turbo:before-fetch-request", {
       cancelable: true,
       detail: {
         fetchOptions,
         url: this.url,
-        resume: this.#resolveRequestPromise
+        resume: this.#resolveRequestPromise,
       },
-      target: this.target
+      target: this.target,
     });
     this.url = event.detail.url;
     if (event.defaultPrevented) await requestInterception;
 
-    return event
+    return event;
   }
 
   #willDelegateErrorHandling(error) {
     const event = dispatch("turbo:fetch-request-error", {
       target: this.target,
       cancelable: true,
-      detail: { request: this, error: error }
+      detail: { request: this, error: error },
     });
 
-    return !event.defaultPrevented
+    return !event.defaultPrevented;
   }
 }
 
 function isSafe(fetchMethod) {
-  return fetchMethodFromString(fetchMethod) == FetchMethod.get
+  return fetchMethodFromString(fetchMethod) == FetchMethod.get;
 }
 
 function buildResourceAndBody(resource, method, requestBody, enctype) {
   const searchParams =
-    Array.from(requestBody).length > 0 ? new URLSearchParams(entriesExcludingFiles(requestBody)) : resource.searchParams;
+    Array.from(requestBody).length > 0
+      ? new URLSearchParams(entriesExcludingFiles(requestBody))
+      : resource.searchParams;
 
   if (isSafe(method)) {
-    return [mergeIntoURLSearchParams(resource, searchParams), null]
+    return [mergeIntoURLSearchParams(resource, searchParams), null];
   } else if (enctype == FetchEnctype.urlEncoded) {
-    return [resource, searchParams]
+    return [resource, searchParams];
   } else {
-    return [resource, requestBody]
+    return [resource, requestBody];
   }
 }
 
@@ -986,11 +1107,11 @@ function entriesExcludingFiles(requestBody) {
   const entries = [];
 
   for (const [name, value] of requestBody) {
-    if (value instanceof File) continue
+    if (value instanceof File) continue;
     else entries.push([name, value]);
   }
 
-  return entries
+  return entries;
 }
 
 function mergeIntoURLSearchParams(url, requestBody) {
@@ -998,11 +1119,11 @@ function mergeIntoURLSearchParams(url, requestBody) {
 
   url.search = searchParams.toString();
 
-  return url
+  return url;
 }
 
 class AppearanceObserver {
-  started = false
+  started = false;
 
   constructor(delegate, element) {
     this.delegate = delegate;
@@ -1029,17 +1150,17 @@ class AppearanceObserver {
     if (lastEntry?.isIntersecting) {
       this.delegate.elementAppearedInViewport(this.element);
     }
-  }
+  };
 }
 
 class StreamMessage {
-  static contentType = "text/vnd.turbo-stream.html"
+  static contentType = "text/vnd.turbo-stream.html";
 
   static wrap(message) {
     if (typeof message == "string") {
-      return new this(createDocumentFragment(message))
+      return new this(createDocumentFragment(message));
     } else {
-      return message
+      return message;
     }
   }
 
@@ -1052,25 +1173,31 @@ function importStreamElements(fragment) {
   for (const element of fragment.querySelectorAll("turbo-stream")) {
     const streamElement = document.importNode(element, true);
 
-    for (const inertScriptElement of streamElement.templateElement.content.querySelectorAll("script")) {
+    for (const inertScriptElement of streamElement.templateElement.content.querySelectorAll(
+      "script",
+    )) {
       inertScriptElement.replaceWith(activateScriptElement(inertScriptElement));
     }
 
     element.replaceWith(streamElement);
   }
 
-  return fragment
+  return fragment;
 }
 
 const PREFETCH_DELAY = 100;
 
 class PrefetchCache {
-  #prefetchTimeout = null
-  #prefetched = null
+  #prefetchTimeout = null;
+  #prefetched = null;
 
   get(url) {
-    if (this.#prefetched && this.#prefetched.url === url && this.#prefetched.expire > Date.now()) {
-      return this.#prefetched.request
+    if (
+      this.#prefetched &&
+      this.#prefetched.url === url &&
+      this.#prefetched.expire > Date.now()
+    ) {
+      return this.#prefetched.request;
     }
   }
 
@@ -1085,7 +1212,11 @@ class PrefetchCache {
   }
 
   set(url, request, ttl) {
-    this.#prefetched = { url, request, expire: new Date(new Date().getTime() + ttl) };
+    this.#prefetched = {
+      url,
+      request,
+      expire: new Date(new Date().getTime() + ttl),
+    };
   }
 
   clear() {
@@ -1103,14 +1234,14 @@ const FormSubmissionState = {
   waiting: "waiting",
   receiving: "receiving",
   stopping: "stopping",
-  stopped: "stopped"
+  stopped: "stopped",
 };
 
 class FormSubmission {
-  state = FormSubmissionState.initialized
+  state = FormSubmissionState.initialized;
 
   static confirmMethod(message) {
-    return Promise.resolve(confirm(message))
+    return Promise.resolve(confirm(message));
   }
 
   constructor(delegate, formElement, submitter, mustRedirect = false) {
@@ -1122,12 +1253,19 @@ class FormSubmission {
     this.delegate = delegate;
     this.formElement = formElement;
     this.submitter = submitter;
-    this.fetchRequest = new FetchRequest(this, method, action, body, formElement, enctype);
+    this.fetchRequest = new FetchRequest(
+      this,
+      method,
+      action,
+      body,
+      formElement,
+      enctype,
+    );
     this.mustRedirect = mustRedirect;
   }
 
   get method() {
-    return this.fetchRequest.method
+    return this.fetchRequest.method;
   }
 
   set method(value) {
@@ -1135,7 +1273,7 @@ class FormSubmission {
   }
 
   get action() {
-    return this.fetchRequest.url.toString()
+    return this.fetchRequest.url.toString();
   }
 
   set action(value) {
@@ -1143,41 +1281,50 @@ class FormSubmission {
   }
 
   get body() {
-    return this.fetchRequest.body
+    return this.fetchRequest.body;
   }
 
   get enctype() {
-    return this.fetchRequest.enctype
+    return this.fetchRequest.enctype;
   }
 
   get isSafe() {
-    return this.fetchRequest.isSafe
+    return this.fetchRequest.isSafe;
   }
 
   get location() {
-    return this.fetchRequest.url
+    return this.fetchRequest.url;
   }
 
   // The submission process
 
   async start() {
     const { initialized, requesting } = FormSubmissionState;
-    const confirmationMessage = getAttribute("data-turbo-confirm", this.submitter, this.formElement);
+    const confirmationMessage = getAttribute(
+      "data-turbo-confirm",
+      this.submitter,
+      this.formElement,
+    );
 
     if (typeof confirmationMessage === "string") {
-      const confirmMethod = typeof config.forms.confirm === "function" ?
-        config.forms.confirm :
-        FormSubmission.confirmMethod;
+      const confirmMethod =
+        typeof config.forms.confirm === "function"
+          ? config.forms.confirm
+          : FormSubmission.confirmMethod;
 
-      const answer = await confirmMethod(confirmationMessage, this.formElement, this.submitter);
+      const answer = await confirmMethod(
+        confirmationMessage,
+        this.formElement,
+        this.submitter,
+      );
       if (!answer) {
-        return
+        return;
       }
     }
 
     if (this.state == initialized) {
       this.state = requesting;
-      return this.fetchRequest.perform()
+      return this.fetchRequest.perform();
     }
   }
 
@@ -1186,7 +1333,7 @@ class FormSubmission {
     if (this.state != stopping && this.state != stopped) {
       this.state = stopping;
       this.fetchRequest.cancel();
-      return true
+      return true;
     }
   }
 
@@ -1194,7 +1341,9 @@ class FormSubmission {
 
   prepareRequest(request) {
     if (!request.isSafe) {
-      const token = getCookieValue(getMetaContent("csrf-param")) || getMetaContent("csrf-token");
+      const token =
+        getCookieValue(getMetaContent("csrf-param")) ||
+        getMetaContent("csrf-token");
       if (token) {
         request.headers["X-CSRF-Token"] = token;
       }
@@ -1212,7 +1361,7 @@ class FormSubmission {
     markAsBusy(this.formElement);
     dispatch("turbo:submit-start", {
       target: this.formElement,
-      detail: { formSubmission: this }
+      detail: { formSubmission: this },
     });
     this.delegate.formSubmissionStarted(this);
   }
@@ -1226,13 +1375,18 @@ class FormSubmission {
   requestSucceededWithResponse(request, response) {
     if (response.clientError || response.serverError) {
       this.delegate.formSubmissionFailedWithResponse(this, response);
-      return
+      return;
     }
 
     prefetchCache.clear();
 
-    if (this.requestMustRedirect(request) && responseSucceededWithoutRedirect(response)) {
-      const error = new Error("Form responses must redirect to another location");
+    if (
+      this.requestMustRedirect(request) &&
+      responseSucceededWithoutRedirect(response)
+    ) {
+      const error = new Error(
+        "Form responses must redirect to another location",
+      );
       this.delegate.formSubmissionErrored(this, error);
     } else {
       this.state = FormSubmissionState.receiving;
@@ -1258,7 +1412,7 @@ class FormSubmission {
     clearBusyState(this.formElement);
     dispatch("turbo:submit-end", {
       target: this.formElement,
-      detail: { formSubmission: this, ...this.result }
+      detail: { formSubmission: this, ...this.result },
     });
     this.delegate.formSubmissionFinished(this);
   }
@@ -1266,7 +1420,7 @@ class FormSubmission {
   // Private
 
   setSubmitsWith() {
-    if (!this.submitter || !this.submitsWith) return
+    if (!this.submitter || !this.submitsWith) return;
 
     if (this.submitter.matches("button")) {
       this.originalSubmitText = this.submitter.innerHTML;
@@ -1279,7 +1433,7 @@ class FormSubmission {
   }
 
   resetSubmitterText() {
-    if (!this.submitter || !this.originalSubmitText) return
+    if (!this.submitter || !this.originalSubmitText) return;
 
     if (this.submitter.matches("button")) {
       this.submitter.innerHTML = this.originalSubmitText;
@@ -1290,15 +1444,18 @@ class FormSubmission {
   }
 
   requestMustRedirect(request) {
-    return !request.isSafe && this.mustRedirect
+    return !request.isSafe && this.mustRedirect;
   }
 
   requestAcceptsTurboStreamResponse(request) {
-    return !request.isSafe || hasAttribute("data-turbo-stream", this.submitter, this.formElement)
+    return (
+      !request.isSafe ||
+      hasAttribute("data-turbo-stream", this.submitter, this.formElement)
+    );
   }
 
   get submitsWith() {
-    return this.submitter?.getAttribute("data-turbo-submits-with")
+    return this.submitter?.getAttribute("data-turbo-submits-with");
   }
 }
 
@@ -1311,7 +1468,7 @@ function buildFormData(formElement, submitter) {
     formData.append(name, value || "");
   }
 
-  return formData
+  return formData;
 }
 
 function getCookieValue(cookieName) {
@@ -1320,22 +1477,23 @@ function getCookieValue(cookieName) {
     const cookie = cookies.find((cookie) => cookie.startsWith(cookieName));
     if (cookie) {
       const value = cookie.split("=").slice(1).join("=");
-      return value ? decodeURIComponent(value) : undefined
+      return value ? decodeURIComponent(value) : undefined;
     }
   }
 }
 
 function responseSucceededWithoutRedirect(response) {
-  return response.statusCode == 200 && !response.redirected
+  return response.statusCode == 200 && !response.redirected;
 }
 
 function getFormAction(formElement, submitter) {
-  const formElementAction = typeof formElement.action === "string" ? formElement.action : null;
+  const formElementAction =
+    typeof formElement.action === "string" ? formElement.action : null;
 
   if (submitter?.hasAttribute("formaction")) {
-    return submitter.getAttribute("formaction") || ""
+    return submitter.getAttribute("formaction") || "";
   } else {
-    return formElement.getAttribute("action") || formElementAction || ""
+    return formElement.getAttribute("action") || formElementAction || "";
   }
 }
 
@@ -1346,16 +1504,21 @@ function getAction(formAction, fetchMethod) {
     action.search = "";
   }
 
-  return action
+  return action;
 }
 
 function getMethod(formElement, submitter) {
-  const method = submitter?.getAttribute("formmethod") || formElement.getAttribute("method") || "";
-  return fetchMethodFromString(method.toLowerCase()) || FetchMethod.get
+  const method =
+    submitter?.getAttribute("formmethod") ||
+    formElement.getAttribute("method") ||
+    "";
+  return fetchMethodFromString(method.toLowerCase()) || FetchMethod.get;
 }
 
 function getEnctype(formElement, submitter) {
-  return fetchEnctypeFromString(submitter?.getAttribute("formenctype") || formElement.enctype)
+  return fetchEnctypeFromString(
+    submitter?.getAttribute("formenctype") || formElement.enctype,
+  );
 }
 
 class Snapshot {
@@ -1364,35 +1527,37 @@ class Snapshot {
   }
 
   get activeElement() {
-    return this.element.ownerDocument.activeElement
+    return this.element.ownerDocument.activeElement;
   }
 
   get children() {
-    return [...this.element.children]
+    return [...this.element.children];
   }
 
   hasAnchor(anchor) {
-    return this.getElementForAnchor(anchor) != null
+    return this.getElementForAnchor(anchor) != null;
   }
 
   getElementForAnchor(anchor) {
-    return anchor ? this.element.querySelector(`[id='${anchor}'], a[name='${anchor}']`) : null
+    return anchor
+      ? this.element.querySelector(`[id='${anchor}'], a[name='${anchor}']`)
+      : null;
   }
 
   get isConnected() {
-    return this.element.isConnected
+    return this.element.isConnected;
   }
 
   get firstAutofocusableElement() {
-    return queryAutofocusableElement(this.element)
+    return queryAutofocusableElement(this.element);
   }
 
   get permanentElements() {
-    return queryPermanentElementsAll(this.element)
+    return queryPermanentElementsAll(this.element);
   }
 
   getPermanentElementById(id) {
-    return getPermanentElementById(this.element, id)
+    return getPermanentElementById(this.element, id);
   }
 
   getPermanentElementMapForSnapshot(snapshot) {
@@ -1402,24 +1567,27 @@ class Snapshot {
       const { id } = currentPermanentElement;
       const newPermanentElement = snapshot.getPermanentElementById(id);
       if (newPermanentElement) {
-        permanentElementMap[id] = [currentPermanentElement, newPermanentElement];
+        permanentElementMap[id] = [
+          currentPermanentElement,
+          newPermanentElement,
+        ];
       }
     }
 
-    return permanentElementMap
+    return permanentElementMap;
   }
 }
 
 function getPermanentElementById(node, id) {
-  return node.querySelector(`#${id}[data-turbo-permanent]`)
+  return node.querySelector(`#${id}[data-turbo-permanent]`);
 }
 
 function queryPermanentElementsAll(node) {
-  return node.querySelectorAll("[id][data-turbo-permanent]")
+  return node.querySelectorAll("[id][data-turbo-permanent]");
 }
 
 class FormSubmitObserver {
-  started = false
+  started = false;
 
   constructor(delegate, eventTarget) {
     this.delegate = delegate;
@@ -1443,11 +1611,12 @@ class FormSubmitObserver {
   submitCaptured = () => {
     this.eventTarget.removeEventListener("submit", this.submitBubbled, false);
     this.eventTarget.addEventListener("submit", this.submitBubbled, false);
-  }
+  };
 
   submitBubbled = (event) => {
     if (!event.defaultPrevented) {
-      const form = event.target instanceof HTMLFormElement ? event.target : undefined;
+      const form =
+        event.target instanceof HTMLFormElement ? event.target : undefined;
       const submitter = event.submitter || undefined;
 
       if (
@@ -1461,24 +1630,26 @@ class FormSubmitObserver {
         this.delegate.formSubmitted(form, submitter);
       }
     }
-  }
+  };
 }
 
 function submissionDoesNotDismissDialog(form, submitter) {
-  const method = submitter?.getAttribute("formmethod") || form.getAttribute("method");
+  const method =
+    submitter?.getAttribute("formmethod") || form.getAttribute("method");
 
-  return method != "dialog"
+  return method != "dialog";
 }
 
 function submissionDoesNotTargetIFrame(form, submitter) {
-  const target = submitter?.getAttribute("formtarget") || form.getAttribute("target");
+  const target =
+    submitter?.getAttribute("formtarget") || form.getAttribute("target");
 
-  return doesNotTargetIFrame(target)
+  return doesNotTargetIFrame(target);
 }
 
 class View {
-  #resolveRenderPromise = (_value) => {}
-  #resolveInterceptionPromise = (_value) => {}
+  #resolveRenderPromise = (_value) => {};
+  #resolveInterceptionPromise = (_value) => {};
 
   constructor(delegate, element) {
     this.delegate = delegate;
@@ -1526,13 +1697,18 @@ class View {
   }
 
   get scrollRoot() {
-    return window
+    return window;
   }
 
   // Rendering
 
   async render(renderer) {
-    const { isPreview, shouldRender, willRender, newSnapshot: snapshot } = renderer;
+    const {
+      isPreview,
+      shouldRender,
+      willRender,
+      newSnapshot: snapshot,
+    } = renderer;
 
     // A workaround to ignore tracked element mismatch reloads when performing
     // a promoted Visit from a frame navigation
@@ -1540,17 +1716,32 @@ class View {
 
     if (shouldRender) {
       try {
-        this.renderPromise = new Promise((resolve) => (this.#resolveRenderPromise = resolve));
+        this.renderPromise = new Promise(
+          (resolve) => (this.#resolveRenderPromise = resolve),
+        );
         this.renderer = renderer;
         await this.prepareToRenderSnapshot(renderer);
 
-        const renderInterception = new Promise((resolve) => (this.#resolveInterceptionPromise = resolve));
-        const options = { resume: this.#resolveInterceptionPromise, render: this.renderer.renderElement, renderMethod: this.renderer.renderMethod };
-        const immediateRender = this.delegate.allowsImmediateRender(snapshot, options);
+        const renderInterception = new Promise(
+          (resolve) => (this.#resolveInterceptionPromise = resolve),
+        );
+        const options = {
+          resume: this.#resolveInterceptionPromise,
+          render: this.renderer.renderElement,
+          renderMethod: this.renderer.renderMethod,
+        };
+        const immediateRender = this.delegate.allowsImmediateRender(
+          snapshot,
+          options,
+        );
         if (!immediateRender) await renderInterception;
 
         await this.renderSnapshot(renderer);
-        this.delegate.viewRenderedSnapshot(snapshot, isPreview, this.renderer.renderMethod);
+        this.delegate.viewRenderedSnapshot(
+          snapshot,
+          isPreview,
+          this.renderer.renderMethod,
+        );
         this.delegate.preloadOnLoadLinksForView(this.element);
         this.finishRenderingSnapshot(renderer);
       } finally {
@@ -1603,7 +1794,7 @@ class FrameView extends View {
   }
 
   get snapshot() {
-    return new Snapshot(this.element)
+    return new Snapshot(this.element);
   }
 }
 
@@ -1631,33 +1822,46 @@ class LinkInterceptor {
     } else {
       delete this.clickEvent;
     }
-  }
+  };
 
   linkClicked = (event) => {
     if (this.clickEvent && this.clickEventIsSignificant(event)) {
-      if (this.delegate.shouldInterceptLinkClick(event.target, event.detail.url, event.detail.originalEvent)) {
+      if (
+        this.delegate.shouldInterceptLinkClick(
+          event.target,
+          event.detail.url,
+          event.detail.originalEvent,
+        )
+      ) {
         this.clickEvent.preventDefault();
         event.preventDefault();
-        this.delegate.linkClickIntercepted(event.target, event.detail.url, event.detail.originalEvent);
+        this.delegate.linkClickIntercepted(
+          event.target,
+          event.detail.url,
+          event.detail.originalEvent,
+        );
       }
     }
     delete this.clickEvent;
-  }
+  };
 
   willVisit = (_event) => {
     delete this.clickEvent;
-  }
+  };
 
   clickEventIsSignificant(event) {
     const target = event.composed ? event.target?.parentElement : event.target;
     const element = findLinkFromClickTarget(target) || target;
 
-    return element instanceof Element && element.closest("turbo-frame, html") == this.element
+    return (
+      element instanceof Element &&
+      element.closest("turbo-frame, html") == this.element
+    );
   }
 }
 
 class LinkClickObserver {
-  started = false
+  started = false;
 
   constructor(delegate, eventTarget) {
     this.delegate = delegate;
@@ -1681,11 +1885,12 @@ class LinkClickObserver {
   clickCaptured = () => {
     this.eventTarget.removeEventListener("click", this.clickBubbled, false);
     this.eventTarget.addEventListener("click", this.clickBubbled, false);
-  }
+  };
 
   clickBubbled = (event) => {
     if (event instanceof MouseEvent && this.clickEventIsSignificant(event)) {
-      const target = (event.composedPath && event.composedPath()[0]) || event.target;
+      const target =
+        (event.composedPath && event.composedPath()[0]) || event.target;
       const link = findLinkFromClickTarget(target);
       if (link && doesNotTargetIFrame(link.target)) {
         const location = getLocationForLink(link);
@@ -1695,7 +1900,7 @@ class LinkClickObserver {
         }
       }
     }
-  }
+  };
 
   clickEventIsSignificant(event) {
     return !(
@@ -1706,7 +1911,7 @@ class LinkClickObserver {
       event.ctrlKey ||
       event.metaKey ||
       event.shiftKey
-    )
+    );
   }
 }
 
@@ -1727,20 +1932,25 @@ class FormLinkClickObserver {
   // Link hover observer delegate
 
   canPrefetchRequestToLocation(link, location) {
-    return false
+    return false;
   }
 
   prefetchAndCacheRequestToLocation(link, location) {
-    return
+    return;
   }
 
   // Link click observer delegate
 
   willFollowLinkToLocation(link, location, originalEvent) {
     return (
-      this.delegate.willSubmitFormLinkToLocation(link, location, originalEvent) &&
-      (link.hasAttribute("data-turbo-method") || link.hasAttribute("data-turbo-stream"))
-    )
+      this.delegate.willSubmitFormLinkToLocation(
+        link,
+        location,
+        originalEvent,
+      ) &&
+      (link.hasAttribute("data-turbo-method") ||
+        link.hasAttribute("data-turbo-stream"))
+    );
   }
 
   followedLinkToLocation(link, location) {
@@ -1748,7 +1958,9 @@ class FormLinkClickObserver {
 
     const type = "hidden";
     for (const [name, value] of location.searchParams) {
-      form.append(Object.assign(document.createElement("input"), { type, name, value }));
+      form.append(
+        Object.assign(document.createElement("input"), { type, name, value }),
+      );
     }
 
     const action = Object.assign(location, { search: "" });
@@ -1774,13 +1986,19 @@ class FormLinkClickObserver {
     this.delegate.submittedFormLinkToLocation(link, location, form);
 
     document.body.appendChild(form);
-    form.addEventListener("turbo:submit-end", () => form.remove(), { once: true });
+    form.addEventListener("turbo:submit-end", () => form.remove(), {
+      once: true,
+    });
     requestAnimationFrame(() => form.requestSubmit());
   }
 }
 
 class Bardo {
-  static async preservingPermanentElements(delegate, permanentElementMap, callback) {
+  static async preservingPermanentElements(
+    delegate,
+    permanentElementMap,
+    callback,
+  ) {
     const bardo = new this(delegate, permanentElementMap);
     bardo.enter();
     await callback();
@@ -1794,7 +2012,8 @@ class Bardo {
 
   enter() {
     for (const id in this.permanentElementMap) {
-      const [currentPermanentElement, newPermanentElement] = this.permanentElementMap[id];
+      const [currentPermanentElement, newPermanentElement] =
+        this.permanentElementMap[id];
       this.delegate.enteringBardo(currentPermanentElement, newPermanentElement);
       this.replaceNewPermanentElementWithPlaceholder(newPermanentElement);
     }
@@ -1825,11 +2044,15 @@ class Bardo {
   }
 
   getPlaceholderById(id) {
-    return this.placeholders.find((element) => element.content == id)
+    return this.placeholders.find((element) => element.content == id);
   }
 
   get placeholders() {
-    return [...document.querySelectorAll("meta[name=turbo-permanent-placeholder][content]")]
+    return [
+      ...document.querySelectorAll(
+        "meta[name=turbo-permanent-placeholder][content]",
+      ),
+    ];
   }
 }
 
@@ -1837,11 +2060,11 @@ function createPlaceholderForPermanentElement(permanentElement) {
   const element = document.createElement("meta");
   element.setAttribute("name", "turbo-permanent-placeholder");
   element.setAttribute("content", permanentElement.id);
-  return element
+  return element;
 }
 
 class Renderer {
-  #activeElement = null
+  #activeElement = null;
 
   static renderElement(currentElement, newElement) {
     // Abstract method
@@ -1853,23 +2076,25 @@ class Renderer {
     this.isPreview = isPreview;
     this.willRender = willRender;
     this.renderElement = this.constructor.renderElement;
-    this.promise = new Promise((resolve, reject) => (this.resolvingFunctions = { resolve, reject }));
+    this.promise = new Promise(
+      (resolve, reject) => (this.resolvingFunctions = { resolve, reject }),
+    );
   }
 
   get shouldRender() {
-    return true
+    return true;
   }
 
   get shouldAutofocus() {
-    return true
+    return true;
   }
 
   get reloadReason() {
-    return
+    return;
   }
 
   prepareToRender() {
-    return
+    return;
   }
 
   render() {
@@ -1884,7 +2109,11 @@ class Renderer {
   }
 
   async preservingPermanentElements(callback) {
-    await Bardo.preservingPermanentElements(this, this.permanentElementMap, callback);
+    await Bardo.preservingPermanentElements(
+      this,
+      this.permanentElementMap,
+      callback,
+    );
   }
 
   focusFirstAutofocusableElement() {
@@ -1899,7 +2128,7 @@ class Renderer {
   // Bardo delegate
 
   enteringBardo(currentPermanentElement) {
-    if (this.#activeElement) return
+    if (this.#activeElement) return;
 
     if (currentPermanentElement.contains(this.currentSnapshot.activeElement)) {
       this.#activeElement = this.currentSnapshot.activeElement;
@@ -1907,7 +2136,10 @@ class Renderer {
   }
 
   leavingBardo(currentPermanentElement) {
-    if (currentPermanentElement.contains(this.#activeElement) && this.#activeElement instanceof HTMLElement) {
+    if (
+      currentPermanentElement.contains(this.#activeElement) &&
+      this.#activeElement instanceof HTMLElement
+    ) {
       this.#activeElement.focus();
 
       this.#activeElement = null;
@@ -1915,23 +2147,27 @@ class Renderer {
   }
 
   get connectedSnapshot() {
-    return this.newSnapshot.isConnected ? this.newSnapshot : this.currentSnapshot
+    return this.newSnapshot.isConnected
+      ? this.newSnapshot
+      : this.currentSnapshot;
   }
 
   get currentElement() {
-    return this.currentSnapshot.element
+    return this.currentSnapshot.element;
   }
 
   get newElement() {
-    return this.newSnapshot.element
+    return this.newSnapshot.element;
   }
 
   get permanentElementMap() {
-    return this.currentSnapshot.getPermanentElementMapForSnapshot(this.newSnapshot)
+    return this.currentSnapshot.getPermanentElementMapForSnapshot(
+      this.newSnapshot,
+    );
   }
 
   get renderMethod() {
-    return "replace"
+    return "replace";
   }
 }
 
@@ -1949,13 +2185,20 @@ class FrameRenderer extends Renderer {
     }
   }
 
-  constructor(delegate, currentSnapshot, newSnapshot, renderElement, isPreview, willRender = true) {
+  constructor(
+    delegate,
+    currentSnapshot,
+    newSnapshot,
+    renderElement,
+    isPreview,
+    willRender = true,
+  ) {
     super(currentSnapshot, newSnapshot, renderElement, isPreview, willRender);
     this.delegate = delegate;
   }
 
   get shouldRender() {
-    return true
+    return true;
   }
 
   async render() {
@@ -1978,15 +2221,21 @@ class FrameRenderer extends Renderer {
   scrollFrameIntoView() {
     if (this.currentElement.autoscroll || this.newElement.autoscroll) {
       const element = this.currentElement.firstElementChild;
-      const block = readScrollLogicalPosition(this.currentElement.getAttribute("data-autoscroll-block"), "end");
-      const behavior = readScrollBehavior(this.currentElement.getAttribute("data-autoscroll-behavior"), "auto");
+      const block = readScrollLogicalPosition(
+        this.currentElement.getAttribute("data-autoscroll-block"),
+        "end",
+      );
+      const behavior = readScrollBehavior(
+        this.currentElement.getAttribute("data-autoscroll-behavior"),
+        "auto",
+      );
 
       if (element) {
         element.scrollIntoView({ block, behavior });
-        return true
+        return true;
       }
     }
-    return false
+    return false;
   }
 
   activateScriptElements() {
@@ -1997,940 +2246,1007 @@ class FrameRenderer extends Renderer {
   }
 
   get newScriptElements() {
-    return this.currentElement.querySelectorAll("script")
+    return this.currentElement.querySelectorAll("script");
   }
 }
 
 function readScrollLogicalPosition(value, defaultValue) {
-  if (value == "end" || value == "start" || value == "center" || value == "nearest") {
-    return value
+  if (
+    value == "end" ||
+    value == "start" ||
+    value == "center" ||
+    value == "nearest"
+  ) {
+    return value;
   } else {
-    return defaultValue
+    return defaultValue;
   }
 }
 
 function readScrollBehavior(value, defaultValue) {
   if (value == "auto" || value == "smooth") {
-    return value
+    return value;
   } else {
-    return defaultValue
+    return defaultValue;
   }
 }
 
 // base IIFE to define idiomorph
 var Idiomorph = (function () {
+  //=============================================================================
+  // AND NOW IT BEGINS...
+  //=============================================================================
+  let EMPTY_SET = new Set();
 
-        //=============================================================================
-        // AND NOW IT BEGINS...
-        //=============================================================================
-        let EMPTY_SET = new Set();
+  // default configuration values, updatable by users now
+  let defaults = {
+    morphStyle: "outerHTML",
+    callbacks: {
+      beforeNodeAdded: noOp,
+      afterNodeAdded: noOp,
+      beforeNodeMorphed: noOp,
+      afterNodeMorphed: noOp,
+      beforeNodeRemoved: noOp,
+      afterNodeRemoved: noOp,
+      beforeAttributeUpdated: noOp,
+    },
+    head: {
+      style: "merge",
+      shouldPreserve: function (elt) {
+        return elt.getAttribute("im-preserve") === "true";
+      },
+      shouldReAppend: function (elt) {
+        return elt.getAttribute("im-re-append") === "true";
+      },
+      shouldRemove: noOp,
+      afterHeadMorphed: noOp,
+    },
+  };
 
-        // default configuration values, updatable by users now
-        let defaults = {
-            morphStyle: "outerHTML",
-            callbacks : {
-                beforeNodeAdded: noOp,
-                afterNodeAdded: noOp,
-                beforeNodeMorphed: noOp,
-                afterNodeMorphed: noOp,
-                beforeNodeRemoved: noOp,
-                afterNodeRemoved: noOp,
-                beforeAttributeUpdated: noOp,
+  //=============================================================================
+  // Core Morphing Algorithm - morph, morphNormalizedContent, morphOldNodeTo, morphChildren
+  //=============================================================================
+  function morph(oldNode, newContent, config = {}) {
+    if (oldNode instanceof Document) {
+      oldNode = oldNode.documentElement;
+    }
 
-            },
-            head: {
-                style: 'merge',
-                shouldPreserve: function (elt) {
-                    return elt.getAttribute("im-preserve") === "true";
-                },
-                shouldReAppend: function (elt) {
-                    return elt.getAttribute("im-re-append") === "true";
-                },
-                shouldRemove: noOp,
-                afterHeadMorphed: noOp,
-            }
-        };
+    if (typeof newContent === "string") {
+      newContent = parseContent(newContent);
+    }
 
-        //=============================================================================
-        // Core Morphing Algorithm - morph, morphNormalizedContent, morphOldNodeTo, morphChildren
-        //=============================================================================
-        function morph(oldNode, newContent, config = {}) {
+    let normalizedContent = normalizeContent(newContent);
 
-            if (oldNode instanceof Document) {
-                oldNode = oldNode.documentElement;
-            }
+    let ctx = createMorphContext(oldNode, normalizedContent, config);
 
-            if (typeof newContent === 'string') {
-                newContent = parseContent(newContent);
-            }
+    return morphNormalizedContent(oldNode, normalizedContent, ctx);
+  }
 
-            let normalizedContent = normalizeContent(newContent);
+  function morphNormalizedContent(oldNode, normalizedNewContent, ctx) {
+    if (ctx.head.block) {
+      let oldHead = oldNode.querySelector("head");
+      let newHead = normalizedNewContent.querySelector("head");
+      if (oldHead && newHead) {
+        let promises = handleHeadElement(newHead, oldHead, ctx);
+        // when head promises resolve, call morph again, ignoring the head tag
+        Promise.all(promises).then(function () {
+          morphNormalizedContent(
+            oldNode,
+            normalizedNewContent,
+            Object.assign(ctx, {
+              head: {
+                block: false,
+                ignore: true,
+              },
+            }),
+          );
+        });
+        return;
+      }
+    }
 
-            let ctx = createMorphContext(oldNode, normalizedContent, config);
+    if (ctx.morphStyle === "innerHTML") {
+      // innerHTML, so we are only updating the children
+      morphChildren(normalizedNewContent, oldNode, ctx);
+      return oldNode.children;
+    } else if (ctx.morphStyle === "outerHTML" || ctx.morphStyle == null) {
+      // otherwise find the best element match in the new content, morph that, and merge its siblings
+      // into either side of the best match
+      let bestMatch = findBestNodeMatch(normalizedNewContent, oldNode, ctx);
 
-            return morphNormalizedContent(oldNode, normalizedContent, ctx);
+      // stash the siblings that will need to be inserted on either side of the best match
+      let previousSibling = bestMatch?.previousSibling;
+      let nextSibling = bestMatch?.nextSibling;
+
+      // morph it
+      let morphedNode = morphOldNodeTo(oldNode, bestMatch, ctx);
+
+      if (bestMatch) {
+        // if there was a best match, merge the siblings in too and return the
+        // whole bunch
+        return insertSiblings(previousSibling, morphedNode, nextSibling);
+      } else {
+        // otherwise nothing was added to the DOM
+        return [];
+      }
+    } else {
+      throw "Do not understand how to morph style " + ctx.morphStyle;
+    }
+  }
+
+  /**
+   * @param possibleActiveElement
+   * @param ctx
+   * @returns {boolean}
+   */
+  function ignoreValueOfActiveElement(possibleActiveElement, ctx) {
+    return (
+      ctx.ignoreActiveValue &&
+      possibleActiveElement === document.activeElement &&
+      possibleActiveElement !== document.body
+    );
+  }
+
+  /**
+   * @param oldNode root node to merge content into
+   * @param newContent new content to merge
+   * @param ctx the merge context
+   * @returns {Element} the element that ended up in the DOM
+   */
+  function morphOldNodeTo(oldNode, newContent, ctx) {
+    if (ctx.ignoreActive && oldNode === document.activeElement);
+    else if (newContent == null) {
+      if (ctx.callbacks.beforeNodeRemoved(oldNode) === false) return oldNode;
+
+      oldNode.remove();
+      ctx.callbacks.afterNodeRemoved(oldNode);
+      return null;
+    } else if (!isSoftMatch(oldNode, newContent)) {
+      if (ctx.callbacks.beforeNodeRemoved(oldNode) === false) return oldNode;
+      if (ctx.callbacks.beforeNodeAdded(newContent) === false) return oldNode;
+
+      oldNode.parentElement.replaceChild(newContent, oldNode);
+      ctx.callbacks.afterNodeAdded(newContent);
+      ctx.callbacks.afterNodeRemoved(oldNode);
+      return newContent;
+    } else {
+      if (ctx.callbacks.beforeNodeMorphed(oldNode, newContent) === false)
+        return oldNode;
+
+      if (oldNode instanceof HTMLHeadElement && ctx.head.ignore);
+      else if (
+        oldNode instanceof HTMLHeadElement &&
+        ctx.head.style !== "morph"
+      ) {
+        handleHeadElement(newContent, oldNode, ctx);
+      } else {
+        syncNodeFrom(newContent, oldNode, ctx);
+        if (!ignoreValueOfActiveElement(oldNode, ctx)) {
+          morphChildren(newContent, oldNode, ctx);
         }
+      }
+      ctx.callbacks.afterNodeMorphed(oldNode, newContent);
+      return oldNode;
+    }
+  }
 
-        function morphNormalizedContent(oldNode, normalizedNewContent, ctx) {
-            if (ctx.head.block) {
-                let oldHead = oldNode.querySelector('head');
-                let newHead = normalizedNewContent.querySelector('head');
-                if (oldHead && newHead) {
-                    let promises = handleHeadElement(newHead, oldHead, ctx);
-                    // when head promises resolve, call morph again, ignoring the head tag
-                    Promise.all(promises).then(function () {
-                        morphNormalizedContent(oldNode, normalizedNewContent, Object.assign(ctx, {
-                            head: {
-                                block: false,
-                                ignore: true
-                            }
-                        }));
-                    });
-                    return;
-                }
-            }
+  /**
+   * This is the core algorithm for matching up children.  The idea is to use id sets to try to match up
+   * nodes as faithfully as possible.  We greedily match, which allows us to keep the algorithm fast, but
+   * by using id sets, we are able to better match up with content deeper in the DOM.
+   *
+   * Basic algorithm is, for each node in the new content:
+   *
+   * - if we have reached the end of the old parent, append the new content
+   * - if the new content has an id set match with the current insertion point, morph
+   * - search for an id set match
+   * - if id set match found, morph
+   * - otherwise search for a "soft" match
+   * - if a soft match is found, morph
+   * - otherwise, prepend the new node before the current insertion point
+   *
+   * The two search algorithms terminate if competing node matches appear to outweigh what can be achieved
+   * with the current node.  See findIdSetMatch() and findSoftMatch() for details.
+   *
+   * @param {Element} newParent the parent element of the new content
+   * @param {Element } oldParent the old content that we are merging the new content into
+   * @param ctx the merge context
+   */
+  function morphChildren(newParent, oldParent, ctx) {
+    let nextNewChild = newParent.firstChild;
+    let insertionPoint = oldParent.firstChild;
+    let newChild;
 
-            if (ctx.morphStyle === "innerHTML") {
+    // run through all the new content
+    while (nextNewChild) {
+      newChild = nextNewChild;
+      nextNewChild = newChild.nextSibling;
 
-                // innerHTML, so we are only updating the children
-                morphChildren(normalizedNewContent, oldNode, ctx);
-                return oldNode.children;
+      // if we are at the end of the exiting parent's children, just append
+      if (insertionPoint == null) {
+        if (ctx.callbacks.beforeNodeAdded(newChild) === false) return;
 
-            } else if (ctx.morphStyle === "outerHTML" || ctx.morphStyle == null) {
-                // otherwise find the best element match in the new content, morph that, and merge its siblings
-                // into either side of the best match
-                let bestMatch = findBestNodeMatch(normalizedNewContent, oldNode, ctx);
+        oldParent.appendChild(newChild);
+        ctx.callbacks.afterNodeAdded(newChild);
+        removeIdsFromConsideration(ctx, newChild);
+        continue;
+      }
 
-                // stash the siblings that will need to be inserted on either side of the best match
-                let previousSibling = bestMatch?.previousSibling;
-                let nextSibling = bestMatch?.nextSibling;
+      // if the current node has an id set match then morph
+      if (isIdSetMatch(newChild, insertionPoint, ctx)) {
+        morphOldNodeTo(insertionPoint, newChild, ctx);
+        insertionPoint = insertionPoint.nextSibling;
+        removeIdsFromConsideration(ctx, newChild);
+        continue;
+      }
 
-                // morph it
-                let morphedNode = morphOldNodeTo(oldNode, bestMatch, ctx);
+      // otherwise search forward in the existing old children for an id set match
+      let idSetMatch = findIdSetMatch(
+        newParent,
+        oldParent,
+        newChild,
+        insertionPoint,
+        ctx,
+      );
 
-                if (bestMatch) {
-                    // if there was a best match, merge the siblings in too and return the
-                    // whole bunch
-                    return insertSiblings(previousSibling, morphedNode, nextSibling);
-                } else {
-                    // otherwise nothing was added to the DOM
-                    return []
-                }
-            } else {
-                throw "Do not understand how to morph style " + ctx.morphStyle;
-            }
+      // if we found a potential match, remove the nodes until that point and morph
+      if (idSetMatch) {
+        insertionPoint = removeNodesBetween(insertionPoint, idSetMatch, ctx);
+        morphOldNodeTo(idSetMatch, newChild, ctx);
+        removeIdsFromConsideration(ctx, newChild);
+        continue;
+      }
+
+      // no id set match found, so scan forward for a soft match for the current node
+      let softMatch = findSoftMatch(
+        newParent,
+        oldParent,
+        newChild,
+        insertionPoint,
+        ctx,
+      );
+
+      // if we found a soft match for the current node, morph
+      if (softMatch) {
+        insertionPoint = removeNodesBetween(insertionPoint, softMatch, ctx);
+        morphOldNodeTo(softMatch, newChild, ctx);
+        removeIdsFromConsideration(ctx, newChild);
+        continue;
+      }
+
+      // abandon all hope of morphing, just insert the new child before the insertion point
+      // and move on
+      if (ctx.callbacks.beforeNodeAdded(newChild) === false) return;
+
+      oldParent.insertBefore(newChild, insertionPoint);
+      ctx.callbacks.afterNodeAdded(newChild);
+      removeIdsFromConsideration(ctx, newChild);
+    }
+
+    // remove any remaining old nodes that didn't match up with new content
+    while (insertionPoint !== null) {
+      let tempNode = insertionPoint;
+      insertionPoint = insertionPoint.nextSibling;
+      removeNode(tempNode, ctx);
+    }
+  }
+
+  //=============================================================================
+  // Attribute Syncing Code
+  //=============================================================================
+
+  /**
+   * @param attr {String} the attribute to be mutated
+   * @param to {Element} the element that is going to be updated
+   * @param updateType {("update"|"remove")}
+   * @param ctx the merge context
+   * @returns {boolean} true if the attribute should be ignored, false otherwise
+   */
+  function ignoreAttribute(attr, to, updateType, ctx) {
+    if (
+      attr === "value" &&
+      ctx.ignoreActiveValue &&
+      to === document.activeElement
+    ) {
+      return true;
+    }
+    return ctx.callbacks.beforeAttributeUpdated(attr, to, updateType) === false;
+  }
+
+  /**
+   * syncs a given node with another node, copying over all attributes and
+   * inner element state from the 'from' node to the 'to' node
+   *
+   * @param {Element} from the element to copy attributes & state from
+   * @param {Element} to the element to copy attributes & state to
+   * @param ctx the merge context
+   */
+  function syncNodeFrom(from, to, ctx) {
+    let type = from.nodeType;
+
+    // if is an element type, sync the attributes from the
+    // new node into the new node
+    if (type === 1 /* element type */) {
+      const fromAttributes = from.attributes;
+      const toAttributes = to.attributes;
+      for (const fromAttribute of fromAttributes) {
+        if (ignoreAttribute(fromAttribute.name, to, "update", ctx)) {
+          continue;
         }
-
-
-        /**
-         * @param possibleActiveElement
-         * @param ctx
-         * @returns {boolean}
-         */
-        function ignoreValueOfActiveElement(possibleActiveElement, ctx) {
-            return ctx.ignoreActiveValue && possibleActiveElement === document.activeElement && possibleActiveElement !== document.body;
+        if (to.getAttribute(fromAttribute.name) !== fromAttribute.value) {
+          to.setAttribute(fromAttribute.name, fromAttribute.value);
         }
-
-        /**
-         * @param oldNode root node to merge content into
-         * @param newContent new content to merge
-         * @param ctx the merge context
-         * @returns {Element} the element that ended up in the DOM
-         */
-        function morphOldNodeTo(oldNode, newContent, ctx) {
-            if (ctx.ignoreActive && oldNode === document.activeElement) ; else if (newContent == null) {
-                if (ctx.callbacks.beforeNodeRemoved(oldNode) === false) return oldNode;
-
-                oldNode.remove();
-                ctx.callbacks.afterNodeRemoved(oldNode);
-                return null;
-            } else if (!isSoftMatch(oldNode, newContent)) {
-                if (ctx.callbacks.beforeNodeRemoved(oldNode) === false) return oldNode;
-                if (ctx.callbacks.beforeNodeAdded(newContent) === false) return oldNode;
-
-                oldNode.parentElement.replaceChild(newContent, oldNode);
-                ctx.callbacks.afterNodeAdded(newContent);
-                ctx.callbacks.afterNodeRemoved(oldNode);
-                return newContent;
-            } else {
-                if (ctx.callbacks.beforeNodeMorphed(oldNode, newContent) === false) return oldNode;
-
-                if (oldNode instanceof HTMLHeadElement && ctx.head.ignore) ; else if (oldNode instanceof HTMLHeadElement && ctx.head.style !== "morph") {
-                    handleHeadElement(newContent, oldNode, ctx);
-                } else {
-                    syncNodeFrom(newContent, oldNode, ctx);
-                    if (!ignoreValueOfActiveElement(oldNode, ctx)) {
-                        morphChildren(newContent, oldNode, ctx);
-                    }
-                }
-                ctx.callbacks.afterNodeMorphed(oldNode, newContent);
-                return oldNode;
-            }
+      }
+      // iterate backwards to avoid skipping over items when a delete occurs
+      for (let i = toAttributes.length - 1; 0 <= i; i--) {
+        const toAttribute = toAttributes[i];
+        if (ignoreAttribute(toAttribute.name, to, "remove", ctx)) {
+          continue;
         }
-
-        /**
-         * This is the core algorithm for matching up children.  The idea is to use id sets to try to match up
-         * nodes as faithfully as possible.  We greedily match, which allows us to keep the algorithm fast, but
-         * by using id sets, we are able to better match up with content deeper in the DOM.
-         *
-         * Basic algorithm is, for each node in the new content:
-         *
-         * - if we have reached the end of the old parent, append the new content
-         * - if the new content has an id set match with the current insertion point, morph
-         * - search for an id set match
-         * - if id set match found, morph
-         * - otherwise search for a "soft" match
-         * - if a soft match is found, morph
-         * - otherwise, prepend the new node before the current insertion point
-         *
-         * The two search algorithms terminate if competing node matches appear to outweigh what can be achieved
-         * with the current node.  See findIdSetMatch() and findSoftMatch() for details.
-         *
-         * @param {Element} newParent the parent element of the new content
-         * @param {Element } oldParent the old content that we are merging the new content into
-         * @param ctx the merge context
-         */
-        function morphChildren(newParent, oldParent, ctx) {
-
-            let nextNewChild = newParent.firstChild;
-            let insertionPoint = oldParent.firstChild;
-            let newChild;
-
-            // run through all the new content
-            while (nextNewChild) {
-
-                newChild = nextNewChild;
-                nextNewChild = newChild.nextSibling;
-
-                // if we are at the end of the exiting parent's children, just append
-                if (insertionPoint == null) {
-                    if (ctx.callbacks.beforeNodeAdded(newChild) === false) return;
-
-                    oldParent.appendChild(newChild);
-                    ctx.callbacks.afterNodeAdded(newChild);
-                    removeIdsFromConsideration(ctx, newChild);
-                    continue;
-                }
-
-                // if the current node has an id set match then morph
-                if (isIdSetMatch(newChild, insertionPoint, ctx)) {
-                    morphOldNodeTo(insertionPoint, newChild, ctx);
-                    insertionPoint = insertionPoint.nextSibling;
-                    removeIdsFromConsideration(ctx, newChild);
-                    continue;
-                }
-
-                // otherwise search forward in the existing old children for an id set match
-                let idSetMatch = findIdSetMatch(newParent, oldParent, newChild, insertionPoint, ctx);
-
-                // if we found a potential match, remove the nodes until that point and morph
-                if (idSetMatch) {
-                    insertionPoint = removeNodesBetween(insertionPoint, idSetMatch, ctx);
-                    morphOldNodeTo(idSetMatch, newChild, ctx);
-                    removeIdsFromConsideration(ctx, newChild);
-                    continue;
-                }
-
-                // no id set match found, so scan forward for a soft match for the current node
-                let softMatch = findSoftMatch(newParent, oldParent, newChild, insertionPoint, ctx);
-
-                // if we found a soft match for the current node, morph
-                if (softMatch) {
-                    insertionPoint = removeNodesBetween(insertionPoint, softMatch, ctx);
-                    morphOldNodeTo(softMatch, newChild, ctx);
-                    removeIdsFromConsideration(ctx, newChild);
-                    continue;
-                }
-
-                // abandon all hope of morphing, just insert the new child before the insertion point
-                // and move on
-                if (ctx.callbacks.beforeNodeAdded(newChild) === false) return;
-
-                oldParent.insertBefore(newChild, insertionPoint);
-                ctx.callbacks.afterNodeAdded(newChild);
-                removeIdsFromConsideration(ctx, newChild);
-            }
-
-            // remove any remaining old nodes that didn't match up with new content
-            while (insertionPoint !== null) {
-
-                let tempNode = insertionPoint;
-                insertionPoint = insertionPoint.nextSibling;
-                removeNode(tempNode, ctx);
-            }
+        if (!from.hasAttribute(toAttribute.name)) {
+          to.removeAttribute(toAttribute.name);
         }
+      }
+    }
 
-        //=============================================================================
-        // Attribute Syncing Code
-        //=============================================================================
+    // sync text nodes
+    if (type === 8 /* comment */ || type === 3 /* text */) {
+      if (to.nodeValue !== from.nodeValue) {
+        to.nodeValue = from.nodeValue;
+      }
+    }
 
-        /**
-         * @param attr {String} the attribute to be mutated
-         * @param to {Element} the element that is going to be updated
-         * @param updateType {("update"|"remove")}
-         * @param ctx the merge context
-         * @returns {boolean} true if the attribute should be ignored, false otherwise
-         */
-        function ignoreAttribute(attr, to, updateType, ctx) {
-            if(attr === 'value' && ctx.ignoreActiveValue && to === document.activeElement){
-                return true;
-            }
-            return ctx.callbacks.beforeAttributeUpdated(attr, to, updateType) === false;
+    if (!ignoreValueOfActiveElement(to, ctx)) {
+      // sync input values
+      syncInputValue(from, to, ctx);
+    }
+  }
+
+  /**
+   * @param from {Element} element to sync the value from
+   * @param to {Element} element to sync the value to
+   * @param attributeName {String} the attribute name
+   * @param ctx the merge context
+   */
+  function syncBooleanAttribute(from, to, attributeName, ctx) {
+    if (from[attributeName] !== to[attributeName]) {
+      let ignoreUpdate = ignoreAttribute(attributeName, to, "update", ctx);
+      if (!ignoreUpdate) {
+        to[attributeName] = from[attributeName];
+      }
+      if (from[attributeName]) {
+        if (!ignoreUpdate) {
+          to.setAttribute(attributeName, from[attributeName]);
         }
-
-        /**
-         * syncs a given node with another node, copying over all attributes and
-         * inner element state from the 'from' node to the 'to' node
-         *
-         * @param {Element} from the element to copy attributes & state from
-         * @param {Element} to the element to copy attributes & state to
-         * @param ctx the merge context
-         */
-        function syncNodeFrom(from, to, ctx) {
-            let type = from.nodeType;
-
-            // if is an element type, sync the attributes from the
-            // new node into the new node
-            if (type === 1 /* element type */) {
-                const fromAttributes = from.attributes;
-                const toAttributes = to.attributes;
-                for (const fromAttribute of fromAttributes) {
-                    if (ignoreAttribute(fromAttribute.name, to, 'update', ctx)) {
-                        continue;
-                    }
-                    if (to.getAttribute(fromAttribute.name) !== fromAttribute.value) {
-                        to.setAttribute(fromAttribute.name, fromAttribute.value);
-                    }
-                }
-                // iterate backwards to avoid skipping over items when a delete occurs
-                for (let i = toAttributes.length - 1; 0 <= i; i--) {
-                    const toAttribute = toAttributes[i];
-                    if (ignoreAttribute(toAttribute.name, to, 'remove', ctx)) {
-                        continue;
-                    }
-                    if (!from.hasAttribute(toAttribute.name)) {
-                        to.removeAttribute(toAttribute.name);
-                    }
-                }
-            }
-
-            // sync text nodes
-            if (type === 8 /* comment */ || type === 3 /* text */) {
-                if (to.nodeValue !== from.nodeValue) {
-                    to.nodeValue = from.nodeValue;
-                }
-            }
-
-            if (!ignoreValueOfActiveElement(to, ctx)) {
-                // sync input values
-                syncInputValue(from, to, ctx);
-            }
+      } else {
+        if (!ignoreAttribute(attributeName, to, "remove", ctx)) {
+          to.removeAttribute(attributeName);
         }
+      }
+    }
+  }
 
-        /**
-         * @param from {Element} element to sync the value from
-         * @param to {Element} element to sync the value to
-         * @param attributeName {String} the attribute name
-         * @param ctx the merge context
-         */
-        function syncBooleanAttribute(from, to, attributeName, ctx) {
-            if (from[attributeName] !== to[attributeName]) {
-                let ignoreUpdate = ignoreAttribute(attributeName, to, 'update', ctx);
-                if (!ignoreUpdate) {
-                    to[attributeName] = from[attributeName];
-                }
-                if (from[attributeName]) {
-                    if (!ignoreUpdate) {
-                        to.setAttribute(attributeName, from[attributeName]);
-                    }
-                } else {
-                    if (!ignoreAttribute(attributeName, to, 'remove', ctx)) {
-                        to.removeAttribute(attributeName);
-                    }
-                }
-            }
+  /**
+   * NB: many bothans died to bring us information:
+   *
+   *  https://github.com/patrick-steele-idem/morphdom/blob/master/src/specialElHandlers.js
+   *  https://github.com/choojs/nanomorph/blob/master/lib/morph.jsL113
+   *
+   * @param from {Element} the element to sync the input value from
+   * @param to {Element} the element to sync the input value to
+   * @param ctx the merge context
+   */
+  function syncInputValue(from, to, ctx) {
+    if (
+      from instanceof HTMLInputElement &&
+      to instanceof HTMLInputElement &&
+      from.type !== "file"
+    ) {
+      let fromValue = from.value;
+      let toValue = to.value;
+
+      // sync boolean attributes
+      syncBooleanAttribute(from, to, "checked", ctx);
+      syncBooleanAttribute(from, to, "disabled", ctx);
+
+      if (!from.hasAttribute("value")) {
+        if (!ignoreAttribute("value", to, "remove", ctx)) {
+          to.value = "";
+          to.removeAttribute("value");
         }
-
-        /**
-         * NB: many bothans died to bring us information:
-         *
-         *  https://github.com/patrick-steele-idem/morphdom/blob/master/src/specialElHandlers.js
-         *  https://github.com/choojs/nanomorph/blob/master/lib/morph.jsL113
-         *
-         * @param from {Element} the element to sync the input value from
-         * @param to {Element} the element to sync the input value to
-         * @param ctx the merge context
-         */
-        function syncInputValue(from, to, ctx) {
-            if (from instanceof HTMLInputElement &&
-                to instanceof HTMLInputElement &&
-                from.type !== 'file') {
-
-                let fromValue = from.value;
-                let toValue = to.value;
-
-                // sync boolean attributes
-                syncBooleanAttribute(from, to, 'checked', ctx);
-                syncBooleanAttribute(from, to, 'disabled', ctx);
-
-                if (!from.hasAttribute('value')) {
-                    if (!ignoreAttribute('value', to, 'remove', ctx)) {
-                        to.value = '';
-                        to.removeAttribute('value');
-                    }
-                } else if (fromValue !== toValue) {
-                    if (!ignoreAttribute('value', to, 'update', ctx)) {
-                        to.setAttribute('value', fromValue);
-                        to.value = fromValue;
-                    }
-                }
-            } else if (from instanceof HTMLOptionElement) {
-                syncBooleanAttribute(from, to, 'selected', ctx);
-            } else if (from instanceof HTMLTextAreaElement && to instanceof HTMLTextAreaElement) {
-                let fromValue = from.value;
-                let toValue = to.value;
-                if (ignoreAttribute('value', to, 'update', ctx)) {
-                    return;
-                }
-                if (fromValue !== toValue) {
-                    to.value = fromValue;
-                }
-                if (to.firstChild && to.firstChild.nodeValue !== fromValue) {
-                    to.firstChild.nodeValue = fromValue;
-                }
-            }
+      } else if (fromValue !== toValue) {
+        if (!ignoreAttribute("value", to, "update", ctx)) {
+          to.setAttribute("value", fromValue);
+          to.value = fromValue;
         }
+      }
+    } else if (from instanceof HTMLOptionElement) {
+      syncBooleanAttribute(from, to, "selected", ctx);
+    } else if (
+      from instanceof HTMLTextAreaElement &&
+      to instanceof HTMLTextAreaElement
+    ) {
+      let fromValue = from.value;
+      let toValue = to.value;
+      if (ignoreAttribute("value", to, "update", ctx)) {
+        return;
+      }
+      if (fromValue !== toValue) {
+        to.value = fromValue;
+      }
+      if (to.firstChild && to.firstChild.nodeValue !== fromValue) {
+        to.firstChild.nodeValue = fromValue;
+      }
+    }
+  }
 
-        //=============================================================================
-        // the HEAD tag can be handled specially, either w/ a 'merge' or 'append' style
-        //=============================================================================
-        function handleHeadElement(newHeadTag, currentHead, ctx) {
+  //=============================================================================
+  // the HEAD tag can be handled specially, either w/ a 'merge' or 'append' style
+  //=============================================================================
+  function handleHeadElement(newHeadTag, currentHead, ctx) {
+    let added = [];
+    let removed = [];
+    let preserved = [];
+    let nodesToAppend = [];
 
-            let added = [];
-            let removed = [];
-            let preserved = [];
-            let nodesToAppend = [];
+    let headMergeStyle = ctx.head.style;
 
-            let headMergeStyle = ctx.head.style;
+    // put all new head elements into a Map, by their outerHTML
+    let srcToNewHeadNodes = new Map();
+    for (const newHeadChild of newHeadTag.children) {
+      srcToNewHeadNodes.set(newHeadChild.outerHTML, newHeadChild);
+    }
 
-            // put all new head elements into a Map, by their outerHTML
-            let srcToNewHeadNodes = new Map();
-            for (const newHeadChild of newHeadTag.children) {
-                srcToNewHeadNodes.set(newHeadChild.outerHTML, newHeadChild);
-            }
-
-            // for each elt in the current head
-            for (const currentHeadElt of currentHead.children) {
-
-                // If the current head element is in the map
-                let inNewContent = srcToNewHeadNodes.has(currentHeadElt.outerHTML);
-                let isReAppended = ctx.head.shouldReAppend(currentHeadElt);
-                let isPreserved = ctx.head.shouldPreserve(currentHeadElt);
-                if (inNewContent || isPreserved) {
-                    if (isReAppended) {
-                        // remove the current version and let the new version replace it and re-execute
-                        removed.push(currentHeadElt);
-                    } else {
-                        // this element already exists and should not be re-appended, so remove it from
-                        // the new content map, preserving it in the DOM
-                        srcToNewHeadNodes.delete(currentHeadElt.outerHTML);
-                        preserved.push(currentHeadElt);
-                    }
-                } else {
-                    if (headMergeStyle === "append") {
-                        // we are appending and this existing element is not new content
-                        // so if and only if it is marked for re-append do we do anything
-                        if (isReAppended) {
-                            removed.push(currentHeadElt);
-                            nodesToAppend.push(currentHeadElt);
-                        }
-                    } else {
-                        // if this is a merge, we remove this content since it is not in the new head
-                        if (ctx.head.shouldRemove(currentHeadElt) !== false) {
-                            removed.push(currentHeadElt);
-                        }
-                    }
-                }
-            }
-
-            // Push the remaining new head elements in the Map into the
-            // nodes to append to the head tag
-            nodesToAppend.push(...srcToNewHeadNodes.values());
-
-            let promises = [];
-            for (const newNode of nodesToAppend) {
-                let newElt = document.createRange().createContextualFragment(newNode.outerHTML).firstChild;
-                if (ctx.callbacks.beforeNodeAdded(newElt) !== false) {
-                    if (newElt.href || newElt.src) {
-                        let resolve = null;
-                        let promise = new Promise(function (_resolve) {
-                            resolve = _resolve;
-                        });
-                        newElt.addEventListener('load', function () {
-                            resolve();
-                        });
-                        promises.push(promise);
-                    }
-                    currentHead.appendChild(newElt);
-                    ctx.callbacks.afterNodeAdded(newElt);
-                    added.push(newElt);
-                }
-            }
-
-            // remove all removed elements, after we have appended the new elements to avoid
-            // additional network requests for things like style sheets
-            for (const removedElement of removed) {
-                if (ctx.callbacks.beforeNodeRemoved(removedElement) !== false) {
-                    currentHead.removeChild(removedElement);
-                    ctx.callbacks.afterNodeRemoved(removedElement);
-                }
-            }
-
-            ctx.head.afterHeadMorphed(currentHead, {added: added, kept: preserved, removed: removed});
-            return promises;
+    // for each elt in the current head
+    for (const currentHeadElt of currentHead.children) {
+      // If the current head element is in the map
+      let inNewContent = srcToNewHeadNodes.has(currentHeadElt.outerHTML);
+      let isReAppended = ctx.head.shouldReAppend(currentHeadElt);
+      let isPreserved = ctx.head.shouldPreserve(currentHeadElt);
+      if (inNewContent || isPreserved) {
+        if (isReAppended) {
+          // remove the current version and let the new version replace it and re-execute
+          removed.push(currentHeadElt);
+        } else {
+          // this element already exists and should not be re-appended, so remove it from
+          // the new content map, preserving it in the DOM
+          srcToNewHeadNodes.delete(currentHeadElt.outerHTML);
+          preserved.push(currentHeadElt);
         }
-
-        function noOp() {
+      } else {
+        if (headMergeStyle === "append") {
+          // we are appending and this existing element is not new content
+          // so if and only if it is marked for re-append do we do anything
+          if (isReAppended) {
+            removed.push(currentHeadElt);
+            nodesToAppend.push(currentHeadElt);
+          }
+        } else {
+          // if this is a merge, we remove this content since it is not in the new head
+          if (ctx.head.shouldRemove(currentHeadElt) !== false) {
+            removed.push(currentHeadElt);
+          }
         }
+      }
+    }
 
-        /*
+    // Push the remaining new head elements in the Map into the
+    // nodes to append to the head tag
+    nodesToAppend.push(...srcToNewHeadNodes.values());
+
+    let promises = [];
+    for (const newNode of nodesToAppend) {
+      let newElt = document
+        .createRange()
+        .createContextualFragment(newNode.outerHTML).firstChild;
+      if (ctx.callbacks.beforeNodeAdded(newElt) !== false) {
+        if (newElt.href || newElt.src) {
+          let resolve = null;
+          let promise = new Promise(function (_resolve) {
+            resolve = _resolve;
+          });
+          newElt.addEventListener("load", function () {
+            resolve();
+          });
+          promises.push(promise);
+        }
+        currentHead.appendChild(newElt);
+        ctx.callbacks.afterNodeAdded(newElt);
+        added.push(newElt);
+      }
+    }
+
+    // remove all removed elements, after we have appended the new elements to avoid
+    // additional network requests for things like style sheets
+    for (const removedElement of removed) {
+      if (ctx.callbacks.beforeNodeRemoved(removedElement) !== false) {
+        currentHead.removeChild(removedElement);
+        ctx.callbacks.afterNodeRemoved(removedElement);
+      }
+    }
+
+    ctx.head.afterHeadMorphed(currentHead, {
+      added: added,
+      kept: preserved,
+      removed: removed,
+    });
+    return promises;
+  }
+
+  function noOp() {}
+
+  /*
           Deep merges the config object and the Idiomoroph.defaults object to
           produce a final configuration object
          */
-        function mergeDefaults(config) {
-            let finalConfig = {};
-            // copy top level stuff into final config
-            Object.assign(finalConfig, defaults);
-            Object.assign(finalConfig, config);
+  function mergeDefaults(config) {
+    let finalConfig = {};
+    // copy top level stuff into final config
+    Object.assign(finalConfig, defaults);
+    Object.assign(finalConfig, config);
 
-            // copy callbacks into final config (do this to deep merge the callbacks)
-            finalConfig.callbacks = {};
-            Object.assign(finalConfig.callbacks, defaults.callbacks);
-            Object.assign(finalConfig.callbacks, config.callbacks);
+    // copy callbacks into final config (do this to deep merge the callbacks)
+    finalConfig.callbacks = {};
+    Object.assign(finalConfig.callbacks, defaults.callbacks);
+    Object.assign(finalConfig.callbacks, config.callbacks);
 
-            // copy head config into final config  (do this to deep merge the head)
-            finalConfig.head = {};
-            Object.assign(finalConfig.head, defaults.head);
-            Object.assign(finalConfig.head, config.head);
-            return finalConfig;
+    // copy head config into final config  (do this to deep merge the head)
+    finalConfig.head = {};
+    Object.assign(finalConfig.head, defaults.head);
+    Object.assign(finalConfig.head, config.head);
+    return finalConfig;
+  }
+
+  function createMorphContext(oldNode, newContent, config) {
+    config = mergeDefaults(config);
+    return {
+      target: oldNode,
+      newContent: newContent,
+      config: config,
+      morphStyle: config.morphStyle,
+      ignoreActive: config.ignoreActive,
+      ignoreActiveValue: config.ignoreActiveValue,
+      idMap: createIdMap(oldNode, newContent),
+      deadIds: new Set(),
+      callbacks: config.callbacks,
+      head: config.head,
+    };
+  }
+
+  function isIdSetMatch(node1, node2, ctx) {
+    if (node1 == null || node2 == null) {
+      return false;
+    }
+    if (node1.nodeType === node2.nodeType && node1.tagName === node2.tagName) {
+      if (node1.id !== "" && node1.id === node2.id) {
+        return true;
+      } else {
+        return getIdIntersectionCount(ctx, node1, node2) > 0;
+      }
+    }
+    return false;
+  }
+
+  function isSoftMatch(node1, node2) {
+    if (node1 == null || node2 == null) {
+      return false;
+    }
+    return node1.nodeType === node2.nodeType && node1.tagName === node2.tagName;
+  }
+
+  function removeNodesBetween(startInclusive, endExclusive, ctx) {
+    while (startInclusive !== endExclusive) {
+      let tempNode = startInclusive;
+      startInclusive = startInclusive.nextSibling;
+      removeNode(tempNode, ctx);
+    }
+    removeIdsFromConsideration(ctx, endExclusive);
+    return endExclusive.nextSibling;
+  }
+
+  //=============================================================================
+  // Scans forward from the insertionPoint in the old parent looking for a potential id match
+  // for the newChild.  We stop if we find a potential id match for the new child OR
+  // if the number of potential id matches we are discarding is greater than the
+  // potential id matches for the new child
+  //=============================================================================
+  function findIdSetMatch(
+    newContent,
+    oldParent,
+    newChild,
+    insertionPoint,
+    ctx,
+  ) {
+    // max id matches we are willing to discard in our search
+    let newChildPotentialIdCount = getIdIntersectionCount(
+      ctx,
+      newChild,
+      oldParent,
+    );
+
+    let potentialMatch = null;
+
+    // only search forward if there is a possibility of an id match
+    if (newChildPotentialIdCount > 0) {
+      let potentialMatch = insertionPoint;
+      // if there is a possibility of an id match, scan forward
+      // keep track of the potential id match count we are discarding (the
+      // newChildPotentialIdCount must be greater than this to make it likely
+      // worth it)
+      let otherMatchCount = 0;
+      while (potentialMatch != null) {
+        // If we have an id match, return the current potential match
+        if (isIdSetMatch(newChild, potentialMatch, ctx)) {
+          return potentialMatch;
         }
 
-        function createMorphContext(oldNode, newContent, config) {
-            config = mergeDefaults(config);
-            return {
-                target: oldNode,
-                newContent: newContent,
-                config: config,
-                morphStyle: config.morphStyle,
-                ignoreActive: config.ignoreActive,
-                ignoreActiveValue: config.ignoreActiveValue,
-                idMap: createIdMap(oldNode, newContent),
-                deadIds: new Set(),
-                callbacks: config.callbacks,
-                head: config.head
-            }
+        // computer the other potential matches of this new content
+        otherMatchCount += getIdIntersectionCount(
+          ctx,
+          potentialMatch,
+          newContent,
+        );
+        if (otherMatchCount > newChildPotentialIdCount) {
+          // if we have more potential id matches in _other_ content, we
+          // do not have a good candidate for an id match, so return null
+          return null;
         }
 
-        function isIdSetMatch(node1, node2, ctx) {
-            if (node1 == null || node2 == null) {
-                return false;
-            }
-            if (node1.nodeType === node2.nodeType && node1.tagName === node2.tagName) {
-                if (node1.id !== "" && node1.id === node2.id) {
-                    return true;
-                } else {
-                    return getIdIntersectionCount(ctx, node1, node2) > 0;
-                }
-            }
-            return false;
+        // advanced to the next old content child
+        potentialMatch = potentialMatch.nextSibling;
+      }
+    }
+    return potentialMatch;
+  }
+
+  //=============================================================================
+  // Scans forward from the insertionPoint in the old parent looking for a potential soft match
+  // for the newChild.  We stop if we find a potential soft match for the new child OR
+  // if we find a potential id match in the old parents children OR if we find two
+  // potential soft matches for the next two pieces of new content
+  //=============================================================================
+  function findSoftMatch(newContent, oldParent, newChild, insertionPoint, ctx) {
+    let potentialSoftMatch = insertionPoint;
+    let nextSibling = newChild.nextSibling;
+    let siblingSoftMatchCount = 0;
+
+    while (potentialSoftMatch != null) {
+      if (getIdIntersectionCount(ctx, potentialSoftMatch, newContent) > 0) {
+        // the current potential soft match has a potential id set match with the remaining new
+        // content so bail out of looking
+        return null;
+      }
+
+      // if we have a soft match with the current node, return it
+      if (isSoftMatch(newChild, potentialSoftMatch)) {
+        return potentialSoftMatch;
+      }
+
+      if (isSoftMatch(nextSibling, potentialSoftMatch)) {
+        // the next new node has a soft match with this node, so
+        // increment the count of future soft matches
+        siblingSoftMatchCount++;
+        nextSibling = nextSibling.nextSibling;
+
+        // If there are two future soft matches, bail to allow the siblings to soft match
+        // so that we don't consume future soft matches for the sake of the current node
+        if (siblingSoftMatchCount >= 2) {
+          return null;
         }
+      }
 
-        function isSoftMatch(node1, node2) {
-            if (node1 == null || node2 == null) {
-                return false;
-            }
-            return node1.nodeType === node2.nodeType && node1.tagName === node2.tagName
+      // advanced to the next old content child
+      potentialSoftMatch = potentialSoftMatch.nextSibling;
+    }
+
+    return potentialSoftMatch;
+  }
+
+  function parseContent(newContent) {
+    let parser = new DOMParser();
+
+    // remove svgs to avoid false-positive matches on head, etc.
+    let contentWithSvgsRemoved = newContent.replace(
+      /<svg(\s[^>]*>|>)([\s\S]*?)<\/svg>/gim,
+      "",
+    );
+
+    // if the newContent contains a html, head or body tag, we can simply parse it w/o wrapping
+    if (
+      contentWithSvgsRemoved.match(/<\/html>/) ||
+      contentWithSvgsRemoved.match(/<\/head>/) ||
+      contentWithSvgsRemoved.match(/<\/body>/)
+    ) {
+      let content = parser.parseFromString(newContent, "text/html");
+      // if it is a full HTML document, return the document itself as the parent container
+      if (contentWithSvgsRemoved.match(/<\/html>/)) {
+        content.generatedByIdiomorph = true;
+        return content;
+      } else {
+        // otherwise return the html element as the parent container
+        let htmlElement = content.firstChild;
+        if (htmlElement) {
+          htmlElement.generatedByIdiomorph = true;
+          return htmlElement;
+        } else {
+          return null;
         }
+      }
+    } else {
+      // if it is partial HTML, wrap it in a template tag to provide a parent element and also to help
+      // deal with touchy tags like tr, tbody, etc.
+      let responseDoc = parser.parseFromString(
+        "<body><template>" + newContent + "</template></body>",
+        "text/html",
+      );
+      let content = responseDoc.body.querySelector("template").content;
+      content.generatedByIdiomorph = true;
+      return content;
+    }
+  }
 
-        function removeNodesBetween(startInclusive, endExclusive, ctx) {
-            while (startInclusive !== endExclusive) {
-                let tempNode = startInclusive;
-                startInclusive = startInclusive.nextSibling;
-                removeNode(tempNode, ctx);
-            }
-            removeIdsFromConsideration(ctx, endExclusive);
-            return endExclusive.nextSibling;
+  function normalizeContent(newContent) {
+    if (newContent == null) {
+      // noinspection UnnecessaryLocalVariableJS
+      const dummyParent = document.createElement("div");
+      return dummyParent;
+    } else if (newContent.generatedByIdiomorph) {
+      // the template tag created by idiomorph parsing can serve as a dummy parent
+      return newContent;
+    } else if (newContent instanceof Node) {
+      // a single node is added as a child to a dummy parent
+      const dummyParent = document.createElement("div");
+      dummyParent.append(newContent);
+      return dummyParent;
+    } else {
+      // all nodes in the array or HTMLElement collection are consolidated under
+      // a single dummy parent element
+      const dummyParent = document.createElement("div");
+      for (const elt of [...newContent]) {
+        dummyParent.append(elt);
+      }
+      return dummyParent;
+    }
+  }
+
+  function insertSiblings(previousSibling, morphedNode, nextSibling) {
+    let stack = [];
+    let added = [];
+    while (previousSibling != null) {
+      stack.push(previousSibling);
+      previousSibling = previousSibling.previousSibling;
+    }
+    while (stack.length > 0) {
+      let node = stack.pop();
+      added.push(node); // push added preceding siblings on in order and insert
+      morphedNode.parentElement.insertBefore(node, morphedNode);
+    }
+    added.push(morphedNode);
+    while (nextSibling != null) {
+      stack.push(nextSibling);
+      added.push(nextSibling); // here we are going in order, so push on as we scan, rather than add
+      nextSibling = nextSibling.nextSibling;
+    }
+    while (stack.length > 0) {
+      morphedNode.parentElement.insertBefore(
+        stack.pop(),
+        morphedNode.nextSibling,
+      );
+    }
+    return added;
+  }
+
+  function findBestNodeMatch(newContent, oldNode, ctx) {
+    let currentElement;
+    currentElement = newContent.firstChild;
+    let bestElement = currentElement;
+    let score = 0;
+    while (currentElement) {
+      let newScore = scoreElement(currentElement, oldNode, ctx);
+      if (newScore > score) {
+        bestElement = currentElement;
+        score = newScore;
+      }
+      currentElement = currentElement.nextSibling;
+    }
+    return bestElement;
+  }
+
+  function scoreElement(node1, node2, ctx) {
+    if (isSoftMatch(node1, node2)) {
+      return 0.5 + getIdIntersectionCount(ctx, node1, node2);
+    }
+    return 0;
+  }
+
+  function removeNode(tempNode, ctx) {
+    removeIdsFromConsideration(ctx, tempNode);
+    if (ctx.callbacks.beforeNodeRemoved(tempNode) === false) return;
+
+    tempNode.remove();
+    ctx.callbacks.afterNodeRemoved(tempNode);
+  }
+
+  //=============================================================================
+  // ID Set Functions
+  //=============================================================================
+
+  function isIdInConsideration(ctx, id) {
+    return !ctx.deadIds.has(id);
+  }
+
+  function idIsWithinNode(ctx, id, targetNode) {
+    let idSet = ctx.idMap.get(targetNode) || EMPTY_SET;
+    return idSet.has(id);
+  }
+
+  function removeIdsFromConsideration(ctx, node) {
+    let idSet = ctx.idMap.get(node) || EMPTY_SET;
+    for (const id of idSet) {
+      ctx.deadIds.add(id);
+    }
+  }
+
+  function getIdIntersectionCount(ctx, node1, node2) {
+    let sourceSet = ctx.idMap.get(node1) || EMPTY_SET;
+    let matchCount = 0;
+    for (const id of sourceSet) {
+      // a potential match is an id in the source and potentialIdsSet, but
+      // that has not already been merged into the DOM
+      if (isIdInConsideration(ctx, id) && idIsWithinNode(ctx, id, node2)) {
+        ++matchCount;
+      }
+    }
+    return matchCount;
+  }
+
+  /**
+   * A bottom up algorithm that finds all elements with ids inside of the node
+   * argument and populates id sets for those nodes and all their parents, generating
+   * a set of ids contained within all nodes for the entire hierarchy in the DOM
+   *
+   * @param node {Element}
+   * @param {Map<Node, Set<String>>} idMap
+   */
+  function populateIdMapForNode(node, idMap) {
+    let nodeParent = node.parentElement;
+    // find all elements with an id property
+    let idElements = node.querySelectorAll("[id]");
+    for (const elt of idElements) {
+      let current = elt;
+      // walk up the parent hierarchy of that element, adding the id
+      // of element to the parent's id set
+      while (current !== nodeParent && current != null) {
+        let idSet = idMap.get(current);
+        // if the id set doesn't exist, create it and insert it in the  map
+        if (idSet == null) {
+          idSet = new Set();
+          idMap.set(current, idSet);
         }
+        idSet.add(elt.id);
+        current = current.parentElement;
+      }
+    }
+  }
 
-        //=============================================================================
-        // Scans forward from the insertionPoint in the old parent looking for a potential id match
-        // for the newChild.  We stop if we find a potential id match for the new child OR
-        // if the number of potential id matches we are discarding is greater than the
-        // potential id matches for the new child
-        //=============================================================================
-        function findIdSetMatch(newContent, oldParent, newChild, insertionPoint, ctx) {
+  /**
+   * This function computes a map of nodes to all ids contained within that node (inclusive of the
+   * node).  This map can be used to ask if two nodes have intersecting sets of ids, which allows
+   * for a looser definition of "matching" than tradition id matching, and allows child nodes
+   * to contribute to a parent nodes matching.
+   *
+   * @param {Element} oldContent  the old content that will be morphed
+   * @param {Element} newContent  the new content to morph to
+   * @returns {Map<Node, Set<String>>} a map of nodes to id sets for the
+   */
+  function createIdMap(oldContent, newContent) {
+    let idMap = new Map();
+    populateIdMapForNode(oldContent, idMap);
+    populateIdMapForNode(newContent, idMap);
+    return idMap;
+  }
 
-            // max id matches we are willing to discard in our search
-            let newChildPotentialIdCount = getIdIntersectionCount(ctx, newChild, oldParent);
+  //=============================================================================
+  // This is what ends up becoming the Idiomorph global object
+  //=============================================================================
+  return {
+    morph,
+    defaults,
+  };
+})();
 
-            let potentialMatch = null;
-
-            // only search forward if there is a possibility of an id match
-            if (newChildPotentialIdCount > 0) {
-                let potentialMatch = insertionPoint;
-                // if there is a possibility of an id match, scan forward
-                // keep track of the potential id match count we are discarding (the
-                // newChildPotentialIdCount must be greater than this to make it likely
-                // worth it)
-                let otherMatchCount = 0;
-                while (potentialMatch != null) {
-
-                    // If we have an id match, return the current potential match
-                    if (isIdSetMatch(newChild, potentialMatch, ctx)) {
-                        return potentialMatch;
-                    }
-
-                    // computer the other potential matches of this new content
-                    otherMatchCount += getIdIntersectionCount(ctx, potentialMatch, newContent);
-                    if (otherMatchCount > newChildPotentialIdCount) {
-                        // if we have more potential id matches in _other_ content, we
-                        // do not have a good candidate for an id match, so return null
-                        return null;
-                    }
-
-                    // advanced to the next old content child
-                    potentialMatch = potentialMatch.nextSibling;
-                }
-            }
-            return potentialMatch;
-        }
-
-        //=============================================================================
-        // Scans forward from the insertionPoint in the old parent looking for a potential soft match
-        // for the newChild.  We stop if we find a potential soft match for the new child OR
-        // if we find a potential id match in the old parents children OR if we find two
-        // potential soft matches for the next two pieces of new content
-        //=============================================================================
-        function findSoftMatch(newContent, oldParent, newChild, insertionPoint, ctx) {
-
-            let potentialSoftMatch = insertionPoint;
-            let nextSibling = newChild.nextSibling;
-            let siblingSoftMatchCount = 0;
-
-            while (potentialSoftMatch != null) {
-
-                if (getIdIntersectionCount(ctx, potentialSoftMatch, newContent) > 0) {
-                    // the current potential soft match has a potential id set match with the remaining new
-                    // content so bail out of looking
-                    return null;
-                }
-
-                // if we have a soft match with the current node, return it
-                if (isSoftMatch(newChild, potentialSoftMatch)) {
-                    return potentialSoftMatch;
-                }
-
-                if (isSoftMatch(nextSibling, potentialSoftMatch)) {
-                    // the next new node has a soft match with this node, so
-                    // increment the count of future soft matches
-                    siblingSoftMatchCount++;
-                    nextSibling = nextSibling.nextSibling;
-
-                    // If there are two future soft matches, bail to allow the siblings to soft match
-                    // so that we don't consume future soft matches for the sake of the current node
-                    if (siblingSoftMatchCount >= 2) {
-                        return null;
-                    }
-                }
-
-                // advanced to the next old content child
-                potentialSoftMatch = potentialSoftMatch.nextSibling;
-            }
-
-            return potentialSoftMatch;
-        }
-
-        function parseContent(newContent) {
-            let parser = new DOMParser();
-
-            // remove svgs to avoid false-positive matches on head, etc.
-            let contentWithSvgsRemoved = newContent.replace(/<svg(\s[^>]*>|>)([\s\S]*?)<\/svg>/gim, '');
-
-            // if the newContent contains a html, head or body tag, we can simply parse it w/o wrapping
-            if (contentWithSvgsRemoved.match(/<\/html>/) || contentWithSvgsRemoved.match(/<\/head>/) || contentWithSvgsRemoved.match(/<\/body>/)) {
-                let content = parser.parseFromString(newContent, "text/html");
-                // if it is a full HTML document, return the document itself as the parent container
-                if (contentWithSvgsRemoved.match(/<\/html>/)) {
-                    content.generatedByIdiomorph = true;
-                    return content;
-                } else {
-                    // otherwise return the html element as the parent container
-                    let htmlElement = content.firstChild;
-                    if (htmlElement) {
-                        htmlElement.generatedByIdiomorph = true;
-                        return htmlElement;
-                    } else {
-                        return null;
-                    }
-                }
-            } else {
-                // if it is partial HTML, wrap it in a template tag to provide a parent element and also to help
-                // deal with touchy tags like tr, tbody, etc.
-                let responseDoc = parser.parseFromString("<body><template>" + newContent + "</template></body>", "text/html");
-                let content = responseDoc.body.querySelector('template').content;
-                content.generatedByIdiomorph = true;
-                return content
-            }
-        }
-
-        function normalizeContent(newContent) {
-            if (newContent == null) {
-                // noinspection UnnecessaryLocalVariableJS
-                const dummyParent = document.createElement('div');
-                return dummyParent;
-            } else if (newContent.generatedByIdiomorph) {
-                // the template tag created by idiomorph parsing can serve as a dummy parent
-                return newContent;
-            } else if (newContent instanceof Node) {
-                // a single node is added as a child to a dummy parent
-                const dummyParent = document.createElement('div');
-                dummyParent.append(newContent);
-                return dummyParent;
-            } else {
-                // all nodes in the array or HTMLElement collection are consolidated under
-                // a single dummy parent element
-                const dummyParent = document.createElement('div');
-                for (const elt of [...newContent]) {
-                    dummyParent.append(elt);
-                }
-                return dummyParent;
-            }
-        }
-
-        function insertSiblings(previousSibling, morphedNode, nextSibling) {
-            let stack = [];
-            let added = [];
-            while (previousSibling != null) {
-                stack.push(previousSibling);
-                previousSibling = previousSibling.previousSibling;
-            }
-            while (stack.length > 0) {
-                let node = stack.pop();
-                added.push(node); // push added preceding siblings on in order and insert
-                morphedNode.parentElement.insertBefore(node, morphedNode);
-            }
-            added.push(morphedNode);
-            while (nextSibling != null) {
-                stack.push(nextSibling);
-                added.push(nextSibling); // here we are going in order, so push on as we scan, rather than add
-                nextSibling = nextSibling.nextSibling;
-            }
-            while (stack.length > 0) {
-                morphedNode.parentElement.insertBefore(stack.pop(), morphedNode.nextSibling);
-            }
-            return added;
-        }
-
-        function findBestNodeMatch(newContent, oldNode, ctx) {
-            let currentElement;
-            currentElement = newContent.firstChild;
-            let bestElement = currentElement;
-            let score = 0;
-            while (currentElement) {
-                let newScore = scoreElement(currentElement, oldNode, ctx);
-                if (newScore > score) {
-                    bestElement = currentElement;
-                    score = newScore;
-                }
-                currentElement = currentElement.nextSibling;
-            }
-            return bestElement;
-        }
-
-        function scoreElement(node1, node2, ctx) {
-            if (isSoftMatch(node1, node2)) {
-                return .5 + getIdIntersectionCount(ctx, node1, node2);
-            }
-            return 0;
-        }
-
-        function removeNode(tempNode, ctx) {
-            removeIdsFromConsideration(ctx, tempNode);
-            if (ctx.callbacks.beforeNodeRemoved(tempNode) === false) return;
-
-            tempNode.remove();
-            ctx.callbacks.afterNodeRemoved(tempNode);
-        }
-
-        //=============================================================================
-        // ID Set Functions
-        //=============================================================================
-
-        function isIdInConsideration(ctx, id) {
-            return !ctx.deadIds.has(id);
-        }
-
-        function idIsWithinNode(ctx, id, targetNode) {
-            let idSet = ctx.idMap.get(targetNode) || EMPTY_SET;
-            return idSet.has(id);
-        }
-
-        function removeIdsFromConsideration(ctx, node) {
-            let idSet = ctx.idMap.get(node) || EMPTY_SET;
-            for (const id of idSet) {
-                ctx.deadIds.add(id);
-            }
-        }
-
-        function getIdIntersectionCount(ctx, node1, node2) {
-            let sourceSet = ctx.idMap.get(node1) || EMPTY_SET;
-            let matchCount = 0;
-            for (const id of sourceSet) {
-                // a potential match is an id in the source and potentialIdsSet, but
-                // that has not already been merged into the DOM
-                if (isIdInConsideration(ctx, id) && idIsWithinNode(ctx, id, node2)) {
-                    ++matchCount;
-                }
-            }
-            return matchCount;
-        }
-
-        /**
-         * A bottom up algorithm that finds all elements with ids inside of the node
-         * argument and populates id sets for those nodes and all their parents, generating
-         * a set of ids contained within all nodes for the entire hierarchy in the DOM
-         *
-         * @param node {Element}
-         * @param {Map<Node, Set<String>>} idMap
-         */
-        function populateIdMapForNode(node, idMap) {
-            let nodeParent = node.parentElement;
-            // find all elements with an id property
-            let idElements = node.querySelectorAll('[id]');
-            for (const elt of idElements) {
-                let current = elt;
-                // walk up the parent hierarchy of that element, adding the id
-                // of element to the parent's id set
-                while (current !== nodeParent && current != null) {
-                    let idSet = idMap.get(current);
-                    // if the id set doesn't exist, create it and insert it in the  map
-                    if (idSet == null) {
-                        idSet = new Set();
-                        idMap.set(current, idSet);
-                    }
-                    idSet.add(elt.id);
-                    current = current.parentElement;
-                }
-            }
-        }
-
-        /**
-         * This function computes a map of nodes to all ids contained within that node (inclusive of the
-         * node).  This map can be used to ask if two nodes have intersecting sets of ids, which allows
-         * for a looser definition of "matching" than tradition id matching, and allows child nodes
-         * to contribute to a parent nodes matching.
-         *
-         * @param {Element} oldContent  the old content that will be morphed
-         * @param {Element} newContent  the new content to morph to
-         * @returns {Map<Node, Set<String>>} a map of nodes to id sets for the
-         */
-        function createIdMap(oldContent, newContent) {
-            let idMap = new Map();
-            populateIdMapForNode(oldContent, idMap);
-            populateIdMapForNode(newContent, idMap);
-            return idMap;
-        }
-
-        //=============================================================================
-        // This is what ends up becoming the Idiomorph global object
-        //=============================================================================
-        return {
-            morph,
-            defaults
-        }
-    })();
-
-function morphElements(currentElement, newElement, { callbacks, ...options } = {}) {
+function morphElements(
+  currentElement,
+  newElement,
+  { callbacks, ...options } = {},
+) {
   Idiomorph.morph(currentElement, newElement, {
     ...options,
-    callbacks: new DefaultIdiomorphCallbacks(callbacks)
+    callbacks: new DefaultIdiomorphCallbacks(callbacks),
   });
 }
 
 function morphChildren(currentElement, newElement) {
   morphElements(currentElement, newElement.children, {
-    morphStyle: "innerHTML"
+    morphStyle: "innerHTML",
   });
 }
 
 class DefaultIdiomorphCallbacks {
-  #beforeNodeMorphed
+  #beforeNodeMorphed;
 
   constructor({ beforeNodeMorphed } = {}) {
     this.#beforeNodeMorphed = beforeNodeMorphed || (() => true);
   }
 
   beforeNodeAdded = (node) => {
-    return !(node.id && node.hasAttribute("data-turbo-permanent") && document.getElementById(node.id))
-  }
+    return !(
+      node.id &&
+      node.hasAttribute("data-turbo-permanent") &&
+      document.getElementById(node.id)
+    );
+  };
 
   beforeNodeMorphed = (currentElement, newElement) => {
     if (currentElement instanceof Element) {
-      if (!currentElement.hasAttribute("data-turbo-permanent") && this.#beforeNodeMorphed(currentElement, newElement)) {
+      if (
+        !currentElement.hasAttribute("data-turbo-permanent") &&
+        this.#beforeNodeMorphed(currentElement, newElement)
+      ) {
         const event = dispatch("turbo:before-morph-element", {
           cancelable: true,
           target: currentElement,
-          detail: { currentElement, newElement }
+          detail: { currentElement, newElement },
         });
 
-        return !event.defaultPrevented
+        return !event.defaultPrevented;
       } else {
-        return false
+        return false;
       }
     }
-  }
+  };
 
   beforeAttributeUpdated = (attributeName, target, mutationType) => {
     const event = dispatch("turbo:before-morph-attribute", {
       cancelable: true,
       target,
-      detail: { attributeName, mutationType }
+      detail: { attributeName, mutationType },
     });
 
-    return !event.defaultPrevented
-  }
+    return !event.defaultPrevented;
+  };
 
   beforeNodeRemoved = (node) => {
-    return this.beforeNodeMorphed(node)
-  }
+    return this.beforeNodeMorphed(node);
+  };
 
   afterNodeMorphed = (currentElement, newElement) => {
     if (currentElement instanceof Element) {
       dispatch("turbo:morph-element", {
         target: currentElement,
-        detail: { currentElement, newElement }
+        detail: { currentElement, newElement },
       });
     }
-  }
+  };
 }
 
 class MorphingFrameRenderer extends FrameRenderer {
   static renderElement(currentElement, newElement) {
     dispatch("turbo:before-frame-morph", {
       target: currentElement,
-      detail: { currentElement, newElement }
+      detail: { currentElement, newElement },
     });
 
     morphChildren(currentElement, newElement);
   }
 
   async preservingPermanentElements(callback) {
-    return await callback()
+    return await callback();
   }
 }
 
 class ProgressBar {
-  static animationDuration = 300 /*ms*/
+  static animationDuration = 300; /*ms*/
 
   static get defaultCSS() {
     return unindent`
@@ -2947,12 +3263,12 @@ class ProgressBar {
           opacity ${ProgressBar.animationDuration / 2}ms ${ProgressBar.animationDuration / 2}ms ease-in;
         transform: translate3d(0, 0, 0);
       }
-    `
+    `;
   }
 
-  hiding = false
-  value = 0
-  visible = false
+  hiding = false;
+  value = 0;
+  visible = false;
 
   constructor() {
     this.stylesheetElement = this.createStylesheetElement();
@@ -2989,7 +3305,10 @@ class ProgressBar {
   // Private
 
   installStylesheetElement() {
-    document.head.insertBefore(this.stylesheetElement, document.head.firstChild);
+    document.head.insertBefore(
+      this.stylesheetElement,
+      document.head.firstChild,
+    );
   }
 
   installProgressElement() {
@@ -3012,7 +3331,10 @@ class ProgressBar {
 
   startTrickling() {
     if (!this.trickleInterval) {
-      this.trickleInterval = window.setInterval(this.trickle, ProgressBar.animationDuration);
+      this.trickleInterval = window.setInterval(
+        this.trickle,
+        ProgressBar.animationDuration,
+      );
     }
   }
 
@@ -3023,7 +3345,7 @@ class ProgressBar {
 
   trickle = () => {
     this.setValue(this.value + Math.random() / 100);
-  }
+  };
 
   refresh() {
     requestAnimationFrame(() => {
@@ -3038,17 +3360,17 @@ class ProgressBar {
     if (this.cspNonce) {
       element.nonce = this.cspNonce;
     }
-    return element
+    return element;
   }
 
   createProgressElement() {
     const element = document.createElement("div");
     element.className = "turbo-progress-bar";
-    return element
+    return element;
   }
 
   get cspNonce() {
-    return getMetaContent("csp-nonce")
+    return getMetaContent("csp-nonce");
   }
 }
 
@@ -3064,29 +3386,29 @@ class HeadSnapshot extends Snapshot {
           : {
               type: elementType(element),
               tracked: elementIsTracked(element),
-              elements: []
+              elements: [],
             };
       return {
         ...result,
         [outerHTML]: {
           ...details,
-          elements: [...details.elements, element]
-        }
-      }
-    }, {})
+          elements: [...details.elements, element],
+        },
+      };
+    }, {});
 
   get trackedElementSignature() {
     return Object.keys(this.detailsByOuterHTML)
       .filter((outerHTML) => this.detailsByOuterHTML[outerHTML].tracked)
-      .join("")
+      .join("");
   }
 
   getScriptElementsNotInSnapshot(snapshot) {
-    return this.getElementsMatchingTypeNotInSnapshot("script", snapshot)
+    return this.getElementsMatchingTypeNotInSnapshot("script", snapshot);
   }
 
   getStylesheetElementsNotInSnapshot(snapshot) {
-    return this.getElementsMatchingTypeNotInSnapshot("stylesheet", snapshot)
+    return this.getElementsMatchingTypeNotInSnapshot("stylesheet", snapshot);
   }
 
   getElementsMatchingTypeNotInSnapshot(matchedType, snapshot) {
@@ -3094,67 +3416,70 @@ class HeadSnapshot extends Snapshot {
       .filter((outerHTML) => !(outerHTML in snapshot.detailsByOuterHTML))
       .map((outerHTML) => this.detailsByOuterHTML[outerHTML])
       .filter(({ type }) => type == matchedType)
-      .map(({ elements: [element] }) => element)
+      .map(({ elements: [element] }) => element);
   }
 
   get provisionalElements() {
     return Object.keys(this.detailsByOuterHTML).reduce((result, outerHTML) => {
       const { type, tracked, elements } = this.detailsByOuterHTML[outerHTML];
       if (type == null && !tracked) {
-        return [...result, ...elements]
+        return [...result, ...elements];
       } else if (elements.length > 1) {
-        return [...result, ...elements.slice(1)]
+        return [...result, ...elements.slice(1)];
       } else {
-        return result
+        return result;
       }
-    }, [])
+    }, []);
   }
 
   getMetaValue(name) {
     const element = this.findMetaElementByName(name);
-    return element ? element.getAttribute("content") : null
+    return element ? element.getAttribute("content") : null;
   }
 
   findMetaElementByName(name) {
     return Object.keys(this.detailsByOuterHTML).reduce((result, outerHTML) => {
       const {
-        elements: [element]
+        elements: [element],
       } = this.detailsByOuterHTML[outerHTML];
-      return elementIsMetaElementWithName(element, name) ? element : result
-    }, undefined | undefined)
+      return elementIsMetaElementWithName(element, name) ? element : result;
+    }, undefined | undefined);
   }
 }
 
 function elementType(element) {
   if (elementIsScript(element)) {
-    return "script"
+    return "script";
   } else if (elementIsStylesheet(element)) {
-    return "stylesheet"
+    return "stylesheet";
   }
 }
 
 function elementIsTracked(element) {
-  return element.getAttribute("data-turbo-track") == "reload"
+  return element.getAttribute("data-turbo-track") == "reload";
 }
 
 function elementIsScript(element) {
   const tagName = element.localName;
-  return tagName == "script"
+  return tagName == "script";
 }
 
 function elementIsNoscript(element) {
   const tagName = element.localName;
-  return tagName == "noscript"
+  return tagName == "noscript";
 }
 
 function elementIsStylesheet(element) {
   const tagName = element.localName;
-  return tagName == "style" || (tagName == "link" && element.getAttribute("rel") == "stylesheet")
+  return (
+    tagName == "style" ||
+    (tagName == "link" && element.getAttribute("rel") == "stylesheet")
+  );
 }
 
 function elementIsMetaElementWithName(element, name) {
   const tagName = element.localName;
-  return tagName == "meta" && element.getAttribute("name") == name
+  return tagName == "meta" && element.getAttribute("name") == name;
 }
 
 function elementWithoutNonce(element) {
@@ -3162,20 +3487,20 @@ function elementWithoutNonce(element) {
     element.setAttribute("nonce", "");
   }
 
-  return element
+  return element;
 }
 
 class PageSnapshot extends Snapshot {
   static fromHTMLString(html = "") {
-    return this.fromDocument(parseHTMLDocument(html))
+    return this.fromDocument(parseHTMLDocument(html));
   }
 
   static fromElement(element) {
-    return this.fromDocument(element.ownerDocument)
+    return this.fromDocument(element.ownerDocument);
   }
 
   static fromDocument({ documentElement, body, head }) {
-    return new this(documentElement, body, new HeadSnapshot(head))
+    return new this(documentElement, body, new HeadSnapshot(head));
   }
 
   constructor(documentElement, body, headSnapshot) {
@@ -3193,70 +3518,81 @@ class PageSnapshot extends Snapshot {
     for (const [index, source] of selectElements.entries()) {
       const clone = clonedSelectElements[index];
       for (const option of clone.selectedOptions) option.selected = false;
-      for (const option of source.selectedOptions) clone.options[option.index].selected = true;
+      for (const option of source.selectedOptions)
+        clone.options[option.index].selected = true;
     }
 
-    for (const clonedPasswordInput of clonedElement.querySelectorAll('input[type="password"]')) {
+    for (const clonedPasswordInput of clonedElement.querySelectorAll(
+      'input[type="password"]',
+    )) {
       clonedPasswordInput.value = "";
     }
 
-    return new PageSnapshot(this.documentElement, clonedElement, this.headSnapshot)
+    return new PageSnapshot(
+      this.documentElement,
+      clonedElement,
+      this.headSnapshot,
+    );
   }
 
   get lang() {
-    return this.documentElement.getAttribute("lang")
+    return this.documentElement.getAttribute("lang");
   }
 
   get headElement() {
-    return this.headSnapshot.element
+    return this.headSnapshot.element;
   }
 
   get rootLocation() {
     const root = this.getSetting("root") ?? "/";
-    return expandURL(root)
+    return expandURL(root);
   }
 
   get cacheControlValue() {
-    return this.getSetting("cache-control")
+    return this.getSetting("cache-control");
   }
 
   get isPreviewable() {
-    return this.cacheControlValue != "no-preview"
+    return this.cacheControlValue != "no-preview";
   }
 
   get isCacheable() {
-    return this.cacheControlValue != "no-cache"
+    return this.cacheControlValue != "no-cache";
   }
 
   get isVisitable() {
-    return this.getSetting("visit-control") != "reload"
+    return this.getSetting("visit-control") != "reload";
   }
 
   get prefersViewTransitions() {
-    return this.headSnapshot.getMetaValue("view-transition") === "same-origin"
+    return this.headSnapshot.getMetaValue("view-transition") === "same-origin";
   }
 
   get shouldMorphPage() {
-    return this.getSetting("refresh-method") === "morph"
+    return this.getSetting("refresh-method") === "morph";
   }
 
   get shouldPreserveScrollPosition() {
-    return this.getSetting("refresh-scroll") === "preserve"
+    return this.getSetting("refresh-scroll") === "preserve";
   }
 
   // Private
 
   getSetting(name) {
-    return this.headSnapshot.getMetaValue(`turbo-${name}`)
+    return this.headSnapshot.getMetaValue(`turbo-${name}`);
   }
 }
 
 class ViewTransitioner {
-  #viewTransitionStarted = false
-  #lastOperation = Promise.resolve()
+  #viewTransitionStarted = false;
+  #lastOperation = Promise.resolve();
 
   renderChange(useViewTransition, render) {
-    if (useViewTransition && this.viewTransitionsAvailable && !this.#viewTransitionStarted) {
+    if (
+      useViewTransition &&
+      this.viewTransitionsAvailable &&
+      !this.#viewTransitionStarted
+    ) {
       this.#viewTransitionStarted = true;
       this.#lastOperation = this.#lastOperation.then(async () => {
         await document.startViewTransition(render).finished;
@@ -3265,11 +3601,11 @@ class ViewTransitioner {
       this.#lastOperation = this.#lastOperation.then(render);
     }
 
-    return this.#lastOperation
+    return this.#lastOperation;
   }
 
   get viewTransitionsAvailable() {
-    return document.startViewTransition
+    return document.startViewTransition;
   }
 }
 
@@ -3280,14 +3616,14 @@ const defaultOptions = {
   willRender: true,
   updateHistory: true,
   shouldCacheSnapshot: true,
-  acceptsStreamResponse: false
+  acceptsStreamResponse: false,
 };
 
 const TimingMetric = {
   visitStart: "visitStart",
   requestStart: "requestStart",
   requestEnd: "requestEnd",
-  visitEnd: "visitEnd"
+  visitEnd: "visitEnd",
 };
 
 const VisitState = {
@@ -3295,33 +3631,33 @@ const VisitState = {
   started: "started",
   canceled: "canceled",
   failed: "failed",
-  completed: "completed"
+  completed: "completed",
 };
 
 const SystemStatusCode = {
   networkFailure: 0,
   timeoutFailure: -1,
-  contentTypeMismatch: -2
+  contentTypeMismatch: -2,
 };
 
 const Direction = {
   advance: "forward",
   restore: "back",
-  replace: "none"
+  replace: "none",
 };
 
 class Visit {
-  identifier = uuid() // Required by turbo-ios
-  timingMetrics = {}
+  identifier = uuid(); // Required by turbo-ios
+  timingMetrics = {};
 
-  followedRedirect = false
-  historyChanged = false
-  scrolled = false
-  shouldCacheSnapshot = true
-  acceptsStreamResponse = false
-  snapshotCached = false
-  state = VisitState.initialized
-  viewTransitioner = new ViewTransitioner()
+  followedRedirect = false;
+  historyChanged = false;
+  scrolled = false;
+  shouldCacheSnapshot = true;
+  acceptsStreamResponse = false;
+  snapshotCached = false;
+  state = VisitState.initialized;
+  viewTransitioner = new ViewTransitioner();
 
   constructor(delegate, location, restorationIdentifier, options = {}) {
     this.delegate = delegate;
@@ -3340,10 +3676,10 @@ class Visit {
       updateHistory,
       shouldCacheSnapshot,
       acceptsStreamResponse,
-      direction
+      direction,
     } = {
       ...defaultOptions,
-      ...options
+      ...options,
     };
     this.action = action;
     this.historyChanged = historyChanged;
@@ -3351,7 +3687,10 @@ class Visit {
     this.snapshot = snapshot;
     this.snapshotHTML = snapshotHTML;
     this.response = response;
-    this.isSamePage = this.delegate.locationWithActionIsSamePage(this.location, this.action);
+    this.isSamePage = this.delegate.locationWithActionIsSamePage(
+      this.location,
+      this.action,
+    );
     this.isPageRefresh = this.view.isPageRefresh(this);
     this.visitCachedSnapshot = visitCachedSnapshot;
     this.willRender = willRender;
@@ -3363,23 +3702,25 @@ class Visit {
   }
 
   get adapter() {
-    return this.delegate.adapter
+    return this.delegate.adapter;
   }
 
   get view() {
-    return this.delegate.view
+    return this.delegate.view;
   }
 
   get history() {
-    return this.delegate.history
+    return this.delegate.history;
   }
 
   get restorationData() {
-    return this.history.getRestorationDataForIdentifier(this.restorationIdentifier)
+    return this.history.getRestorationDataForIdentifier(
+      this.restorationIdentifier,
+    );
   }
 
   get silent() {
-    return this.isSamePage
+    return this.isSamePage;
   }
 
   start() {
@@ -3424,7 +3765,8 @@ class Visit {
 
   changeHistory() {
     if (!this.historyChanged && this.updateHistory) {
-      const actionForHistory = this.location.href === this.referrer?.href ? "replace" : this.action;
+      const actionForHistory =
+        this.location.href === this.referrer?.href ? "replace" : this.action;
       const method = getHistoryMethodForAction(actionForHistory);
       this.history.update(method, this.location, this.restorationIdentifier);
       this.historyChanged = true;
@@ -3484,7 +3826,10 @@ class Visit {
           this.adapter.visitRendered(this);
           this.complete();
         } else {
-          await this.view.renderError(PageSnapshot.fromHTMLString(responseHTML), this);
+          await this.view.renderError(
+            PageSnapshot.fromHTMLString(responseHTML),
+            this,
+          );
           this.adapter.visitRendered(this);
           this.fail();
         }
@@ -3493,23 +3838,29 @@ class Visit {
   }
 
   getCachedSnapshot() {
-    const snapshot = this.view.getCachedSnapshotForLocation(this.location) || this.getPreloadedSnapshot();
+    const snapshot =
+      this.view.getCachedSnapshotForLocation(this.location) ||
+      this.getPreloadedSnapshot();
 
-    if (snapshot && (!getAnchor(this.location) || snapshot.hasAnchor(getAnchor(this.location)))) {
+    if (
+      snapshot &&
+      (!getAnchor(this.location) ||
+        snapshot.hasAnchor(getAnchor(this.location)))
+    ) {
       if (this.action == "restore" || snapshot.isPreviewable) {
-        return snapshot
+        return snapshot;
       }
     }
   }
 
   getPreloadedSnapshot() {
     if (this.snapshotHTML) {
-      return PageSnapshot.fromHTMLString(this.snapshotHTML)
+      return PageSnapshot.fromHTMLString(this.snapshotHTML);
     }
   }
 
   hasCachedSnapshot() {
-    return this.getCachedSnapshot() != null
+    return this.getCachedSnapshot() != null;
   }
 
   loadCachedSnapshot() {
@@ -3535,12 +3886,16 @@ class Visit {
   }
 
   followRedirect() {
-    if (this.redirectedToLocation && !this.followedRedirect && this.response?.redirected) {
+    if (
+      this.redirectedToLocation &&
+      !this.followedRedirect &&
+      this.response?.redirected
+    ) {
       this.adapter.visitProposedToLocation(this.redirectedToLocation, {
         action: "replace",
         response: this.response,
         shouldCacheSnapshot: false,
-        willRender: false
+        willRender: false,
       });
       this.followedRedirect = true;
     }
@@ -3577,10 +3932,12 @@ class Visit {
     if (responseHTML == undefined) {
       this.recordResponse({
         statusCode: SystemStatusCode.contentTypeMismatch,
-        redirected
+        redirected,
       });
     } else {
-      this.redirectedToLocation = response.redirected ? response.location : undefined;
+      this.redirectedToLocation = response.redirected
+        ? response.location
+        : undefined;
       this.recordResponse({ statusCode: statusCode, responseHTML, redirected });
     }
   }
@@ -3591,7 +3948,7 @@ class Visit {
     if (responseHTML == undefined) {
       this.recordResponse({
         statusCode: SystemStatusCode.contentTypeMismatch,
-        redirected
+        redirected,
       });
     } else {
       this.recordResponse({ statusCode: statusCode, responseHTML, redirected });
@@ -3601,7 +3958,7 @@ class Visit {
   requestErrored(_request, _error) {
     this.recordResponse({
       statusCode: SystemStatusCode.networkFailure,
-      redirected: false
+      redirected: false,
     });
   }
 
@@ -3612,14 +3969,23 @@ class Visit {
   // Scrolling
 
   performScroll() {
-    if (!this.scrolled && !this.view.forceReloaded && !this.view.shouldPreserveScrollPosition(this)) {
+    if (
+      !this.scrolled &&
+      !this.view.forceReloaded &&
+      !this.view.shouldPreserveScrollPosition(this)
+    ) {
       if (this.action == "restore") {
-        this.scrollToRestoredPosition() || this.scrollToAnchor() || this.view.scrollToTop();
+        this.scrollToRestoredPosition() ||
+          this.scrollToAnchor() ||
+          this.view.scrollToTop();
       } else {
         this.scrollToAnchor() || this.view.scrollToTop();
       }
       if (this.isSamePage) {
-        this.delegate.visitScrolledToSamePageLocation(this.view.lastRenderedLocation, this.location);
+        this.delegate.visitScrolledToSamePageLocation(
+          this.view.lastRenderedLocation,
+          this.location,
+        );
       }
 
       this.scrolled = true;
@@ -3630,7 +3996,7 @@ class Visit {
     const { scrollPosition } = this.restorationData;
     if (scrollPosition) {
       this.view.scrollToPosition(scrollPosition);
-      return true
+      return true;
     }
   }
 
@@ -3638,7 +4004,7 @@ class Visit {
     const anchor = getAnchor(this.location);
     if (anchor != null) {
       this.view.scrollToAnchor(anchor);
-      return true
+      return true;
     }
   }
 
@@ -3649,7 +4015,7 @@ class Visit {
   }
 
   getTimingMetrics() {
-    return { ...this.timingMetrics }
+    return { ...this.timingMetrics };
   }
 
   // Private
@@ -3657,30 +4023,32 @@ class Visit {
   getHistoryMethodForAction(action) {
     switch (action) {
       case "replace":
-        return history.replaceState
+        return history.replaceState;
       case "advance":
       case "restore":
-        return history.pushState
+        return history.pushState;
     }
   }
 
   hasPreloadedResponse() {
-    return typeof this.response == "object"
+    return typeof this.response == "object";
   }
 
   shouldIssueRequest() {
     if (this.isSamePage) {
-      return false
+      return false;
     } else if (this.action == "restore") {
-      return !this.hasCachedSnapshot()
+      return !this.hasCachedSnapshot();
     } else {
-      return this.willRender
+      return this.willRender;
     }
   }
 
   cacheSnapshot() {
     if (!this.snapshotCached) {
-      this.view.cacheSnapshot(this.snapshot).then((snapshot) => snapshot && this.visitCachedSnapshot(snapshot));
+      this.view
+        .cacheSnapshot(this.snapshot)
+        .then((snapshot) => snapshot && this.visitCachedSnapshot(snapshot));
       this.snapshotCached = true;
     }
   }
@@ -3689,17 +4057,22 @@ class Visit {
     this.cancelRender();
     await new Promise((resolve) => {
       this.frame =
-        document.visibilityState === "hidden" ? setTimeout(() => resolve(), 0) : requestAnimationFrame(() => resolve());
+        document.visibilityState === "hidden"
+          ? setTimeout(() => resolve(), 0)
+          : requestAnimationFrame(() => resolve());
     });
     await callback();
     delete this.frame;
   }
 
   async renderPageSnapshot(snapshot, isPreview) {
-    await this.viewTransitioner.renderChange(this.view.shouldTransitionTo(snapshot), async () => {
-      await this.view.renderPage(snapshot, isPreview, this.willRender, this);
-      this.performScroll();
-    });
+    await this.viewTransitioner.renderChange(
+      this.view.shouldTransitionTo(snapshot),
+      async () => {
+        await this.view.renderPage(snapshot, isPreview, this.willRender, this);
+        this.performScroll();
+      },
+    );
   }
 
   cancelRender() {
@@ -3711,11 +4084,11 @@ class Visit {
 }
 
 function isSuccessful(statusCode) {
-  return statusCode >= 200 && statusCode < 300
+  return statusCode >= 200 && statusCode < 300;
 }
 
 class BrowserAdapter {
-  progressBar = new ProgressBar()
+  progressBar = new ProgressBar();
 
   constructor(session) {
     this.session = session;
@@ -3723,7 +4096,11 @@ class BrowserAdapter {
 
   visitProposedToLocation(location, options) {
     if (locationIsVisitable(location, this.navigator.rootLocation)) {
-      this.navigator.startVisit(location, options?.restorationIdentifier || uuid(), options);
+      this.navigator.startVisit(
+        location,
+        options?.restorationIdentifier || uuid(),
+        options,
+      );
     } else {
       window.location.href = location.toString();
     }
@@ -3757,11 +4134,11 @@ class BrowserAdapter {
         return this.reload({
           reason: "request_failed",
           context: {
-            statusCode
-          }
-        })
+            statusCode,
+          },
+        });
       default:
-        return visit.loadResponse()
+        return visit.loadResponse();
     }
   }
 
@@ -3798,7 +4175,10 @@ class BrowserAdapter {
   // Private
 
   showVisitProgressBarAfterDelay() {
-    this.visitProgressBarTimeout = window.setTimeout(this.showProgressBar, this.session.progressBarDelay);
+    this.visitProgressBarTimeout = window.setTimeout(
+      this.showProgressBar,
+      this.session.progressBarDelay,
+    );
   }
 
   hideVisitProgressBar() {
@@ -3811,7 +4191,10 @@ class BrowserAdapter {
 
   showFormProgressBarAfterDelay() {
     if (this.formProgressBarTimeout == null) {
-      this.formProgressBarTimeout = window.setTimeout(this.showProgressBar, this.session.progressBarDelay);
+      this.formProgressBarTimeout = window.setTimeout(
+        this.showProgressBar,
+        this.session.progressBarDelay,
+      );
     }
   }
 
@@ -3825,7 +4208,7 @@ class BrowserAdapter {
 
   showProgressBar = () => {
     this.progressBar.show();
-  }
+  };
 
   reload(reason) {
     dispatch("turbo:reload", { detail: reason });
@@ -3834,27 +4217,35 @@ class BrowserAdapter {
   }
 
   get navigator() {
-    return this.session.navigator
+    return this.session.navigator;
   }
 }
 
 class CacheObserver {
-  selector = "[data-turbo-temporary]"
-  deprecatedSelector = "[data-turbo-cache=false]"
+  selector = "[data-turbo-temporary]";
+  deprecatedSelector = "[data-turbo-cache=false]";
 
-  started = false
+  started = false;
 
   start() {
     if (!this.started) {
       this.started = true;
-      addEventListener("turbo:before-cache", this.removeTemporaryElements, false);
+      addEventListener(
+        "turbo:before-cache",
+        this.removeTemporaryElements,
+        false,
+      );
     }
   }
 
   stop() {
     if (this.started) {
       this.started = false;
-      removeEventListener("turbo:before-cache", this.removeTemporaryElements, false);
+      removeEventListener(
+        "turbo:before-cache",
+        this.removeTemporaryElements,
+        false,
+      );
     }
   }
 
@@ -3862,10 +4253,13 @@ class CacheObserver {
     for (const element of this.temporaryElements) {
       element.remove();
     }
-  }
+  };
 
   get temporaryElements() {
-    return [...document.querySelectorAll(this.selector), ...this.temporaryElementsWithDeprecation]
+    return [
+      ...document.querySelectorAll(this.selector),
+      ...this.temporaryElementsWithDeprecation,
+    ];
   }
 
   get temporaryElementsWithDeprecation() {
@@ -3873,11 +4267,11 @@ class CacheObserver {
 
     if (elements.length) {
       console.warn(
-        `The ${this.deprecatedSelector} selector is deprecated and will be removed in a future version. Use ${this.selector} instead.`
+        `The ${this.deprecatedSelector} selector is deprecated and will be removed in a future version. Use ${this.selector} instead.`,
       );
     }
 
-    return [...elements]
+    return [...elements];
   }
 }
 
@@ -3902,7 +4296,7 @@ class FrameRedirector {
   // Link interceptor delegate
 
   shouldInterceptLinkClick(element, _location, _event) {
-    return this.#shouldRedirect(element)
+    return this.#shouldRedirect(element);
   }
 
   linkClickIntercepted(element, url, event) {
@@ -3919,7 +4313,7 @@ class FrameRedirector {
       element.closest("turbo-frame") == null &&
       this.#shouldSubmit(element, submitter) &&
       this.#shouldRedirect(element, submitter)
-    )
+    );
   }
 
   formSubmitted(element, submitter) {
@@ -3931,10 +4325,15 @@ class FrameRedirector {
 
   #shouldSubmit(form, submitter) {
     const action = getAction$1(form, submitter);
-    const meta = this.element.ownerDocument.querySelector(`meta[name="turbo-root"]`);
+    const meta = this.element.ownerDocument.querySelector(
+      `meta[name="turbo-root"]`,
+    );
     const rootLocation = expandURL(meta?.content ?? "/");
 
-    return this.#shouldRedirect(form, submitter) && locationIsVisitable(action, rootLocation)
+    return (
+      this.#shouldRedirect(form, submitter) &&
+      locationIsVisitable(action, rootLocation)
+    );
   }
 
   #shouldRedirect(element, submitter) {
@@ -3945,30 +4344,32 @@ class FrameRedirector {
 
     if (isNavigatable) {
       const frame = this.#findFrameElement(element, submitter);
-      return frame ? frame != element.closest("turbo-frame") : false
+      return frame ? frame != element.closest("turbo-frame") : false;
     } else {
-      return false
+      return false;
     }
   }
 
   #findFrameElement(element, submitter) {
-    const id = submitter?.getAttribute("data-turbo-frame") || element.getAttribute("data-turbo-frame");
+    const id =
+      submitter?.getAttribute("data-turbo-frame") ||
+      element.getAttribute("data-turbo-frame");
     if (id && id != "_top") {
       const frame = this.element.querySelector(`#${id}:not([disabled])`);
       if (frame instanceof FrameElement) {
-        return frame
+        return frame;
       }
     }
   }
 }
 
 class History {
-  location
-  restorationIdentifier = uuid()
-  restorationData = {}
-  started = false
-  pageLoaded = false
-  currentIndex = 0
+  location;
+  restorationIdentifier = uuid();
+  restorationData = {};
+  started = false;
+  pageLoaded = false;
+  currentIndex = 0;
 
   constructor(delegate) {
     this.delegate = delegate;
@@ -4003,7 +4404,9 @@ class History {
   update(method, location, restorationIdentifier = uuid()) {
     if (method === history.pushState) ++this.currentIndex;
 
-    const state = { turbo: { restorationIdentifier, restorationIndex: this.currentIndex } };
+    const state = {
+      turbo: { restorationIdentifier, restorationIndex: this.currentIndex },
+    };
     method.call(history, state, "", location.href);
     this.location = location;
     this.restorationIdentifier = restorationIdentifier;
@@ -4012,7 +4415,7 @@ class History {
   // Restoration data
 
   getRestorationDataForIdentifier(restorationIdentifier) {
-    return this.restorationData[restorationIdentifier] || {}
+    return this.restorationData[restorationIdentifier] || {};
   }
 
   updateRestorationData(additionalData) {
@@ -4020,7 +4423,7 @@ class History {
     const restorationData = this.restorationData[restorationIdentifier];
     this.restorationData[restorationIdentifier] = {
       ...restorationData,
-      ...additionalData
+      ...additionalData,
     };
   }
 
@@ -4049,33 +4452,38 @@ class History {
         this.location = new URL(window.location.href);
         const { restorationIdentifier, restorationIndex } = turbo;
         this.restorationIdentifier = restorationIdentifier;
-        const direction = restorationIndex > this.currentIndex ? "forward" : "back";
-        this.delegate.historyPoppedToLocationWithRestorationIdentifierAndDirection(this.location, restorationIdentifier, direction);
+        const direction =
+          restorationIndex > this.currentIndex ? "forward" : "back";
+        this.delegate.historyPoppedToLocationWithRestorationIdentifierAndDirection(
+          this.location,
+          restorationIdentifier,
+          direction,
+        );
         this.currentIndex = restorationIndex;
       }
     }
-  }
+  };
 
   onPageLoad = async (_event) => {
     await nextMicrotask();
     this.pageLoaded = true;
-  }
+  };
 
   // Private
 
   shouldHandlePopState() {
     // Safari dispatches a popstate event after window's load event, ignore it
-    return this.pageIsLoaded()
+    return this.pageIsLoaded();
   }
 
   pageIsLoaded() {
-    return this.pageLoaded || document.readyState == "complete"
+    return this.pageLoaded || document.readyState == "complete";
   }
 }
 
 class LinkPrefetchObserver {
-  started = false
-  #prefetchedLink = null
+  started = false;
+  #prefetchedLink = null;
 
   constructor(delegate, eventTarget) {
     this.delegate = delegate;
@@ -4083,50 +4491,78 @@ class LinkPrefetchObserver {
   }
 
   start() {
-    if (this.started) return
+    if (this.started) return;
 
     if (this.eventTarget.readyState === "loading") {
-      this.eventTarget.addEventListener("DOMContentLoaded", this.#enable, { once: true });
+      this.eventTarget.addEventListener("DOMContentLoaded", this.#enable, {
+        once: true,
+      });
     } else {
       this.#enable();
     }
   }
 
   stop() {
-    if (!this.started) return
+    if (!this.started) return;
 
-    this.eventTarget.removeEventListener("mouseenter", this.#tryToPrefetchRequest, {
-      capture: true,
-      passive: true
-    });
-    this.eventTarget.removeEventListener("mouseleave", this.#cancelRequestIfObsolete, {
-      capture: true,
-      passive: true
-    });
+    this.eventTarget.removeEventListener(
+      "mouseenter",
+      this.#tryToPrefetchRequest,
+      {
+        capture: true,
+        passive: true,
+      },
+    );
+    this.eventTarget.removeEventListener(
+      "mouseleave",
+      this.#cancelRequestIfObsolete,
+      {
+        capture: true,
+        passive: true,
+      },
+    );
 
-    this.eventTarget.removeEventListener("turbo:before-fetch-request", this.#tryToUsePrefetchedRequest, true);
+    this.eventTarget.removeEventListener(
+      "turbo:before-fetch-request",
+      this.#tryToUsePrefetchedRequest,
+      true,
+    );
     this.started = false;
   }
 
   #enable = () => {
-    this.eventTarget.addEventListener("mouseenter", this.#tryToPrefetchRequest, {
-      capture: true,
-      passive: true
-    });
-    this.eventTarget.addEventListener("mouseleave", this.#cancelRequestIfObsolete, {
-      capture: true,
-      passive: true
-    });
+    this.eventTarget.addEventListener(
+      "mouseenter",
+      this.#tryToPrefetchRequest,
+      {
+        capture: true,
+        passive: true,
+      },
+    );
+    this.eventTarget.addEventListener(
+      "mouseleave",
+      this.#cancelRequestIfObsolete,
+      {
+        capture: true,
+        passive: true,
+      },
+    );
 
-    this.eventTarget.addEventListener("turbo:before-fetch-request", this.#tryToUsePrefetchedRequest, true);
+    this.eventTarget.addEventListener(
+      "turbo:before-fetch-request",
+      this.#tryToUsePrefetchedRequest,
+      true,
+    );
     this.started = true;
-  }
+  };
 
   #tryToPrefetchRequest = (event) => {
-    if (getMetaContent("turbo-prefetch") === "false") return
+    if (getMetaContent("turbo-prefetch") === "false") return;
 
     const target = event.target;
-    const isLink = target.matches && target.matches("a[href]:not([target^=_]):not([download])");
+    const isLink =
+      target.matches &&
+      target.matches("a[href]:not([target^=_]):not([download])");
 
     if (isLink && this.#isPrefetchable(target)) {
       const link = target;
@@ -4140,25 +4576,32 @@ class LinkPrefetchObserver {
           FetchMethod.get,
           location,
           new URLSearchParams(),
-          target
+          target,
         );
 
-        prefetchCache.setLater(location.toString(), fetchRequest, this.#cacheTtl);
+        prefetchCache.setLater(
+          location.toString(),
+          fetchRequest,
+          this.#cacheTtl,
+        );
       }
     }
-  }
+  };
 
   #cancelRequestIfObsolete = (event) => {
     if (event.target === this.#prefetchedLink) this.#cancelPrefetchRequest();
-  }
+  };
 
   #cancelPrefetchRequest = () => {
     prefetchCache.clear();
     this.#prefetchedLink = null;
-  }
+  };
 
   #tryToUsePrefetchedRequest = (event) => {
-    if (event.target.tagName !== "FORM" && event.detail.fetchOptions.method === "GET") {
+    if (
+      event.target.tagName !== "FORM" &&
+      event.detail.fetchOptions.method === "GET"
+    ) {
       const cached = prefetchCache.get(event.detail.url.toString());
 
       if (cached) {
@@ -4168,7 +4611,7 @@ class LinkPrefetchObserver {
 
       prefetchCache.clear();
     }
-  }
+  };
 
   prepareRequest(request) {
     const link = request.target;
@@ -4176,7 +4619,10 @@ class LinkPrefetchObserver {
     request.headers["X-Sec-Purpose"] = "prefetch";
 
     const turboFrame = link.closest("turbo-frame");
-    const turboFrameTarget = link.getAttribute("data-turbo-frame") || turboFrame?.getAttribute("target") || turboFrame?.id;
+    const turboFrameTarget =
+      link.getAttribute("data-turbo-frame") ||
+      turboFrame?.getAttribute("target") ||
+      turboFrame?.id;
 
     if (turboFrameTarget && turboFrameTarget !== "_top") {
       request.headers["Turbo-Frame"] = turboFrameTarget;
@@ -4198,60 +4644,83 @@ class LinkPrefetchObserver {
   requestFailedWithResponse(fetchRequest, fetchResponse) {}
 
   get #cacheTtl() {
-    return Number(getMetaContent("turbo-prefetch-cache-time")) || cacheTtl
+    return Number(getMetaContent("turbo-prefetch-cache-time")) || cacheTtl;
   }
 
   #isPrefetchable(link) {
     const href = link.getAttribute("href");
 
-    if (!href) return false
+    if (!href) return false;
 
-    if (unfetchableLink(link)) return false
-    if (linkToTheSamePage(link)) return false
-    if (linkOptsOut(link)) return false
-    if (nonSafeLink(link)) return false
-    if (eventPrevented(link)) return false
+    if (unfetchableLink(link)) return false;
+    if (linkToTheSamePage(link)) return false;
+    if (linkOptsOut(link)) return false;
+    if (nonSafeLink(link)) return false;
+    if (eventPrevented(link)) return false;
 
-    return true
+    return true;
   }
 }
 
 const unfetchableLink = (link) => {
-  return link.origin !== document.location.origin || !["http:", "https:"].includes(link.protocol) || link.hasAttribute("target")
+  return (
+    link.origin !== document.location.origin ||
+    !["http:", "https:"].includes(link.protocol) ||
+    link.hasAttribute("target")
+  );
 };
 
 const linkToTheSamePage = (link) => {
-  return (link.pathname + link.search === document.location.pathname + document.location.search) || link.href.startsWith("#")
+  return (
+    link.pathname + link.search ===
+      document.location.pathname + document.location.search ||
+    link.href.startsWith("#")
+  );
 };
 
 const linkOptsOut = (link) => {
-  if (link.getAttribute("data-turbo-prefetch") === "false") return true
-  if (link.getAttribute("data-turbo") === "false") return true
+  if (link.getAttribute("data-turbo-prefetch") === "false") return true;
+  if (link.getAttribute("data-turbo") === "false") return true;
 
-  const turboPrefetchParent = findClosestRecursively(link, "[data-turbo-prefetch]");
-  if (turboPrefetchParent && turboPrefetchParent.getAttribute("data-turbo-prefetch") === "false") return true
+  const turboPrefetchParent = findClosestRecursively(
+    link,
+    "[data-turbo-prefetch]",
+  );
+  if (
+    turboPrefetchParent &&
+    turboPrefetchParent.getAttribute("data-turbo-prefetch") === "false"
+  )
+    return true;
 
-  return false
+  return false;
 };
 
 const nonSafeLink = (link) => {
   const turboMethod = link.getAttribute("data-turbo-method");
-  if (turboMethod && turboMethod.toLowerCase() !== "get") return true
+  if (turboMethod && turboMethod.toLowerCase() !== "get") return true;
 
-  if (isUJS(link)) return true
-  if (link.hasAttribute("data-turbo-confirm")) return true
-  if (link.hasAttribute("data-turbo-stream")) return true
+  if (isUJS(link)) return true;
+  if (link.hasAttribute("data-turbo-confirm")) return true;
+  if (link.hasAttribute("data-turbo-stream")) return true;
 
-  return false
+  return false;
 };
 
 const isUJS = (link) => {
-  return link.hasAttribute("data-remote") || link.hasAttribute("data-behavior") || link.hasAttribute("data-confirm") || link.hasAttribute("data-method")
+  return (
+    link.hasAttribute("data-remote") ||
+    link.hasAttribute("data-behavior") ||
+    link.hasAttribute("data-confirm") ||
+    link.hasAttribute("data-method")
+  );
 };
 
 const eventPrevented = (link) => {
-  const event = dispatch("turbo:before-prefetch", { target: link, cancelable: true });
-  return event.defaultPrevented
+  const event = dispatch("turbo:before-prefetch", {
+    target: link,
+    cancelable: true,
+  });
+  return event.defaultPrevented;
 };
 
 class Navigator {
@@ -4260,17 +4729,24 @@ class Navigator {
   }
 
   proposeVisit(location, options = {}) {
-    if (this.delegate.allowsVisitingLocationWithAction(location, options.action)) {
+    if (
+      this.delegate.allowsVisitingLocationWithAction(location, options.action)
+    ) {
       this.delegate.visitProposedToLocation(location, options);
     }
   }
 
   startVisit(locatable, restorationIdentifier, options = {}) {
     this.stop();
-    this.currentVisit = new Visit(this, expandURL(locatable), restorationIdentifier, {
-      referrer: this.location,
-      ...options
-    });
+    this.currentVisit = new Visit(
+      this,
+      expandURL(locatable),
+      restorationIdentifier,
+      {
+        referrer: this.location,
+        ...options,
+      },
+    );
     this.currentVisit.start();
   }
 
@@ -4294,19 +4770,19 @@ class Navigator {
   }
 
   get adapter() {
-    return this.delegate.adapter
+    return this.delegate.adapter;
   }
 
   get view() {
-    return this.delegate.view
+    return this.delegate.view;
   }
 
   get rootLocation() {
-    return this.view.snapshot.rootLocation
+    return this.view.snapshot.rootLocation;
   }
 
   get history() {
-    return this.delegate.history
+    return this.delegate.history;
   }
 
   // Form submission delegate
@@ -4328,11 +4804,14 @@ class Navigator {
         }
 
         const { statusCode, redirected } = fetchResponse;
-        const action = this.#getActionForFormSubmission(formSubmission, fetchResponse);
+        const action = this.#getActionForFormSubmission(
+          formSubmission,
+          fetchResponse,
+        );
         const visitOptions = {
           action,
           shouldCacheSnapshot,
-          response: { statusCode, responseHTML, redirected }
+          response: { statusCode, responseHTML, redirected },
         };
         this.proposeVisit(fetchResponse.location, visitOptions);
       }
@@ -4349,7 +4828,7 @@ class Navigator {
       } else {
         await this.view.renderPage(snapshot, false, true, this.currentVisit);
       }
-      if(!snapshot.shouldPreserveScrollPosition) {
+      if (!snapshot.shouldPreserveScrollPosition) {
         this.view.scrollToTop();
       }
       this.view.clearSnapshotCache();
@@ -4381,13 +4860,15 @@ class Navigator {
   locationWithActionIsSamePage(location, action) {
     const anchor = getAnchor(location);
     const currentAnchor = getAnchor(this.view.lastRenderedLocation);
-    const isRestorationToTop = action === "restore" && typeof anchor === "undefined";
+    const isRestorationToTop =
+      action === "restore" && typeof anchor === "undefined";
 
     return (
       action !== "replace" &&
-      getRequestURL(location) === getRequestURL(this.view.lastRenderedLocation) &&
+      getRequestURL(location) ===
+        getRequestURL(this.view.lastRenderedLocation) &&
       (isRestorationToTop || (anchor != null && anchor !== currentAnchor))
-    )
+    );
   }
 
   visitScrolledToSamePageLocation(oldURL, newURL) {
@@ -4397,21 +4878,26 @@ class Navigator {
   // Visits
 
   get location() {
-    return this.history.location
+    return this.history.location;
   }
 
   get restorationIdentifier() {
-    return this.history.restorationIdentifier
+    return this.history.restorationIdentifier;
   }
 
   #getActionForFormSubmission(formSubmission, fetchResponse) {
     const { submitter, formElement } = formSubmission;
-    return getVisitAction(submitter, formElement) || this.#getDefaultAction(fetchResponse)
+    return (
+      getVisitAction(submitter, formElement) ||
+      this.#getDefaultAction(fetchResponse)
+    );
   }
 
   #getDefaultAction(fetchResponse) {
-    const sameLocationRedirect = fetchResponse.redirected && fetchResponse.location.href === this.location?.href;
-    return sameLocationRedirect ? "replace" : "advance"
+    const sameLocationRedirect =
+      fetchResponse.redirected &&
+      fetchResponse.location.href === this.location?.href;
+    return sameLocationRedirect ? "replace" : "advance";
   }
 }
 
@@ -4419,12 +4905,12 @@ const PageStage = {
   initial: 0,
   loading: 1,
   interactive: 2,
-  complete: 3
+  complete: 3,
 };
 
 class PageObserver {
-  stage = PageStage.initial
-  started = false
+  stage = PageStage.initial;
+  started = false;
 
   constructor(delegate) {
     this.delegate = delegate;
@@ -4435,7 +4921,11 @@ class PageObserver {
       if (this.stage == PageStage.initial) {
         this.stage = PageStage.loading;
       }
-      document.addEventListener("readystatechange", this.interpretReadyState, false);
+      document.addEventListener(
+        "readystatechange",
+        this.interpretReadyState,
+        false,
+      );
       addEventListener("pagehide", this.pageWillUnload, false);
       this.started = true;
     }
@@ -4443,7 +4933,11 @@ class PageObserver {
 
   stop() {
     if (this.started) {
-      document.removeEventListener("readystatechange", this.interpretReadyState, false);
+      document.removeEventListener(
+        "readystatechange",
+        this.interpretReadyState,
+        false,
+      );
       removeEventListener("pagehide", this.pageWillUnload, false);
       this.started = false;
     }
@@ -4456,7 +4950,7 @@ class PageObserver {
     } else if (readyState == "complete") {
       this.pageIsComplete();
     }
-  }
+  };
 
   pageIsInteractive() {
     if (this.stage == PageStage.loading) {
@@ -4475,15 +4969,15 @@ class PageObserver {
 
   pageWillUnload = () => {
     this.delegate.pageWillUnload();
-  }
+  };
 
   get readyState() {
-    return document.readyState
+    return document.readyState;
   }
 }
 
 class ScrollObserver {
-  started = false
+  started = false;
 
   constructor(delegate) {
     this.delegate = delegate;
@@ -4506,7 +5000,7 @@ class ScrollObserver {
 
   onScroll = () => {
     this.updatePosition({ x: window.pageXOffset, y: window.pageYOffset });
-  }
+  };
 
   // Private
 
@@ -4517,13 +5011,17 @@ class ScrollObserver {
 
 class StreamMessageRenderer {
   render({ fragment }) {
-    Bardo.preservingPermanentElements(this, getPermanentElementMapForFragment(fragment), () => {
-      withAutofocusFromFragment(fragment, () => {
-        withPreservedFocus(() => {
-          document.documentElement.appendChild(fragment);
+    Bardo.preservingPermanentElements(
+      this,
+      getPermanentElementMapForFragment(fragment),
+      () => {
+        withAutofocusFromFragment(fragment, () => {
+          withPreservedFocus(() => {
+            document.documentElement.appendChild(fragment);
+          });
         });
-      });
-    });
+      },
+    );
   }
 
   // Bardo delegate
@@ -4536,13 +5034,18 @@ class StreamMessageRenderer {
 }
 
 function getPermanentElementMapForFragment(fragment) {
-  const permanentElementsInDocument = queryPermanentElementsAll(document.documentElement);
+  const permanentElementsInDocument = queryPermanentElementsAll(
+    document.documentElement,
+  );
   const permanentElementMap = {};
   for (const permanentElementInDocument of permanentElementsInDocument) {
     const { id } = permanentElementInDocument;
 
     for (const streamElement of fragment.querySelectorAll("turbo-stream")) {
-      const elementInStream = getPermanentElementById(streamElement.templateElement.content, id);
+      const elementInStream = getPermanentElementById(
+        streamElement.templateElement.content,
+        id,
+      );
 
       if (elementInStream) {
         permanentElementMap[id] = [permanentElementInDocument, elementInStream];
@@ -4550,7 +5053,7 @@ function getPermanentElementMapForFragment(fragment) {
     }
   }
 
-  return permanentElementMap
+  return permanentElementMap;
 }
 
 async function withAutofocusFromFragment(fragment, callback) {
@@ -4572,7 +5075,8 @@ async function withAutofocusFromFragment(fragment, callback) {
   callback();
   await nextRepaint();
 
-  const hasNoActiveElement = document.activeElement == null || document.activeElement == document.body;
+  const hasNoActiveElement =
+    document.activeElement == null || document.activeElement == document.body;
 
   if (hasNoActiveElement && willAutofocusId) {
     const elementToAutofocus = document.getElementById(willAutofocusId);
@@ -4587,14 +5091,21 @@ async function withAutofocusFromFragment(fragment, callback) {
 }
 
 async function withPreservedFocus(callback) {
-  const [activeElementBeforeRender, activeElementAfterRender] = await around(callback, () => document.activeElement);
+  const [activeElementBeforeRender, activeElementAfterRender] = await around(
+    callback,
+    () => document.activeElement,
+  );
 
-  const restoreFocusTo = activeElementBeforeRender && activeElementBeforeRender.id;
+  const restoreFocusTo =
+    activeElementBeforeRender && activeElementBeforeRender.id;
 
   if (restoreFocusTo) {
     const elementToFocus = document.getElementById(restoreFocusTo);
 
-    if (elementIsFocusable(elementToFocus) && elementToFocus != activeElementAfterRender) {
+    if (
+      elementIsFocusable(elementToFocus) &&
+      elementToFocus != activeElementAfterRender
+    ) {
       elementToFocus.focus();
     }
   }
@@ -4602,17 +5113,19 @@ async function withPreservedFocus(callback) {
 
 function firstAutofocusableElementInStreams(nodeListOfStreamElements) {
   for (const streamElement of nodeListOfStreamElements) {
-    const elementWithAutofocus = queryAutofocusableElement(streamElement.templateElement.content);
+    const elementWithAutofocus = queryAutofocusableElement(
+      streamElement.templateElement.content,
+    );
 
-    if (elementWithAutofocus) return elementWithAutofocus
+    if (elementWithAutofocus) return elementWithAutofocus;
   }
 
-  return null
+  return null;
 }
 
 class StreamObserver {
-  sources = new Set()
-  #started = false
+  sources = new Set();
+  #started = false;
 
   constructor(delegate) {
     this.delegate = delegate;
@@ -4621,14 +5134,22 @@ class StreamObserver {
   start() {
     if (!this.#started) {
       this.#started = true;
-      addEventListener("turbo:before-fetch-response", this.inspectFetchResponse, false);
+      addEventListener(
+        "turbo:before-fetch-response",
+        this.inspectFetchResponse,
+        false,
+      );
     }
   }
 
   stop() {
     if (this.#started) {
       this.#started = false;
-      removeEventListener("turbo:before-fetch-response", this.inspectFetchResponse, false);
+      removeEventListener(
+        "turbo:before-fetch-response",
+        this.inspectFetchResponse,
+        false,
+      );
     }
   }
 
@@ -4647,7 +5168,7 @@ class StreamObserver {
   }
 
   streamSourceIsConnected(source) {
-    return this.sources.has(source)
+    return this.sources.has(source);
   }
 
   inspectFetchResponse = (event) => {
@@ -4656,13 +5177,13 @@ class StreamObserver {
       event.preventDefault();
       this.receiveMessageResponse(response);
     }
-  }
+  };
 
   receiveMessageEvent = (event) => {
     if (this.#started && typeof event.data == "string") {
       this.receiveMessageHTML(event.data);
     }
-  }
+  };
 
   async receiveMessageResponse(response) {
     const html = await response.responseHTML;
@@ -4679,13 +5200,13 @@ class StreamObserver {
 function fetchResponseFromEvent(event) {
   const fetchResponse = event.detail?.fetchResponse;
   if (fetchResponse instanceof FetchResponse) {
-    return fetchResponse
+    return fetchResponse;
   }
 }
 
 function fetchResponseIsStream(response) {
   const contentType = response.contentType ?? "";
-  return contentType.startsWith(StreamMessage.contentType)
+  return contentType.startsWith(StreamMessage.contentType);
 }
 
 class ErrorRenderer extends Renderer {
@@ -4717,11 +5238,11 @@ class ErrorRenderer extends Renderer {
   }
 
   get newHead() {
-    return this.newSnapshot.headSnapshot.element
+    return this.newSnapshot.headSnapshot.element;
   }
 
   get scriptElements() {
-    return document.documentElement.querySelectorAll("script")
+    return document.documentElement.querySelectorAll("script");
   }
 }
 
@@ -4735,20 +5256,20 @@ class PageRenderer extends Renderer {
   }
 
   get shouldRender() {
-    return this.newSnapshot.isVisitable && this.trackedElementsAreIdentical
+    return this.newSnapshot.isVisitable && this.trackedElementsAreIdentical;
   }
 
   get reloadReason() {
     if (!this.newSnapshot.isVisitable) {
       return {
-        reason: "turbo_visit_control_is_reload"
-      }
+        reason: "turbo_visit_control_is_reload",
+      };
     }
 
     if (!this.trackedElementsAreIdentical) {
       return {
-        reason: "tracked_element_mismatch"
-      }
+        reason: "tracked_element_mismatch",
+      };
     }
   }
 
@@ -4771,15 +5292,15 @@ class PageRenderer extends Renderer {
   }
 
   get currentHeadSnapshot() {
-    return this.currentSnapshot.headSnapshot
+    return this.currentSnapshot.headSnapshot;
   }
 
   get newHeadSnapshot() {
-    return this.newSnapshot.headSnapshot
+    return this.newSnapshot.headSnapshot;
   }
 
   get newElement() {
-    return this.newSnapshot.element
+    return this.newSnapshot.element;
   }
 
   #setLanguage() {
@@ -4814,7 +5335,10 @@ class PageRenderer extends Renderer {
   }
 
   get trackedElementsAreIdentical() {
-    return this.currentHeadSnapshot.trackedElementSignature == this.newHeadSnapshot.trackedElementSignature
+    return (
+      this.currentHeadSnapshot.trackedElementSignature ==
+      this.newHeadSnapshot.trackedElementSignature
+    );
   }
 
   async copyNewHeadStylesheetElements() {
@@ -4860,22 +5384,22 @@ class PageRenderer extends Renderer {
       // if title element...
       if (element.tagName == "TITLE") {
         if (newElement.tagName != "TITLE") {
-          continue
+          continue;
         }
         if (element.innerHTML == newElement.innerHTML) {
           elementList.splice(index, 1);
-          return true
+          return true;
         }
       }
 
       // if any other element...
       if (newElement.isEqualNode(element)) {
         elementList.splice(index, 1);
-        return true
+        return true;
       }
     }
 
-    return false
+    return false;
   }
 
   removeCurrentHeadProvisionalElements() {
@@ -4908,32 +5432,38 @@ class PageRenderer extends Renderer {
 
   get unusedDynamicStylesheetElements() {
     return this.oldHeadStylesheetElements.filter((element) => {
-      return element.getAttribute("data-turbo-track") === "dynamic"
-    })
+      return element.getAttribute("data-turbo-track") === "dynamic";
+    });
   }
 
   get oldHeadStylesheetElements() {
-    return this.currentHeadSnapshot.getStylesheetElementsNotInSnapshot(this.newHeadSnapshot)
+    return this.currentHeadSnapshot.getStylesheetElementsNotInSnapshot(
+      this.newHeadSnapshot,
+    );
   }
 
   get newHeadStylesheetElements() {
-    return this.newHeadSnapshot.getStylesheetElementsNotInSnapshot(this.currentHeadSnapshot)
+    return this.newHeadSnapshot.getStylesheetElementsNotInSnapshot(
+      this.currentHeadSnapshot,
+    );
   }
 
   get newHeadScriptElements() {
-    return this.newHeadSnapshot.getScriptElementsNotInSnapshot(this.currentHeadSnapshot)
+    return this.newHeadSnapshot.getScriptElementsNotInSnapshot(
+      this.currentHeadSnapshot,
+    );
   }
 
   get currentHeadProvisionalElements() {
-    return this.currentHeadSnapshot.provisionalElements
+    return this.currentHeadSnapshot.provisionalElements;
   }
 
   get newHeadProvisionalElements() {
-    return this.newHeadSnapshot.provisionalElements
+    return this.newHeadSnapshot.provisionalElements;
   }
 
   get newBodyScriptElements() {
-    return this.newElement.querySelectorAll("script")
+    return this.newElement.querySelectorAll("script");
   }
 }
 
@@ -4941,8 +5471,8 @@ class MorphingPageRenderer extends PageRenderer {
   static renderElement(currentElement, newElement) {
     morphElements(currentElement, newElement, {
       callbacks: {
-        beforeNodeMorphed: element => !canRefreshFrame(element)
-      }
+        beforeNodeMorphed: (element) => !canRefreshFrame(element),
+      },
     });
 
     for (const frame of currentElement.querySelectorAll("turbo-frame")) {
@@ -4953,49 +5483,51 @@ class MorphingPageRenderer extends PageRenderer {
   }
 
   async preservingPermanentElements(callback) {
-    return await callback()
+    return await callback();
   }
 
   get renderMethod() {
-    return "morph"
+    return "morph";
   }
 
   get shouldAutofocus() {
-    return false
+    return false;
   }
 }
 
 function canRefreshFrame(frame) {
-  return frame instanceof FrameElement &&
+  return (
+    frame instanceof FrameElement &&
     frame.src &&
     frame.refresh === "morph" &&
     !frame.closest("[data-turbo-permanent]")
+  );
 }
 
 class SnapshotCache {
-  keys = []
-  snapshots = {}
+  keys = [];
+  snapshots = {};
 
   constructor(size) {
     this.size = size;
   }
 
   has(location) {
-    return toCacheKey(location) in this.snapshots
+    return toCacheKey(location) in this.snapshots;
   }
 
   get(location) {
     if (this.has(location)) {
       const snapshot = this.read(location);
       this.touch(location);
-      return snapshot
+      return snapshot;
     }
   }
 
   put(location, snapshot) {
     this.write(location, snapshot);
     this.touch(location);
-    return snapshot
+    return snapshot;
   }
 
   clear() {
@@ -5005,7 +5537,7 @@ class SnapshotCache {
   // Private
 
   read(location) {
-    return this.snapshots[toCacheKey(location)]
+    return this.snapshots[toCacheKey(location)];
   }
 
   write(location, snapshot) {
@@ -5028,19 +5560,27 @@ class SnapshotCache {
 }
 
 class PageView extends View {
-  snapshotCache = new SnapshotCache(10)
-  lastRenderedLocation = new URL(location.href)
-  forceReloaded = false
+  snapshotCache = new SnapshotCache(10);
+  lastRenderedLocation = new URL(location.href);
+  forceReloaded = false;
 
   shouldTransitionTo(newSnapshot) {
-    return this.snapshot.prefersViewTransitions && newSnapshot.prefersViewTransitions
+    return (
+      this.snapshot.prefersViewTransitions && newSnapshot.prefersViewTransitions
+    );
   }
 
   renderPage(snapshot, isPreview = false, willRender = true, visit) {
-    const shouldMorphPage = this.isPageRefresh(visit) && this.snapshot.shouldMorphPage;
+    const shouldMorphPage =
+      this.isPageRefresh(visit) && this.snapshot.shouldMorphPage;
     const rendererClass = shouldMorphPage ? MorphingPageRenderer : PageRenderer;
 
-    const renderer = new rendererClass(this.snapshot, snapshot, isPreview, willRender);
+    const renderer = new rendererClass(
+      this.snapshot,
+      snapshot,
+      isPreview,
+      willRender,
+    );
 
     if (!renderer.shouldRender) {
       this.forceReloaded = true;
@@ -5048,13 +5588,13 @@ class PageView extends View {
       visit?.changeHistory();
     }
 
-    return this.render(renderer)
+    return this.render(renderer);
   }
 
   renderError(snapshot, visit) {
     visit?.changeHistory();
     const renderer = new ErrorRenderer(this.snapshot, snapshot, false);
-    return this.render(renderer)
+    return this.render(renderer);
   }
 
   clearSnapshotCache() {
@@ -5068,29 +5608,35 @@ class PageView extends View {
       await nextEventLoopTick();
       const cachedSnapshot = snapshot.clone();
       this.snapshotCache.put(location, cachedSnapshot);
-      return cachedSnapshot
+      return cachedSnapshot;
     }
   }
 
   getCachedSnapshotForLocation(location) {
-    return this.snapshotCache.get(location)
+    return this.snapshotCache.get(location);
   }
 
   isPageRefresh(visit) {
-    return !visit || (this.lastRenderedLocation.pathname === visit.location.pathname && visit.action === "replace")
+    return (
+      !visit ||
+      (this.lastRenderedLocation.pathname === visit.location.pathname &&
+        visit.action === "replace")
+    );
   }
 
   shouldPreserveScrollPosition(visit) {
-    return this.isPageRefresh(visit) && this.snapshot.shouldPreserveScrollPosition
+    return (
+      this.isPageRefresh(visit) && this.snapshot.shouldPreserveScrollPosition
+    );
   }
 
   get snapshot() {
-    return PageSnapshot.fromElement(this.element)
+    return PageSnapshot.fromElement(this.element);
   }
 }
 
 class Preloader {
-  selector = "a[data-turbo-preload]"
+  selector = "a[data-turbo-preload]";
 
   constructor(delegate, snapshotCache) {
     this.delegate = delegate;
@@ -5121,10 +5667,16 @@ class Preloader {
     const location = new URL(link.href);
 
     if (this.snapshotCache.has(location)) {
-      return
+      return;
     }
 
-    const fetchRequest = new FetchRequest(this, FetchMethod.get, location, new URLSearchParams(), link);
+    const fetchRequest = new FetchRequest(
+      this,
+      FetchMethod.get,
+      location,
+      new URLSearchParams(),
+      link,
+    );
     await fetchRequest.perform();
   }
 
@@ -5157,7 +5709,7 @@ class Preloader {
 
   #preloadAll = () => {
     this.preloadOnLoadLinksForView(document.body);
-  }
+  };
 }
 
 class Cache {
@@ -5187,26 +5739,29 @@ class Cache {
 }
 
 class Session {
-  navigator = new Navigator(this)
-  history = new History(this)
-  view = new PageView(this, document.documentElement)
-  adapter = new BrowserAdapter(this)
+  navigator = new Navigator(this);
+  history = new History(this);
+  view = new PageView(this, document.documentElement);
+  adapter = new BrowserAdapter(this);
 
-  pageObserver = new PageObserver(this)
-  cacheObserver = new CacheObserver()
-  linkPrefetchObserver = new LinkPrefetchObserver(this, document)
-  linkClickObserver = new LinkClickObserver(this, window)
-  formSubmitObserver = new FormSubmitObserver(this, document)
-  scrollObserver = new ScrollObserver(this)
-  streamObserver = new StreamObserver(this)
-  formLinkClickObserver = new FormLinkClickObserver(this, document.documentElement)
-  frameRedirector = new FrameRedirector(this, document.documentElement)
-  streamMessageRenderer = new StreamMessageRenderer()
-  cache = new Cache(this)
+  pageObserver = new PageObserver(this);
+  cacheObserver = new CacheObserver();
+  linkPrefetchObserver = new LinkPrefetchObserver(this, document);
+  linkClickObserver = new LinkClickObserver(this, window);
+  formSubmitObserver = new FormSubmitObserver(this, document);
+  scrollObserver = new ScrollObserver(this);
+  streamObserver = new StreamObserver(this);
+  formLinkClickObserver = new FormLinkClickObserver(
+    this,
+    document.documentElement,
+  );
+  frameRedirector = new FrameRedirector(this, document.documentElement);
+  streamMessageRenderer = new StreamMessageRenderer();
+  cache = new Cache(this);
 
-  enabled = true
-  started = false
-  #pageRefreshDebouncePeriod = 150
+  enabled = true;
+  started = false;
+  #pageRefreshDebouncePeriod = 150;
 
   constructor(recentRequests) {
     this.recentRequests = recentRequests;
@@ -5259,12 +5814,17 @@ class Session {
   }
 
   visit(location, options = {}) {
-    const frameElement = options.frame ? document.getElementById(options.frame) : null;
+    const frameElement = options.frame
+      ? document.getElementById(options.frame)
+      : null;
 
     if (frameElement instanceof FrameElement) {
       const action = options.action || getVisitAction(frameElement);
 
-      frameElement.delegate.proposeVisitIfNavigatedWithAction(frameElement, action);
+      frameElement.delegate.proposeVisitIfNavigatedWithAction(
+        frameElement,
+        action,
+      );
       frameElement.src = location.toString();
     } else {
       this.navigator.proposeVisit(expandURL(location), options);
@@ -5296,7 +5856,7 @@ class Session {
 
   setProgressBarDelay(delay) {
     console.warn(
-      "Please replace `session.setProgressBarDelay(delay)` with `session.progressBarDelay = delay`. The function is deprecated and will be removed in a future version of Turbo.`"
+      "Please replace `session.setProgressBarDelay(delay)` with `session.progressBarDelay = delay`. The function is deprecated and will be removed in a future version of Turbo.`",
     );
 
     this.progressBarDelay = delay;
@@ -5307,7 +5867,7 @@ class Session {
   }
 
   get progressBarDelay() {
-    return config.drive.progressBarDelay
+    return config.drive.progressBarDelay;
   }
 
   set drive(value) {
@@ -5315,7 +5875,7 @@ class Session {
   }
 
   get drive() {
-    return config.drive.enabled
+    return config.drive.enabled;
   }
 
   set formMode(value) {
@@ -5323,19 +5883,19 @@ class Session {
   }
 
   get formMode() {
-    return config.forms.mode
+    return config.forms.mode;
   }
 
   get location() {
-    return this.history.location
+    return this.history.location;
   }
 
   get restorationIdentifier() {
-    return this.history.restorationIdentifier
+    return this.history.restorationIdentifier;
   }
 
   get pageRefreshDebouncePeriod() {
-    return this.#pageRefreshDebouncePeriod
+    return this.#pageRefreshDebouncePeriod;
   }
 
   set pageRefreshDebouncePeriod(value) {
@@ -5349,31 +5909,40 @@ class Session {
     const isUnsafe = element.hasAttribute("data-turbo-method");
     const isStream = element.hasAttribute("data-turbo-stream");
     const frameTarget = element.getAttribute("data-turbo-frame");
-    const frame = frameTarget == "_top" ?
-      null :
-      document.getElementById(frameTarget) || findClosestRecursively(element, "turbo-frame:not([disabled])");
+    const frame =
+      frameTarget == "_top"
+        ? null
+        : document.getElementById(frameTarget) ||
+          findClosestRecursively(element, "turbo-frame:not([disabled])");
 
     if (isUnsafe || isStream || frame instanceof FrameElement) {
-      return false
+      return false;
     } else {
       const location = new URL(element.href);
 
-      return this.elementIsNavigatable(element) && locationIsVisitable(location, this.snapshot.rootLocation)
+      return (
+        this.elementIsNavigatable(element) &&
+        locationIsVisitable(location, this.snapshot.rootLocation)
+      );
     }
   }
 
   // History delegate
 
-  historyPoppedToLocationWithRestorationIdentifierAndDirection(location, restorationIdentifier, direction) {
+  historyPoppedToLocationWithRestorationIdentifierAndDirection(
+    location,
+    restorationIdentifier,
+    direction,
+  ) {
     if (this.enabled) {
       this.navigator.startVisit(location, restorationIdentifier, {
         action: "restore",
         historyChanged: true,
-        direction
+        direction,
       });
     } else {
       this.adapter.pageInvalidated({
-        reason: "turbo_disabled"
+        reason: "turbo_disabled",
       });
     }
   }
@@ -5387,7 +5956,10 @@ class Session {
   // Form click observer delegate
 
   willSubmitFormLinkToLocation(link, location) {
-    return this.elementIsNavigatable(link) && locationIsVisitable(location, this.snapshot.rootLocation)
+    return (
+      this.elementIsNavigatable(link) &&
+      locationIsVisitable(location, this.snapshot.rootLocation)
+    );
   }
 
   submittedFormLinkToLocation() {}
@@ -5397,8 +5969,8 @@ class Session {
   canPrefetchRequestToLocation(link, location) {
     return (
       this.elementIsNavigatable(link) &&
-        locationIsVisitable(location, this.snapshot.rootLocation)
-    )
+      locationIsVisitable(location, this.snapshot.rootLocation)
+    );
   }
 
   // Link click observer delegate
@@ -5408,7 +5980,7 @@ class Session {
       this.elementIsNavigatable(link) &&
       locationIsVisitable(location, this.snapshot.rootLocation) &&
       this.applicationAllowsFollowingLinkToLocation(link, location, event)
-    )
+    );
   }
 
   followedLinkToLocation(link, location) {
@@ -5421,7 +5993,10 @@ class Session {
   // Navigator delegate
 
   allowsVisitingLocationWithAction(location, action) {
-    return this.locationWithActionIsSamePage(location, action) || this.applicationAllowsVisitingLocation(location)
+    return (
+      this.locationWithActionIsSamePage(location, action) ||
+      this.applicationAllowsVisitingLocation(location)
+    );
   }
 
   visitProposedToLocation(location, options) {
@@ -5449,7 +6024,7 @@ class Session {
   }
 
   locationWithActionIsSamePage(location, action) {
-    return this.navigator.locationWithActionIsSamePage(location, action)
+    return this.navigator.locationWithActionIsSamePage(location, action);
   }
 
   visitScrolledToSamePageLocation(oldURL, newURL) {
@@ -5464,7 +6039,7 @@ class Session {
     return (
       this.submissionIsNavigatable(form, submitter) &&
       locationIsVisitable(expandURL(action), this.snapshot.rootLocation)
-    )
+    );
   }
 
   formSubmitted(form, submitter) {
@@ -5504,14 +6079,14 @@ class Session {
     const event = this.notifyApplicationBeforeRender(element, options);
     const {
       defaultPrevented,
-      detail: { render }
+      detail: { render },
     } = event;
 
     if (this.view.renderer && render) {
       this.view.renderer.renderElement = render;
     }
 
-    return !defaultPrevented
+    return !defaultPrevented;
   }
 
   viewRenderedSnapshot(_snapshot, _isPreview, renderMethod) {
@@ -5540,88 +6115,96 @@ class Session {
   // Application events
 
   applicationAllowsFollowingLinkToLocation(link, location, ev) {
-    const event = this.notifyApplicationAfterClickingLinkToLocation(link, location, ev);
-    return !event.defaultPrevented
+    const event = this.notifyApplicationAfterClickingLinkToLocation(
+      link,
+      location,
+      ev,
+    );
+    return !event.defaultPrevented;
   }
 
   applicationAllowsVisitingLocation(location) {
     const event = this.notifyApplicationBeforeVisitingLocation(location);
-    return !event.defaultPrevented
+    return !event.defaultPrevented;
   }
 
   notifyApplicationAfterClickingLinkToLocation(link, location, event) {
     return dispatch("turbo:click", {
       target: link,
       detail: { url: location.href, originalEvent: event },
-      cancelable: true
-    })
+      cancelable: true,
+    });
   }
 
   notifyApplicationBeforeVisitingLocation(location) {
     return dispatch("turbo:before-visit", {
       detail: { url: location.href },
-      cancelable: true
-    })
+      cancelable: true,
+    });
   }
 
   notifyApplicationAfterVisitingLocation(location, action) {
-    return dispatch("turbo:visit", { detail: { url: location.href, action } })
+    return dispatch("turbo:visit", { detail: { url: location.href, action } });
   }
 
   notifyApplicationBeforeCachingSnapshot() {
-    return dispatch("turbo:before-cache")
+    return dispatch("turbo:before-cache");
   }
 
   notifyApplicationBeforeRender(newBody, options) {
     return dispatch("turbo:before-render", {
       detail: { newBody, ...options },
-      cancelable: true
-    })
+      cancelable: true,
+    });
   }
 
   notifyApplicationAfterRender(renderMethod) {
-    return dispatch("turbo:render", { detail: { renderMethod } })
+    return dispatch("turbo:render", { detail: { renderMethod } });
   }
 
   notifyApplicationAfterPageLoad(timing = {}) {
     return dispatch("turbo:load", {
-      detail: { url: this.location.href, timing }
-    })
+      detail: { url: this.location.href, timing },
+    });
   }
 
   notifyApplicationAfterVisitingSamePageLocation(oldURL, newURL) {
     dispatchEvent(
       new HashChangeEvent("hashchange", {
         oldURL: oldURL.toString(),
-        newURL: newURL.toString()
-      })
+        newURL: newURL.toString(),
+      }),
     );
   }
 
   notifyApplicationAfterFrameLoad(frame) {
-    return dispatch("turbo:frame-load", { target: frame })
+    return dispatch("turbo:frame-load", { target: frame });
   }
 
   notifyApplicationAfterFrameRender(fetchResponse, frame) {
     return dispatch("turbo:frame-render", {
       detail: { fetchResponse },
       target: frame,
-      cancelable: true
-    })
+      cancelable: true,
+    });
   }
 
   // Helpers
 
   submissionIsNavigatable(form, submitter) {
     if (config.forms.mode == "off") {
-      return false
+      return false;
     } else {
-      const submitterIsNavigatable = submitter ? this.elementIsNavigatable(submitter) : true;
+      const submitterIsNavigatable = submitter
+        ? this.elementIsNavigatable(submitter)
+        : true;
 
       if (config.forms.mode == "optin") {
-        return submitterIsNavigatable && form.closest('[data-turbo="true"]') != null
+        return (
+          submitterIsNavigatable && form.closest('[data-turbo="true"]') != null
+        );
       } else {
-        return submitterIsNavigatable && this.elementIsNavigatable(form)
+        return submitterIsNavigatable && this.elementIsNavigatable(form);
       }
     }
   }
@@ -5634,16 +6217,16 @@ class Session {
     if (config.drive.enabled || withinFrame) {
       // Element is navigatable by default, unless `data-turbo="false"`.
       if (container) {
-        return container.getAttribute("data-turbo") != "false"
+        return container.getAttribute("data-turbo") != "false";
       } else {
-        return true
+        return true;
       }
     } else {
       // Element isn't navigatable by default, unless `data-turbo="true"`.
       if (container) {
-        return container.getAttribute("data-turbo") == "true"
+        return container.getAttribute("data-turbo") == "true";
       } else {
-        return false
+        return false;
       }
     }
   }
@@ -5651,11 +6234,11 @@ class Session {
   // Private
 
   getActionForLink(link) {
-    return getVisitAction(link) || "advance"
+    return getVisitAction(link) || "advance";
   }
 
   get snapshot() {
-    return this.view.snapshot
+    return this.view.snapshot;
   }
 }
 
@@ -5677,9 +6260,9 @@ function extendURLWithDeprecatedProperties(url) {
 const deprecatedLocationPropertyDescriptors = {
   absoluteURL: {
     get() {
-      return this.toString()
-    }
-  }
+      return this.toString();
+    },
+  },
 };
 
 const session = new Session(recentRequests);
@@ -5757,7 +6340,7 @@ function renderStreamMessage(message) {
  */
 function clearCache() {
   console.warn(
-    "Please replace `Turbo.clearCache()` with `Turbo.cache.clear()`. The top-level function is deprecated and will be removed in a future version of Turbo.`"
+    "Please replace `Turbo.clearCache()` with `Turbo.cache.clear()`. The top-level function is deprecated and will be removed in a future version of Turbo.`",
   );
   session.clearCache();
 }
@@ -5774,26 +6357,26 @@ function clearCache() {
  */
 function setProgressBarDelay(delay) {
   console.warn(
-    "Please replace `Turbo.setProgressBarDelay(delay)` with `Turbo.config.drive.progressBarDelay = delay`. The top-level function is deprecated and will be removed in a future version of Turbo.`"
+    "Please replace `Turbo.setProgressBarDelay(delay)` with `Turbo.config.drive.progressBarDelay = delay`. The top-level function is deprecated and will be removed in a future version of Turbo.`",
   );
   config.drive.progressBarDelay = delay;
 }
 
 function setConfirmMethod(confirmMethod) {
   console.warn(
-    "Please replace `Turbo.setConfirmMethod(confirmMethod)` with `Turbo.config.forms.confirm = confirmMethod`. The top-level function is deprecated and will be removed in a future version of Turbo.`"
+    "Please replace `Turbo.setConfirmMethod(confirmMethod)` with `Turbo.config.forms.confirm = confirmMethod`. The top-level function is deprecated and will be removed in a future version of Turbo.`",
   );
   config.forms.confirm = confirmMethod;
 }
 
 function setFormMode(mode) {
   console.warn(
-    "Please replace `Turbo.setFormMode(mode)` with `Turbo.config.forms.mode = mode`. The top-level function is deprecated and will be removed in a future version of Turbo.`"
+    "Please replace `Turbo.setFormMode(mode)` with `Turbo.config.forms.mode = mode`. The top-level function is deprecated and will be removed in a future version of Turbo.`",
   );
   config.forms.mode = mode;
 }
 
-var Turbo = /*#__PURE__*/Object.freeze({
+var Turbo = /*#__PURE__*/ Object.freeze({
   __proto__: null,
   navigator: navigator$1,
   session: session,
@@ -5812,20 +6395,20 @@ var Turbo = /*#__PURE__*/Object.freeze({
   clearCache: clearCache,
   setProgressBarDelay: setProgressBarDelay,
   setConfirmMethod: setConfirmMethod,
-  setFormMode: setFormMode
+  setFormMode: setFormMode,
 });
 
 class TurboFrameMissingError extends Error {}
 
 class FrameController {
-  fetchResponseLoaded = (_fetchResponse) => Promise.resolve()
-  #currentFetchRequest = null
-  #resolveVisitPromise = () => {}
-  #connected = false
-  #hasBeenLoaded = false
-  #ignoredAttributes = new Set()
-  #shouldMorphFrame = false
-  action = null
+  fetchResponseLoaded = (_fetchResponse) => Promise.resolve();
+  #currentFetchRequest = null;
+  #resolveVisitPromise = () => {};
+  #connected = false;
+  #hasBeenLoaded = false;
+  #ignoredAttributes = new Set();
+  #shouldMorphFrame = false;
+  action = null;
 
   constructor(element) {
     this.element = element;
@@ -5870,7 +6453,7 @@ class FrameController {
   }
 
   sourceURLChanged() {
-    if (this.#isIgnoringChangesTo("src")) return
+    if (this.#isIgnoringChangesTo("src")) return;
 
     if (this.element.isConnected) {
       this.complete = false;
@@ -5889,7 +6472,7 @@ class FrameController {
     this.element.removeAttribute("complete");
     this.element.src = null;
     this.element.src = src;
-    return this.element.loaded
+    return this.element.loaded;
   }
 
   loadingStyleChanged() {
@@ -5911,7 +6494,10 @@ class FrameController {
   }
 
   async loadResponse(fetchResponse) {
-    if (fetchResponse.redirected || (fetchResponse.succeeded && fetchResponse.isHTML)) {
+    if (
+      fetchResponse.redirected ||
+      (fetchResponse.succeeded && fetchResponse.isHTML)
+    ) {
       this.sourceURL = fetchResponse.response.url;
     }
 
@@ -5943,7 +6529,7 @@ class FrameController {
   // Form link click observer delegate
 
   willSubmitFormLinkToLocation(link) {
-    return this.#shouldInterceptNavigation(link)
+    return this.#shouldInterceptNavigation(link);
   }
 
   submittedFormLinkToLocation(link, _location, form) {
@@ -5954,7 +6540,7 @@ class FrameController {
   // Link interceptor delegate
 
   shouldInterceptLinkClick(element, _location, _event) {
-    return this.#shouldInterceptNavigation(element)
+    return this.#shouldInterceptNavigation(element);
   }
 
   linkClickIntercepted(element, location) {
@@ -5964,7 +6550,10 @@ class FrameController {
   // Form submit observer delegate
 
   willSubmitForm(element, submitter) {
-    return element.closest("turbo-frame") == this.element && this.#shouldInterceptNavigation(element, submitter)
+    return (
+      element.closest("turbo-frame") == this.element &&
+      this.#shouldInterceptNavigation(element, submitter)
+    );
   }
 
   formSubmitted(element, submitter) {
@@ -6022,9 +6611,19 @@ class FrameController {
   }
 
   formSubmissionSucceededWithResponse(formSubmission, response) {
-    const frame = this.#findFrameElement(formSubmission.formElement, formSubmission.submitter);
+    const frame = this.#findFrameElement(
+      formSubmission.formElement,
+      formSubmission.submitter,
+    );
 
-    frame.delegate.proposeVisitIfNavigatedWithAction(frame, getVisitAction(formSubmission.submitter, formSubmission.formElement, frame));
+    frame.delegate.proposeVisitIfNavigatedWithAction(
+      frame,
+      getVisitAction(
+        formSubmission.submitter,
+        formSubmission.formElement,
+        frame,
+      ),
+    );
     frame.delegate.loadResponse(response);
 
     if (!formSubmission.isSafe) {
@@ -6051,19 +6650,19 @@ class FrameController {
     const event = dispatch("turbo:before-frame-render", {
       target: this.element,
       detail: { newFrame, ...options },
-      cancelable: true
+      cancelable: true,
     });
 
     const {
       defaultPrevented,
-      detail: { render }
+      detail: { render },
     } = event;
 
     if (this.view.renderer && render) {
       this.view.renderer.renderElement = render;
     }
 
-    return !defaultPrevented
+    return !defaultPrevented;
   }
 
   viewRenderedSnapshot(_snapshot, _isPreview, _renderMethod) {}
@@ -6088,17 +6687,27 @@ class FrameController {
     }
 
     delete this.previousFrameElement;
-  }
+  };
 
   // Private
 
   async #loadFrameResponse(fetchResponse, document) {
-    const newFrameElement = await this.extractForeignFrameElement(document.body);
-    const rendererClass = this.#shouldMorphFrame ? MorphingFrameRenderer : FrameRenderer;
+    const newFrameElement = await this.extractForeignFrameElement(
+      document.body,
+    );
+    const rendererClass = this.#shouldMorphFrame
+      ? MorphingFrameRenderer
+      : FrameRenderer;
 
     if (newFrameElement) {
       const snapshot = new Snapshot(newFrameElement);
-      const renderer = new rendererClass(this, this.view.snapshot, snapshot, false, false);
+      const renderer = new rendererClass(
+        this,
+        this.view.snapshot,
+        snapshot,
+        false,
+        false,
+      );
       if (this.view.renderPromise) await this.view.renderPromise;
       this.changeHistory();
 
@@ -6113,7 +6722,13 @@ class FrameController {
   }
 
   async #visit(url) {
-    const request = new FetchRequest(this, FetchMethod.get, url, new URLSearchParams(), this.element);
+    const request = new FetchRequest(
+      this,
+      FetchMethod.get,
+      url,
+      new URLSearchParams(),
+      this.element,
+    );
 
     this.#currentFetchRequest?.cancel();
     this.#currentFetchRequest = request;
@@ -6125,13 +6740,16 @@ class FrameController {
         resolve();
       };
       request.perform();
-    })
+    });
   }
 
   #navigateFrame(element, url, submitter) {
     const frame = this.#findFrameElement(element, submitter);
 
-    frame.delegate.proposeVisitIfNavigatedWithAction(frame, getVisitAction(submitter, element, frame));
+    frame.delegate.proposeVisitIfNavigatedWithAction(
+      frame,
+      getVisitAction(submitter, element, frame),
+    );
 
     this.#withCurrentNavigationElement(element, () => {
       frame.src = url;
@@ -6156,7 +6774,7 @@ class FrameController {
             willRender: false,
             updateHistory: false,
             restorationIdentifier: this.restorationIdentifier,
-            snapshot: pageSnapshot
+            snapshot: pageSnapshot,
           };
 
           if (this.action) options.action = this.action;
@@ -6170,13 +6788,17 @@ class FrameController {
   changeHistory() {
     if (this.action) {
       const method = getHistoryMethodForAction(this.action);
-      session.history.update(method, expandURL(this.element.src || ""), this.restorationIdentifier);
+      session.history.update(
+        method,
+        expandURL(this.element.src || ""),
+        this.restorationIdentifier,
+      );
     }
   }
 
   async #handleUnvisitableFrameResponse(fetchResponse) {
     console.warn(
-      `The response (${fetchResponse.statusCode}) from <turbo-frame id="${this.element.id}"> is performing a full page visit due to turbo-visit-control.`
+      `The response (${fetchResponse.statusCode}) from <turbo-frame id="${this.element.id}"> is performing a full page visit due to turbo-visit-control.`,
     );
 
     await this.#visitResponse(fetchResponse.response);
@@ -6197,10 +6819,10 @@ class FrameController {
     const event = dispatch("turbo:frame-missing", {
       target: this.element,
       detail: { response, visit },
-      cancelable: true
+      cancelable: true,
     });
 
-    return !event.defaultPrevented
+    return !event.defaultPrevented;
   }
 
   #handleFrameMissingFromResponse(fetchResponse) {
@@ -6210,7 +6832,7 @@ class FrameController {
 
   #throwFrameMissingError(fetchResponse) {
     const message = `The response (${fetchResponse.statusCode}) did not contain the expected <turbo-frame id="${this.element.id}"> and will be ignored. To perform a full page visit instead, set turbo-visit-control to reload.`;
-    throw new TurboFrameMissingError(message)
+    throw new TurboFrameMissingError(message);
   }
 
   async #visitResponse(response) {
@@ -6218,12 +6840,16 @@ class FrameController {
     const responseHTML = await wrapped.responseHTML;
     const { location, redirected, statusCode } = wrapped;
 
-    return session.visit(location, { response: { redirected, statusCode, responseHTML } })
+    return session.visit(location, {
+      response: { redirected, statusCode, responseHTML },
+    });
   }
 
   #findFrameElement(element, submitter) {
-    const id = getAttribute("data-turbo-frame", submitter, element) || this.element.getAttribute("target");
-    return getFrameElementById(id) ?? this.element
+    const id =
+      getAttribute("data-turbo-frame", submitter, element) ||
+      this.element.getAttribute("target");
+    return getFrameElementById(id) ?? this.element;
   }
 
   async extractForeignFrameElement(container) {
@@ -6231,72 +6857,83 @@ class FrameController {
     const id = CSS.escape(this.id);
 
     try {
-      element = activateElement(container.querySelector(`turbo-frame#${id}`), this.sourceURL);
+      element = activateElement(
+        container.querySelector(`turbo-frame#${id}`),
+        this.sourceURL,
+      );
       if (element) {
-        return element
+        return element;
       }
 
-      element = activateElement(container.querySelector(`turbo-frame[src][recurse~=${id}]`), this.sourceURL);
+      element = activateElement(
+        container.querySelector(`turbo-frame[src][recurse~=${id}]`),
+        this.sourceURL,
+      );
       if (element) {
         await element.loaded;
-        return await this.extractForeignFrameElement(element)
+        return await this.extractForeignFrameElement(element);
       }
     } catch (error) {
       console.error(error);
-      return new FrameElement()
+      return new FrameElement();
     }
 
-    return null
+    return null;
   }
 
   #formActionIsVisitable(form, submitter) {
     const action = getAction$1(form, submitter);
 
-    return locationIsVisitable(expandURL(action), this.rootLocation)
+    return locationIsVisitable(expandURL(action), this.rootLocation);
   }
 
   #shouldInterceptNavigation(element, submitter) {
-    const id = getAttribute("data-turbo-frame", submitter, element) || this.element.getAttribute("target");
+    const id =
+      getAttribute("data-turbo-frame", submitter, element) ||
+      this.element.getAttribute("target");
 
-    if (element instanceof HTMLFormElement && !this.#formActionIsVisitable(element, submitter)) {
-      return false
+    if (
+      element instanceof HTMLFormElement &&
+      !this.#formActionIsVisitable(element, submitter)
+    ) {
+      return false;
     }
 
     if (!this.enabled || id == "_top") {
-      return false
+      return false;
     }
 
     if (id) {
       const frameElement = getFrameElementById(id);
       if (frameElement) {
-        return !frameElement.disabled
+        return !frameElement.disabled;
       }
     }
 
     if (!session.elementIsNavigatable(element)) {
-      return false
+      return false;
     }
 
     if (submitter && !session.elementIsNavigatable(submitter)) {
-      return false
+      return false;
     }
 
-    return true
+    return true;
   }
 
   // Computed properties
 
   get id() {
-    return this.element.id
+    return this.element.id;
   }
 
   get enabled() {
-    return !this.element.disabled
+    return !this.element.disabled;
   }
 
   get sourceURL() {
     if (this.element.src) {
-      return this.element.src
+      return this.element.src;
     }
   }
 
@@ -6307,15 +6944,18 @@ class FrameController {
   }
 
   get loadingStyle() {
-    return this.element.loading
+    return this.element.loading;
   }
 
   get isLoading() {
-    return this.formSubmission !== undefined || this.#resolveVisitPromise() !== undefined
+    return (
+      this.formSubmission !== undefined ||
+      this.#resolveVisitPromise() !== undefined
+    );
   }
 
   get complete() {
-    return this.element.hasAttribute("complete")
+    return this.element.hasAttribute("complete");
   }
 
   set complete(value) {
@@ -6327,17 +6967,19 @@ class FrameController {
   }
 
   get isActive() {
-    return this.element.isActive && this.#connected
+    return this.element.isActive && this.#connected;
   }
 
   get rootLocation() {
-    const meta = this.element.ownerDocument.querySelector(`meta[name="turbo-root"]`);
+    const meta = this.element.ownerDocument.querySelector(
+      `meta[name="turbo-root"]`,
+    );
     const root = meta?.content ?? "/";
-    return expandURL(root)
+    return expandURL(root);
   }
 
   #isIgnoringChangesTo(attributeName) {
-    return this.#ignoredAttributes.has(attributeName)
+    return this.#ignoredAttributes.has(attributeName);
   }
 
   #ignoringChangesToAttribute(attributeName, callback) {
@@ -6357,7 +6999,7 @@ function getFrameElementById(id) {
   if (id != null) {
     const element = document.getElementById(id);
     if (element instanceof FrameElement) {
-      return element
+      return element;
     }
   }
 }
@@ -6366,7 +7008,9 @@ function activateElement(element, currentURL) {
   if (element) {
     const src = element.getAttribute("src");
     if (src != null && currentURL != null && urlsAreEqual(src, currentURL)) {
-      throw new Error(`Matching <turbo-frame id="${element.id}"> element has a source URL which references itself`)
+      throw new Error(
+        `Matching <turbo-frame id="${element.id}"> element has a source URL which references itself`,
+      );
     }
     if (element.ownerDocument !== document) {
       element = document.importNode(element, true);
@@ -6375,14 +7019,16 @@ function activateElement(element, currentURL) {
     if (element instanceof FrameElement) {
       element.connectedCallback();
       element.disconnectedCallback();
-      return element
+      return element;
     }
   }
 }
 
 const StreamActions = {
   after() {
-    this.targetElements.forEach((e) => e.parentElement?.insertBefore(this.templateContent, e.nextSibling));
+    this.targetElements.forEach((e) =>
+      e.parentElement?.insertBefore(this.templateContent, e.nextSibling),
+    );
   },
 
   append() {
@@ -6391,7 +7037,9 @@ const StreamActions = {
   },
 
   before() {
-    this.targetElements.forEach((e) => e.parentElement?.insertBefore(this.templateContent, e));
+    this.targetElements.forEach((e) =>
+      e.parentElement?.insertBefore(this.templateContent, e),
+    );
   },
 
   prepend() {
@@ -6430,7 +7078,7 @@ const StreamActions = {
 
   refresh() {
     session.refresh(this.baseURI, this.requestId);
-  }
+  },
 };
 
 // <turbo-stream action=replace target=id><template>...
@@ -6480,7 +7128,7 @@ class StreamElement extends HTMLElement {
         await nextRepaint();
         await event.detail.render(this);
       }
-    })())
+    })());
   }
 
   disconnect() {
@@ -6501,10 +7149,14 @@ class StreamElement extends HTMLElement {
    * Gets the list of duplicate children (i.e. those with the same ID)
    */
   get duplicateChildren() {
-    const existingChildren = this.targetElements.flatMap((e) => [...e.children]).filter((c) => !!c.id);
-    const newChildrenIds = [...(this.templateContent?.children || [])].filter((c) => !!c.id).map((c) => c.id);
+    const existingChildren = this.targetElements
+      .flatMap((e) => [...e.children])
+      .filter((c) => !!c.id);
+    const newChildrenIds = [...(this.templateContent?.children || [])]
+      .filter((c) => !!c.id)
+      .map((c) => c.id);
 
-    return existingChildren.filter((c) => newChildrenIds.includes(c.id))
+    return existingChildren.filter((c) => newChildrenIds.includes(c.id));
   }
 
   /**
@@ -6514,7 +7166,7 @@ class StreamElement extends HTMLElement {
     if (this.action) {
       const actionFunction = StreamActions[this.action];
       if (actionFunction) {
-        return actionFunction
+        return actionFunction;
       }
       this.#raise("unknown action");
     }
@@ -6526,9 +7178,9 @@ class StreamElement extends HTMLElement {
    */
   get targetElements() {
     if (this.target) {
-      return this.targetElementsById
+      return this.targetElementsById;
     } else if (this.targets) {
-      return this.targetElementsByQuery
+      return this.targetElementsByQuery;
     } else {
       this.#raise("target or targets attribute is missing");
     }
@@ -6538,7 +7190,7 @@ class StreamElement extends HTMLElement {
    * Gets the contents of the main `<template>`.
    */
   get templateContent() {
-    return this.templateElement.content.cloneNode(true)
+    return this.templateElement.content.cloneNode(true);
   }
 
   /**
@@ -6548,9 +7200,9 @@ class StreamElement extends HTMLElement {
     if (this.firstElementChild === null) {
       const template = this.ownerDocument.createElement("template");
       this.appendChild(template);
-      return template
+      return template;
     } else if (this.firstElementChild instanceof HTMLTemplateElement) {
-      return this.firstElementChild
+      return this.firstElementChild;
     }
     this.#raise("first child element must be a <template> element");
   }
@@ -6559,7 +7211,7 @@ class StreamElement extends HTMLElement {
    * Gets the current action.
    */
   get action() {
-    return this.getAttribute("action")
+    return this.getAttribute("action");
   }
 
   /**
@@ -6567,46 +7219,46 @@ class StreamElement extends HTMLElement {
    * be rendered.
    */
   get target() {
-    return this.getAttribute("target")
+    return this.getAttribute("target");
   }
 
   /**
    * Gets the current "targets" selector (a CSS selector)
    */
   get targets() {
-    return this.getAttribute("targets")
+    return this.getAttribute("targets");
   }
 
   /**
    * Reads the request-id attribute
    */
   get requestId() {
-    return this.getAttribute("request-id")
+    return this.getAttribute("request-id");
   }
 
   #raise(message) {
-    throw new Error(`${this.description}: ${message}`)
+    throw new Error(`${this.description}: ${message}`);
   }
 
   get description() {
-    return (this.outerHTML.match(/<[^>]+>/) ?? [])[0] ?? "<turbo-stream>"
+    return (this.outerHTML.match(/<[^>]+>/) ?? [])[0] ?? "<turbo-stream>";
   }
 
   get beforeRenderEvent() {
     return new CustomEvent("turbo:before-stream-render", {
       bubbles: true,
       cancelable: true,
-      detail: { newStream: this, render: StreamElement.renderElement }
-    })
+      detail: { newStream: this, render: StreamElement.renderElement },
+    });
   }
 
   get targetElementsById() {
     const element = this.ownerDocument?.getElementById(this.target);
 
     if (element !== null) {
-      return [element]
+      return [element];
     } else {
-      return []
+      return [];
     }
   }
 
@@ -6614,18 +7266,20 @@ class StreamElement extends HTMLElement {
     const elements = this.ownerDocument?.querySelectorAll(this.targets);
 
     if (elements.length !== 0) {
-      return Array.prototype.slice.call(elements)
+      return Array.prototype.slice.call(elements);
     } else {
-      return []
+      return [];
     }
   }
 }
 
 class StreamSourceElement extends HTMLElement {
-  streamSource = null
+  streamSource = null;
 
   connectedCallback() {
-    this.streamSource = this.src.match(/^ws{1,2}:/) ? new WebSocket(this.src) : new EventSource(this.src);
+    this.streamSource = this.src.match(/^ws{1,2}:/)
+      ? new WebSocket(this.src)
+      : new EventSource(this.src);
 
     connectStreamSource(this.streamSource);
   }
@@ -6639,7 +7293,7 @@ class StreamSourceElement extends HTMLElement {
   }
 
   get src() {
-    return this.getAttribute("src") || ""
+    return this.getAttribute("src") || "";
   }
 }
 
@@ -6659,8 +7313,8 @@ if (customElements.get("turbo-stream-source") === undefined) {
 
 (() => {
   let element = document.currentScript;
-  if (!element) return
-  if (element.hasAttribute("data-turbo-suppress-warning")) return
+  if (!element) return;
+  if (element.hasAttribute("data-turbo-suppress-warning")) return;
 
   element = element.parentElement;
   while (element) {
@@ -6676,8 +7330,8 @@ if (customElements.get("turbo-stream-source") === undefined) {
         ——
         Suppress this warning by adding a "data-turbo-suppress-warning" attribute to: %s
       `,
-        element.outerHTML
-      )
+        element.outerHTML,
+      );
     }
 
     element = element.parentElement;
@@ -6687,4 +7341,35 @@ if (customElements.get("turbo-stream-source") === undefined) {
 window.Turbo = { ...Turbo, StreamActions };
 start();
 
-export { FetchEnctype, FetchMethod, FetchRequest, FetchResponse, FrameElement, FrameLoadingStyle, FrameRenderer, PageRenderer, PageSnapshot, StreamActions, StreamElement, StreamSourceElement, cache, clearCache, config, connectStreamSource, disconnectStreamSource, fetchWithTurboHeaders as fetch, fetchEnctypeFromString, fetchMethodFromString, isSafe, navigator$1 as navigator, registerAdapter, renderStreamMessage, session, setConfirmMethod, setFormMode, setProgressBarDelay, start, visit };
+export {
+  FetchEnctype,
+  FetchMethod,
+  FetchRequest,
+  FetchResponse,
+  FrameElement,
+  FrameLoadingStyle,
+  FrameRenderer,
+  PageRenderer,
+  PageSnapshot,
+  StreamActions,
+  StreamElement,
+  StreamSourceElement,
+  cache,
+  clearCache,
+  config,
+  connectStreamSource,
+  disconnectStreamSource,
+  fetchWithTurboHeaders as fetch,
+  fetchEnctypeFromString,
+  fetchMethodFromString,
+  isSafe,
+  navigator$1 as navigator,
+  registerAdapter,
+  renderStreamMessage,
+  session,
+  setConfirmMethod,
+  setFormMode,
+  setProgressBarDelay,
+  start,
+  visit,
+};

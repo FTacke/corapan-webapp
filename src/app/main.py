@@ -1,4 +1,5 @@
 """Entry point for running the application via python -m src.app.main."""
+
 from __future__ import annotations
 
 import os

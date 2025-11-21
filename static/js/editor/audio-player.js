@@ -1,6 +1,6 @@
 /**
  * AudioPlayer - Audio playback with transcript sync
- * 
+ *
  * Features:
  * - Play/pause, seek, volume control
  * - Highlights currently playing word
@@ -15,7 +15,7 @@ export class AudioPlayer {
     this.renderer = null;
     this.isPlaying = false;
     this.currentWordPosition = null;
-    
+
     this.initializeControls();
     this.attachEventListeners();
   }
@@ -32,15 +32,15 @@ export class AudioPlayer {
    * Initialize UI controls
    */
   initializeControls() {
-    this.playPauseBtn = document.getElementById('playPauseBtn');
-    this.progressBar = document.getElementById('progressBar');
-    this.volumeControl = document.getElementById('volumeControl');
-    this.muteBtn = document.getElementById('muteBtn');
-    this.rewindBtn = document.getElementById('rewindBtn');
-    this.forwardBtn = document.getElementById('forwardBtn');
-    this.speedControl = document.getElementById('speedControlSlider');
-    this.speedDisplay = document.getElementById('speedDisplay');
-    this.timeDisplay = document.getElementById('timeDisplay');
+    this.playPauseBtn = document.getElementById("playPauseBtn");
+    this.progressBar = document.getElementById("progressBar");
+    this.volumeControl = document.getElementById("volumeControl");
+    this.muteBtn = document.getElementById("muteBtn");
+    this.rewindBtn = document.getElementById("rewindBtn");
+    this.forwardBtn = document.getElementById("forwardBtn");
+    this.speedControl = document.getElementById("speedControlSlider");
+    this.speedDisplay = document.getElementById("speedDisplay");
+    this.timeDisplay = document.getElementById("timeDisplay");
   }
 
   /**
@@ -48,44 +48,52 @@ export class AudioPlayer {
    */
   attachEventListeners() {
     // Play/Pause button
-    this.playPauseBtn.addEventListener('click', () => this.togglePlayPause());
+    this.playPauseBtn.addEventListener("click", () => this.togglePlayPause());
 
     // Skip buttons (±3s)
-    this.rewindBtn.addEventListener('click', () => this.skip(-3));
-    this.forwardBtn.addEventListener('click', () => this.skip(3));
+    this.rewindBtn.addEventListener("click", () => this.skip(-3));
+    this.forwardBtn.addEventListener("click", () => this.skip(3));
 
     // Audio events
-    this.audio.addEventListener('loadedmetadata', () => this.onMetadataLoaded());
-    this.audio.addEventListener('timeupdate', () => this.onTimeUpdate());
-    this.audio.addEventListener('ended', () => this.onEnded());
-    this.audio.addEventListener('play', () => this.onPlay());
-    this.audio.addEventListener('pause', () => this.onPause());
+    this.audio.addEventListener("loadedmetadata", () =>
+      this.onMetadataLoaded(),
+    );
+    this.audio.addEventListener("timeupdate", () => this.onTimeUpdate());
+    this.audio.addEventListener("ended", () => this.onEnded());
+    this.audio.addEventListener("play", () => this.onPlay());
+    this.audio.addEventListener("pause", () => this.onPause());
 
     // Progress bar
-    this.progressBar.addEventListener('input', (e) => this.onSeek(e));
+    this.progressBar.addEventListener("input", (e) => this.onSeek(e));
 
     // Volume control
-    this.volumeControl.addEventListener('input', (e) => this.onVolumeChange(e));
-    this.muteBtn.addEventListener('click', () => this.toggleMute());
+    this.volumeControl.addEventListener("input", (e) => this.onVolumeChange(e));
+    this.muteBtn.addEventListener("click", () => this.toggleMute());
     this.audio.volume = 1.0; // Initial volume
 
     // Speed control
-    this.speedControl.addEventListener('input', (e) => this.onSpeedChange(e));
+    this.speedControl.addEventListener("input", (e) => this.onSpeedChange(e));
 
     // Keyboard shortcuts
-    document.addEventListener('keydown', (e) => {
+    document.addEventListener("keydown", (e) => {
       // Space = play/pause (if not editing)
-      if (e.code === 'Space' && !e.target.matches('[contenteditable="true"]')) {
+      if (e.code === "Space" && !e.target.matches('[contenteditable="true"]')) {
         e.preventDefault();
         this.togglePlayPause();
       }
       // Arrow Left = -3s
-      if (e.code === 'ArrowLeft' && !e.target.matches('[contenteditable="true"]')) {
+      if (
+        e.code === "ArrowLeft" &&
+        !e.target.matches('[contenteditable="true"]')
+      ) {
         e.preventDefault();
         this.skip(-3);
       }
       // Arrow Right = +3s
-      if (e.code === 'ArrowRight' && !e.target.matches('[contenteditable="true"]')) {
+      if (
+        e.code === "ArrowRight" &&
+        !e.target.matches('[contenteditable="true"]')
+      ) {
         e.preventDefault();
         this.skip(3);
       }
@@ -96,11 +104,11 @@ export class AudioPlayer {
    * Attach click-to-seek listeners to transcript words
    */
   attachTranscriptListeners() {
-    const transcriptContainer = document.getElementById('transcript-content');
-    
-    transcriptContainer.addEventListener('click', (e) => {
-      const wordSpan = e.target.closest('.word');
-      if (wordSpan && !wordSpan.classList.contains('editing')) {
+    const transcriptContainer = document.getElementById("transcript-content");
+
+    transcriptContainer.addEventListener("click", (e) => {
+      const wordSpan = e.target.closest(".word");
+      if (wordSpan && !wordSpan.classList.contains("editing")) {
         const start = parseFloat(wordSpan.dataset.start);
         if (!isNaN(start)) {
           this.seekTo(start);
@@ -124,7 +132,10 @@ export class AudioPlayer {
    * Skip forward/backward by seconds
    */
   skip(seconds) {
-    this.audio.currentTime = Math.max(0, Math.min(this.audio.duration, this.audio.currentTime + seconds));
+    this.audio.currentTime = Math.max(
+      0,
+      Math.min(this.audio.duration, this.audio.currentTime + seconds),
+    );
   }
 
   /**
@@ -148,13 +159,13 @@ export class AudioPlayer {
    */
   updateMuteIcon() {
     if (this.audio.muted) {
-      this.muteBtn.className = 'fa-solid fa-volume-xmark volume-icon';
+      this.muteBtn.className = "fa-solid fa-volume-xmark volume-icon";
     } else if (this.audio.volume > 0.5) {
-      this.muteBtn.className = 'fa-solid fa-volume-high volume-icon';
+      this.muteBtn.className = "fa-solid fa-volume-high volume-icon";
     } else if (this.audio.volume > 0) {
-      this.muteBtn.className = 'fa-solid fa-volume-low volume-icon';
+      this.muteBtn.className = "fa-solid fa-volume-low volume-icon";
     } else {
-      this.muteBtn.className = 'fa-solid fa-volume-xmark volume-icon';
+      this.muteBtn.className = "fa-solid fa-volume-xmark volume-icon";
     }
   }
 
@@ -184,11 +195,12 @@ export class AudioPlayer {
     // Highlight current word
     if (this.renderer) {
       const wordInfo = this.renderer.findWordAtTime(currentTime);
-      
-      if (wordInfo && 
-          (this.currentWordPosition?.segmentIndex !== wordInfo.segmentIndex ||
-           this.currentWordPosition?.wordIndex !== wordInfo.wordIndex)) {
-        
+
+      if (
+        wordInfo &&
+        (this.currentWordPosition?.segmentIndex !== wordInfo.segmentIndex ||
+          this.currentWordPosition?.wordIndex !== wordInfo.wordIndex)
+      ) {
         this.renderer.highlightWord(wordInfo.segmentIndex, wordInfo.wordIndex);
         this.currentWordPosition = wordInfo;
       }
@@ -235,8 +247,8 @@ export class AudioPlayer {
    */
   onPlay() {
     this.isPlaying = true;
-    this.playPauseBtn.className = 'bi bi-pause-circle-fill play-icon';
-    console.log('[Player] Playing');
+    this.playPauseBtn.className = "bi bi-pause-circle-fill play-icon";
+    console.log("[Player] Playing");
   }
 
   /**
@@ -244,8 +256,8 @@ export class AudioPlayer {
    */
   onPause() {
     this.isPlaying = false;
-    this.playPauseBtn.className = 'bi bi-play-circle-fill play-icon';
-    console.log('[Player] Paused');
+    this.playPauseBtn.className = "bi bi-play-circle-fill play-icon";
+    console.log("[Player] Paused");
   }
 
   /**
@@ -253,21 +265,21 @@ export class AudioPlayer {
    */
   onEnded() {
     this.isPlaying = false;
-    this.playPauseBtn.className = 'bi bi-play-circle-fill play-icon';
+    this.playPauseBtn.className = "bi bi-play-circle-fill play-icon";
     if (this.renderer) {
       this.renderer.clearHighlight();
     }
-    console.log('[Player] Ended');
+    console.log("[Player] Ended");
   }
 
   /**
    * Format seconds to MM:SS
    */
   formatTime(seconds) {
-    if (!isFinite(seconds)) return '00:00';
-    
+    if (!isFinite(seconds)) return "00:00";
+
     const mins = Math.floor(seconds / 60);
     const secs = Math.floor(seconds % 60);
-    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
   }
 }

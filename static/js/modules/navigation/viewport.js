@@ -7,33 +7,38 @@
 (() => {
   // Guard: Nur einmal initialisieren (Turbo Drive kompatibel)
   if (window.__viewportInit) {
-    console.log('[Viewport] Already initialized, skipping');
+    console.log("[Viewport] Already initialized, skipping");
     return;
   }
 
   const root = document.documentElement;
-  const mMedium = window.matchMedia('(min-width: 600px)');
-  const mExpanded = window.matchMedia('(min-width: 840px)');
+  const mMedium = window.matchMedia("(min-width: 600px)");
+  const mExpanded = window.matchMedia("(min-width: 840px)");
 
   function applyViewportClass() {
-    const cls = mExpanded.matches ? 'expanded' 
-                : (mMedium.matches ? 'medium' : 'compact');
-    
+    const cls = mExpanded.matches
+      ? "expanded"
+      : mMedium.matches
+        ? "medium"
+        : "compact";
+
     // Set data attribute for CSS targeting
     root.dataset.viewport = cls;
-    
+
     // Optional: Log für Debugging
     // console.log('[Viewport] Current size:', cls);
   }
 
   // Listen to media query changes
-  [mMedium, mExpanded].forEach(m => m.addEventListener('change', applyViewportClass));
+  [mMedium, mExpanded].forEach((m) =>
+    m.addEventListener("change", applyViewportClass),
+  );
 
   // Apply initial state
   applyViewportClass();
 
   // Mark as initialized
   window.__viewportInit = true;
-  
-  console.log('[Viewport] Initialized');
+
+  console.log("[Viewport] Initialized");
 })();

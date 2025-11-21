@@ -7,9 +7,9 @@
  * Based on viewport width breakpoints
  */
 export const WindowSize = {
-  COMPACT: 'compact',   // <600px (Mobile)
-  MEDIUM: 'medium',     // 600-839px (Tablet)
-  EXPANDED: 'expanded'  // ≥840px (Desktop)
+  COMPACT: "compact", // <600px (Mobile)
+  MEDIUM: "medium", // 600-839px (Tablet)
+  EXPANDED: "expanded", // ≥840px (Desktop)
 };
 
 /**
@@ -18,15 +18,15 @@ export const WindowSize = {
  */
 export function getWindowSize() {
   const width = window.innerWidth;
-  
+
   if (width < 600) {
     return WindowSize.COMPACT;
   }
-  
+
   if (width < 840) {
     return WindowSize.MEDIUM;
   }
-  
+
   return WindowSize.EXPANDED;
 }
 
@@ -37,11 +37,11 @@ export function getWindowSize() {
  */
 export function isWindowSize(size) {
   const current = getWindowSize();
-  
+
   if (Array.isArray(size)) {
     return size.includes(current);
   }
-  
+
   return current === size;
 }
 
@@ -52,30 +52,30 @@ export function isWindowSize(size) {
  */
 export function onWindowSizeChange(callback) {
   let currentSize = getWindowSize();
-  
+
   function handleResize() {
     const newSize = getWindowSize();
-    
+
     if (newSize !== currentSize) {
       const previousSize = currentSize;
       currentSize = newSize;
       callback(newSize, previousSize);
     }
   }
-  
+
   // Use debouncing to avoid excessive calls
   let resizeTimeout;
   function debouncedResize() {
     clearTimeout(resizeTimeout);
     resizeTimeout = setTimeout(handleResize, 150);
   }
-  
-  window.addEventListener('resize', debouncedResize);
-  
+
+  window.addEventListener("resize", debouncedResize);
+
   // Return cleanup function
   return () => {
     clearTimeout(resizeTimeout);
-    window.removeEventListener('resize', debouncedResize);
+    window.removeEventListener("resize", debouncedResize);
   };
 }
 
@@ -85,25 +85,25 @@ export function onWindowSizeChange(callback) {
  * @param {HTMLElement} element - Target element
  * @param {string} baseClass - Base class name (e.g., 'app-shell')
  */
-export function applyWindowSizeClass(element, baseClass = 'window') {
+export function applyWindowSizeClass(element, baseClass = "window") {
   function updateClass(size) {
     // Remove all size classes
     element.classList.remove(
       `${baseClass}--compact`,
       `${baseClass}--medium`,
-      `${baseClass}--expanded`
+      `${baseClass}--expanded`,
     );
-    
+
     // Add current size class
     element.classList.add(`${baseClass}--${size}`);
-    
+
     // Set data attribute for CSS targeting
     element.dataset.windowSize = size;
   }
-  
+
   // Initial application
   updateClass(getWindowSize());
-  
+
   // Listen for changes
   return onWindowSizeChange(updateClass);
 }

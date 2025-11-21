@@ -59,7 +59,7 @@
 }
 
 .md3-country-tab::after {
-  content: '';
+  content: "";
   position: absolute;
   bottom: -2px;
   left: 0;
@@ -148,7 +148,7 @@
 
 /* Table Cell Styles */
 .md3-filename-cell {
-  font-family: 'Courier New', 'Consolas', monospace;
+  font-family: "Courier New", "Consolas", monospace;
   font-weight: 500;
   color: var(--md-sys-color-on-surface);
   font-size: 0.8125rem;
@@ -285,5 +285,3 @@
     display: none;
   }
 }
-
-

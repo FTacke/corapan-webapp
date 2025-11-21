@@ -4,11 +4,11 @@
  * @module editor/editor-player
  */
 
-import AudioPlayer from '../player/modules/audio.js';
-import TranscriptionManager from '../player/modules/transcription.js';
-import { WordEditor } from './word-editor.js';
-import BookmarkManager from './bookmark-manager.js';
-import { HistoryPanel } from './history-panel.js';
+import AudioPlayer from "../player/modules/audio.js";
+import TranscriptionManager from "../player/modules/transcription.js";
+import { WordEditor } from "./word-editor.js";
+import BookmarkManager from "./bookmark-manager.js";
+import { HistoryPanel } from "./history-panel.js";
 
 export class EditorPlayer {
   constructor(config) {
@@ -25,47 +25,47 @@ export class EditorPlayer {
    * Initialize the editor player
    */
   async init() {
-    console.log('[EditorPlayer] Initializing...');
+    console.log("[EditorPlayer] Initializing...");
 
     try {
       // Initialize audio player with file from config
       this.audio = new AudioPlayer();
-      
+
       // Use /media/full endpoint for MP3 (same as player.html uses)
       const audioPath = `/media/full/${this.config.audioFile}`;
       this.audio.init(audioPath);
 
       // Initialize transcription manager
       this.transcription = new TranscriptionManager(this.audio, null); // No token collector
-      
+
       // In editor mode: disable only normal clicks, but keep Ctrl+Click and Shift+Click
       this.transcription.disableNormalClick = true;
-      
+
       // Connect audio playback events to word highlighting
       this.audio.onPlay = () => {
-        console.log('[EditorPlayer] Starting word highlighting');
+        console.log("[EditorPlayer] Starting word highlighting");
         this.transcription.startWordHighlighting();
       };
       this.audio.onPause = () => {
-        console.log('[EditorPlayer] Stopping word highlighting');
+        console.log("[EditorPlayer] Stopping word highlighting");
         this.transcription.stopWordHighlighting();
       };
       this.audio.onEnded = () => {
-        console.log('[EditorPlayer] Audio ended, stopping highlighting');
+        console.log("[EditorPlayer] Audio ended, stopping highlighting");
         this.transcription.stopWordHighlighting();
       };
 
       // Load and render transcription using TranscriptionManager's load method
       const transcriptPath = `/media/transcripts/${this.config.transcriptFile}`;
       await this.transcription.load(transcriptPath);
-      
+
       // Store transcript data for editor
       this.transcriptData = this.transcription.transcriptionData;
 
       // Initialize word editor
       this.editor = new WordEditor(this.transcriptData, this.config);
       this.editor.attachToTranscription(this.transcription);
-      
+
       // Initialize speaker selection (no longer requires speakers array)
       this.editor.initializeSpeakerSelection();
 
@@ -73,27 +73,27 @@ export class EditorPlayer {
       this.bookmarks = new BookmarkManager(this.transcriptData, this.config);
       this.bookmarks.attachToAudioPlayer(this.audio);
       window.bookmarkManager = this.bookmarks; // Global reference for bookmark list clicks
-      
+
       // Initialize history panel
       this.history = new HistoryPanel({
         country: this.config.country,
         filename: this.config.filename,
-        apiBaseUrl: this.config.apiBaseUrl
+        apiBaseUrl: this.config.apiBaseUrl,
       });
-      
+
       // Modify word click behavior for editing
       this._setupEditingBehavior();
-      
+
       // Setup speaker editing behavior (in editor mode)
       this._setupSpeakerEditingBehavior();
 
       // Setup unsaved changes warning
       this._setupUnsavedChangesWarning();
 
-      console.log('[EditorPlayer] Initialization complete');
+      console.log("[EditorPlayer] Initialization complete");
     } catch (error) {
-      console.error('[EditorPlayer] Initialization failed:', error);
-      alert('Fehler beim Laden des Editors. Bitte Seite neu laden.');
+      console.error("[EditorPlayer] Initialization failed:", error);
+      alert("Fehler beim Laden des Editors. Bitte Seite neu laden.");
     }
   }
 
@@ -102,10 +102,10 @@ export class EditorPlayer {
    * @private
    */
   _setupEditingBehavior() {
-    const container = document.getElementById('transcriptionContainer');
-    
-    container.addEventListener('click', (e) => {
-      const wordSpan = e.target.closest('.word');
+    const container = document.getElementById("transcriptionContainer");
+
+    container.addEventListener("click", (e) => {
+      const wordSpan = e.target.closest(".word");
       if (!wordSpan) return;
 
       // Ctrl+Click and Shift+Click are handled by transcription.js for audio playback
@@ -115,12 +115,12 @@ export class EditorPlayer {
       }
 
       // Normal click: start editing
-      if (!wordSpan.classList.contains('editing')) {
+      if (!wordSpan.classList.contains("editing")) {
         this.editor.startEditing(wordSpan);
       }
     });
 
-    console.log('[EditorPlayer] Editing behavior setup complete');
+    console.log("[EditorPlayer] Editing behavior setup complete");
   }
 
   /**
@@ -128,41 +128,46 @@ export class EditorPlayer {
    * @private
    */
   _setupSpeakerEditingBehavior() {
-    const container = document.getElementById('transcriptionContainer');
-    
+    const container = document.getElementById("transcriptionContainer");
+
     // Handle speaker icon clicks to open speaker selection
-    container.addEventListener('click', (e) => {
+    container.addEventListener("click", (e) => {
       // Check if an icon (user-pen or circle-user) was clicked
-      const isIcon = e.target.classList.contains('fa-user-pen') || 
-                     e.target.classList.contains('fa-circle-user') ||
-                     e.target.classList.contains('md3-speaker-edit-icon');
-      
+      const isIcon =
+        e.target.classList.contains("fa-user-pen") ||
+        e.target.classList.contains("fa-circle-user") ||
+        e.target.classList.contains("md3-speaker-edit-icon");
+
       if (!isIcon) return;
-      
+
       // Get segment index from icon's data attribute or closest speaker-turn
-      let segmentIndex = e.target.getAttribute('data-segment-index');
-      
+      let segmentIndex = e.target.getAttribute("data-segment-index");
+
       if (!segmentIndex) {
         // Fallback: get from parent .speaker-name (legacy) or .md3-speaker-turn
-        const speakerName = e.target.closest('.speaker-name');
-        const speakerTurn = e.target.closest('.md3-speaker-turn');
-        
+        const speakerName = e.target.closest(".speaker-name");
+        const speakerTurn = e.target.closest(".md3-speaker-turn");
+
         if (speakerName) {
-          segmentIndex = speakerName.getAttribute('data-segment-index');
+          segmentIndex = speakerName.getAttribute("data-segment-index");
         } else if (speakerTurn) {
-          segmentIndex = speakerTurn.getAttribute('data-segment-index');
+          segmentIndex = speakerTurn.getAttribute("data-segment-index");
         }
       }
-      
-      const currentSpeaker = this.transcriptData.segments[segmentIndex]?.speaker_code || 
-                           this.transcriptData.segments[segmentIndex]?.speaker;
-      
+
+      const currentSpeaker =
+        this.transcriptData.segments[segmentIndex]?.speaker_code ||
+        this.transcriptData.segments[segmentIndex]?.speaker;
+
       if (segmentIndex !== null && currentSpeaker) {
-        this.editor.openSpeakerSelection(parseInt(segmentIndex), currentSpeaker);
+        this.editor.openSpeakerSelection(
+          parseInt(segmentIndex),
+          currentSpeaker,
+        );
       }
     });
 
-    console.log('[EditorPlayer] Speaker editing behavior setup complete');
+    console.log("[EditorPlayer] Speaker editing behavior setup complete");
   }
 
   /**
@@ -170,28 +175,30 @@ export class EditorPlayer {
    */
   _setupUnsavedChangesWarning() {
     // Monitor editor state for unsaved changes
-    const backLink = document.querySelector('.back-link');
-    const saveBtn = document.getElementById('save-btn');
-    const discardBtn = document.getElementById('discard-btn');
+    const backLink = document.querySelector(".back-link");
+    const saveBtn = document.getElementById("save-btn");
+    const discardBtn = document.getElementById("discard-btn");
 
     // Flag to suppress beforeunload during intentional navigation
     let allowNavigation = false;
 
     // beforeunload event for navigation, reload, close
-    window.addEventListener('beforeunload', (e) => {
+    window.addEventListener("beforeunload", (e) => {
       if (!allowNavigation && this.editor && this.editor.hasUnsavedChanges()) {
         e.preventDefault();
-        e.returnValue = '';
-        return '';
+        e.returnValue = "";
+        return "";
       }
     });
 
     // Back link handler
     if (backLink) {
-      backLink.addEventListener('click', (e) => {
+      backLink.addEventListener("click", (e) => {
         if (this.editor && this.editor.hasUnsavedChanges()) {
           e.preventDefault();
-          const confirmed = confirm('Es gibt ungespeicherte Änderungen. Möchten Sie diese speichern, bevor Sie gehen?');
+          const confirmed = confirm(
+            "Es gibt ungespeicherte Änderungen. Möchten Sie diese speichern, bevor Sie gehen?",
+          );
           if (confirmed) {
             // Enable navigation after save
             allowNavigation = true;
@@ -213,16 +220,19 @@ export class EditorPlayer {
     // Listen for save completion and disable beforeunload warning
     const originalSaveBtn = saveBtn;
     if (originalSaveBtn) {
-      originalSaveBtn.addEventListener('click', () => {
+      originalSaveBtn.addEventListener("click", () => {
         // After successful save, disable the warning temporarily
         const checkSaveComplete = setInterval(() => {
-          const saveIndicator = document.getElementById('save-indicator');
-          if (saveIndicator && saveIndicator.classList.contains('md3-editor-status-saved')) {
+          const saveIndicator = document.getElementById("save-indicator");
+          if (
+            saveIndicator &&
+            saveIndicator.classList.contains("md3-editor-status-saved")
+          ) {
             allowNavigation = true;
             clearInterval(checkSaveComplete);
           }
         }, 100);
-        
+
         // Timeout after 2 seconds
         setTimeout(() => clearInterval(checkSaveComplete), 2000);
       });
@@ -230,11 +240,11 @@ export class EditorPlayer {
 
     // Discard button: Allow navigation without save
     if (discardBtn) {
-      discardBtn.addEventListener('click', () => {
+      discardBtn.addEventListener("click", () => {
         allowNavigation = true;
       });
     }
 
-    console.log('[EditorPlayer] Unsaved changes warning setup complete');
+    console.log("[EditorPlayer] Unsaved changes warning setup complete");
   }
 }

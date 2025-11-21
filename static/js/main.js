@@ -1,74 +1,76 @@
 ﻿// ============================================
 // JWT Token Auto-Refresh Initialization
 // ============================================
-import { setupTokenRefresh } from './modules/auth/token-refresh.js';
+import { setupTokenRefresh } from "./modules/auth/token-refresh.js";
 
 // ============================================
 // Navigation Drawer Handler
 // ============================================
-import { NavigationDrawer } from './modules/navigation/drawer.js';
+import { NavigationDrawer } from "./modules/navigation/drawer.js";
 
 // ============================================
 // Navigation Accordion Handler
 // ============================================
-import { initAccordion } from './modules/navigation/accordion.js';
+import { initAccordion } from "./modules/navigation/accordion.js";
 
 // ============================================
 // Top App Bar User Menu Handler
 // ============================================
-import { initUserMenu } from './modules/navigation/app-bar.js';
+import { initUserMenu } from "./modules/navigation/app-bar.js";
 
 // Setup automatic token refresh on app initialization
 setupTokenRefresh();
 
 // CSS.escape polyfill (MDN) - define globally for older browsers if missing
-if (typeof CSS === 'undefined' || typeof CSS.escape !== 'function') {
+if (typeof CSS === "undefined" || typeof CSS.escape !== "function") {
   (function (global) {
     function cssEscape(value) {
       if (arguments.length === 0) {
-        throw new TypeError('`CSS.escape` requires an argument.');
+        throw new TypeError("`CSS.escape` requires an argument.");
       }
       var string = String(value);
       var length = string.length;
       var index = -1;
       var codeUnit;
-      var result = '';
+      var result = "";
       var firstCodeUnit = string.charCodeAt(0);
       while (++index < length) {
         codeUnit = string.charCodeAt(index);
         // Note: there’s no need to special-case astral symbols, surrogate
         // pairs, or lone surrogates.
         if (codeUnit === 0x0000) {
-          result += '\uFFFD';
+          result += "\uFFFD";
           continue;
         }
         if (
-          (codeUnit >= 0x0001 && codeUnit <= 0x001F) ||
-          codeUnit === 0x007F ||
+          (codeUnit >= 0x0001 && codeUnit <= 0x001f) ||
+          codeUnit === 0x007f ||
           (index === 0 && codeUnit >= 0x0030 && codeUnit <= 0x0039) ||
-          (index === 1 && index === 0 && codeUnit >= 0x0030 && codeUnit <= 0x0039 && firstCodeUnit === 0x002D)
+          (index === 1 &&
+            index === 0 &&
+            codeUnit >= 0x0030 &&
+            codeUnit <= 0x0039 &&
+            firstCodeUnit === 0x002d)
         ) {
-          result += '\\' + codeUnit.toString(16) + ' ';
+          result += "\\" + codeUnit.toString(16) + " ";
           continue;
         }
-        if (
-          index === 0 && codeUnit === 0x002D && length === 1
-        ) {
-          result += '\\-';
+        if (index === 0 && codeUnit === 0x002d && length === 1) {
+          result += "\\-";
           continue;
         }
         if (
           codeUnit >= 0x0080 ||
-          codeUnit === 0x002D ||
-          codeUnit === 0x005F ||
+          codeUnit === 0x002d ||
+          codeUnit === 0x005f ||
           (codeUnit >= 0x0030 && codeUnit <= 0x0039) ||
-          (codeUnit >= 0x0041 && codeUnit <= 0x005A) ||
-          (codeUnit >= 0x0061 && codeUnit <= 0x007A)
+          (codeUnit >= 0x0041 && codeUnit <= 0x005a) ||
+          (codeUnit >= 0x0061 && codeUnit <= 0x007a)
         ) {
           result += string.charAt(index);
           continue;
         }
-        result += '\\' + string.charAt(index);
+        result += "\\" + string.charAt(index);
       }
       return result;
     }
@@ -84,7 +86,7 @@ new NavigationDrawer();
 initAccordion();
 
 // Initialize user menu handler (delegated, runs once)
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener("DOMContentLoaded", () => {
   initUserMenu();
 });
 
@@ -95,57 +97,57 @@ let atlasMap = null;
 let atlasModule = null;
 
 async function initAtlas() {
-  const mapEl = document.getElementById('atlas-map');
+  const mapEl = document.getElementById("atlas-map");
   if (!mapEl) return;
 
-  console.log('[Atlas] Initializing...');
+  console.log("[Atlas] Initializing...");
 
   try {
     // 1) Load external dependencies
-    ensureStyles('https://unpkg.com/leaflet@1.9.4/dist/leaflet.css');
-    ensureStyles('/static/css/md3/components/atlas.css');
-    await ensureScript('https://unpkg.com/leaflet@1.9.4/dist/leaflet.js');
+    ensureStyles("https://unpkg.com/leaflet@1.9.4/dist/leaflet.css");
+    ensureStyles("/static/css/md3/components/atlas.css");
+    await ensureScript("https://unpkg.com/leaflet@1.9.4/dist/leaflet.js");
 
     // 2) Prevent double initialization
     if (atlasMap) {
-      console.log('[Atlas] Map already exists, removing...');
+      console.log("[Atlas] Map already exists, removing...");
       try {
         atlasMap.remove();
       } catch (e) {
-        console.warn('[Atlas] Error removing map:', e);
+        console.warn("[Atlas] Error removing map:", e);
       }
       atlasMap = null;
     }
 
     // 3) Wait for Leaflet to be available
     if (!window.L) {
-      console.error('[Atlas] Leaflet not loaded');
+      console.error("[Atlas] Leaflet not loaded");
       return;
     }
 
     // 4) Dynamically import Atlas module
     if (!atlasModule) {
-      atlasModule = await import('/static/js/modules/atlas/index.js');
-      console.log('[Atlas] Module loaded');
+      atlasModule = await import("/static/js/modules/atlas/index.js");
+      console.log("[Atlas] Module loaded");
     }
 
     // 5) Initialize Atlas
     if (atlasModule.init) {
       atlasMap = atlasModule.init();
-      console.log('[Atlas] Initialized successfully');
+      console.log("[Atlas] Initialized successfully");
     }
   } catch (error) {
-    console.error('[Atlas] Initialization failed:', error);
+    console.error("[Atlas] Initialization failed:", error);
   }
 }
 
 function teardownAtlas() {
   if (atlasMap) {
-    console.log('[Atlas] Tearing down...');
+    console.log("[Atlas] Tearing down...");
     try {
       atlasMap.remove();
     } catch (e) {
-      console.warn('[Atlas] Error during teardown:', e);
+      console.warn("[Atlas] Error during teardown:", e);
     }
     atlasMap = null;
   }
@@ -153,19 +155,19 @@ function teardownAtlas() {
 
 function ensureStyles(href) {
   if (!document.querySelector(`link[rel="stylesheet"][href="${href}"]`)) {
-    const link = document.createElement('link');
-    link.rel = 'stylesheet';
+    const link = document.createElement("link");
+    link.rel = "stylesheet";
     link.href = href;
-    link.setAttribute('data-turbo-track', 'dynamic');
+    link.setAttribute("data-turbo-track", "dynamic");
     document.head.appendChild(link);
   }
 }
 
 async function ensureScript(src) {
   if (document.querySelector(`script[src="${src}"]`)) return;
-  
+
   return new Promise((resolve, reject) => {
-    const script = document.createElement('script');
+    const script = document.createElement("script");
     script.src = src;
     script.defer = true;
     script.onload = resolve;
@@ -175,20 +177,21 @@ async function ensureScript(src) {
 }
 
 // Atlas Turbo Hooks
-document.addEventListener('turbo:load', initAtlas);
-document.addEventListener('turbo:before-cache', teardownAtlas);
+document.addEventListener("turbo:load", initAtlas);
+document.addEventListener("turbo:before-cache", teardownAtlas);
 
 // ============================================
 // Mobile Navigation
 // ============================================
-const navbarRoot = document.querySelector('.site-header');
-const mobileToggle = navbarRoot?.querySelector('[data-mobile-toggle]');
-const mobileMenu = navbarRoot?.querySelector('[data-mobile-menu]');
-const mobileClose = mobileMenu?.querySelector('[data-mobile-close]');
-const mobileBackdrop = mobileMenu?.querySelector('[data-mobile-backdrop]');
+const navbarRoot = document.querySelector(".site-header");
+const mobileToggle = navbarRoot?.querySelector("[data-mobile-toggle]");
+const mobileMenu = navbarRoot?.querySelector("[data-mobile-menu]");
+const mobileClose = mobileMenu?.querySelector("[data-mobile-close]");
+const mobileBackdrop = mobileMenu?.querySelector("[data-mobile-backdrop]");
 let lastFocusedElement = null;
 
-const focusableSelectors = 'a[href], button:not([disabled]), textarea, input, select, [tabindex]:not([tabindex="-1"])';
+const focusableSelectors =
+  'a[href], button:not([disabled]), textarea, input, select, [tabindex]:not([tabindex="-1"])';
 let releaseFocusTrap = () => {};
 const MOBILE_MENU_TRANSITION_FALLBACK = 380;
 let mobileMenuTransitionHandler = null;
@@ -197,13 +200,15 @@ let mobileMenuAnimationFrame = null;
 
 function getMobileMenuTransitionDuration() {
   if (!mobileMenu) return MOBILE_MENU_TRANSITION_FALLBACK;
-  const raw = getComputedStyle(mobileMenu).getPropertyValue('--md3-mobile-menu-duration').trim();
+  const raw = getComputedStyle(mobileMenu)
+    .getPropertyValue("--md3-mobile-menu-duration")
+    .trim();
   if (!raw) return MOBILE_MENU_TRANSITION_FALLBACK;
-  if (raw.endsWith('ms')) {
+  if (raw.endsWith("ms")) {
     const value = Number.parseFloat(raw);
     return Number.isNaN(value) ? MOBILE_MENU_TRANSITION_FALLBACK : value;
   }
-  if (raw.endsWith('s')) {
+  if (raw.endsWith("s")) {
     const value = Number.parseFloat(raw);
     return Number.isNaN(value) ? MOBILE_MENU_TRANSITION_FALLBACK : value * 1000;
   }
@@ -212,12 +217,16 @@ function getMobileMenuTransitionDuration() {
 }
 
 function trapFocus(container) {
-  const focusable = Array.from(container.querySelectorAll(focusableSelectors)).filter((element) => !element.hasAttribute('disabled') && element.tabIndex !== -1);
+  const focusable = Array.from(
+    container.querySelectorAll(focusableSelectors),
+  ).filter(
+    (element) => !element.hasAttribute("disabled") && element.tabIndex !== -1,
+  );
   if (!focusable.length) return () => {};
   const first = focusable[0];
   const last = focusable[focusable.length - 1];
   function handleKeydown(event) {
-    if (event.key !== 'Tab') return;
+    if (event.key !== "Tab") return;
     if (event.shiftKey) {
       if (document.activeElement === first) {
         event.preventDefault();
@@ -228,14 +237,17 @@ function trapFocus(container) {
       first.focus();
     }
   }
-  container.addEventListener('keydown', handleKeydown);
-  return () => container.removeEventListener('keydown', handleKeydown);
+  container.addEventListener("keydown", handleKeydown);
+  return () => container.removeEventListener("keydown", handleKeydown);
 }
 
 function openMobileMenu() {
   if (!mobileMenu) return;
   if (mobileMenuTransitionHandler) {
-    mobileMenu.removeEventListener('transitionend', mobileMenuTransitionHandler);
+    mobileMenu.removeEventListener(
+      "transitionend",
+      mobileMenuTransitionHandler,
+    );
     mobileMenuTransitionHandler = null;
   }
   if (mobileMenuCloseTimeout) {
@@ -245,8 +257,8 @@ function openMobileMenu() {
   mobileMenu.hidden = false;
   // Force reflow so transitions fire correctly.
   void mobileMenu.getBoundingClientRect();
-  document.body.classList.add('overflow-hidden');
-  mobileToggle?.setAttribute('aria-expanded', 'true');
+  document.body.classList.add("overflow-hidden");
+  mobileToggle?.setAttribute("aria-expanded", "true");
   lastFocusedElement = document.activeElement;
   const dialog = mobileMenu.querySelector('[role="dialog"]');
   if (dialog) {
@@ -257,7 +269,7 @@ function openMobileMenu() {
   }
   mobileMenuAnimationFrame = window.requestAnimationFrame(() => {
     mobileMenuAnimationFrame = null;
-    mobileMenu.classList.add('is-open');
+    mobileMenu.classList.add("is-open");
     if (dialog) {
       const firstFocusable = dialog.querySelector(focusableSelectors);
       firstFocusable?.focus();
@@ -267,79 +279,90 @@ function openMobileMenu() {
 
 function closeMobileMenu() {
   if (!mobileMenu || mobileMenu.hidden) return;
-  
+
   // Close all expanded collapsibles before closing menu
-  const collapsibleTriggers = document.querySelectorAll('.md3-mobile-collapsible__trigger');
-  collapsibleTriggers.forEach(trigger => {
-    trigger.setAttribute('aria-expanded', 'false');
-    const contentId = trigger.getAttribute('aria-controls');
+  const collapsibleTriggers = document.querySelectorAll(
+    ".md3-mobile-collapsible__trigger",
+  );
+  collapsibleTriggers.forEach((trigger) => {
+    trigger.setAttribute("aria-expanded", "false");
+    const contentId = trigger.getAttribute("aria-controls");
     const content = document.getElementById(contentId);
     if (content) {
-      content.classList.remove('is-expanded');
+      content.classList.remove("is-expanded");
       content.hidden = true;
     }
   });
-  
+
   if (mobileMenuTransitionHandler) {
-    mobileMenu.removeEventListener('transitionend', mobileMenuTransitionHandler);
+    mobileMenu.removeEventListener(
+      "transitionend",
+      mobileMenuTransitionHandler,
+    );
     mobileMenuTransitionHandler = null;
   }
   if (mobileMenuCloseTimeout) {
     window.clearTimeout(mobileMenuCloseTimeout);
     mobileMenuCloseTimeout = null;
   }
-  mobileMenu.classList.remove('is-open');
+  mobileMenu.classList.remove("is-open");
   if (mobileMenuAnimationFrame) {
     window.cancelAnimationFrame(mobileMenuAnimationFrame);
     mobileMenuAnimationFrame = null;
   }
-  document.body.classList.remove('overflow-hidden');
-  mobileToggle?.setAttribute('aria-expanded', 'false');
+  document.body.classList.remove("overflow-hidden");
+  mobileToggle?.setAttribute("aria-expanded", "false");
   releaseFocusTrap();
   if (lastFocusedElement) {
     lastFocusedElement.focus();
   }
   mobileMenuTransitionHandler = (event) => {
-    if (event.target !== mobileMenu || event.propertyName !== 'opacity') {
+    if (event.target !== mobileMenu || event.propertyName !== "opacity") {
       return;
     }
     mobileMenu.hidden = true;
-    mobileMenu.removeEventListener('transitionend', mobileMenuTransitionHandler);
+    mobileMenu.removeEventListener(
+      "transitionend",
+      mobileMenuTransitionHandler,
+    );
     mobileMenuTransitionHandler = null;
     if (mobileMenuCloseTimeout) {
       window.clearTimeout(mobileMenuCloseTimeout);
       mobileMenuCloseTimeout = null;
     }
   };
-  mobileMenu.addEventListener('transitionend', mobileMenuTransitionHandler);
+  mobileMenu.addEventListener("transitionend", mobileMenuTransitionHandler);
   const menuTransitionDuration = getMobileMenuTransitionDuration();
   mobileMenuCloseTimeout = window.setTimeout(() => {
     if (!mobileMenu.hidden) {
       mobileMenu.hidden = true;
     }
     if (mobileMenuTransitionHandler) {
-      mobileMenu.removeEventListener('transitionend', mobileMenuTransitionHandler);
+      mobileMenu.removeEventListener(
+        "transitionend",
+        mobileMenuTransitionHandler,
+      );
       mobileMenuTransitionHandler = null;
     }
     mobileMenuCloseTimeout = null;
   }, menuTransitionDuration);
 }
 
-mobileToggle?.addEventListener('click', () => {
+mobileToggle?.addEventListener("click", () => {
   if (!mobileMenu) return;
-  if (mobileMenu.classList.contains('is-open')) {
+  if (mobileMenu.classList.contains("is-open")) {
     closeMobileMenu();
   } else {
     openMobileMenu();
   }
 });
 
-mobileClose?.addEventListener('click', closeMobileMenu);
-mobileBackdrop?.addEventListener('click', closeMobileMenu);
+mobileClose?.addEventListener("click", closeMobileMenu);
+mobileBackdrop?.addEventListener("click", closeMobileMenu);
 
-document.addEventListener('keydown', (event) => {
-  if (event.key === 'Escape') {
-    if (mobileMenu && mobileMenu.classList.contains('is-open')) {
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape") {
+    if (mobileMenu && mobileMenu.classList.contains("is-open")) {
       closeMobileMenu();
     }
     if (userMenuOpen) {
@@ -352,14 +375,14 @@ document.addEventListener('keydown', (event) => {
   }
 });
 
-const userMenuToggle = navbarRoot?.querySelector('[data-user-menu-toggle]');
-const userMenu = navbarRoot?.querySelector('[data-user-menu]');
+const userMenuToggle = navbarRoot?.querySelector("[data-user-menu-toggle]");
+const userMenu = navbarRoot?.querySelector("[data-user-menu]");
 let userMenuOpen = false;
 
 function openUserMenu() {
   if (!userMenu) return;
   userMenu.hidden = false;
-  userMenuToggle?.setAttribute('aria-expanded', 'true');
+  userMenuToggle?.setAttribute("aria-expanded", "true");
   userMenuOpen = true;
   const firstFocusable = userMenu.querySelector(focusableSelectors);
   firstFocusable?.focus();
@@ -368,11 +391,11 @@ function openUserMenu() {
 function closeUserMenu() {
   if (!userMenu) return;
   userMenu.hidden = true;
-  userMenuToggle?.setAttribute('aria-expanded', 'false');
+  userMenuToggle?.setAttribute("aria-expanded", "false");
   userMenuOpen = false;
 }
 
-userMenuToggle?.addEventListener('click', (event) => {
+userMenuToggle?.addEventListener("click", (event) => {
   event.preventDefault();
   if (!userMenu) return;
   if (userMenuOpen) {
@@ -382,17 +405,20 @@ userMenuToggle?.addEventListener('click', (event) => {
   }
 });
 
-document.addEventListener('click', (event) => {
+document.addEventListener("click", (event) => {
   if (!userMenuOpen) return;
-  if (!userMenu?.contains(event.target) && !userMenuToggle?.contains(event.target)) {
+  if (
+    !userMenu?.contains(event.target) &&
+    !userMenuToggle?.contains(event.target)
+  ) {
     closeUserMenu();
   }
 });
 
-userMenu?.addEventListener('click', (event) => {
+userMenu?.addEventListener("click", (event) => {
   const target = event.target;
   if (!(target instanceof Element)) return;
-  if (target.closest('a, button')) {
+  if (target.closest("a, button")) {
     closeUserMenu();
   }
 });
@@ -404,17 +430,20 @@ function openLogin() {
   // Get loginSheet dynamically each time (survives page reloads)
   const loginSheet = document.querySelector('[data-element="login-sheet"]');
   if (!loginSheet) return;
-  
+
   // Save current scroll position to restore later if needed
   scrollPositionBeforeLogin = window.scrollY || window.pageYOffset;
-  
+
   // Lock body scroll position using CSS variable (prevents jump when overflow:hidden is applied)
-  document.body.style.setProperty('--scroll-lock-offset', `-${scrollPositionBeforeLogin}px`);
-  
+  document.body.style.setProperty(
+    "--scroll-lock-offset",
+    `-${scrollPositionBeforeLogin}px`,
+  );
+
   loginSheet.hidden = false;
-  document.body.classList.add('login-open');
+  document.body.classList.add("login-open");
   previouslyFocusedForLogin = document.activeElement;
-  
+
   // Focus input without scrolling the page
   const input = loginSheet.querySelector('input[name="username"]');
   if (input) {
@@ -427,46 +456,46 @@ function closeLogin() {
   // Get loginSheet dynamically each time (survives page reloads)
   const loginSheet = document.querySelector('[data-element="login-sheet"]');
   if (!loginSheet) return;
-  
+
   loginSheet.hidden = true;
-  document.body.classList.remove('login-open');
-  
+  document.body.classList.remove("login-open");
+
   // Remove scroll lock CSS variable
-  document.body.style.removeProperty('--scroll-lock-offset');
-  
+  document.body.style.removeProperty("--scroll-lock-offset");
+
   // Restore scroll position
   window.scrollTo(0, scrollPositionBeforeLogin);
-  
+
   if (previouslyFocusedForLogin) {
     previouslyFocusedForLogin.focus({ preventScroll: true });
   }
 }
 
 // Use event delegation to handle login buttons (works after page reload)
-document.addEventListener('click', (event) => {
+document.addEventListener("click", (event) => {
   const target = event.target;
-  
+
   // Check if clicked element or its parent is an open-login button
   const openButton = target.closest('[data-action="open-login"]');
   if (openButton) {
     event.preventDefault();
-    console.log('[Auth] Opening login sheet');
+    console.log("[Auth] Opening login sheet");
     openLogin();
     return;
   }
-  
+
   // Check if clicked element or its parent is a close-login button
   const closeButton = target.closest('[data-action="close-login"]');
   if (closeButton) {
     event.preventDefault();
-    console.log('[Auth] Closing login sheet');
+    console.log("[Auth] Closing login sheet");
     closeLogin();
     return;
   }
 });
 
 // Close login sheet when clicking on backdrop (event delegation)
-document.addEventListener('click', (event) => {
+document.addEventListener("click", (event) => {
   const loginSheet = document.querySelector('[data-element="login-sheet"]');
   if (event.target === loginSheet) {
     closeLogin();
@@ -474,25 +503,25 @@ document.addEventListener('click', (event) => {
 });
 
 // Login form submission handler (event delegation for page reload resilience)
-document.addEventListener('submit', (event) => {
+document.addEventListener("submit", (event) => {
   // Check if this is the login form
   const loginSheet = document.querySelector('[data-element="login-sheet"]');
-  const loginForm = loginSheet?.querySelector('form');
-  
+  const loginForm = loginSheet?.querySelector("form");
+
   if (event.target === loginForm) {
     // Don't prevent default - let form submit naturally
     // This ensures cookies are set correctly by the browser
-    
-    console.log('[Auth] Login form submitted');
-    
+
+    console.log("[Auth] Login form submitted");
+
     // No sessionStorage-based redirect mechanism used anymore
-    
+
     // Visual feedback - close login sheet
     // Note: Sheet will be hidden by page navigation anyway
     if (loginSheet && !loginSheet.hidden) {
-      loginSheet.style.opacity = '0';
+      loginSheet.style.opacity = "0";
     }
-    
+
     // Form submits naturally - browser handles redirect with cookies
   }
 });
@@ -500,16 +529,21 @@ document.addEventListener('submit', (event) => {
 // No sessionStorage-based redirect mechanism used anymore; rely on server-side `save-redirect` and next/session fallback
 
 function getCookie(name) {
-  return document.cookie
-    .split(';')
-    .map((cookie) => cookie.trim())
-    .find((cookie) => cookie.startsWith(`${name}=`))?.split('=')[1] || '';
+  return (
+    document.cookie
+      .split(";")
+      .map((cookie) => cookie.trim())
+      .find((cookie) => cookie.startsWith(`${name}=`))
+      ?.split("=")[1] || ""
+  );
 }
 
 function syncLogoutCsrf() {
-  const logoutForms = document.querySelectorAll('[data-element^="logout-form"]');
+  const logoutForms = document.querySelectorAll(
+    '[data-element^="logout-form"]',
+  );
   if (!logoutForms.length) return;
-  const csrfToken = decodeURIComponent(getCookie('csrf_access_token'));
+  const csrfToken = decodeURIComponent(getCookie("csrf_access_token"));
   logoutForms.forEach((form) => {
     const field = form.querySelector('[data-element="csrf-token"]');
     if (field && csrfToken) {
@@ -520,10 +554,10 @@ function syncLogoutCsrf() {
 
 function ensureLoginHiddenForAuthenticated() {
   if (!navbarRoot || !loginSheet) return;
-  const isAuthenticated = navbarRoot.dataset.auth === 'true';
+  const isAuthenticated = navbarRoot.dataset.auth === "true";
   if (isAuthenticated) {
     loginSheet.hidden = true;
-    document.body.classList.remove('login-open');
+    document.body.classList.remove("login-open");
   }
 }
 
@@ -533,13 +567,13 @@ ensureLoginHiddenForAuthenticated();
 // Open login sheet if redirected with ?showlogin=1 query parameter
 // Using query param instead of hash avoids automatic scroll-to-anchor behavior
 const urlParams = new URLSearchParams(window.location.search);
-if (urlParams.has('showlogin')) {
+if (urlParams.has("showlogin")) {
   // Remove showlogin parameter from URL without reload (clean URL)
-  urlParams.delete('showlogin');
+  urlParams.delete("showlogin");
   const newSearch = urlParams.toString();
-  const newUrl = window.location.pathname + (newSearch ? '?' + newSearch : '');
-  history.replaceState(null, '', newUrl);
-  
+  const newUrl = window.location.pathname + (newSearch ? "?" + newSearch : "");
+  history.replaceState(null, "", newUrl);
+
   // Open login sheet (scroll position is preserved automatically)
   openLogin();
 }
@@ -547,20 +581,26 @@ if (urlParams.has('showlogin')) {
 // Mark active navigation link
 function markActiveNavLink() {
   const currentPath = window.location.pathname;
-  const navLinks = document.querySelectorAll('.nav-link');
-  const mobileLinks = document.querySelectorAll('.mobile-link');
-  
-  navLinks.forEach(link => {
+  const navLinks = document.querySelectorAll(".nav-link");
+  const mobileLinks = document.querySelectorAll(".mobile-link");
+
+  navLinks.forEach((link) => {
     const linkPath = new URL(link.href).pathname;
-    if (linkPath === currentPath || (linkPath !== '/' && currentPath.startsWith(linkPath))) {
-      link.classList.add('nav-link--active');
+    if (
+      linkPath === currentPath ||
+      (linkPath !== "/" && currentPath.startsWith(linkPath))
+    ) {
+      link.classList.add("nav-link--active");
     }
   });
-  
-  mobileLinks.forEach(link => {
+
+  mobileLinks.forEach((link) => {
     const linkPath = new URL(link.href).pathname;
-    if (linkPath === currentPath || (linkPath !== '/' && currentPath.startsWith(linkPath))) {
-      link.classList.add('mobile-link--active');
+    if (
+      linkPath === currentPath ||
+      (linkPath !== "/" && currentPath.startsWith(linkPath))
+    ) {
+      link.classList.add("mobile-link--active");
     }
   });
 }
@@ -569,11 +609,11 @@ function markActiveNavLink() {
 let openDesktopSubmenu = null;
 
 function closeAllDesktopSubmenus() {
-  document.querySelectorAll('.md3-nav__submenu').forEach(menu => {
+  document.querySelectorAll(".md3-nav__submenu").forEach((menu) => {
     menu.hidden = true;
     const trigger = menu.previousElementSibling;
-    if (trigger && trigger.classList.contains('md3-nav__trigger')) {
-      trigger.setAttribute('aria-expanded', 'false');
+    if (trigger && trigger.classList.contains("md3-nav__trigger")) {
+      trigger.setAttribute("aria-expanded", "false");
     }
   });
   openDesktopSubmenu = null;
@@ -583,16 +623,19 @@ function initDesktopSubmenus() {
   // Use event delegation: attach a single click listener to the nav links container.
   // This is more robust (works even if triggers are dynamically replaced or listeners
   // would otherwise be missed on some pages).
-  const navLinksContainer = document.querySelector('.md3-nav__links');
+  const navLinksContainer = document.querySelector(".md3-nav__links");
   if (!navLinksContainer) return;
 
-  navLinksContainer.addEventListener('click', (event) => {
-    const clicked = event.target instanceof Element ? event.target.closest('.md3-nav__trigger') : null;
+  navLinksContainer.addEventListener("click", (event) => {
+    const clicked =
+      event.target instanceof Element
+        ? event.target.closest(".md3-nav__trigger")
+        : null;
     if (!clicked) return;
     event.preventDefault();
     event.stopPropagation();
 
-    const submenuId = clicked.getAttribute('aria-controls');
+    const submenuId = clicked.getAttribute("aria-controls");
     const submenu = submenuId ? document.getElementById(submenuId) : null;
     if (!submenu) return;
 
@@ -603,96 +646,98 @@ function initDesktopSubmenus() {
     // If it wasn't open, open it
     if (!isCurrentlyOpen) {
       submenu.hidden = false;
-      clicked.setAttribute('aria-expanded', 'true');
+      clicked.setAttribute("aria-expanded", "true");
       openDesktopSubmenu = submenu;
     }
   });
 
   // Close desktop submenu when clicking outside
-  document.addEventListener('click', (event) => {
+  document.addEventListener("click", (event) => {
     if (!openDesktopSubmenu) return;
     const target = event.target;
     if (!(target instanceof Element)) return;
 
     // Don't close if clicking inside the submenu or on the trigger wrapper
-    if (!target.closest('.md3-nav__link-with-menu')) {
+    if (!target.closest(".md3-nav__link-with-menu")) {
       closeAllDesktopSubmenus();
     }
   });
 }
 
 // Initialize desktop submenus - wait for DOM to be fully loaded
-document.addEventListener('DOMContentLoaded', initDesktopSubmenus);
+document.addEventListener("DOMContentLoaded", initDesktopSubmenus);
 
 // Mobile collapsible functionality (replaces subpanel logic)
 function initMobileCollapsibles() {
-  const collapsibleTriggers = document.querySelectorAll('.md3-mobile-collapsible__trigger');
-  
-  collapsibleTriggers.forEach(trigger => {
-    const contentId = trigger.getAttribute('aria-controls');
+  const collapsibleTriggers = document.querySelectorAll(
+    ".md3-mobile-collapsible__trigger",
+  );
+
+  collapsibleTriggers.forEach((trigger) => {
+    const contentId = trigger.getAttribute("aria-controls");
     const content = document.getElementById(contentId);
     if (!content) return;
-    
+
     // Auto-expand if any child link is active (Best Practice: show current location)
-    const hasActiveChild = content.querySelector('.md3-mobile-link--active');
+    const hasActiveChild = content.querySelector(".md3-mobile-link--active");
     if (hasActiveChild) {
-      trigger.setAttribute('aria-expanded', 'true');
-      content.removeAttribute('hidden');
-      content.classList.add('is-expanded');
+      trigger.setAttribute("aria-expanded", "true");
+      content.removeAttribute("hidden");
+      content.classList.add("is-expanded");
     }
-    
+
     // Toggle on click
-    trigger.addEventListener('click', (event) => {
+    trigger.addEventListener("click", (event) => {
       event.preventDefault();
-      
-      const isExpanded = trigger.getAttribute('aria-expanded') === 'true';
-      
+
+      const isExpanded = trigger.getAttribute("aria-expanded") === "true";
+
       if (isExpanded) {
         // Collapse with smooth animation
-        trigger.setAttribute('aria-expanded', 'false');
-        content.classList.remove('is-expanded');
+        trigger.setAttribute("aria-expanded", "false");
+        content.classList.remove("is-expanded");
         // Set hidden after animation completes
         setTimeout(() => {
-          if (!content.classList.contains('is-expanded')) {
+          if (!content.classList.contains("is-expanded")) {
             content.hidden = true;
           }
         }, 400);
       } else {
         // Expand with smooth animation
-        trigger.setAttribute('aria-expanded', 'true');
-        content.removeAttribute('hidden');
+        trigger.setAttribute("aria-expanded", "true");
+        content.removeAttribute("hidden");
         // Trigger reflow for smooth animation
         void content.offsetHeight;
-        content.classList.add('is-expanded');
+        content.classList.add("is-expanded");
       }
     });
   });
 }
 
 // Initialize mobile collapsibles - wait for DOM to be fully loaded
-document.addEventListener('DOMContentLoaded', initMobileCollapsibles);
+document.addEventListener("DOMContentLoaded", initMobileCollapsibles);
 
 // Run on page load - wait for DOM to be fully loaded
-document.addEventListener('DOMContentLoaded', markActiveNavLink);
+document.addEventListener("DOMContentLoaded", markActiveNavLink);
 
 // ============================================
 // Drawer Animation Handler (from Index Page)
 // ============================================
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener("DOMContentLoaded", () => {
   const urlParams = new URLSearchParams(window.location.search);
-  if (urlParams.get('drawer_animate') === '1') {
-    const drawer = document.querySelector('.md3-navigation-drawer--standard');
+  if (urlParams.get("drawer_animate") === "1") {
+    const drawer = document.querySelector(".md3-navigation-drawer--standard");
     if (drawer) {
       // Force reflow to ensure the browser knows it was hidden
       void drawer.offsetWidth;
-      
-      drawer.classList.remove('pending-slide-in');
-      drawer.classList.add('animate-slide-in');
-      
+
+      drawer.classList.remove("pending-slide-in");
+      drawer.classList.add("animate-slide-in");
+
       // Clean up URL
       const newUrl = new URL(window.location);
-      newUrl.searchParams.delete('drawer_animate');
-      window.history.replaceState({}, '', newUrl);
+      newUrl.searchParams.delete("drawer_animate");
+      window.history.replaceState({}, "", newUrl);
     }
   }
 });
