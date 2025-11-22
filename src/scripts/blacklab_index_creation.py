@@ -58,8 +58,8 @@ class TokenFull:
     """Full token with optional fields."""
 
     meta: TokenMeta
-    past_type: str = ""
-    future_type: str = ""
+    PastType: str = ""
+    FutureType: str = ""
     tense: str = ""
     mood: str = ""
     person: str = ""
@@ -79,6 +79,8 @@ class TokenFull:
     country_region_code: str = ""
     city: str = ""
     radio: str = ""
+    date: str = ""
+    audio_path: str = ""
 
     def to_tsv_row(self) -> str:
         """Export to TSV row."""
@@ -88,13 +90,13 @@ class TokenFull:
                 self.meta.norm,
                 self.meta.lemma,
                 self.meta.pos,
-                self.past_type,
-                self.future_type,
                 self.tense,
                 self.mood,
                 self.person,
                 self.number,
                 self.aspect,
+                self.PastType,
+                self.FutureType,
                 self.meta.token_id,
                 str(self.meta.start_ms),
                 str(self.meta.end_ms),
@@ -112,6 +114,8 @@ class TokenFull:
                 self.country_region_code,
                 self.city,
                 self.radio,
+                self.date,
+                self.audio_path,
             ]
         )
 
@@ -227,10 +231,30 @@ def _extract_full_token(
     speaker_mode = segment_speaker.get("speaker_mode", "")
     speaker_discourse = segment_speaker.get("speaker_discourse", "")
 
+    # Extract morph info (fallback to token fields if not in morph)
+    morph = token_dict.get("morph", {})
+    # Support multiple JSON variants: tokens may have past_type/future_type at top-level
+    # or inside morph under various naming conventions (PastType, past_type, Past_Tense_Type).
+    PastType = str(
+        morph.get("PastType", "")
+        or morph.get("past_type", "")
+        or token_dict.get("past_type", "")
+        or morph.get("Past_Tense_Type", "")
+        or token_dict.get("Past_Tense_Type", "")
+        or token_dict.get("PastType", "")
+    ).strip()
+    FutureType = str(
+        morph.get("FutureType", "")
+        or morph.get("future_type", "")
+        or token_dict.get("future_type", "")
+        or morph.get("Future_Type", "")
+        or token_dict.get("FutureType", "")
+    ).strip()
+
     return TokenFull(
         meta=meta,
-        past_type=str(token_dict.get("past_type", "")).strip(),
-        future_type=str(token_dict.get("future_type", "")).strip(),
+        PastType=PastType,
+        FutureType=FutureType,
         tense=str(token_dict.get("tense", "")).strip(),
         mood=str(token_dict.get("mood", "")).strip(),
         person=str(token_dict.get("person", "")).strip(),
@@ -249,6 +273,8 @@ def _extract_full_token(
         country_region_code=doc_meta.get("country_region_code", ""),
         city=doc_meta.get("city", ""),
         radio=doc_meta.get("radio", ""),
+        date=doc_meta.get("date", ""),
+        audio_path=doc_meta.get("audio_path", ""),
     )
 
 
@@ -305,6 +331,8 @@ def export_to_tsv(
         "country_region_code": corpus_doc.get("country_region_code", ""),
         "city": corpus_doc.get("city", ""),
         "radio": corpus_doc.get("radio", ""),
+        "date": corpus_doc.get("date", ""),
+        "audio_path": corpus_doc.get("audio_path", corpus_doc.get("filename", "")),
     }
 
     # Extract tokens
@@ -353,10 +381,10 @@ def export_to_tsv(
         with open(tsv_file, "w", encoding="utf-8") as f:
             # Header with all new fields
             f.write(
-                "word\tnorm\tlemma\tpos\tpast_type\tfuture_type\ttense\tmood\tperson\tnumber\taspect\t"
+                "word\tnorm\tlemma\tpos\ttense\tmood\tperson\tnumber\taspect\tPastType\tFutureType\t"
                 "tokid\tstart_ms\tend_ms\tsentence_id\tutterance_id\t"
                 "speaker_code\tspeaker_type\tspeaker_sex\tspeaker_mode\tspeaker_discourse\t"
-                "file_id\tcountry_code\tcountry_scope\tcountry_parent_code\tcountry_region_code\tcity\tradio\n"
+                "file_id\tcountry_code\tcountry_scope\tcountry_parent_code\tcountry_region_code\tcity\tradio\tdate\taudio_path\n"
             )
             # Data rows
             for token in tokens:
