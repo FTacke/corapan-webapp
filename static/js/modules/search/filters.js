@@ -229,20 +229,80 @@ export class SearchFiltersManager {
  */
 
 export class SearchFilters {
-  constructor() {
+  constructor(rootElement = document) {
+    this.root = rootElement;
+    this.root.searchFilters = this;
     this.filterFields = new Map();
     this.activeFilters = new Map();
     this.init();
   }
 
   init() {
-    // Initialize all filter fields
-    document.querySelectorAll(".md3-filter-field").forEach((field) => {
+    // Initialize all filter fields within root
+    this.root.querySelectorAll(".md3-filter-field").forEach((field) => {
       this.initFilterField(field);
     });
 
     // Bind active filter chip removal
     this.bindChipRemoval();
+
+    // Setup Regional Toggle (Scoped)
+    this.setupRegionalToggle();
+  }
+
+  /**
+   * Setup Regional Toggle Logic
+   */
+  setupRegionalToggle() {
+    // Find scoped elements
+    // We look for inputs ending with 'include_regional' or 'include_regional-simple/advanced'
+    // But since we are scoped to 'root', we can just look for the checkbox with name="include_regional"
+    const regionalCheckbox = this.root.querySelector('input[name="include_regional"]');
+    // The country select is likely the one with data-facet="pais" -> hidden select or the UI select?
+    // The UI logic uses the custom dropdown, so we need to manipulate the custom dropdown options.
+    // The custom dropdown is initialized in initFilterField.
+    
+    if (!regionalCheckbox) return;
+
+    regionalCheckbox.addEventListener('change', () => {
+        const isChecked = regionalCheckbox.checked;
+        this.toggleRegionalOptions(isChecked);
+    });
+
+    // Initial state
+    if (regionalCheckbox.checked) {
+        this.toggleRegionalOptions(true);
+    }
+  }
+
+  /**
+   * Toggle visibility of regional options in the country dropdown
+   */
+  toggleRegionalOptions(show) {
+    const countryField = this.filterFields.get('pais');
+    if (!countryField) return;
+
+    const menuContent = countryField.menu.querySelector('.md3-filter-field__menu-content');
+    if (!menuContent) return;
+
+    const regionalOptions = menuContent.querySelectorAll('.md3-filter-option--regional');
+    regionalOptions.forEach(opt => {
+        if (show) {
+            opt.classList.remove('hidden');
+        } else {
+            opt.classList.add('hidden');
+            // Also uncheck if hidden
+            const checkbox = opt.querySelector('input[type="checkbox"]');
+            if (checkbox && checkbox.checked) {
+                checkbox.checked = false;
+            }
+        }
+    });
+
+    // If hiding, we might need to update the field display if a regional option was selected
+    if (!show) {
+        this.updateFilterField('pais');
+    }
   }
 
   /**
@@ -452,8 +512,9 @@ export class SearchFilters {
    * Render active filter chips
    */
   renderChips() {
-    const chipsContainer = document.getElementById("active-filters-chips");
-    const filterBar = document.getElementById("active-filters-bar");
+    // Find containers within root or fallback to document (for backward compatibility if root is document)
+    const chipsContainer = this.root.querySelector(".md3-active-filters__chips") || document.getElementById("active-filters-chips");
+    const filterBar = this.root.querySelector(".md3-active-filters") || document.getElementById("active-filters-bar");
 
     if (!chipsContainer || !filterBar) return;
 
@@ -613,13 +674,13 @@ export class SearchFilters {
 }
 
 // Auto-initialize on page load
-let searchFiltersInstance = null;
+// let searchFiltersInstance = null;
 
-document.addEventListener("DOMContentLoaded", () => {
-  searchFiltersInstance = new SearchFilters();
-});
+// document.addEventListener("DOMContentLoaded", () => {
+//   searchFiltersInstance = new SearchFilters();
+// });
 
 // Export singleton instance
-export function getSearchFilters() {
-  return searchFiltersInstance;
-}
+// export function getSearchFilters() {
+//   return searchFiltersInstance;
+// }

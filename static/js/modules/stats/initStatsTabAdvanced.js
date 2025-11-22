@@ -13,7 +13,7 @@ import {
   disposeChart,
   updateChartTheme,
 } from "./renderBar.js";
-import { getSearchFilters } from "../search/filters.js";
+import { escapeHtml } from "../advanced/datatableFactory.js";
 
 // State management
 let isLoading = false;
@@ -81,19 +81,56 @@ function showError() {
  * Update total count display
  */
 function updateTotal(total) {
-  // Update count
-  const countEl = document.getElementById("stats-summary-count");
-  if (countEl) {
-    countEl.textContent = new Intl.NumberFormat("es-ES").format(total);
+  const summaryBox = document.getElementById("stats-summary");
+  if (!summaryBox) return;
+
+  const params = new URLSearchParams(window.location.search);
+  const query = params.get("q") || params.get("cql_raw") || "—";
+  const mode = params.get("mode");
+  
+  let modeLabel = "Consulta simple";
+  let queryLabel = "Consulta";
+  
+  if (mode === "cql" || mode === "advanced") {
+      modeLabel = "Modo avanzado";
+      queryLabel = "Consulta CQL";
   }
 
-  // Update query text
-  const queryEl = document.getElementById("stats-summary-query");
-  if (queryEl) {
-    const form = document.getElementById("advanced-search-form");
-    const query = form?.querySelector("#q")?.value?.trim() || "*";
-    queryEl.textContent = `"${query}"`;
+  let html = `
+    <span class="md3-advanced__summary-mode" style="font-weight: bold; color: var(--md-sys-color-primary);">${modeLabel}</span> 
+    <span class="md3-advanced__summary-separator">|</span>
+    <span class="md3-advanced__summary-label">${queryLabel}:</span> 
+    <span class="md3-advanced__summary-query">"${escapeHtml(query)}"</span> 
+    <span class="md3-advanced__summary-separator">|</span>
+    <span class="md3-advanced__summary-label">Resultados:</span>
+    <span class="md3-advanced__summary-count">${new Intl.NumberFormat("es-ES").format(total)}</span>`;
+
+  // Check for filters
+  const filtered = total; // We don't have total vs filtered here easily, assuming total is filtered count
+  // Actually initTable has filtered vs total. Here we just get one number.
+  // Let's assume it's the filtered count.
+  
+  const hasFilters =
+    params.has("country_code") ||
+    params.has("speaker_type") ||
+    params.has("sex") ||
+    params.has("speech_mode") ||
+    params.has("discourse") ||
+    params.get("include_regional") === "1";
+
+  if (hasFilters) {
+    const activeFilters = [];
+    if (params.get("include_regional") === "1") activeFilters.push("Regional");
+    if (params.get("country_code")) activeFilters.push(`País: ${params.get("country_code")}`);
+    if (params.get("speaker_type")) activeFilters.push(`Tipo de hablante: ${params.get("speaker_type")}`);
+    if (params.get("sex")) activeFilters.push(`Sexo: ${params.get("sex")}`);
+    if (params.get("speech_mode")) activeFilters.push(`Modo de habla: ${params.get("speech_mode")}`);
+    if (params.get("discourse")) activeFilters.push(`Discurso: ${params.get("discourse")}`);
+
+    html += ` <span class="md3-advanced__summary-separator">|</span> <span class="md3-advanced__summary-filters">${activeFilters.join(", ")}</span>`;
   }
+
+  summaryBox.innerHTML = html;
 }
 
 /**
@@ -108,95 +145,20 @@ function updateCategoryCount(dimension, count) {
 
 /**
  * Build stats URL from advanced search form
- * Reads parameters from #advanced-search-form
+ * Reads parameters from URL (since search updates URL)
  */
 function buildStatsUrl() {
-  const form = document.getElementById("advanced-search-form");
-  if (!form) {
-    console.error("Advanced search form not found");
-    return "/search/advanced/stats";
-  }
-
-  const params = new URLSearchParams();
-
-  // Query text
-  const query = form.querySelector("#q")?.value?.trim() || "";
-  if (query) {
-    params.append("q", query);
-  }
-
-  // Case sensitivity via ignore_accents: unchecked = sensitive=1, checked = insensitive=0
-  const ignoreAccentsCheckbox = form.querySelector(
-    'input[name="ignore_accents"]',
-  );
-  const sensitive =
-    ignoreAccentsCheckbox && ignoreAccentsCheckbox.checked ? "0" : "1";
-  params.append("sensitive", sensitive);
-
-  // Mode (CQL or simple)
-  const expertCql = form.querySelector("#modo-avanzado")?.checked;
-  const modeEl =
-    form.querySelector('input[name="mode"]:checked') ||
-    form.querySelector('select[name="mode"]');
-  let mode = modeEl?.value || "forma";
-
-  // Map spanish UI 'lema' to backend 'lemma'
-  if (mode === "lema") {
-    mode = "lemma";
-  }
-
-  if (expertCql) {
-    params.append("mode", "cql");
-  } else {
-    params.append("mode", mode);
-  }
+  const params = new URLSearchParams(window.location.search);
 
   // Country filters
-  // If we have a specific country filter from the dropdown, use ONLY that
+  // If we have a specific country filter from the dropdown (interactive filter in stats tab),
+  // we override the country_code param.
   if (currentCountryFilter) {
+    // Remove existing country codes from search
+    params.delete("country_code");
+    // Add the selected one
     params.append("country_code", currentCountryFilter);
-  } else {
-    // Otherwise use the checkboxes from the form
-    // Note: The UI uses checkboxes with name="pais_ui", but we want to send "country_code"
-    const countryCheckboxes = form.querySelectorAll(
-      'input[name="pais_ui"]:checked',
-    );
-    countryCheckboxes.forEach((cb) => {
-      params.append("country_code", cb.value);
-    });
   }
-
-  // Include regional checkbox
-  const includeRegional = form.querySelector("#include-regional")?.checked;
-  params.append("include_regional", includeRegional ? "1" : "0");
-
-  // Speaker type filters
-  const speakerCheckboxes = form.querySelectorAll(
-    'input[name="hablante_ui"]:checked',
-  );
-  speakerCheckboxes.forEach((cb) => {
-    params.append("speaker_type", cb.value);
-  });
-
-  // Sex filters
-  const sexCheckboxes = form.querySelectorAll('input[name="sexo_ui"]:checked');
-  sexCheckboxes.forEach((cb) => {
-    params.append("sex", cb.value);
-  });
-
-  // Mode filters (registro)
-  const modeCheckboxes = form.querySelectorAll('input[name="modo_ui"]:checked');
-  modeCheckboxes.forEach((cb) => {
-    params.append("speech_mode", cb.value);
-  });
-
-  // Discourse filters
-  const discourseCheckboxes = form.querySelectorAll(
-    'input[name="discurso_ui"]:checked',
-  );
-  discourseCheckboxes.forEach((cb) => {
-    params.append("discourse", cb.value);
-  });
 
   return `/search/advanced/stats?${params.toString()}`;
 }

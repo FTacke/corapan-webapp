@@ -62,14 +62,17 @@ export class PatternBuilder {
     // Initialize first token from DOM
     this.initializeExistingTokens();
 
-    // Bind query sync
-    this.bindQuerySync();
+    // Bind query sync - REMOVED in favor of explicit sync on tab switch
+    // this.bindQuerySync();
   }
 
   /**
    * Bind query input to first token value
    */
   bindQuerySync() {
+    // Deprecated: Logic moved to searchMode.js
+    return; 
+    /*
     const queryInput = document.getElementById("q");
     const advancedToggle = document.getElementById("advanced-mode-toggle");
     
@@ -88,6 +91,7 @@ export class PatternBuilder {
         }
       });
     }
+    */
   }
 
   /**
@@ -332,6 +336,12 @@ export class PatternBuilder {
       forma: "word",
       lema: "lemma",
       pos: "pos",
+      tense: "tense",
+      mood: "mood",
+      person: "person",
+      number: "number",
+      PastType: "PastType",
+      FutureType: "FutureType",
     };
 
     const cqlField = fieldMap[field] || "word";
@@ -369,11 +379,11 @@ export class PatternBuilder {
    * Update CQL preview textarea
    */
   updateCQLPreview() {
-    const cqlPreview = document.getElementById("cql-preview");
+    const cqlPreview = document.getElementById("cql_query") || document.getElementById("cql-preview");
     if (!cqlPreview) return;
 
     // Only update if not manually edited
-    const allowManualEdit = document.getElementById("allow-manual-edit");
+    const allowManualEdit = document.getElementById("cql_manual_edit") || document.getElementById("allow-manual-edit");
     if (
       allowManualEdit &&
       allowManualEdit.checked &&

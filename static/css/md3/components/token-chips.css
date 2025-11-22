@@ -131,13 +131,15 @@
 
 /* Chip Text Label */
 .tokid-chip__label {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  /* Show full token ids — allow wrapping if very long */
+  white-space: normal;
+  overflow: visible;
+  text-overflow: unset;
   font-family: "Roboto Mono", "Consolas", monospace;
   font-size: 0.8125rem;
   letter-spacing: 0.02em;
   flex-shrink: 0;
+  word-break: break-all;
 }
 
 /* Trailing Icon (Remove Button) */

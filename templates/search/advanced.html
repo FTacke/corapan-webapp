@@ -50,36 +50,22 @@
   <section class="md3-corpus-content">
     <!-- Tab Navigation -->
     <nav class="md3-tabs" role="tablist">
-      <button type="button" class="md3-tab md3-tab--active" role="tab" aria-selected="true" data-tab="advanced">Consultar corpus</button>
+      <button type="button" class="md3-tab md3-tab--active" role="tab" aria-selected="true" data-tab="simple">Consulta simple</button>
+      <button type="button" class="md3-tab" role="tab" aria-selected="false" data-tab="advanced">Modo avanzado (CQL)</button>
       <button type="button" class="md3-tab" role="tab" aria-selected="false" data-tab="token">Token</button>
     </nav>
     
-    <!-- Advanced Search Container (Tab: Consultar corpus) -->
-    <section id="tab-advanced" class="md3-tab-content md3-tab-content--active">
-      <!-- ========================================
-           SEARCH FORM CARD (MD3 Design)
-           Estructura: A-F según especificación
-           ======================================== -->
-      <form id="advanced-search-form" class="md3-search-card" role="search" aria-label="Consultar corpus con filtros">
+    <!-- TAB: CONSULTA SIMPLE -->
+    <section id="tab-simple" class="md3-tab-content md3-tab-content--active">
+      <form id="form-simple" class="md3-search-card" role="search" aria-label="Consulta simple">
+          <input type="hidden" name="mode" value="simple">
           
-          <!-- ========================================
-               A: BASIS-QUERY
-               ======================================== -->
+          <!-- A: QUERY -->
           <div class="md3-search-card__section">
             <h2 class="md3-search-card__heading">Consulta simple</h2>
-            
             <div class="md3-search-card__query-row">
-              <!-- Query Input -->
               <div class="md3-outlined-textfield md3-outlined-textfield--flex">
-                <input 
-                  type="text" 
-                  id="q" 
-                  name="q" 
-                  class="md3-outlined-textfield__input" 
-                  placeholder="  Consulta  de palabras o secuencias"
-                  value="{{ request.args.get('q', '') }}"
-                  required
-                  aria-required="true">
+                <input type="text" id="q" name="q" class="md3-outlined-textfield__input" placeholder=" Consulta" value="{{ request.args.get('q', '') }}">
                 <label for="q" class="md3-outlined-textfield__label">Consulta</label>
                 <div class="md3-outlined-textfield__outline">
                   <div class="md3-outlined-textfield__outline-start"></div>
@@ -87,18 +73,13 @@
                   <div class="md3-outlined-textfield__outline-end"></div>
                 </div>
               </div>
-
-              <!-- Search Type Dropdown -->
               <div class="md3-outlined-textfield md3-outlined-textfield--fixed">
-                <select 
-                  name="mode" 
-                  id="search_type" 
-                  class="md3-outlined-textfield__input md3-outlined-textfield__input--select">
-                  <option value="forma" {% if request.args.get('search_type') == 'forma' or not request.args.get('search_type') %}selected{% endif %}>Forma</option>
-                  <option value="forma_exacta" {% if request.args.get('search_type') == 'forma_exacta' %}selected{% endif %}>Forma exacta</option>
-                  <option value="lema" {% if request.args.get('search_type') == 'lema' %}selected{% endif %}>Lema</option>
+                <select name="search_type" id="search_type_simple" class="md3-outlined-textfield__input md3-outlined-textfield__input--select">
+                  <option value="forma">Forma</option>
+                  <option value="forma_exacta">Forma exacta</option>
+                  <option value="lema">Lema</option>
                 </select>
-                <label for="search_type" class="md3-outlined-textfield__label md3-outlined-textfield__label--select">Tipo</label>
+                <label for="search_type_simple" class="md3-outlined-textfield__label md3-outlined-textfield__label--select">Tipo</label>
                 <div class="md3-outlined-textfield__outline">
                   <div class="md3-outlined-textfield__outline-start"></div>
                   <div class="md3-outlined-textfield__outline-notch"></div>
@@ -108,482 +89,37 @@
             </div>
           </div>
 
-          <!-- ========================================
-               B: METADATEN-FILTER (Facettenleiste)
-               ======================================== -->
-          <div class="md3-search-card__section">
-            <h2 class="md3-search-card__heading">Filtros</h2>
-            
-            <div class="md3-filters-grid">
-              <!-- País -->
-              <div class="md3-filter-field" data-facet="pais">
-                <div class="md3-filter-field__trigger" tabindex="0" role="button" aria-haspopup="menu" aria-expanded="false">
-                  <label class="md3-filter-field__label">País</label>
-                  <div class="md3-filter-field__value" data-placeholder="Todos los países">Todos los países</div>
-                  <span class="material-symbols-rounded md3-filter-field__icon">expand_more</span>
-                </div>
-                <div class="md3-filter-field__menu" role="menu" hidden>
-                  <div class="md3-filter-field__menu-content">
-                    <!-- National codes (always visible) -->
-                    <label class="md3-filter-option">
-                      <input type="checkbox" name="pais_ui" value="ARG" data-label="ARG">
-                      <span>ARG</span>
-                    </label>
-                    <label class="md3-filter-option md3-filter-option--regional hidden" data-parent="ARG">
-                      <input type="checkbox" name="pais_ui" value="ARG-CBA" data-label="ARG-CBA">
-                      <span>  ↳ ARG-CBA</span>
-                    </label>
-                    <label class="md3-filter-option md3-filter-option--regional hidden" data-parent="ARG">
-                      <input type="checkbox" name="pais_ui" value="ARG-CHU" data-label="ARG-CHU">
-                      <span>  ↳ ARG-CHU</span>
-                    </label>
-                    <label class="md3-filter-option md3-filter-option--regional hidden" data-parent="ARG">
-                      <input type="checkbox" name="pais_ui" value="ARG-SDE" data-label="ARG-SDE">
-                      <span>  ↳ ARG-SDE</span>
-                    </label>
-                    <label class="md3-filter-option">
-                      <input type="checkbox" name="pais_ui" value="BOL" data-label="BOL">
-                      <span>BOL</span>
-                    </label>
-                    <label class="md3-filter-option">
-                      <input type="checkbox" name="pais_ui" value="CHL" data-label="CHL">
-                      <span>CHL</span>
-                    </label>
-                    <label class="md3-filter-option">
-                      <input type="checkbox" name="pais_ui" value="COL" data-label="COL">
-                      <span>COL</span>
-                    </label>
-                    <label class="md3-filter-option">
-                      <input type="checkbox" name="pais_ui" value="CRI" data-label="CRI">
-                      <span>CRI</span>
-                    </label>
-                    <label class="md3-filter-option">
-                      <input type="checkbox" name="pais_ui" value="CUB" data-label="CUB">
-                      <span>CUB</span>
-                    </label>
-                    <label class="md3-filter-option">
-                      <input type="checkbox" name="pais_ui" value="ECU" data-label="ECU">
-                      <span>ECU</span>
-                    </label>
-                    <label class="md3-filter-option">
-                      <input type="checkbox" name="pais_ui" value="ESP" data-label="ESP">
-                      <span>ESP</span>
-                    </label>
-                    <label class="md3-filter-option md3-filter-option--regional hidden" data-parent="ESP">
-                      <input type="checkbox" name="pais_ui" value="ESP-CAN" data-label="ESP-CAN">
-                      <span>  ↳ ESP-CAN</span>
-                    </label>
-                    <label class="md3-filter-option md3-filter-option--regional hidden" data-parent="ESP">
-                      <input type="checkbox" name="pais_ui" value="ESP-SEV" data-label="ESP-SEV">
-                      <span>  ↳ ESP-SEV</span>
-                    </label>
-                    <label class="md3-filter-option">
-                      <input type="checkbox" name="pais_ui" value="USA" data-label="USA">
-                      <span>USA</span>
-                    </label>
-                    <label class="md3-filter-option">
-                      <input type="checkbox" name="pais_ui" value="GTM" data-label="GTM">
-                      <span>GTM</span>
-                    </label>
-                    <label class="md3-filter-option">
-                      <input type="checkbox" name="pais_ui" value="HND" data-label="HND">
-                      <span>HND</span>
-                    </label>
-                    <label class="md3-filter-option">
-                      <input type="checkbox" name="pais_ui" value="MEX" data-label="MEX">
-                      <span>MEX</span>
-                    </label>
-                    <label class="md3-filter-option">
-                      <input type="checkbox" name="pais_ui" value="NIC" data-label="NIC">
-                      <span>NIC</span>
-                    </label>
-                    <label class="md3-filter-option">
-                      <input type="checkbox" name="pais_ui" value="PAN" data-label="PAN">
-                      <span>PAN</span>
-                    </label>
-                    <label class="md3-filter-option">
-                      <input type="checkbox" name="pais_ui" value="PRY" data-label="PRY">
-                      <span>PRY</span>
-                    </label>
-                    <label class="md3-filter-option">
-                      <input type="checkbox" name="pais_ui" value="PER" data-label="PER">
-                      <span>PER</span>
-                    </label>
-                    <label class="md3-filter-option">
-                      <input type="checkbox" name="pais_ui" value="DOM" data-label="DOM">
-                      <span>DOM</span>
-                    </label>
-                    <label class="md3-filter-option">
-                      <input type="checkbox" name="pais_ui" value="SLV" data-label="SLV">
-                      <span>SLV</span>
-                    </label>
-                    <label class="md3-filter-option">
-                      <input type="checkbox" name="pais_ui" value="URY" data-label="URY">
-                      <span>URY</span>
-                    </label>
-                    <label class="md3-filter-option">
-                      <input type="checkbox" name="pais_ui" value="VEN" data-label="VEN">
-                      <span>VEN</span>
-                    </label>
-                  </div>
-                </div>
-                <!-- Hidden select for backend -->
-                <select name="country_code" multiple hidden>
-                  <!-- National codes -->
-                  <option value="ARG" {% if 'ARG' in request.args.getlist('country_code') %}selected{% endif %}>ARG</option>
-                  <option value="ARG-CBA" {% if 'ARG-CBA' in request.args.getlist('country_code') %}selected{% endif %}>ARG-CBA</option>
-                  <option value="ARG-CHU" {% if 'ARG-CHU' in request.args.getlist('country_code') %}selected{% endif %}>ARG-CHU</option>
-                  <option value="ARG-SDE" {% if 'ARG-SDE' in request.args.getlist('country_code') %}selected{% endif %}>ARG-SDE</option>
-                  <option value="BOL" {% if 'BOL' in request.args.getlist('country_code') %}selected{% endif %}>BOL</option>
-                  <option value="CHL" {% if 'CHL' in request.args.getlist('country_code') %}selected{% endif %}>CHL</option>
-                  <option value="COL" {% if 'COL' in request.args.getlist('country_code') %}selected{% endif %}>COL</option>
-                  <option value="CRI" {% if 'CRI' in request.args.getlist('country_code') %}selected{% endif %}>CRI</option>
-                  <option value="CUB" {% if 'CUB' in request.args.getlist('country_code') %}selected{% endif %}>CUB</option>
-                  <option value="ECU" {% if 'ECU' in request.args.getlist('country_code') %}selected{% endif %}>ECU</option>
-                  <option value="ESP" {% if 'ESP' in request.args.getlist('country_code') %}selected{% endif %}>ESP</option>
-                  <option value="ESP-CAN" {% if 'ESP-CAN' in request.args.getlist('country_code') %}selected{% endif %}>ESP-CAN</option>
-                  <option value="ESP-SEV" {% if 'ESP-SEV' in request.args.getlist('country_code') %}selected{% endif %}>ESP-SEV</option>
-                  <option value="USA" {% if 'USA' in request.args.getlist('country_code') %}selected{% endif %}>USA</option>
-                  <option value="GTM" {% if 'GTM' in request.args.getlist('country_code') %}selected{% endif %}>GTM</option>
-                  <option value="HND" {% if 'HND' in request.args.getlist('country_code') %}selected{% endif %}>HND</option>
-                  <option value="MEX" {% if 'MEX' in request.args.getlist('country_code') %}selected{% endif %}>MEX</option>
-                  <option value="NIC" {% if 'NIC' in request.args.getlist('country_code') %}selected{% endif %}>NIC</option>
-                  <option value="PAN" {% if 'PAN' in request.args.getlist('country_code') %}selected{% endif %}>PAN</option>
-                  <option value="PRY" {% if 'PRY' in request.args.getlist('country_code') %}selected{% endif %}>PRY</option>
-                  <option value="PER" {% if 'PER' in request.args.getlist('country_code') %}selected{% endif %}>PER</option>
-                  <option value="DOM" {% if 'DOM' in request.args.getlist('country_code') %}selected{% endif %}>DOM</option>
-                  <option value="SLV" {% if 'SLV' in request.args.getlist('country_code') %}selected{% endif %}>SLV</option>
-                  <option value="URY" {% if 'URY' in request.args.getlist('country_code') %}selected{% endif %}>URY</option>
-                  <option value="VEN" {% if 'VEN' in request.args.getlist('country_code') %}selected{% endif %}>VEN</option>
-                </select>
-              </div>
+          <!-- B: FILTERS (Simple) -->
+          {% with suffix='-simple' %}
+          {% include 'search/partials/filters_block.html' %}
+          {% endwith %}
 
-              <!-- Hablante -->
-              <div class="md3-filter-field" data-facet="hablante">
-                <div class="md3-filter-field__trigger" tabindex="0" role="button" aria-haspopup="menu" aria-expanded="false">
-                  <label class="md3-filter-field__label">Hablante</label>
-                  <div class="md3-filter-field__value" data-placeholder="Todos">Todos</div>
-                  <span class="material-symbols-rounded md3-filter-field__icon">expand_more</span>
-                </div>
-                <div class="md3-filter-field__menu" role="menu" hidden>
-                  <div class="md3-filter-field__menu-content">
-                    <label class="md3-filter-option">
-                      <input type="checkbox" name="hablante_ui" value="pro" data-label="Profesional">
-                      <span>Profesional</span>
-                    </label>
-                    <label class="md3-filter-option">
-                      <input type="checkbox" name="hablante_ui" value="otro" data-label="Otro">
-                      <span>Otro</span>
-                    </label>
-                  </div>
-                </div>
-                <select name="speaker_type" multiple hidden>
-                  <option value="pro" {% if 'pro' in request.args.getlist('speaker_type') %}selected{% endif %}>Profesional</option>
-                  <option value="otro" {% if 'otro' in request.args.getlist('speaker_type') %}selected{% endif %}>Otro</option>
-                </select>
-              </div>
-
-              <!-- Sexo -->
-              <div class="md3-filter-field" data-facet="sexo">
-                <div class="md3-filter-field__trigger" tabindex="0" role="button" aria-haspopup="menu" aria-expanded="false">
-                  <label class="md3-filter-field__label">Sexo</label>
-                  <div class="md3-filter-field__value" data-placeholder="Todos">Todos</div>
-                  <span class="material-symbols-rounded md3-filter-field__icon">expand_more</span>
-                </div>
-                <div class="md3-filter-field__menu" role="menu" hidden>
-                  <div class="md3-filter-field__menu-content">
-                    <label class="md3-filter-option">
-                      <input type="checkbox" name="sexo_ui" value="m" data-label="Masculino">
-                      <span>Masculino</span>
-                    </label>
-                    <label class="md3-filter-option">
-                      <input type="checkbox" name="sexo_ui" value="f" data-label="Femenino">
-                      <span>Femenino</span>
-                    </label>
-                  </div>
-                </div>
-                <select name="sex" multiple hidden>
-                  <option value="m" {% if 'm' in request.args.getlist('sex') %}selected{% endif %}>Masculino</option>
-                  <option value="f" {% if 'f' in request.args.getlist('sex') %}selected{% endif %}>Femenino</option>
-                </select>
-              </div>
-
-              <!-- Modo -->
-              <div class="md3-filter-field" data-facet="modo">
-                <div class="md3-filter-field__trigger" tabindex="0" role="button" aria-haspopup="menu" aria-expanded="false">
-                  <label class="md3-filter-field__label">Modo</label>
-                  <div class="md3-filter-field__value" data-placeholder="Todos">Todos</div>
-                  <span class="material-symbols-rounded md3-filter-field__icon">expand_more</span>
-                </div>
-                <div class="md3-filter-field__menu" role="menu" hidden>
-                  <div class="md3-filter-field__menu-content">
-                    <label class="md3-filter-option">
-                      <input type="checkbox" name="modo_ui" value="pre" data-label="Anuncio">
-                      <span>Anuncio</span>
-                    </label>
-                    <label class="md3-filter-option">
-                      <input type="checkbox" name="modo_ui" value="lectura" data-label="Lectura">
-                      <span>Lectura</span>
-                    </label>
-                    <label class="md3-filter-option">
-                      <input type="checkbox" name="modo_ui" value="libre" data-label="Habla libre">
-                      <span>Habla libre</span>
-                    </label>
-                  </div>
-                </div>
-                <select name="speech_mode" multiple hidden>
-                  <option value="pre" {% if 'pre' in request.args.getlist('speech_mode') %}selected{% endif %}>Anuncio</option>
-                  <option value="lectura" {% if 'lectura' in request.args.getlist('speech_mode') %}selected{% endif %}>Lectura</option>
-                  <option value="libre" {% if 'libre' in request.args.getlist('speech_mode') %}selected{% endif %}>Habla libre</option>
-                </select>
-              </div>
-
-              <!-- Discurso -->
-              <div class="md3-filter-field" data-facet="discurso">
-                <div class="md3-filter-field__trigger" tabindex="0" role="button" aria-haspopup="menu" aria-expanded="false">
-                  <label class="md3-filter-field__label">Discurso</label>
-                  <div class="md3-filter-field__value" data-placeholder="Todos">Todos</div>
-                  <span class="material-symbols-rounded md3-filter-field__icon">expand_more</span>
-                </div>
-                <div class="md3-filter-field__menu" role="menu" hidden>
-                  <div class="md3-filter-field__menu-content">
-                    <label class="md3-filter-option">
-                      <input type="checkbox" name="discurso_ui" value="general" data-label="General">
-                      <span>General</span>
-                    </label>
-                    <label class="md3-filter-option">
-                      <input type="checkbox" name="discurso_ui" value="tiempo" data-label="Tiempo">
-                      <span>Tiempo</span>
-                    </label>
-                    <label class="md3-filter-option">
-                      <input type="checkbox" name="discurso_ui" value="tránsito" data-label="Tránsito">
-                      <span>Tránsito</span>
-                    </label>
-                  </div>
-                </div>
-                <select name="discourse" multiple hidden>
-                  <option value="general" {% if 'general' in request.args.getlist('discourse') %}selected{% endif %}>General</option>
-                  <option value="tiempo" {% if 'tiempo' in request.args.getlist('discourse') %}selected{% endif %}>Tiempo</option>
-                  <option value="tránsito" {% if 'tránsito' in request.args.getlist('discourse') %}selected{% endif %}>Tránsito</option>
-                </select>
-              </div>
-            </div>
-          </div>
-
-          <!-- ========================================
-               ACTIVE FILTERS CHIP BAR
-               ======================================== -->
-          <div id="active-filters-bar" class="md3-active-filters" hidden>
+          <!-- Active Filters Bar (Simple) -->
+          <div id="active-filters-bar-simple" class="md3-active-filters" hidden>
             <div class="md3-active-filters__label">Filtros activos:</div>
-            <div id="active-filters-chips" class="md3-active-filters__chips">
-              <!-- Chips will be inserted here by JS -->
-            </div>
+            <div id="active-filters-chips-simple" class="md3-active-filters__chips"></div>
           </div>
 
-          <!-- ========================================
-               C: OPTIONEN (Checkboxen)
-               ======================================== -->
+          <!-- C: OPTIONS (Simple) -->
           <div class="md3-search-card__section">
             <h2 class="md3-search-card__heading">Opciones</h2>
-            
             <div class="md3-options-row">
               <label class="md3-checkbox-container">
-                <input type="checkbox" id="include-regional" name="include_regional" value="1" {% if request.args.get('include_regional') %}checked{% endif %}>
-                <span class="md3-checkbox">
-                  <svg class="md3-checkbox__checkmark" viewBox="0 0 18 18">
-                    <path class="md3-checkbox__checkmark-path" fill="none" stroke="white" d="M1.73,9.29 l4.75,4.75 l10.04,-10.04"></path>
-                  </svg>
-                </span>
+                <input type="checkbox" id="include-regional-simple" name="include_regional" value="1">
+                <span class="md3-checkbox"><svg class="md3-checkbox__checkmark" viewBox="0 0 18 18"><path class="md3-checkbox__checkmark-path" fill="none" stroke="white" d="M1.73,9.29 l4.75,4.75 l10.04,-10.04"></path></svg></span>
                 <span class="md3-checkbox__label">Incluir emisoras regionales</span>
               </label>
-              
               <label class="md3-checkbox-container">
-                <input type="checkbox" id="ignore-accents" name="ignore_accents" value="1" {% if request.args.get('ignore_accents') %}checked{% endif %}>
-                <span class="md3-checkbox">
-                  <svg class="md3-checkbox__checkmark" viewBox="0 0 18 18">
-                    <path class="md3-checkbox__checkmark-path" fill="none" stroke="white" d="M1.73,9.29 l4.75,4.75 l10.04,-10.04"></path>
-                  </svg>
-                </span>
+                <input type="checkbox" id="ignore-accents-simple" name="ignore_accents" value="1">
+                <span class="md3-checkbox"><svg class="md3-checkbox__checkmark" viewBox="0 0 18 18"><path class="md3-checkbox__checkmark-path" fill="none" stroke="white" d="M1.73,9.29 l4.75,4.75 l10.04,-10.04"></path></svg></span>
                 <span class="md3-checkbox__label">Ignorar acentos/mayúsculas</span>
               </label>
             </div>
           </div>
 
-          <!-- ========================================
-               D: TOGGLE FÜR ADVANCED MODE
-               ======================================== -->
-          <div class="md3-search-card__section md3-search-card__section--toggle">
-            <button type="button" id="advanced-mode-toggle" class="md3-button md3-button--outlined" aria-expanded="false" aria-controls="expert-area">
-              <span class="material-symbols-rounded">tune</span>
-              <span>Modo avanzado (CQL)</span>
-              <span class="material-symbols-rounded md3-button__icon--end" id="advanced-mode-icon">expand_more</span>
-            </button>
-          </div>
-
-          <!-- ========================================
-               E: EXPERTENBEREICH (nur bei Modo avanzado)
-               ======================================== -->
-          <div id="expert-area" class="md3-expert-area" hidden>
-            
-            <!-- E1: PATTERN BUILDER -->
-            <div class="md3-expert-section overflow-visible">
-              <div class="md3-expert-header">
-                <h3 class="md3-expert-section__title">Patrones de palabras (CQL)</h3>
-                        <!-- Help tooltip deliberately removed — shows as dialog only via (Guía y prompt) link -->
-              </div>
-              <p class="md3-expert-section__description">
-                Construye patrones como 'verbo + sustantivo' paso a paso sin escribir CQL a mano.
-              </p>
-
-              <div id="pattern-builder" class="md3-pattern-builder">
-                <!-- Token rows will be inserted here -->
-                <div class="md3-pattern-builder__tokens" id="pattern-tokens">
-                  <!-- Initial token row -->
-                  <div class="md3-token-row" data-token-index="0">
-                    <div class="md3-token-row__number">Token 1</div>
-                    
-                    <div class="md3-outlined-textfield md3-outlined-textfield--compact">
-                      <select class="md3-outlined-textfield__input md3-outlined-textfield__input--select token-field-select">
-                        <option value="forma">Forma</option>
-                        <option value="lema">Lema</option>
-                        <option value="pos">Categoría gramatical (POS)</option>
-                      </select>
-                      <label class="md3-outlined-textfield__label md3-outlined-textfield__label--select">Campo</label>
-                      <div class="md3-outlined-textfield__outline">
-                        <div class="md3-outlined-textfield__outline-start"></div>
-                        <div class="md3-outlined-textfield__outline-notch"></div>
-                        <div class="md3-outlined-textfield__outline-end"></div>
-                      </div>
-                    </div>
-
-                    <div class="md3-outlined-textfield md3-outlined-textfield--compact">
-                      <select class="md3-outlined-textfield__input md3-outlined-textfield__input--select token-match-select">
-                        <option value="exact">es exactamente</option>
-                        <option value="contains">contiene</option>
-                        <option value="starts">empieza por</option>
-                        <option value="ends">termina en</option>
-                      </select>
-                      <label class="md3-outlined-textfield__label md3-outlined-textfield__label--select">Tipo</label>
-                      <div class="md3-outlined-textfield__outline">
-                        <div class="md3-outlined-textfield__outline-start"></div>
-                        <div class="md3-outlined-textfield__outline-notch"></div>
-                        <div class="md3-outlined-textfield__outline-end"></div>
-                      </div>
-                    </div>
-
-                    <div class="md3-outlined-textfield md3-outlined-textfield--flex">
-                      <input 
-                        type="text" 
-                        class="md3-outlined-textfield__input token-value-input" 
-                        placeholder=" ">
-                      <label class="md3-outlined-textfield__label">Valor</label>
-                      <div class="md3-outlined-textfield__outline">
-                        <div class="md3-outlined-textfield__outline-start"></div>
-                        <div class="md3-outlined-textfield__outline-notch"></div>
-                        <div class="md3-outlined-textfield__outline-end"></div>
-                      </div>
-                    </div>
-
-                    <button type="button" class="md3-icon-button token-remove-btn" title="Eliminar" disabled>
-                      <span class="material-symbols-rounded">close</span>
-                    </button>
-                  </div>
-                </div>
-
-                <button type="button" id="add-token-btn" class="md3-button md3-button--outlined">
-                  <span class="material-symbols-rounded">add</span>
-                  <span>Añadir palabra siguiente</span>
-                </button>
-
-                <!-- Distance Rule -->
-                <div class="md3-distance-rule">
-                  <h4 class="md3-distance-rule__title">Distancia entre palabras</h4>
-                  
-                  <label class="md3-radio-container">
-                    <input type="radio" name="distance_type" value="consecutive" checked>
-                    <span class="md3-radio"></span>
-                    <span class="md3-radio__label">Justo seguidas</span>
-                  </label>
-
-                  <label class="md3-radio-container">
-                    <input type="radio" name="distance_type" value="gap">
-                    <span class="md3-radio"></span>
-                    <span class="md3-radio__label">Hasta N palabras entre medias</span>
-                  </label>
-
-                  <div id="distance-number-field" class="md3-outlined-textfield md3-outlined-textfield--compact" hidden>
-                    <input 
-                      type="number" 
-                      id="distance-max" 
-                      name="distance_max" 
-                      class="md3-outlined-textfield__input" 
-                      min="0" 
-                      max="10" 
-                      value="1"
-                      placeholder=" ">
-                    <label for="distance-max" class="md3-outlined-textfield__label">Número máximo de palabras entre medias</label>
-                    <div class="md3-outlined-textfield__outline">
-                      <div class="md3-outlined-textfield__outline-start"></div>
-                      <div class="md3-outlined-textfield__outline-notch"></div>
-                      <div class="md3-outlined-textfield__outline-end"></div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- E2: CQL PREVIEW -->
-            <div class="md3-expert-section">
-              <h3 class="md3-expert-section__title">Consulta CQL</h3>
-              
-              <div class="md3-cql-preview">
-                <textarea 
-                  id="cql-preview" 
-                  class="md3-cql-textarea" 
-                  rows="4" 
-                  readonly
-                  aria-label="Vista previa de la consulta CQL"></textarea>
-                
-                <label class="md3-checkbox-container">
-                  <input type="checkbox" id="allow-manual-edit" name="allow_manual_edit">
-                  <span class="md3-checkbox">
-                    <svg class="md3-checkbox__checkmark" viewBox="0 0 18 18">
-                      <path class="md3-checkbox__checkmark-path" fill="none" stroke="white" d="M1.73,9.29 l4.75,4.75 l10.04,-10.04"></path>
-                    </svg>
-                  </span>
-                  <span class="md3-checkbox__label">Permitir editar manualmente <a href="#" id="cql-guide-link" class="md3-link md3-link--inline">(Guía y prompt)</a></span>
-                </label>
-
-                <div id="cql-warning" class="md3-cql-warning" hidden>
-                  <span class="material-symbols-rounded">warning</span>
-                  <span>Si editas la consulta CQL a mano, la interfaz de patrones puede dejar de reflejar todos los detalles.</span>
-                </div>
-              </div>
-            </div>
-
-            <!-- E3: PLANTILLAS RÁPIDAS -->
-            <div class="md3-expert-section">
-              <h3 class="md3-expert-section__title">Plantillas frecuentes</h3>
-              
-              <div class="md3-templates">
-                <button type="button" class="md3-button md3-button--outlined template-btn" data-template="verb-noun">
-                  Verbo + sustantivo
-                </button>
-                <button type="button" class="md3-button md3-button--outlined template-btn" data-template="adj-noun">
-                  Adjetivo + sustantivo
-                </button>
-                <button type="button" class="md3-button md3-button--outlined template-btn" data-template="same-lemma">
-                  Dos palabras con el mismo lema
-                </button>
-              </div>
-            </div>
-          </div>
-
-          <!-- ========================================
-               F: FORMULAR-FOOTER
-               ======================================== -->
+          <!-- F: FOOTER -->
           <div class="md3-search-card__footer">
-            <button type="button" id="reset-form-btn" class="md3-button md3-button--outlined">
+            <button type="button" class="md3-button md3-button--outlined reset-btn">
               <span class="material-symbols-rounded">restart_alt</span>
               <span>Restablecer</span>
             </button>
@@ -592,8 +128,105 @@
               <span>Buscar</span>
             </button>
           </div>
+      </form>
+    </section>
 
-        </form>
+    <!-- TAB: MODO AVANZADO -->
+    <section id="tab-advanced" class="md3-tab-content">
+      <form id="form-advanced" class="md3-search-card" role="search" aria-label="Modo avanzado">
+          <input type="hidden" name="mode" value="advanced">
+
+          <!-- E1: PATTERN BUILDER -->
+          <div class="md3-expert-section overflow-visible">
+              <div class="md3-expert-header">
+                <h2 class="md3-expert-section__title">Modo avanzado (CQL)</h2>
+              </div>
+              
+              <!-- Pattern Builder Container -->
+              <div id="cql-builder-container" class="md3-pattern-builder">
+                  <!-- Token rows will be injected here -->
+              </div>
+
+              <div class="md3-pattern-actions mt-4">
+                  <button type="button" id="add-token-btn" class="md3-button md3-button--outlined">
+                      <span class="material-symbols-rounded">add</span>
+                      <span>Añadir palabra</span>
+                  </button>
+              </div>
+          </div>
+
+          <!-- E2: CQL PREVIEW -->
+            <div class="md3-expert-section">
+              <hr class="md3-divider" />
+              <h3 class="md3-expert-section__title">Consulta CQL</h3>
+              <div class="md3-cql-preview">
+                  <div class="md3-outlined-textfield md3-outlined-textfield--textarea">
+                    <textarea id="cql_query" name="cql_query" class="md3-outlined-textfield__input" rows="4" readonly>{{ request.args.get('cql_query', '') }}</textarea>
+                    <label for="cql_query" class="md3-outlined-textfield__label">Consulta CQL</label>
+                    <div class="md3-outlined-textfield__outline">
+                        <div class="md3-outlined-textfield__outline-start"></div>
+                        <div class="md3-outlined-textfield__outline-notch"></div>
+                        <div class="md3-outlined-textfield__outline-end"></div>
+                    </div>
+                  </div>
+                  
+                      <label class="md3-checkbox-container mt-2">
+                        <input type="checkbox" id="cql_manual_edit" name="cql_manual_edit">
+                        <span class="md3-checkbox"><svg class="md3-checkbox__checkmark" viewBox="0 0 18 18"><path class="md3-checkbox__checkmark-path" fill="none" stroke="white" d="M1.73,9.29 l4.75,4.75 l10.04,-10.04"></path></svg></span>
+                        <span class="md3-checkbox__label">Permitir editar manualmente <a href="#" id="cql-guide-link" class="md3-link md3-link--inline">(Cómo hacerlo)</a></span>
+                      </label>
+
+                      <div id="cql-warning" class="md3-cql-warning" hidden>
+                      <span class="material-symbols-rounded">warning</span>
+                      <span>La consulta CQL ha sido editada manualmente. El constructor no la sobrescribirá.</span>
+                    </div>
+
+                    <!-- guide link restored into checkbox label -->
+              </div>
+          </div>
+
+          <!-- B: FILTERS (Advanced) -->
+          <hr class="md3-divider" />
+          {% with suffix='-advanced' %}
+          {% include 'search/partials/filters_block.html' %}
+          {% endwith %}
+
+          <!-- Active Filters Bar (Advanced) -->
+          <div id="active-filters-bar-advanced" class="md3-active-filters" hidden>
+            <div class="md3-active-filters__label">Filtros activos:</div>
+            <div id="active-filters-chips-advanced" class="md3-active-filters__chips"></div>
+          </div>
+
+          <!-- C: OPTIONS (Advanced) -->
+          <div class="md3-search-card__section">
+            <h2 class="md3-search-card__heading">Opciones</h2>
+            <div class="md3-options-row">
+              <label class="md3-checkbox-container">
+                <input type="checkbox" id="include-regional-advanced" name="include_regional" value="1">
+                <span class="md3-checkbox"><svg class="md3-checkbox__checkmark" viewBox="0 0 18 18"><path class="md3-checkbox__checkmark-path" fill="none" stroke="white" d="M1.73,9.29 l4.75,4.75 l10.04,-10.04"></path></svg></span>
+                <span class="md3-checkbox__label">Incluir emisoras regionales</span>
+              </label>
+              <label class="md3-checkbox-container">
+                <input type="checkbox" id="ignore-accents-advanced" name="ignore_accents" value="1">
+                <span class="md3-checkbox"><svg class="md3-checkbox__checkmark" viewBox="0 0 18 18"><path class="md3-checkbox__checkmark-path" fill="none" stroke="white" d="M1.73,9.29 l4.75,4.75 l10.04,-10.04"></path></svg></span>
+                <span class="md3-checkbox__label">Ignorar acentos/mayúsculas</span>
+              </label>
+            </div>
+          </div>
+
+          <!-- F: FOOTER -->
+          <div class="md3-search-card__footer">
+            <button type="button" class="md3-button md3-button--outlined reset-btn">
+              <span class="material-symbols-rounded">restart_alt</span>
+              <span>Restablecer</span>
+            </button>
+            <button type="submit" class="md3-button md3-button--filled">
+              <span class="material-symbols-rounded">search</span>
+              <span>Buscar</span>
+            </button>
+          </div>
+      </form>
+    </section>
 
         <!-- CQL Guide Modal (MD3 overlay) -->
         <div id="cql-guide-overlay" class="md3-dialog-overlay" aria-hidden="true">
@@ -611,10 +244,7 @@
                   <p class="md3-prompt-title">Prompt sugerido para generar consultas CQL en CORAPAN (BlackLab)</p>
                   <p class="md3-prompt-subtitle">Copia y pega este prompt en el modelo de IA generativa y luego añade tu descripción al final:</p>
                   <div class="md3-code-block md3-full-width">
-                    <pre class="highlight">
-                    <code id="cql-guide-prompt" class="language-plaintext">
-                    
-                    Actúa como generador de consultas CQL para un corpus de español hablado llamado CORAPAN, indexado en BlackLab.
+                    <pre class="highlight"><code id="cql-guide-prompt" class="language-plaintext">Actúa como generador de consultas CQL para un corpus de español hablado llamado CORAPAN, indexado en BlackLab.
 
 El corpus está anotado con los siguientes atributos a nivel de token (dentro de corchetes `[...]` en CQL):
 
@@ -787,7 +417,7 @@ Ahora convierte la siguiente descripción en una consulta CQL precisa para CORAP
       <!-- Statistics Panel -->
       <div id="panel-estadisticas" role="tabpanel" aria-labelledby="tab-estadisticas" class="md3-view-content" hidden>
         <section class="md3-stats-section">
-          <header class="md3-stats-header">
+          <header class="md3-stats-header" style="display: flex; flex-direction: column; gap: 1rem;">
             <!-- Summary Line (same style as results) -->
             <div id="stats-summary" class="md3-advanced__summary md3-stats-summary" role="status" aria-live="polite" aria-atomic="true">
                 <span class="md3-advanced__summary-query" id="stats-summary-query"></span>: 
@@ -796,8 +426,8 @@ Ahora convierte la siguiente descripción en una consulta CQL precisa para CORAP
             </div>
 
             <!-- Controls Line -->
-            <div class="md3-stats-controls">
-                <div class="md3-stats-filter md3-stats-filter-group">
+            <div class="md3-stats-controls" style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                <div class="md3-stats-filter md3-stats-filter-group" style="display: flex; align-items: center; gap: 0.5rem;">
                   <label for="stats-country-filter" class="md3-stats-filter-label">Seleccionar:</label>
                   <select id="stats-country-filter" class="md3-stats-filter-select">
                     <option value="">Todos los países</option>

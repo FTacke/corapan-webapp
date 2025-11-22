@@ -52,7 +52,8 @@ function renderTokidChips() {
     chip.className = "tokid-chip";
     chip.dataset.id = id;
     chip.title = id;
-    chip.innerHTML = `<span class="tokid-chip__label">${shortenId(id)}</span><span class="tokid-chip__trailing" role="button" aria-label="Entfernen" tabindex="0">×</span>`;
+    // Show full token id (no shortening) per UX request
+    chip.innerHTML = `<span class="tokid-chip__label">${id}</span><span class="tokid-chip__trailing" role="button" aria-label="Entfernen" tabindex="0">×</span>`;
     itemsWrap.appendChild(chip);
   });
   updateTokenCount();

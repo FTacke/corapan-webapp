@@ -581,10 +581,23 @@ export function updateSummary(data, queryParams, initialLoad = false) {
   const filtersActive = hasFilters && filtered < total;
 
   // Build summary HTML
+  const mode = params.get("mode");
+  let modeLabel = "Consulta simple";
+  let queryLabel = "Consulta";
+  
+  if (mode === "cql" || mode === "advanced") {
+      modeLabel = "Modo avanzado";
+      queryLabel = "Consulta CQL";
+  }
+
   let html = `
-    <span class="md3-advanced__summary-query">"${escapeHtml(query)}"</span>: 
-    <span class="md3-advanced__summary-count">${filtered.toLocaleString("es-ES")}</span>
-    <span class="md3-advanced__summary-total">resultados`;
+    <span class="md3-advanced__summary-mode" style="font-weight: bold; color: var(--md-sys-color-primary);">${modeLabel}</span> 
+    <span class="md3-advanced__summary-separator">|</span>
+    <span class="md3-advanced__summary-label">${queryLabel}:</span> 
+    <span class="md3-advanced__summary-query">"${escapeHtml(query)}"</span> 
+    <span class="md3-advanced__summary-separator">|</span>
+    <span class="md3-advanced__summary-label">Resultados:</span>
+    <span class="md3-advanced__summary-count">${filtered.toLocaleString("es-ES")}</span>`;
 
   if (filtersActive) {
     const activeFilters = [];
@@ -609,10 +622,8 @@ export function updateSummary(data, queryParams, initialLoad = false) {
       activeFilters.push(`Discurso: ${params.get("discourse")}`);
     }
 
-    html += `, <span class="md3-advanced__summary-filters">${activeFilters.join(", ")}</span>`;
+    html += ` <span class="md3-advanced__summary-separator">|</span> <span class="md3-advanced__summary-filters">${activeFilters.join(", ")}</span>`;
   }
-
-  html += `</span>`;
 
   // Update summary box content
   summaryBox.innerHTML = html;

@@ -11,7 +11,6 @@ export function initConfig() {
     try {
       const config = JSON.parse(configData);
       window.__CORAPAN__ = config;
-      console.log('[Config] Loaded global config:', config);
     } catch (e) {
       console.error('[Config] Failed to parse global config:', e);
       window.__CORAPAN__ = {};
