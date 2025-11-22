@@ -432,7 +432,7 @@ export async function loadStats() {
 
   try {
     const url = buildStatsUrl();
-    console.log("Fetching stats from:", url);
+    // console.debug("Fetching stats from:", url);
 
     const response = await fetch(url, {
       method: "GET",
@@ -508,7 +508,7 @@ export function resetStats() {
  * Initialize stats tab for advanced search
  */
 export function initStatsTabAdvanced() {
-  console.log("Initializing advanced stats tab");
+  // console.debug("Initializing advanced stats tab");
 
   // Setup tab click listeners
   const statsTab = document.getElementById("tab-estadisticas");
@@ -608,7 +608,7 @@ export function initStatsTabAdvanced() {
     });
   }
 
-  console.log("Advanced stats tab initialized");
+  // console.debug("Advanced stats tab initialized");
 }
 
 /**

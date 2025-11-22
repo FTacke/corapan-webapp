@@ -254,7 +254,7 @@ export async function loadStats() {
 
   try {
     const url = buildStatsUrl();
-    console.log("Fetching stats from:", url);
+    // console.debug("Fetching stats from:", url);
 
     const response = await fetch(url, {
       method: "GET",
@@ -334,7 +334,7 @@ export function initStatsTab() {
   // Setup segmented buttons for each chart
   setupSegmentedButtons();
 
-  console.log("Stats tab initialized");
+  // console.debug("Stats tab initialized");
 }
 
 /**

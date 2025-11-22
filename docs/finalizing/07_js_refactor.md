@@ -88,6 +88,61 @@
 - `static/js/modules/editor/entry.js`: Editor Entry-Point.
 - `static/js/modules/editor/overview.js`: Editor Overview Logic.
 
+## Template/Entry-Mapping
+
+Die folgende Tabelle zeigt, wie Templates mit JavaScript-Modulen verknüpft sind. Es gibt zwei Mechanismen:
+1.  **Router-basiert**: `data-page` Attribut am `<body>` triggert `static/js/modules/core/router.js`.
+2.  **Direkt-Import**: `<script type="module">` direkt im Template.
+
+| Template / Seite                       | Kennzeichnung (z.B. data-page) | Entry-Point / Modul                         | Mechanismus |
+|----------------------------------------|---------------------------------|---------------------------------------------|-------------|
+| `templates/pages/atlas.html`           | `data-page="atlas"`            | `static/js/pages/atlas.js`                  | Router      |
+| `templates/search/advanced.html`       | (kein data-page)               | `static/js/modules/search/advanced_entry.js`| Direkt      |
+| `templates/pages/player.html`          | `data-page="player"`           | `static/js/modules/player/entry.js`         | Direkt      |
+| `templates/pages/editor.html`          | `data-page="editor"`           | `static/js/modules/editor/entry.js`         | Direkt      |
+| `templates/pages/editor_overview.html` | `data-page="editor_overview"`  | `static/js/modules/editor/overview.js`      | Direkt      |
+| `templates/pages/proyecto_estadisticas.html` | (kein data-page)         | `static/js/modules/stats/zoom.js`           | Direkt      |
+| `templates/base.html` (Global)         | -                               | `static/js/modules/core/entry.js`           | Direkt      |
+
+## Router-Verhalten
+
+Das Modul `static/js/modules/core/router.js` wird vom globalen Entry-Point (`core/entry.js`) aufgerufen.
+Es prüft das `data-page` Attribut am `<body>` Tag.
+Wenn ein passender Key in der internen `pageInits` Map gefunden wird (z.B. `atlas`), wird das entsprechende Modul dynamisch importiert und dessen `init()` Funktion aufgerufen.
+
+Dies ermöglicht Lazy-Loading von seitenspezifischem Code, ohne dass jedes Template eigene Skript-Tags benötigt. Aktuell wird dies primär für den Atlas genutzt. Andere Seiten nutzen (noch) direkte Imports, was ebenfalls valide ist (Standard ES Modules).
+
+## Legacy-Code Einstufung
+
+### `static/js/main.js`
+- **Status**: Legacy / Deprecated.
+- **Inhalt**: Enthält noch Polyfills, globale Event-Listener (z.B. für Accordions, Drawer-Logik, Token-Refresh) und Importe alter Module.
+- **Strategie**: Funktionalität wurde teilweise bereits in `modules/core/` (z.B. `ui.js`, `auth_handler.js`) migriert. Der Rest sollte schrittweise extrahiert werden. Für neue Features nicht mehr erweitern.
+
+### `static/js/app.js`
+- **Status**: Legacy / Turbo-Adapter.
+- **Inhalt**: Handelt Turbo Drive Events und Atlas-Lifecycle.
+- **Strategie**: Beibehalten, solange Turbo Drive genutzt wird.
+
+## Regression & Tests
+
+Da die JavaScript-Architektur stark umgebaut wurde, sind folgende manuelle Tests essenziell:
+
+1.  **Navigation**: Funktioniert der Drawer und die Top-Bar auf allen Seiten? (Mobile & Desktop)
+2.  **Advanced Search**:
+    - Laden die Tabs (Simple/Advanced/Stats)?
+    - Funktionieren die Filter und die Suche?
+    - Werden Statistiken (ECharts) korrekt gerendert?
+3.  **Player**:
+    - Lädt der Audio-Player?
+    - Funktioniert die Synchronisation mit dem Transkript (Klick auf Wort -> Audio springt)?
+    - Werden Metadaten angezeigt?
+4.  **Editor**:
+    - Können Änderungen vorgenommen und gespeichert werden?
+    - Funktioniert Undo/Redo?
+5.  **Atlas**:
+    - Lädt die Karte? (Prüfung der Router-Funktionalität)
+
 ## Offene Punkte
 - `static/js/main.js` ist noch ein monolithisches Legacy-Skript, das in `core/entry.js` importiert wird. Es sollte langfristig weiter zerlegt werden.
 - Manuelle Regressionstests durchführen.
