@@ -152,7 +152,7 @@ def save_edits():
                 original_data = f.read()
             with open(original_backup_path, "w", encoding="utf-8") as f:
                 f.write(original_data)
-            print(f"[Backup] Created permanent original: {original_backup_path}")
+            current_app.logger.info(f"[Backup] Created permanent original: {original_backup_path}")
 
         # 3. SAVE DIFFS instead of timestamped backups (NEW SYSTEM)
         # Dieser Schritt speichert nur die Changes, nicht die komplette Datei
@@ -511,7 +511,7 @@ def _get_file_info(country: str, filename: str) -> dict:
                 duration = row["duration"] or "N/A"
                 word_count = row["word_count"] or 0
     except Exception as e:
-        print(f"[Editor] Error loading stats for {filename}: {e}")
+        current_app.logger.error(f"[Editor] Error loading stats for {filename}: {e}")
 
     # Hole Last Edited aus edit_log.jsonl
     last_edited = None

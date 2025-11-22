@@ -63,7 +63,6 @@ export function initTokenTable(tokenIds) {
     scrollCollapse: false,
   });
   tokenTable = $("#token-results-table").DataTable(config);
-  console.log("✅ Token DataTable initialized");
   setTimeout(() => {
     try {
       if (tokenTable && tokenTable.columns) {
@@ -86,7 +85,6 @@ export function initTokenTable(tokenIds) {
   });
 }
 export function reloadTokenTable(tokenIds) {
-  console.log("[Token DataTables] Reloading with token IDs:", tokenIds);
   initTokenTable(tokenIds);
 }
 export function destroyTokenTable() {

@@ -48,17 +48,32 @@
   transform: scale(1.02);
 }
 
-.md3-stats-image {
-  width: 100%;
-  height: auto;
+/* Stats Header & Controls (Clean Sweep) */
+.md3-stats-header {
   display: block;
-  object-fit: contain;
-  max-width: 100%;
-  border-radius: var(--radius-md);
-  /* Responsive font scaling: The key is to scale down the image proportionally
-     so text sizes in the graphic remain readable while being smaller than original.
-     Using max-width constraints to ensure readable font sizes. */
-  font-size: clamp(12px, 2.5vw, 16px);
+}
+
+.md3-stats-summary {
+  margin-bottom: var(--space-4);
+}
+
+.md3-stats-controls {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+}
+
+.md3-stats-filter-group {
+  margin: 0;
+}
+
+.md3-stats-filter-label {
+  margin: 0;
+}
+
+.md3-stats-action-end {
+  margin-left: auto;
 }
 
 /* Caption Styling */
