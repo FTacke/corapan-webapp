@@ -25,6 +25,16 @@ export function initTabs() {
       if (targetContent) {
         targetContent.classList.add("md3-tab-content--active");
       }
+
+      // Dispatch event for other modules to react
+      document.dispatchEvent(new CustomEvent('tab:change', { detail: { tab: tabName } }));
+
+      // Add explicit marker on body to indicate token-tab active for stronger CSS overrides
+      if (tabName === 'token') {
+        document.body.classList.add('token-active');
+      } else {
+        document.body.classList.remove('token-active');
+      }
     });
   });
 }

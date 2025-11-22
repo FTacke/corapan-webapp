@@ -6,11 +6,13 @@
 import { initTabs } from "./tabs.js";
 import { initStatsTabAdvanced, cleanupStats } from "../stats/initStatsTabAdvanced.js";
 import { initRegionalToggle } from "./regional-toggle.js";
+import { initSearchMode } from "./searchMode.js";
+import { SearchFilters } from "./filters.js";
+import { CqlBuilder } from "./cqlBuilder.js";
 
 // Import modules that have side-effects (auto-init) or are dependencies
 import "./config.js";
 import "./filters.js";
-import "./patternBuilder.js";
 import "./searchUI.js";
 import "../advanced/initTable.js";
 import "../stats/renderBar.js";
@@ -21,6 +23,17 @@ document.addEventListener('DOMContentLoaded', () => {
     initTabs();
     initStatsTabAdvanced();
     initRegionalToggle();
+    initSearchMode();
+
+    // Initialize filters for both forms
+    const formSimple = document.getElementById('form-simple');
+    const formAdvanced = document.getElementById('form-advanced');
+    
+    if (formSimple) new SearchFilters(formSimple);
+    if (formAdvanced) new SearchFilters(formAdvanced);
+
+    // Initialize CQL Builder
+    new CqlBuilder();
 });
 
 window.addEventListener('beforeunload', cleanupStats);

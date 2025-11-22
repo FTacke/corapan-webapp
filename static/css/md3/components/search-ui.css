@@ -687,6 +687,29 @@
   cursor: not-allowed;
 }
 
+/* Ensure specific CQL/simple inputs use a white background so they are clearly editable/readable
+   even when the global theme applies tinted surfaces. Use high specificity and !important to
+   avoid accidental overrides from other component rules. */
+textarea#cql_query.md3-outlined-textfield__input,
+input#q.md3-outlined-textfield__input,
+input#tokid-input.md3-outlined-textfield__input,
+input#tokid-input,
+input#q {
+  /* Keep the input background white and ensure it respects outline radius/spacing */
+  background-color: var(--md-sys-color-surface, #ffffff) !important;
+  color: var(--md-sys-color-on-surface, #1c1b1f) !important;
+  border-radius: var(--radius-sm, 8px) !important;
+  padding: 12px 16px !important;
+  box-sizing: border-box !important;
+}
+
+textarea#cql_query.md3-outlined-textfield__input[readonly] {
+  /* readonly CQL stays visually white but shouldn't appear editable */
+  background-color: var(--md-sys-color-surface, #ffffff) !important;
+  cursor: not-allowed !important;
+  opacity: 1 !important;
+}
+
 .md3-cql-warning {
   display: flex;
   align-items: center;

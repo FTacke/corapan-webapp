@@ -10,12 +10,14 @@
  * - Integration with filters and pattern builder
  */
 
-import { getSearchFilters } from "./filters.js";
 import { getPatternBuilder } from "./patternBuilder.js";
+import { getCqlBuilder } from "./cqlBuilder.js";
 import {
   initAdvancedTable,
   destroyAdvancedTable,
 } from "../advanced/initTable.js";
+import { destroyTokenTable } from "./initTokenTable.js";
+import { cleanupStats } from "../stats/initStatsTabAdvanced.js";
 
 export class SearchUI {
   constructor() {
@@ -45,10 +47,200 @@ export class SearchUI {
     // Bind CQL Guide Dialog
     this.bindCqlGuide();
 
+    // Bind Tab Change
+    this.bindTabChange();
+
     // Restore state from URL or SessionStorage
     this.restoreState();
 
     console.log("✅ Search UI initialized");
+  }
+
+  /**
+   * Bind Tab Change to handle visibility of main results
+   */
+  bindTabChange() {
+    document.addEventListener('tab:change', (e) => {
+      const tab = e.detail.tab;
+            // Show main results if they should be visible (e.g. if search was performed)
+            // We check if search-sub-tabs was previously visible or if we have results
+            // For now, we just remove 'hidden' if it was hidden by this logic.
+            // But wait, 'hidden' class is used for initial state too.
+            // We should only show if there are results.
+            // Let's check if #datatable-container is visible or if we have a search.
+            
+            // Actually, simpler: just remove the 'hidden' class if it was added by us?
+            // Or better: The main results visibility is managed by performSearch.
+            // But if we switch to Token and back, we want to restore state.
+            
+            // If we have a search active (check URL or table), show sub-tabs.
+            const hasResults = document.getElementById('datatable-container')?.classList.contains('hidden') === false 
+                               || document.getElementById('adv-summary')?.hidden === false;
+            
+            // When returning from Token tab, try to restore previous search UI state
+            const subTabs = document.getElementById('search-sub-tabs');
+            const tableContainer = document.getElementById('datatable-container');
+            const advSummary = document.getElementById('adv-summary');
+
+            if (tab === 'token') {
+              // Hide the main search sub-tabs and any search results when token tab is active.
+              // We keep DataTables instances intact so data is persistent; we only hide the containers.
+              if (subTabs) {
+                subTabs.classList.add('hidden');
+                subTabs.style.display = 'none';
+              }
+
+              // hide summary and results panels specifically
+              const resultsPanel = document.getElementById('panel-resultados');
+              const statsPanel = document.getElementById('panel-estadisticas');
+              const tableContainer = document.getElementById('datatable-container');
+              const advSummary = document.getElementById('adv-summary');
+
+              if (resultsPanel) resultsPanel.setAttribute('hidden', '');
+              if (statsPanel) statsPanel.setAttribute('hidden', '');
+              if (tableContainer) {
+                tableContainer.classList.add('hidden');
+                tableContainer.style.display = 'none';
+              }
+              if (advSummary) advSummary.hidden = true;
+
+              // When showing token tab, ensure token DataTable (if present) recalculates layout
+              setTimeout(() => {
+                try {
+                  if (window.jQuery && $.fn.dataTable && $.fn.dataTable.isDataTable('#token-results-table')) {
+                    const tdt = $('#token-results-table').DataTable();
+                    if (tdt && tdt.columns) {
+                      tdt.columns.adjust();
+                      if (tdt.responsive) tdt.responsive.recalc();
+                    }
+                  }
+                } catch (e) {
+                  console.warn('[SearchUI] Could not adjust token results table on tab change:', e);
+                }
+              }, 120);
+            } else {
+              // Only unhide/search panels if there are previous results to show
+              const lastSearch = sessionStorage.getItem('lastSearch');
+              const advHasContent = advSummary && advSummary.innerHTML && advSummary.innerHTML.trim() !== '';
+
+              // Determine whether sub-tabs should be visible. They should appear when
+              // - we have lastSearch params (previous search performed), OR
+              // - adv-summary has content, OR
+              // - the table container / panels themselves are already visible.
+              const resultsPanel = document.getElementById('panel-resultados');
+              const statsPanel = document.getElementById('panel-estadisticas');
+              const tableVisible = tableContainer && (tableContainer.classList.contains('hidden') === false && tableContainer.style.display !== 'none');
+              const resultsPanelVisible = resultsPanel && !resultsPanel.hasAttribute('hidden');
+              const statsPanelVisible = statsPanel && !statsPanel.hasAttribute('hidden');
+              const shouldShowSubTabs = !!(lastSearch || advHasContent || tableVisible || resultsPanelVisible || statsPanelVisible);
+
+              if (subTabs && shouldShowSubTabs) {
+                subTabs.classList.remove('hidden');
+                subTabs.style.display = '';
+              }
+
+              // restore visibility of main panels (do not destroy data) — only when we actually have a saved search
+
+              if (resultsPanel) resultsPanel.removeAttribute('hidden');
+              if (statsPanel) statsPanel.removeAttribute('hidden');
+              if (tableContainer && (lastSearch || advHasContent || tableVisible)) {
+                tableContainer.classList.remove('hidden');
+                tableContainer.style.display = '';
+
+                // Ensure DataTables reflows/adjusts after becoming visible
+                setTimeout(() => {
+                  try {
+                    if (window.jQuery && $.fn.dataTable && $.fn.dataTable.isDataTable('#advanced-table')) {
+                      const dt = $('#advanced-table').DataTable();
+                      if (dt && dt.columns) {
+                        dt.columns.adjust();
+                        if (dt.responsive) dt.responsive.recalc();
+                      }
+                    }
+                  } catch (e) {
+                    console.warn('[SearchUI] Could not adjust advanced table on tab restore:', e);
+                  }
+                }, 120);
+              }
+              if (advSummary && advHasContent) advSummary.hidden = false;
+
+              // Ensure there is an active sub-tab; if none found, default to 'Resultados'
+              if (subTabs) {
+                const active = subTabs.querySelector('.md3-stats-tab--active');
+                if (!active) {
+                  const defaultTab = subTabs.querySelector('[data-view="results"]');
+                  if (defaultTab) {
+                    defaultTab.classList.add('md3-stats-tab--active');
+                    defaultTab.setAttribute('aria-selected', 'true');
+                    // Hide/show corresponding panels
+                    const targetId = defaultTab.getAttribute('aria-controls');
+                    if (targetId) {
+                      const target = document.getElementById(targetId);
+                      if (target) target.removeAttribute('hidden');
+                    }
+                    const otherTab = subTabs.querySelector('[data-view="stats"]');
+                    if (otherTab) otherTab.classList.remove('md3-stats-tab--active');
+                  }
+                }
+              }
+            }
+            // NOTE: we intentionally DO NOT hide the main results when switching to the Token tab
+            // This keeps the main DataTables/statistics persistent and independent from token results.
+
+            // If the advanced table is present and was hidden, show it
+            if (tableContainer) {
+              if (tableContainer.classList.contains('hidden') || tableContainer.style.display === 'none') {
+                // If we have a saved lastSearch params, restore previous view.
+                // Prefer reusing an existing DataTable instance (preserve paging/sort state).
+                const lastSearch = sessionStorage.getItem('lastSearch');
+                if (lastSearch) {
+                  try {
+                    if (window.jQuery && $.fn.dataTable && $.fn.dataTable.isDataTable('#advanced-table')) {
+                      // Table instance exists — keep it and just make it visible and reflow
+                      tableContainer.classList.remove('hidden');
+                      tableContainer.style.display = '';
+                      setTimeout(() => {
+                        try {
+                          const dt = $('#advanced-table').DataTable();
+                          if (dt && dt.columns) {
+                            dt.columns.adjust();
+                            if (dt.responsive) dt.responsive.recalc();
+                          }
+                        } catch (inner) {
+                          console.warn('[SearchUI] Could not adjust advanced table on tab restore (existing instance):', inner);
+                        }
+                      }, 80);
+                    } else {
+                      // No instance found — initialize a new one from saved params
+                      this.initResultsTable(lastSearch);
+                    }
+                  } catch (err) {
+                    console.warn('[SearchUI] Could not re-init or show advanced table on tab restore:', err);
+                  }
+                } else {
+                  tableContainer.classList.remove('hidden');
+                  tableContainer.style.display = '';
+                }
+              }
+            }
+
+            // Ensure the adv-summary is visible if it contains content
+            if (advSummary && advSummary.innerHTML && advSummary.innerHTML.trim() !== '') {
+              advSummary.hidden = false;
+            }
+
+            // Restore the active subpanel (results|stats)
+            if (subTabs) {
+              const activeSubTab = subTabs.querySelector('.md3-stats-tab--active');
+              if (activeSubTab) {
+                const targetId = activeSubTab.getAttribute('aria-controls');
+                if (targetId) {
+                  const target = document.getElementById(targetId);
+                  if (target) target.hidden = false;
+                }
+              }
+            }
+    });
   }
 
   /**
@@ -83,43 +275,65 @@ export class SearchUI {
    * Restore form values from params
    */
   restoreFormFromParams(params) {
-    // Basic fields
-    const q = params.get("q");
-    if (q) {
-      const qInput = document.getElementById("q");
-      if (qInput) qInput.value = q;
-    }
-
-    const type = params.get("search_type") || params.get("mode");
-    if (type) {
-      const typeSelect = document.getElementById("search_type");
-      if (typeSelect) typeSelect.value = type;
-    }
-
-    // Checkboxes
+    const mode = params.get('mode');
     const sensitive = params.get("sensitive");
-    if (sensitive === "0") {
-      const ignoreAccents = document.getElementById("ignore-accents");
-      if (ignoreAccents) ignoreAccents.checked = true;
+    const ignore = sensitive === "0";
+
+    // Restore common checkboxes
+    const ignoreSimple = document.getElementById('ignore-accents-simple');
+    if (ignoreSimple) ignoreSimple.checked = ignore;
+    
+    const ignoreAdvanced = document.getElementById('ignore-accents-advanced');
+    if (ignoreAdvanced) ignoreAdvanced.checked = ignore;
+
+    const regional = params.get("include_regional") === "1" || params.get("include_regional") === "true";
+    const regSimple = document.getElementById('include-regional-simple');
+    if (regSimple) {
+        regSimple.checked = regional;
+        if (regional) regSimple.dispatchEvent(new Event("change"));
+    }
+    const regAdvanced = document.getElementById('include-regional-advanced');
+    if (regAdvanced) {
+        regAdvanced.checked = regional;
+        if (regional) regAdvanced.dispatchEvent(new Event("change"));
     }
 
-    const regional = params.get("include_regional");
-    if (regional === "1" || regional === "true") {
-      const regionalCheck = document.getElementById("include-regional");
-      if (regionalCheck) {
-        regionalCheck.checked = true;
-        // Trigger change event to show regional options
-        regionalCheck.dispatchEvent(new Event("change"));
+    if (mode === 'cql' || mode === 'advanced') {
+      // Restore Advanced Form
+      const cql = params.get('q'); // In advanced mode, q is CQL
+      const cqlInput = document.getElementById('cql_query') || document.getElementById('cql-preview');
+      if (cqlInput && cql) cqlInput.value = cql;
+
+      // Restore manual edit checkbox
+      const manualChecked = params.get('allow_manual_edit') || params.get('cql_manual_edit');
+      const manualCheckbox = document.getElementById('cql_manual_edit') || document.getElementById('allow-manual-edit');
+      if (manualCheckbox) {
+        manualCheckbox.checked = !!manualChecked;
+        // Delegate to builder if present
+        const cqlBuilder = getCqlBuilder();
+        if (cqlBuilder) cqlBuilder.toggleManualEdit(manualCheckbox.checked);
       }
-    }
-
-    // Restore filters (requires filter module support)
-    const searchFilters = getSearchFilters();
-    if (
-      searchFilters &&
-      typeof searchFilters.restoreFiltersFromParams === "function"
-    ) {
-      searchFilters.restoreFiltersFromParams(params);
+        
+        // Restore filters for Advanced
+        const form = document.getElementById('form-advanced');
+        if (form && form.searchFilters) {
+            form.searchFilters.restoreFiltersFromParams(params);
+        }
+    } else {
+        // Restore Simple Form
+        const q = params.get('q');
+        const qInput = document.getElementById('q');
+        if (qInput && q) qInput.value = q;
+        
+        const type = params.get('search_type');
+        const typeSelect = document.getElementById('search_type_simple');
+        if (typeSelect && type) typeSelect.value = type;
+        
+        // Restore filters for Simple
+        const form = document.getElementById('form-simple');
+        if (form && form.searchFilters) {
+            form.searchFilters.restoreFiltersFromParams(params);
+        }
     }
   }
 
@@ -162,135 +376,151 @@ export class SearchUI {
    * Bind manual CQL edit checkbox
    */
   bindManualEditToggle() {
-    const checkbox = document.getElementById("allow-manual-edit");
-    const cqlPreview = document.getElementById("cql-preview");
+    // support both old ids (allow-manual-edit / cql-preview) and new cql ids
+    const checkbox = document.getElementById("cql_manual_edit") || document.getElementById("allow-manual-edit");
+    const cqlField = document.getElementById("cql_query") || document.getElementById("cql-preview");
     const cqlWarning = document.getElementById("cql-warning");
+    const cqlHint = document.getElementById("cql-hint");
 
-    if (!checkbox || !cqlPreview || !cqlWarning) return;
+    if (!checkbox || !cqlField || !cqlWarning) return;
 
-    checkbox.addEventListener("change", (e) => {
+    // If a CqlBuilder exists it already binds change events for the same checkbox.
+    // Avoid double-binding the 'change' event when a builder is present.
+    const potentialBuilder = typeof getCqlBuilder === 'function' ? getCqlBuilder() : null;
+    if (!potentialBuilder) {
+      checkbox.addEventListener("change", (e) => {
       this.manualCQLEdit = e.target.checked;
 
-      if (this.manualCQLEdit) {
-        cqlPreview.removeAttribute("readonly");
-        cqlWarning.removeAttribute("hidden");
-      } else {
-        cqlPreview.setAttribute("readonly", "");
-        cqlWarning.setAttribute("hidden", "");
+      // Prefer CqlBuilder instance when available
+      let builder = null;
+      try {
+        builder = typeof getCqlBuilder === 'function' ? getCqlBuilder() : null;
+      } catch (_) {
+        // ignore
+      }
 
-        // Regenerate CQL from builder
-        const patternBuilder = getPatternBuilder();
-        if (patternBuilder) {
-          patternBuilder.updateCQLPreview();
+      if (builder && typeof builder.toggleManualEdit === "function") {
+        builder.toggleManualEdit(this.manualCQLEdit);
+      } else {
+        if (this.manualCQLEdit) {
+          cqlField.removeAttribute("readonly");
+          cqlWarning.removeAttribute("hidden");
+          if (cqlHint) cqlHint.hidden = true;
+        } else {
+          cqlField.setAttribute("readonly", "");
+          cqlWarning.setAttribute("hidden", "");
+          if (cqlHint) cqlHint.hidden = false;
+
+          // Try to regenerate from any existing pattern builder
+          const patternBuilder = getPatternBuilder();
+          if (patternBuilder && typeof patternBuilder.updateCQLPreview === "function") {
+            patternBuilder.updateCQLPreview();
+          }
         }
       }
-    });
+
+      // If the user enables manual edit we should also reset the manual-modified flag
+      if (!this.manualCQLEdit) {
+        // reset manual-edited UI state
+        if (builder && typeof builder.resetManualEdit === "function") {
+          builder.resetManualEdit();
+        }
+      }
+      });
+    }
+
+    // Track user edits to the textarea to set manualCqlModified
+    // If a CQL builder instance is present it already registers its own input listener
+    // so we avoid attaching a second handler which could cause duplicate behaviour.
+    const existingBuilder = typeof getCqlBuilder === 'function' ? getCqlBuilder() : null;
+    if (!existingBuilder) {
+      cqlField.addEventListener("input", () => {
+        // Mark manual edit from legacy path
+        if (cqlField && cqlField.getAttribute('readonly') === null) {
+          if (cqlWarning) cqlWarning.removeAttribute("hidden");
+          if (cqlHint) cqlHint.hidden = true;
+        }
+      });
+    }
   }
 
   /**
    * Bind form submission
    */
   bindFormSubmit() {
-    const form = document.getElementById("advanced-search-form");
-    if (!form) return;
+    const formSimple = document.getElementById("form-simple");
+    const formAdvanced = document.getElementById("form-advanced");
 
-    form.addEventListener("submit", (e) => {
-      e.preventDefault();
+    if (formSimple) {
+      formSimple.addEventListener("submit", (e) => {
+        e.preventDefault();
+        const queryParams = this.buildQueryParams(formSimple, "simple");
+        this.performSearch(queryParams);
+      });
+    }
 
-      const queryParams = this.buildQueryParams();
-      console.log(
-        "[SearchUI] Submitting search:",
-        Object.fromEntries(queryParams),
-      );
-
-      // Here you would typically call the existing search handler
-      // For now, we'll log the parameters
-      this.performSearch(queryParams);
-    });
+    if (formAdvanced) {
+      formAdvanced.addEventListener("submit", (e) => {
+        e.preventDefault();
+        const queryParams = this.buildQueryParams(formAdvanced, "advanced");
+        this.performSearch(queryParams);
+      });
+    }
   }
 
   /**
    * Build query parameters from form
    */
-  buildQueryParams() {
+  buildQueryParams(form, mode) {
+    const formData = new FormData(form);
     const params = new URLSearchParams();
-    // Read sensitivity early so we can adjust CQL generation
-    const ignoreAccentsEarly = document.getElementById("ignore-accents");
-    const sensitiveFlag =
-      ignoreAccentsEarly && ignoreAccentsEarly.checked ? "0" : "1";
-    params.set("sensitive", sensitiveFlag);
 
-    // A: Basic query
-    const queryInput = document.getElementById("q");
-    const searchTypeSelect = document.getElementById("search_type");
+    // Handle Sensitivity (ignore_accents -> sensitive)
+    const ignoreAccents = formData.get("ignore_accents");
+    const sensitive = ignoreAccents ? "0" : "1";
+    params.set("sensitive", sensitive);
 
-    if (queryInput && queryInput.value.trim()) {
-      // If advanced mode is active and manual CQL or pattern builder has content, use CQL
-      if (this.advancedMode) {
-        const cqlPreview = document.getElementById("cql-preview");
-        if (cqlPreview && cqlPreview.value.trim()) {
-          let cqlStr = cqlPreview.value.trim();
-          // Map sensitivity: if insensitive (0) and not manual edit, substitute word -> norm
-          const sensitive = sensitiveFlag;
-          const allowManualCql = document.getElementById("allow-manual-edit");
-          const manualEdit = allowManualCql && allowManualCql.checked;
-          if (sensitive === "0" && !manualEdit) {
-            // Simple transformation: replace word="..." -> norm="..."
-            cqlStr = cqlStr.replace(/\bword=/g, "norm=");
-          }
-          params.set("q", cqlStr);
-          params.set("mode", "cql");
-        } else {
-          // Fallback to basic query
-          params.set("q", queryInput.value.trim());
-          const uiSearchType = searchTypeSelect
-            ? searchTypeSelect.value
-            : "forma";
-          params.set("search_type", uiSearchType);
-          // Map spanish UI 'lema' to backend 'lemma'
-          if (uiSearchType === "lema") {
-            params.set("mode", "lemma");
-          } else if (uiSearchType === "forma") {
-            params.set("mode", "forma");
-          } else if (uiSearchType === "forma_exacta") {
-            params.set("mode", "forma_exacta");
-          }
+    // Copy other filters directly
+    for (const [key, value] of formData.entries()) {
+        // Exclude fields we handle manually or don't want to send raw
+        if (["ignore_accents", "q", "cql_query", "mode", "allow_manual_edit", "cql_manual_edit"].includes(key)) {
+            continue;
         }
-      } else {
-        // Simple mode
-        params.set("q", queryInput.value.trim());
-        const uiSearchType = searchTypeSelect
-          ? searchTypeSelect.value
-          : "forma";
+        // Exclude UI-only checkboxes
+        if (key.endsWith('_ui')) continue;
+        
+        if (value) params.append(key, value);
+    }
+
+    if (mode === "simple") {
+        params.set("q", formData.get("q") || "");
+        const uiSearchType = formData.get("search_type") || "forma";
         params.set("search_type", uiSearchType);
-        // Map Spanish to canonical backend modes for advanced search
+        
+        // Map Spanish to canonical backend modes
         if (uiSearchType === "lema") {
           params.set("mode", "lemma");
         } else if (uiSearchType === "forma") {
           params.set("mode", "forma");
         } else if (uiSearchType === "forma_exacta") {
           params.set("mode", "forma_exacta");
+        } else {
+          params.set("mode", "simple"); // Default fallback
         }
-      }
+    } else if (mode === "advanced") {
+        let cqlStr = formData.get("cql_query") || "";
+        const manualEdit = formData.get("allow_manual_edit") || formData.get("cql_manual_edit"); 
+        
+        // Apply CQL transformation if insensitive and not manual edit
+        if (sensitive === "0" && !manualEdit) {
+             cqlStr = cqlStr.replace(/\bword=/g, "norm=");
+        }
+        
+        params.set("q", cqlStr);
+        params.set("mode", "cql");
     }
 
-    // B: Metadata filters (handled by SearchFilters)
-    const searchFilters = getSearchFilters();
-    if (searchFilters) {
-      const filterParams = searchFilters.getActiveFilterParams();
-      filterParams.forEach((value, key) => {
-        params.append(key, value);
-      });
-    }
-
-    // C: Options
-    const includeRegional = document.getElementById("include-regional");
-    if (includeRegional && includeRegional.checked) {
-      params.set("include_regional", "1");
-    }
-
-    // (sensitivity already set earlier)
-
+    console.log("[SearchUI] Built params:", Object.fromEntries(params));
     return params;
   }
 
@@ -307,17 +537,19 @@ export class SearchUI {
     try {
       if (summaryBox) {
         summaryBox.hidden = false;
-        // MD3 Linear Progress Indicator
+        // Reuse the full-width summary style so loading looks like Results summary
+        // IMPORTANT: adv-summary already has class md3-advanced__summary, avoid nesting the same class inside it.
         summaryBox.innerHTML = `
-          <div style="display: flex; flex-direction: column; gap: 8px; width: 100%; align-items: center; justify-content: center; min-height: 60px;">
-            <span class="md3-body-medium">Cargando resultados...</span>
-            <div role="progressbar" class="md3-linear-progress md3-linear-progress--indeterminate" aria-label="Cargando resultados">
-              <div class="md3-linear-progress__buffer"></div>
-              <div class="md3-linear-progress__bar md3-linear-progress__primary-bar">
-                <span class="md3-linear-progress__bar-inner"></span>
-              </div>
-              <div class="md3-linear-progress__bar md3-linear-progress__secondary-bar">
-                <span class="md3-linear-progress__bar-inner"></span>
+          <div style="display:flex; align-items:center; gap:0.75rem; min-height:60px; width:100%;">
+            <span class="md3-advanced__summary-mode" style="font-weight:700; color:var(--md-sys-color-primary);">Cargando</span>
+            <span class="md3-advanced__summary-separator">|</span>
+            <span class="md3-advanced__summary-label">Consultando…</span>
+            <div style="flex:1"></div>
+            <div style="width:160px;">
+              <div role="progressbar" class="md3-linear-progress md3-linear-progress--indeterminate" aria-label="Cargando resultados">
+                <div class="md3-linear-progress__buffer"></div>
+                <div class="md3-linear-progress__bar md3-linear-progress__primary-bar"><span class="md3-linear-progress__bar-inner"></span></div>
+                <div class="md3-linear-progress__bar md3-linear-progress__secondary-bar"><span class="md3-linear-progress__bar-inner"></span></div>
               </div>
             </div>
           </div>
@@ -417,11 +649,16 @@ export class SearchUI {
    * Bind reset button
    */
   bindResetButton() {
-    const resetBtn = document.getElementById("reset-form-btn");
-    if (!resetBtn) return;
+    // Bind all reset buttons inside search forms (simple and advanced)
+    const resetBtns = document.querySelectorAll('.reset-btn');
+    if (!resetBtns || resetBtns.length === 0) return;
 
-    resetBtn.addEventListener("click", () => {
-      this.resetForm();
+    resetBtns.forEach((btn) => {
+      btn.addEventListener('click', () => {
+        if (confirm('¿Restablecer el formulario? Se borrarán todos los campos, filtros y resultados.')) {
+          this.resetForm();
+        }
+      });
     });
   }
 
@@ -491,7 +728,29 @@ export class SearchUI {
     // Destroy DataTable
     destroyAdvancedTable();
 
+      // Destroy token DataTable if present and clear token UI
+      try {
+        destroyTokenTable();
+      } catch (e) {
+        // If token module not present, ignore
+      }
+
+      // Clear token chips and hidden values if TokenTab API exists
+      if (window.TokenTab && typeof window.TokenTab.clearTokens === 'function') {
+        window.TokenTab.clearTokens();
+      }
+
+      // Cleanup stats charts
+      try {
+        if (typeof cleanupStats === 'function') cleanupStats();
+      } catch (e) {
+        // ignore
+      }
+
     this.manualCQLEdit = false;
+
+    // Clear session storage lastSearch
+    try { sessionStorage.removeItem('lastSearch'); } catch(e){}
 
     // Dispatch reset event for other modules (like stats)
     document.dispatchEvent(new Event("search:reset"));
@@ -683,8 +942,10 @@ export class SearchUI {
 let searchUIInstance = null;
 
 document.addEventListener("DOMContentLoaded", () => {
-  const form = document.getElementById("advanced-search-form");
-  if (form) {
+  const formSimple = document.getElementById("form-simple");
+  const formAdvanced = document.getElementById("form-advanced");
+  
+  if (formSimple || formAdvanced) {
     searchUIInstance = new SearchUI();
   }
 });
