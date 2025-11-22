@@ -497,12 +497,12 @@ import { formatMorphLeipzig } from "./morph_formatter.js";
           speakerBlock.style.cursor = "pointer";
           speakerBlock.addEventListener("click", () => {
             playVisualAudioSegment(
-              words[0].start,
-              words[words.length - 1].end,
+              words[0].start_ms / 1000,
+              words[words.length - 1].end_ms / 1000,
               true,
             );
             console.log(
-              `Speaker: ${speakerName} Start: ${words[0].start} End: ${words[words.length - 1].end}`,
+              `Speaker: ${speakerName} Start: ${words[0].start_ms / 1000} End: ${words[words.length - 1].end_ms / 1000}`,
             );
           });
 
@@ -537,8 +537,8 @@ import { formatMorphLeipzig } from "./morph_formatter.js";
           // Oben: Sprecherzeit (als eigene Zeile über dem Textblock)
           const speakerTimeElement = document.createElement("div");
           speakerTimeElement.classList.add("speaker-time");
-          const speakerStartTime = formatTime(words[0].start);
-          const speakerEndTime = formatTime(words[words.length - 1].end);
+          const speakerStartTime = formatTime(words[0].start_ms / 1000);
+          const speakerEndTime = formatTime(words[words.length - 1].end_ms / 1000);
           speakerTimeElement.textContent = `${speakerStartTime} - ${speakerEndTime}`;
 
           // Darunter: Transkript (Wörter)
@@ -556,7 +556,7 @@ import { formatMorphLeipzig } from "./morph_formatter.js";
 
             // Prüfe ob Pause zum nächsten Wort ODER max. Gruppengröße erreicht
             if (idx < words.length - 1) {
-              const pauseToNext = words[idx + 1].start - word.end;
+              const pauseToNext = (words[idx + 1].start_ms - word.end_ms) / 1000;
               const groupIsFull = currentGroup.length >= MAX_GROUP_SIZE;
 
               if (pauseToNext >= PAUSE_THRESHOLD || groupIsFull) {
@@ -574,8 +574,8 @@ import { formatMorphLeipzig } from "./morph_formatter.js";
             const wordElement = document.createElement("span");
             wordElement.textContent = word.text + " ";
             wordElement.classList.add("word");
-            wordElement.dataset.start = word.start;
-            wordElement.dataset.end = word.end;
+            wordElement.dataset.start = word.start_ms / 1000;
+            wordElement.dataset.end = word.end_ms / 1000;
             wordElement.dataset.tokenId = word.token_id;
             wordElement.style.cursor = "pointer";
 
@@ -643,8 +643,8 @@ import { formatMorphLeipzig } from "./morph_formatter.js";
               if (event.ctrlKey) {
                 const startPrev =
                   idx > 0
-                    ? parseFloat(words[idx - 1].start)
-                    : parseFloat(word.start);
+                    ? parseFloat(words[idx - 1].start_ms) / 1000
+                    : parseFloat(word.start_ms) / 1000;
                 const endNext = parseFloat(wordElement.dataset.end);
                 playVisualAudioSegment(startPrev, endNext, false);
                 console.log(
@@ -653,12 +653,12 @@ import { formatMorphLeipzig } from "./morph_formatter.js";
               } else {
                 const startPrev =
                   idx >= 2
-                    ? parseFloat(words[idx - 2].start)
-                    : parseFloat(words[0].start);
+                    ? parseFloat(words[idx - 2].start_ms) / 1000
+                    : parseFloat(words[0].start_ms) / 1000;
                 const endNext =
-                  idx < words.length - 1
-                    ? parseFloat(words[idx + 2].end)
-                    : parseFloat(word.end);
+                  idx < words.length - 2
+                    ? parseFloat(words[idx + 2].end_ms) / 1000
+                    : parseFloat(word.end_ms) / 1000;
                 playVisualAudioSegment(startPrev, endNext, true);
                 if (!event.ctrlKey) {
                   wordElement.dataset.start = startPrev;

@@ -100,12 +100,12 @@ export class TranscriptRenderer {
       : "";
     span.dataset.segmentIndex = segmentIndex;
     span.dataset.wordIndex = wordIndex;
-    span.dataset.start = wordData.start;
-    span.dataset.end = wordData.end;
+    span.dataset.start = wordData.start_ms / 1000;
+    span.dataset.end = wordData.end_ms / 1000;
 
     // Make clickable for seek-to-timestamp
     const wordText = wordData.text || wordData.word || "[?]";
-    span.title = `${wordText} (${this.formatTime(wordData.start)} - ${this.formatTime(wordData.end)})`;
+    span.title = `${wordText} (${this.formatTime(wordData.start_ms / 1000)} - ${this.formatTime(wordData.end_ms / 1000)})`;
 
     return span;
   }

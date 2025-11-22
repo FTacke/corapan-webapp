@@ -381,7 +381,7 @@ export class BookmarkManager {
       const preview = words.map((w) => w.text || w.word).join(" ");
 
       // Get time
-      const time = segment.words?.[0]?.start || 0;
+      const time = (segment.words?.[0]?.start_ms || 0) / 1000;
       const timeStr = this._formatTime(time);
 
       html += `
@@ -487,8 +487,8 @@ export class BookmarkManager {
     }
 
     // Seek to start of segment and play
-    const startTime = segment.words[0].start;
-    const endTime = segment.words[segment.words.length - 1].end;
+    const startTime = segment.words[0].start_ms / 1000;
+    const endTime = segment.words[segment.words.length - 1].end_ms / 1000;
     if (this.audioPlayer) {
       // Use playSegment to set time and play
       this.audioPlayer.playSegment(startTime, endTime);

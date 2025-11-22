@@ -399,9 +399,9 @@ export class TranscriptionManager {
     // Speaker name is always clickable to play segment audio
     nameContainer.style.cursor = "pointer";
     nameContainer.addEventListener("click", () => {
-      this._playSegment(words[0].start, words[words.length - 1].end, true);
+      this._playSegment(words[0].start_ms / 1000, words[words.length - 1].end_ms / 1000, true);
       console.log(
-        `Speaker: ${speakerCode} Start: ${words[0].start} End: ${words[words.length - 1].end}`,
+        `Speaker: ${speakerCode} Start: ${words[0].start_ms / 1000} End: ${words[words.length - 1].end_ms / 1000}`,
       );
     });
 
@@ -590,8 +590,8 @@ export class TranscriptionManager {
     const timeElement = document.createElement("div");
     timeElement.classList.add("md3-speaker-time");
 
-    const startTime = this._formatTime(words[0].start);
-    const endTime = this._formatTime(words[words.length - 1].end);
+    const startTime = this._formatTime(words[0].start_ms / 1000);
+    const endTime = this._formatTime(words[words.length - 1].end_ms / 1000);
     timeElement.textContent = `${startTime} - ${endTime}`;
 
     return timeElement;
@@ -637,7 +637,7 @@ export class TranscriptionManager {
       currentGroup.push({ word, idx });
 
       if (idx < words.length - 1) {
-        const pauseToNext = words[idx + 1].start - word.end;
+        const pauseToNext = (words[idx + 1].start_ms - word.end_ms) / 1000;
         const groupIsFull = currentGroup.length >= MAX_GROUP_SIZE;
 
         if (pauseToNext >= PAUSE_THRESHOLD || groupIsFull) {
@@ -660,8 +660,8 @@ export class TranscriptionManager {
     const wordElement = document.createElement("span");
     wordElement.textContent = word.text + " ";
     wordElement.classList.add("word");
-    wordElement.dataset.start = word.start;
-    wordElement.dataset.end = word.end;
+    wordElement.dataset.start = word.start_ms / 1000;
+    wordElement.dataset.end = word.end_ms / 1000;
     const tokenIdOriginal = word.token_id ? String(word.token_id).trim() : "";
     const tokenIdLower = tokenIdOriginal ? tokenIdOriginal.toLowerCase() : "";
     wordElement.dataset.tokenId = tokenIdOriginal;
@@ -726,25 +726,25 @@ export class TranscriptionManager {
 
       const startPrev =
         idx >= 2
-          ? parseFloat(words[idx - 2].start)
-          : parseFloat(words[0].start);
+          ? parseFloat(words[idx - 2].start_ms) / 1000
+          : parseFloat(words[0].start_ms) / 1000;
       const endNext =
-        idx < words.length - 1
-          ? parseFloat(words[idx + 2].end)
-          : parseFloat(word.end);
+        idx < words.length - 2
+          ? parseFloat(words[idx + 2].end_ms) / 1000
+          : parseFloat(word.end_ms) / 1000;
 
       if (event.ctrlKey) {
         // Ctrl+Click: Play only this word
-        this._playSegment(parseFloat(word.start), parseFloat(word.end), false);
+        this._playSegment(parseFloat(word.start_ms) / 1000, parseFloat(word.end_ms) / 1000, false);
         console.log(
-          `Ctrl+Click: ${word.text} Start: ${word.start} End: ${word.end}`,
+          `Ctrl+Click: ${word.text} Start: ${word.start_ms / 1000} End: ${word.end_ms / 1000}`,
         );
       } else if (event.shiftKey) {
         // Shift+Click: Play from this word to end of segment
-        const segmentEnd = parseFloat(words[words.length - 1].end);
-        this._playSegment(parseFloat(word.start), segmentEnd, false);
+        const segmentEnd = parseFloat(words[words.length - 1].end_ms) / 1000;
+        this._playSegment(parseFloat(word.start_ms) / 1000, segmentEnd, false);
         console.log(
-          `Shift+Click: ${word.text} Start: ${word.start} End: ${segmentEnd}`,
+          `Shift+Click: ${word.text} Start: ${word.start_ms / 1000} End: ${segmentEnd}`,
         );
       } else {
         // Normal click: Play with context (word before and after)
