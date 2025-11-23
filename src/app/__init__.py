@@ -30,6 +30,26 @@ def create_app(env_name: str | None = None) -> Flask:
         static_folder=str(static_dir),
     )
     load_config(app, env_name)
+    # Warn if passwords.env file exists but app configured for DB-backed auth
+    try:
+        from pathlib import Path
+
+        project_root = Path(__file__).resolve().parents[2]
+        pw_path = project_root / "passwords.env"
+        if pw_path.exists() and app.config.get("AUTH_BACKEND", "db") == "db" and env_name != "development":
+            app.logger.warning(
+                "Found passwords.env on disk while AUTH_BACKEND=db is configured; ensure this file is not used in staging/production and remove it from server disk when safe."
+            )
+    except Exception:
+        # never fail app startup due to warning check
+        pass
+    from .extensions.sqlalchemy_ext import init_engine as init_auth_db
+    # Initialize auth DB engine if configured
+    try:
+        init_auth_db(app)
+    except Exception:
+        # avoid hard failure in environments that don't require auth DB
+        app.logger.debug("Auth DB not initialized (AUTH_DATABASE_URL may be unset or invalid)")
 
     # Add build ID for cache busting and deployment verification
     import time

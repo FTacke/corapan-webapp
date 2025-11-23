@@ -1,0 +1,242 @@
+"""Admin user management API endpoints.
+
+All endpoints require JWT auth and admin role.
+"""
+from __future__ import annotations
+
+from datetime import datetime
+
+from flask import Blueprint, jsonify, request, current_app
+from flask_jwt_extended import jwt_required
+
+from ..auth import Role
+from ..auth.decorators import require_role
+from ..auth import services as auth_services
+from ..auth.models import User as UserModel
+import secrets
+from sqlalchemy import select
+
+bp = Blueprint("admin_users", __name__, url_prefix="/admin/users")
+
+
+@bp.get("")
+@jwt_required()
+@require_role(Role.ADMIN)
+def list_users():
+    backend = current_app.config.get("AUTH_BACKEND", "env")
+    if backend != "db":
+        return jsonify({"error": "unsupported_on_env_backend"}), 501
+
+    q = request.args.get("q")
+    role = request.args.get("role")
+    status = request.args.get("status")
+    page = int(request.args.get("page", 1))
+    size = int(request.args.get("size", 50))
+
+    # naive query using session
+    with auth_services.get_session() as session:
+        sel = select(UserModel)
+        # apply filters
+        if q:
+            sel = sel.where((UserModel.username.ilike(f"%{q}%")) | (UserModel.email.ilike(f"%{q}%")))
+        if role:
+            sel = sel.where(UserModel.role == role)
+        if status:
+            if status == 'active':
+                sel = sel.where(UserModel.is_active == True)
+            elif status == 'deleted':
+                sel = sel.where(UserModel.deleted_at != None)
+            elif status == 'locked':
+                sel = sel.where(UserModel.locked_until != None)
+
+        total = None
+        offset = (page - 1) * size
+        res = session.execute(sel.offset(offset).limit(size)).scalars().all()
+
+        items = [
+            {
+                "id": str(u.id),
+                "username": u.username,
+                "email": u.email,
+                "role": u.role,
+                "is_active": bool(u.is_active),
+                "last_login_at": u.last_login_at.isoformat() if u.last_login_at else None,
+                "created_at": u.created_at.isoformat() if u.created_at else None,
+            }
+            for u in res
+        ]
+
+    return jsonify({"items": items, "meta": {"page": page, "size": size}})
+
+
+@bp.get("/<id>")
+@jwt_required()
+@require_role(Role.ADMIN)
+def get_user(id):
+    backend = current_app.config.get("AUTH_BACKEND", "env")
+    if backend != "db":
+        return jsonify({"error": "unsupported_on_env_backend"}), 501
+    user = auth_services.get_user_by_id(id)
+    if not user:
+        return jsonify({"error": "not_found"}), 404
+    obj = {
+        "id": str(user.id),
+        "username": user.username,
+        "email": user.email,
+        "role": user.role,
+        "is_active": bool(user.is_active),
+        "must_reset_password": bool(user.must_reset_password),
+        "valid_from": user.valid_from.isoformat() if user.valid_from else None,
+        "access_expires_at": user.access_expires_at.isoformat() if user.access_expires_at else None,
+        "last_login_at": user.last_login_at.isoformat() if user.last_login_at else None,
+        "login_failed_count": user.login_failed_count,
+        "locked_until": user.locked_until.isoformat() if user.locked_until else None,
+    }
+    return jsonify(obj)
+
+
+@bp.post("")
+@jwt_required()
+@require_role(Role.ADMIN)
+def create_user():
+    # Invite flow: do not store plaintext password; create a user with must_reset_password true and generate reset token
+    backend = current_app.config.get("AUTH_BACKEND", "env")
+    if backend != "db":
+        return jsonify({"error": "unsupported_on_env_backend"}), 501
+
+    data = request.get_json() or {}
+    username = data.get("username")
+    email = data.get("email")
+    role = data.get("role", "user")
+    must_reset_password = bool(data.get("must_reset_password", True))
+
+    if not username and not email:
+        return jsonify({"error": "username_or_email_required"}), 400
+
+    # create user
+    from uuid import uuid4
+    from datetime import datetime, timezone
+    uid = str(uuid4())
+    hashed = auth_services.hash_password(secrets.token_urlsafe(12))
+    with auth_services.get_session() as session:
+        u = auth_services.User(
+            id=uid,
+            username=(username or email).lower(),
+            email=(email or None),
+            password_hash=hashed,
+            role=role,
+            is_active=True,
+            must_reset_password=must_reset_password,
+            created_at=datetime.now(timezone.utc),
+            updated_at=datetime.now(timezone.utc),
+        )
+        session.add(u)
+
+    # generate invite/reset token and log
+    raw, tokenrow = auth_services.create_reset_token_for_user(u)
+    current_app.logger.info(f"Invite created for {u.username}: token={raw}")
+
+    return jsonify({"ok": True, "userId": uid, "inviteSent": True}), 201
+
+
+@bp.patch("/<id>")
+@jwt_required()
+@require_role(Role.ADMIN)
+def patch_user(id):
+    backend = current_app.config.get("AUTH_BACKEND", "env")
+    if backend != "db":
+        return jsonify({"error": "unsupported_on_env_backend"}), 501
+    data = request.get_json() or {}
+    # allowed: role, is_active, must_reset_password, valid_from, access_expires_at
+    # simple implementation: load, update fields
+    with auth_services.get_session() as session:
+        stmt = select(UserModel).where(UserModel.id == id)
+        user = session.execute(stmt).scalars().first()
+        if not user:
+            return jsonify({"error": "not_found"}), 404
+        if "role" in data:
+            user.role = data["role"]
+        if "is_active" in data:
+            user.is_active = bool(data["is_active"])
+        if "must_reset_password" in data:
+            user.must_reset_password = bool(data["must_reset_password"])
+        if "valid_from" in data:
+            user.valid_from = data["valid_from"]
+        if "access_expires_at" in data:
+            user.access_expires_at = data["access_expires_at"]
+    return jsonify({"ok": True})
+
+
+@bp.post("/<id>/reset-password")
+@jwt_required()
+@require_role(Role.ADMIN)
+def admin_reset_password(id):
+    backend = current_app.config.get("AUTH_BACKEND", "env")
+    if backend != "db":
+        return jsonify({"error": "unsupported_on_env_backend"}), 501
+    # create reset token for user
+    user = auth_services.get_user_by_id(id)
+    if not user:
+        return jsonify({"error": "not_found"}), 404
+    raw, tokenrow = auth_services.create_reset_token_for_user(user)
+    current_app.logger.info(f"Admin-reset for {user.username}: token={raw}")
+    return jsonify({"ok": True})
+
+
+@bp.post("/<id>/lock")
+@jwt_required()
+@require_role(Role.ADMIN)
+def admin_lock_user(id):
+    backend = current_app.config.get("AUTH_BACKEND", "env")
+    if backend != "db":
+        return jsonify({"error": "unsupported_on_env_backend"}), 501
+    data = request.get_json() or {}
+    until = data.get("until")
+    from datetime import datetime
+    with auth_services.get_session() as session:
+        stmt = select(UserModel).where(UserModel.id == id)
+        user = session.execute(stmt).scalars().first()
+        if not user:
+            return jsonify({"error": "not_found"}), 404
+        user.locked_until = datetime.fromisoformat(until) if until else None
+    return jsonify({"ok": True})
+
+
+@bp.post("/<id>/unlock")
+@jwt_required()
+@require_role(Role.ADMIN)
+def admin_unlock_user(id):
+    backend = current_app.config.get("AUTH_BACKEND", "env")
+    if backend != "db":
+        return jsonify({"error": "unsupported_on_env_backend"}), 501
+    with auth_services.get_session() as session:
+        stmt = select(UserModel).where(UserModel.id == id)
+        user = session.execute(stmt).scalars().first()
+        if not user:
+            return jsonify({"error": "not_found"}), 404
+        user.locked_until = None
+    return jsonify({"ok": True})
+
+
+@bp.post("/<id>/invalidate-sessions")
+@jwt_required()
+@require_role(Role.ADMIN)
+def admin_invalidate_sessions(id):
+    backend = current_app.config.get("AUTH_BACKEND", "env")
+    if backend != "db":
+        return jsonify({"error": "unsupported_on_env_backend"}), 501
+    auth_services.revoke_all_refresh_tokens_for_user(id)
+    return jsonify({"ok": True})
+
+
+@bp.delete("/<id>")
+@jwt_required()
+@require_role(Role.ADMIN)
+def admin_delete_user(id):
+    backend = current_app.config.get("AUTH_BACKEND", "env")
+    if backend != "db":
+        return jsonify({"error": "unsupported_on_env_backend"}), 501
+    auth_services.mark_user_deleted(id)
+    auth_services.revoke_all_refresh_tokens_for_user(id)
+    current_app.logger.info(f"Admin deleted user {id}")
+    return jsonify({"ok": True})

@@ -57,8 +57,9 @@ class BaseConfig:
     JWT_COOKIE_SECURE = SESSION_COOKIE_SECURE
     JWT_COOKIE_CSRF_PROTECT = True
     JWT_COOKIE_SAMESITE = "Lax"  # Allows cookies in redirects
-    JWT_ACCESS_TOKEN_EXPIRES = 3600  # 1 hour
-    JWT_REFRESH_TOKEN_EXPIRES = 604800  # 7 days
+    # Token lifetimes (seconds)
+    ACCESS_TOKEN_EXP = int(os.getenv("ACCESS_TOKEN_EXP", os.getenv("JWT_ACCESS_TOKEN_EXPIRES", "3600")))
+    REFRESH_TOKEN_EXP = int(os.getenv("REFRESH_TOKEN_EXP", os.getenv("JWT_REFRESH_TOKEN_EXPIRES", "604800")))
     # Ensure cookies are sent with all requests (not just /auth)
     JWT_ACCESS_COOKIE_PATH = "/"
     JWT_REFRESH_COOKIE_PATH = "/"
@@ -81,6 +82,23 @@ class BaseConfig:
         os.getenv("ALLOW_PUBLIC_TEMP_AUDIO", "false").lower() == "true"
     )
 
+    # Auth backend: 'env' (legacy passwords.env) or 'db' (database users)
+    # Security/production default: prefer database-backed auth. Dev config may
+    # override this to 'env' for convenience/testing.
+    AUTH_BACKEND = os.getenv("AUTH_BACKEND", "db").lower()
+
+    # Auth DB (used only when AUTH_BACKEND=db) - DSN or fallback to sqlite file
+    AUTH_DATABASE_URL = os.getenv(
+        "AUTH_DATABASE_URL", f"sqlite:///{(Path(PROJECT_ROOT) / 'data' / 'db' / 'auth.db').as_posix()}"
+    )
+
+    # Hashing (argon2 or bcrypt)
+    AUTH_HASH_ALGO = os.getenv("AUTH_HASH_ALGO", "argon2")
+    # Argon2 defaults - these may be tuned for infra but sensible defaults applied
+    AUTH_ARGON2_TIME_COST = int(os.getenv("AUTH_ARGON2_TIME_COST", "2"))
+    AUTH_ARGON2_MEMORY_COST = int(os.getenv("AUTH_ARGON2_MEMORY_COST", "102400"))
+    AUTH_ARGON2_PARALLELISM = int(os.getenv("AUTH_ARGON2_PARALLELISM", "4"))
+
     # Debug
     DEBUG = False
     TESTING = False
@@ -97,6 +115,9 @@ class DevConfig(BaseConfig):
     # Template auto-reload for development
     TEMPLATES_AUTO_RELOAD = True
     SEND_FILE_MAX_AGE_DEFAULT = 0
+    # In development, allow the legacy env-file based auth to be enabled by default
+    # so local dev can continue to use passwords.env and *_PASSWORD_HASH vars.
+    AUTH_BACKEND = os.getenv("AUTH_BACKEND", "env").lower()
 
 
 CONFIG_MAPPING = {
@@ -110,6 +131,13 @@ def load_config(app, env_name: str | None) -> None:
     env = env_name or os.getenv("FLASK_ENV", "production").lower()
     config_obj = CONFIG_MAPPING.get(env, BaseConfig)
     app.config.from_object(config_obj)
+
+    # Safety: in production we expect DB-backed auth. Log a warning if env-based
+    # auth is used in a non-dev environment to make this visible in logs.
+    if env not in ("development",) and app.config.get("AUTH_BACKEND", "db") == "env":
+        app.logger.warning(
+            "AUTH_BACKEND is set to 'env' in a non-development environment — this is deprecated and insecure for staging/production. Set AUTH_BACKEND=db and migrate to DB-backed auth."
+        )
 
     if app.config["SECRET_KEY"] == DEFAULT_SECRET_SENTINEL:
         raise RuntimeError(

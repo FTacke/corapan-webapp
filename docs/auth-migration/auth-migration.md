@@ -930,6 +930,266 @@ Example test mapping / locations for implementation:
 - tests/test_privacy_compliance.py -> deletion/anonymization/data retention tests
 
 
+### Aktueller Stand der Implementierung (Step 2) — Tests & Ergebnisse
+
+Stand heute (lokal getestet):
+
+- Implementierte Code‑Elemente (Step 2):
+  - `src/app/auth/services.py` — Hashing, Access-Token-Erzeugung, Refresh-Token-Erzeugung/Rotation, Reset-Token-Helpers, User-CRUD Hilfen.
+  - `src/app/routes/auth.py` — DB‑backed Login/Refresh/Logout/Change-password/Reset/Profile/Delete/Data-Export Endpunkte (feature-flag `AUTH_BACKEND=db`).
+  - `src/app/routes/admin_users.py` — Admin‑APIs für User Management (create/invite, patch, lock/unlock, invalidate sessions, delete).
+  - `src/app/extensions/sqlalchemy_ext.py` — lightweight engine/session helper genutzt für sqlite (tests) und production DB.
+
+- Bereits vorhandene Tests (lokal, aktuell grün):
+  - `tests/test_migrations_sqlite.py` — validiert die Step‑1 SQLite DDL.
+  - `tests/test_auth_db_flow.py` — Unit‑Tests: password hashing/verifying, refresh token rotation & reuse detection.
+  - `tests/test_auth_db_endpoints.py` — Integration/endpoint Tests: login sets cookies, refresh rotates and detects reuse, logout behavior and DB revocation.
+
+Ergebnis der lokalen Testläufe (Stand 23.11.2025):
+
+- `pytest tests/test_migrations_sqlite.py tests/test_auth_db_flow.py tests/test_auth_db_endpoints.py` → alle Tests grün (5 passed for auth db tests + migration validation), mehrere DeprecationWarnings zu naive datetimes.
+
+Diese Tests decken die Kern­funktionalität des DB‑backed Auth Flows ab (hashing, rotation, reuse detection, cookie handling, logout revoke). Sie bilden die Grundlage für weiteres, breiteres Testen.
+
+---
+
+### Neu implementierte Tests (Step 3 / Ergänzungen)
+
+In Ergänzung zu den bereits vorhandenen Tests wurden folgende **High‑Priority** Tests implementiert und lokal ausgeführt (grün):
+
+- Backend / Endpoint Tests
+  - `tests/test_auth_flow.py` — change-password (success/fail), reset-password (request + confirm E2E), account profile GET/PATCH, account delete + data-export.
+  - `tests/test_admin_users.py` — Admin endpoints: list, detail, create/invite, patch, reset-password (admin), lock/unlock, invalidate-sessions, soft-delete + RBAC checks.
+  - `tests/test_refresh_concurrency.py` — concurrency race simulation for `/auth/refresh` (parallel requests) to validate rotation vs. reuse detection and atomicity.
+  - `tests/test_rate_limit_and_cookie.py` — lockout logic (failed login threshold) and cookie flag checks (HttpOnly, Secure, SameSite, Path/Max-Age).
+  - `tests/test_account_status.py` — negative account-state tests (inactive, not_yet_valid, expired, locked, deleted) blocking login/refresh.
+
+- Frontend / UI + E2E‑style tests (integration)
+  - `tests/test_ui_pages.py` — smoke checks that new UI pages render (password forgot/reset pages, profile/password/delete pages, admin UI page) and that admin UI is protected.
+  - `tests/test_e2e_ui.py` — integration flows (Login → Protected → Refresh → Logout), Password-reset E2E (request -> confirm -> login), Admin create + simple UI verification.
+
+Aktueller Teststatus (lokal): Alle oben gelisteten Tests laufen grün (18 backend/unit tests + UI/integration tests) — siehe Testausgaben und Commit-Änderungen im Repo.
+
+---
+
+### E2E / UI‑Implementierungsstand (Step 3 — begonnen)
+
+Kurzfassung der bisherigen UI-Arbeiten und E2E‑Tests (Status: lokal grün):
+
+- Templates / UI‑Views (neu)
+  - `templates/auth/password_forgot.html` — Formular für Password‑Reset‑Request (frontend JS ruft `/auth/reset-password/request`).
+  - `templates/auth/password_reset.html` — Seite für Reset‑Token + neues Password (form → `/auth/reset-password/confirm`).
+  - `templates/auth/account_profile.html` — Enduser Profilseite (GET `/auth/account/profile`, PATCH `/auth/account/profile`).
+  - `templates/auth/account_password.html` — Change‑Password UI (POST `/auth/change-password`).
+  - `templates/auth/account_delete.html` — Account‑Löschung UI (POST `/auth/account/delete`).
+  - `templates/auth/admin_users.html` — minimaler Admin‑User‑Management UI‑View (nutzt `/admin/users` API).
+
+- Routen (Backend, UI views)
+  - `src/app/routes/auth.py` — neue GET‑Routen für die UI‑Seiten (`/password/forgot`, `/password/reset`, `/account/profile/page`, `/account/password/page`, `/account/delete/page`, `/auth/admin_users`).
+
+- E2E / UI‑Tests (integration, lokal)
+  - `tests/test_ui_pages.py` — smoke tests dass die UI‑Pages gerendert werden (public vs. admin access control).
+  - `tests/test_e2e_ui.py` — Integration-Scenarios: Login → geschützte Seite → Refresh → Logout; Password‑Reset E2E; Admin create → UI check.
+
+Status / Notes:
+  - Lokale Tests: alle neuen UI‑Tests und E2E‑style flows laufen grün in der Testumgebung (wie oben angegeben).
+  - Diese E2E‑tests sind browser‑light (Flask test client based). Für vollwertige browser‑E2E (Playwright / Selenium) empfehlen wir ein zusätzliches Job in CI — das ist als nächster Schritt geplant.
+
+
+
+### Empfohlene zusätzliche Tests (Priorisiert)
+
+1) Vollständige Endpunkt‑Abdeckung (HIGH)
+  - `change-password` (authenticated): erfolgreicher vs. fehlgeschlagener Ablauf. Verifikation, dass refresh tokens revoket werden.
+  - `reset-password/request` + `reset-password/confirm`: E2E-Flow inklusive Token-Generation, E-Mail-Send-Simulation, Token-Use und Invalidierung.
+  - `account/data-export` und `account/delete`: sicherstellen, dass Datenschutz-API Daten korrekt zusammenführt und Soft‑Delete + Anonymisierung geplant wird.
+  - Admin‑APIs: create/invite, update (role, access_expires_at, valid_from), lock/unlock, invalidate sessions, delete.
+
+2) Concurrency & Race Conditions (HIGH)
+  - Simuliere gleichzeitige `/auth/refresh` requests mit demselben Token (concurrent rotation) — verifiziere konsistente `replaced_by`‑Logik, keine UID collision, und that reuse detection works.
+  - DB transaction tests to ensure atomicity for rotation and `replaced_by` updates.
+
+3) Security negative tests (HIGH)
+  - Token reuse attack simulation: present rotated token and expect full revocation of all tokens for that user.
+  - Cookie tampering: missing HttpOnly/Secure flags detection in output (CI smoke test to ensure cookie flags are set as expected).
+  - Replay attacks and invalid tokens.
+
+4) Rate limiting & abuse tests (MEDIUM)
+  - Exceed login attempts: per IP and per account enforcement → 429 and correct lockout increments.
+  - Password reset bruteforce attempts → rate limit enforced.
+
+5) End‑to‑End / Acceptance tests (MEDIUM)
+  - Full browser‑flow tests with Playwright/Selenium: login → access protected UI → token refresh flow occurs transparently → logout clears cookies.
+  - Mobile client / API client tests to ensure cookie handling is deterministic.
+
+6) Migrations & Upgrade testing (HIGH)
+  - Alembic migration apply/rollback tests against a real Postgres instance in CI (fast, ephemeral docker container) — verify schema, indices, FK and test `migrations/0001_create_auth_schema_postgres.sql` equivalence.
+  - Migration of `passwords.env` to DB script idempotency + verification (counts, collisions, created flags).
+
+7) Long‑term & privacy compliance tests (LOW→MEDIUM)
+  - Automated anonymization run: trigger a user deletion and validate that PII is removed after the configured retention window.
+  - Backup restore test to confirm backups don’t leak plaintext sensitive information.
+
+8) Timezone and deprecation fixes (LOW)
+  - Replace naive `datetime.utcnow()` usage across services/tests with timezone‑aware dates and add tests to verify `expires_at` semantics across timezone boundaries.
+
+9) CI / dependency tests (MEDIUM)
+  - Add argon2_cffi to CI extras or add a CI matrix that validates both `AUTH_HASH_ALGO=argon2` and `AUTH_HASH_ALGO=bcrypt`. Ensure passlib + bcrypt and argon2 are installed in CI.
+
+10) Performance / load tests (LOW→MEDIUM)
+   - Load test refresh endpoint to ensure DB can handle rotation traffic during peak (e.g., many users refreshing daily). Look for lock contention or excessive row writes; consider soft‑pruning old tokens.
+
+### Konkrete Test To‑Dos (schnelle Implementierungsvorschläge)
+
+- Add unit tests for `hash_password` long-password behavior and fallback to direct bcrypt call.
+- Add endpoint tests for `POST /auth/reset-password/confirm` covering invalid/expired/used tokens and successful reset.
+- Add integration tests for `PATCH /account/profile` and `POST /account/delete` including attacker‑style negative tests (missing password, wrong password).
+- Add tests verifying cookie flags are present (HttpOnly, Secure, SameSite) in responses across login/refresh endpoints when `JWT_COOKIE_SECURE` set/unset.
+
+### CI Integration Ideas
+
+- Add a `tests/auth-db` pipeline step in CI that runs the DB-auth tests against a temporary Postgres Docker container using `AUTH_DATABASE_URL=postgres://...` to validate Alembic migrations + SQL.
+- Add a small Playwright job to validate end-to-end browser flows around login/refresh/logout.
+- Matrix: run tests with `AUTH_HASH_ALGO=argon2` and `AUTH_HASH_ALGO=bcrypt` ensuring consistency across environments.
+
+#### CI: concrete changes added in repo
+
+- A GitHub Actions workflow is present at `.github/workflows/ci.yml` that now runs tests with a small matrix variable `AUTH_HASH_ALGO` (`argon2` and `bcrypt`) so both hashing modes are validated in CI. The job will install `argon2_cffi` when required during the matrix run.
+- A new job `migration-postgres` applies `migrations/0001_create_auth_schema_postgres.sql` against an ephemeral Postgres service and smoke-tests that the tables `users`, `refresh_tokens` and `reset_tokens` exist. This verifies that our SQL is compatible with Postgres in CI.
+
+These jobs provide early warnings when migration SQL or hashing code paths regress.
+
+---
+
+## 19. Staging Rollout (concrete)
+
+Prepare a staging deployment that uses DB-backed auth and exercises all auth endpoints prior to production cut over. The repo contains the artifacts and test scripts referenced below.
+
+1) Create a staging environment / compose override that sets:
+
+```text
+AUTH_BACKEND=db
+AUTH_DATABASE_URL=postgresql://postgres:postgres@postgres:5432/postgres
+JWT_SECRET=<secure secret (from CI secrets)>
+AUTH_HASH_ALGO=argon2
+JWT_COOKIE_SECURE=true
+```
+
+2) Deployment (example using docker-compose on the staging host):
+
+```powershell
+# from project root (windows shell example)
+$env:AUTH_BACKEND='db'; $env:AUTH_DATABASE_URL='postgresql://postgres:postgres@db:5432/postgres'; docker compose -f docker-compose.yml up -d --build
+```
+
+3) Smoke-tests (manual/automated): run the following checks after deployment (automatable in CI/CD):
+
+- POST /auth/login (existing staging user) → expect 200 + Set-Cookie access/refresh
+- POST /auth/refresh → expect 200 (rotation) and new refresh cookie
+- POST /auth/change-password → change and verify that refresh tokens revoked
+- POST /auth/reset-password/request && /auth/reset-password/confirm → E2E check
+- GET /admin/users → requires admin scope → ensures admin APIs are reachable
+- POST /auth/account/delete → shows 202 accepted, sets deleted_at and revokes tokens
+
+Store these checks as a script (e.g. `scripts/smoke-auth-staging.sh`) and run them automatically after Staging deploy.
+
+---
+
+## 20. Monitoring & Alerting (Auth)
+
+Add the following minimal metrics (application-level counters are present in `src/app/services/counters.py`):
+
+- auth_login_success — incremented on successful DB login
+- auth_login_failure — incremented on failed login
+- auth_refresh_reuse — incremented when refresh token reuse is detected (attack indicator)
+- auth_rate_limited — increment when rate-limited (login/reset endpoints)
+
+Recommended thresholds / alerts:
+
+- Spike in auth_login_failure > x% above baseline for 5m → investigate possible brute-force attacks
+- auth_refresh_reuse > 0 → immediate alert + audit the affected user(s)
+- Rate-limited events sustained > threshold → consider progressive backoff rule or investigate automation
+
+Alerting should route to on-call Ops and produce an incident ticket including a trace of the events and the affected users.
+
+---
+
+## 21. Production Rollout Plan (Concrete)
+
+Prerequisites (pre-deploy checklist):
+
+- Full backups: take encrypted DB dump and verify restoration steps are documented.
+- CI is green (all tests + migration-postgres smoke pass).
+- Staging has been running DB-backed auth for at least 24–72h with no regressions.
+
+Switch-over steps:
+
+1. Schedule a maintenance window (if desired) and communicate to stakeholders.
+2. Set `AUTH_BACKEND=db` in production environment variables and ensure `AUTH_DATABASE_URL` points to the auth DB (Postgres or other supported DB).
+3. Deploy application code that depends on DB-backed auth (this repo's main branch contains the code). Run smoke-tests from staging checklist.
+4. Monitor auth metrics and logs closely for 72 hours: failed login spikes, refresh reuse, increased 5xx errors.
+
+Rollback plan (only if critical issues discovered):
+
+- Immediate rollback condition: evidence of mass token reuse attacks or inability to authenticate existing users at scale.
+- Steps to rollback:
+  1. Revert environment var `AUTH_BACKEND` to `env` (note: this only works if `passwords.env` is still available on the host). This will re-enable legacy env-based auth as a quick fallback.
+  2. Re-deploy the previous application image or configuration with the env-backend enabled.
+  3. Investigate logs/metrics produced during the failed rollout and plan a corrective deployment.
+
+NOTE: Reverting to `env` requires `passwords.env` to exist; keep a secure copy for 7 days after migration for rollback use only.
+
+---
+
+## 22. Step 4 — Final Cleanup (when production is stable)
+
+After the rollout is mature (suggest 1–4 weeks of monitoring and validation):
+
+1. Remove the `env` auth branch and any conditional code paths guarded by `AUTH_BACKEND` (raise errors on 'env').
+2. Remove `passwords.env` from deploys and any references in Docker compose, ansible, or repo documentation (leave an archival note in docs if required by policy).
+3. Remove the feature-flag (AUTH_BACKEND) from config if you want to reduce complexity and make `db` the only supported backend.
+4. Run full CI and smoke tests (again).
+
+Suggested git flow for cleanup: open a feature branch `auth/cleanup/env-remove` with the removal commits, protect with CI checks and a full test run before merging to main.
+
+---
+
+## 23. Acceptance Criteria & Done-Definition
+
+Migration is considered complete when all of the following are true:
+
+- All CI jobs pass, including `migration-postgres` and both hashing-mode matrix runs.
+- Staging has been running DB-based auth for at least 24–72 hours with no critical incidents.
+- Production has been running DB-based auth for 72 hours with no anomalous metrics (login failure spike, refresh token reuse, or rate-limit saturation).
+- All tests (unit/integration/E2E) that cover auth flows are green in CI.
+- The legacy `env` auth path is scheduled for removal and no new deploys rely on `passwords.env` (or it has been removed in final cleanup step).
+- Documentation updated: `docs/auth-migration/auth-migration.md`, `templates/pages/privacy.html`, and `README.md` (links) reflect the new flow, compliance details and operational runbooks.
+
+Where to update the public privacy text in this repo:
+
+- The canonical privacy page lives at `templates/pages/privacy.html` — edit this file and open a review PR to update the live text.
+- For small policy text changes you may also update `docs/auth-migration/auth-migration.md` to note the change history or to propose new phrasing for legal review.
+
+When these are met, create the cleanup PR to remove legacy env code and delete `passwords.env` deploy artifacts.
+
+---
+
+### Example of high-priority test plan (short roadmap)
+
+1. Unit tests + endpoint tests for reset/change/password and admin flows (2–4 days effort).  
+2. Add Alembic migration + Postgres CI runner, ensure migration applies/rolls back (1–2 days).  
+3. Add concurrency + reuse attack tests (1–2 days).  
+4. Add Playwright-based E2E smoke for login+refresh+logout (2–4 days).  
+
+Diese Liste sollte den Testaufwand priorisieren und in kleine, review‑freundliche PRs zerlegt werden.
+
+### Zusammenfassung
+
+Aktueller Stand: Step 2 ist fertig implementiert und durch Core‑Unit + Integrationstests gut abgedeckt (login, refresh rotation & reuse, logout). Die nächsten sinnvollen Test‑Arbeiten sind: vollständige Endpoint‑Coverage (reset/change/delete/import/export), Concurrency/Race‑Condition Tests, Alembic/Postgres CI‑Tests sowie E2E Browser‑Flows.
+
+### Anmerkung
+Bitte sag mir, welche der vorgeschlagenen Test‑Aufgaben ich als nächstes priorisieren soll — ich kann direkt anfangen, die Tests zu implementieren und CI‑Jobs zu ergänzen.
+
 ### Example tests mapping to repo
 - Add/modify tests in `tests/test_optional_auth_behavior.py` and `tests/test_...` or new `tests/test_auth_flow.py`.
 

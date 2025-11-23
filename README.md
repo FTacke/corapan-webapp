@@ -39,6 +39,8 @@ Diese Anwendung dient als Frontend und API-Layer für das CO.RA.PAN-Projekt. Sie
 - **Frontend:** Jinja2 Templates, Vanilla JS, CSS (Bootstrap-basiert), ECharts, Leaflet
 - **Deployment:** Gunicorn, Docker Compose
 
+Note on authentication: the project migrated to a DB-backed authentication system. In production/staging `AUTH_BACKEND` should be set to `db`. The legacy `passwords.env` approach is kept only for local development and rollback scenarios — see `docs/auth-migration/auth-migration.md` for details and rollout instructions.
+
 ## 4. Voraussetzungen
 
 - **Python:** Version 3.12 oder höher

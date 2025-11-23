@@ -101,7 +101,7 @@ def logout():
     return response
 ```
 
-**TODO: Logout-Fix**
+**TODO: Logout-Fix** — tracked at `docs/auth-migration/todos.md` (item: Logout UX improvement)
 
 **Option A: Immer Page-Reload** (aktuell implementiert)
 

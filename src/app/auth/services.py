@@ -1,0 +1,400 @@
+"""Auth service helpers: hashing, token generation, token rotation, account checks.
+
+Intended to be used by the DB-backed auth routes. Uses SQLAlchemy sessions
+from extensions.sqlalchemy_ext.get_session.
+"""
+from __future__ import annotations
+
+import hashlib
+import secrets
+import uuid
+from dataclasses import dataclass
+from datetime import datetime, timedelta, timezone
+from typing import Optional, Tuple
+
+from flask import current_app
+from flask_jwt_extended import create_access_token
+from passlib.hash import argon2, bcrypt
+import bcrypt as _bcrypt_module  # fallback direct bcrypt usage when passlib backend behaves oddly
+from sqlalchemy import select
+
+from ..extensions.sqlalchemy_ext import get_session
+from ..services.counters import auth_refresh_reuse, auth_login_success, auth_login_failure
+from .models import User, RefreshToken, ResetToken
+
+
+# Type for account status
+@dataclass
+class AccountStatus:
+    ok: bool
+    code: Optional[str] = None
+    message: Optional[str] = None
+
+
+# Password hashing
+def hash_password(plain: str) -> str:
+    algo = current_app.config.get("AUTH_HASH_ALGO", "argon2")
+    if algo == "argon2":
+        # passlib argon2 uses reasonable defaults; we allow tuning via config
+        return argon2.using(
+            time_cost=current_app.config.get("AUTH_ARGON2_TIME_COST", 2),
+            memory_cost=current_app.config.get("AUTH_ARGON2_MEMORY_COST", 102400),
+            parallelism=current_app.config.get("AUTH_ARGON2_PARALLELISM", 4),
+        ).hash(plain)
+    else:
+        # fallback to bcrypt
+        # bcrypt (the underlying C library) has a 72-byte input limit; passlib tries to detect
+        # features by hashing very long secrets which can raise a ValueError in some envs.
+        # Truncate input to 72 bytes when using bcrypt and fall back to the bcrypt module
+        # if passlib's handler raises an error.
+        try:
+            # try the passlib wrapper first (handles salt/cost config)
+            return bcrypt.hash(plain)
+        except Exception:
+            # deterministic truncation to bcrypt's max 72 bytes (utf-8)
+            b = plain.encode("utf-8")[:72]
+            hashed = _bcrypt_module.hashpw(b, _bcrypt_module.gensalt())
+            # bcrypt.hashpw returns bytes
+            return hashed.decode("utf-8")
+
+
+def verify_password(plain: str, hashed: str) -> bool:
+    algo = current_app.config.get("AUTH_HASH_ALGO", "argon2")
+    try:
+        if algo == "argon2":
+            return argon2.verify(plain, hashed)
+        try:
+            return bcrypt.verify(plain, hashed)
+        except Exception:
+            # try direct bcrypt module verification with truncation when passlib fails
+            try:
+                b = plain.encode("utf-8")[:72]
+                return _bcrypt_module.checkpw(b, hashed.encode("utf-8"))
+            except Exception:
+                return False
+    except Exception:
+        return False
+
+
+# Access token creation
+def create_access_token_for_user(user: User) -> str:
+    expires_seconds = current_app.config.get("ACCESS_TOKEN_EXP", 900)
+    expires_delta = timedelta(seconds=int(expires_seconds))
+    claims = {
+        "sub": str(user.id),
+        "username": user.username,
+        "role": user.role,
+        "is_active": bool(user.is_active),
+        "must_reset_password": bool(user.must_reset_password),
+    }
+    token = create_access_token(identity=str(user.id), additional_claims=claims, expires_delta=expires_delta)
+    return token
+
+
+# Refresh token handling
+def _hash_refresh_token(raw: str) -> str:
+    return hashlib.sha256(raw.encode("utf-8")).hexdigest()
+
+
+def _ensure_utc(dt: Optional[datetime]) -> Optional[datetime]:
+    """Return a timezone-aware datetime in UTC for naive datetimes (SQLite may return naive datetimes)."""
+    if dt is None:
+        return None
+    return dt if dt.tzinfo is not None else dt.replace(tzinfo=timezone.utc)
+
+
+def create_refresh_token_for_user(user: User, user_agent: Optional[str] = None, ip_address: Optional[str] = None) -> Tuple[str, RefreshToken]:
+    raw = secrets.token_urlsafe(64)
+    token_hash = _hash_refresh_token(raw)
+    expires_at = datetime.now(timezone.utc) + timedelta(seconds=int(current_app.config.get("REFRESH_TOKEN_EXP", 2592000)))
+
+    token_id = str(uuid.uuid4())
+    rt = RefreshToken(
+        token_id=token_id,
+        user_id=str(user.id),
+        token_hash=token_hash,
+        created_at=datetime.now(timezone.utc),
+        expires_at=expires_at,
+        user_agent=user_agent,
+        ip_address=ip_address,
+    )
+
+    with get_session() as session:
+        session.add(rt)
+
+    return raw, rt
+
+
+def rotate_refresh_token(old_raw_token: str, user_agent: Optional[str], ip_address: Optional[str]) -> Tuple[Optional[str], Optional[RefreshToken], str]:
+    """Rotate an existing raw refresh token.
+
+    Returns tuple (new_raw, new_model, status) where status is one of:
+    - 'ok' (success)
+    - 'invalid' (token not found/invalid)
+    - 'expired' (token expired)
+    - 'reused' (reuse detected)
+    """
+    # use module-level helper
+    old_hash = _hash_refresh_token(old_raw_token)
+    marker = f"rotating-{uuid.uuid4()}"
+    now = datetime.now(timezone.utc)
+
+    with get_session() as session:
+        # Attempt to mark the row as rotating in a single atomic UPDATE so concurrent
+        # rotations race against the DB and only one will win.
+        update_count = (
+            session.query(RefreshToken)
+            .filter(
+                RefreshToken.token_hash == old_hash,
+                RefreshToken.replaced_by == None,
+                RefreshToken.revoked_at == None,
+                RefreshToken.expires_at >= now,
+            )
+            .update({RefreshToken.replaced_by: marker}, synchronize_session=False)
+        )
+
+        # If we couldn't mark the row, inspect why
+        if update_count == 0:
+            stmt = select(RefreshToken).where(RefreshToken.token_hash == old_hash)
+            result = session.execute(stmt).scalars().first()
+            if not result:
+                return None, None, "invalid"
+            token_row: RefreshToken = result
+
+            if _ensure_utc(token_row.expires_at) < datetime.now(timezone.utc) or token_row.revoked_at is not None:
+                return None, None, "expired"
+
+            # If the token already had a replacement, treat as reuse
+            if token_row.replaced_by is not None and token_row.replaced_by != marker:
+                # detected reuse -> revoke all tokens for this user and increment metric
+                session.query(RefreshToken).filter(RefreshToken.user_id == token_row.user_id).update({RefreshToken.revoked_at: datetime.now(timezone.utc)})
+                try:
+                    auth_refresh_reuse.increment()
+                except Exception:
+                    # Don't fail rotation on metric failures
+                    current_app.logger.debug("Failed to increment auth_refresh_reuse metric")
+                return None, None, "reused"
+
+            # Fallback - unknown state
+            return None, None, "invalid"
+
+        # reload the token row we claimed
+        stmt = select(RefreshToken).where(RefreshToken.token_hash == old_hash)
+        token_row = session.execute(stmt).scalars().first()
+
+        # create new token
+        new_raw = secrets.token_urlsafe(64)
+        new_hash = _hash_refresh_token(new_raw)
+        new_id = str(uuid.uuid4())
+        new_expires = datetime.now(timezone.utc) + timedelta(seconds=int(current_app.config.get("REFRESH_TOKEN_EXP", 2592000)))
+
+        new_row = RefreshToken(
+            token_id=new_id,
+            user_id=token_row.user_id,
+            token_hash=new_hash,
+            created_at=datetime.now(timezone.utc),
+            expires_at=new_expires,
+            user_agent=user_agent,
+            ip_address=ip_address,
+            replaced_by=None,
+        )
+
+        # set replaced_by on old row and optionally set last_used_at
+        token_row.replaced_by = new_id
+        token_row.last_used_at = datetime.now(timezone.utc)
+
+        session.add(new_row)
+
+    return new_raw, new_row, "ok"
+
+
+def revoke_all_refresh_tokens_for_user(user_id: str) -> None:
+    with get_session() as session:
+        session.query(RefreshToken).filter(RefreshToken.user_id == user_id, RefreshToken.revoked_at == None).update({RefreshToken.revoked_at: datetime.now(timezone.utc)})
+
+
+def revoke_refresh_token_by_raw(raw: str) -> bool:
+    """Mark a single refresh token (by raw value) as revoked. Returns True if found."""
+    h = _hash_refresh_token(raw)
+    with get_session() as session:
+        stmt = select(RefreshToken).where(RefreshToken.token_hash == h)
+        r = session.execute(stmt).scalars().first()
+        if not r:
+            return False
+        r.revoked_at = datetime.now(timezone.utc)
+        return True
+
+
+def anonymize_user(user_id: str) -> None:
+    """Anonymize a soft-deleted user by removing PII and marking fields anonymous.
+
+    This function implements the post-deletion pseudonymization step (e.g.
+    after the configured retention window). It replaces username/email with a
+    non-reversible placeholder and clears user-identifying fields.
+    """
+    with get_session() as session:
+        stmt = select(User).where(User.id == user_id)
+        user = session.execute(stmt).scalars().first()
+        if not user:
+            raise KeyError("user_not_found")
+
+        # ensure user was already soft-deleted
+        if not user.deleted_at:
+            raise ValueError("user_not_deleted")
+
+        placeholder = f"deleted-{user_id}"
+        user.username = placeholder
+        user.email = f"{placeholder}@example.invalid"
+        user.display_name = None
+        # invalidate password (store a random hash)
+        user.password_hash = hash_password(secrets.token_urlsafe(32))
+        user.is_active = False
+        # clear last login info
+        user.last_login_at = None
+
+        # revoke refresh/reset tokens for user
+        session.query(RefreshToken).filter(RefreshToken.user_id == user_id).update({RefreshToken.revoked_at: datetime.now(timezone.utc)})
+        session.query(ResetToken).filter(ResetToken.user_id == user_id).update({ResetToken.used_at: datetime.now(timezone.utc)})
+
+
+# Account check
+def check_account_status(user: User) -> AccountStatus:
+    now = datetime.now(timezone.utc)
+    if not user.is_active:
+        return AccountStatus(False, "account_inactive", "Account is not active")
+    if user.deleted_at is not None:
+        return AccountStatus(False, "account_deleted", "Account deleted")
+    if user.valid_from and _ensure_utc(user.valid_from) > now:
+        return AccountStatus(False, "account_not_yet_valid", "Account is not valid yet")
+    if user.access_expires_at and _ensure_utc(user.access_expires_at) < now:
+        return AccountStatus(False, "account_expired", "Account access expired")
+    if user.locked_until and _ensure_utc(user.locked_until) > now:
+        return AccountStatus(False, "account_locked", "Account temporarily locked")
+    return AccountStatus(True)
+
+
+# Helper: lookup user by username/email
+def find_user_by_username_or_email(identifier: str) -> Optional[User]:
+    with get_session() as session:
+        stmt = select(User).where(User.username == identifier.lower())
+        user = session.execute(stmt).scalars().first()
+        if user:
+            return user
+        stmt2 = select(User).where(User.email == identifier.lower())
+        return session.execute(stmt2).scalars().first()
+
+
+def get_user_by_id(user_id: str) -> Optional[User]:
+    with get_session() as session:
+        stmt = select(User).where(User.id == user_id)
+        return session.execute(stmt).scalars().first()
+
+
+def update_user_password(user_id: str, new_hashed: str) -> None:
+    with get_session() as session:
+        stmt = select(User).where(User.id == user_id)
+        user = session.execute(stmt).scalars().first()
+        if not user:
+            raise KeyError("user_not_found")
+        user.password_hash = new_hashed
+        user.must_reset_password = False
+
+
+def update_user_profile(user_id: str, display_name: Optional[str] = None, email: Optional[str] = None) -> None:
+    with get_session() as session:
+        stmt = select(User).where(User.id == user_id)
+        user = session.execute(stmt).scalars().first()
+        if not user:
+            raise KeyError("user_not_found")
+        if display_name is not None:
+            setattr(user, "display_name", display_name)
+        if email is not None:
+            user.email = email.lower()
+
+
+def mark_user_deleted(user_id: str) -> None:
+    with get_session() as session:
+        stmt = select(User).where(User.id == user_id)
+        user = session.execute(stmt).scalars().first()
+        if not user:
+            raise KeyError("user_not_found")
+        user.deletion_requested_at = datetime.now(timezone.utc)
+        user.deleted_at = datetime.now(timezone.utc)
+        user.is_active = False
+
+
+def create_reset_token_for_user(user: User) -> Tuple[str, ResetToken]:
+    raw = secrets.token_urlsafe(48)
+    token_hash = _hash_refresh_token(raw)
+    rid = str(uuid.uuid4())
+    expires_at = datetime.now(timezone.utc) + timedelta(hours=1)
+    rt = ResetToken(
+        id=rid,
+        user_id=str(user.id),
+        token_hash=token_hash,
+        created_at=datetime.now(timezone.utc),
+        expires_at=expires_at,
+    )
+    with get_session() as session:
+        session.add(rt)
+    return raw, rt
+
+
+def verify_and_use_reset_token(raw: str) -> Tuple[Optional[ResetToken], str]:
+    """Verify reset token and mark used if valid. Returns (row, status)."""
+    h = _hash_refresh_token(raw)
+    with get_session() as session:
+        stmt = select(ResetToken).where(ResetToken.token_hash == h)
+        r = session.execute(stmt).scalars().first()
+        if not r:
+            return None, "invalid"
+        if r.used_at is not None:
+            return None, "used"
+        if _ensure_utc(r.expires_at) < datetime.now(timezone.utc):
+            return None, "expired"
+        r.used_at = datetime.now(timezone.utc)
+        return r, "ok"
+
+
+# Helper to mark login success/failure
+def on_successful_login(user: User) -> None:
+    with get_session() as session:
+        stmt = select(User).where(User.id == user.id)
+        dbu = session.execute(stmt).scalars().first()
+        if dbu:
+            dbu.login_failed_count = 0
+            dbu.locked_until = None
+            dbu.last_login_at = datetime.now(timezone.utc)
+            try:
+                auth_login_success.increment()
+            except Exception:
+                current_app.logger.debug("Failed to increment auth_login_success metric")
+
+
+def on_failed_login(user: Optional[User]) -> None:
+    if user is None:
+        return
+    with get_session() as session:
+        stmt = select(User).where(User.id == user.id)
+        dbu = session.execute(stmt).scalars().first()
+        if dbu:
+            dbu.login_failed_count = (dbu.login_failed_count or 0) + 1
+            # Lockout policy: 5 failed attempts -> lock for 10 minutes
+            if dbu.login_failed_count >= 5:
+                dbu.locked_until = datetime.now(timezone.utc) + timedelta(minutes=10)
+            try:
+                auth_login_failure.increment()
+            except Exception:
+                current_app.logger.debug("Failed to increment auth_login_failure metric")
+
+
+def revoke_refresh_token_by_raw(raw: str) -> bool:
+    """Mark a single refresh token (by raw value) as revoked. Returns True if found."""
+    h = _hash_refresh_token(raw)
+    with get_session() as session:
+        stmt = select(RefreshToken).where(RefreshToken.token_hash == h)
+        r = session.execute(stmt).scalars().first()
+        if not r:
+            return False
+        r.revoked_at = datetime.now(timezone.utc)
+        return True

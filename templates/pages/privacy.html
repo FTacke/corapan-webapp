@@ -73,6 +73,7 @@
         <li><strong>Speicherort:</strong> Das JWT wird als Cookie ("jwt_token") in Ihrem Browser abgelegt. Es ist mit dem <code>HttpOnly</code>- und <code>Secure</code>-Flag versehen, wodurch es nur über HTTPS übertragen und nicht per JavaScript ausgelesen werden kann.</li>
         <li><strong>Zweck:</strong> Der Token ist für die technische Bereitstellung geschützter Inhalte erforderlich, um zu prüfen, ob ein Benutzer bzw. eine Benutzergruppe die entsprechenden Zugriffsrechte besitzt.</li>
         <li><strong>Ablauf/Löschung:</strong> Der Token verfällt automatisch nach einer Stunde (Standard-Sessiondauer). Schließen Sie den Browser, kann das Cookie zudem ungültig werden, wenn Ihr Browser für das automatische Löschen von Cookies konfiguriert ist.</li>
+        <li><strong>Refresh-Token (Session-Erneuerung):</strong> Zusätzlich verwendet die Anwendung ein lang laufendes, HttpOnly <code>refreshToken</code>-Cookie, welches nur über HTTPS übertragen werden kann (Secure + HttpOnly + SameSite policies) und ausschließlich dem Zweck dient, kurze Access-Tokens automatisch zu erneuern. Dieses Cookie enthält keine Klartext-Personenangaben.</li>
         <li><strong>Keine Weitergabe:</strong> Es erfolgt keine Übermittlung dieser Daten an Dritte. Eine Profilbildung oder Auswertung personenbezogener Informationen findet nicht statt.</li>
       </ul>
     </section>
@@ -94,7 +95,16 @@
     </section>
 
     <section class="md3-text-section md3-text-section--divider">
-      <h2 class="md3-headline-small">7. Kontakt zur Datenschutzaufsicht</h2>
+      <h2 class="md3-headline-small">7. Auth-bezogene Daten & App‑Funktionen</h2>
+      <p class="md3-body-large">
+        Im Rahmen von Benutzerkonten verarbeitet die Anwendung die folgenden Daten zur Authentifizierung, Autorisierung und Auditing: <code>user_id</code>, <code>username</code>, <code>email</code>, <code>password_hash</code> (gesichert, nicht im Klartext), <code>role</code>, <code>is_active</code>, <code>must_reset_password</code>, <code>created_at</code>, <code>updated_at</code>, <code>last_login_at</code>, <code>login_failed_count</code>, <code>locked_until</code>, <code>deleted_at</code>, <code>deletion_requested_at</code> sowie verschlüsselte/geshashte Token-Metadaten (Refresh-/Reset-Token-Hashes).</p>
+      <p class="md3-body-large">
+        Betroffene Nutzer können folgende Funktionen in der Anwendung nutzen: <strong>GET /auth/account/data-export</strong> zur Datenübertragung und <strong>POST /auth/account/delete</strong> zum Anfordern der Löschung (Soft-Delete). Diese Endpunkte sind unter dem jeweiligen Nutzerkonto erreichbar und erfordern Authentifizierung.
+      </p>
+    </section>
+
+    <section class="md3-text-section md3-text-section--divider">
+      <h2 class="md3-headline-small">8. Kontakt zur Datenschutzaufsicht</h2>
       <p class="md3-body-large">
         Sollten Sie der Meinung sein, dass Ihre Daten nicht datenschutzkonform verarbeitet werden, können Sie sich an die Datenschutzaufsichtsbehörde wenden:<br>
         <strong>Der Hessische Beauftragte für Datenschutz und Informationsfreiheit</strong><br>

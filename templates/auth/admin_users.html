@@ -1,0 +1,23 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Admin — Users</title>
+  </head>
+  <body>
+    <h1>Admin: Users</h1>
+    <div id="list"></div>
+    <button id="refresh">Reload</button>
+
+    <script>
+      async function reload(){
+        const r = await fetch('/admin/users');
+        if(!r.ok){ document.getElementById('list').textContent = 'Failed'; return; }
+        const j = await r.json();
+        document.getElementById('list').textContent = JSON.stringify(j.items || j, null, 2);
+      }
+      document.getElementById('refresh').addEventListener('click', reload);
+      reload();
+    </script>
+  </body>
+</html>

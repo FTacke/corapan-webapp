@@ -7,7 +7,7 @@ from pathlib import Path
 from typing import Any
 
 import json
-from datetime import datetime
+from datetime import datetime, timezone
 
 DATA_ROOT = Path(__file__).resolve().parents[3] / "data"
 COUNTER_ROOT = DATA_ROOT / "counters"
@@ -43,7 +43,7 @@ class CounterStore:
 class AccessCounter(CounterStore):
     def increment(self, account: str, role: str) -> None:
         payload = self.load()
-        now = datetime.utcnow()
+        now = datetime.now(timezone.utc)
         month_key = now.strftime("%Y-%m")
         day_value = now.strftime("%Y-%m-%d")
 
@@ -77,7 +77,7 @@ class AccessCounter(CounterStore):
 class DetailedCounter(CounterStore):
     def increment(self, amount: int = 1) -> None:
         payload = self.load()
-        now = datetime.utcnow()
+        now = datetime.now(timezone.utc)
         month_key = now.strftime("%Y-%m")
         day_value = now.strftime("%Y-%m-%d")
 
@@ -108,5 +108,26 @@ counter_visits = DetailedCounter(
 
 counter_search = DetailedCounter(
     filename="counter_search.json",
+    default={"overall": 0, "monthly": {}, "days": {}},
+)
+
+# Authentication & security counters
+auth_login_success = DetailedCounter(
+    filename="auth_login_success.json",
+    default={"overall": 0, "monthly": {}, "days": {}},
+)
+
+auth_login_failure = DetailedCounter(
+    filename="auth_login_failure.json",
+    default={"overall": 0, "monthly": {}, "days": {}},
+)
+
+auth_refresh_reuse = DetailedCounter(
+    filename="auth_refresh_reuse.json",
+    default={"overall": 0, "monthly": {}, "days": {}},
+)
+
+auth_rate_limited = DetailedCounter(
+    filename="auth_rate_limited.json",
     default={"overall": 0, "monthly": {}, "days": {}},
 )
