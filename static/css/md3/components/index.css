@@ -72,6 +72,7 @@
   display: flex;
   flex-direction: column;
   min-width: 0; /* Erlaubt Shrinking */
+  box-shadow: var(--elev-1); /* Add elevation to filled card */
 }
 
 .md3-index-card .card-body {
@@ -92,7 +93,10 @@
 .md3-index-card__title {
   margin: var(--space-2) 0;
   color: var(--md-sys-color-primary);
-  font-size: var(--md-sys-typescale-title-large);
+  font-size: var(--md-sys-typescale-title-large-font-size);
+  font-weight: var(--md-sys-typescale-title-large-font-weight);
+  line-height: var(--md-sys-typescale-title-large-line-height);
+  letter-spacing: var(--md-sys-typescale-title-large-letter-spacing);
 }
 
 .md3-index-card__text {
@@ -106,6 +110,10 @@
   display: flex;
   justify-content: flex-end;
   margin-top: auto;
+}
+
+.md3-index-card .btn .material-symbols-rounded {
+  font-size: 0.9rem;
 }
 
 /* ============================================
@@ -131,5 +139,3 @@ body[data-page="index"] #navigation-drawer {
     grid-template-columns: 1fr !important;
   }
 }
-
-

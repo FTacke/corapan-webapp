@@ -149,7 +149,7 @@
 
 /* KWIC Context Columns */
 .md3-datatable__cell--context {
-  color: var(--md-sys-color-on-surface-variant, #4A4F55) !important;
+  color: var(--md-sys-color-on-surface-variant, #4a4f55) !important;
   font-size: 0.95rem !important;
   white-space: normal !important;
   word-wrap: break-word !important;
@@ -179,7 +179,7 @@
 
 /* Empty Cell Placeholder */
 .md3-datatable__empty {
-  color: var(--md-sys-color-outline, #79747E) !important;
+  color: var(--md-sys-color-outline, #79747e) !important;
   font-style: italic;
 }
 
@@ -202,7 +202,7 @@
 
 /* Info Text */
 .dataTables_wrapper .dataTables_info {
-  color: var(--md-sys-color-on-surface-variant, #4A4F55) !important;
+  color: var(--md-sys-color-on-surface-variant, #4a4f55) !important;
   font-size: 0.95rem;
 }
 
@@ -215,4 +215,3 @@
   color: var(--md-sys-color-on-surface, #1c1b1f) !important;
   padding: var(--space-4, 1rem) var(--space-6, 1.5rem) !important;
 }
-

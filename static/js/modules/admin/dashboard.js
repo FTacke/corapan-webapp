@@ -1,124 +1,128 @@
-﻿const metricsGrid = document.querySelector('[data-element="metrics-grid"]');
-const toggleButton = document.querySelector('[data-element="toggle-temp"]');
-const toggleLabel = document.querySelector('[data-element="toggle-temp-label"]');
+﻿/**
+ * Admin Dashboard Module
+ * Handles metrics fetching and rendering for the redesigned dashboard.
+ */
 
-const numberFormatter = new Intl.NumberFormat('es-ES');
-
-function getInitialToggleState() {
-  const globalValue = window.__CORAPAN__?.allowPublicTempAudio;
-  if (typeof globalValue === 'boolean') {
-    return globalValue;
-  }
-  if (typeof globalValue === 'string') {
-    return globalValue.toLowerCase() === 'true';
-  }
-  return false;
-}
-
-let allowPublicTempAudio = getInitialToggleState();
-
-function updateToggleVisual(state) {
-  if (!toggleButton || !toggleLabel) return;
-  toggleButton.setAttribute('aria-checked', state ? 'true' : 'false');
-  toggleLabel.textContent = state ? 'Acceso público activado (/media/temp, /media/snippet)' : 'Acceso público desactivado (/media/temp, /media/snippet)';
-}
-
-function summariseAccessMetric(data) {
-  if (!data) {
-    return { value: 0, detail: 'Sin datos' };
-  }
-  const totalOverall = data.total?.overall ?? 0;
-  const monthly = data.total?.monthly ?? {};
-  const lastMonthKey = Object.keys(monthly).sort().pop();
-  const monthlyTotal = lastMonthKey ? monthly[lastMonthKey] : 0;
-  const detail = lastMonthKey ? `En ${lastMonthKey}: ${numberFormatter.format(monthlyTotal)}` : 'Sin desglose mensual';
-  return {
-    value: totalOverall,
-    detail,
-  };
-}
-
-function summariseSimpleMetric(data) {
-  if (!data) {
-    return { value: 0, detail: 'Sin datos' };
-  }
-  const total = data.overall ?? 0;
-  return {
-    value: total,
-    detail: 'Total hist\u00f3rico',
-  };
-}
-
-function hydrateMetricCard(metric, payload) {
+export function initAdminDashboard() {
+  // Check if we are on the dashboard page by looking for the metrics grid
+  const metricsGrid = document.querySelector('[data-element="metrics-grid"]');
   if (!metricsGrid) return;
-  const card = metricsGrid.querySelector(`[data-metric="${metric}"]`);
-  if (!card) return;
-  const valueEl = card.querySelector('.md3-metric-card__value');
-  const detailEl = card.querySelector('.md3-metric-card__delta');
 
-  let summary = { value: 0, detail: 'Sin datos' };
-  if (metric === 'access') {
-    summary = summariseAccessMetric(payload);
-  } else {
-    summary = summariseSimpleMetric(payload);
-  }
-
-  if (valueEl) {
-    valueEl.textContent = numberFormatter.format(summary.value ?? 0);
-  }
-  if (detailEl) {
-    detailEl.textContent = summary.detail;
-  }
+  fetchMetrics();
 }
 
-async function loadMetrics() {
-  if (!metricsGrid) return;
+async function fetchMetrics() {
   try {
-    const response = await fetch('/admin/metrics', { credentials: 'same-origin' });
-    if (!response.ok) {
-      throw new Error('No se pudieron obtener las métricas');
-    }
-    const payload = await response.json();
-    hydrateMetricCard('access', payload.access);
-    hydrateMetricCard('visits', payload.visits);
-    hydrateMetricCard('search', payload.search);
+    const response = await fetch('/admin/metrics');
+    if (!response.ok) throw new Error('Failed to fetch metrics');
+    const data = await response.json();
+    renderMetrics(data);
   } catch (error) {
-    console.error(error);
-    metricsGrid.classList.add('is-error');
-    metricsGrid.querySelectorAll('.md3-metric-card__delta').forEach((element) => {
-      element.textContent = 'No se pudo cargar la información';
-    });
+    console.error('Error fetching metrics:', error);
+    // Optional: Show error state in UI
   }
 }
 
-async function toggleTempAccess() {
-  if (!toggleButton) return;
-  toggleButton.disabled = true;
-  try {
-    const response = await fetch('/media/toggle/temp', {
-      method: 'POST',
-      credentials: 'same-origin',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
-    if (!response.ok) {
-      throw new Error('No se pudo actualizar el ajuste');
+function renderMetrics(data) {
+  // data structure: { visits: DetailedCounter, access: AccessCounter, search: DetailedCounter }
+  renderMetricCard('visits', data.visits);
+  renderMetricCard('access', data.access);
+  renderMetricCard('search', data.search);
+}
+
+function renderMetricCard(type, metricData) {
+  if (!metricData) return;
+
+  // 1. Render Total
+  const totalEl = document.getElementById(`${type}-total`);
+  if (totalEl) {
+    // DetailedCounter: metricData.overall
+    // AccessCounter: metricData.total.overall
+    let total = 0;
+    if (typeof metricData.overall === 'number') {
+        total = metricData.overall;
+    } else if (metricData.total && typeof metricData.total.overall === 'number') {
+        total = metricData.total.overall;
     }
-    const payload = await response.json();
-    allowPublicTempAudio = Boolean(payload.allow_public_temp_audio);
-    updateToggleVisual(allowPublicTempAudio);
-    if (window.__CORAPAN__) {
-      window.__CORAPAN__.allowPublicTempAudio = allowPublicTempAudio;
+    totalEl.textContent = total.toLocaleString('es-ES');
+  }
+
+  // 2. Render Days (Current Month)
+  const daysList = document.getElementById(`${type}-days-list`);
+  if (daysList) {
+    daysList.innerHTML = '';
+    
+    let daysMap = {};
+    
+    // Normalize data to a map: { "YYYY-MM-DD": count }
+    if (metricData.days && !Array.isArray(metricData.days)) {
+        // DetailedCounter format: { "2023-10-27": 5 }
+        daysMap = metricData.days;
+    } else if (metricData.total && Array.isArray(metricData.total.days)) {
+        // AccessCounter format: ["2023-10-27", "2023-10-27", ...]
+        metricData.total.days.forEach(day => {
+            daysMap[day] = (daysMap[day] || 0) + 1;
+        });
     }
-  } catch (error) {
-    console.error(error);
-  } finally {
-    toggleButton.disabled = false;
+
+    // Filter for current month
+    const now = new Date();
+    const currentMonthPrefix = now.toISOString().slice(0, 7); // "YYYY-MM"
+
+    const sortedDays = Object.keys(daysMap)
+        .filter(day => day.startsWith(currentMonthPrefix))
+        .sort()
+        .reverse();
+
+    if (sortedDays.length === 0) {
+        daysList.innerHTML = '<li class="md3-list-item"><span class="md3-list-item__text">Sin datos este mes</span></li>';
+    } else {
+        sortedDays.forEach(day => {
+            const count = daysMap[day];
+            const li = document.createElement('li');
+            li.className = 'md3-list-item';
+            li.innerHTML = `
+                <span class="md3-list-item__text">${day}</span>
+                <span class="md3-list-item__meta">${count}</span>
+            `;
+            daysList.appendChild(li);
+        });
+    }
+  }
+
+  // 3. Render Months (History)
+  const monthsList = document.getElementById(`${type}-months-list`);
+  if (monthsList) {
+    monthsList.innerHTML = '';
+    
+    let monthsMap = {};
+    
+    if (metricData.monthly) {
+        // DetailedCounter format
+        monthsMap = metricData.monthly;
+    } else if (metricData.total && metricData.total.monthly) {
+        // AccessCounter format
+        monthsMap = metricData.total.monthly;
+    }
+
+    const sortedMonths = Object.keys(monthsMap).sort().reverse();
+
+    if (sortedMonths.length === 0) {
+        monthsList.innerHTML = '<li class="md3-list-item"><span class="md3-list-item__text">Sin historial</span></li>';
+    } else {
+        sortedMonths.forEach(month => {
+            const count = monthsMap[month];
+            const li = document.createElement('li');
+            li.className = 'md3-list-item';
+            li.innerHTML = `
+                <span class="md3-list-item__text">${month}</span>
+                <span class="md3-list-item__meta">${count}</span>
+            `;
+            monthsList.appendChild(li);
+        });
+    }
   }
 }
 
-updateToggleVisual(allowPublicTempAudio);
-loadMetrics();
-
-toggleButton?.addEventListener('click', toggleTempAccess);
+// Auto-initialize when DOM is ready
+document.addEventListener('DOMContentLoaded', initAdminDashboard);

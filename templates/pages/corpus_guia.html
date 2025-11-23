@@ -1,0 +1,121 @@
+{% extends 'base.html' %}
+
+{% block page_title %}Guía de Búsqueda · CO.RA.PAN{% endblock %}
+
+{% block content %}
+<article class="md3-text-page">
+  <section class="md3-hero md3-hero--container md3-hero--with-icon" role="main" aria-label="Guía de Búsqueda">
+    <div class="md3-hero__container">
+      <span class="material-symbols-rounded md3-hero__icon" aria-hidden="true">school</span>
+      <div class="md3-hero__content">
+        <span class="md3-hero__eyebrow">Ayuda</span>
+        <h1 class="md3-hero__title">Guía paso a paso para buscar en CO.RA.PAN</h1>
+        <p class="md3-hero__intro">Aprende a utilizar todas las herramientas de búsqueda, desde lo más básico hasta consultas avanzadas.</p>
+      </div>
+    </div>
+  </section>
+
+  <div class="md3-text-content">
+    
+    <!-- INTRODUCCIÓN -->
+    <section class="md3-text-section">
+      <p class="md3-body-large">
+        Bienvenido a la herramienta de búsqueda del corpus CO.RA.PAN. No necesitas ser un experto en informática ni en lingüística computacional para encontrar lo que buscas. Esta guía te explicará cómo funciona cada pestaña de la página de búsqueda.
+      </p>
+    </section>
+
+    <hr class="md3-divider">
+
+    <!-- 1. BÚSQUEDA SIMPLE -->
+    <section class="md3-text-section">
+      <h2 class="md3-title-large md3-text-heading">1. Consulta Simple: Para empezar</h2>
+      <p class="md3-body-large">
+        La pestaña <strong>"Consulta simple"</strong> es ideal si buscas una palabra concreta o una frase exacta. Es como usar Google, pero aplicado a nuestro corpus.
+      </p>
+
+      <h3 class="md3-title-medium">¿Cómo funciona?</h3>
+      <ol class="md3-body-large md3-text-list">
+        <li>Escribe la palabra en el cuadro de texto (por ejemplo: <code>casa</code>).</li>
+        <li>Elige el <strong>Tipo</strong> de búsqueda:
+          <ul>
+            <li><strong>Forma:</strong> Busca la palabra tal cual la escribiste, pero puede ignorar mayúsculas/minúsculas si marcas la opción correspondiente. (Ej: busca "Casa" y encuentra "casa").</li>
+            <li><strong>Forma exacta:</strong> Busca exactamente lo que escribiste, respetando mayúsculas y acentos. (Ej: "está" no encontrará "esta").</li>
+            <li><strong>Lema:</strong> ¡Esta es la opción más potente! Busca todas las variantes de una palabra. Si buscas el lema <code>cantar</code>, el sistema encontrará "canto", "cantas", "cantaron", "cantaría", etc.</li>
+          </ul>
+        </li>
+        <li>(Opcional) Usa los <strong>Filtros</strong> para limitar la búsqueda a un país (ej. Argentina), un tipo de hablante o un género específico.</li>
+        <li>Haz clic en <strong>Buscar</strong>.</li>
+      </ol>
+    </section>
+
+    <hr class="md3-divider">
+
+    <!-- 2. MODO AVANZADO -->
+    <section class="md3-text-section">
+      <h2 class="md3-title-large md3-text-heading">2. Modo Avanzado: Para profundizar</h2>
+      <p class="md3-body-large">
+        La pestaña <strong>"Modo avanzado (CQL)"</strong> te permite buscar patrones gramaticales o secuencias de palabras. ¿Quieres buscar un verbo seguido de un sustantivo? ¿O todas las formas de futuro? Aquí es donde ocurre la magia.
+      </p>
+
+      <h3 class="md3-title-medium">El Constructor de Patrones</h3>
+      <p class="md3-body-large">
+        No necesitas saber programar. Usa el botón <strong>"Añadir palabra"</strong> para agregar "bloques" a tu búsqueda. Cada bloque representa una palabra en la secuencia.
+      </p>
+      <ul class="md3-body-large md3-text-list">
+        <li><strong>Ejemplo:</strong> Quieres buscar un artículo seguido de un sustantivo (ej. "la casa", "un perro").
+          <ol>
+            <li>Añade un primer bloque y selecciona en "Categoría (POS)" la opción <code>DET</code> (Determinante/Artículo).</li>
+            <li>Añade un segundo bloque y selecciona en "Categoría (POS)" la opción <code>NOUN</code> (Sustantivo).</li>
+            <li>¡Listo! Dale a buscar.</li>
+          </ol>
+        </li>
+      </ul>
+
+      <h3 class="md3-title-medium">Ayuda con Inteligencia Artificial</h3>
+      <p class="md3-body-large">
+        Si te sientes perdido o quieres hacer algo muy complejo (como buscar "futuros perifrásticos"), hemos incluido una ayuda especial. Busca el enlace <strong>"(Cómo hacerlo)"</strong> o el botón de ayuda. Allí encontrarás un "prompt" (instrucción) que puedes copiar y pegar en ChatGPT o tu IA favorita para que ella escriba el código de búsqueda (CQL) por ti.
+      </p>
+    </section>
+
+    <hr class="md3-divider">
+
+    <!-- 3. BÚSQUEDA POR TOKEN -->
+    <section class="md3-text-section">
+      <h2 class="md3-title-large md3-text-heading">3. Búsqueda por Token: Precisión quirúrgica</h2>
+      <p class="md3-body-large">
+        Esta es una función para usuarios muy específicos. En nuestro corpus, cada palabra pronunciada tiene un número de identificación único (Token-ID).
+      </p>
+      <p class="md3-body-large">
+        Si anotaste un ID de una búsqueda anterior (por ejemplo, <code>doc_123_token_45</code>) y quieres volver a ver exactamente ese ejemplo, ve a la pestaña <strong>"Token"</strong>, pega el ID y pulsa "Añadir". Puedes añadir varios y luego pulsar "Visualizar" para verlos todos juntos.
+      </p>
+    </section>
+
+    <hr class="md3-divider">
+
+    <!-- 4. RESULTADOS Y ESTADÍSTICAS -->
+    <section class="md3-text-section">
+      <h2 class="md3-title-large md3-text-heading">4. Resultados y Estadísticas</h2>
+      <p class="md3-body-large">
+        Una vez que haces una búsqueda, verás dos pestañas nuevas abajo:
+      </p>
+      <ul class="md3-body-large md3-text-list">
+        <li><strong>Resultados:</strong> Una lista de frases donde aparece tu búsqueda.
+          <ul>
+            <li>Puedes leer el contexto (lo que se dijo antes y después).</li>
+            <li>Puedes escuchar el audio original haciendo clic en el icono de reproducción.</li>
+            <li>Puedes ver quién lo dijo y de dónde es.</li>
+          </ul>
+        </li>
+        <li><strong>Estadísticas:</strong> Gráficos coloridos que te muestran la distribución de tus resultados.
+          <ul>
+            <li>¿Se usa más esta palabra en España o en América?</li>
+            <li>¿Lo dicen más los hombres o las mujeres?</li>
+            <li>Puedes descargar estos datos en CSV para tus propias investigaciones.</li>
+          </ul>
+        </li>
+      </ul>
+    </section>
+
+  </div>
+</article>
+{% endblock %}

@@ -419,7 +419,7 @@ curl http://localhost:8081/blacklab-server/
 
 **Lösung:**
 ```bash
-bash scripts/run_bls.sh 8081 2g 512m
+bash scripts/blacklab/run_bls.sh 8081 2g 512m
 ```
 
 ---
@@ -667,7 +667,7 @@ curl -s 'http://localhost:8000/bls/corapan/hits?filter=country:"ARG"&patt=[word=
 ## Live Testing (Production)
 
 **Voraussetzungen:**
-- BlackLab Server läuft (`bash scripts/run_bls.sh 8081 2g 512m`)
+- BlackLab Server läuft (`bash scripts/blacklab/run_bls.sh 8081 2g 512m`)
 - Flask läuft (Gunicorn/Waitress auf Port 8000)
 
 ### Test 1: Proxy Health
@@ -749,7 +749,7 @@ tail -f logs/app.log | grep "filter="
 curl http://localhost:8081/blacklab-server/
 
 # Start BLS
-bash scripts/run_bls.sh 8081 2g 512m
+bash scripts/blacklab/run_bls.sh 8081 2g 512m
 ```
 
 ### Issue 4: 500 Internal Server Error

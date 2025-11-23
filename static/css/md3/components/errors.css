@@ -1,0 +1,85 @@
+/* MD3 Error Pages - Simple Layout */
+
+/* Force white background for the entire page including header/footer */
+body {
+  background: var(--md-sys-color-surface) !important;
+}
+
+.md3-nav, 
+.md3-footer {
+  background: var(--md-sys-color-surface) !important;
+  border-color: transparent !important;
+}
+
+.md3-error-page {
+  min-height: 80vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-4);
+  background: var(--md-sys-color-surface);
+}
+
+.md3-error-container {
+  max-width: 600px;
+  width: 100%;
+  text-align: center;
+}
+
+.md3-error-icon {
+  font-size: 80px;
+  color: var(--md-sys-color-primary);
+  margin-bottom: var(--space-6);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.md3-error-icon .material-symbols-rounded {
+  font-size: 80px;
+  width: 80px;
+  height: 80px;
+}
+
+.md3-error-code {
+  color: var(--md-sys-color-primary);
+  margin: 0;
+  font-family: var(--md-sys-typescale-display-large-font-family);
+  font-weight: var(--md-sys-typescale-display-large-font-weight);
+  font-size: var(--md-sys-typescale-display-large-font-size);
+  line-height: var(--md-sys-typescale-display-large-line-height);
+  letter-spacing: var(--md-sys-typescale-display-large-letter-spacing);
+}
+
+.md3-error-title {
+  color: var(--md-sys-color-on-surface);
+  margin: var(--space-2) 0 var(--space-6);
+  font-family: var(--md-sys-typescale-headline-medium-font-family);
+  font-weight: var(--md-sys-typescale-headline-medium-font-weight);
+  font-size: var(--md-sys-typescale-headline-medium-font-size);
+  line-height: var(--md-sys-typescale-headline-medium-line-height);
+  letter-spacing: var(--md-sys-typescale-headline-medium-letter-spacing);
+}
+
+.md3-error-message {
+  color: var(--md-sys-color-on-surface-variant);
+  margin-bottom: var(--space-10);
+  max-width: 480px;
+  margin-left: auto;
+  margin-right: auto;
+  font-family: var(--md-sys-typescale-body-large-font-family);
+  font-weight: var(--md-sys-typescale-body-large-font-weight);
+  font-size: var(--md-sys-typescale-body-large-font-size);
+  line-height: var(--md-sys-typescale-body-large-line-height);
+  letter-spacing: var(--md-sys-typescale-body-large-letter-spacing);
+}
+
+.md3-error-actions {
+  display: flex;
+  gap: var(--space-4);
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+/* Buttons are already styled by md3/components/buttons.css, 
+   but we might need to ensure they are loaded or use specific classes */

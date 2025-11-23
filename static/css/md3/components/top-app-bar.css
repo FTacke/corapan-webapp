@@ -21,14 +21,15 @@
   right: 0;
   width: 100%;
   z-index: 1200; /* MUSS über Leaflet Controls (1000) liegen! */
-  
+
   /* Default: Opak für Compact/Medium (<840px) */
   background: var(--md-sys-color-surface);
   color: var(--md-sys-color-on-surface);
   box-shadow: var(--elev-2); /* Elevation 2 im Ruhezustand */
-  
-  transition: box-shadow 300ms cubic-bezier(0.4, 0, 0.2, 1),
-              background 300ms cubic-bezier(0.4, 0, 0.2, 1);
+
+  transition:
+    box-shadow 300ms cubic-bezier(0.4, 0, 0.2, 1),
+    background 300ms cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* ============================================
@@ -63,7 +64,7 @@ body[data-scrolled="true"] .md3-top-app-bar {
   gap: var(--space-3);
   height: 64px; /* MD3 Small Top App Bar */
   max-width: 100%;
-  
+
   /* Safe Area Insets für Notches, Dynamic Island, etc. */
   padding-left: max(var(--space-4), env(safe-area-inset-left));
   padding-right: max(var(--space-4), env(safe-area-inset-right));
@@ -159,8 +160,9 @@ body[data-scrolled="true"] .md3-top-app-bar__title-page {
 @media (prefers-reduced-motion: no-preference) {
   .md3-top-app-bar__title-site,
   .md3-top-app-bar__title-page {
-    transition: opacity 180ms cubic-bezier(0.4, 0, 0.2, 1),
-                transform 180ms cubic-bezier(0.4, 0, 0.2, 1);
+    transition:
+      opacity 180ms cubic-bezier(0.4, 0, 0.2, 1),
+      transform 180ms cubic-bezier(0.4, 0, 0.2, 1);
   }
 }
 
@@ -225,7 +227,11 @@ body[data-scrolled="true"] .md3-top-app-bar__title-page {
 }
 
 .md3-icon-button:hover {
-  background: color-mix(in srgb, var(--md-sys-color-on-surface) 8%, transparent);
+  background: color-mix(
+    in srgb,
+    var(--md-sys-color-on-surface) 8%,
+    transparent
+  );
 }
 
 .md3-icon-button:focus-visible {
@@ -339,7 +345,7 @@ body[data-scrolled="true"] .md3-top-app-bar__title-page {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 40px;  /* Gleiche Größe wie Icon-Buttons */
+  width: 40px; /* Gleiche Größe wie Icon-Buttons */
   height: 40px;
   border-radius: 50%;
   background: var(--md-sys-color-primary);
@@ -363,8 +369,9 @@ body[data-scrolled="true"] .md3-top-app-bar__title-page {
   /* Animation */
   opacity: 0;
   transform: translateY(-8px);
-  transition: opacity 200ms cubic-bezier(0.4, 0, 0.2, 1),
-              transform 200ms cubic-bezier(0.4, 0, 0.2, 1);
+  transition:
+    opacity 200ms cubic-bezier(0.4, 0, 0.2, 1),
+    transform 200ms cubic-bezier(0.4, 0, 0.2, 1);
   pointer-events: none;
   display: none;
 }
@@ -418,7 +425,11 @@ body[data-scrolled="true"] .md3-top-app-bar__title-page {
 }
 
 .md3-user-menu__item:hover {
-  background: color-mix(in srgb, var(--md-sys-color-on-surface) 8%, transparent);
+  background: color-mix(
+    in srgb,
+    var(--md-sys-color-on-surface) 8%,
+    transparent
+  );
 }
 
 .md3-user-menu__item:focus-visible {
@@ -459,11 +470,11 @@ body[data-scrolled="true"] .md3-top-app-bar__title-page {
   .md3-top-app-bar__title {
     font-size: 1.125rem;
   }
-  
+
   .md3-top-app-bar--medium .md3-top-app-bar__headline {
     font-size: 1.5rem;
   }
-  
+
   .md3-top-app-bar--large .md3-top-app-bar__headline {
     font-size: 1.75rem;
   }
@@ -514,26 +525,30 @@ body[data-scrolled="true"] .md3-top-app-bar__title-page {
 }
 
 .md3-theme-toggle[aria-pressed="true"]:hover {
-  background: color-mix(in srgb, var(--md-sys-color-primary-container) 90%, var(--md-sys-color-primary) 10%);
+  background: color-mix(
+    in srgb,
+    var(--md-sys-color-primary-container) 90%,
+    var(--md-sys-color-primary) 10%
+  );
 }
 
 /* Icon-Sizing für Theme Toggle */
 .md3-theme-toggle .material-symbols-rounded {
   font-size: 22px;
   line-height: 1;
-  font-variation-settings: 
-    'FILL' 0,
-    'wght' 400,
-    'GRAD' 0,
-    'opsz' 22;
+  font-variation-settings:
+    "FILL" 0,
+    "wght" 400,
+    "GRAD" 0,
+    "opsz" 22;
 }
 
 .md3-theme-toggle[aria-pressed="true"] .material-symbols-rounded {
-  font-variation-settings: 
-    'FILL' 1,
-    'wght' 500,
-    'GRAD' 0,
-    'opsz' 22;
+  font-variation-settings:
+    "FILL" 1,
+    "wght" 500,
+    "GRAD" 0,
+    "opsz" 22;
 }
 
 /* ============================================
@@ -574,5 +589,3 @@ body[data-scrolled="true"] .md3-top-app-bar__title-page {
   --app-bar-transition-duration: 300ms;
   --app-bar-transition-easing: cubic-bezier(0.4, 0, 0.2, 1);
 }
-
-

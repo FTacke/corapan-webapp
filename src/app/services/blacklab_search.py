@@ -3,16 +3,16 @@
 Provides a wrapper to call BlackLab via the Flask proxy and return results
 formatted like the existing `search_tokens` service (CANON_COLS format).
 """
+
 from __future__ import annotations
 
 import logging
 import math
 from typing import Any
 
-from flask import current_app, request
+from flask import request
 from ..extensions.http_client import get_http_client
 from ..search.cql import build_cql_with_speaker_filter, build_filters
-from ..services.corpus_search import CANON_COLS
 
 logger = logging.getLogger(__name__)
 
@@ -48,7 +48,7 @@ def _build_simple_cql(query: str, search_mode: str, sensitive: int) -> str:
         else:
             # fallback to word contains
             field = "word" if sensitive == 1 else "norm"
-            val = f'.*{escape_cql(token)}.*'
+            val = f".*{escape_cql(token)}.*"
 
         parts.append(f'[{field}="{val}"]')
     return " ".join(parts)
@@ -70,9 +70,24 @@ def build_sentence_context(hit: dict[str, Any]) -> dict[str, Any] | None:
                 return side.get(key, []) or []
             return []
 
-        left_words, left_sent_ids, left_start, left_end = arr(left, "word"), arr(left, "sentence_id"), arr(left, "start_ms"), arr(left, "end_ms")
-        match_words, match_sent_ids, match_start, match_end = arr(match, "word"), arr(match, "sentence_id"), arr(match, "start_ms"), arr(match, "end_ms")
-        right_words, right_sent_ids, right_start, right_end = arr(right, "word"), arr(right, "sentence_id"), arr(right, "start_ms"), arr(right, "end_ms")
+        left_words, left_sent_ids, left_start, left_end = (
+            arr(left, "word"),
+            arr(left, "sentence_id"),
+            arr(left, "start_ms"),
+            arr(left, "end_ms"),
+        )
+        match_words, match_sent_ids, match_start, match_end = (
+            arr(match, "word"),
+            arr(match, "sentence_id"),
+            arr(match, "start_ms"),
+            arr(match, "end_ms"),
+        )
+        right_words, right_sent_ids, right_start, right_end = (
+            arr(right, "word"),
+            arr(right, "sentence_id"),
+            arr(right, "start_ms"),
+            arr(right, "end_ms"),
+        )
 
         if not match_words or not match_sent_ids:
             return None
@@ -83,32 +98,59 @@ def build_sentence_context(hit: dict[str, Any]) -> dict[str, Any] | None:
 
         tokens = []
         for i, w in enumerate(left_words):
-            tokens.append({
-                "zone": "left", "word": w,
-                "sentence_id": left_sent_ids[i] if i < len(left_sent_ids) else None,
-                "start_ms": int(left_start[i]) if i < len(left_start) and left_start[i] is not None else None,
-                "end_ms": int(left_end[i]) if i < len(left_end) and left_end[i] is not None else None,
-            })
+            tokens.append(
+                {
+                    "zone": "left",
+                    "word": w,
+                    "sentence_id": left_sent_ids[i] if i < len(left_sent_ids) else None,
+                    "start_ms": int(left_start[i])
+                    if i < len(left_start) and left_start[i] is not None
+                    else None,
+                    "end_ms": int(left_end[i])
+                    if i < len(left_end) and left_end[i] is not None
+                    else None,
+                }
+            )
         for i, w in enumerate(match_words):
-            tokens.append({
-                "zone": "match", "word": w,
-                "sentence_id": match_sent_ids[i] if i < len(match_sent_ids) else None,
-                "start_ms": int(match_start[i]) if i < len(match_start) and match_start[i] is not None else None,
-                "end_ms": int(match_end[i]) if i < len(match_end) and match_end[i] is not None else None,
-            })
+            tokens.append(
+                {
+                    "zone": "match",
+                    "word": w,
+                    "sentence_id": match_sent_ids[i]
+                    if i < len(match_sent_ids)
+                    else None,
+                    "start_ms": int(match_start[i])
+                    if i < len(match_start) and match_start[i] is not None
+                    else None,
+                    "end_ms": int(match_end[i])
+                    if i < len(match_end) and match_end[i] is not None
+                    else None,
+                }
+            )
         for i, w in enumerate(right_words):
-            tokens.append({
-                "zone": "right", "word": w,
-                "sentence_id": right_sent_ids[i] if i < len(right_sent_ids) else None,
-                "start_ms": int(right_start[i]) if i < len(right_start) and right_start[i] is not None else None,
-                "end_ms": int(right_end[i]) if i < len(right_end) and right_end[i] is not None else None,
-            })
+            tokens.append(
+                {
+                    "zone": "right",
+                    "word": w,
+                    "sentence_id": right_sent_ids[i]
+                    if i < len(right_sent_ids)
+                    else None,
+                    "start_ms": int(right_start[i])
+                    if i < len(right_start) and right_start[i] is not None
+                    else None,
+                    "end_ms": int(right_end[i])
+                    if i < len(right_end) and right_end[i] is not None
+                    else None,
+                }
+            )
 
         sentence_tokens = [t for t in tokens if t["sentence_id"] == sent_id]
         if not sentence_tokens:
             return None
 
-        match_indices = [i for i, t in enumerate(sentence_tokens) if t["zone"] == "match"]
+        match_indices = [
+            i for i, t in enumerate(sentence_tokens) if t["zone"] == "match"
+        ]
         if not match_indices:
             return None
 
@@ -116,16 +158,28 @@ def build_sentence_context(hit: dict[str, Any]) -> dict[str, Any] | None:
         last_match_idx = max(match_indices)
 
         left_tokens = sentence_tokens[:first_match_idx]
-        right_tokens = sentence_tokens[last_match_idx + 1:]
+        right_tokens = sentence_tokens[last_match_idx + 1 :]
 
         context_left = " ".join(t["word"] for t in left_tokens)
         context_right = " ".join(t["word"] for t in right_tokens)
 
-        hit_start_ms = int(match_start[0]) if match_start and match_start[0] is not None else 0
-        hit_end_ms = int(match_end[-1]) if match_end and match_end[-1] is not None else hit_start_ms
+        hit_start_ms = (
+            int(match_start[0]) if match_start and match_start[0] is not None else 0
+        )
+        hit_end_ms = (
+            int(match_end[-1])
+            if match_end and match_end[-1] is not None
+            else hit_start_ms
+        )
 
-        context_start = min((t["start_ms"] for t in sentence_tokens if t["start_ms"] is not None), default=hit_start_ms)
-        context_end = max((t["end_ms"] for t in sentence_tokens if t["end_ms"] is not None), default=hit_end_ms)
+        context_start = min(
+            (t["start_ms"] for t in sentence_tokens if t["start_ms"] is not None),
+            default=hit_start_ms,
+        )
+        context_end = max(
+            (t["end_ms"] for t in sentence_tokens if t["end_ms"] is not None),
+            default=hit_end_ms,
+        )
 
         return {
             "context_left": context_left,
@@ -160,12 +214,16 @@ def _hit_to_canonical(hit: dict[str, Any]) -> dict[str, Any]:
         text = " ".join(match.get("word", []))
     else:
         # tokid may be present as list of ids or strings
-        text = _safe_first(match.get("tokid", [])) if match.get("tokid") else _safe_first(match.get("word", []))
+        text = (
+            _safe_first(match.get("tokid", []))
+            if match.get("tokid")
+            else _safe_first(match.get("word", []))
+        )
     lemma = " ".join(match.get("lemma", [])) if match.get("lemma") else ""
-    pos = " ".join(match.get("pos", [])) if match.get("pos") else ""
 
     token_id = _safe_first(match.get("tokid", [])) or ""
     filename = _safe_first(match.get("filename", [])) or hit.get("docPid", "")
+
     # metadata fields may exist under match or under doc metadata
     # BL v5 may return 'country' or 'country_code' keys; support both
     # docInfo may be a dict or a list of dicts (v4 vs v5 shapes); handle both
@@ -180,11 +238,30 @@ def _hit_to_canonical(hit: dict[str, Any]) -> dict[str, Any]:
             return doc_info.get(field_name, "") or ""
         return ""
 
-    country = _safe_first(match.get("country", [])) or _safe_first(match.get("country_code", [])) or _safe_doc_field("country") or _safe_doc_field("country_code")
-    speaker_type = _safe_first(match.get("speaker_type", [])) or _safe_doc_field("speaker_type")
-    speaker_sex = _safe_first(match.get("speaker_sex", [])) or _safe_first(match.get("sex", [])) or ""
-    speaker_mode = _safe_first(match.get("speaker_mode", [])) or _safe_first(match.get("mode", [])) or ""
-    speaker_discourse = _safe_first(match.get("speaker_discourse", [])) or _safe_first(match.get("discourse", [])) or ""
+    country = (
+        _safe_first(match.get("country", []))
+        or _safe_first(match.get("country_code", []))
+        or _safe_doc_field("country")
+        or _safe_doc_field("country_code")
+    )
+    speaker_type = _safe_first(match.get("speaker_type", [])) or _safe_doc_field(
+        "speaker_type"
+    )
+    speaker_sex = (
+        _safe_first(match.get("speaker_sex", []))
+        or _safe_first(match.get("sex", []))
+        or ""
+    )
+    speaker_mode = (
+        _safe_first(match.get("speaker_mode", []))
+        or _safe_first(match.get("mode", []))
+        or ""
+    )
+    speaker_discourse = (
+        _safe_first(match.get("speaker_discourse", []))
+        or _safe_first(match.get("discourse", []))
+        or ""
+    )
 
     # New sentence-based context logic
     sentence_context = build_sentence_context(hit)
@@ -205,7 +282,12 @@ def _hit_to_canonical(hit: dict[str, Any]) -> dict[str, Any]:
                 return " ".join(side.get("word", []))
             if isinstance(side, list) and all(isinstance(x, str) for x in side):
                 return " ".join(side)
-            if isinstance(side, list) and side and isinstance(side[0], dict) and side[0].get("word"):
+            if (
+                isinstance(side, list)
+                and side
+                and isinstance(side[0], dict)
+                and side[0].get("word")
+            ):
                 words = []
                 for elem in side:
                     w = elem.get("word")
@@ -225,7 +307,7 @@ def _hit_to_canonical(hit: dict[str, Any]) -> dict[str, Any]:
                     return int(match.get(arr_name)[0])
                 except Exception:
                     return default
-            return int(hit.get(arr_name.replace('_ms', ''), default))
+            return int(hit.get(arr_name.replace("_ms", ""), default))
 
         start_ms = _get_first_int("start_ms", 0)
         end_ms = _get_first_int("end_ms", 0)
@@ -255,16 +337,26 @@ def _hit_to_canonical(hit: dict[str, Any]) -> dict[str, Any]:
             try:
                 if isinstance(side, dict) and side.get("end_ms"):
                     return _to_int(_safe_last(side.get("end_ms", [])))
-                if isinstance(side, list) and side and isinstance(side[-1], dict) and side[-1].get("end_ms"):
+                if (
+                    isinstance(side, list)
+                    and side
+                    and isinstance(side[-1], dict)
+                    and side[-1].get("end_ms")
+                ):
                     return _to_int(_safe_last(side[-1].get("end_ms", [])))
                 if isinstance(side, dict) and side.get("start_ms"):
                     return _to_int(_safe_last(side.get("start_ms", [])))
-                if isinstance(side, list) and side and isinstance(side[-1], dict) and side[-1].get("start_ms"):
+                if (
+                    isinstance(side, list)
+                    and side
+                    and isinstance(side[-1], dict)
+                    and side[-1].get("start_ms")
+                ):
                     return _to_int(_safe_last(side[-1].get("start_ms", [])))
             except Exception:
                 pass
             return 0
-        
+
         context_start = _get_context_start(left)
         context_end = _get_context_end(right)
 
@@ -306,9 +398,15 @@ def search_blacklab(params: Any) -> dict[str, Any]:
     """
     http = get_http_client()
     # Map pagination
-    page = int(params.get("page", 1)) if isinstance(params.get("page", (1)), int) or str(params.get("page", "1")) else 1
+    page = (
+        int(params.get("page", 1))
+        if isinstance(params.get("page", (1)), int) or str(params.get("page", "1"))
+        else 1
+    )
     page = max(1, int(page))
-    page_size = int(params.get("page_size", params.get("pageSize", 25))) if params else 25
+    page_size = (
+        int(params.get("page_size", params.get("pageSize", 25))) if params else 25
+    )
     first = (page - 1) * page_size
 
     # Build CQL
@@ -336,7 +434,9 @@ def search_blacklab(params: Any) -> dict[str, Any]:
 
     # Build filters and integrate into CQL
     filter_params = build_filters(params)
-    merged = build_cql_with_speaker_filter({"q": query, "mode": mode, "sensitive": sensitive}, filter_params)
+    merged = build_cql_with_speaker_filter(
+        {"q": query, "mode": mode, "sensitive": sensitive}, filter_params
+    )
     if merged:
         cql = merged
 
@@ -372,9 +472,12 @@ def search_blacklab(params: Any) -> dict[str, Any]:
     total_pages = math.ceil(total / page_size) if page_size else 1
     # compute display pages similar to corpus_search._compute_display_pages
     from .corpus_search import _compute_display_pages as _dp
+
     display_pages = _dp(page, total_pages)
 
-    unique_countries = len({it.get("country_code") for it in items if it.get("country_code")})
+    unique_countries = len(
+        {it.get("country_code") for it in items if it.get("country_code")}
+    )
     unique_files = len({it.get("filename") for it in items if it.get("filename")})
 
     return {

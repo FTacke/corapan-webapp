@@ -1,6 +1,6 @@
 /**
  * Atlas Page Initializer
- * 
+ *
  * Lazy-loads dependencies and initializes the Atlas map.
  * Called by the global page router when data-page="atlas" is detected.
  */
@@ -10,8 +10,8 @@
  */
 function ensureStyles(url) {
   if (document.querySelector(`link[href="${url}"]`)) return;
-  const link = document.createElement('link');
-  link.rel = 'stylesheet';
+  const link = document.createElement("link");
+  link.rel = "stylesheet";
   link.href = url;
   document.head.appendChild(link);
 }
@@ -25,7 +25,7 @@ function ensureScript(url) {
       resolve();
       return;
     }
-    const script = document.createElement('script');
+    const script = document.createElement("script");
     script.src = url;
     script.onload = resolve;
     script.onerror = reject;
@@ -37,37 +37,37 @@ function ensureScript(url) {
  * Initialize Atlas on the current page
  */
 export async function init() {
-  const mapEl = document.getElementById('atlas-map');
+  const mapEl = document.getElementById("atlas-map");
   if (!mapEl) {
-    console.warn('[atlas] Map container not found (#atlas-map)');
+    console.warn("[atlas] Map container not found (#atlas-map)");
     return;
   }
 
-  console.log('[atlas] Initializing...');
+  console.log("[atlas] Initializing...");
 
   try {
     // 1) Load external Leaflet dependencies
-    ensureStyles('https://unpkg.com/leaflet@1.9.4/dist/leaflet.css');
-    ensureStyles('/static/css/md3/components/atlas.css');
-    await ensureScript('https://unpkg.com/leaflet@1.9.4/dist/leaflet.js');
+    ensureStyles("https://unpkg.com/leaflet@1.9.4/dist/leaflet.css");
+    ensureStyles("/static/css/md3/components/atlas.css");
+    await ensureScript("https://unpkg.com/leaflet@1.9.4/dist/leaflet.js");
 
     // 2) Wait for Leaflet to be available
     if (!window.L) {
-      console.error('[atlas] Leaflet not loaded');
+      console.error("[atlas] Leaflet not loaded");
       return;
     }
 
     // 3) Dynamically import Atlas module
-    const atlasModule = await import('/static/js/modules/atlas/index.js');
-    
+    const atlasModule = await import("/static/js/modules/atlas/index.js");
+
     // 4) Initialize Atlas (calls internal bootstrap with Leaflet ready)
     if (atlasModule?.init) {
       const mapInstance = atlasModule.init();
-      console.log('[atlas] Initialized successfully');
+      console.log("[atlas] Initialized successfully");
     } else {
-      console.error('[atlas] No init function exported from atlas module');
+      console.error("[atlas] No init function exported from atlas module");
     }
   } catch (error) {
-    console.error('[atlas] Initialization failed:', error);
+    console.error("[atlas] Initialization failed:", error);
   }
 }

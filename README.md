@@ -1,102 +1,145 @@
 ﻿# CO.RA.PAN Web App
 
-Redesigned CO.RA.PAN portal with modular Flask backend, Vite-powered frontend, and separated media/data mounts.
+Eine moderne Webplattform für die Analyse und Exploration des CO.RA.PAN-Korpus (Corpus Oral de Referencia del Español Actual).
 
-## Repository
+## 1. Projektübersicht
 
-GitLab: `git@gitlab.uni-marburg.de:tackef/corapan-new.git`
+Diese Anwendung dient als Frontend und API-Layer für das CO.RA.PAN-Projekt. Sie ermöglicht Linguisten und Forschern:
+- **Suche:** Detaillierte Korpus-Recherchen (Wortformen, Lemmata, POS-Tags) via BlackLab Server.
+- **Analyse:** Statistische Auswertungen und Visualisierungen (Charts, Karten).
+- **Exploration:** Interaktive Wiedergabe von Audio-Segmenten synchron zum Transkript.
+- **Verwaltung:** Editor-Tools zur Pflege von Metadaten und Transkripten.
 
-## Structure
+## 2. Features
 
-- `src/app/` - Flask application (routes, services, auth, models)
-- `templates/` - Jinja templates (pages, partials)
-- `static/` - CSS, JS, images (built via Vite)
-- `config/` - Configuration files (keys excluded via .gitignore)
-- `docs/` - Architecture, design system, roadmap
-- `media/` - Audio files and transcripts (not in repo)
-- `data/` - SQLite databases (not in repo)
+- **Korpus-Suche:**
+  - Einfache Suche und Expertensuche (CQL) mit Pattern-Builder.
+  - **NEU:** Detaillierte Schritt-für-Schritt-Anleitung (Guía) für Einsteiger.
+  - **NEU:** Token-Suche für präzises Wiederfinden spezifischer Belege.
+  - Filterung nach Metadaten (Land, Region, Sprecher, Geschlecht, etc.).
+  - KWIC-Ansicht (Key Word in Context) mit Audio-Verknüpfung.
+- **Audio-Player:**
+  - Segmentgenaue Wiedergabe.
+  - Visuelle Hervorhebung im Transkript.
+- **Visualisierung:**
+  - Interaktive Karten (Leaflet) zur geografischen Verteilung.
+  - Statistik-Dashboard (ECharts) für Frequenzanalysen.
+- **Export:**
+  - CSV/TSV-Export von Suchergebnissen (Streaming-Support für große Datenmengen).
+  - CSV-Export von Statistiken (inkl. Metadaten und Filter-Infos).
+- **Administration:**
+  - Rollenbasiertes Zugriffssystem (User, Editor, Admin).
+  - JSON-Editor für Transkripte.
 
-## Environment
+## 3. Tech-Stack
 
-- Python 3.12+, FFmpeg, and libsndfile are required locally.
-- Secrets (Flask key, JWT keys, hashed passwords) are provided via environment variables or mounted files.
-- The `ALLOW_PUBLIC_TEMP_AUDIO` flag controls whether anonymous users can access generated temporary snippets via `/media/temp` and `/media/snippet`. The legacy `/media/play_audio` endpoint is public and not controlled by this flag.
+- **Backend:** Python 3.12, Flask (Web Framework)
+- **Suchmaschine:** BlackLab Server (Lucene-basiert, via Docker)
+- **Datenbank:** SQLite (für User-Daten und App-Status)
+- **Frontend:** Jinja2 Templates, Vanilla JS, CSS (Bootstrap-basiert), ECharts, Leaflet
+- **Deployment:** Gunicorn, Docker Compose
 
-## Getting Started
+## 4. Voraussetzungen
 
+- **Python:** Version 3.12 oder höher
+- **Docker Desktop:** Für den Betrieb des BlackLab Servers
+- **PowerShell:** (Windows) für Hilfsskripte (empfohlen Version 5.1 oder 7+)
+
+## 5. Installation & Setup
+
+### 1. Repository klonen
 ```bash
-python -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
-pip install -e .
-FLASK_SECRET_KEY=change-me python -m src.app.main
+git clone <repo-url>
+cd corapan-webapp
 ```
 
-## Documentation
+### 2. Virtuelles Environment erstellen
+```powershell
+python -m venv .venv
+.venv\Scripts\Activate.ps1
+```
 
-**📚 [Start here: Documentation Index](docs/index.md)**
+### 3. Abhängigkeiten installieren
+```powershell
+pip install -r requirements.txt
+pip install -e .
+```
 
-The documentation follows "Docs as Code" principles with a clear 8-category taxonomy:
+### 4. Konfiguration
+Erstellen Sie eine `.env` Datei basierend auf der Vorlage:
+```powershell
+cp .env.example .env
+```
+Passen Sie die Werte in `.env` an (insbesondere `FLASK_SECRET_KEY` und Pfade).
 
-- **[Concepts](docs/concepts/)** - Architecture, authentication flow
-- **[How-To Guides](docs/how-to/)** - Step-by-step tutorials
-- **[Reference](docs/reference/)** - API docs, database schema, technical specs
-- **[Operations](docs/operations/)** - Deployment, CI/CD, security
-- **[Design](docs/design/)** - Design system, tokens, accessibility
-- **[Decisions](docs/decisions/)** - ADRs, roadmap
-- **[Troubleshooting](docs/troubleshooting/)** - Common problems & solutions
+### 5. BlackLab Index (Optional/Initial)
+Falls noch kein Index vorhanden ist, muss dieser erstellt werden. Siehe dazu `docs/how-to/quickstart-windows.md` oder nutzen Sie das Skript:
+```powershell
+.\scripts\build_blacklab_index.ps1
+```
 
-### Quick Links
-- **[Deployment Guide](docs/operations/deployment.md)** - Production server setup
-- **[Architecture Overview](docs/concepts/architecture.md)** - Technical architecture
-- **[Database Maintenance](docs/reference/database-maintenance.md)** - DB operations
-- **[Troubleshooting](docs/troubleshooting/)** - Problem solutions by domain
+## 6. Entwicklung & Start
 
-## Features
+### BlackLab Server starten
+Der Such-Server muss im Hintergrund laufen:
+```powershell
+.\scripts\start_blacklab_docker_v3.ps1 -Detach
+```
+URL: http://localhost:8081/blacklab-server
 
-### Core Search Capabilities
-- **Basic Corpus Search**: Token-based search with morphological filters (form, lemma, POS)
-  - Multi-token query support with wildcards
-  - Country/region filtering with national/regional toggle
-  - Speaker metadata filtering (type, sex, mode, discourse)
-  - Results with context (left/match/right) and audio snippet links
-  
-- **Advanced Search** (BlackLab Integration): 
-  - CQL (Corpus Query Language) support for complex queries
-  - Pattern-based search (exact, lemma-based)
-  - Server-side DataTables with pagination and filtering
-  - CSV/TSV export with streaming (up to 50,000 rows)
-  - Rate limiting and security hardening
+### Flask App starten
+```powershell
+# Environment aktivieren
+.venv\Scripts\Activate.ps1
 
-### Audio & Visualization
-- **Audio Player**: Segment playback with transcript synchronization
-  - Full audio and split segment playback
-  - Interactive transcript with time-synchronized highlighting
-  - Temporary snippet generation for search results
-  
-- **Atlas**: Interactive geolinguistic map with Leaflet
-  - Country/region markers with metadata
-  - File counts and speaker statistics per location
-  - Integrated with corpus data
+# Server starten (Development Mode)
+$env:FLASK_ENV="development"; python -m src.app.main
+```
+URL: http://localhost:8000
 
-- **Statistics Dashboard**: Data visualization with ECharts
-  - Speaker distribution by country, sex, type
-  - Word frequency analysis
-  - Interactive charts with filtering
+## 7. Tests & Qualitätssicherung
 
-### Content Management
-- **Editor Interface** (Editor/Admin roles):
-  - JSON transcript editing with live preview
-  - Version tracking and edit history
-  - File management per country/region
-  
-- **Admin Dashboard** (Admin role):
-  - User management and role assignment
-  - Content moderation capabilities
+### Tests ausführen
+Das Projekt nutzt `pytest`. Alle Tests (Unit & Integration) können wie folgt gestartet werden:
+```powershell
+pytest
+```
 
-### Authentication & Security
-- **JWT-based Authentication**: Cookie-based JWT tokens with CSRF protection
-- **Role-Based Access Control**: Three tiers (user, editor, admin)
+### Code-Qualität
+Wir nutzen `ruff` für Linting und Formatierung:
+```powershell
+# Check
+ruff check .
+
+# Formatierung anwenden
+ruff format .
+```
+
+### CI/CD
+Eine GitHub Actions Pipeline (`.github/workflows/ci.yml`) prüft bei jedem Push automatisch Tests und Linter-Regeln.
+
+## 8. Dokumentation
+
+Die detaillierte Dokumentation befindet sich im `docs/` Ordner:
+
+- **[Konzepte](docs/concepts/)**: Architektur, Authentifizierung.
+- **[Auth Migration Guide](docs/auth-migration/auth-migration.md)**: Praktische Anleitung zur Umstellung von passwords.env auf DB-basierte Auth (JWT / Refresh Token).
+- **[Anleitungen](docs/how-to/)**: Schritt-für-Schritt Guides (z.B. Quickstart).
+- **[Betrieb](docs/operations/)**: Deployment, Security.
+- **[Referenz](docs/reference/)**: API-Doku, Datenbank-Schema.
+
+## 9. Deployment
+
+Für den produktiven Betrieb wird empfohlen:
+- Einsatz eines WSGI-Servers (z.B. Gunicorn).
+- Reverse Proxy (Nginx/Apache) für SSL-Terminierung.
+- Setzen der Environment-Variable `FLASK_ENV=production`.
+- Siehe `docs/operations/deployment.md` für Details.
+
+## 10. Lizenz
+
+(Hier Lizenzinformationen einfügen, z.B. MIT oder Proprietär)
+
 - **Public Access Mode**: Configurable public/private audio snippet access
 - **Security Features**: Rate limiting, CQL injection prevention, input validation
 

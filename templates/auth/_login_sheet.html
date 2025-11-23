@@ -2,10 +2,11 @@
 {% set user_role = g.get('role') %}
 
 <!-- Login Sheet: Rendered as htmx fragment (GET /auth/login_sheet) -->
+<link rel="stylesheet" href="{{ url_for('static', filename='css/md3/components/login.css') }}">
+
 <div id="login-sheet" class="md3-login-sheet" role="dialog" aria-modal="true">
   <!-- Backdrop (clickable to dismiss) -->
-  <div class="md3-login-backdrop" 
-       onclick="document.getElementById('login-sheet').remove()"></div>
+  <div class="md3-login-backdrop"></div>
   
   <!-- Sheet Container -->
   <div class="md3-login-sheet__container">
@@ -21,7 +22,6 @@
         <h2 class="md3-login-sheet__title">Iniciar sesión</h2>
         <button type="button" 
                 class="md3-login-sheet__close-button" 
-                onclick="document.getElementById('login-sheet').remove()" 
                 aria-label="Cerrar">
           <span class="material-symbols-rounded" aria-hidden="true">close</span>
         </button>
@@ -81,12 +81,4 @@
   </div>
 </div>
 
-<script>
-// Auto-close sheet on successful login (HX-Redirect triggers page reload)
-document.body.addEventListener('htmx:beforeSwap', function(evt) {
-  if (evt.detail.xhr.status === 204 && evt.detail.xhr.getResponseHeader('HX-Redirect')) {
-    const sheet = document.getElementById('login-sheet');
-    if (sheet) sheet.remove();
-  }
-});
-</script>
+<script type="module" src="{{ url_for('static', filename='js/modules/auth/login-sheet.js') }}"></script>

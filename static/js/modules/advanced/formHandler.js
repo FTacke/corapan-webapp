@@ -1,6 +1,6 @@
 /**
  * Advanced Search Form Handler (Stabilized)
- * 
+ *
  * Null-safe implementation with robust HTMX/Turbo support
  * - Handles missing form gracefully
  * - Fallback for Select2
@@ -8,26 +8,33 @@
  * - Supports dynamic content swap via HTMX
  */
 
-import { initAdvancedTable, updateExportButtons, updateSummary } from './initTable.js';
-import { SearchFiltersManager } from '../search/filters.js';
-import { AdvancedAudioManager } from './audio.js';
-import { loadStats } from '../stats/initStatsTabAdvanced.js';
+import {
+  initAdvancedTable,
+  updateExportButtons,
+  updateSummary,
+} from "./initTable.js";
+import { SearchFiltersManager } from "../search/filters.js";
+import { AdvancedAudioManager } from "./audio.js";
+import { loadStats } from "../stats/initStatsTabAdvanced.js";
 
 let filtersManager = null;
 let resultsLoaded = false;
 let audioManager = null;
 
 // --- Null-sichere Helpers ---
-function q(form, sel) { return form ? form.querySelector(sel) : null; }
+function q(form, sel) {
+  return form ? form.querySelector(sel) : null;
+}
 function qv(form, sel, fallback = "") {
-  const el = q(form, sel); return el?.value ?? fallback;
+  const el = q(form, sel);
+  return el?.value ?? fallback;
 }
 function qb(form, sel, fallback = false) {
   const el = q(form, sel);
   if (!el) return fallback;
-  if (el.type === 'checkbox' || el.type === 'radio') return !!el.checked;
+  if (el.type === "checkbox" || el.type === "radio") return !!el.checked;
   const val = (el.value || "").toLowerCase();
-  return val === 'true' || val === 'on' || val === '1';
+  return val === "true" || val === "on" || val === "1";
 }
 
 /**
@@ -36,64 +43,66 @@ function qb(form, sel, fallback = false) {
  */
 function buildQueryParams(form) {
   if (!form) {
-    console.error('[Advanced] Form not found in buildQueryParams');
+    console.error("[Advanced] Form not found in buildQueryParams");
     return new URLSearchParams();
   }
-  
+
   const params = new URLSearchParams();
 
   // Required: Query
-  const qElement = q(form, '#q');
+  const qElement = q(form, "#q");
   if (!qElement) {
-    console.error('[Advanced] Query element #q not found');
+    console.error("[Advanced] Query element #q not found");
     return params;
   }
-  
-  const query = qv(form, '#q', '').trim();
+
+  const query = qv(form, "#q", "").trim();
   if (!query) {
-    alert('Por favor ingresa una consulta');
+    alert("Por favor ingresa una consulta");
     return params;
   }
-  params.append('q', query);
+  params.append("q", query);
 
   // Case sensitivity via ignore_accents: unchecked = sensitive=1, checked = insensitive=0
   const ignoreAccentsCheckbox = form.querySelector('[name="ignore_accents"]');
-  const sensitive = (ignoreAccentsCheckbox && ignoreAccentsCheckbox.checked) ? '0' : '1';
-  params.set('sensitive', sensitive);
+  const sensitive =
+    ignoreAccentsCheckbox && ignoreAccentsCheckbox.checked ? "0" : "1";
+  params.set("sensitive", sensitive);
 
   const expertCql = qb(form, '[name="expert_cql"]', false);
 
-  const modeEl = q(form, 'input[name="mode"]:checked') || q(form, 'select[name="mode"]');
-  const mode = modeEl?.value || 'forma';
+  const modeEl =
+    q(form, 'input[name="mode"]:checked') || q(form, 'select[name="mode"]');
+  const mode = modeEl?.value || "forma";
 
   if (expertCql) {
-    params.set('mode', 'cql');
+    params.set("mode", "cql");
   } else {
-    params.set('mode', mode);
+    params.set("mode", mode);
   }
 
   // Query-type specific parameters
   // Metadata filters (country, speaker type, sex, speech mode, discourse)
   const filterMappings = [
-    { param: 'country_code', selector: '#filter-country-code' },
-    { param: 'speaker_type', selector: '#filter-speaker-type' },
-    { param: 'sex', selector: '#filter-sex' },
-    { param: 'speech_mode', selector: '#filter-speech-mode' },
-    { param: 'discourse', selector: '#filter-discourse' },
+    { param: "country_code", selector: "#filter-country-code" },
+    { param: "speaker_type", selector: "#filter-speaker-type" },
+    { param: "sex", selector: "#filter-sex" },
+    { param: "speech_mode", selector: "#filter-speech-mode" },
+    { param: "discourse", selector: "#filter-discourse" },
   ];
-  
+
   filterMappings.forEach(({ param, selector }) => {
     const selectEl = q(form, selector);
     if (selectEl) {
       Array.from(selectEl.options)
-        .filter(opt => opt.selected && opt.value)
-        .forEach(opt => params.append(param, opt.value));
+        .filter((opt) => opt.selected && opt.value)
+        .forEach((opt) => params.append(param, opt.value));
     }
   });
 
   // Include regional checkbox
-  const includeRegional = qb(form, '#include-regional', false);
-  if (includeRegional) params.set('include_regional', '1');
+  const includeRegional = qb(form, "#include-regional", false);
+  if (includeRegional) params.set("include_regional", "1");
 
   return params;
 }
@@ -103,15 +112,18 @@ function buildQueryParams(form) {
  */
 function bindFormSubmit(form) {
   if (!form) return;
-  if (form.dataset.bound === '1') return;
-  form.dataset.bound = '1';
+  if (form.dataset.bound === "1") return;
+  form.dataset.bound = "1";
 
-  form.addEventListener('submit', function(e) {
+  form.addEventListener("submit", function (e) {
     e.preventDefault();
-    
+
     const queryParams = buildQueryParams(form);
-    console.log('[Advanced] Submitting with params:', Object.fromEntries(queryParams));
-    
+    console.log(
+      "[Advanced] Submitting with params:",
+      Object.fromEntries(queryParams),
+    );
+
     loadSearchResults(queryParams);
   });
 }
@@ -120,43 +132,44 @@ function bindFormSubmit(form) {
  * Load search results via AJAX
  */
 async function loadSearchResults(queryParams) {
-  const summaryBox = document.getElementById('adv-summary');
-  
+  const summaryBox = document.getElementById("adv-summary");
+
   try {
     if (summaryBox) {
       summaryBox.hidden = false;
-      summaryBox.innerHTML = '<span>Cargando resultados...</span>';
+      summaryBox.innerHTML = "<span>Cargando resultados...</span>";
     }
-    
+
     initAdvancedTable(queryParams.toString());
     updateExportButtons(queryParams.toString());
-    
-    const response = await fetch(`/search/advanced/data?${queryParams.toString()}`);
+
+    const response = await fetch(
+      `/search/advanced/data?${queryParams.toString()}`,
+    );
     if (!response.ok) {
       throw new Error(`HTTP ${response.status}`);
     }
-    
+
     const data = await response.json();
     updateSummary(data, queryParams);
-    
+
     if (summaryBox) {
       summaryBox.focus();
-      summaryBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      summaryBox.scrollIntoView({ behavior: "smooth", block: "nearest" });
     }
-    
+
     resultsLoaded = true;
-    console.log('✅ Results loaded:', data.recordsFiltered);
-    
+    console.log("✅ Results loaded:", data.recordsFiltered);
+
     // Trigger stats refresh if stats tab exists
     // Stats will only actually load if the tab is active
-    const statsTab = document.getElementById('tab-estadisticas');
-    if (statsTab && statsTab.getAttribute('aria-selected') === 'true') {
-      console.log('[Advanced] Stats tab active, refreshing stats');
+    const statsTab = document.getElementById("tab-estadisticas");
+    if (statsTab && statsTab.getAttribute("aria-selected") === "true") {
+      console.log("[Advanced] Stats tab active, refreshing stats");
       setTimeout(() => loadStats(), 300);
     }
-    
   } catch (error) {
-    console.error('❌ Error loading results:', error);
+    console.error("❌ Error loading results:", error);
     if (summaryBox) {
       summaryBox.innerHTML = `<span style="color: var(--md-sys-color-error);">Error: ${escapeHtml(error.message)}</span>`;
     }
@@ -167,15 +180,15 @@ async function loadSearchResults(queryParams) {
  * Escape HTML entities
  */
 function escapeHtml(text) {
-  if (!text) return '';
+  if (!text) return "";
   const map = {
-    '&': '&amp;',
-    '<': '&lt;',
-    '>': '&gt;',
-    '"': '&quot;',
-    "'": '&#039;'
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#039;",
   };
-  return text.replace(/[&<>"']/g, m => map[m]);
+  return text.replace(/[&<>"']/g, (m) => map[m]);
 }
 
 /**
@@ -183,15 +196,18 @@ function escapeHtml(text) {
  */
 function initFormHandler(root = document) {
   // Find the form (multiple fallbacks for flexibility)
-  const form = (root || document).querySelector('#advanced-search-form') 
-    || document.getElementById('advanced-search-form');
-  
+  const form =
+    (root || document).querySelector("#advanced-search-form") ||
+    document.getElementById("advanced-search-form");
+
   if (!form) {
-    console.log('[Advanced] Form #advanced-search-form not found, skipping initialization');
+    console.log(
+      "[Advanced] Form #advanced-search-form not found, skipping initialization",
+    );
     return;
   }
 
-  console.log('[Advanced] Initializing form handler');
+  console.log("[Advanced] Initializing form handler");
 
   // Initialize filters with Select2 (if available)
   if (!filtersManager) {
@@ -210,30 +226,34 @@ function initFormHandler(root = document) {
     if (!f) return;
     const selects = f.querySelectorAll?.('[data-enhance="select2"]');
     if (!selects || !selects.length) return;
-    const hasJQ = !!(window.jQuery && window.jQuery.fn && window.jQuery.fn.select2);
+    const hasJQ = !!(
+      window.jQuery &&
+      window.jQuery.fn &&
+      window.jQuery.fn.select2
+    );
     if (!hasJQ) {
-      console.warn('Select2 nicht geladen – nutze native <select>.');
+      console.warn("Select2 nicht geladen – nutze native <select>.");
       return;
     }
-    window.jQuery(selects).select2({ width: '100%' });
+    window.jQuery(selects).select2({ width: "100%" });
   })(form);
 
   // Bind form submit
   bindFormSubmit(form);
 
-  console.log('✅ Advanced form handler ready');
+  console.log("✅ Advanced form handler ready");
 }
 
 // --- Event Listeners ---
 
 // Standard page load
-document.addEventListener('DOMContentLoaded', () => initFormHandler());
+document.addEventListener("DOMContentLoaded", () => initFormHandler());
 
 // HTMX afterSwap for dynamic content swaps
-document.addEventListener('htmx:afterSwap', (e) => {
+document.addEventListener("htmx:afterSwap", (e) => {
   if (!e?.target) return;
-  if (e.target.closest && e.target.closest('#advanced-search-form')) {
-    console.log('[Advanced] HTMX swap detected, re-initializing');
+  if (e.target.closest && e.target.closest("#advanced-search-form")) {
+    console.log("[Advanced] HTMX swap detected, re-initializing");
     initFormHandler(document);
   }
 });

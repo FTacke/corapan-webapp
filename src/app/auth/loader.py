@@ -1,4 +1,5 @@
-﻿"""Hydrate credential store from environment variables."""
+"""Hydrate credential store from environment variables."""
+
 from __future__ import annotations
 
 import os
@@ -8,7 +9,7 @@ from ..routes import auth
 
 
 def _parse_role_account(env_key: str) -> tuple[Role, str]:
-    token = env_key.removesuffix('_PASSWORD_HASH')  # strip suffix
+    token = env_key.removesuffix("_PASSWORD_HASH")  # strip suffix
     if "__" in token:
         role_token, account_token = token.split("__", 1)
     else:

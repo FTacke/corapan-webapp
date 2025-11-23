@@ -4,7 +4,7 @@
  * @module player/modules/audio
  */
 
-import { PLAYER_CONFIG } from '../config.js';
+import { PLAYER_CONFIG } from "../config.js";
 
 export class AudioPlayer {
   constructor() {
@@ -25,7 +25,7 @@ export class AudioPlayer {
     this._getControlElements();
     this._setupEventListeners();
     this._setupKeyboardShortcuts();
-    
+
     return this.audioElement;
   }
 
@@ -34,41 +34,44 @@ export class AudioPlayer {
    * @private
    */
   _createAudioElement(audioFile) {
-    this.audioElement = document.createElement('audio');
-    this.audioElement.id = 'visualAudioPlayer';
-    
+    this.audioElement = document.createElement("audio");
+    this.audioElement.id = "visualAudioPlayer";
+
     // Construct audio path with MEDIA_ENDPOINT
-    const audioPath = audioFile.startsWith('/') || audioFile.startsWith('http') 
-      ? audioFile 
-      : `${PLAYER_CONFIG.MEDIA_ENDPOINT}/${audioFile}`;
-    
+    const audioPath =
+      audioFile.startsWith("/") || audioFile.startsWith("http")
+        ? audioFile
+        : `${PLAYER_CONFIG.MEDIA_ENDPOINT}/${audioFile}`;
+
     this.audioElement.src = audioPath;
-    console.log('[Audio] Loading audio from:', audioPath);
-    
+    console.log("[Audio] Loading audio from:", audioPath);
+
     // Error handling
-    this.audioElement.addEventListener('error', (e) => {
-      console.error('[Audio] Failed to load:', audioPath);
-      console.error('[Audio] Error details:', e);
-      alert(`Audio konnte nicht geladen werden.\nPfad: ${audioPath}\n\nBitte prüfe, ob die Datei existiert.`);
+    this.audioElement.addEventListener("error", (e) => {
+      console.error("[Audio] Failed to load:", audioPath);
+      console.error("[Audio] Error details:", e);
+      alert(
+        `Audio konnte nicht geladen werden.\nPfad: ${audioPath}\n\nBitte prüfe, ob die Datei existiert.`,
+      );
     });
-    
+
     // Play/Pause/Ended events for word highlighting
-    this.audioElement.addEventListener('play', () => {
-      console.log('[Audio] Playing - triggering word highlighting');
+    this.audioElement.addEventListener("play", () => {
+      console.log("[Audio] Playing - triggering word highlighting");
       if (this.onPlay) this.onPlay();
     });
-    
-    this.audioElement.addEventListener('pause', () => {
-      console.log('[Audio] Paused - stopping word highlighting');
+
+    this.audioElement.addEventListener("pause", () => {
+      console.log("[Audio] Paused - stopping word highlighting");
       if (this.onPause) this.onPause();
     });
-    
-    this.audioElement.addEventListener('ended', () => {
-      console.log('[Audio] Ended - stopping word highlighting');
+
+    this.audioElement.addEventListener("ended", () => {
+      console.log("[Audio] Ended - stopping word highlighting");
       if (this.onEnded) this.onEnded();
     });
-    
-    document.querySelector('.custom-audio-player').prepend(this.audioElement);
+
+    document.querySelector(".custom-audio-player").prepend(this.audioElement);
   }
 
   /**
@@ -77,15 +80,15 @@ export class AudioPlayer {
    */
   _getControlElements() {
     this.controls = {
-      playPause: document.getElementById('playPauseBtn'),
-      rewind: document.getElementById('rewindBtn'),
-      forward: document.getElementById('forwardBtn'),
-      progress: document.getElementById('progressBar'),
-      volume: document.getElementById('volumeControl'),
-      speed: document.getElementById('speedControlSlider'),
-      mute: document.getElementById('muteBtn'),
-      timeDisplay: document.getElementById('timeDisplay'),
-      speedDisplay: document.getElementById('speedDisplay'),
+      playPause: document.getElementById("playPauseBtn"),
+      rewind: document.getElementById("rewindBtn"),
+      forward: document.getElementById("forwardBtn"),
+      progress: document.getElementById("progressBar"),
+      volume: document.getElementById("volumeControl"),
+      speed: document.getElementById("speedControlSlider"),
+      mute: document.getElementById("muteBtn"),
+      timeDisplay: document.getElementById("timeDisplay"),
+      speedDisplay: document.getElementById("speedDisplay"),
     };
   }
 
@@ -95,46 +98,58 @@ export class AudioPlayer {
    */
   _setupEventListeners() {
     // Metadata loaded
-    this.audioElement.addEventListener('loadedmetadata', () => {
+    this.audioElement.addEventListener("loadedmetadata", () => {
       this._updateTimeDisplay();
       this.controls.progress.value = 0;
     });
 
     // Play/Pause button
-    this.controls.playPause.addEventListener('click', () => this.togglePlayPause());
-    this.audioElement.addEventListener('play', () => this._updatePlayPauseButton());
-    this.audioElement.addEventListener('pause', () => this._updatePlayPauseButton());
+    this.controls.playPause.addEventListener("click", () =>
+      this.togglePlayPause(),
+    );
+    this.audioElement.addEventListener("play", () =>
+      this._updatePlayPauseButton(),
+    );
+    this.audioElement.addEventListener("pause", () =>
+      this._updatePlayPauseButton(),
+    );
 
     // Skip buttons
-    this.controls.rewind.addEventListener('click', () => this.skip(-PLAYER_CONFIG.SKIP_DURATION / 1000));
-    this.controls.forward.addEventListener('click', () => this.skip(PLAYER_CONFIG.SKIP_DURATION / 1000));
+    this.controls.rewind.addEventListener("click", () =>
+      this.skip(-PLAYER_CONFIG.SKIP_DURATION / 1000),
+    );
+    this.controls.forward.addEventListener("click", () =>
+      this.skip(PLAYER_CONFIG.SKIP_DURATION / 1000),
+    );
 
     // Volume control
-    this.controls.volume.addEventListener('input', (e) => {
+    this.controls.volume.addEventListener("input", (e) => {
       this.audioElement.volume = parseFloat(e.target.value);
       this._updateVolumeIcon(e.target.value);
     });
 
-    this.controls.mute.addEventListener('click', () => {
+    this.controls.mute.addEventListener("click", () => {
       this.audioElement.muted = !this.audioElement.muted;
       this._updateVolumeIcon(this.controls.volume.value);
     });
 
     // Speed control
-    this.controls.speed.addEventListener('input', (e) => {
+    this.controls.speed.addEventListener("input", (e) => {
       const speed = parseFloat(e.target.value);
       this.audioElement.playbackRate = speed;
       this.controls.speedDisplay.textContent = `${speed.toFixed(1)}x`;
     });
 
     // Progress bar
-    this.audioElement.addEventListener('timeupdate', () => {
-      this.controls.progress.value = (this.audioElement.currentTime / this.audioElement.duration) * 100;
+    this.audioElement.addEventListener("timeupdate", () => {
+      this.controls.progress.value =
+        (this.audioElement.currentTime / this.audioElement.duration) * 100;
       this._updateTimeDisplay();
     });
 
-    this.controls.progress.addEventListener('input', (e) => {
-      this.audioElement.currentTime = (e.target.value / 100) * this.audioElement.duration;
+    this.controls.progress.addEventListener("input", (e) => {
+      this.audioElement.currentTime =
+        (e.target.value / 100) * this.audioElement.duration;
     });
   }
 
@@ -143,29 +158,29 @@ export class AudioPlayer {
    * @private
    */
   _setupKeyboardShortcuts() {
-    document.addEventListener('keydown', (event) => {
+    document.addEventListener("keydown", (event) => {
       // Ctrl+Space: Play/Pause
-      if (event.ctrlKey && event.code === 'Space' && !this.ctrlSpaceActive) {
+      if (event.ctrlKey && event.code === "Space" && !this.ctrlSpaceActive) {
         this.ctrlSpaceActive = true;
         this.togglePlayPause();
         event.preventDefault();
       }
 
       // Ctrl+Comma: Rewind 3s
-      if (event.ctrlKey && event.key === ',') {
+      if (event.ctrlKey && event.key === ",") {
         this.skip(-PLAYER_CONFIG.SKIP_DURATION / 1000);
         event.preventDefault();
       }
 
       // Ctrl+Period: Forward 3s
-      if (event.ctrlKey && event.key === '.') {
+      if (event.ctrlKey && event.key === ".") {
         this.skip(PLAYER_CONFIG.SKIP_DURATION / 1000);
         event.preventDefault();
       }
     });
 
-    document.addEventListener('keyup', (event) => {
-      if (event.key === 'Control') {
+    document.addEventListener("keyup", (event) => {
+      if (event.key === "Control") {
         this.ctrlSpaceActive = false;
       }
     });
@@ -189,9 +204,12 @@ export class AudioPlayer {
   skip(seconds) {
     this.audioElement.currentTime = Math.max(
       0,
-      Math.min(this.audioElement.duration, this.audioElement.currentTime + seconds)
+      Math.min(
+        this.audioElement.duration,
+        this.audioElement.currentTime + seconds,
+      ),
     );
-    
+
     // Animate button
     const button = seconds < 0 ? this.controls.rewind : this.controls.forward;
     this._animateButton(button);
@@ -204,17 +222,17 @@ export class AudioPlayer {
    */
   playSegment(startTime, endTime = null) {
     this.audioElement.currentTime = startTime;
-    
+
     if (endTime !== null) {
       const playUntil = () => {
         if (this.audioElement.currentTime >= endTime) {
           this.audioElement.pause();
-          this.audioElement.removeEventListener('timeupdate', playUntil);
+          this.audioElement.removeEventListener("timeupdate", playUntil);
         }
       };
-      this.audioElement.addEventListener('timeupdate', playUntil);
+      this.audioElement.addEventListener("timeupdate", playUntil);
     }
-    
+
     this.audioElement.play();
   }
 
@@ -224,11 +242,9 @@ export class AudioPlayer {
    */
   _updatePlayPauseButton() {
     if (this.audioElement.paused || this.audioElement.ended) {
-      this.controls.playPause.classList.remove('bi-pause-circle-fill');
-      this.controls.playPause.classList.add('bi-play-circle-fill');
+      this.controls.playPause.textContent = "play_circle";
     } else {
-      this.controls.playPause.classList.remove('bi-play-circle-fill');
-      this.controls.playPause.classList.add('bi-pause-circle-fill');
+      this.controls.playPause.textContent = "pause_circle";
     }
   }
 
@@ -238,11 +254,9 @@ export class AudioPlayer {
    */
   _updateVolumeIcon(volume) {
     if (this.audioElement.muted || parseFloat(volume) === 0) {
-      this.controls.mute.classList.remove('fa-volume-high');
-      this.controls.mute.classList.add('fa-volume-xmark');
+      this.controls.mute.textContent = "volume_off";
     } else {
-      this.controls.mute.classList.remove('fa-volume-xmark');
-      this.controls.mute.classList.add('fa-volume-high');
+      this.controls.mute.textContent = "volume_up";
     }
   }
 
@@ -255,8 +269,8 @@ export class AudioPlayer {
     const currentSeconds = Math.floor(this.audioElement.currentTime % 60);
     const durationMinutes = Math.floor(this.audioElement.duration / 60) || 0;
     const durationSeconds = Math.floor(this.audioElement.duration % 60) || 0;
-    
-    const pad = (num) => num < 10 ? '0' + num : num.toString();
+
+    const pad = (num) => (num < 10 ? "0" + num : num.toString());
     this.controls.timeDisplay.textContent = `${pad(currentMinutes)}:${pad(currentSeconds)} / ${pad(durationMinutes)}:${pad(durationSeconds)}`;
   }
 
@@ -265,10 +279,10 @@ export class AudioPlayer {
    * @private
    */
   _animateButton(button) {
-    button.classList.add('fa-fade');
+    button.style.opacity = "0.5";
     setTimeout(() => {
-      button.classList.remove('fa-fade');
-    }, 1000);
+      button.style.opacity = "1";
+    }, 200);
   }
 
   /**

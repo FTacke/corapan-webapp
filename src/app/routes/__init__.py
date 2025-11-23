@@ -1,9 +1,10 @@
 """Blueprint registration."""
+
 from __future__ import annotations
 
 from flask import Flask
 
-from . import admin, auth, media, public, atlas, player, editor, stats, bls_proxy
+from . import admin, auth, media, public, atlas, player, editor, stats, bls_proxy, corpus
 from ..search import advanced, advanced_api
 
 
@@ -19,6 +20,7 @@ BLUEPRINTS = [
     stats.blueprint,  # Stats API: /api/stats (public read-only)
     bls_proxy.bp,  # BlackLab Server proxy: /bls/**
     advanced.bp,  # Advanced search UI: /search/advanced
+    corpus.blueprint,  # Corpus informational routes (e.g. /corpus/guia)
     advanced_api.bp,  # Advanced search API: /search/advanced/data, /search/advanced/export
 ]
 

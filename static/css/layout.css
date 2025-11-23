@@ -12,9 +12,9 @@ body {
 body.app-shell {
   margin: 0 !important;
   padding: 0 !important;
-  font-family: 'Roboto', 'Noto Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  font-family: var(--md-sys-typescale-base-font-family);
   font-size: 0;
-  background: var(--md-sys-color-background);
+  background: var(--app-background);
   color: var(--md-sys-color-on-background);
   min-height: 100vh;
   display: grid;
@@ -45,24 +45,30 @@ body.overflow-hidden {
 
 /* Turbo Loading Indicator - Subtil am oberen Rand */
 body.turbo-loading::before {
-  content: '';
+  content: "";
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   height: 3px;
-  background: linear-gradient(90deg, 
-    transparent 0%, 
-    var(--md-sys-color-primary) 50%, 
-    transparent 100%);
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    var(--md-sys-color-primary) 50%,
+    transparent 100%
+  );
   background-size: 200% 100%;
   animation: turbo-progress 1s ease-in-out infinite;
   z-index: 9999;
 }
 
 @keyframes turbo-progress {
-  0% { background-position: 200% 0; }
-  100% { background-position: -200% 0; }
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
 }
 
 /* On mobile (<840px), we need position: fixed to prevent scroll */
@@ -107,7 +113,7 @@ main.site-main,
   grid-area: main;
   width: 100%;
   margin: 0 auto;
-  padding: 0;  /* No padding on main, containers define their own */
+  padding: 0; /* No padding on main, containers define their own */
   font-size: 1rem;
   display: block;
   background: transparent; /* Prevent color flash on first paint */
@@ -145,30 +151,30 @@ h6:focus[tabindex="-1"] {
 .page-header {
   margin-bottom: clamp(1.5rem, 3vw, 2rem);
   padding-bottom: 1.25rem;
-  border-bottom: 1px solid var(--color-border);
+  border-bottom: 1px solid var(--md-sys-color-outline-variant);
 }
 
 .page-eyebrow {
-  margin: 1.0rem 0 0.5rem 0;
-  font-size: 0.8rem;
+  margin: 1rem 0 0.5rem 0;
+  font-size: var(--md-sys-typescale-label-small-font-size);
   letter-spacing: 0.2em;
   text-transform: uppercase;
-  color: var(--color-text-muted);
+  color: var(--md-sys-color-on-surface-variant);
 }
 
 .page-title {
   margin: 0 0 1rem 0;
-  font-family: var(--font-sans);
+  font-family: var(--md-sys-typescale-base-font-family);
   font-size: clamp(1.75rem, 4.5vw, 2.5rem);
   font-weight: 400;
   line-height: 1.2;
-  color: var(--color-accent);
+  color: var(--md-sys-color-primary);
 }
 
 .page-intro {
-  font-size: 0.95rem;
+  font-size: var(--md-sys-typescale-body-large-font-size);
   line-height: 1.65;
-  color: var(--color-text);
+  color: var(--md-sys-color-on-surface);
 }
 
 .page-intro p {
@@ -186,23 +192,23 @@ h6:focus[tabindex="-1"] {
 
 .page-section h2 {
   margin: 0 0 1rem 0;
-  font-size: 1.25rem;
+  font-size: var(--md-sys-typescale-title-large-font-size);
   font-weight: 600;
-  color: var(--color-accent);
+  color: var(--md-sys-color-primary);
 }
 
 .page-section h3 {
   margin: 1.5rem 0 0.75rem 0;
-  font-size: 1rem;
+  font-size: var(--md-sys-typescale-title-medium-font-size);
   font-weight: 600;
-  color: var(--color-text);
+  color: var(--md-sys-color-on-surface);
 }
 
 .page-section p {
   margin: 0 0 0.75rem 0;
   line-height: 1.65;
-  font-size: 0.95rem;
-  color: var(--color-text);
+  font-size: var(--md-sys-typescale-body-medium-font-size);
+  color: var(--md-sys-color-on-surface);
 }
 
 .page-section p:last-child {
@@ -211,7 +217,7 @@ h6:focus[tabindex="-1"] {
 
 .page-section strong {
   font-weight: 600;
-  color: var(--color-accent);
+  color: var(--md-sys-color-primary);
 }
 
 .page-section ul,
@@ -219,8 +225,8 @@ h6:focus[tabindex="-1"] {
   margin: 0 0 0.75rem 0;
   padding-left: 1.5rem;
   line-height: 1.65;
-  font-size: 0.95rem;
-  color: var(--color-text);
+  font-size: var(--md-sys-typescale-body-medium-font-size);
+  color: var(--md-sys-color-on-surface);
 }
 
 .page-section li {
@@ -228,103 +234,100 @@ h6:focus[tabindex="-1"] {
 }
 
 .page-section a {
-  color: var(--color-accent);
+  color: var(--md-sys-color-primary);
   text-decoration: none;
   border-bottom: 1px solid transparent;
   transition: border-color 0.2s ease;
 }
 
 .page-section a:hover {
-  border-bottom-color: var(--color-accent);
+  border-bottom-color: var(--md-sys-color-primary);
 }
 
 .page-divider {
   margin: clamp(1.5rem, 3vw, 2rem) 0;
   padding-top: 1.25rem;
-  border-top: 1px solid var(--color-border);
+  border-top: 1px solid var(--md-sys-color-outline-variant);
 }
 
 .page-note {
-  font-size: 0.95rem;
-  color: var(--color-text-muted);
+  font-size: var(--md-sys-typescale-body-medium-font-size);
+  color: var(--md-sys-color-on-surface-variant);
   padding: 1rem;
-  background: rgba(234, 243, 245, 0.3);
-  border-left: 3px solid var(--color-accent);
+  background: var(--md-sys-color-surface-container-low);
+  border-left: 3px solid var(--md-sys-color-primary);
   border-radius: 0.25rem;
 }
 
 .site-footer {
   grid-area: footer;
-  padding: var(--space-md) clamp(1rem, 6vw, 4rem);
+  padding: var(--space-4) clamp(1rem, 6vw, 4rem);
   background: transparent;
-  color: var(--color-text);
-  border-top: 1px solid rgba(47, 95, 115, 0.35);
-  --tw-shadow: var(--shadow-elevated);
-  box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
-  font-size: 1rem;
+  color: var(--md-sys-color-on-surface);
+  border-top: 1px solid var(--md-sys-color-outline-variant);
+  box-shadow: var(--elev-2);
+  font-size: var(--md-sys-typescale-body-large-font-size);
 }
 
 .hero {
   display: grid;
   place-items: center;
-  padding: var(--space-xl) 0 var(--space-lg);
+  padding: var(--space-10) 0 var(--space-8);
 }
 
 .hero-card {
-  background: var(--color-surface);
+  background: var(--md-sys-color-surface);
   padding: clamp(2rem, 5vw, 3rem);
   border-radius: var(--radius-md);
-  --tw-shadow: var(--shadow-elevated);
-  box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
+  box-shadow: var(--elev-2);
   text-align: center;
   display: grid;
-  gap: var(--space-md);
+  gap: var(--space-4);
 }
 
 .hero-title {
-  font-family: var(--font-sans);
+  font-family: var(--md-sys-typescale-base-font-family);
   font-size: clamp(2rem, 4vw, 3rem);
   margin: 0;
 }
 
 .hero-subtitle {
   margin: 0;
-  color: var(--color-text-muted);
-  font-size: 1.05rem;
+  color: var(--md-sys-color-on-surface-variant);
+  font-size: var(--md-sys-typescale-body-large-font-size);
 }
 
 .hero-search {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
-  gap: var(--space-sm);
+  gap: var(--space-2);
 }
 
 .hero-search input[type="search"] {
   padding: 0.85rem 1rem;
   border-radius: var(--radius-sm);
-  border: 1px solid var(--color-border);
-  font-size: 1rem;
-  background: #fff;
-  color: var(--color-text);
+  border: 1px solid var(--md-sys-color-outline);
+  font-size: var(--md-sys-typescale-body-large-font-size);
+  background: var(--md-sys-color-surface);
+  color: var(--md-sys-color-on-surface);
 }
 
 .feature-grid {
   display: grid;
-  gap: var(--space-md);
+  gap: var(--space-4);
   grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-  margin-top: var(--space-lg);
+  margin-top: var(--space-8);
 }
 
 .feature-card {
-  background: var(--color-surface);
-  padding: var(--space-md);
+  background: var(--md-sys-color-surface);
+  padding: var(--space-4);
   border-radius: var(--radius-md);
-  border: 1px solid rgba(47, 95, 115, 0.35);
-  --tw-shadow: var(--shadow-elevated);
-  box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
+  border: 1px solid var(--md-sys-color-outline-variant);
+  box-shadow: var(--elev-2);
   display: grid;
-  gap: var(--space-sm);
-  color: var(--color-text);
+  gap: var(--space-2);
+  color: var(--md-sys-color-on-surface);
 }
 
 @media (max-width: 1120px) {
@@ -332,3 +335,28 @@ h6:focus[tabindex="-1"] {
     grid-template-columns: 1fr;
   }
 }
+
+/* Utility Classes */
+.hidden {
+  display: none !important;
+}
+
+.text-primary {
+  color: var(--md-sys-color-primary) !important;
+}
+
+.text-on-surface-variant {
+  color: var(--md-sys-color-on-surface-variant) !important;
+}
+
+.mt-2 { margin-top: 0.5rem !important; }
+.mt-4 { margin-top: 1rem !important; }
+.mt-6 { margin-top: 1.5rem !important; }
+.mt-8 { margin-top: 2rem !important; }
+
+.m-0 { margin: 0 !important; }
+.overflow-visible { overflow: visible !important; }
+.flex { display: flex !important; }
+.w-full { width: 100% !important; }
+
+.p-4 { padding: 1rem !important; }

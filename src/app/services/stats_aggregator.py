@@ -1,4 +1,5 @@
 """Statistics aggregation service for corpus data."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -10,6 +11,7 @@ from .database import open_db
 @dataclass(slots=True)
 class StatsParams:
     """Parameters for statistics aggregation, matching SearchParams."""
+
     query: str = ""
     search_mode: str = "text"
     token_ids: Sequence[str] = ()
@@ -45,7 +47,9 @@ def _append_in_clause(
     params.extend(selection)
 
 
-def _build_word_query(words: list[str], column: str, exact: bool) -> tuple[str, list[str]]:
+def _build_word_query(
+    words: list[str], column: str, exact: bool
+) -> tuple[str, list[str]]:
     """Build SQL query for word/lemma matching. Reused from corpus_search logic."""
     if not words:
         return "", []
@@ -63,7 +67,7 @@ def _build_word_query(words: list[str], column: str, exact: bool) -> tuple[str, 
         value = word if exact else f"%{word}%"
         conditions.append(f"{alias}.{column} {comparator} ?")
         params.append(value)
-    
+
     join_parts: list[str] = []
     for left, right in zip(aliases, aliases[1:]):
         join_parts.append(
@@ -80,7 +84,7 @@ def _build_word_query(words: list[str], column: str, exact: bool) -> tuple[str, 
 def aggregate_stats(params: StatsParams) -> dict[str, object]:
     """
     Aggregate corpus statistics based on search filters.
-    
+
     Returns:
         Dictionary with total count and breakdowns by country, speaker_type, sexo, modo.
         Each dimension includes absolute counts (n) and proportions (p).
@@ -104,7 +108,7 @@ def aggregate_stats(params: StatsParams) -> dict[str, object]:
     _append_in_clause(filters, filter_params, "t.sex", params.sexes)
     _append_in_clause(filters, filter_params, "t.mode", params.speech_modes)
     _append_in_clause(filters, filter_params, "t.discourse", params.discourses)
-    
+
     # Country detail filter (adds additional constraint to further narrow results)
     # This allows filtering stats to a single country while preserving other filters
     if params.country_detail:
@@ -166,7 +170,7 @@ def aggregate_stats(params: StatsParams) -> dict[str, object]:
     # Aggregation queries
     # Note: Count tokens (not distinct filenames)
     sql_total = f"{hits_cte} SELECT COUNT(*) AS total FROM hits"
-    
+
     sql_country = f"""
     {hits_cte}
     SELECT country_code AS key, COUNT(*) AS n
@@ -174,7 +178,7 @@ def aggregate_stats(params: StatsParams) -> dict[str, object]:
     GROUP BY country_code
     ORDER BY n DESC
     """
-    
+
     sql_speaker = f"""
     {hits_cte}
     SELECT speaker_type AS key, COUNT(*) AS n
@@ -182,7 +186,7 @@ def aggregate_stats(params: StatsParams) -> dict[str, object]:
     GROUP BY speaker_type
     ORDER BY n DESC
     """
-    
+
     sql_sexo = f"""
     {hits_cte}
     SELECT sex AS key, COUNT(*) AS n
@@ -190,7 +194,7 @@ def aggregate_stats(params: StatsParams) -> dict[str, object]:
     GROUP BY sex
     ORDER BY n DESC
     """
-    
+
     sql_modo = f"""
     {hits_cte}
     SELECT mode AS key, COUNT(*) AS n
@@ -198,7 +202,7 @@ def aggregate_stats(params: StatsParams) -> dict[str, object]:
     GROUP BY mode
     ORDER BY n DESC
     """
-    
+
     sql_discourse = f"""
     {hits_cte}
     SELECT discourse AS key, COUNT(*) AS n
@@ -209,46 +213,66 @@ def aggregate_stats(params: StatsParams) -> dict[str, object]:
 
     with open_db("transcription") as conn:
         cursor = conn.cursor()
-        
+
         # Total count
         cursor.execute(sql_total, all_params)
         total = cursor.fetchone()["total"]
-        
+
         # Country breakdown
         cursor.execute(sql_country, all_params)
         by_country = [
-            {"key": row["key"], "n": row["n"], "p": round(row["n"] / total, 3) if total > 0 else 0}
+            {
+                "key": row["key"],
+                "n": row["n"],
+                "p": round(row["n"] / total, 3) if total > 0 else 0,
+            }
             for row in cursor.fetchall()
         ]
-        
+
         # Speaker type breakdown
         cursor.execute(sql_speaker, all_params)
         by_speaker_type = [
-            {"key": row["key"], "n": row["n"], "p": round(row["n"] / total, 3) if total > 0 else 0}
+            {
+                "key": row["key"],
+                "n": row["n"],
+                "p": round(row["n"] / total, 3) if total > 0 else 0,
+            }
             for row in cursor.fetchall()
         ]
-        
+
         # Sexo breakdown
         cursor.execute(sql_sexo, all_params)
         by_sexo = [
-            {"key": row["key"], "n": row["n"], "p": round(row["n"] / total, 3) if total > 0 else 0}
+            {
+                "key": row["key"],
+                "n": row["n"],
+                "p": round(row["n"] / total, 3) if total > 0 else 0,
+            }
             for row in cursor.fetchall()
         ]
-        
+
         # Modo breakdown
         cursor.execute(sql_modo, all_params)
         by_modo = [
-            {"key": row["key"], "n": row["n"], "p": round(row["n"] / total, 3) if total > 0 else 0}
+            {
+                "key": row["key"],
+                "n": row["n"],
+                "p": round(row["n"] / total, 3) if total > 0 else 0,
+            }
             for row in cursor.fetchall()
         ]
-        
+
         # Discourse breakdown
         cursor.execute(sql_discourse, all_params)
         by_discourse = [
-            {"key": row["key"], "n": row["n"], "p": round(row["n"] / total, 3) if total > 0 else 0}
+            {
+                "key": row["key"],
+                "n": row["n"],
+                "p": round(row["n"] / total, 3) if total > 0 else 0,
+            }
             for row in cursor.fetchall()
         ]
-    
+
     return {
         "total": total,
         "by_country": by_country,

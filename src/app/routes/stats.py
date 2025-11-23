@@ -1,4 +1,5 @@
 """Statistics API endpoints."""
+
 from __future__ import annotations
 
 import hashlib
@@ -26,13 +27,33 @@ def _ensure_cache_dir() -> None:
 def _normalize_params(args: dict) -> dict:
     """Normalize query parameters for consistent caching."""
     # Regional codes that should be excluded by default
-    regional_codes = ['ARG-CHU', 'ARG-CBA', 'ARG-SDE', 'ESP-CAN', 'ESP-SEV']
-    national_codes = ['ARG', 'BOL', 'CHL', 'COL', 'CRI', 'CUB', 'ECU', 'ESP', 'GTM', 
-                      'HND', 'MEX', 'NIC', 'PAN', 'PRY', 'PER', 'DOM', 'SLV', 'URY', 'USA', 'VEN']
-    
+    regional_codes = ["ARG-CHU", "ARG-CBA", "ARG-SDE", "ESP-CAN", "ESP-SEV"]
+    national_codes = [
+        "ARG",
+        "BOL",
+        "CHL",
+        "COL",
+        "CRI",
+        "CUB",
+        "ECU",
+        "ESP",
+        "GTM",
+        "HND",
+        "MEX",
+        "NIC",
+        "PAN",
+        "PRY",
+        "PER",
+        "DOM",
+        "SLV",
+        "URY",
+        "USA",
+        "VEN",
+    ]
+
     countries = args.getlist("pais") if "pais" in args else []
     include_regional = args.get("include_regional") == "1"
-    
+
     # Apply same logic as in corpus.search()
     if not countries:
         if include_regional:
@@ -42,7 +63,7 @@ def _normalize_params(args: dict) -> dict:
     elif not include_regional:
         # If user selected countries but checkbox is off, exclude any regional codes
         countries = [c for c in countries if c not in regional_codes]
-    
+
     normalized = {
         "query": args.get("q", "").strip(),
         "search_mode": args.get("mode", "text"),
@@ -53,7 +74,9 @@ def _normalize_params(args: dict) -> dict:
         "sexes": sorted(args.getlist("sexo")) if "sexo" in args else [],
         "speech_modes": sorted(args.getlist("modo")) if "modo" in args else [],
         "discourses": sorted(args.getlist("discourse")) if "discourse" in args else [],
-        "country_detail": args.get("country_detail", "").strip(),  # For per-country filtering
+        "country_detail": args.get(
+            "country_detail", ""
+        ).strip(),  # For per-country filtering
     }
     return normalized
 
@@ -67,19 +90,19 @@ def _compute_cache_key(params: dict) -> str:
 def _get_cached_response(cache_key: str) -> tuple[dict | None, str | None]:
     """
     Retrieve cached response if still valid.
-    
+
     Returns:
         Tuple of (cached_data, etag) or (None, None) if cache miss/expired.
     """
     cache_file = STATS_CACHE_DIR / f"{cache_key}.json"
-    
+
     if not cache_file.exists():
         return None, None
-    
+
     # Check TTL
     mtime = cache_file.stat().st_mtime
     age = datetime.now(timezone.utc).timestamp() - mtime
-    
+
     if age > CACHE_TTL_SECONDS:
         # Expired - delete and return miss
         try:
@@ -87,7 +110,7 @@ def _get_cached_response(cache_key: str) -> tuple[dict | None, str | None]:
         except OSError:
             pass
         return None, None
-    
+
     # Valid cache - load and return
     try:
         with open(cache_file, encoding="utf-8") as f:
@@ -102,7 +125,7 @@ def _save_cached_response(cache_key: str, data: dict) -> None:
     """Save response to cache."""
     _ensure_cache_dir()
     cache_file = STATS_CACHE_DIR / f"{cache_key}.json"
-    
+
     try:
         with open(cache_file, "w", encoding="utf-8") as f:
             json.dump(data, f, ensure_ascii=False)
@@ -115,7 +138,7 @@ def _save_cached_response(cache_key: str, data: dict) -> None:
 def get_stats() -> Response:
     """
     Aggregate corpus statistics based on search filters.
-    
+
     Query Parameters:
         q: Search query string
         mode: Search mode (text, text_exact, lemma, lemma_exact)
@@ -125,38 +148,38 @@ def get_stats() -> Response:
         modo: Speech mode(s) - can be repeated
         discourse: Discourse type(s) - can be repeated
         token_ids: Token ID(s) - can be repeated
-    
+
     Returns:
         JSON with total count and breakdowns by dimension.
         Each dimension includes:
         - key: category identifier
         - n: absolute count
         - p: proportion (0-1)
-    
+
     Headers:
         ETag: Weak entity tag for caching
         Cache-Control: public, max-age=60
-    
+
     Rate Limit:
         60 requests per minute per IP
     """
     # Normalize parameters
     normalized = _normalize_params(request.args)
     cache_key = _compute_cache_key(normalized)
-    
+
     # Check cache
     cached_data, etag = _get_cached_response(cache_key)
-    
+
     # ETag conditional request support
     if etag and request.headers.get("If-None-Match") == etag:
         return Response(status=304)
-    
+
     if cached_data:
         response = jsonify(cached_data)
         response.headers["ETag"] = etag
         response.headers["Cache-Control"] = "public, max-age=60"
         return response
-    
+
     # Cache miss - compute stats
     params = StatsParams(
         query=normalized["query"],
@@ -169,36 +192,35 @@ def get_stats() -> Response:
         discourses=normalized["discourses"],
         country_detail=normalized["country_detail"],
     )
-    
+
     try:
         stats = aggregate_stats(params)
-        
+
         # Add metadata
         result = {
             **stats,
             "meta": {
                 "query": normalized,
                 "generatedAt": datetime.now(timezone.utc).isoformat(),
-            }
+            },
         }
-        
+
         # Cache result
         _save_cached_response(cache_key, result)
-        
+
         # Build response
         etag = f'W/"{cache_key}"'
         response = jsonify(result)
         response.headers["ETag"] = etag
         response.headers["Cache-Control"] = "public, max-age=60"
-        
+
         return response
-        
+
     except Exception as e:
         current_app.logger.error(f"Stats aggregation error: {e}", exc_info=True)
-        return jsonify({
-            "error": "internal_error",
-            "message": "Failed to compute statistics"
-        }), 500
+        return jsonify(
+            {"error": "internal_error", "message": "Failed to compute statistics"}
+        ), 500
 
 
 # Ensure cache directory exists on import
@@ -207,4 +229,5 @@ try:
 except Exception as e:
     # Log but don't crash app startup
     import logging
+
     logging.warning(f"Failed to create stats cache directory: {e}")

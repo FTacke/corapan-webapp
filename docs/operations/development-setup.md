@@ -156,10 +156,10 @@ python -m src.scripts.blacklab_index_creation \
   --docmeta /data/bl_input/docmeta.jsonl
 
 # Manual index build
-bash scripts/build_blacklab_index.sh tsv 4
+bash scripts/blacklab/build_blacklab_index.sh tsv 4
 
 # Manual BLS start
-bash scripts/run_bls.sh 8081 2g 512m
+bash scripts/blacklab/run_bls.sh 8081 2g 512m
 ```
 
 ---
@@ -311,7 +311,7 @@ make bls
 
 ```bash
 # Use more workers (if multi-core)
-bash scripts/build_blacklab_index.sh tsv 8
+bash scripts/blacklab/build_blacklab_index.sh tsv 8
 
 # Or limit corpus for testing
 python -m src.scripts.blacklab_index_creation \
@@ -470,7 +470,7 @@ gunicorn --bind 0.0.0.0:8000 --workers 4 --timeout 180 --keep-alive 5 src.app.ma
 **Quick Prod Start (Windows):**
 ```bash
 # 1. Start BlackLab Server
-bash scripts/run_bls.sh 8081 2g 512m
+bash scripts/blacklab/run_bls.sh 8081 2g 512m
 
 # 2. Start Flask with Waitress
 $env:BLS_BASE_URL="http://localhost:8081/blacklab-server"

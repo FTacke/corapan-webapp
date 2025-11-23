@@ -4,7 +4,7 @@
  * @module player/modules/tokens
  */
 
-import { PLAYER_CONFIG } from '../config.js';
+import { PLAYER_CONFIG } from "../config.js";
 
 export class TokenCollector {
   constructor() {
@@ -18,12 +18,12 @@ export class TokenCollector {
    * Initialize token collector
    */
   init() {
-    this.inputElement = document.getElementById('tokenCollectorInput');
-    this.copyButton = document.getElementById('copyTokenIdsBtn');
-    this.resetButton = document.getElementById('resetTokenCollectorBtn');
-    
+    this.inputElement = document.getElementById("tokenCollectorInput");
+    this.copyButton = document.getElementById("copyTokenIdsBtn");
+    this.resetButton = document.getElementById("resetTokenCollectorBtn");
+
     if (!this.inputElement) {
-      console.warn('[Tokens] Token collector input not found');
+      console.warn("[Tokens] Token collector input not found");
       return;
     }
 
@@ -36,11 +36,11 @@ export class TokenCollector {
    */
   _setupEventListeners() {
     if (this.copyButton) {
-      this.copyButton.addEventListener('click', () => this.copyToClipboard());
+      this.copyButton.addEventListener("click", () => this.copyToClipboard());
     }
 
     if (this.resetButton) {
-      this.resetButton.addEventListener('click', () => this.reset());
+      this.resetButton.addEventListener("click", () => this.reset());
     }
   }
 
@@ -82,24 +82,27 @@ export class TokenCollector {
    */
   async copyToClipboard() {
     if (this.collectedTokenIds.length === 0) {
-      this._showSnackbar('⚠️ Keine Token-IDs zum Kopieren vorhanden', 'warning');
+      this._showSnackbar(
+        "⚠️ Keine Token-IDs zum Kopieren vorhanden",
+        "warning",
+      );
       return;
     }
 
-    const text = this.collectedTokenIds.join(', ');
-    
+    const text = this.collectedTokenIds.join(", ");
+
     try {
       await navigator.clipboard.writeText(text);
       this._showCopySuccess();
-      this._showSnackbar('✓ Token-IDs kopiert!', 'success');
+      this._showSnackbar("✓ Token-IDs kopiert!", "success");
     } catch (err) {
-      console.error('[Tokens] Failed to copy:', err);
-      
+      console.error("[Tokens] Failed to copy:", err);
+
       // Fallback: Select text
       this.inputElement.select();
-      document.execCommand('copy');
+      document.execCommand("copy");
       this._showCopySuccess();
-      this._showSnackbar('✓ Token-IDs kopiert!', 'success');
+      this._showSnackbar("✓ Token-IDs kopiert!", "success");
     }
   }
 
@@ -110,11 +113,11 @@ export class TokenCollector {
   _updateDisplay() {
     if (!this.inputElement) return;
 
-    this.inputElement.value = this.collectedTokenIds.join(', ');
-    
+    this.inputElement.value = this.collectedTokenIds.join(", ");
+
     // Auto-resize textarea
-    this.inputElement.style.height = 'auto';
-    this.inputElement.style.height = this.inputElement.scrollHeight + 'px';
+    this.inputElement.style.height = "auto";
+    this.inputElement.style.height = this.inputElement.scrollHeight + "px";
   }
 
   /**
@@ -125,7 +128,7 @@ export class TokenCollector {
     if (!this.copyButton) return;
 
     // Change icon to check
-    this.copyButton.classList.add('copy-success');
+    this.copyButton.classList.add("copy-success");
 
     // Reset after delay
     setTimeout(() => {
@@ -140,46 +143,46 @@ export class TokenCollector {
   _resetCopyIcon() {
     if (!this.copyButton) return;
 
-    this.copyButton.classList.remove('copy-success');
+    this.copyButton.classList.remove("copy-success");
   }
 
   /**
    * Show snackbar notification
    * @private
    */
-  _showSnackbar(message, type = 'success') {
+  _showSnackbar(message, type = "success") {
     // Remove existing snackbar
-    const existingSnackbar = document.querySelector('.copy-snackbar');
+    const existingSnackbar = document.querySelector(".copy-snackbar");
     if (existingSnackbar) {
       existingSnackbar.remove();
     }
 
     // Create snackbar
-    const snackbar = document.createElement('div');
-    snackbar.className = 'copy-snackbar';
-    
-    const icon = document.createElement('i');
-    if (type === 'success') {
-      icon.className = 'bi bi-check-circle-fill';
-    } else if (type === 'warning') {
-      icon.className = 'bi bi-exclamation-circle-fill';
+    const snackbar = document.createElement("div");
+    snackbar.className = "copy-snackbar";
+
+    const icon = document.createElement("i");
+    if (type === "success") {
+      icon.className = "bi bi-check-circle-fill";
+    } else if (type === "warning") {
+      icon.className = "bi bi-exclamation-circle-fill";
     }
-    
-    const text = document.createElement('span');
+
+    const text = document.createElement("span");
     text.textContent = message;
-    
+
     snackbar.appendChild(icon);
     snackbar.appendChild(text);
     document.body.appendChild(snackbar);
 
     // Show with animation
     setTimeout(() => {
-      snackbar.classList.add('visible');
+      snackbar.classList.add("visible");
     }, 10);
 
     // Hide and remove after delay
     setTimeout(() => {
-      snackbar.classList.remove('visible');
+      snackbar.classList.remove("visible");
       setTimeout(() => {
         snackbar.remove();
       }, 300);

@@ -41,15 +41,19 @@
 
 /* Alert Title */
 .md3-alert__title {
-  font-weight: 600;
-  font-size: var(--md-sys-typescale-body-large);
+  font-size: var(--md-sys-typescale-body-large-font-size);
+  font-weight: var(--md-sys-typescale-body-large-font-weight);
+  line-height: var(--md-sys-typescale-body-large-line-height);
+  letter-spacing: var(--md-sys-typescale-body-large-letter-spacing);
   margin: 0;
 }
 
 /* Alert Message */
 .md3-alert__message {
-  font-size: var(--md-sys-typescale-body-medium);
-  line-height: 1.5;
+  font-size: var(--md-sys-typescale-body-medium-font-size);
+  font-weight: var(--md-sys-typescale-body-medium-font-weight);
+  line-height: var(--md-sys-typescale-body-medium-line-height);
+  letter-spacing: var(--md-sys-typescale-body-medium-letter-spacing);
   margin: 0;
 }
 
@@ -155,10 +159,16 @@
   }
 
   .md3-alert__title {
-    font-size: var(--md-sys-typescale-body-medium);
+    font-size: var(--md-sys-typescale-body-medium-font-size);
+    font-weight: var(--md-sys-typescale-body-medium-font-weight);
+    line-height: var(--md-sys-typescale-body-medium-line-height);
+    letter-spacing: var(--md-sys-typescale-body-medium-letter-spacing);
   }
 
   .md3-alert__message {
-    font-size: var(--md-sys-typescale-label-medium);
+    font-size: var(--md-sys-typescale-label-medium-font-size);
+    font-weight: var(--md-sys-typescale-label-medium-font-weight);
+    line-height: var(--md-sys-typescale-label-medium-line-height);
+    letter-spacing: var(--md-sys-typescale-label-medium-letter-spacing);
   }
 }

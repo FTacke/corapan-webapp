@@ -48,17 +48,32 @@
   transform: scale(1.02);
 }
 
-.md3-stats-image {
-  width: 100%;
-  height: auto;
+/* Stats Header & Controls (Clean Sweep) */
+.md3-stats-header {
   display: block;
-  object-fit: contain;
-  max-width: 100%;
-  border-radius: var(--radius-md);
-  /* Responsive font scaling: The key is to scale down the image proportionally
-     so text sizes in the graphic remain readable while being smaller than original.
-     Using max-width constraints to ensure readable font sizes. */
-  font-size: clamp(12px, 2.5vw, 16px);
+}
+
+.md3-stats-summary {
+  margin-bottom: var(--space-4);
+}
+
+.md3-stats-controls {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+}
+
+.md3-stats-filter-group {
+  margin: 0;
+}
+
+.md3-stats-filter-label {
+  margin: 0;
+}
+
+.md3-stats-action-end {
+  margin-left: auto;
 }
 
 /* Caption Styling */
@@ -106,8 +121,9 @@
   background-repeat: no-repeat;
   background-position: right var(--space-3) center;
   padding-right: var(--space-10);
-  transition: border-color 200ms cubic-bezier(0.2, 0, 0, 1),
-              border-width 200ms cubic-bezier(0.2, 0, 0, 1);
+  transition:
+    border-color 200ms cubic-bezier(0.2, 0, 0, 1),
+    border-width 200ms cubic-bezier(0.2, 0, 0, 1);
 }
 
 .md3-stats-country-select:hover {
@@ -164,8 +180,9 @@
   padding: var(--space-6);
   box-shadow: var(var(--elev-1));
   opacity: 0;
-  transition: opacity 300ms var(cubic-bezier(0.4, 0, 0.2, 1)),
-              box-shadow 200ms cubic-bezier(0.2, 0, 0, 1);
+  transition:
+    opacity 300ms var(cubic-bezier(0.4, 0, 0.2, 1)),
+    box-shadow 200ms cubic-bezier(0.2, 0, 0, 1);
 }
 
 .md3-stats-country-figure.visible {
@@ -316,7 +333,7 @@
 /* Close button X icon using pseudo-elements */
 .md3-stats-zoom-modal-close::before,
 .md3-stats-zoom-modal-close::after {
-  content: '';
+  content: "";
   position: absolute;
   width: 20px;
   height: 2px;
@@ -382,6 +399,10 @@
 /* Stats Header */
 .md3-stats-header {
   margin-bottom: var(--space-4);
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  flex-wrap: wrap;
 }
 
 .md3-stats-title {
@@ -391,7 +412,9 @@
 
 /* Country Filter */
 .md3-stats-filter {
-  margin-bottom: var(--space-4);
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
 }
 
 .md3-stats-filter-label {
@@ -550,7 +573,3 @@
   height: 300px;
   min-height: 300px;
 }
-
-
-
-

@@ -157,7 +157,7 @@
 }
 
 .md3-editor-current-word {
-  font-family: 'Courier New', 'Consolas', monospace;
+  font-family: "Courier New", "Consolas", monospace;
   font-weight: 600;
   font-size: 1rem;
   color: var(--md-sys-color-on-secondary-container);
@@ -376,7 +376,7 @@
 }
 
 .md3-editor-bookmark-time {
-  font-family: 'Courier New', 'Consolas', monospace;
+  font-family: "Courier New", "Consolas", monospace;
   font-weight: 600;
   color: var(--md-sys-color-primary);
   font-size: 0.75rem;
@@ -558,12 +558,12 @@
   white-space: nowrap;
   flex-shrink: 0;
   line-height: 1;
-  font-family: 'Courier New', 'Consolas', monospace;
+  font-family: "Courier New", "Consolas", monospace;
 }
 
 .md3-editor-history-old-value {
   color: var(--md-sys-color-error);
-  font-family: 'Courier New', 'Consolas', monospace;
+  font-family: "Courier New", "Consolas", monospace;
   font-size: 0.6875rem;
   min-width: 0;
   flex-shrink: 1;
@@ -583,7 +583,7 @@
 
 .md3-editor-history-new-value {
   color: var(--md-sys-color-tertiary);
-  font-family: 'Courier New', 'Consolas', monospace;
+  font-family: "Courier New", "Consolas", monospace;
   font-size: 0.6875rem;
   min-width: 0;
   flex-shrink: 1;
@@ -640,9 +640,9 @@
 }
 
 .md3-editor-status-saved {
-  background: #1b5e20; /* Grün – deutlich als "OK/Gespeichert" */
-  color: #ffffff;
-  border-color: #1b5e20;
+  background: var(--app-color-success);
+  color: var(--app-color-on-success);
+  border-color: var(--app-color-success);
 }
 
 .md3-editor-status-unsaved {
@@ -659,7 +659,8 @@
 }
 
 @keyframes pulse-warning {
-  0%, 100% {
+  0%,
+  100% {
     opacity: 1;
   }
   50% {
@@ -802,7 +803,7 @@ body.app-shell {
   font-weight: 500;
   color: var(--md-sys-color-on-surface);
   margin: 0;
-  font-family: 'Consolas', 'Courier New', monospace;
+  font-family: "Consolas", "Courier New", monospace;
   letter-spacing: 0.02em;
 }
 
@@ -868,10 +869,13 @@ body.app-shell {
   border: none; /* Angepasst an Player (war 1px solid) */
   background: transparent; /* Angepasst an Player (war surface-container-low) */
   transition: background 0.15s ease;
+  border-left: 1px solid var(--md-sys-color-outline-variant);
 }
 
 .md3-speaker-turn:hover {
-  background: var(--md-sys-color-surface-container-lowest); /* Angepasst an Player */
+  background: var(
+    --md-sys-color-surface-container-lowest
+  ); /* Angepasst an Player */
 }
 
 /* Speaker Header - Zeile 1: Edit-Icon | Name | Time */
@@ -881,7 +885,6 @@ body.app-shell {
   gap: var(--space-2);
   margin-bottom: var(--space-2);
   padding-bottom: var(--space-2);
-  border-bottom: 1px solid var(--md-sys-color-outline-variant);
 }
 
 /* Edit Icon (links) */
@@ -921,7 +924,12 @@ body.app-shell {
 /* Styles are inherited from transcription-shared.css */
 
 .md3-speaker-text .word.modified-word {
-  background: rgba(76, 175, 80, 0.2); /* Grüner Hintergrund für geänderte Wörter */
+  background: rgba(
+    76,
+    175,
+    80,
+    0.2
+  ); /* Grüner Hintergrund für geänderte Wörter */
   color: var(--md-sys-color-on-surface);
   border-bottom: 2px solid rgba(76, 175, 80, 0.6); /* Grüne Unterstreichung */
   font-weight: 500;
@@ -952,7 +960,8 @@ body.app-shell {
 }
 
 @keyframes bookmark-pulse {
-  0%, 100% {
+  0%,
+  100% {
     transform: scale(1);
   }
   50% {
@@ -968,7 +977,7 @@ body.app-shell {
 }
 
 .md3-speaker-name.modified-speaker::after {
-  content: '';
+  content: "";
   position: absolute;
   bottom: -2px;
   left: 0;
@@ -1030,7 +1039,7 @@ body.app-shell {
     font-size: 0.875rem; /* Kleiner auf Mobile */
     line-height: 1.5;
   }
-  
+
   .player-sidebar {
     position: static; /* Kein Sticky auf Mobile */
     max-height: none;
@@ -1120,5 +1129,3 @@ dialog.md3-dialog[open] {
   color: var(--md-sys-color-on-surface);
   box-shadow: var(--elev-4);
 }
-
-

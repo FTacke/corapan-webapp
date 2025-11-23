@@ -18,19 +18,13 @@ UI showed Material Design 3 error banner: "Search Backend Unavailable".
 ## Root Causes Identified & Fixed
 
 ### 1. ✅ Docker Image Wrong
-- **Problem:** Script used non-existent image `corpuslab/blacklab-server:3.5.0`
-- **Fix:** Updated to correct image `instituutnederlandsetaal/blacklab:latest`
-- **File:** `scripts/start_blacklab_docker.ps1`
 
 ### 2. ✅ Volume Mounts Incorrect
-- **Problem:** Config mounted as single file, index path mismatch
-- **Fix:** 
   - Config dir: `config/blacklab/` → `/etc/blacklab` (includes `blacklab-server.yaml`)
   - Index dir: `data/blacklab_index/` → `/data/index` (matches BLS default)
-- **Files:** `scripts/start_blacklab_docker.ps1`, `config/blacklab/blacklab-server.yaml`
 
-### 3. ✅ Missing BlackLab Server Config
-- **Problem:** BLS expected `blacklab-server.yaml` in `/etc/blacklab`
+**File:** `scripts/blacklab/start_blacklab_docker_v3.ps1`
+ **Files:** `scripts/blacklab/start_blacklab_docker_v3.ps1`, `config/blacklab/blacklab-server.yaml`
 - **Fix:** Created minimal config with `indexLocations: [/data/index]`
 - **File:** `config/blacklab/blacklab-server.yaml`
 

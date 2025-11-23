@@ -4,7 +4,7 @@
  * @module player/modules/mobile
  */
 
-import { PLAYER_CONFIG } from '../config.js';
+import { PLAYER_CONFIG } from "../config.js";
 
 export class MobileHandler {
   constructor() {
@@ -28,21 +28,27 @@ export class MobileHandler {
    */
   _detectViewport() {
     const width = window.innerWidth;
-    
+
     this.isMobile = width <= PLAYER_CONFIG.MOBILE_MAX;
-    this.isTablet = width > PLAYER_CONFIG.MOBILE_MAX && width <= PLAYER_CONFIG.TABLET_MAX;
-    
+    this.isTablet =
+      width > PLAYER_CONFIG.MOBILE_MAX && width <= PLAYER_CONFIG.TABLET_MAX;
+
     if (width <= PLAYER_CONFIG.MOBILE_SMALL) {
-      this.currentBreakpoint = 'mobile-small';
+      this.currentBreakpoint = "mobile-small";
     } else if (width <= PLAYER_CONFIG.MOBILE_MAX) {
-      this.currentBreakpoint = 'mobile';
+      this.currentBreakpoint = "mobile";
     } else if (width <= PLAYER_CONFIG.TABLET_MAX) {
-      this.currentBreakpoint = 'tablet';
+      this.currentBreakpoint = "tablet";
     } else {
-      this.currentBreakpoint = 'desktop';
+      this.currentBreakpoint = "desktop";
     }
 
-    console.log('[Mobile] Viewport:', width, 'Breakpoint:', this.currentBreakpoint);
+    console.log(
+      "[Mobile] Viewport:",
+      width,
+      "Breakpoint:",
+      this.currentBreakpoint,
+    );
   }
 
   /**
@@ -52,16 +58,21 @@ export class MobileHandler {
    */
   _setupResizeListener() {
     let resizeTimeout;
-    
-    window.addEventListener('resize', () => {
+
+    window.addEventListener("resize", () => {
       clearTimeout(resizeTimeout);
       resizeTimeout = setTimeout(() => {
         const oldBreakpoint = this.currentBreakpoint;
         this._detectViewport();
-        
+
         // Only re-apply if breakpoint actually changed
         if (oldBreakpoint !== this.currentBreakpoint) {
-          console.log('[Mobile] Breakpoint changed:', oldBreakpoint, '→', this.currentBreakpoint);
+          console.log(
+            "[Mobile] Breakpoint changed:",
+            oldBreakpoint,
+            "→",
+            this.currentBreakpoint,
+          );
           this._applyMobileOptimizations();
         }
       }, 100); // FAST: 100ms statt SCROLL_DEBOUNCE (250ms)
@@ -88,16 +99,16 @@ export class MobileHandler {
    * @private
    */
   _enableMobileLayout() {
-    document.body.classList.add('mobile-layout');
-    document.body.classList.remove('desktop-layout');
-    
+    document.body.classList.add("mobile-layout");
+    document.body.classList.remove("desktop-layout");
+
     // Hide sidebars on mobile
-    const sidebars = document.querySelectorAll('.sidebar');
-    sidebars.forEach(sidebar => {
-      sidebar.classList.add('mobile-hidden');
+    const sidebars = document.querySelectorAll(".sidebar");
+    sidebars.forEach((sidebar) => {
+      sidebar.classList.add("mobile-hidden");
     });
 
-    console.log('[Mobile] Mobile layout enabled');
+    console.log("[Mobile] Mobile layout enabled");
   }
 
   /**
@@ -105,16 +116,16 @@ export class MobileHandler {
    * @private
    */
   _enableDesktopLayout() {
-    document.body.classList.remove('mobile-layout');
-    document.body.classList.add('desktop-layout');
-    
+    document.body.classList.remove("mobile-layout");
+    document.body.classList.add("desktop-layout");
+
     // Show sidebars on desktop
-    const sidebars = document.querySelectorAll('.sidebar');
-    sidebars.forEach(sidebar => {
-      sidebar.classList.remove('mobile-hidden');
+    const sidebars = document.querySelectorAll(".sidebar");
+    sidebars.forEach((sidebar) => {
+      sidebar.classList.remove("mobile-hidden");
     });
 
-    console.log('[Mobile] Desktop layout enabled');
+    console.log("[Mobile] Desktop layout enabled");
   }
 
   /**
@@ -126,7 +137,7 @@ export class MobileHandler {
   _optimizeSpeakerNames() {
     // CSS handles all speaker name styling via .mobile-layout class
     // No JavaScript manipulation needed for performance
-    console.log('[Mobile] Speaker names: CSS-only (no DOM manipulation)');
+    console.log("[Mobile] Speaker names: CSS-only (no DOM manipulation)");
   }
 
   /**
@@ -137,7 +148,7 @@ export class MobileHandler {
   _optimizeTranscription() {
     // CSS handles all transcription styling via .mobile-layout class
     // No JavaScript manipulation needed for performance
-    console.log('[Mobile] Transcription: CSS-only (no DOM manipulation)');
+    console.log("[Mobile] Transcription: CSS-only (no DOM manipulation)");
   }
 
   /**
@@ -146,14 +157,14 @@ export class MobileHandler {
    * @private
    */
   _simplifyPlayer() {
-    const player = document.querySelector('.custom-audio-player');
-    
+    const player = document.querySelector(".custom-audio-player");
+
     if (player) {
-      player.classList.add('mobile-player'); // Only class toggle, no styling
+      player.classList.add("mobile-player"); // Only class toggle, no styling
     }
-    
+
     // CSS handles all player styling via .mobile-layout class
-    console.log('[Mobile] Player: CSS-only (no DOM manipulation)');
+    console.log("[Mobile] Player: CSS-only (no DOM manipulation)");
   }
 
   /**

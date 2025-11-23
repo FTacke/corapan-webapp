@@ -23,8 +23,8 @@ Die CO.RA.PAN-Suchfunktion basiert auf **BlackLab Server** (v5.x), einer Lucene-
 
 ```mermaid
 graph TD
-    A[Transkripte (JSON)] -->|scripts/run_export.py| B[Export (TSV + JSONL)]
-    B -->|scripts/build_blacklab_index.ps1| C[BlackLab Index (Lucene)]
+    A[Transkripte (JSON)] -->|LOKAL/.../03b_generate_blacklab_export.py| B[Export (TSV + JSONL)]
+    B -->|scripts/blacklab/build_blacklab_index.ps1| C[BlackLab Index (Lucene)]
     C -->|Docker Volume| D[BlackLab Server (BLS)]
     D -->|REST API| E[Flask Backend (Advanced API)]
     E -->|JSON| F[Frontend (DataTables/ECharts)]
@@ -35,12 +35,12 @@ graph TD
 ## Komponenten
 
 ### 1. Export (Python)
-Das Skript `scripts/run_export.py` liest die normalisierten Transkripte aus der Datenbank oder dem Dateisystem und erzeugt zwei Artefakte:
+Das Skript `LOKAL/01 - Add New Transcriptions/03b_generate_blacklab_export.py` liest die normalisierten Transkripte aus der Datenbank oder dem Dateisystem und erzeugt zwei Artefakte:
 - **TSV-Dateien**: Enthalten die Token-Daten (Wort, Lemma, POS, Zeitstempel).
 - **DocMeta (JSONL)**: Enthält die Metadaten pro Dokument (Sprecher, Land, Video-ID).
 
 ### 2. Indexierung (Docker)
-Das Skript `scripts/build_blacklab_index.ps1` nutzt ein Docker-Image (`instituutnederlandsetaal/blacklab`), um die TSV-Dateien zu indexieren.
+Das Skript `scripts/blacklab/build_blacklab_index.ps1` nutzt ein Docker-Image (`instituutnederlandsetaal/blacklab`), um die TSV-Dateien zu indexieren.
 - **Input**: `data/blacklab_export/tsv`
 - **Config**: `config/blacklab/corapan-tsv.blf.yaml`
 - **Output**: `data/blacklab_index`

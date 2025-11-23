@@ -8,15 +8,18 @@
   width: 100%; /* Ensure cards don't overflow container */
 }
 
-.card .card-title { 
-  font-size: var(--md-sys-typescale-title-medium); 
-  margin: 0 0 var(--space-2) 0; 
+.card .card-title {
+  font-size: var(--md-sys-typescale-title-medium-font-size);
+  font-weight: var(--md-sys-typescale-title-medium-font-weight);
+  line-height: var(--md-sys-typescale-title-medium-line-height);
+  letter-spacing: var(--md-sys-typescale-title-medium-letter-spacing);
+  margin: 0 0 var(--space-2) 0;
 }
 
-.card .card-actions { 
-  display: flex; 
-  gap: var(--space-2); 
-  margin-top: var(--space-3); 
+.card .card-actions {
+  display: flex;
+  gap: var(--space-2);
+  margin-top: var(--space-3);
 }
 
 /* Card Variants */
@@ -94,7 +97,7 @@ pre.highlight {
   padding: var(--space-4);
   margin: var(--space-4) 0;
   overflow-x: auto; /* Horizontal scroll for long code lines */
-  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  font-family: "Monaco", "Menlo", "Ubuntu Mono", monospace;
   font-size: 0.875rem;
   line-height: 1.5;
   color: var(--md-sys-color-on-surface);
@@ -115,12 +118,10 @@ pre.highlight {
   }
 }
 
-pre.highlight code { 
-  background: none; 
-  padding: 0; 
+pre.highlight code {
+  background: none;
+  padding: 0;
   color: inherit;
   white-space: pre-wrap; /* Inherit wrapping behavior */
   word-wrap: break-word;
 }
-
-

@@ -1,34 +1,34 @@
 /**
  * CO.RA.PAN Global Theme Controller (MD3-konform)
- * 
+ *
  * Unterstützt drei Modi:
  * - 'auto': Folgt System-Präferenz (prefers-color-scheme)
  * - 'light': Erzwingt helles Theme
  * - 'dark': Erzwingt dunkles Theme
- * 
+ *
  * State wird in localStorage unter 'site-theme' persistiert.
  * HTML root erhält data-theme="auto|light|dark" und data-system-dark="true|false"
  */
 
 (() => {
-  const KEY = 'site-theme'; // localStorage-Schlüssel
+  const KEY = "site-theme"; // localStorage-Schlüssel
   const root = document.documentElement;
-  const mm = window.matchMedia('(prefers-color-scheme: dark)');
+  const mm = window.matchMedia("(prefers-color-scheme: dark)");
 
   // Hilfsfunktionen
   const sysDark = () => mm.matches;
-  const setSysFlag = () => { 
-    root.dataset.systemDark = sysDark() ? 'true' : 'false'; 
+  const setSysFlag = () => {
+    root.dataset.systemDark = sysDark() ? "true" : "false";
   };
-  const load = () => localStorage.getItem(KEY) || 'light'; // Default: light
+  const load = () => localStorage.getItem(KEY) || "light"; // Default: light
   const save = (v) => localStorage.setItem(KEY, v);
-  const apply = (v) => { 
+  const apply = (v) => {
     root.dataset.theme = v;
     // Für backwards compatibility mit drawer-spezifischem Code
-    if (v === 'dark' || (v === 'auto' && sysDark())) {
-      root.classList.add('theme-dark');
+    if (v === "dark" || (v === "auto" && sysDark())) {
+      root.classList.add("theme-dark");
     } else {
-      root.classList.remove('theme-dark');
+      root.classList.remove("theme-dark");
     }
   };
 
@@ -37,11 +37,11 @@
   apply(load());
 
   // System-Präferenz-Änderungen live verfolgen
-  mm.addEventListener('change', () => { 
-    setSysFlag(); 
+  mm.addEventListener("change", () => {
+    setSysFlag();
     const current = load();
-    if (current === 'auto') {
-      apply('auto'); // Re-apply um classList zu aktualisieren
+    if (current === "auto") {
+      apply("auto"); // Re-apply um classList zu aktualisieren
     }
   });
 
@@ -52,8 +52,10 @@
      * @param {string} mode - 'auto' | 'light' | 'dark'
      */
     set(mode) {
-      if (!['auto', 'light', 'dark'].includes(mode)) {
-        console.warn(`[SiteTheme] Ungültiger Modus: ${mode}. Erlaubt: auto, light, dark`);
+      if (!["auto", "light", "dark"].includes(mode)) {
+        console.warn(
+          `[SiteTheme] Ungültiger Modus: ${mode}. Erlaubt: auto, light, dark`,
+        );
         return;
       }
       save(mode);
@@ -82,8 +84,8 @@
      */
     getEffective() {
       const mode = load();
-      if (mode === 'auto') {
-        return sysDark() ? 'dark' : 'light';
+      if (mode === "auto") {
+        return sysDark() ? "dark" : "light";
       }
       return mode;
     },
@@ -93,16 +95,16 @@
      */
     toggle() {
       const effective = this.getEffective();
-      this.set(effective === 'dark' ? 'light' : 'dark');
-    }
+      this.set(effective === "dark" ? "light" : "dark");
+    },
   };
 
   // Dev-Logging
-  if (window.location.search.includes('debug-theme')) {
-    console.log('[SiteTheme] Initialized:', {
+  if (window.location.search.includes("debug-theme")) {
+    console.log("[SiteTheme] Initialized:", {
       mode: load(),
       effective: window.SiteTheme.getEffective(),
-      systemDark: sysDark()
+      systemDark: sysDark(),
     });
   }
 })();

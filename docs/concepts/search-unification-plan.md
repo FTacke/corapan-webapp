@@ -243,7 +243,7 @@ Für lokale Entwicklung mit echten Suchergebnissen:
 
 ```powershell
 # Terminal 1: BlackLab starten (Docker, Port 8081)
-.\scripts\start_blacklab_docker.ps1
+.\scripts\blacklab\start_blacklab_docker_v3.ps1
 
 # Terminal 2: Flask starten (nutzt Default-BLS_BASE_URL)
 .venv\Scripts\activate
@@ -321,7 +321,7 @@ python -m src.app.main
 
 **Setup:**
 
-1. Starte BlackLab: `.\scripts\start_blacklab_docker.ps1` (Docker, Port 8081)
+1. Starte BlackLab: `.\scripts\blacklab\start_blacklab_docker_v3.ps1` (Docker, Port 8081)
 2. Starte Flask: `python -m src.app.main`
 
 **Schritte:**

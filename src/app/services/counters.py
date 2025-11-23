@@ -1,4 +1,5 @@
 """Counter services for access, visits, and search telemetry."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass, field
@@ -48,41 +49,64 @@ class AccessCounter(CounterStore):
 
         total = payload.setdefault("total", {"overall": 0, "monthly": {}, "days": []})
         total["overall"] += 1
-        total.setdefault("monthly", {})[month_key] = total["monthly"].get(month_key, 0) + 1
+        total.setdefault("monthly", {})[month_key] = (
+            total["monthly"].get(month_key, 0) + 1
+        )
         total.setdefault("days", []).append(day_value)
 
         roles = payload.setdefault("roles", {})
         role_bucket = roles.setdefault(role, {"overall": 0, "monthly": {}, "days": []})
         role_bucket["overall"] += 1
-        role_bucket.setdefault("monthly", {})[month_key] = role_bucket["monthly"].get(month_key, 0) + 1
+        role_bucket.setdefault("monthly", {})[month_key] = (
+            role_bucket["monthly"].get(month_key, 0) + 1
+        )
         role_bucket.setdefault("days", []).append(day_value)
 
         accounts = payload.setdefault("accounts", {})
-        account_bucket = accounts.setdefault(account, {"overall": 0, "monthly": {}, "days": []})
+        account_bucket = accounts.setdefault(
+            account, {"overall": 0, "monthly": {}, "days": []}
+        )
         account_bucket["overall"] += 1
-        account_bucket.setdefault("monthly", {})[month_key] = account_bucket["monthly"].get(month_key, 0) + 1
+        account_bucket.setdefault("monthly", {})[month_key] = (
+            account_bucket["monthly"].get(month_key, 0) + 1
+        )
         account_bucket.setdefault("days", []).append(day_value)
         self.persist()
 
 
-class SimpleCounter(CounterStore):
+class DetailedCounter(CounterStore):
     def increment(self, amount: int = 1) -> None:
         payload = self.load()
+        now = datetime.utcnow()
+        month_key = now.strftime("%Y-%m")
+        day_value = now.strftime("%Y-%m-%d")
+
         payload["overall"] = payload.get("overall", 0) + amount
+        
+        monthly = payload.setdefault("monthly", {})
+        monthly[month_key] = monthly.get(month_key, 0) + amount
+        
+        days = payload.setdefault("days", {})
+        days[day_value] = days.get(day_value, 0) + amount
+        
         self.persist()
 
 
 counter_access = AccessCounter(
     filename="counter_access.json",
-    default={"total": {"overall": 0, "monthly": {}, "days": []}, "roles": {}, "accounts": {}},
+    default={
+        "total": {"overall": 0, "monthly": {}, "days": []},
+        "roles": {},
+        "accounts": {},
+    },
 )
 
-counter_visits = SimpleCounter(
+counter_visits = DetailedCounter(
     filename="counter_visits.json",
-    default={"overall": 0},
+    default={"overall": 0, "monthly": {}, "days": {}},
 )
 
-counter_search = SimpleCounter(
+counter_search = DetailedCounter(
     filename="counter_search.json",
-    default={"overall": 0},
+    default={"overall": 0, "monthly": {}, "days": {}},
 )

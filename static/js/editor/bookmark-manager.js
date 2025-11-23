@@ -1,6 +1,6 @@
 /**
  * BookmarkManager - Handles segment bookmarking and retrieval
- * 
+ *
  * Features:
  * - Add/remove bookmarks for segments
  * - Display bookmark list with jump-to functionality
@@ -17,7 +17,7 @@ export class BookmarkManager {
     this.audioPlayer = null;
     this.currentSegmentIndex = null;
     this.segmentTrackingInterval = null;
-    
+
     this.initializeUI();
   }
 
@@ -25,54 +25,67 @@ export class BookmarkManager {
    * Initialize bookmark UI elements
    */
   initializeUI() {
-    this.bookmarkBtn = document.getElementById('bookmark-btn');
-    this.bookmarkList = document.getElementById('bookmark-list');
+    this.bookmarkBtn = document.getElementById("bookmark-btn");
+    this.bookmarkList = document.getElementById("bookmark-list");
 
     if (this.bookmarkBtn) {
-      this.bookmarkBtn.addEventListener('click', () => this.toggleBookmark());
+      this.bookmarkBtn.addEventListener("click", () => this.toggleBookmark());
     }
 
     // Add click listener to transcription container - bubbling from words
-    const container = document.getElementById('transcriptionContainer');
+    const container = document.getElementById("transcriptionContainer");
     if (container) {
-      container.addEventListener('click', (e) => {
+      container.addEventListener("click", (e) => {
         // Find the closest .word element (in case click was on a child)
-        const wordEl = e.target.closest('.word');
+        const wordEl = e.target.closest(".word");
         if (wordEl) {
           let segIdx = null;
-          
+
           // First try: get from word's data-groupIndex
-          const groupIndex = wordEl.getAttribute('data-groupIndex');
+          const groupIndex = wordEl.getAttribute("data-groupIndex");
           if (groupIndex) {
-            const [segmentIndex] = groupIndex.split('-');
+            const [segmentIndex] = groupIndex.split("-");
             segIdx = parseInt(segmentIndex);
           }
-          
+
           // Fallback: get from parent .md3-speaker-turn data-segment-index
           if (segIdx === null) {
-            const speakerTurn = wordEl.closest('.md3-speaker-turn');
+            const speakerTurn = wordEl.closest(".md3-speaker-turn");
             if (speakerTurn) {
-              const segmentIndexAttr = speakerTurn.getAttribute('data-segment-index');
+              const segmentIndexAttr =
+                speakerTurn.getAttribute("data-segment-index");
               if (segmentIndexAttr) {
                 segIdx = parseInt(segmentIndexAttr);
               }
             }
           }
-          
+
           if (segIdx !== null) {
             if (this.currentSegmentIndex !== segIdx) {
               this.currentSegmentIndex = segIdx;
-              console.log('[BookmarkManager] Segment selected by word click:', segIdx, 'Word:', wordEl.textContent.trim());
+              console.log(
+                "[BookmarkManager] Segment selected by word click:",
+                segIdx,
+                "Word:",
+                wordEl.textContent.trim(),
+              );
               this.updateBookmarkButton();
             }
           } else {
-            console.warn('[BookmarkManager] Could not find segment index for word:', wordEl.textContent.trim());
+            console.warn(
+              "[BookmarkManager] Could not find segment index for word:",
+              wordEl.textContent.trim(),
+            );
           }
         }
       });
-      console.log('[BookmarkManager] Click listener registered on transcriptionContainer');
+      console.log(
+        "[BookmarkManager] Click listener registered on transcriptionContainer",
+      );
     } else {
-      console.warn('[BookmarkManager] transcriptionContainer not found - click tracking disabled');
+      console.warn(
+        "[BookmarkManager] transcriptionContainer not found - click tracking disabled",
+      );
     }
 
     // Start tracking current segment
@@ -88,18 +101,21 @@ export class BookmarkManager {
   startTrackingCurrentSegment() {
     this.segmentTrackingInterval = setInterval(() => {
       // Find first word with .playing class (only if audio is actually playing)
-      const playingWord = document.querySelector('.word.playing');
-      
+      const playingWord = document.querySelector(".word.playing");
+
       if (playingWord) {
-        const groupIndex = playingWord.getAttribute('data-groupIndex');
+        const groupIndex = playingWord.getAttribute("data-groupIndex");
         if (groupIndex) {
           // groupIndex format: "segmentIndex-groupIndex"
-          const [segmentIndex] = groupIndex.split('-');
+          const [segmentIndex] = groupIndex.split("-");
           const segIdx = parseInt(segmentIndex);
-          
+
           if (this.currentSegmentIndex !== segIdx) {
             this.currentSegmentIndex = segIdx;
-            console.log('[BookmarkManager] Current segment changed (via playing word):', segIdx);
+            console.log(
+              "[BookmarkManager] Current segment changed (via playing word):",
+              segIdx,
+            );
             this.updateBookmarkButton();
           }
         }
@@ -138,22 +154,29 @@ export class BookmarkManager {
    * Toggle bookmark for current segment
    */
   toggleBookmark() {
-    if (this.currentSegmentIndex === null || this.currentSegmentIndex === undefined) {
-      console.warn('[BookmarkManager] No current segment selected', {
+    if (
+      this.currentSegmentIndex === null ||
+      this.currentSegmentIndex === undefined
+    ) {
+      console.warn("[BookmarkManager] No current segment selected", {
         currentSegmentIndex: this.currentSegmentIndex,
-        totalSegments: this.data.segments?.length
+        totalSegments: this.data.segments?.length,
       });
-      alert('Bitte wähle erst ein Segment aus (durch Abspielen oder Scrollen)');
+      alert("Bitte wähle erst ein Segment aus (durch Abspielen oder Scrollen)");
       return;
     }
 
     const isBookmarked = this.isBookmarked(this.currentSegmentIndex);
-    
-    console.log('[BookmarkManager] Toggling bookmark for segment', this.currentSegmentIndex, {
-      isCurrentlyBookmarked: isBookmarked,
-      allBookmarks: this.bookmarks
-    });
-    
+
+    console.log(
+      "[BookmarkManager] Toggling bookmark for segment",
+      this.currentSegmentIndex,
+      {
+        isCurrentlyBookmarked: isBookmarked,
+        allBookmarks: this.bookmarks,
+      },
+    );
+
     if (isBookmarked) {
       this.removeBookmark(this.currentSegmentIndex);
     } else {
@@ -164,40 +187,46 @@ export class BookmarkManager {
   /**
    * Add bookmark to segment
    */
-  async addBookmark(segmentIndex, note = '') {
-    console.log('[BookmarkManager] Adding bookmark for segment', segmentIndex, { note });
-    
+  async addBookmark(segmentIndex, note = "") {
+    console.log("[BookmarkManager] Adding bookmark for segment", segmentIndex, {
+      note,
+    });
+
     try {
       const payload = {
         file: this.config.transcriptFile,
         segment_index: segmentIndex,
-        note: note
+        note: note,
       };
-      
-      console.log('[BookmarkManager] Sending request to', this.config.apiEndpoints.addBookmark, payload);
+
+      console.log(
+        "[BookmarkManager] Sending request to",
+        this.config.apiEndpoints.addBookmark,
+        payload,
+      );
 
       const response = await fetch(this.config.apiEndpoints.addBookmark, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json'
+          "Content-Type": "application/json",
         },
-        body: JSON.stringify(payload)
+        body: JSON.stringify(payload),
       });
 
-      console.log('[BookmarkManager] Response status:', response.status);
+      console.log("[BookmarkManager] Response status:", response.status);
 
       if (!response.ok) {
         const error = await response.json();
-        console.error('[BookmarkManager] Error response:', error);
+        console.error("[BookmarkManager] Error response:", error);
         throw new Error(error.message || `HTTP ${response.status}`);
       }
 
       const result = await response.json();
-      console.log('[BookmarkManager] Success response:', result);
-      
+      console.log("[BookmarkManager] Success response:", result);
+
       // Add to local bookmarks array
       this.bookmarks.push(result.bookmark);
-      
+
       // Update data
       if (!this.data.bookmarks) {
         this.data.bookmarks = [];
@@ -208,13 +237,12 @@ export class BookmarkManager {
       this.updateBookmarkButton();
       this.renderBookmarkList();
 
-      console.log('[BookmarkManager] Bookmark added successfully', {
+      console.log("[BookmarkManager] Bookmark added successfully", {
         segment: segmentIndex,
-        totalBookmarks: this.bookmarks.length
+        totalBookmarks: this.bookmarks.length,
       });
-
     } catch (error) {
-      console.error('[BookmarkManager] Failed to add bookmark:', error);
+      console.error("[BookmarkManager] Failed to add bookmark:", error);
       alert(`Bookmark hinzufügen fehlgeschlagen: ${error.message}`);
     }
   }
@@ -223,49 +251,55 @@ export class BookmarkManager {
    * Remove bookmark from segment
    */
   async removeBookmark(segmentIndex) {
-    console.log('[BookmarkManager] Removing bookmark for segment', segmentIndex);
-    
+    console.log(
+      "[BookmarkManager] Removing bookmark for segment",
+      segmentIndex,
+    );
+
     try {
       const payload = {
         file: this.config.transcriptFile,
-        segment_index: segmentIndex
+        segment_index: segmentIndex,
       };
 
       const response = await fetch(this.config.apiEndpoints.removeBookmark, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json'
+          "Content-Type": "application/json",
         },
-        body: JSON.stringify(payload)
+        body: JSON.stringify(payload),
       });
 
-      console.log('[BookmarkManager] Response status:', response.status);
+      console.log("[BookmarkManager] Response status:", response.status);
 
       if (!response.ok) {
         const error = await response.json();
-        console.error('[BookmarkManager] Error response:', error);
+        console.error("[BookmarkManager] Error response:", error);
         throw new Error(error.message || `HTTP ${response.status}`);
       }
 
       // Remove from local bookmarks array
-      this.bookmarks = this.bookmarks.filter(b => b.segment_index !== segmentIndex);
-      
+      this.bookmarks = this.bookmarks.filter(
+        (b) => b.segment_index !== segmentIndex,
+      );
+
       // Update data
       if (this.data.bookmarks) {
-        this.data.bookmarks = this.data.bookmarks.filter(b => b.segment_index !== segmentIndex);
+        this.data.bookmarks = this.data.bookmarks.filter(
+          (b) => b.segment_index !== segmentIndex,
+        );
       }
 
       // Update UI
       this.updateBookmarkButton();
       this.renderBookmarkList();
 
-      console.log('[BookmarkManager] Bookmark removed successfully', {
+      console.log("[BookmarkManager] Bookmark removed successfully", {
         segment: segmentIndex,
-        remainingBookmarks: this.bookmarks.length
+        remainingBookmarks: this.bookmarks.length,
       });
-
     } catch (error) {
-      console.error('[BookmarkManager] Failed to remove bookmark:', error);
+      console.error("[BookmarkManager] Failed to remove bookmark:", error);
       alert(`Bookmark entfernen fehlgeschlagen: ${error.message}`);
     }
   }
@@ -274,7 +308,7 @@ export class BookmarkManager {
    * Check if segment is bookmarked
    */
   isBookmarked(segmentIndex) {
-    return this.bookmarks.some(b => b.segment_index === segmentIndex);
+    return this.bookmarks.some((b) => b.segment_index === segmentIndex);
   }
 
   /**
@@ -282,25 +316,33 @@ export class BookmarkManager {
    */
   updateBookmarkButton() {
     if (!this.bookmarkBtn) {
-      console.warn('[BookmarkManager] Bookmark button not found in DOM');
+      console.warn("[BookmarkManager] Bookmark button not found in DOM");
       return;
     }
 
     if (this.currentSegmentIndex === null) {
-      console.log('[BookmarkManager] No segment selected for button update');
-      this.bookmarkBtn.classList.remove('bookmarked');
+      console.log("[BookmarkManager] No segment selected for button update");
+      this.bookmarkBtn.classList.remove("bookmarked");
       this.bookmarkBtn.innerHTML = '<i class="bi bi-bookmark"></i> Bookmark';
       return;
     }
 
     const isBookmarked = this.isBookmarked(this.currentSegmentIndex);
-    console.log('[BookmarkManager] Updating button - Segment:', this.currentSegmentIndex, 'Is bookmarked:', isBookmarked, 'Total bookmarks:', this.bookmarks.length);
-    
+    console.log(
+      "[BookmarkManager] Updating button - Segment:",
+      this.currentSegmentIndex,
+      "Is bookmarked:",
+      isBookmarked,
+      "Total bookmarks:",
+      this.bookmarks.length,
+    );
+
     if (isBookmarked) {
-      this.bookmarkBtn.classList.add('bookmarked');
-      this.bookmarkBtn.innerHTML = '<i class="bi bi-bookmark-fill"></i> Bookmark';
+      this.bookmarkBtn.classList.add("bookmarked");
+      this.bookmarkBtn.innerHTML =
+        '<i class="bi bi-bookmark-fill"></i> Bookmark';
     } else {
-      this.bookmarkBtn.classList.remove('bookmarked');
+      this.bookmarkBtn.classList.remove("bookmarked");
       this.bookmarkBtn.innerHTML = '<i class="bi bi-bookmark"></i> Bookmark';
     }
   }
@@ -312,31 +354,34 @@ export class BookmarkManager {
     if (!this.bookmarkList) return;
 
     // Sort bookmarks by segment index
-    const sorted = [...this.bookmarks].sort((a, b) => a.segment_index - b.segment_index);
+    const sorted = [...this.bookmarks].sort(
+      (a, b) => a.segment_index - b.segment_index,
+    );
 
     if (sorted.length === 0) {
-      this.bookmarkList.innerHTML = '<p class="md3-editor-history-empty">Keine Bookmarks</p>';
+      this.bookmarkList.innerHTML =
+        '<p class="md3-editor-history-empty">Keine Bookmarks</p>';
       this._removeAllBookmarkIndicators();
       return;
     }
 
-    let html = '<ul>';
-    
-    sorted.forEach(bookmark => {
+    let html = "<ul>";
+
+    sorted.forEach((bookmark) => {
       const segmentIndex = bookmark.segment_index;
       const segment = this.data.segments?.[segmentIndex];
-      
+
       if (!segment) return;
 
       // Get speaker code (use speaker_code directly)
-      const speakerCode = segment.speaker_code || segment.speaker || 'Unknown';
+      const speakerCode = segment.speaker_code || segment.speaker || "Unknown";
 
       // Get first few words as preview
       const words = segment.words?.slice(0, 8) || [];
-      const preview = words.map(w => w.text || w.word).join(' ');
+      const preview = words.map((w) => w.text || w.word).join(" ");
 
       // Get time
-      const time = segment.words?.[0]?.start || 0;
+      const time = (segment.words?.[0]?.start_ms || 0) / 1000;
       const timeStr = this._formatTime(time);
 
       html += `
@@ -352,12 +397,12 @@ export class BookmarkManager {
             </button>
           </div>
           <div class="md3-editor-bookmark-text">${preview}</div>
-          ${bookmark.note ? `<div style="font-size: 0.6875rem; color: var(--md-sys-color-tertiary); font-style: italic; margin-top: var(--space-1);">Note: ${bookmark.note}</div>` : ''}
+          ${bookmark.note ? `<div style="font-size: 0.6875rem; color: var(--md-sys-color-tertiary); font-style: italic; margin-top: var(--space-1);">Note: ${bookmark.note}</div>` : ""}
         </li>
       `;
     });
 
-    html += '</ul>';
+    html += "</ul>";
     this.bookmarkList.innerHTML = html;
 
     // Update visual indicators in transcript
@@ -373,18 +418,22 @@ export class BookmarkManager {
     this._removeAllBookmarkIndicators();
 
     // Add indicator to bookmarked segments
-    this.bookmarks.forEach(bookmark => {
-      const segmentEl = document.querySelector(`.md3-speaker-turn[data-segment-index="${bookmark.segment_index}"]`);
+    this.bookmarks.forEach((bookmark) => {
+      const segmentEl = document.querySelector(
+        `.md3-speaker-turn[data-segment-index="${bookmark.segment_index}"]`,
+      );
       if (segmentEl) {
-        segmentEl.classList.add('has-bookmark');
-        
+        segmentEl.classList.add("has-bookmark");
+
         // Add bookmark icon to speaker text (not speaker name)
-        const speakerText = segmentEl.querySelector('.md3-speaker-text, .speaker-text');
-        if (speakerText && !speakerText.querySelector('.bookmark-indicator')) {
-          const indicator = document.createElement('span');
-          indicator.className = 'bookmark-indicator';
+        const speakerText = segmentEl.querySelector(
+          ".md3-speaker-text, .speaker-text",
+        );
+        if (speakerText && !speakerText.querySelector(".bookmark-indicator")) {
+          const indicator = document.createElement("span");
+          indicator.className = "bookmark-indicator";
           indicator.innerHTML = '<i class="bi bi-bookmark-star-fill"></i>';
-          indicator.title = 'Bookmark';
+          indicator.title = "Bookmark";
           speakerText.insertBefore(indicator, speakerText.firstChild);
         }
       }
@@ -396,10 +445,12 @@ export class BookmarkManager {
    * @private
    */
   _removeAllBookmarkIndicators() {
-    document.querySelectorAll('.md3-speaker-turn.has-bookmark').forEach(el => {
-      el.classList.remove('has-bookmark');
-    });
-    document.querySelectorAll('.bookmark-indicator').forEach(el => {
+    document
+      .querySelectorAll(".md3-speaker-turn.has-bookmark")
+      .forEach((el) => {
+        el.classList.remove("has-bookmark");
+      });
+    document.querySelectorAll(".bookmark-indicator").forEach((el) => {
       el.remove();
     });
   }
@@ -412,17 +463,23 @@ export class BookmarkManager {
     if (!segment || !segment.words || segment.words.length === 0) return;
 
     // Scroll to segment (center in viewport with padding)
-    const segmentEl = document.querySelector(`.md3-speaker-turn[data-segment-index="${segmentIndex}"]`);
+    const segmentEl = document.querySelector(
+      `.md3-speaker-turn[data-segment-index="${segmentIndex}"]`,
+    );
     if (segmentEl) {
       // Scroll to center of viewport with some top padding for context
-      const container = document.getElementById('transcriptionContainer');
+      const container = document.getElementById("transcriptionContainer");
       if (container) {
         const rect = segmentEl.getBoundingClientRect();
         const containerRect = container.getBoundingClientRect();
-        const scrollPosition = container.scrollTop + (rect.top - containerRect.top) - 100; // 100px from top
-        container.scrollTo({ top: Math.max(0, scrollPosition), behavior: 'smooth' });
+        const scrollPosition =
+          container.scrollTop + (rect.top - containerRect.top) - 100; // 100px from top
+        container.scrollTo({
+          top: Math.max(0, scrollPosition),
+          behavior: "smooth",
+        });
       } else {
-        segmentEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        segmentEl.scrollIntoView({ behavior: "smooth", block: "center" });
       }
 
       // Highlight segment briefly
@@ -430,14 +487,14 @@ export class BookmarkManager {
     }
 
     // Seek to start of segment and play
-    const startTime = segment.words[0].start;
-    const endTime = segment.words[segment.words.length - 1].end;
+    const startTime = segment.words[0].start_ms / 1000;
+    const endTime = segment.words[segment.words.length - 1].end_ms / 1000;
     if (this.audioPlayer) {
       // Use playSegment to set time and play
       this.audioPlayer.playSegment(startTime, endTime);
     }
 
-    console.log('[BookmarkManager] Jumped to segment', segmentIndex);
+    console.log("[BookmarkManager] Jumped to segment", segmentIndex);
   }
 
   /**
@@ -445,15 +502,17 @@ export class BookmarkManager {
    * @private
    */
   _highlightSegment(segmentIndex) {
-    const segmentEl = document.querySelector(`.md3-speaker-turn[data-segment-index="${segmentIndex}"]`);
+    const segmentEl = document.querySelector(
+      `.md3-speaker-turn[data-segment-index="${segmentIndex}"]`,
+    );
     if (!segmentEl) return;
 
     // Add highlight class
-    segmentEl.classList.add('bookmark-highlight');
+    segmentEl.classList.add("bookmark-highlight");
 
     // Remove after 1.5 seconds
     setTimeout(() => {
-      segmentEl.classList.remove('bookmark-highlight');
+      segmentEl.classList.remove("bookmark-highlight");
     }, 1500);
   }
 
@@ -461,10 +520,10 @@ export class BookmarkManager {
    * Format time in MM:SS
    */
   _formatTime(seconds) {
-    if (!seconds || isNaN(seconds)) return '0:00';
+    if (!seconds || isNaN(seconds)) return "0:00";
     const mins = Math.floor(seconds / 60);
     const secs = Math.floor(seconds % 60);
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
+    return `${mins}:${secs.toString().padStart(2, "0")}`;
   }
 }
 

@@ -25,11 +25,10 @@
 
 /* Mobile Standard (< 600px) */
 @media (max-width: 600px) {
-  
   /* ==========================================================================
      CSS OVERRIDES (Desktop-Regeln überschreiben!)
      ========================================================================== */
-  
+
   /* WICHTIG: Desktop line-height überschreiben */
   .speaker-turn,
   .speaker-content,
@@ -49,11 +48,11 @@
   #transcriptionContainer {
     gap: var(--md3-space-2) !important; /* Override desktop 1.5rem */
   }
-  
+
   /* ==========================================================================
      LAYOUT
      ========================================================================== */
-  
+
   body.mobile-layout {
     padding: 0;
     margin: 0;
@@ -148,7 +147,7 @@
   /* ==========================================================================
      METADATA HEADER (Compact)
      ========================================================================== */
-  
+
   .metadata-header {
     padding: var(--md3-space-3);
     background: var(--md3-color-surface-container-low);
@@ -175,7 +174,7 @@
   /* ==========================================================================
      SPEAKER NAMES (ÜBER dem Text, sehr klein!)
      ========================================================================== */
-  
+
   .speaker-name {
     font-size: 0.65rem !important; /* Sehr klein! 10.4px */
     font-weight: 500 !important;
@@ -217,7 +216,7 @@
   /* ==========================================================================
      TRANSCRIPTION TEXT (Kompakter Zeilenabstand!)
      ========================================================================== */
-  
+
   .transcript-text,
   .speaker-text {
     font-size: 1.125rem !important; /* 18px für Lesbarkeit */
@@ -245,11 +244,11 @@
   /* ==========================================================================
      SIMPLIFIED MOBILE PLAYER (Full-Width, kein Lautstärke!)
      ========================================================================== */
-  
+
   /* ==========================================================================
      MOBILE PLAYER: BRUTALER 100% BREITE OVERRIDE!
      ========================================================================== */
-  
+
   /* ALLE Player-Selektoren - NUCLEAR OPTION! */
   .custom-audio-player,
   .custom-audio-player.mobile-player,
@@ -262,38 +261,38 @@
     left: 0 !important;
     right: 0 !important;
     top: auto !important;
-    
+
     /* BREITE: ABSOLUTE 100vw, KEINE Limits! */
     width: 100vw !important;
     min-width: 100vw !important;
     max-width: 100vw !important;
-    
+
     /* MARGINS: ALLE auf 0! */
     margin: 0 !important;
     margin-left: 0 !important;
     margin-right: 0 !important;
     margin-top: 0 !important;
     margin-bottom: 0 !important;
-    
+
     /* TRANSFORM: KEINE! (kann Breite beeinflussen) */
     transform: none !important;
     -webkit-transform: none !important;
-    
+
     /* PADDING: Nur innen */
     padding: 0.5rem !important;
     padding-left: 0.5rem !important;
     padding-right: 0.5rem !important;
-    
+
     /* BOX-SIZING: Border-box für echte 100vw */
     box-sizing: border-box !important;
     -webkit-box-sizing: border-box !important;
-    
+
     /* BACKGROUND: Solid, KEIN Glassmorphism */
     background: var(--md3-color-surface-container) !important;
     background-color: var(--md3-color-surface-container) !important;
     backdrop-filter: none !important;
     -webkit-backdrop-filter: none !important;
-    
+
     /* BORDER: Nur oben, KEINE Radius */
     border: none !important;
     border-top: 2px solid var(--md3-color-primary) !important;
@@ -302,21 +301,21 @@
     border-top-right-radius: 0 !important;
     border-bottom-left-radius: 0 !important;
     border-bottom-right-radius: 0 !important;
-    
+
     /* Z-INDEX: MAXIMAL! */
     z-index: 99999 !important;
-    
+
     /* SHADOW: Stark für Sichtbarkeit */
     box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.2) !important;
-    
+
     /* HEIGHT: Auto, mindestens 100px (4 Zeilen!) */
     min-height: 100px !important;
     max-height: 200px !important;
     height: auto !important;
-    
+
     /* ISOLATION: Eigener Context */
     isolation: isolate !important;
-    
+
     /* DISPLAY: Flex */
     display: flex !important;
     flex-direction: column !important;
@@ -326,7 +325,7 @@
   /* ==========================================================================
      PLAYER CONTROLS: 4-ZEILEN LAYOUT (BRUTAL OVERRIDE!)
      ========================================================================== */
-  
+
   /* Player Controls Container: FLEX WRAP für 4 Zeilen */
   .mobile-layout .player-controls,
   body.mobile-layout .custom-audio-player .player-controls,
@@ -336,14 +335,14 @@
     margin: 0 !important;
     padding: 0 !important;
     box-sizing: border-box !important;
-    
+
     /* WICHTIG: Grid für 4 Zeilen! */
     display: grid !important;
     grid-template-columns: 1fr !important;
     grid-template-rows: auto auto auto auto !important;
     gap: 0.4rem !important;
   }
-  
+
   /* ZEILE 1: Fortschrittsbalken (player-controls-top) */
   .mobile-layout .player-controls-top,
   .custom-audio-player .player-controls-top {
@@ -353,7 +352,7 @@
     align-items: center !important;
     gap: 0 !important;
   }
-  
+
   /* ZEILE 2-4: player-controls-bottom wird aufgeteilt! */
   .mobile-layout .player-controls-bottom,
   .custom-audio-player .player-controls-bottom {
@@ -365,7 +364,7 @@
     grid-template-rows: auto auto auto !important;
     gap: 0.4rem !important;
   }
-  
+
   /* ZEILE 2: Zeit (innerhalb von player-controls-bottom) */
   .mobile-layout .time-display,
   .custom-audio-player .time-display {
@@ -374,11 +373,11 @@
     text-align: center !important;
     font-size: 0.7rem !important;
     color: var(--md3-color-on-surface-variant) !important;
-    font-family: 'Consolas, Inconsolata', monospace !important;
+    font-family: "Consolas, Inconsolata", monospace !important;
     margin: 0 !important;
     padding: 0 !important;
   }
-  
+
   /* ZEILE 3: Play-Container (innerhalb von player-controls-bottom) */
   .mobile-layout .play-container,
   .custom-audio-player .play-container {
@@ -389,7 +388,7 @@
     align-items: center !important;
     gap: 0.5rem !important;
   }
-  
+
   /* ZEILE 4: Speed-Control (innerhalb von player-controls-bottom) */
   .mobile-layout .speed-control-container,
   .custom-audio-player .speed-control-container {
@@ -409,7 +408,7 @@
     justify-content: center !important;
     gap: 0.5rem !important;
   }
-  
+
   /* Play button (kompakter) */
   .mobile-layout .play-icon,
   .custom-audio-player .play-icon {
@@ -449,13 +448,13 @@
     gap: 0.15rem !important;
     cursor: pointer !important;
   }
-  
+
   .mobile-layout .skip-icon,
   .custom-audio-player .skip-icon {
     font-size: 1.2rem !important;
     color: var(--md3-color-primary) !important;
   }
-  
+
   .mobile-layout .skip-label,
   .custom-audio-player .skip-label {
     font-size: 0.65rem !important;
@@ -492,7 +491,7 @@
   /* ==========================================================================
      SPACING & PADDING (Kompakter!)
      ========================================================================== */
-  
+
   /* Add bottom padding to content to avoid player overlap */
   .mobile-layout .player-transcript {
     padding-bottom: 120px !important; /* 100px player + 20px gap */
@@ -508,7 +507,9 @@
 
   /* Speaker turn spacing: SEHR KOMPAKT */
   .mobile-layout .speaker-turn {
-    margin-bottom: var(--md3-space-2) !important; /* Reduziert von space-4 auf space-2 */
+    margin-bottom: var(
+      --md3-space-2
+    ) !important; /* Reduziert von space-4 auf space-2 */
     padding: 0 !important;
     background: transparent !important;
     border-radius: 0 !important;
@@ -534,7 +535,7 @@
   /* ==========================================================================
      BUTTONS & CONTROLS
      ========================================================================== */
-  
+
   /* Larger touch targets for all buttons */
   .mobile-layout button,
   .mobile-layout .btn {
@@ -553,7 +554,7 @@
   /* ==========================================================================
      TOOLTIPS (Hide on mobile)
      ========================================================================== */
-  
+
   .mobile-layout .tooltip-text {
     display: none !important; /* Tooltips don't work well on touch */
   }
@@ -561,7 +562,7 @@
   /* ==========================================================================
      SCROLLING
      ========================================================================== */
-  
+
   /* Smooth scrolling */
   html.mobile-layout {
     scroll-behavior: smooth;
@@ -582,7 +583,7 @@
 
 @media (min-width: 601px) and (max-width: 900px) {
   /* Hybrid layout: Collapsible sidebar */
-  
+
   .sidebar {
     max-width: 240px; /* Narrower on tablet */
   }
@@ -608,7 +609,7 @@
 
 @media (max-width: 900px) and (orientation: landscape) {
   /* In landscape, give even more space to transcription */
-  
+
   .speaker-name {
     font-size: 0.65rem !important;
     max-width: 60px !important;

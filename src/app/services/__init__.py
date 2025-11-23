@@ -1,4 +1,5 @@
-﻿"""Service layer exports."""
+"""Service layer exports."""
+
 from . import counters
 from . import atlas
 from . import corpus_search
