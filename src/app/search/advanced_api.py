@@ -1333,21 +1333,42 @@ def bls_group_by_field(
 
         logger.debug(f"Grouping {field_name}: {len(groups)} groups in {duration:.2f}s")
 
-        result = []
-        for g in groups:
-            identity = g.get("identity", "")
-            # identity for hit: grouping is usually just the value
-            # but sometimes it might be "cql:..." depending on version
-            val = identity
-            if ":" in str(val) and not str(val).startswith(
-                "http"
-            ):  # Avoid splitting URLs if any
-                # Heuristic: if it looks like cql:field:value, take last part
-                parts = str(val).split(":")
-                if len(parts) > 1:
-                    val = parts[-1]
+        # Normalize identity values and aggregate any duplicate keys
+        # BlackLab sometimes returns composite identities like "VEN|m" or
+        # "cql:country_code:VEN" — we want just the final value (e.g. 'm' or 'VEN')
+        import re
 
-            result.append({"key": val, "n": g.get("size", 0)})
+        counts: dict[str, int] = {}
+
+        for g in groups:
+            identity = str(g.get("identity", "") or "").strip()
+
+            # Try to extract a clean key value. Prefer the last meaningful token
+            # separated by common delimiters. Also fall back to the last alphanumeric
+            # token if delimiters are absent.
+            if ":" in identity and not identity.startswith("http"):
+                key_candidate = identity.split(":")[-1]
+            elif "|" in identity:
+                key_candidate = identity.split("|")[-1]
+            elif "=" in identity:
+                key_candidate = identity.split("=")[-1]
+            elif "/" in identity:
+                key_candidate = identity.split("/")[-1]
+            else:
+                # fallback to regex: last contiguous word-like token
+                m = re.search(r"([A-Za-z0-9_\-]+)$", identity)
+                key_candidate = m.group(1) if m else identity
+
+            key = key_candidate.strip()
+            if key == "":
+                # use the raw identity as a last resort
+                key = identity
+
+            counts[key] = counts.get(key, 0) + int(g.get("size", 0) or 0)
+
+        # Convert to list of dicts sorted by count desc
+        result = [{"key": k, "n": v} for k, v in counts.items()]
+        result.sort(key=lambda i: i["n"], reverse=True)
 
         return result
 

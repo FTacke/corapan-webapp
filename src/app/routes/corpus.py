@@ -83,6 +83,15 @@ def corpus_home() -> Response:
     return redirect(url_for("advanced_search.index"))
 
 
+@blueprint.get("/guia")
+def guia() -> Response:
+    """Guía para consultar el corpus (página estática, en español).
+
+    Sólo renderiza el template y permite marcar el endpoint activo para el menú.
+    """
+    return render_template("pages/corpus_guia.html")
+
+
 @blueprint.route("/search", methods=["GET", "POST"])
 def search() -> Response:
     """Deprecated search endpoint - redirects to corpus home.
