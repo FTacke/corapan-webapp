@@ -63,7 +63,7 @@ python -m src.scripts.blacklab_index_creation \
   --workers 4
 
 # Stage 2: Index-Build (TSV → Lucene)
-bash scripts/build_blacklab_index.sh tsv 4
+bash scripts/blacklab/build_blacklab_index.sh tsv 4
 ```
 
 **Siehe:** [How-To: Build BlackLab Index](../how-to/build-blacklab-index.md)
@@ -90,10 +90,10 @@ curl -s http://localhost:8081/blacklab-server/ | jq .blacklabBuildTime
 **Windows/Development:**
 ```bash
 # Standard: 2g Heap, 512m Metaspace
-bash scripts/run_bls.sh 8081 2g 512m
+bash scripts/blacklab/run_bls.sh 8081 2g 512m
 
 # Falls Timeout-Probleme auftreten (siehe Runbook):
-bash scripts/run_bls.sh 8081 4g 512m
+bash scripts/blacklab/run_bls.sh 8081 4g 512m
 ```
 
 **Erwartete Ausgabe:**
@@ -313,7 +313,7 @@ sudo systemctl restart blacklab-server
 
 # Windows
 # Beende Java-Prozess, dann:
-bash scripts/run_bls.sh 8081 2g 512m
+bash scripts/blacklab/run_bls.sh 8081 2g 512m
 ```
 
 ### 2. Flask App Neustart

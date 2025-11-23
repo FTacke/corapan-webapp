@@ -76,7 +76,7 @@ if (Test-Path $backupDir) {
 
 ```powershell
 # Delegates all work to canonical script
-$canonicalScript = Join-Path $repoRoot "scripts\build_blacklab_index.ps1"
+$canonicalScript = Join-Path $repoRoot "scripts\blacklab\build_blacklab_index.ps1"
 & $canonicalScript @delegateArgs
 exit $LASTEXITCODE
 ```
@@ -120,7 +120,7 @@ data/
 
 ```
 scripts/
-├── build_blacklab_index.ps1        ✅ Canonical (247 lines, single backup)
+├── blacklab/build_blacklab_index.ps1        ✅ Canonical (247 lines, single backup)
 ├── build_blacklab_index_v3.ps1     ✅ Wrapper (70 lines, delegates)
 └── build_blacklab_index.old.ps1    ✅ Archived
 ```
@@ -167,7 +167,7 @@ scripts/
 - No breaking changes to build process
 
 **For New Development:**
-- Always use `scripts/build_blacklab_index.ps1`
+- Always use `scripts/blacklab/build_blacklab_index.ps1`
 - Do not create new `_v3`, `_v4` variants
 - Single canonical script is maintained
 

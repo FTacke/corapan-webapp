@@ -76,10 +76,10 @@ corapan-webapp/
 │
 ├── scripts/                    # Production & maintenance scripts
 │   ├── README.md               # Document script purposes
-│   ├── build_blacklab_index.ps1           # Production (keep)
+│   ├── blacklab/build_blacklab_index.ps1           # Production (keep)
 │   ├── build_blacklab_index_v3.ps1        # Production (keep)
 │   ├── start_blacklab_docker_v3.ps1       # Production (keep)
-│   ├── start_blacklab_docker.ps1          # Production (keep)
+│   ├── blacklab/start_blacklab_docker.ps1          # Production (keep)
 │   ├── check_tsv_schema.py                # Validation tool (keep)
 │   ├── build_index_wrapper.ps1            # Moved from root
 │   ├── run_export.py                      # Moved from root

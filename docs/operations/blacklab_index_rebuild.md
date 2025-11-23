@@ -24,10 +24,10 @@ PowerShell (Windows) — full JSON-first rebuild and start BLS + webapp:
 
 ```powershell
 # Rebuild index (JSON -> TSV -> IndexTool)
-.\scripts\build_blacklab_index.ps1 -Format json -Force
+.\scripts\blacklab\build_blacklab_index.ps1 -Format json -Force
 
 # Start BlackLab server (detached)
-.\scripts\start_blacklab_docker_v3.ps1 -Detach
+.\scripts\blacklab\start_blacklab_docker_v3.ps1 -Detach
 
 # Start Flask (in dev venv)
 Set-Item -Path Env:FLASK_ENV -Value 'development'
@@ -38,10 +38,10 @@ Bash / Linux (WSL) equivalent:
 
 ```bash
 # Rebuild index (JSON -> TSV -> IndexTool)
-./scripts/build_blacklab_index.sh json 4
+./scripts/blacklab/build_blacklab_index.sh json 4
 
 # Start BlackLab (detached) via provided script or docker-compose
-./scripts/start_blacklab_docker_v3.sh -d  # if you have a bash wrapper (PowerShell script exists for Windows)
+./scripts/blacklab/start_blacklab_docker_v3.sh -d  # if you have a bash wrapper (PowerShell script exists for Windows)
 
 # Start Flask
 python -m src.app.main

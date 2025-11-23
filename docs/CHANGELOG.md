@@ -406,7 +406,7 @@ All removed documentation was either:
 
 - **Docker/Nginx Clarification** (All docs)
   - Clearly marked Docker/Nginx sections as **"Production Only"**
-  - Development: Use Flask proxy (`/bls/**`) + `scripts/run_bls.sh`
+  - Development: Use Flask proxy (`/bls/**`) + `scripts/blacklab/run_bls.sh`
   - Production: Use nginx reverse proxy + separate Java BLS process
 
 ### Known Issues

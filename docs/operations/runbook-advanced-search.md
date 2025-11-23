@@ -71,7 +71,7 @@ curl -s http://localhost:8081/blacklab-server/ | jq .blacklabVersion
 taskkill /F /IM java.exe
 
 # Neustart
-bash scripts/run_bls.sh 8081 2g 512m
+bash scripts/blacklab/run_bls.sh 8081 2g 512m
 
 # Validierung
 Start-Sleep -Seconds 10
@@ -121,7 +121,8 @@ sudo systemctl restart blacklab-server
 **2. Erhöhe Memory/Timeout (falls wiederkehrend):**
 ```bash
 # Erhöhe Heap von 2g auf 4g
-bash scripts/run_bls.sh 8081 4g 512m
+# Erhöhe Heap von 2g auf 4g
+bash scripts/blacklab/run_bls.sh 8081 4g 512m
 
 # Oder in systemd-Unit (Production):
 # Edit /etc/systemd/system/blacklab-server.service
@@ -134,7 +135,8 @@ sudo systemctl restart blacklab-server
 
 **3. Index-Rebuild (falls Corruption vermutet):**
 ```bash
-bash scripts/build_blacklab_index.sh tsv 4
+# Index neu bauen (bash helper)
+bash scripts/blacklab/build_blacklab_index.sh tsv 4
 ```
 
 ### Prävention
@@ -395,7 +397,7 @@ iostat -x 1 5
 
 # Scale BLS bei Bedarf
 # Erhöhe -Xmx flag (z.B., 4g → 8g)
-bash scripts/run_bls.sh 8081 8g 1g
+bash scripts/blacklab/run_bls.sh 8081 8g 1g
 
 # Restart Flask/Gunicorn (erhöhe timeout)
 # Edit /etc/systemd/system/corapan-gunicorn.service

@@ -152,8 +152,8 @@ scripts/
 │   └── verify_stage_2_3.py
 ├── advanced-search-preflight.sh
 ├── build_blacklab_index.old.ps1
-├── build_blacklab_index.ps1
-├── build_blacklab_index.sh
+├── blacklab/build_blacklab_index.ps1
+├── blacklab/build_blacklab_index.sh
 ├── build_blacklab_index_v3.ps1
 ├── build_index_wrapper.ps1
 ├── check_normalized_transcripts.py
@@ -161,14 +161,14 @@ scripts/
 ├── deploy_checklist.sh
 ├── fix_emoji.py
 ├── normalize_transcripts.py
-├── run_bls.sh
-├── run_export.py
-├── start_blacklab_docker.ps1
-├── start_blacklab_docker_v3.ps1
-├── start_blacklab_windows.ps1
+├── blacklab/run_bls.sh
+├── blacklab/run_export.py
+├── blacklab/start_blacklab_docker.ps1
+├── blacklab/start_blacklab_docker_v3.ps1
+├── blacklab/start_blacklab_windows.ps1
 ├── start_dev_windows.ps1
 ├── start_waitress.py
-└── stop_blacklab_docker.ps1
+└── blacklab/stop_blacklab_docker.ps1
 ```
 
 ### Documentation Structure

@@ -32,7 +32,7 @@ Dieser Prozess exportiert alle Daten neu und erstellt den Index von Grund auf.
 Konvertiert JSON-Transkripte in das TSV-Format für BlackLab.
 
 ```powershell
-python scripts/run_export.py
+python scripts/blacklab/run_export.py
 ```
 *Output: `data/blacklab_export/tsv/*.tsv` und `data/blacklab_export/docmeta.jsonl`*
 
@@ -41,7 +41,7 @@ python scripts/run_export.py
 Startet den Docker-Container, um die TSV-Dateien zu indexieren.
 
 ```powershell
-.\scripts\build_blacklab_index.ps1
+.\scripts\blacklab\build_blacklab_index.ps1
 ```
 *Dauer: ca. 2-5 Minuten je nach Datenmenge.*
 
@@ -50,8 +50,8 @@ Startet den Docker-Container, um die TSV-Dateien zu indexieren.
 Damit der neue Index geladen wird, muss der BlackLab-Server neu gestartet werden.
 
 ```powershell
-.\scripts\stop_blacklab_docker.ps1
-.\scripts\start_blacklab_docker_v3.ps1
+.\scripts\blacklab\stop_blacklab_docker.ps1
+.\scripts\blacklab\start_blacklab_docker_v3.ps1
 ```
 
 ---
