@@ -123,6 +123,7 @@ Eine GitHub Actions Pipeline (`.github/workflows/ci.yml`) prüft bei jedem Push 
 Die detaillierte Dokumentation befindet sich im `docs/` Ordner:
 
 - **[Konzepte](docs/concepts/)**: Architektur, Authentifizierung.
+- **[Auth Migration Guide](docs/auth-migration/auth-migration.md)**: Praktische Anleitung zur Umstellung von passwords.env auf DB-basierte Auth (JWT / Refresh Token).
 - **[Anleitungen](docs/how-to/)**: Schritt-für-Schritt Guides (z.B. Quickstart).
 - **[Betrieb](docs/operations/)**: Deployment, Security.
 - **[Referenz](docs/reference/)**: API-Doku, Datenbank-Schema.
