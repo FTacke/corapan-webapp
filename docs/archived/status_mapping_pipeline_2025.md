@@ -157,7 +157,7 @@ corpusConfig:
 ### Configuration
 - **BLF config:** `config/blacklab/corapan-tsv.blf.yaml`
 - **Exporter script:** `src/scripts/blacklab_index_creation.py`
-- **Build script (canonical):** `scripts/build_blacklab_index.ps1`
+- **Build script (canonical):** `scripts/blacklab/build_blacklab_index.ps1`
 - **Build script (compatibility wrapper):** `scripts/build_blacklab_index_v3.ps1` (delegates to canonical)
 
 ---
@@ -165,7 +165,7 @@ corpusConfig:
 ## 5. Index Build & Backup Strategy
 
 ### Canonical Build Script
-**Location:** `scripts/build_blacklab_index.ps1`
+**Location:** `scripts/blacklab/build_blacklab_index.ps1`
 
 This is the **single source of truth** for building the BlackLab index. All other build scripts should delegate to this one.
 
@@ -192,13 +192,13 @@ This is the **single source of truth** for building the BlackLab index. All othe
 **Usage:**
 ```powershell
 # Standard build (with backup and confirmation)
-.\scripts\build_blacklab_index.ps1
+.\scripts\blacklab\build_blacklab_index.ps1
 
 # Force build without confirmation
-.\scripts\build_blacklab_index.ps1 -Force
+.\scripts\blacklab\build_blacklab_index.ps1 -Force
 
 # Build without creating backup (dangerous!)
-.\scripts\build_blacklab_index.ps1 -SkipBackup -Force
+.\scripts\blacklab\build_blacklab_index.ps1 -SkipBackup -Force
 
 # Compatibility (delegates to canonical script)
 .\scripts\build_blacklab_index_v3.ps1

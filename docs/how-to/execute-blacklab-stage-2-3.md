@@ -46,7 +46,7 @@ Nach dieser Anleitung haben Sie einen aktiven Lucene-Index gebaut, BlackLab Serv
 
 **Befehl:**
 ```bash
-bash scripts/build_blacklab_index.sh tsv 4
+bash scripts/blacklab/build_blacklab_index.sh tsv 4
 ```
 
 **Parameter:**
@@ -113,7 +113,7 @@ grep -i error logs/bls/index_build.log
 
 **Option A: Mit Script (lokal)**
 ```bash
-bash scripts/run_bls.sh 8081 2g 512m
+bash scripts/blacklab/run_bls.sh 8081 2g 512m
 ```
 
 **Parameter:**
@@ -323,7 +323,7 @@ rm -rf data/blacklab_index
 mv data/blacklab_index.backup data/blacklab_index
 
 # BLS neu starten
-bash scripts/run_bls.sh 8081 2g 512m
+bash scripts/blacklab/run_bls.sh 8081 2g 512m
 
 # Tests wiederholen
 python scripts/smoke_tests.py
@@ -383,7 +383,7 @@ tail -20 logs/bls/bls.log
 **Lösung:**
 ```bash
 # Option 1: Mit Script starten
-bash scripts/run_bls.sh 8081 2g 512m
+bash scripts/blacklab/run_bls.sh 8081 2g 512m
 
 # Option 2: Mit Mock-Server (für Testing)
 python scripts/mock_bls_server.py 8081 &
@@ -413,7 +413,7 @@ grep "localhost:8081" src/app/routes/bls_proxy.py
 **Lösung:**
 ```bash
 # 1. BLS auf Port 8081 starten
-bash scripts/run_bls.sh 8081 2g 512m
+bash scripts/blacklab/run_bls.sh 8081 2g 512m
 
 # 2. Flask neu starten
 python -m src.app.main

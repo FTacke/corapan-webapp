@@ -677,7 +677,7 @@ Implementierung einer **3-stufigen Pipeline** zur Volltext-Indexierung des CO.RA
 
 **Neue Dateien:**
 - Exporter-Skript: `src/scripts/blacklab_index_creation.py`
-- Build-Skript: `scripts/build_blacklab_index.sh`
+- Build-Skript: `scripts/blacklab/build_blacklab_index.sh`
 - Proxy-Komponente: `src/app/routes/bls_proxy.py`
 - Config: `config/blacklab/corapan-tsv.blf.yaml`
 - 6 Dokumentations-Dateien (Konzept, How-To, Referenz, Troubleshooting)
@@ -691,7 +691,7 @@ Implementierung einer **3-stufigen Pipeline** zur Volltext-Indexierung des CO.RA
 | Datei (neu) | Typ | Grund |
 |------------|-----|-------|
 | `src/scripts/blacklab_index_creation.py` | create | Exporter (JSON→TSV, 650 Zeilen) |
-| `scripts/build_blacklab_index.sh` | create | Index-Builder + atomare Switch |
+| `scripts/blacklab/build_blacklab_index.sh` | create | Index-Builder + atomare Switch |
 | `src/app/routes/bls_proxy.py` | create | HTTP-Proxy Blueprint |
 | `config/blacklab/corapan-tsv.blf.yaml` | create | Index-Schema (TSV-only) |
 | `docs/concepts/blacklab-indexing.md` | create | Architektur-Konzept |
@@ -731,14 +731,14 @@ python -m src.scripts.blacklab_index_creation \
 
 **Stage 2: Index-Build (pending)**
 ```bash
-bash scripts/build_blacklab_index.sh tsv 4
+bash scripts/blacklab/build_blacklab_index.sh tsv 4
 # Erstellt: data/blacklab_index/ (Lucene-Index)
 ```
 *Hängt ab von: Java + BlackLab Server Installation*
 
 **Stage 3: Proxy-Start (pending)**
 ```bash
-bash scripts/run_bls.sh 8081 2g 512m
+bash scripts/blacklab/run_bls.sh 8081 2g 512m
 curl http://localhost:8000/bls/  # Proxy-Test
 ```
 

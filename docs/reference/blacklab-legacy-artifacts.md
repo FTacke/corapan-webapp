@@ -56,7 +56,7 @@ Dieses Dokument listet Dateien und Skripte auf, die als **Legacy** oder **Deprec
 
 Verwenden Sie **nur** diese Dateien für den Betrieb:
 
-1.  **Export**: `src/scripts/blacklab_index_creation.py` (via `scripts/run_export.py`)
-2.  **Build**: `scripts/build_blacklab_index.ps1` (oder `.sh`)
+1.  **Export**: `LOKAL/01 - Add New Transcriptions/03b_generate_blacklab_export.py`
+2.  **Build**: `scripts/blacklab/build_blacklab_index.ps1` (oder `.sh`)
 3.  **Config**: `config/blacklab/corapan-tsv.blf.yaml`
 4.  **Run**: `scripts/start_blacklab_docker_v3.ps1`

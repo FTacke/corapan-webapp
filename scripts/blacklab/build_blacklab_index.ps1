@@ -8,8 +8,7 @@
 
 param(
     [switch]$SkipBackup,
-    [switch]$Force,
-    [string]$Format = "tsv"
+    [switch]$Force
 )
 
 $ErrorActionPreference = "Stop"
@@ -18,9 +17,8 @@ $ErrorActionPreference = "Stop"
 $BLACKLAB_IMAGE = "instituutnederlandsetaal/blacklab:latest"
 $TSV_SOURCE_DIR = "data\blacklab_export\tsv"
 $DOCMETA_FILE = "data\blacklab_export\docmeta.jsonl"
-$JSON_EXPORT_DIR = "data\blacklab_export\json_ready"
 $INDEX_TARGET_DIR = "data\blacklab_index"
-$INDEX_TARGET_DIR_JSON = "data\blacklab_index_json"
+$INDEX_TARGET_DIR_NEW = "data\blacklab_index.new"
 $BLF_CONFIG = "config\blacklab\corapan-tsv.blf.yaml"
 
 # Resolve paths
@@ -28,9 +26,9 @@ $repoRoot = Split-Path -Parent $PSScriptRoot
 $tsvSourcePath = Join-Path $repoRoot $TSV_SOURCE_DIR
 $docmetaPath = Join-Path $repoRoot $DOCMETA_FILE
 $indexTargetPath = Join-Path $repoRoot $INDEX_TARGET_DIR
-$indexTargetPathJson = Join-Path $repoRoot $INDEX_TARGET_DIR_JSON
+$indexTargetPathNew = Join-Path $repoRoot $INDEX_TARGET_DIR_NEW
 $blfConfigPath = Join-Path $repoRoot $BLF_CONFIG
-$BUILD_LOG = Join-Path $indexTargetPath "build.log"
+$BUILD_LOG = Join-Path $indexTargetPathNew "build.log"
 
 Write-Host ""
 Write-Host "================================================================" -ForegroundColor Cyan
@@ -42,8 +40,6 @@ Write-Host "Configuration:" -ForegroundColor White
 Write-Host "  Repository:      $repoRoot" -ForegroundColor Gray
 Write-Host "  Docker Image:    $BLACKLAB_IMAGE" -ForegroundColor Gray
 Write-Host "  TSV Source:      $tsvSourcePath" -ForegroundColor Gray
-Write-Host "  JSON source dir: $($repoRoot)\media\transcripts" -ForegroundColor Gray
-Write-Host "  Build format:    $Format" -ForegroundColor Gray
 Write-Host "  Docmeta:         $docmetaPath" -ForegroundColor Gray
 Write-Host "  Target Index:    $indexTargetPath" -ForegroundColor Gray
 Write-Host ""
@@ -78,41 +74,27 @@ try {
     exit 1
 }
 
-# Validate inputs depending on selected format
-if ($Format -eq 'tsv') {
-    # Check TSV source
-    if (-not (Test-Path $tsvSourcePath)) {
-        Write-Host ("  ERROR: TSV source not found: {0}" -f $tsvSourcePath) -ForegroundColor Red
-        exit 1
-    }
-
-    $tsvFiles = @(Get-ChildItem -Path $tsvSourcePath -Filter "*.tsv" -File)
-    if ($tsvFiles.Count -eq 0) {
-        Write-Host "  ERROR: No TSV files found!" -ForegroundColor Red
-        exit 1
-    }
-    Write-Host ("  OK TSV source: {0} files" -f $tsvFiles.Count) -ForegroundColor Green
-
-    # Check docmeta
-    if (-not (Test-Path $docmetaPath)) {
-        Write-Host ("  ERROR: docmeta.jsonl not found: {0}" -f $docmetaPath) -ForegroundColor Red
-        exit 1
-    }
-
-    $docmetaLines = @(Get-Content $docmetaPath).Count
-    Write-Host ("  OK Docmeta: {0} documents" -f $docmetaLines) -ForegroundColor Green
-} elseif ($Format -eq 'json') {
-    # JSON build checks
-    $jsonRoot = Join-Path $repoRoot 'media\transcripts'
-    if (-not (Test-Path $jsonRoot)) {
-        Write-Host ("  ERROR: JSON transcripts not found at: {0}" -f $jsonRoot) -ForegroundColor Red
-        exit 1
-    }
-    Write-Host "  OK JSON transcripts found" -ForegroundColor Green
-} else {
-    Write-Host "  ERROR: Unknown format specified: $Format" -ForegroundColor Red
+# Check TSV source
+if (-not (Test-Path $tsvSourcePath)) {
+    Write-Host ("  ERROR: TSV source not found: {0}" -f $tsvSourcePath) -ForegroundColor Red
     exit 1
 }
+
+$tsvFiles = @(Get-ChildItem -Path $tsvSourcePath -Filter "*.tsv" -File)
+if ($tsvFiles.Count -eq 0) {
+    Write-Host "  ERROR: No TSV files found!" -ForegroundColor Red
+    exit 1
+}
+Write-Host ("  OK TSV source: {0} files" -f $tsvFiles.Count) -ForegroundColor Green
+
+# Check docmeta
+if (-not (Test-Path $docmetaPath)) {
+    Write-Host ("  ERROR: docmeta.jsonl not found: {0}" -f $docmetaPath) -ForegroundColor Red
+    exit 1
+}
+
+$docmetaLines = @(Get-Content $docmetaPath).Count
+Write-Host ("  OK Docmeta: {0} documents" -f $docmetaLines) -ForegroundColor Green
 
 # Check BLF config
 if (-not (Test-Path $blfConfigPath)) {
@@ -129,12 +111,7 @@ Write-Host ""
 Write-Host "[2/4] Backing up existing index..." -ForegroundColor Yellow
 
 $backupDir = Join-Path $repoRoot "data\blacklab_index.backup"
-
-if ($Format -eq 'json') {
-    $targetIndexPath = $indexTargetPathJson
-} else {
-    $targetIndexPath = $indexTargetPath
-}
+$targetIndexPath = $indexTargetPath
 
 if (Test-Path $targetIndexPath) {
     $indexFiles = @(Get-ChildItem -Path $indexTargetPath -File -Recurse -ErrorAction SilentlyContinue)
@@ -202,93 +179,53 @@ Write-Host "[4/4] Running index build..." -ForegroundColor Yellow
 Write-Host "  This will take 5-10 minutes..." -ForegroundColor Gray
 Write-Host ""
 
-# Create index directory
-if ($Format -eq 'json') {
-    # JSON index target
-    $indexTargetPathJson = Join-Path $repoRoot $INDEX_TARGET_DIR_JSON
-    New-Item -ItemType Directory -Path $indexTargetPathJson -Force | Out-Null
-} else {
-    New-Item -ItemType Directory -Path $indexTargetPath -Force | Out-Null
-}
+# Create a clean temporary index directory (we'll swap atomically after a successful build)
+if (Test-Path $indexTargetPathNew) { Remove-Item -Path $indexTargetPathNew -Recurse -Force }
+New-Item -ItemType Directory -Path $indexTargetPathNew -Force | Out-Null
 
-if ($Format -eq 'tsv') {
-    # Prepare a clean TSV directory that excludes *_min.tsv files (these are small/alternate-format TSVs used for tests)
-    $tsvForIndexDir = Join-Path $tsvSourcePath "tsv_for_index"
-    if (Test-Path $tsvForIndexDir) { Remove-Item -Path $tsvForIndexDir -Recurse -Force }
-    New-Item -ItemType Directory -Path $tsvForIndexDir -Force | Out-Null
+# Prepare a clean TSV directory that excludes *_min.tsv files (these are small/alternate-format TSVs used for tests)
+$tsvForIndexDir = Join-Path $tsvSourcePath "tsv_for_index"
+if (Test-Path $tsvForIndexDir) { Remove-Item -Path $tsvForIndexDir -Recurse -Force }
+New-Item -ItemType Directory -Path $tsvForIndexDir -Force | Out-Null
 
-    # Copy only TSV files that are NOT suffix _min.tsv
-    Write-Host "  Copying TSV files (excluding '*_min.tsv') to: $tsvForIndexDir" -ForegroundColor Gray
-    Get-ChildItem -Path $tsvSourcePath -Filter "*.tsv" -File | Where-Object { $_.Name -notlike '*_min.tsv' } | ForEach-Object {
-        Copy-Item -Path $_.FullName -Destination $tsvForIndexDir -Force
-    }
-} elseif ($Format -eq 'json') {
-    # Prepare JSON-ready exports
-    $jsonForIndexDir = Join-Path $repoRoot $JSON_EXPORT_DIR
-    if (Test-Path $jsonForIndexDir) { Remove-Item -Path $jsonForIndexDir -Recurse -Force }
-    New-Item -ItemType Directory -Path $jsonForIndexDir -Force | Out-Null
-
-    Write-Host "  Preparing JSON-ready files to: $jsonForIndexDir" -ForegroundColor Gray
-    python scripts/prepare_json_for_blacklab.py --in (Join-Path $repoRoot 'media\transcripts') --out $jsonForIndexDir 2>&1 | Out-Host
+# Copy only TSV files that are NOT suffix _min.tsv
+Write-Host "  Copying TSV files (excluding '*_min.tsv') to: $tsvForIndexDir" -ForegroundColor Gray
+Get-ChildItem -Path $tsvSourcePath -Filter "*.tsv" -File | Where-Object { $_.Name -notlike '*_min.tsv' } | ForEach-Object {
+    Copy-Item -Path $_.FullName -Destination $tsvForIndexDir -Force
 }
 
 # Convert Windows paths to Docker format
 $exportPath = Join-Path $repoRoot "data\blacklab_export"
 $exportMount = $exportPath.Replace('\', '/').Replace('C:', '/c')
-$indexMount = $indexTargetPath.Replace('\', '/').Replace('C:', '/c')
+$indexMount = $indexTargetPathNew.Replace('\', '/').Replace('C:', '/c')
 $configMount = (Join-Path $repoRoot "config\blacklab").Replace('\', '/').Replace('C:', '/c')
 
 # Build Docker command
-if ($Format -eq 'json') {
-    # JSON build: target index dir is indexTargetPathJson
-    $indexMount = $indexTargetPathJson.Replace('\', '/').Replace('C:', '/c')
-    # Convert JSON corpus into TSVs for IndexTool (transparent JSON-first flow)
-    $jsonTsvDir = Join-Path $repoRoot 'data\blacklab_export\tsv_json'
-    if (Test-Path $jsonTsvDir) { Remove-Item -Path $jsonTsvDir -Recurse -Force }
-    New-Item -ItemType Directory -Path $jsonTsvDir -Force | Out-Null
-    Write-Host "  Exporting JSON -> TSV in: $jsonTsvDir" -ForegroundColor Gray
-    python -m src.scripts.blacklab_index_creation --in (Join-Path $repoRoot 'media\transcripts') --out $jsonTsvDir --docmeta (Join-Path $jsonTsvDir 'docmeta.jsonl') 2>&1 | Out-Host
-
-    # create a clean tsv_for_index directory inside the json->tsv export so we exclude *_min.tsv variants
-    $jsonTsvForIndex = Join-Path $jsonTsvDir 'tsv_for_index'
-    if (Test-Path $jsonTsvForIndex) { Remove-Item -Path $jsonTsvForIndex -Recurse -Force }
-    New-Item -ItemType Directory -Path $jsonTsvForIndex -Force | Out-Null
-    Get-ChildItem -Path $jsonTsvDir -Filter "*.tsv" -File | Where-Object { $_.Name -notlike '*_min.tsv' } | ForEach-Object {
-        Copy-Item -Path $_.FullName -Destination $jsonTsvForIndex -Force
+    # Ensure metadata directory exists for IndexTool (IndexTool expects per-file JSONs in linked-file-dir)
+    $exportMetadataDir = Join-Path $exportPath "metadata"
+    if (-not (Test-Path $exportMetadataDir)) {
+        if (Test-Path $docmetaPath) {
+            Write-Host "  metadata dir missing; creating from docmeta.jsonl..." -ForegroundColor Gray
+            python scripts/docmeta_to_metadata_dir.py 2>&1 | Out-Host
+        } else {
+            Write-Host "  WARNING: docmeta.jsonl missing; continuing without metadata directory" -ForegroundColor Yellow
+        }
     }
 
     $dockerArgs = @(
-        "run", "--rm"
-        "-v", ($exportMount + ":/data/export:ro")
-        "-v", ($indexMount + ":/data/index:rw")
-        "-v", ($configMount + ":/config:ro")
-        $BLACKLAB_IMAGE
-        "java", "-cp", "/usr/local/lib/blacklab-tools/*"
-        "nl.inl.blacklab.tools.IndexTool", "create"
-        "/data/index"
-        "/data/export/tsv_json/tsv_for_index"
-        "/config/corapan-tsv.blf.yaml"
-        "--docmeta", "/data/export/tsv_json/docmeta.jsonl"
-        "--linked-file-dir", "/data/export/metadata"
-        "--threads", "1"
-    )
-} else {
-    $indexMount = $indexTargetPath.Replace('\', '/').Replace('C:', '/c')
-    $dockerArgs = @(
-        "run", "--rm"
-        "-v", ($exportMount + ":/data/export:ro")
-        "-v", ($indexMount + ":/data/index:rw")
-        "-v", ($configMount + ":/config:ro")
-        $BLACKLAB_IMAGE
-        "java", "-cp", "/usr/local/lib/blacklab-tools/*"
-        "nl.inl.blacklab.tools.IndexTool", "create"
-        "/data/index"
-        "/data/export/tsv_for_index"
-        "/config/corapan-tsv.blf.yaml"
-        "--linked-file-dir", "/data/export/metadata",
-        "--threads", "1"
-    )
-}
+    "run", "--rm"
+    "-v", ($exportMount + ":/data/export:ro")
+    "-v", ($indexMount + ":/data/index:rw")
+    "-v", ($configMount + ":/config:ro")
+    $BLACKLAB_IMAGE
+    "java", "-cp", "/usr/local/lib/blacklab-tools/*"
+    "nl.inl.blacklab.tools.IndexTool", "create"
+    "/data/index"
+    "/data/export/tsv/tsv_for_index"
+    "/config/corapan-tsv.blf.yaml"
+    "--linked-file-dir", "/data/export/metadata",
+    "--threads", "1"
+)
 
 # Initialize build log
 $logHeader = "# BlackLab Index Build Log - $(Get-Date -Format o)`n# Image: $BLACKLAB_IMAGE`n`n"
@@ -320,11 +257,23 @@ Write-Host ""
 # Verify and Summary
 # ============================================================================
 
-    $indexFiles = @(Get-ChildItem -Path $targetIndexPath -File -Recurse -ErrorAction SilentlyContinue)
+# Check the newly created index directory
+$newIndexPath = $indexTargetPathNew
+$indexFiles = @(Get-ChildItem -Path $newIndexPath -File -Recurse -ErrorAction SilentlyContinue)
 if ($indexFiles.Count -eq 0) {
-    Write-Host "ERROR: Index directory is empty!" -ForegroundColor Red
+    Write-Host "ERROR: New index directory is empty!" -ForegroundColor Red
     exit 1
 }
+
+# Swap new index into place atomically. Backup existing index if present
+if (Test-Path $indexTargetPath) {
+    if (Test-Path $backupDir) { Remove-Item -Path $backupDir -Recurse -Force }
+    Move-Item -Path $indexTargetPath -Destination $backupDir -Force
+    Write-Host ("  OK Backup created: {0}" -f $backupDir) -ForegroundColor Green
+}
+
+Move-Item -Path $newIndexPath -Destination $indexTargetPath -Force
+Write-Host ("  OK Activated new index: {0}" -f $indexTargetPath) -ForegroundColor Green
 
 $indexSizeMB = [math]::Round(($indexFiles | Measure-Object -Property Length -Sum).Sum / 1MB, 2)
 
@@ -333,14 +282,8 @@ Write-Host "Index Build Completed Successfully!" -ForegroundColor Green
 Write-Host "================================================================" -ForegroundColor Green
 Write-Host ""
 Write-Host "Summary:" -ForegroundColor White
-if ($Format -eq 'tsv') {
-    Write-Host ("  TSV Files:   {0}" -f $tsvFiles.Count) -ForegroundColor Gray
-    Write-Host ("  Documents:   {0}" -f $docmetaLines) -ForegroundColor Gray
-} else {
-    $jfiles = @(Get-ChildItem -Path $jsonForIndexDir -Filter '*.json' -File)
-    Write-Host ("  JSON files:  {0}" -f $jfiles.Count) -ForegroundColor Gray
-    Write-Host ("  Documents:   {0}" -f $jfiles.Count) -ForegroundColor Gray
-}
+Write-Host ("  TSV Files:   {0}" -f $tsvFiles.Count) -ForegroundColor Gray
+Write-Host ("  Documents:   {0}" -f $docmetaLines) -ForegroundColor Gray
 Write-Host ("  Index Size:  {0} MB" -f $indexSizeMB) -ForegroundColor Gray
 Write-Host ("  Index Path:  {0}" -f $targetIndexPath) -ForegroundColor Gray
 Write-Host ""

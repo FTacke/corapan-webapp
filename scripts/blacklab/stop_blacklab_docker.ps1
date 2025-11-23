@@ -83,7 +83,7 @@ if ($Remove) {
         Write-Host "✓ BlackLab container removed successfully." -ForegroundColor Green
         Write-Host ""
         Write-Host "To recreate the container, run:" -ForegroundColor Cyan
-        Write-Host "  .\scripts\start_blacklab_docker.ps1" -ForegroundColor Gray
+        Write-Host "  .\scripts\blacklab\start_blacklab_docker_v3.ps1" -ForegroundColor Gray
     } else {
         Write-Host "ERROR: Failed to remove container." -ForegroundColor Red
         exit 1
@@ -91,7 +91,7 @@ if ($Remove) {
 } else {
     Write-Host ""
     Write-Host "Container stopped but not removed." -ForegroundColor Gray
-    Write-Host "To restart: .\scripts\start_blacklab_docker.ps1" -ForegroundColor Cyan
+    Write-Host "To restart: .\scripts\blacklab\start_blacklab_docker_v3.ps1" -ForegroundColor Cyan
     Write-Host "To remove:  .\scripts\stop_blacklab_docker.ps1 -Remove" -ForegroundColor Cyan
 }
 

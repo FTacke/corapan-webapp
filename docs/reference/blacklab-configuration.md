@@ -72,7 +72,7 @@ Der Service `blacklab` definiert die Server-Instanz.
 
 ### Build-Skripte
 
-#### `scripts/build_blacklab_index.ps1`
+#### `scripts/blacklab/build_blacklab_index.ps1`
 Das Hauptskript für den Index-Build unter Windows.
 - Startet einen temporären Container.
 - Führt `IndexTool` aus.

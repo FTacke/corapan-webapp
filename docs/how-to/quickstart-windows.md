@@ -39,7 +39,7 @@ Oder **manuell in Einzelschritten**:
 python "LOKAL\01 - Add New Transcriptions\03b build blacklab_index\blacklab_index_creation.py"
 
 # Schritt 2: TSV → Lucene Index (BlackLab 5.x)
-.\scripts\build_blacklab_index.ps1
+.\scripts\blacklab\build_blacklab_index.ps1
 ```
 
 Dieser Prozess:

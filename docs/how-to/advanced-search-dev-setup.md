@@ -24,7 +24,7 @@ The Advanced Search feature requires a running **BlackLab Server** instance. Thi
 
 ```powershell
 # Terminal 1: Start BlackLab in Docker (real index, real searches)
-.\scripts\start_blacklab_docker.ps1
+.\scripts\blacklab\start_blacklab_docker_v3.ps1 -Detach
 
 # Terminal 2: Start Flask (uses default BLS_BASE_URL)
 .venv\Scripts\activate
@@ -91,10 +91,10 @@ The app uses the **FCS interface** for CQL queries, metadata filtering, and hit 
 
 ```powershell
 # Start BlackLab (creates container if needed, starts if stopped)
-.\scripts\start_blacklab_docker.ps1
+.\scripts\blacklab\start_blacklab_docker_v3.ps1 -Detach
 
 # Stop BlackLab (keeps container for next start)
-.\scripts\stop_blacklab_docker.ps1
+.\scripts\blacklab\stop_blacklab_docker.ps1
 ```
 
 **What this does:**
@@ -105,7 +105,7 @@ The app uses the **FCS interface** for CQL queries, metadata filtering, and hit 
 - Mounts `data/blacklab_index/` as `/data/index` (read-write index storage)
 - URL: `http://localhost:8081/blacklab-server`
 
-**Important:** This Docker setup only runs the BlackLab Server. The index must be pre-built using the canonical Docker-based index build script (`scripts/build_blacklab_index.ps1`). The Docker image does NOT include indexing tools for exporting JSON→TSV.
+**Important:** This Docker setup only runs the BlackLab Server. The index must be pre-built using the canonical Docker-based index build script (`scripts/blacklab/build_blacklab_index.ps1`). The Docker image does NOT include indexing tools for exporting JSON→TSV.
 
 **⚠️ Known Issue: Index Migration Required**
 
@@ -115,10 +115,10 @@ The existing index was built with Lucene 8.11.1, but the current BlackLab Docker
 
 ```powershell
 # Rebuild BlackLab index from TSV sources (use the canonical Docker-based build)
-.\scripts\build_blacklab_index.ps1
+.\scripts\blacklab\build_blacklab_index.ps1 -Force
 
 # Then start BlackLab normally
-.\scripts\start_blacklab_docker.ps1
+.\scripts\blacklab\start_blacklab_docker_v3.ps1 -Detach
 ```
 
 **For detailed information about the index migration and JAR setup, see:**  
@@ -234,7 +234,7 @@ java -jar blacklab-server.jar \
 **IndexTool Usage:**  
 The same JAR contains the IndexTool for building indices. See:  
 📖 [tools/blacklab/README.md](../../tools/blacklab/README.md) for download instructions  
-📖 [scripts/build_blacklab_index.ps1](../../scripts/build_blacklab_index.ps1) for usage examples
+📖 [scripts/blacklab/build_blacklab_index.ps1](../../scripts/blacklab/build_blacklab_index.ps1) for usage examples
 
 ---
 
@@ -487,7 +487,7 @@ BLS_BASE_URL=http://blacklab.example.com:8080/blacklab-server
 
 | Issue | Cause | Fix |
 |-------|-------|-----|
-| `WinError 10061: Connection refused` | BlackLab not running or wrong port | Start BlackLab with `.\scripts\start_blacklab_docker.ps1`, verify port matches `BLS_BASE_URL` |
+| `WinError 10061: Connection refused` | BlackLab not running or wrong port | Start BlackLab with `.\\scripts\\blacklab\\start_blacklab_docker_v3.ps1 -Detach`, verify port matches `BLS_BASE_URL` |
 | `Connection refused on localhost:8081` | BlackLab not running on expected port | Run `docker ps` to check, use helper script to start |
 | `404 Not Found on /blacklab-server/` | BlackLab running but path is wrong | Verify BlackLab is exposing `/blacklab-server` (not `/blacklab`) |
 | `Timeout (no response from BLS)` | BlackLab slow or indexing | Wait for index to finish, or increase timeouts in code |
@@ -510,13 +510,13 @@ docker logs corapan-blacklab-dev --follow
 watch -n 1 'curl -s http://localhost:8000/health/bls | jq .ok'
 
 # Restart BlackLab (using helper scripts)
-.\scripts\stop_blacklab_docker.ps1
-.\scripts\start_blacklab_docker.ps1
+.\\scripts\\blacklab\\stop_blacklab_docker.ps1
+.\\scripts\\blacklab\\start_blacklab_docker_v3.ps1 -Detach
 
 # Remove and recreate BlackLab container
 docker stop corapan-blacklab-dev
 docker rm corapan-blacklab-dev
-.\scripts\start_blacklab_docker.ps1
+.\\scripts\\blacklab\\start_blacklab_docker_v3.ps1 -Detach
 
 # Connect to BlackLab web UI (if available)
 # http://localhost:8081/blacklab-server-gui/
@@ -530,7 +530,7 @@ docker rm corapan-blacklab-dev
 
 1. **Start BlackLab:**
    ```powershell
-   .\scripts\start_blacklab_docker.ps1
+   .\\scripts\\blacklab\\start_blacklab_docker_v3.ps1 -Detach
    ```
    Expected output: `BlackLab is now running on http://localhost:8081/blacklab-server (Container: corapan-blacklab-dev)`
 
@@ -570,7 +570,7 @@ docker rm corapan-blacklab-dev
 
 1. **Stop BlackLab:**
    ```powershell
-   .\scripts\stop_blacklab_docker.ps1
+   .\\scripts\\blacklab\\stop_blacklab_docker.ps1
    ```
 
 2. **Flask still running, attempt search:**
@@ -608,7 +608,7 @@ docker rm corapan-blacklab-dev
 - **Search Endpoints:** `src/app/search/advanced_api.py`
 - **Frontend Handler:** `static/js/modules/advanced/initTable.js`
 - **Health Check:** `src/app/routes/public.py` (`/health`, `/health/bls`)
-- **Helper Scripts:** `scripts/start_blacklab_docker.ps1`, `scripts/stop_blacklab_docker.ps1`
+- **Helper Scripts:** `scripts/blacklab/start_blacklab_docker_v3.ps1`, `scripts/blacklab/stop_blacklab_docker.ps1`
 
 ---
 

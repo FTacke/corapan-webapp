@@ -19,9 +19,9 @@ Anleitung zum manuellen Testen der Advanced Search gegen einen echten BlackLab S
 ## Voraussetzungen
 
 1. **BlackLab Server läuft** auf Port 8081
-   ```bash
-   bash scripts/run_bls.sh 8081 4g 1g
-   ```
+  ```bash
+  bash scripts/blacklab/run_bls.sh 8081 4g 1g
+  ```
 
 2. **Flask/Waitress läuft** auf Port 8000
    ```bash

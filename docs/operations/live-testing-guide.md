@@ -143,7 +143,7 @@ Stop-Process -Id <PID> -Force
 curl.exe -s http://localhost:8081/blacklab-server/ | jq .blacklabVersion
 
 # Restart if needed
-bash scripts/run_bls.sh 8081 2g 512m
+bash scripts/blacklab/run_bls.sh 8081 2g 512m
 ```
 
 ### Tests failing
