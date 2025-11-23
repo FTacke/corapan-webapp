@@ -53,7 +53,13 @@ CREATE TABLE users (
   is_active BOOLEAN NOT NULL DEFAULT TRUE,
   must_reset_password BOOLEAN NOT NULL DEFAULT FALSE,
   created_at TIMESTAMP WITHOUT TIME ZONE NOT NULL DEFAULT now(),
-  updated_at TIMESTAMP WITHOUT TIME ZONE NOT NULL DEFAULT now()
+  updated_at TIMESTAMP WITHOUT TIME ZONE NOT NULL DEFAULT now(),
+  -- Neue Felder zur Steuerung / Audit und Security
+  access_expires_at TIMESTAMP NULL DEFAULT NULL, -- optional: Konto zeitlich begrenzt
+  valid_from TIMESTAMP NULL DEFAULT NULL, -- Konto aktiv erst ab diesem Datum
+  last_login_at TIMESTAMP NULL DEFAULT NULL, -- Timestamp letzte erfolgreiche Auth
+  login_failed_count INTEGER NOT NULL DEFAULT 0, -- Zähler für fehlgeschlagene Logins
+  locked_until TIMESTAMP NULL DEFAULT NULL -- Wenn gesetzt: temporär gesperrt bis zu diesem Zeitpunkt
 );
 
 -- optional: table for refresh tokens (recommended for token rotation/blacklisting)
@@ -63,12 +69,42 @@ CREATE TABLE refresh_tokens (
   token_hash TEXT NOT NULL,
   created_at TIMESTAMP NOT NULL DEFAULT now(),
   expires_at TIMESTAMP NOT NULL,
-  last_used_at TIMESTAMP,
-  replaced_by UUID -- token_id of replacement
+  last_used_at TIMESTAMP NULL DEFAULT NULL,
+  revoked_at TIMESTAMP NULL DEFAULT NULL, -- Zeitpunkt der manuellen/automatischen Widerrufs
+  user_agent TEXT NULL DEFAULT NULL, -- optional: for logging/abuse detection
+  ip_address TEXT NULL DEFAULT NULL,
+  replaced_by UUID NULL -- token_id of replacement
 );
 ```
 
 Hinweis: Speichere niemals den Refresh-Token im Klartext in der DB; speichere stattdessen einen Hash (z.B. SHA-256) und vergleiche Hashes bei Nutzung.
+
+### Feld-Beschreibung & Verhalten
+
+Kurze Hinweise, wann die Felder erzeugt oder geprüft werden:
+
+- user_id: Primärschlüssel, bei Erstellung gesetzt.
+- username: bei Erstellung gesetzt; für Queries/Lookups verwendet.
+- password_hash: bei Erstellung und bei Passwort-Änderung gesetzt; bei Login gegen eingegebenes Passwort geprüft.
+- role: bei Erstellung gesetzt; geprüft bei RBAC-Checks (Admin-Routen).
+- is_active: geprüft bei Login und Refresh; Admin kann setzen.
+- must_reset_password: geprüft nach erfolgreichem Auth; wenn TRUE, wird normaler Zugriff verweigert und Nutzer zur PW-Änderung weitergeleitet. Wird auf FALSE gesetzt nach Reset/Change.
+- created_at / updated_at: Audit-Felder, updated_at bei jeder Änderung des Nutzerobjekts aktualisieren.
+- access_expires_at: wenn gesetzt, verhindert Login und Refresh nach dem Zeitpunkt; geprüft bei Login/Refresh.
+- valid_from: wenn gesetzt, verhindert Login vor diesem Zeitpunkt.
+- last_login_at: bei erfolgreichem Login gesetzt; hilfreich für Audit/Reporting.
+- login_failed_count: erhöht bei Fehlversuchen; bei Überschreitung einer Schwelle (z.B. 5) kann locked_until gesetzt werden.
+- locked_until: wenn gesetzt und > now(), Login verweigern mit `account_locked`-Fehler.
+
+Für `refresh_tokens`:
+
+- token_id: Primärschlüssel, bei Erzeugung gesetzt.
+- token_hash: Hash des Refresh-Tokens; niemals das Klartext-Token speichern.
+- created_at / expires_at: bei Erzeugung gesetzt; `expires_at` verhindert Nutzung nach Ablauf.
+- last_used_at: bei jeder erfolgreichen Nutzung aktualisiert.
+- revoked_at: Markiert Widerruf; geprüft bei /auth/refresh.
+- user_agent / ip_address: optional zur Forensik; können in Alerts verwendet werden.
+- replaced_by: bei Rotation auf neuen Token zeigen; dienen zur Erkennung von Reuse-Versuchen.
 
 ---
 
@@ -106,6 +142,14 @@ Flow:
 - Issue access token and refresh token; save hashed refresh token in DB (refresh_tokens) with expiry 30d.
 - Set refresh cookie, return access token.
 
+Errors / standardized error codes (API-wise):
+
+- invalid_credentials — 401: provided username/password not valid
+- account_locked — 423: account is temporarily locked until `locked_until`
+- account_expired — 403: `access_expires_at` passed or `valid_from` not yet reached
+- password_reset_required — 403: user must change password
+- rate_limited — 429: too many attempts — include Retry-After header
+
 ### /auth/refresh (POST)
 - Beschreibung: Rotiert Refresh-Token.
 - Cookie (HttpOnly): refreshToken
@@ -120,6 +164,12 @@ Flow:
 - Issue new access token and set refresh cookie.
 - Implement refresh rotation and reuse detection (if old token re-used, revoke all tokens for user and force re-login).
 
+Detailed behaviour / security checks:
+
+- Verify refresh token by hashing and comparing to stored `token_hash`.
+- If a token is already replaced (replaced_by is set) or revoked_at is present and the presented token is not the direct predecessor, treat as `refresh_token_reused` attack: revoke all refresh tokens for the user, log the event, and force re-authentication.
+- On success, generate a new refresh token (raw), persist its hash and expiry in DB, update the old token's replaced_by to the new id, set last_used_at on the old token, and return the new refresh cookie together with a fresh access token.
+
 ### /auth/logout (POST)
 - Beschreibung: Revoke current refresh token (remove DB entry), clear cookie.
 - Cookie: refreshToken required.
@@ -129,6 +179,10 @@ Flow:
 - Find refresh token from cookie, delete row or mark revoked.
 - Clear cookie (set Max-Age=0)
 
+Notes:
+
+- We recommend setting `revoked_at` and keeping the row for audit instead of hard-deleting tokens. Admin endpoints can also revoke all tokens for a user as requested.
+
 ### /auth/change-password (POST)
 - Beschreibung: Authenticated route; user authenticated with access token; change password.
 - Body: { "oldPassword": "...", "newPassword": "..." }
@@ -136,11 +190,67 @@ Flow:
   - Verify oldPassword, hash & store new password, set must_reset_password=false, update updated_at.
   - Optionally invalidate existing refresh tokens (delete all refresh_tokens for user).
 
+Security note: Changing a user's password must invalidate/rotate existing sessions: invalidate all refresh_tokens, or alternatively rotate them so old tokens cannot continue to be used.
+
 ### /auth/reset-password (POST)
 - Beschreibung: Request flow for password reset.
 - Body to request reset: { "email": "..." } => send email with reset link with short-lived token (e.g., 1 hour).
 - Body to confirm reset: { "resetToken": "...", "newPassword": "..." }
 - Implementation notes: can use DB table reset_tokens with token_hash, user_id, expires_at.
+
+### User-facing routes & pages (Passwort-Handling)
+
+Für jede Frontend-Route beschreiben wir die zugehörigen Backend-API-Endpunkte, JSON-Formate und Fehlercodes.
+
+1) Login
+
+- Page: `/login` (Frontend form)
+- API: POST `/auth/login`
+- Request JSON: {"username": "<user|email>", "password": "<plaintext>"}
+- Success Response (200):
+  - Body: {"accessToken": "<JWT>", "expiresIn": 900}
+  - Cookie: Set-Cookie: refreshToken=<token>; HttpOnly; Secure; Path=/auth/refresh; Max-Age=2592000
+- Errors:
+  - 401 invalid_credentials
+  - 423 account_locked
+  - 403 account_expired / password_reset_required
+  - 429 rate_limited
+
+2) Passwort vergessen / Request reset
+
+- Page: `/password/forgot`
+- API: POST `/auth/reset-password/request` (or `/auth/reset-password` depending on naming)
+- Request JSON: {"email": "<email>"} (or {"username": "<username|email>"})
+- Response (200): {"ok": true} — Do not reveal whether the email exists (always return success/fallback message)
+- Errors:
+  - 429 rate_limited
+
+3) Passwort zurücksetzen (mit Token aus E-Mail)
+
+- Page: `/password/reset?token=<token>`
+- API: POST `/auth/reset-password/confirm`
+- Request JSON: {"resetToken": "<token>", "newPassword": "<new-password>"}
+- Success: 200 OK with message {"ok": true}
+- Errors:
+  - 400 invalid_reset_token
+  - 410 reset_token_expired
+  - 400 weak_password
+
+4) Passwort ändern (eingeloggt)
+
+- Page: `/account/password`
+- API: POST `/auth/change-password`
+- Request JSON: {"oldPassword": "...", "newPassword": "..."}
+- Success: 200 OK — password changed; optionally also return {"ok": true} and rotate/invalidate refresh tokens.
+- Errors:
+  - 401 invalid_credentials (oldPassword mismatch)
+  - 400 weak_password
+
+5) Erzwungener Passwortwechsel (must_reset_password)
+
+- Behaviour: If `must_reset_password = true` for the user, upon successful login the server must respond with 200 but cause a client redirect to the forced password change page (`/account/password?mustReset=1`) and respond with a code `password_reset_required` to indicate the client must block other actions until password change.
+
+Richtlinie: Client must never proceed to other features before password changed; server-side protections should also require `must_reset_password` checks on protected endpoints and respond with a `password_reset_required` error if enforced.
 
 ---
 
@@ -182,6 +292,54 @@ Config & env:
   - REFRESH_TOKEN_EXP (2592000)
   - BCRYPT_ROUNDS or ARGON2_CONFIG
   - START_ADMIN_USERNAME, START_ADMIN_PASSWORD (only during migration/setup)
+
+  ---
+
+  ## 6. Sicherheitsaspekte & Best Practices
+
+  Diese Sektion fasst Security-spezifische Vorgaben präzise zusammen, damit Implementierung und Betrieb in Übereinstimmung mit Best Practices erfolgt.
+
+  1) Passwort-Hashing
+
+  - Empfohlen: argon2id (wenn verfügbar). Alternativ bcrypt (mindestens 12 rounds).
+  - Parameter / Beispiel (argon2-cffi): time_cost=2, memory_cost=102400 (100MiB), parallelism=4 — an die Infrastruktur anpassen und dokumentieren.
+  - Verwendung: Verwende stets geprüfte Bibliotheken (passlib, argon2-cffi, bcrypt). Niemals eigenen Krypto-Code schreiben.
+
+  2) JWT / Signing
+
+  - Signiere Access-Tokens mit HMAC (shared secret) oder RSA/ECDSA (asymmetrisch) mit klaren rotation / versioning.
+  - Env vars:
+    - JWT_SECRET (HMAC) oder PRIVATE_KEY (PEM) + PUBLIC_KEY
+    - JWT_ALG = HS256 | RS256 | ES256
+  - Halte kompakte Access-Tokens (15–30 min lifetime). Refresh-Tokens sind opaque and long-lived; keep them out of client JS.
+
+  3) Token storage & transport
+
+  - Access-Token: short-lived, keep in-memory on clients (do not store in localStorage). Mobile apps can use secure storage per platform.
+  - Refresh-Token: HttpOnly + Secure cookie, set SameSite=Strict (or Lax if necessary for cross-site). Cookie path should be /auth/refresh.
+  - Use HTTPS in production always.
+
+  4) Rate-limiting & abuse prevention
+
+  - Enforce rate limits on critical endpoints:
+    - POST /auth/login — per IP and per account (e.g. 5 attempts / 5 minutes) with exponential backoff.
+    - POST /auth/reset-password/request — per account / per IP to avoid account enumeration and abuse.
+  - Apply generic rate limits for anonymous endpoints on per-client and global basis.
+
+  5) Expiry / validity checks
+
+  - access_expires_at: when set and current time is greater, block login and refresh flows; return `account_expired` (403).
+  - valid_from: if current time is before valid_from block login with `account_not_yet_valid` (403).
+
+  6) Monitoring & alerting
+
+  - Log and alert suspicious auth events (repeated refresh token reuse attempts, sudden number of failed logins across accounts, mass resets).
+  - Keep audit trails for admin operations and token revocations.
+
+  7) Misc
+
+  - Access tokens must be validated on each request, including signature and expiry.
+  - Consider device fingerprinting (user_agent/ip) only for logging and anomaly detection; never rely on those as the only security control.
 
 ---
 
@@ -274,15 +432,38 @@ Checklist for migration script:
 ## 9. Admin Dashboard & Management APIs
 
 ### Endpoints under /admin/users
-
 - GET /admin/users (list, filter, pagination)
+  - Query params: ?page=1&size=50&role=admin&status=locked
+  - Response: {"items": [{"id":...,"username":...,"role":...,"is_active":...,"last_login_at":...,"valid_from":...,"access_expires_at":...}], "meta":{}}
 - GET /admin/users/:id (detail)
-- POST /admin/users (create) { username, password, role }
-- PATCH /admin/users/:id (partial update) { role, is_active, must_reset_password }
+  - Response: user object (fields listed above plus audit data)
+- POST /admin/users (create)
+  - Request JSON: {"username": "...", "email": "...", "password": "<plain>" | "tempPassword": "...", "role": "user|admin|sysadmin", "is_active": true|false, "valid_from": "<ISO>" , "access_expires_at": "<ISO>", "must_reset_password": true|false}
+  - Response: 201 created, created user object (no password)
+- PATCH /admin/users/:id (partial update)
+  - Request JSON: {"role":"admin","is_active":false,"must_reset_password":true, "valid_from":"ISO","access_expires_at":"ISO"}
+  - Response: 200 updated user
 - POST /admin/users/:id/reset-password (admin set new password)
+  - Request JSON: {"newPassword": "<plaintext>", "must_reset_password": true|false}
+  - Response: 200 OK, returns {"ok": true}
+- POST /admin/users/:id/lock
+  - Request JSON: {"until":"<ISO>"} (optional — if missing, set an administrative indefinite lock)
+  - Response: 200OK {"ok":true, "locked_until":"<ISO>"}
+- POST /admin/users/:id/unlock
+  - Request JSON: none
+  - Response: 200OK
+- POST /admin/users/:id/invalidate-sessions
+  - Request JSON: {"scope":"all"|"current"} — "all" invalidates all refresh_tokens for the user
+  - Response: 200OK
 - DELETE /admin/users/:id (delete user)
 
-All admin endpoints must be protected by require_role('admin') middleware.
+All admin endpoints must be protected by RBAC middleware. Suggested roles and allowed actions:
+
+- sysadmin: full rights (create/delete users, change roles, invalidate sessions, create system-level admin users)
+- admin: manage regular users, change role to/from 'user', lock/unlock, trigger `invalidate-sessions`, request password resets
+- support: read-only listing, trigger forced password reset for support cases (if allowed), cannot change roles or delete accounts
+
+Role enforcement should be explicit in middleware, and endpoints must validate both the caller's role and the target user's properties (e.g., prevent lower-privileged admins changing sysadmin accounts).
 
 ---
 
