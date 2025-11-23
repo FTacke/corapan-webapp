@@ -80,10 +80,6 @@ export class CqlBuilder {
         
         const tokenRow = document.createElement('div');
         tokenRow.className = 'cql-token-row card p-3 mb-3';
-        tokenRow.style.position = 'relative';
-        // enforce visible light background inline to avoid being overridden by other .card rules
-        tokenRow.style.backgroundColor = 'var(--md-sys-color-surface-container, rgba(255,255,255,0.98))';
-        tokenRow.style.backgroundImage = 'none';
         tokenRow.dataset.id = tokenId;
         tokenRow.innerHTML = `
             <button type="button" class="md3-button md3-button--icon md3-button--text delete-token-btn" aria-label="Eliminar palabra">

@@ -335,8 +335,12 @@ body.token-active #adv-summary {
 
 /* Stronger specificity to prevent other .card rules from overwriting the background */
 .cql-token-row.card {
-  /* stronger explicit background that should take precedence */
-  background-color: rgba(255,255,255,0.98) !important;
+  /* Token rows should be visually distinct from the surrounding form.
+     Default to the lightest tonal container so they appear 'white' within a
+     surface-container parent. Allow an app-level override token so product
+     teams can tune the exact look without editing this file. */
+  background-color: var(--app-cql-token-background, var(--md-sys-color-surface-container-lowest, var(--md-sys-color-surface, #ffffff))) !important;
+  /* Prevent background images/gradients from changing the appearance */
   background-image: none !important;
 }
 

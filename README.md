@@ -13,7 +13,9 @@ Diese Anwendung dient als Frontend und API-Layer für das CO.RA.PAN-Projekt. Sie
 ## 2. Features
 
 - **Korpus-Suche:**
-  - Einfache Suche und Expertensuche (CQL).
+  - Einfache Suche und Expertensuche (CQL) mit Pattern-Builder.
+  - **NEU:** Detaillierte Schritt-für-Schritt-Anleitung (Guía) für Einsteiger.
+  - **NEU:** Token-Suche für präzises Wiederfinden spezifischer Belege.
   - Filterung nach Metadaten (Land, Region, Sprecher, Geschlecht, etc.).
   - KWIC-Ansicht (Key Word in Context) mit Audio-Verknüpfung.
 - **Audio-Player:**

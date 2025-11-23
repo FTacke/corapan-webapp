@@ -22,7 +22,7 @@ Konzeptuelle Übersichten und Architektur-Entscheidungen.
 - **[Webapp Status Overview](concepts/webapp-status.md)** - Vollständiger Status aller Features, Metriken, Production-Readiness ⭐ NEU
 - **[Architecture Overview](concepts/architecture.md)** - Backend/Frontend Architektur, Blueprints
 - **[Authentication Flow](concepts/authentication-flow.md)** - JWT, Cookie-Auth, Login-Szenarien
-- **[BlackLab Indexing Architecture](concepts/blacklab-indexing.md)** - Corpus Search Engine, Export→Index→Proxy Pipeline
+- **[BlackLab Pipeline Architecture](concepts/blacklab-pipeline.md)** - Corpus Search Engine, Export→Index→Proxy Pipeline
 - **[Advanced Search Architecture](concepts/advanced-search-architecture.md)** - Security hardening, streaming design, performance
 - **[Search Unification Plan](concepts/search-unification-plan.md)** - Simple vs. Advanced Search, 3-Phasen-Plan, Unified Mapping ⭐ NEU (2025-11-13)
 - **[Audio Playback](concepts/audio-playback.md)** - Konzept der Audio-Wiedergabe und 4-Minuten-Splits
@@ -48,6 +48,8 @@ Schritt-für-Schritt-Anleitungen für häufige Aufgaben.
 API-Dokumentation, Datenbank-Schema, technische Spezifikationen.
 
 - **[API Auth Endpoints](reference/api-auth-endpoints.md)** - JWT-Endpoints, Decorators, Error-Handler
+- **[BlackLab Configuration](reference/blacklab-configuration.md)** - Index-Format (BLF), Docker-Config
+- **[BlackLab Legacy Artifacts](reference/blacklab-legacy-artifacts.md)** - Liste veralteter Skripte und Configs
 - **[Auth Access Matrix](reference/auth-access-matrix.md)** - Route Inventory, CSRF, Public/Protected Routes (NEW 2025-11-11)
 - **[Database Maintenance](reference/database-maintenance.md)** - Schema, Indizes, Wartung, Performance
 - **[Media Folder Structure](reference/media-folder-structure.md)** - MP3/Transcript-Organisation
