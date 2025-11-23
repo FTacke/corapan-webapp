@@ -40,6 +40,74 @@ Nächste Schritte: implementierbare Details, Migrationsskripte, Tests und Deploy
 
 ---
 
+## Datenschutz (DSGVO) — Anforderungen & technische Umsetzung
+
+Diese Sektion ergänzt die technische Migration um die erforderlichen DSGVO-Maßnahmen. Alle Punkte sind als umsetzbare Hinweise formuliert und gehören zwingend zur Implementierung.
+
+### 1.1 Mindest‑Datenschutzmaßnahmen (technisch umsetzbar)
+
+- Zweckbindung: Jede gespeicherte personenbezogene Information muss einen klaren Zweck haben (Authentifizierung, Autorisierung, Audit, Support). In der DB/Modelldokumentation muss für jedes Feld ein Zweckfeld dokumentiert werden.
+- Datenminimierung: Speichere nur die minimal notwendigen Felder (vollständige Feldliste siehe Datenmodell-Abschnitt). Keine Tracking-Daten in Auth-Tabellen, keine Klartext-Passwörter, keine unnötigen personenbezogenen Metadaten.
+- Speicherdauer (Richtwerte):
+  - Nutzerkonto-Daten (users) — solange das Konto aktiv ist und maximal 10 Jahre nach Inaktivität (konfigurierbar).
+  - Auth-Logs / Sicherheitslogs — 1 Jahr (für forensische Zwecke), danach archivieren oder löschen.
+  - Refresh-Tokens (DB): standardmäßig 30 Tage plus Rotation-Audit (keine längere Speicherung im Klartext), entsorgen / anonymisieren 90 Tage nach Widerruf.
+  - Password-Reset-Tokens: sehr kurzlebig (1 Stunde), werden nach Benutzung oder Ablauf sofort ungültig und spätestens nach 7 Tagen gelöscht.
+  - Account-Löschung / Soft-Delete: Konten werden sofort soft-gelöscht (deleted_at gesetzt) und nach 30 Tagen anonymisiert (oder früher, abhängig von rechtlicher Aufbewahrungspflicht).
+- Lösch- und Anonymisierungsregeln:
+  - Soft-Delete: `deleted_at` + `is_active=false` + `login_disabled=true` sofort bei Löschanfrage.
+  - Nach Frist X (konfigurierbar, z. B. 30 Tage) Pseudonymisierung/Anonymisierung aller personenbezogenen Felder (username, email) — ersetze durch hashed-placeholder (z. B. `deleted-{user_id}@example.invalid`) und entferne sensible Audit-Felder soweit möglich.
+  - Audit-Logs: prüfen, ob gesetzliche Aufbewahrungspflichten einem anonymisieren/zurückhalten entgegenstehen — implementiere getrennte Archiv-Speicherplätze und Aufbewahrungsfristen.
+- Backups:
+  - Backups müssen verschlüsselt gespeichert werden (AES-256). Keine Speicherung sensitiver Klartext-Backups in unverschlüsselten Speicherbereichen.
+  - Zugriff auf Backups ist auf einen gekapselten Ops/Infra-Admin-Account beschränkt (Principle of Least Privilege).
+  - Retention: Backups automatisch rotieren/überschreiben — beispielsweise tägliche Backups mit 30 Tagen Aufbewahrung, Wochen- und Monats-Backups nach Bedarf.
+- Transport & TLS: Alle Endpunkte in Produktion müssen HTTPS erzwingen (redirect und HSTS). Interne API-Kommunikation ebenfalls TLS-gesichert.
+- Reset-Tokens Schutz: Reset-Tokens sind einmalig, random, kurzlebig (z. B. 3600s) und werden nur als Hash (SHA-256) in der DB gespeichert. E-Mail enthält niemals ein direkter Link mit Klartext-Passwort.
+- Rate-Limiting & Lockout: Rate-Limit pro IP und pro Account (z. B. 5 Fehlversuche in 10 Minuten) plus inkrementeller Backoff; bei Verdacht auf Brute-Force Aktionskette (temporary lock + alert).
+
+### 1.2 Betroffenenrechte (Art. 15–20 DSGVO) — techn. Spezifikation
+
+Die Implementierung muss APIs und Frontend-Komponenten bereitstellen, die die Ausübung der DSGVO-Rechte erlauben:
+
+- Auskunftsrecht (Art. 15):
+  - API: `GET /account/data-export` (auth-required)
+  - Response: JSON mit allen personenbezogenen Feldern, Audit-Einträgen (letzter Login, created_at, deleted_at), Verarbeitungszwecken und ggf. Löschfristen. Maximum: 1 MB, komprimierbar.
+  - Intern: Aufruf führt zu Erzeugung eines Download-Token (einmalig gültig, 15 Minuten) und POST-Export-Job falls Dataset groß.
+
+- Recht auf Berichtigung (Art. 16):
+  - UI: `/account/profile` mit editierbaren Feldern (siehe Section Enduser-Flows).
+  - API: `PATCH /account/profile` — validiert Felder, schreibt `updated_at`, versioniert kritische Änderungen (z. B. email change -> email_verified=false). Audit-Log-Eintrag.
+
+- Recht auf Löschung (Art. 17):
+  - API: `POST /account/delete` — erzeugt Soft-Delete (`deletion_requested_at`, `deleted_at` optionally on timeout) and führt folgende Schritte aus:
+    - Revoke all refresh tokens for user
+    - Remove PII from active tables only at anonymization time, keep audit footprints as needed
+    - Queue background job to perform irreversible anonymization after configurable retention (e.g., 30 days)
+  - Endpoint requires re-auth (fresh access token) to prevent abuse.
+
+- Recht auf Datenportabilität (Art. 20):
+  - Implement via `GET /account/data-export` returning a JSON file that the user can download.
+  - Format: JSON + CSV (optional) with clear field mapping; include a schema version number.
+
+- Einschränkung der Verarbeitung (Art. 18):
+  - System-support for user-level processing restriction: `PATCH /account/profile` or `POST /account/restrictions` -> set `is_active=false` or set `locked_until` to a requested timestamp. Admin must be able to mark `restriction_requested` and document reason.
+
+### 1.3 Aktualisierung der Datenschutzerklärung (privacy policy)
+
+Forderung: Die Datenschutzerklärung muss die folgenden, präzise Textbausteine enthalten (vorformuliert):
+
+- Beschreibung der personenbezogenen Daten, die für Auth/Account gespeichert werden: username / email, password_hash, role, is_active, must_reset_password, access_expires_at, valid_from, last_login_at, login_failed_count, locked_until, deleted_at, deletion_requested_at, sowie Refresh-/Reset-Token-Hashes.
+- Verarbeitungszwecke: Authentifizierung, Autorisierung, Security/Audit, Support, rechtliche Aufbewahrung.
+- Aufbewahrungsfristen: klare, präzise Fristen für accounts (in days/years), logs, tokens und backups. Beispieltext: "Account-Daten werden solange gespeichert wie das Konto aktiv ist. Nach Löschung werden personenbezogene Daten nach 30 Tagen anonymisiert.".
+- Cookies: technische Notwendigkeit bei Refresh-Cookie (HttpOnly, Secure) und CSRF-Token. Dokumentiere: keine Tracking-/Marketing-Cookies durch die App selbst -> daher kein Cookie-Banner notwendig für diese Applikation, nur eine klare Erwähnung, welche technisch notwendigen Cookies gesetzt werden.
+- Betroffenenrechte: erkläre, wie Nutzer Auskunft, Berichtigung, Löschung, Einschränkung und Datenportabilität ausüben können (Web-Aufruf/Support Email). Links zu `GET /account/data-export` und Lösch-Buttons erwähnen.
+
+Bei Unsicherheiten oder lokalen Rechtsvorgaben (z. B. Archivpflichten) bitte juristische Prüfung hinzuzuziehen.
+
+
+---
+
 ## 2. Datenbank-Schema
 
 Empfohlene DB-Tabelle `users` (SQL-Beispiel):
@@ -59,7 +127,9 @@ CREATE TABLE users (
   valid_from TIMESTAMP NULL DEFAULT NULL, -- Konto aktiv erst ab diesem Datum
   last_login_at TIMESTAMP NULL DEFAULT NULL, -- Timestamp letzte erfolgreiche Auth
   login_failed_count INTEGER NOT NULL DEFAULT 0, -- Zähler für fehlgeschlagene Logins
-  locked_until TIMESTAMP NULL DEFAULT NULL -- Wenn gesetzt: temporär gesperrt bis zu diesem Zeitpunkt
+  locked_until TIMESTAMP NULL DEFAULT NULL, -- Wenn gesetzt: temporär gesperrt bis zu diesem Zeitpunkt
+  deleted_at TIMESTAMP NULL DEFAULT NULL, -- Soft-delete: Zeitpunkt der Löschung
+  deletion_requested_at TIMESTAMP NULL DEFAULT NULL -- Zeitpunkt der Nutzer-Löschanfrage
 );
 
 -- optional: table for refresh tokens (recommended for token rotation/blacklisting)
@@ -95,6 +165,9 @@ Kurze Hinweise, wann die Felder erzeugt oder geprüft werden:
 - last_login_at: bei erfolgreichem Login gesetzt; hilfreich für Audit/Reporting.
 - login_failed_count: erhöht bei Fehlversuchen; bei Überschreitung einer Schwelle (z.B. 5) kann locked_until gesetzt werden.
 - locked_until: wenn gesetzt und > now(), Login verweigern mit `account_locked`-Fehler.
+ - locked_until: wenn gesetzt und > now(), Login verweigern mit `account_locked`-Fehler.
+ - deleted_at: wenn gesetzt => Konto ist soft-deleted; Login verweigern; Tokens widerrufen; spätere Anonymisierung möglich.
+ - deletion_requested_at: Zeitpunkt, zu dem der Nutzer die Löschung angefordert hat; dient zur Rückverfolgbarkeit und Fristenberechnung.
 
 Für `refresh_tokens`:
 
@@ -105,6 +178,75 @@ Für `refresh_tokens`:
 - revoked_at: Markiert Widerruf; geprüft bei /auth/refresh.
 - user_agent / ip_address: optional zur Forensik; können in Alerts verwendet werden.
 - replaced_by: bei Rotation auf neuen Token zeigen; dienen zur Erkennung von Reuse-Versuchen.
+
+---
+
+### Migrationsanweisungen (SQL / Alembic)
+
+Die Migration des Schemas und die sichere Übernahme bestehender Nutzerkonten erfordert mehrere Schritte. Die folgenden Befehle und Skript‑Skizzen sind als technische Vorlage gedacht.
+
+1) Versioniere & teste in einer Staging-DB
+
+ - Erzeuge eine Alembic-Revision und prüfe die DDL-Schritte in einer Staging-Instanz bevor du in Production upgradest.
+
+2) Beispiel-SQL / DDL (Postgres)
+
+```sql
+ALTER TABLE users ADD COLUMN access_expires_at TIMESTAMP NULL DEFAULT NULL;
+ALTER TABLE users ADD COLUMN valid_from TIMESTAMP NULL DEFAULT NULL;
+ALTER TABLE users ADD COLUMN last_login_at TIMESTAMP NULL DEFAULT NULL;
+ALTER TABLE users ADD COLUMN login_failed_count INTEGER NOT NULL DEFAULT 0;
+ALTER TABLE users ADD COLUMN locked_until TIMESTAMP NULL DEFAULT NULL;
+ALTER TABLE users ADD COLUMN deleted_at TIMESTAMP NULL DEFAULT NULL;
+ALTER TABLE users ADD COLUMN deletion_requested_at TIMESTAMP NULL DEFAULT NULL;
+
+-- Refresh/reset token tables
+CREATE TABLE IF NOT EXISTS refresh_tokens (
+  token_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
+  token_hash TEXT NOT NULL,
+  created_at TIMESTAMP NOT NULL DEFAULT now(),
+  expires_at TIMESTAMP NOT NULL,
+  last_used_at TIMESTAMP NULL DEFAULT NULL,
+  revoked_at TIMESTAMP NULL DEFAULT NULL,
+  user_agent TEXT NULL DEFAULT NULL,
+  ip_address TEXT NULL DEFAULT NULL,
+  replaced_by UUID NULL
+);
+
+CREATE TABLE IF NOT EXISTS reset_tokens (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
+  token_hash TEXT NOT NULL,
+  created_at TIMESTAMP NOT NULL DEFAULT now(),
+  expires_at TIMESTAMP NOT NULL,
+  used_at TIMESTAMP NULL DEFAULT NULL
+);
+```
+
+3) Migration von `passwords.env` in DB
+
+ - Entwickle ein idempotentes Script (`scripts/migrate_passwords_env.py`) welches:
+   - `passwords.env` parst
+   - für jedes Konto einen `users`-Datensatz anlegt (username/email)
+   - das Klartextpasswort mit Argon2id/Bcrypt hasht
+   - evtl. `must_reset_password=true` setzt, wenn Policy erforderlich
+ - Prüfe und dokumentiere die Anzahl migrierter Accounts und mögliche Deltas (z. B. gleiche Emails mehrfach).
+
+4) Bootstrapping des ersten Admins
+
+ - Script `scripts/create_initial_admin.py` liest `START_ADMIN_USERNAME` und `START_ADMIN_PASSWORD` aus Umgebungsvariablen (CI secrets), legt den Admin an, setzt `must_reset_password=true` und schreibt einen Eintrag im Audit-Log.
+
+5) Tests & Rollback
+
+ - Teste den kompletten Migrationspfad in Staging inklusive Login, Refresh, Reset-Flow.
+ - Fertige vor Live-Migration ein Backup an (verschlüsselt) und dokumentiere Restore-Schritte.
+
+6) Nach der Migration
+
+ - Schalte die Feature-Flag `AUTH_BACKEND=db` in Staging on, teste Verfügbarkeit, erst dann in Prod.
+ - Entferne `passwords.env`-abhängige Pfade erst wenn alle Backups, Migrationsergebnisse und Tests bestätigt wurden.
+
 
 ---
 
@@ -119,6 +261,59 @@ Für `refresh_tokens`:
 - Use HTTPS only in production.
 - Login rate-limiting: per IP and per account (e.g., 5 attempts per 5 minutes).
 - Use argumented logging and monitoring for suspicious auth events.
+
+### Token-System, Middleware-Checks & Security Rules (detailliert)
+
+1) Token lifecycles
+
+- Access Token:
+  - Type: JWT (signed)
+  - Lifetime: default 15–30 minutes (ACCESS_TOKEN_EXP config)
+  - Storage: do NOT store in localStorage; keep in memory on web clients, or use secure per-platform storage for mobile.
+  - Claims: `sub` (user_id), `role`, `is_active`, `must_reset_password`, `iat`, `exp`, `jti` (optional for short lived revocation support).
+
+- Refresh Token:
+  - Type: opaque random token (at least 64 bytes of entropy), stored as an HttpOnly+Secure cookie, `SameSite=Strict`, Path=/auth/refresh.
+  - Lifetime: 30 days by default (REFRESH_TOKEN_EXP config).
+  - Storage in DB: only store a hash of the token (SHA-256) in `refresh_tokens.token_hash` and record `created_at`, `expires_at`, `user_agent`, `ip_address`.
+  - Rotation: on `/auth/refresh`, issue new refresh token (raw) and store its hash as a new DB row with `replaced_by` pointers. Mark old token `replaced_by` to new token_id and set `last_used_at`.
+  - Reuse detection: If an old token is presented when it's already `replaced_by` or `revoked_at` is set, treat as reuse attack — revoke all refresh tokens for user and force re-auth.
+
+2) Token invalidation rules
+
+- Password change: revoke all refresh_tokens for user (set revoked_at=now()).
+- Account deletion / soft-delete: revoke all refresh tokens for user immediately.
+- Admin invalidation: `POST /admin/users/:id/invalidate-sessions` with scope triggers revocation.
+
+3) Middleware checks for all protected routes
+
+- `require_auth` middleware must check:
+  - Validate JWT signature and `exp`.
+  - Load user by `sub` and verify `is_active=true`.
+  - Reject if `deleted_at` is set (account deleted).
+  - Reject if `locked_until` > now() -> return `account_locked` (423).
+  - If `access_expires_at` is set and expired -> return `account_expired` (403).
+  - If `valid_from` > now() -> return `account_not_yet_valid` (403).
+  - If `must_reset_password` true -> return `password_reset_required` (403) and require redirect to password change page.
+
+4) Refresh endpoint `/auth/refresh` specifics
+
+- Read refresh cookie, compute hash, and lookup DB row.
+- Verify `expires_at`, `revoked_at` is NULL, and token is not previously `replaced_by` unless it is the immediate predecessor in rotation protocol.
+- On success: create new token, store its hash, set `replaced_by` on old token, set `last_used_at` and return new access and refresh cookie.
+- On token reuse detection: revoke all user's refresh tokens (set revoked_at), log event, send monitoring alert, return 403 with `refresh_token_reused`.
+
+5) Storage & transport policies
+
+- Transport: TLS enforced for all public and internal endpoints.
+- Cookies: Set `HttpOnly`, `Secure`, `SameSite=Strict`, `Path=/auth/refresh`.
+- Do not store tokens in client-side storage (localStorage/sessionStorage) to avoid XSS exposure. Access token ephemeral storage in memory is acceptable.
+
+6) Additional hardening
+
+- Implement Content Security Policy (CSP), CSP reporting and secure headers.
+- Protect login/refresh endpoints with IP-based rate-limiting and anomaly detection.
+
 
 ---
 
@@ -216,6 +411,12 @@ Für jede Frontend-Route beschreiben wir die zugehörigen Backend-API-Endpunkte,
   - 403 account_expired / password_reset_required
   - 429 rate_limited
 
+Integration Hinweis: Das bestehende Login-Sheet (Templates: `templates/auth/login.html` und `templates/auth/_login_sheet.html`) ist für die UI-Ebene wiederverwendbar. Die Login-Form sollte folgende client-seitige Anforderungen implementieren:
+
+- Formular validiert Eingaben lokal (min length email/password), zeigt Sicherheits-Hinweise (z. B. Passwort-Richtlinien) und sendet POST `/auth/login`.
+- Bei `password_reset_required` muss das Login-Client eine forcierte Redirect auf `/account/password?mustReset=1` durchführen.
+
+
 2) Passwort vergessen / Request reset
 
 - Page: `/password/forgot`
@@ -236,6 +437,12 @@ Für jede Frontend-Route beschreiben wir die zugehörigen Backend-API-Endpunkte,
   - 410 reset_token_expired
   - 400 weak_password
 
+Security / Behaviour:
+
+- Das `resetToken` darf nur in Hash-Form in DB gespeichert werden. Der Reset-Link enthält das Token in der URL; das Frontend reicht den Token im POST Body ein.
+- Der Reset-Token ist einmalig verwendbar: `used_at` wird gesetzt.
+- Nach erfolgreichem Reset: setze `must_reset_password=false`, invalidiere vorhandene Refresh-Tokens und zwinge Logout aller Sessions (invalidate-sessions) oder rotiere Tokens.
+
 4) Passwort ändern (eingeloggt)
 
 - Page: `/account/password`
@@ -246,11 +453,60 @@ Für jede Frontend-Route beschreiben wir die zugehörigen Backend-API-Endpunkte,
   - 401 invalid_credentials (oldPassword mismatch)
   - 400 weak_password
 
+Re-auth und Security: Für Passwort-Änderungen empfehlen wir einen frischen Login-Anforderung (z. B. Access-Token Alter < 5 Minuten) oder die erneute Eingabe des aktuellen Passworts zur Bestätigung.
+
 5) Erzwungener Passwortwechsel (must_reset_password)
 
 - Behaviour: If `must_reset_password = true` for the user, upon successful login the server must respond with 200 but cause a client redirect to the forced password change page (`/account/password?mustReset=1`) and respond with a code `password_reset_required` to indicate the client must block other actions until password change.
 
 Richtlinie: Client must never proceed to other features before password changed; server-side protections should also require `must_reset_password` checks on protected endpoints and respond with a `password_reset_required` error if enforced.
+
+---
+
+6) Profilseite / Account-Daten
+
+- Page: `/account/profile`
+- API: `GET /account/profile` (auth-required) -> liefert alle editierbaren personenbezogenen Felder: `{ "username", "email", "display_name", "about" }` und nicht-editierbare Audit-Felder `{ "created_at", "last_login_at", "is_active", "access_expires_at", "valid_from", "deleted_at" }`.
+- API: `PATCH /account/profile` (auth-required)
+  - Request JSON: allow partial updates e.g. `{ "display_name": "New", "email": "new@example.org" }`
+  - On email change set `email_verified=false` and send verification email; require re-auth for sensitive updates.
+  - Response: 200 OK + updated user object (do not return password_hash).
+
+7) Account-Löschung (User-Initiated)
+
+- Page: `/account/delete` (confirmation + reauth)
+- API: `POST /account/delete` (auth-required, re-auth with fresh credentials)
+  - Request: must include either a current password or a fresh one-time challenge for re-auth.
+  - Behaviour on request:
+    1. Set `deletion_requested_at = now()`, set `deleted_at = now()` if immediate soft-delete policy, otherwise schedule anonymization after retention window.
+    2. Revoke/invalidate all refresh tokens for the user (`revoked_at` set on all rows).
+    3. Invalidate active sessions (optionally rotate access-tokens to invalid) and log audit event.
+    4. Respond 202 Accepted with information about anonymization schedule and possible reversal window (e.g. 30 days).
+- Background job: after configured grace period (default 30 days) perform irreversible anonymization:
+  - Replace email/username with pseudonym `deleted-{user_id}@example.invalid`, delete or scrub PII fields, drop reset token rows and older logs as per retention rules.
+  - Keep minimal audit records for legal obligations but remove any personal identifiers where possible.
+
+8) Account Deletion by Admin (Admin-initiated)
+
+- Admin endpoint `DELETE /admin/users/:id` should perform a soft-delete equivalent to user deletion, set `deleted_at` and `deletion_requested_at`, revoke tokens, and optionally add an admin note for audit.
+
+Technical notes on token handling during deletion:
+
+- All refresh tokens must be marked `revoked_at=now()` as soon as deletion is requested.
+- Access tokens (JWT) cannot always be revoked immediately unless using token blacklist lookup; prefer short-lived access tokens and immediate revocation of refresh tokens so session expiry is limited.
+
+9) Data export endpoint (user-initiated & admin-initiated)
+
+- User: `GET /account/data-export` -> returns JSON with all personal data fields and metadata (audits, created_at, deletion_requested_at, deleted_at). Rate-limit the endpoint and require re-authentication on request > sensitive.
+- Admin: `POST /admin/users/:id/export` -> generate export package for compliance. Exports must be delivered via time-limited download link (15 minutes) and protected by audit log.
+
+Errors & Responses (examples):
+
+- 200 OK: {"ok": true, "downloadUrl": "..."}
+- 401 unauthorized: invalid access
+- 403 forbidden: insufficient scope/role
+- 404 not_found: user not found
+
 
 ---
 
@@ -465,6 +721,72 @@ All admin endpoints must be protected by RBAC middleware. Suggested roles and al
 
 Role enforcement should be explicit in middleware, and endpoints must validate both the caller's role and the target user's properties (e.g., prevent lower-privileged admins changing sysadmin accounts).
 
+### UI layout & behaviour — `/admin/users` (React/Vanilla frontend spec)
+
+1) Listing page `/admin/users`
+
+- Table columns (default):
+  - Checkbox (select), Username, E-Mail, Rolle, is_active, Status (Active/Locked/Expired/Deleted/NotYetValid), `last_login_at`, `created_at`, `updated_at`, Aktionen (Buttons)
+- Filters & search:
+  - Quick search (username/email)
+  - Filters: Role (dropdown), Status (active/locked/expired/deleted), Date ranges (created_at/last_login_at)
+  - Sortable columns: username, role, last_login_at, created_at
+- Pagination & size selection.
+- Bulk actions (on selected): invalidate sessions, lock, unlock, set must_reset_password, delete (soft-delete) — bulk ops must be rate-limited and protected by higher role (admin or sysadmin).
+
+2) Row actions (per user):
+
+- View (opens detail pane) — GET /admin/users/:id
+- Edit (opens modal) — PATCH /admin/users/:id
+- Invite / Set password — POST /admin/users (create) OR POST /admin/users/:id/reset-password (admin initiates a reset or sends Invite link). Invite flows should send a secure one-time link using `reset_tokens` with short expiry.
+- Lock/Unlock — POST /admin/users/:id/lock / unlock
+- Invalidate sessions — POST /admin/users/:id/invalidate-sessions
+- Delete — DELETE /admin/users/:id (soft-delete)
+
+3) Detail / Audit view `/admin/users/:id`
+
+- Show full user object (safe fields only): username, email (masked optional), role, is_active, must_reset_password, valid_from, access_expires_at, last_login_at, login_failed_count, locked_until, created_at, updated_at, deleted_at, deletion_requested_at
+- Audit timeline: last login IP, last login user_agent, recent failed login attempts (count + last events), recent token rotations, admin actions (who changed role / locked account). Provide a paginated small audit log view.
+
+4) Create user / Invite
+
+- Instead of storing admin-chosen plaintext passwords, offer two flows:
+  - Invite flow: `POST /admin/users` with `{"username":"...","email":"...","role":"user","must_reset_password":true}` -> server generates a reset/invite token (reset_tokens row) and sends an invite email with single-use link. The created user has no accessible password; they must set it via reset flow.
+  - Admin create with tempPassword (allowed only for sysadmin): same as above but store temporary password hashed and optionally set `must_reset_password=true`.
+
+5) RBAC and UI restrictions
+
+- A user with `admin` role cannot modify or delete `sysadmin` users. UI must hide action buttons not permitted for the logged-in admin.
+- Actions that affect authentication (invalidate sessions, reset passwords) must require a confirmation modal and be logged in audit trail.
+
+6) Compliance & Audit
+
+- Every admin action (create/update/delete/reset/invalidate-session) must produce an audit record with: `actor_id`, `actor_role`, `target_user_id`, `action`, `reason` (optional), `timestamp`.
+- Audit logs must be write-once (append-only) and retained according to policy (1 year) or per legal requirement.
+
+7) Rate-limits & protections for admin endpoints
+
+- Enforce rate-limits and require MFA for high-privileged actions (invalidate all sessions, delete users). Consider additional approval flow for deleting accounts older than X days.
+
+8) Example JSON payloads (summary)
+
+- GET /admin/users
+  - Response: {"items": [{"id":"uuid","username":"...","email":"x@x","role":"user","is_active":true,"status":"active","last_login_at":"ISO"}], "meta": {"page":1,"size":50}}
+
+- PATCH /admin/users/:id
+  - Request: {"role":"admin","is_active":true,"must_reset_password":false, "valid_from":"ISO","access_expires_at":"ISO"}
+  - Response: 200 {"ok":true, "user": {...}}
+
+- POST /admin/users (invite)
+  - Request: {"username":"bob","email":"bob@example.org","role":"user","must_reset_password":true}
+  - Response: 201 {"ok":true, "inviteSent":true, "userId":"..."}
+
+9) Frontend UX considerations
+
+- For destructive actions provide “Are you sure?” with typed confirmation (e.g. type the username to confirm delete).
+- Show clear status badges in UI for `deleted`, `locked`, `expired`, `must_reset_password`.
+
+
 ---
 
 ## 10. Tests & Testplan
@@ -483,6 +805,73 @@ Integration / E2E tests to implement:
 - Change password invalidates refresh tokens.
 - Admin create user, change role, lock/unlock user.
 - Rate limiting test: more than N attempts -> 429.
+
+Detailed Test Matrix and validation expectations (unit, integration & E2E):
+
+1) Login flow
+
+- Success: valid username/password -> 200, returns accessToken and refresh cookie, increments last_login_at, resets login_failed_count.
+- Invalid password -> 401 invalid_credentials; increments login_failed_count.
+- Locked account -> after N attempts -> 423 account_locked and locked_until set in DB.
+- Account not yet valid (valid_from in future) -> 403 account_not_yet_valid.
+- Account expired (access_expires_at in the past) -> 403 account_expired.
+
+2) Refresh token & rotation
+
+- Valid refresh cookie -> new access+refresh tokens returned; old refresh token `replaced_by` set; last_used_at updated.
+- Reuse of old (rotated) refresh token -> 403 refresh_token_reused; all refresh tokens for user revoked.
+- Expired refresh token -> 401 invalid/expired.
+
+3) Logout
+
+- POST /auth/logout -> revoke current refresh token and clear cookie; access token may expire naturally (verify refresh row revoked_at set).
+
+4) Password reset
+
+- Request reset -> rate-limited, always return 200 success message (no enumeration).
+- Token usage -> single-use; after use `used_at` set.
+- Invalid or expired -> appropriate 400/410 codes.
+- After reset, existing refresh tokens invalidated.
+
+5) Password change (authenticated)
+
+- Correct oldPassword -> password updated, must_reset_password cleared, all refresh tokens invalidated.
+- Wrong oldPassword -> 401 and no changes.
+
+6) Profile editing
+
+- GET /account/profile -> returns current data (200).
+- PATCH /account/profile -> updates allowed fields, sets updated_at, not exposing password_hash.
+
+7) Account deletion
+
+- POST /account/delete (re-auth required) -> sets deleted_at, deletion_requested_at, revoke tokens -> return 202 with scheduled anonymization info.
+- After anonymization window -> user row pseudonymized; login fails; data export returns limited/anonymous view.
+
+8) Admin flows
+
+- Create user (invite) -> creates user and sends invite; no password stored in logs / admin UI.
+- Patch user -> change role/valid_from/access_expires_at; unauthorized roles are rejected.
+- Lock/unlock/invalidate-sessions -> check token rows updated and audit entry created.
+
+9) Security negative tests
+
+- Attempt to use access token after refresh-token-based revocation -> expected 401 (if immediate blacklist enabled) or short window until access token expires.
+- Reuse of refresh token -> detect and revoke all tokens.
+- Rate-limit exceeded on password reset -> return 429.
+
+10) Compliance & data-rights tests
+
+- `GET /account/data-export` returns valid JSON that includes all requested personal fields and meta data.
+- `POST /account/delete` and subsequent anonymization steps validated — verify no PII remains and backup handling is compliant.
+
+Example test mapping / locations for implementation:
+
+- tests/test_auth_flow.py -> login/refresh/logout/reset/change tests
+- tests/test_account_profile.py -> profile GET/PATCH and data-export
+- tests/test_admin_users.py -> admin create/patch/lock/unlock/invalidate/delete tests
+- tests/test_privacy_compliance.py -> deletion/anonymization/data retention tests
+
 
 ### Example tests mapping to repo
 - Add/modify tests in `tests/test_optional_auth_behavior.py` and `tests/test_...` or new `tests/test_auth_flow.py`.
