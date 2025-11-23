@@ -15,7 +15,6 @@ def app(tmp_path):
     dbfile = tmp_path / "race_auth.db"
     url = f"sqlite:///{dbfile}"
     app = Flask(__name__)
-    app.config["AUTH_BACKEND"] = "db"
     app.config["AUTH_DATABASE_URL"] = url
     app.config["AUTH_HASH_ALGO"] = "bcrypt"
     app.config["JWT_SECRET_KEY"] = "test-secret"

@@ -26,7 +26,7 @@
 
     <!-- Copyright -->
     <p class="md3-footer__copy md3-body-small">
-      © {{ now().year }} Philipps-Universität Marburg · Felix Tacke
+      © {% if now is defined %}{{ now().year }}{% else %}{{ "2025" }}{% endif %} Philipps-Universität Marburg · Felix Tacke
     </p>
     
     <!-- Build ID for deployment verification -->

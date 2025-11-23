@@ -9,7 +9,6 @@ from pathlib import Path
 
 from flask import Flask, flash, jsonify, redirect, render_template, request, url_for
 
-from .auth.loader import hydrate
 from .extensions import register_extensions
 from .routes import register_blueprints
 
@@ -30,19 +29,9 @@ def create_app(env_name: str | None = None) -> Flask:
         static_folder=str(static_dir),
     )
     load_config(app, env_name)
-    # Warn if passwords.env file exists but app configured for DB-backed auth
-    try:
-        from pathlib import Path
-
-        project_root = Path(__file__).resolve().parents[2]
-        pw_path = project_root / "passwords.env"
-        if pw_path.exists() and app.config.get("AUTH_BACKEND", "db") == "db" and env_name != "development":
-            app.logger.warning(
-                "Found passwords.env on disk while AUTH_BACKEND=db is configured; ensure this file is not used in staging/production and remove it from server disk when safe."
-            )
-    except Exception:
-        # never fail app startup due to warning check
-        pass
+    # Legacy passwords.env files on disk are ignored by default; they were used
+    # for env-based auth and are deprecated. Keep the file on disk only for
+    # manual recovery/rollback scenarios; the app defaults to DB-backed auth.
     from .extensions.sqlalchemy_ext import init_engine as init_auth_db
     # Initialize auth DB engine if configured
     try:
@@ -56,12 +45,13 @@ def create_app(env_name: str | None = None) -> Flask:
 
     app.config["APP_BUILD_ID"] = time.strftime("%Y%m%d%H%M%S")
 
-    hydrate()
+    # Legacy env-based credential hydration removed. All auth now uses DB-backed flows.
     register_extensions(app)
     register_blueprints(app)
     register_context_processors(app)
     register_auth_context(app)
     register_security_headers(app)
+    register_maintenance_commands(app)
     register_error_handlers(app)
     setup_logging(app)
 
@@ -69,6 +59,24 @@ def create_app(env_name: str | None = None) -> Flask:
     _validate_db_schema_on_startup(app)
 
     return app
+
+
+def register_maintenance_commands(app: Flask) -> None:
+    """Register maintenance CLI commands (anonymization, housekeeping)."""
+    from flask.cli import with_appcontext
+
+    @app.cli.command("auth-anonymize")
+    @with_appcontext
+    def auth_anonymize_command():
+        """Anonymize soft-deleted accounts older than configured window.
+
+        Usage: flask auth-anonymize
+        """
+        from .auth import services
+
+        days = int(app.config.get("AUTH_ACCOUNT_ANONYMIZE_AFTER_DAYS", 30))
+        count = services.anonymize_soft_deleted_users_older_than(days)
+        app.logger.info(f"Anonymized {count} users soft-deleted older than {days} days")
 
 
 def _validate_db_schema_on_startup(app: Flask) -> None:
@@ -212,9 +220,10 @@ def register_security_headers(app: Flask) -> None:
         # TODO: Remove 'unsafe-inline' after jQuery migration
         csp = (
             "default-src 'self'; "
-            "script-src 'self' 'unsafe-inline' https://code.jquery.com https://cdn.jsdelivr.net "
+            # we removed 'unsafe-inline' for scripts after moving inline scripts to external files
+            "script-src 'self' https://code.jquery.com https://cdn.jsdelivr.net "
             "https://cdn.datatables.net https://cdnjs.cloudflare.com https://unpkg.com; "
-            "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdn.datatables.net "
+            "style-src 'self' https://cdn.jsdelivr.net https://cdn.datatables.net "
             "https://cdnjs.cloudflare.com https://unpkg.com https://fonts.googleapis.com; "
             "img-src 'self' data: https: blob:; "
             "font-src 'self' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net "

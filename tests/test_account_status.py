@@ -12,7 +12,6 @@ from src.app.auth.models import Base, User
 @pytest.fixture
 def client():
     app = Flask(__name__)
-    app.config["AUTH_BACKEND"] = "db"
     app.config["AUTH_DATABASE_URL"] = "sqlite:///:memory:"
     app.config["AUTH_HASH_ALGO"] = "bcrypt"
     app.config["JWT_SECRET_KEY"] = "test-secret"

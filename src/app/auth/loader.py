@@ -24,30 +24,19 @@ def _parse_role_account(env_key: str) -> tuple[Role, str]:
 
 
 def hydrate() -> None:
-    """Populate the credential map based on *_PASSWORD_HASH environment values.
+    """Deprecated: env-based credential hydration is removed.
 
-    This function will only load credentials when the AUTH_BACKEND is configured
-    to 'env'. In staging/production (AUTH_BACKEND=db) the legacy env-based
-    credential loader is skipped to avoid creating a parallel auth path.
+    Historically this populated an in-memory credential store from
+    environment variables (`*_PASSWORD_HASH`) when AUTH_BACKEND=env was used.
+    The project has migrated to DB-backed authentication and environment-based
+    hydration is no longer supported. This function is now a no-op kept for
+    compatibility with older startup sequences.
     """
-    auth.CREDENTIALS.clear()
-    backend = os.getenv("AUTH_BACKEND", "env").lower()
-    if backend != "env":
-        # intentionally skip hydrating credentials when DB-backed auth is active
-        # to avoid accidental dual-auth behaviour in non-dev environments.
-        # In dev environments it's still convenient to use passwords.env.
-        try:
-            import logging
+    try:
+        import logging
 
-            logging.getLogger(__name__).info(
-                "Skipping env-based credential hydration because AUTH_BACKEND=%s", backend
-            )
-        except Exception:
-            pass
-        return
-
-    for key, value in os.environ.items():
-        if not key.endswith("_PASSWORD_HASH"):
-            continue
-        role, account = _parse_role_account(key)
-        auth.CREDENTIALS[account] = auth.Credential(role=role, password_hash=value)
+        logging.getLogger(__name__).info(
+            "Auth env-based hydration is disabled — environment-based auth is deprecated"
+        )
+    except Exception:
+        pass

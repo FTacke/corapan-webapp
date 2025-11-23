@@ -23,9 +23,7 @@ bp = Blueprint("admin_users", __name__, url_prefix="/admin/users")
 @jwt_required()
 @require_role(Role.ADMIN)
 def list_users():
-    backend = current_app.config.get("AUTH_BACKEND", "env")
-    if backend != "db":
-        return jsonify({"error": "unsupported_on_env_backend"}), 501
+    # DB-backed auth is required for admin user management
 
     q = request.args.get("q")
     role = request.args.get("role")
@@ -73,9 +71,7 @@ def list_users():
 @jwt_required()
 @require_role(Role.ADMIN)
 def get_user(id):
-    backend = current_app.config.get("AUTH_BACKEND", "env")
-    if backend != "db":
-        return jsonify({"error": "unsupported_on_env_backend"}), 501
+    # DB-backed auth is required for admin user management
     user = auth_services.get_user_by_id(id)
     if not user:
         return jsonify({"error": "not_found"}), 404
@@ -100,9 +96,7 @@ def get_user(id):
 @require_role(Role.ADMIN)
 def create_user():
     # Invite flow: do not store plaintext password; create a user with must_reset_password true and generate reset token
-    backend = current_app.config.get("AUTH_BACKEND", "env")
-    if backend != "db":
-        return jsonify({"error": "unsupported_on_env_backend"}), 501
+    # DB-backed auth is required for admin user management
 
     data = request.get_json() or {}
     username = data.get("username")
@@ -143,9 +137,7 @@ def create_user():
 @jwt_required()
 @require_role(Role.ADMIN)
 def patch_user(id):
-    backend = current_app.config.get("AUTH_BACKEND", "env")
-    if backend != "db":
-        return jsonify({"error": "unsupported_on_env_backend"}), 501
+    # DB-backed auth is required for admin user management
     data = request.get_json() or {}
     # allowed: role, is_active, must_reset_password, valid_from, access_expires_at
     # simple implementation: load, update fields
@@ -171,9 +163,7 @@ def patch_user(id):
 @jwt_required()
 @require_role(Role.ADMIN)
 def admin_reset_password(id):
-    backend = current_app.config.get("AUTH_BACKEND", "env")
-    if backend != "db":
-        return jsonify({"error": "unsupported_on_env_backend"}), 501
+    # DB-backed auth is required for admin user management
     # create reset token for user
     user = auth_services.get_user_by_id(id)
     if not user:
@@ -187,9 +177,7 @@ def admin_reset_password(id):
 @jwt_required()
 @require_role(Role.ADMIN)
 def admin_lock_user(id):
-    backend = current_app.config.get("AUTH_BACKEND", "env")
-    if backend != "db":
-        return jsonify({"error": "unsupported_on_env_backend"}), 501
+    # DB-backed auth is required for admin user management
     data = request.get_json() or {}
     until = data.get("until")
     from datetime import datetime
@@ -206,9 +194,7 @@ def admin_lock_user(id):
 @jwt_required()
 @require_role(Role.ADMIN)
 def admin_unlock_user(id):
-    backend = current_app.config.get("AUTH_BACKEND", "env")
-    if backend != "db":
-        return jsonify({"error": "unsupported_on_env_backend"}), 501
+    # DB-backed auth is required for admin user management
     with auth_services.get_session() as session:
         stmt = select(UserModel).where(UserModel.id == id)
         user = session.execute(stmt).scalars().first()
@@ -222,9 +208,7 @@ def admin_unlock_user(id):
 @jwt_required()
 @require_role(Role.ADMIN)
 def admin_invalidate_sessions(id):
-    backend = current_app.config.get("AUTH_BACKEND", "env")
-    if backend != "db":
-        return jsonify({"error": "unsupported_on_env_backend"}), 501
+    # DB-backed auth is required for admin operations
     auth_services.revoke_all_refresh_tokens_for_user(id)
     return jsonify({"ok": True})
 
@@ -233,9 +217,7 @@ def admin_invalidate_sessions(id):
 @jwt_required()
 @require_role(Role.ADMIN)
 def admin_delete_user(id):
-    backend = current_app.config.get("AUTH_BACKEND", "env")
-    if backend != "db":
-        return jsonify({"error": "unsupported_on_env_backend"}), 501
+    # DB-backed auth is required for admin operations
     auth_services.mark_user_deleted(id)
     auth_services.revoke_all_refresh_tokens_for_user(id)
     current_app.logger.info(f"Admin deleted user {id}")

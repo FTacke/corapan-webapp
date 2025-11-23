@@ -29,12 +29,9 @@ from .countries import (
 # Sentinel value to detect missing SECRET_KEY
 DEFAULT_SECRET_SENTINEL = "___SENTINEL_CHANGE_ME___"
 
-# Load environment variables from passwords.env file
-# This must happen before any config classes are instantiated
-_PROJECT_ROOT = Path(__file__).resolve().parents[3]
-_PASSWORDS_ENV_PATH = _PROJECT_ROOT / "passwords.env"
-if _PASSWORDS_ENV_PATH.exists():
-    load_dotenv(_PASSWORDS_ENV_PATH)
+# Note: passwords.env support (env-based auth) is deprecated and has been
+# removed from automatic loading. Operator-managed secrets should be provided
+# directly as environment variables or via the auth database.
 
 
 class BaseConfig:
@@ -82,10 +79,6 @@ class BaseConfig:
         os.getenv("ALLOW_PUBLIC_TEMP_AUDIO", "false").lower() == "true"
     )
 
-    # Auth backend: 'env' (legacy passwords.env) or 'db' (database users)
-    # Security/production default: prefer database-backed auth. Dev config may
-    # override this to 'env' for convenience/testing.
-    AUTH_BACKEND = os.getenv("AUTH_BACKEND", "db").lower()
 
     # Auth DB (used only when AUTH_BACKEND=db) - DSN or fallback to sqlite file
     AUTH_DATABASE_URL = os.getenv(
@@ -98,6 +91,10 @@ class BaseConfig:
     AUTH_ARGON2_TIME_COST = int(os.getenv("AUTH_ARGON2_TIME_COST", "2"))
     AUTH_ARGON2_MEMORY_COST = int(os.getenv("AUTH_ARGON2_MEMORY_COST", "102400"))
     AUTH_ARGON2_PARALLELISM = int(os.getenv("AUTH_ARGON2_PARALLELISM", "4"))
+
+    # Account deletion/anonymization retention (days)
+    # Users marked as deleted will be anonymized after this many days.
+    AUTH_ACCOUNT_ANONYMIZE_AFTER_DAYS = int(os.getenv("AUTH_ACCOUNT_ANONYMIZE_AFTER_DAYS", "30"))
 
     # Debug
     DEBUG = False
@@ -115,9 +112,6 @@ class DevConfig(BaseConfig):
     # Template auto-reload for development
     TEMPLATES_AUTO_RELOAD = True
     SEND_FILE_MAX_AGE_DEFAULT = 0
-    # In development, allow the legacy env-file based auth to be enabled by default
-    # so local dev can continue to use passwords.env and *_PASSWORD_HASH vars.
-    AUTH_BACKEND = os.getenv("AUTH_BACKEND", "env").lower()
 
 
 CONFIG_MAPPING = {
@@ -132,12 +126,8 @@ def load_config(app, env_name: str | None) -> None:
     config_obj = CONFIG_MAPPING.get(env, BaseConfig)
     app.config.from_object(config_obj)
 
-    # Safety: in production we expect DB-backed auth. Log a warning if env-based
-    # auth is used in a non-dev environment to make this visible in logs.
-    if env not in ("development",) and app.config.get("AUTH_BACKEND", "db") == "env":
-        app.logger.warning(
-            "AUTH_BACKEND is set to 'env' in a non-development environment — this is deprecated and insecure for staging/production. Set AUTH_BACKEND=db and migrate to DB-backed auth."
-        )
+    # We now assume the auth system is DB-backed. Legacy env-based auth (passwords.env)
+    # support is deprecated and not automatically enabled by configuration.
 
     if app.config["SECRET_KEY"] == DEFAULT_SECRET_SENTINEL:
         raise RuntimeError(

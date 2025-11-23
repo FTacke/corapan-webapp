@@ -1,27 +1,31 @@
-<!doctype html>
-<html>
-  <head>
-    <meta charset="utf-8">
-    <title>Delete Account</title>
-  </head>
-  <body>
-    <h1>Account löschen</h1>
-    <p>Das Löschen ist irreversibel. Bitte geben Sie Ihr Passwort ein, um zu bestätigen.</p>
-    <form id="del">
-      <label for="pw">Passwort</label>
-      <input id="pw" type="password" />
-      <button type="submit">Löschen</button>
-    </form>
-    <div id="status"></div>
-    <script>
-      document.getElementById('del').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const password = document.getElementById('pw').value;
-        const r = await fetch('/auth/account/delete', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({password})});
-        const j = await r.json();
-        document.getElementById('status').textContent = r.status === 202 ? 'Löschanfrage akzeptiert' : JSON.stringify(j);
-        if (r.status === 202) window.location = '/';
-      });
-    </script>
-  </body>
-</html>
+{% extends "base.html" %}
+
+{% block title %}Account löschen — CO.RA.PAN{% endblock %}
+
+{% block content %}
+<div class="md3-page">
+  <div class="md3-page__content">
+    <div class="md3-card card-elevated md3-account-card">
+      <header class="md3-card__header">
+        <h2 class="md3-title-medium">Account löschen</h2>
+        <p class="md3-body-small">Dies ist eine irreversible Aktion</p>
+      </header>
+      <div class="md3-card__content">
+        <p>Das Löschen ist irreversibel. Bitte geben Sie Ihr Passwort ein, um zu bestätigen.</p>
+        <form id="del" class="md3-form" novalidate>
+          <div class="md3-text-field">
+            <input id="pw" name="password" type="password" class="md3-text-field__input" required aria-label="Passwort" />
+            <label class="md3-text-field__label" for="pw">Passwort</label>
+          </div>
+          <div class="md3-actions">
+            <button type="submit" class="md3-button md3-button--outlined md3-button--danger">Löschen</button>
+          </div>
+        </form>
+        <div id="status"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="{{ url_for('static', filename='js/auth/account_delete.js') }}" defer></script>
+{% endblock %}

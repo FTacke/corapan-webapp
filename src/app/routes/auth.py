@@ -120,13 +120,8 @@ def check_session() -> Response:
     return resp, 200
 
 
-@dataclass(slots=True)
-class Credential:
-    role: Role
-    password_hash: str
-
-
-CREDENTIALS: dict[str, Credential] = {}
+# Environment-based credential hydration has been removed. All auth flows
+# use the DB-backed implementation provided by src.app.auth.services.
 
 
 def _safe_next(raw: str | None) -> str | None:
@@ -296,74 +291,53 @@ def login_post() -> Response:
         )
     next_url = _safe_next(next_raw)
 
-    # Decide behavior based on feature flag
-    if current_app.config.get("AUTH_BACKEND", "env") == "db":
-        # DB-backed flow (JSON or form)
-        identifier = username
-        # support JSON body as well
-        if request.is_json:
-            payload = request.get_json()
-            identifier = (payload.get("username") or payload.get("email") or "").strip().lower()
-            password = payload.get("password", "")
+    # Resolve identifier and support JSON payloads
+    identifier = username
+    if request.is_json:
+        payload = request.get_json()
+        identifier = (payload.get("username") or payload.get("email") or "").strip().lower()
+        password = payload.get("password", "")
 
-        if not identifier:
-            current_app.logger.warning(f"Failed login attempt - missing identifier from {request.remote_addr}")
-            flash("Unknown account.", "error")
-            return render_template("auth/_login_sheet.html", next=next_url or ""), 400
+    if not identifier:
+        current_app.logger.warning(f"Failed login attempt - missing identifier from {request.remote_addr}")
+        flash("Unknown account.", "error")
+        return render_template("auth/_login_sheet.html", next=next_url or ""), 400
 
-        user = auth_services.find_user_by_username_or_email(identifier)
-        if not user:
-            current_app.logger.warning(f"Failed login attempt - unknown user: {identifier} from {request.remote_addr}")
-            flash("Unknown account.", "error")
-            return render_template("auth/_login_sheet.html", next=next_url or ""), 400
+    user = auth_services.find_user_by_username_or_email(identifier)
+    if not user:
+        current_app.logger.warning(f"Failed login attempt - unknown user: {identifier} from {request.remote_addr}")
+        flash("Unknown account.", "error")
+        return render_template("auth/_login_sheet.html", next=next_url or ""), 400
 
-        # check account status
-        status = auth_services.check_account_status(user)
-        if not status.ok:
-            current_app.logger.warning(f"Login blocked for {identifier}: {status.code}")
-            return jsonify({"error": status.code}), 403
+    # check account status and password
+    status = auth_services.check_account_status(user)
+    if not status.ok:
+        current_app.logger.warning(f"Login blocked for {identifier}: {status.code}")
+        return jsonify({"error": status.code}), 403
 
-        if not auth_services.verify_password(password, user.password_hash):
-            auth_services.on_failed_login(user)
-            try:
-                auth_login_failure.increment()
-            except Exception:
-                current_app.logger.debug("Failed to increment auth_login_failure metric")
-            current_app.logger.warning(f"Failed login attempt - wrong password: {identifier} from {request.remote_addr}")
-            flash("Invalid credentials.", "error")
-            return render_template("auth/_login_sheet.html", next=next_url or ""), 400
-
-        # Success: create tokens
+    if not auth_services.verify_password(password, user.password_hash):
+        auth_services.on_failed_login(user)
         try:
-            auth_login_success.increment()
+            auth_login_failure.increment()
         except Exception:
-            current_app.logger.debug("Failed to increment auth_login_success metric")
-        auth_services.on_successful_login(user)
-        access_token = auth_services.create_access_token_for_user(user)
-        raw_refresh, _ = auth_services.create_refresh_token_for_user(user, user_agent=request.headers.get("User-Agent"), ip_address=request.remote_addr)
+            current_app.logger.debug("Failed to increment auth_login_failure metric")
+        current_app.logger.warning(f"Failed login attempt - wrong password: {identifier} from {request.remote_addr}")
+        flash("Invalid credentials.", "error")
+        return render_template("auth/_login_sheet.html", next=next_url or ""), 400
 
-        # Set cookies + response
-        target = next_url or url_for("public.landing_page")
-        if request.headers.get("HX-Request"):
-            response = make_response("", 204)
-            response.headers["HX-Redirect"] = target
-            set_access_cookies(response, access_token)
-            # set refresh cookie (HttpOnly manual)
-            response.set_cookie(
-                "refreshToken",
-                raw_refresh,
-                max_age=int(current_app.config.get("REFRESH_TOKEN_EXP", 2592000)),
-                httponly=True,
-                secure=current_app.config.get("JWT_COOKIE_SECURE", True),
-                samesite=current_app.config.get("JWT_COOKIE_SAMESITE", "Lax"),
-                path="/auth/refresh",
-            )
-            response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate"
-            response.headers["Pragma"] = "no-cache"
-            current_app.logger.info(f"Successful login (DB, HTMX): {identifier} from {request.remote_addr} -> {target}")
-            return response
+    # Success: create tokens and set cookies
+    try:
+        auth_login_success.increment()
+    except Exception:
+        current_app.logger.debug("Failed to increment auth_login_success metric")
+    auth_services.on_successful_login(user)
+    access_token = auth_services.create_access_token_for_user(user)
+    raw_refresh, _ = auth_services.create_refresh_token_for_user(user, user_agent=request.headers.get("User-Agent"), ip_address=request.remote_addr)
 
-        response = make_response(redirect(target, 303))
+    target = next_url or url_for("public.landing_page")
+    if request.headers.get("HX-Request"):
+        response = make_response("", 204)
+        response.headers["HX-Redirect"] = target
         set_access_cookies(response, access_token)
         response.set_cookie(
             "refreshToken",
@@ -376,71 +350,34 @@ def login_post() -> Response:
         )
         response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate"
         response.headers["Pragma"] = "no-cache"
-        current_app.logger.info(f"Successful login (DB): {identifier} from {request.remote_addr} -> {target}")
+        current_app.logger.info(f"Successful login (DB, HTMX): {identifier} from {request.remote_addr} -> {target}")
         return response
 
-    # Validierung: Username existiert?
-    if not username or username not in CREDENTIALS:
-        current_app.logger.warning(
-            f"Failed login attempt - unknown user: {username} from {request.remote_addr}"
-        )
-        flash("Unknown account.", "error")
-        # Return sheet with error
-        return render_template("auth/_login_sheet.html", next=next_url or ""), 400
-
-    # Validierung: Password korrekt?
-    credential = CREDENTIALS[username]
-    if not check_password_hash(credential.password_hash, password):
-        current_app.logger.warning(
-            f"Failed login attempt - wrong password: {username} from {request.remote_addr}"
-        )
-        flash("Invalid credentials.", "error")
-        # Return sheet with error
-        return render_template("auth/_login_sheet.html", next=next_url or ""), 400
-
-    # Erfolgreich: Tokens erstellen
-    access_token = issue_token(username, credential.role)
-    # legacy env-based refresh token
-    refresh_token = create_refresh_token(
-        identity=username, additional_claims={"role": credential.role.value}
-    )
-
-    counter_access.increment(username, credential.role.value)
-
-    # Redirect target
-    target = next_url or url_for("public.landing_page")
-
-    # HTMX request: Header-based redirect (no HTML body)
-    if request.headers.get("HX-Request"):
-        response = make_response("", 204)
-        response.headers["HX-Redirect"] = target
-        set_access_cookies(response, access_token)
-        set_refresh_cookies(response, refresh_token)
-        response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate"
-        response.headers["Pragma"] = "no-cache"
-        current_app.logger.info(
-            f"Successful login (HTMX): {username} from {request.remote_addr} -> {target}"
-        )
-        return response
-
-    # Full-page request: Standard 303 redirect
     response = make_response(redirect(target, 303))
     set_access_cookies(response, access_token)
-    set_refresh_cookies(response, refresh_token)
+    response.set_cookie(
+        "refreshToken",
+        raw_refresh,
+        max_age=int(current_app.config.get("REFRESH_TOKEN_EXP", 2592000)),
+        httponly=True,
+        secure=current_app.config.get("JWT_COOKIE_SECURE", True),
+        samesite=current_app.config.get("JWT_COOKIE_SAMESITE", "Lax"),
+        path="/auth/refresh",
+    )
     response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate"
     response.headers["Pragma"] = "no-cache"
-    current_app.logger.info(
-        f"Successful login: {username} from {request.remote_addr} -> {target}"
-    )
+    current_app.logger.info(f"Successful login (DB): {identifier} from {request.remote_addr} -> {target}")
     return response
+
+    # Legacy env-based login support was removed. The route above already
+    # performs DB-backed login and returns; any env-based auth branch was
+    # intentionally removed to make DB the canonical backend.
 
 
 @blueprint.post("/change-password")
 @jwt_required()
 def change_password() -> Response:
-    backend = current_app.config.get("AUTH_BACKEND", "env")
-    if backend != "db":
-        return jsonify({"error": "unsupported_on_env_backend"}), 501
+    # DB-backed auth is the only supported implementation in this branch.
 
     data = request.get_json() or request.form or {}
     old_pass = data.get("oldPassword")
@@ -471,14 +408,11 @@ def change_password() -> Response:
 @blueprint.post("/reset-password/request")
 @limiter.limit("5 per minute")
 def reset_password_request() -> Response:
-    backend = current_app.config.get("AUTH_BACKEND", "env")
+    # DB-backed flow only
     data = request.get_json() or request.form or {}
     identifier = (data.get("email") or data.get("username") or "").strip().lower()
 
-    # Always respond 200 to avoid enumeration
-    if backend != "db":
-        current_app.logger.info("Password reset requested (env backend) for %s", identifier)
-        return jsonify({"ok": True}), 200
+    # Always respond 200 to avoid enumeration; DB-backed flow below
 
     user = auth_services.find_user_by_username_or_email(identifier)
     if not user:
@@ -495,12 +429,9 @@ def reset_password_request() -> Response:
 
 @blueprint.post("/reset-password/confirm")
 def reset_password_confirm() -> Response:
-    backend = current_app.config.get("AUTH_BACKEND", "env")
     data = request.get_json() or {}
     token = data.get("resetToken")
     new_password = data.get("newPassword")
-    if backend != "db":
-        return jsonify({"error": "unsupported_on_env_backend"}), 501
     if not token or not new_password:
         return jsonify({"error": "missing_parameters"}), 400
 
@@ -521,9 +452,7 @@ def reset_password_confirm() -> Response:
 @blueprint.get("/account/profile")
 @jwt_required()
 def account_profile_get() -> Response:
-    backend = current_app.config.get("AUTH_BACKEND", "env")
-    if backend != "db":
-        return jsonify({"error": "unsupported_on_env_backend"}), 501
+    # DB-backed flow only
 
     identity = get_jwt_identity()
     user = auth_services.get_user_by_id(identity) or auth_services.find_user_by_username_or_email(identity)
@@ -546,9 +475,7 @@ def account_profile_get() -> Response:
 @blueprint.patch("/account/profile")
 @jwt_required()
 def account_profile_patch() -> Response:
-    backend = current_app.config.get("AUTH_BACKEND", "env")
-    if backend != "db":
-        return jsonify({"error": "unsupported_on_env_backend"}), 501
+    # DB-backed flow only
 
     identity = get_jwt_identity()
     user = auth_services.get_user_by_id(identity) or auth_services.find_user_by_username_or_email(identity)
@@ -567,9 +494,7 @@ def account_profile_patch() -> Response:
 @blueprint.post("/account/delete")
 @jwt_required()
 def account_delete() -> Response:
-    backend = current_app.config.get("AUTH_BACKEND", "env")
-    if backend != "db":
-        return jsonify({"error": "unsupported_on_env_backend"}), 501
+    # DB-backed flow only
 
     data = request.get_json() or {}
     password = data.get("password")
@@ -593,9 +518,7 @@ def account_delete() -> Response:
 @blueprint.get("/account/data-export")
 @jwt_required()
 def account_data_export() -> Response:
-    backend = current_app.config.get("AUTH_BACKEND", "env")
-    if backend != "db":
-        return jsonify({"error": "unsupported_on_env_backend"}), 501
+    # DB-backed flow only
 
     identity = get_jwt_identity()
     user = auth_services.get_user_by_id(identity) or auth_services.find_user_by_username_or_email(identity)
@@ -708,18 +631,15 @@ def logout_any() -> Response:
 
     # Clear JWT cookies or revoke DB refresh token
     response = make_response(redirect(redirect_to, 303))
-    if current_app.config.get("AUTH_BACKEND", "env") == "db":
-        # Revoke refresh token if present
-        raw = request.cookies.get("refreshToken")
-        if raw:
-            try:
-                auth_services.revoke_refresh_token_by_raw(raw)
-            except Exception:
-                current_app.logger.exception("Failed to revoke refresh token during logout")
-        # Clear refresh cookie manually
-        response.delete_cookie("refreshToken", path="/auth/refresh")
-    else:
-        unset_jwt_cookies(response)
+    # Revoke refresh token if present (DB-backed)
+    raw = request.cookies.get("refreshToken")
+    if raw:
+        try:
+            auth_services.revoke_refresh_token_by_raw(raw)
+        except Exception:
+            current_app.logger.exception("Failed to revoke refresh token during logout")
+    # Clear refresh cookie manually
+    response.delete_cookie("refreshToken", path="/auth/refresh")
 
     # Force browser to reload page after redirect
     response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
@@ -741,29 +661,7 @@ def refresh() -> Response:
     Called automatically by frontend when access token expires.
     No user interaction required.
     """
-    backend = current_app.config.get("AUTH_BACKEND", "env")
-
-    if backend == "env":
-        # legacy behavior: check JWT refresh token (flask_jwt_extended)
-        try:
-            verify_jwt_in_request(refresh=True)
-        except Exception:
-            return jsonify({"error": "refresh_token_invalid"}), 401
-
-        current_user = get_jwt_identity()
-        current_role_value = get_jwt().get("role")
-        try:
-            role = Role(current_role_value) if current_role_value else None
-            if not role:
-                return jsonify({"error": "Invalid role"}), 401
-        except ValueError:
-            return jsonify({"error": "Invalid role"}), 401
-
-        new_access_token = issue_token(current_user, role)
-        response = jsonify({"msg": "Token refreshed successfully"})
-        set_access_cookies(response, new_access_token)
-        current_app.logger.info(f"Token refreshed for user: {current_user} (env)")
-        return response
+    # DB-backed flow: opaque refresh tokens in cookie and rotation
 
     # DB-backed flow: opaque refresh tokens in cookie and rotation
     raw = request.cookies.get("refreshToken")

@@ -11,6 +11,12 @@
  */
 
 (() => {
+  // Remove the `no-js` class immediately when JS executes (moved from base.html)
+  try {
+    document.documentElement.classList.remove('no-js');
+  } catch (e) {
+    /* ignore */
+  }
   const KEY = "site-theme"; // localStorage-Schlüssel
   const root = document.documentElement;
   const mm = window.matchMedia("(prefers-color-scheme: dark)");
@@ -35,6 +41,22 @@
   // Initial setup
   setSysFlag();
   apply(load());
+
+  // Attach load handlers to stylesheets that were deferred via data-async-onload
+  try {
+    document.querySelectorAll('link[data-async-onload]').forEach((lnk) => {
+      lnk.addEventListener('load', function () {
+        try {
+          this.media = 'all';
+        } catch (e) {
+          /* ignore */
+        }
+        this.removeAttribute('data-async-onload');
+      });
+    });
+  } catch (e) {
+    // defensive
+  }
 
   // System-Präferenz-Änderungen live verfolgen
   mm.addEventListener("change", () => {

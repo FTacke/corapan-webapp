@@ -11,7 +11,6 @@ from src.app.auth.models import Base, User, RefreshToken
 @pytest.fixture
 def client():
     app = Flask(__name__)
-    app.config["AUTH_BACKEND"] = "db"
     app.config["AUTH_DATABASE_URL"] = "sqlite:///:memory:"
     app.config["AUTH_HASH_ALGO"] = "bcrypt"
     app.config["JWT_SECRET_KEY"] = "test-secret"
@@ -74,3 +73,35 @@ def test_anonymize_user_flow(client):
         assert row.display_name is None
         assert row.last_login_at is None
         assert not row.is_active
+
+
+def test_anonymize_job_respects_retention(client):
+    """Ensure anonymization job only anonymizes users deleted older than retention."""
+    from src.app.auth import services
+    from datetime import timedelta
+    # Create two users
+    u_old = create_test_user("olduser")
+    u_recent = create_test_user("recentuser")
+
+    # mark both deleted
+    services.mark_user_deleted(str(u_old.id))
+    services.mark_user_deleted(str(u_recent.id))
+
+    # Manually set deleted_at for u_old to be older than retention
+    from src.app.extensions.sqlalchemy_ext import get_session
+    from datetime import datetime, timezone
+
+    with get_session() as session:
+        u = session.query(User).filter(User.id == u_old.id).first()
+        u.deleted_at = datetime.now(timezone.utc) - timedelta(days=31)
+
+    # Run anonymize for >30 days
+    count = services.anonymize_soft_deleted_users_older_than(30)
+    assert count >= 1
+
+    # Check u_old was anonymized and u_recent remains
+    with get_session() as session:
+        row_old = session.query(User).filter(User.id == u_old.id).first()
+        row_new = session.query(User).filter(User.id == u_recent.id).first()
+        assert row_old.username.startswith("deleted-")
+        assert row_new.username == "recentuser"

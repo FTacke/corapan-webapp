@@ -83,7 +83,7 @@ Die Implementierung muss APIs und Frontend-Komponenten bereitstellen, die die Au
   - API: `POST /account/delete` — erzeugt Soft-Delete (`deletion_requested_at`, `deleted_at` optionally on timeout) and führt folgende Schritte aus:
     - Revoke all refresh tokens for user
     - Remove PII from active tables only at anonymization time, keep audit footprints as needed
-    - Queue background job to perform irreversible anonymization after configurable retention (e.g., 30 days)
+    - Queue background job to perform irreversible anonymization after configurable retention (e.g., 30 days). Implemented: a CLI/script is now available (flask auth-anonymize and scripts/anonymize_old_users.py) and a default retention of 30 days is configured via AUTH_ACCOUNT_ANONYMIZE_AFTER_DAYS.
   - Endpoint requires re-auth (fresh access token) to prevent abuse.
 
 - Recht auf Datenportabilität (Art. 20):
@@ -244,7 +244,7 @@ CREATE TABLE IF NOT EXISTS reset_tokens (
 
 6) Nach der Migration
 
- - Schalte die Feature-Flag `AUTH_BACKEND=db` in Staging on, teste Verfügbarkeit, erst dann in Prod.
+-- Note: The AUTH_BACKEND feature-flag and env-based auth were removed in this release. The application now assumes DB-backed auth and does not auto-load passwords.env. Legacy guidance remains for manual rollback scenarios only.
  - Entferne `passwords.env`-abhängige Pfade erst wenn alle Backups, Migrationsergebnisse und Tests bestätigt wurden.
 
 ---
@@ -712,13 +712,13 @@ Taktisches Migrations-Plan (zahme Reihenfolge):
 
 ### 4. Update codebase: Begin optional parallel path
 - Add new `src/app/auth` code (controllers, models, services, routes, middleware)
-- Keep current `passwords.env` code in place, but add feature flag or config switch (AUTH_BACKEND=env/db) to choose auth backend.
+  - The legacy `passwords.env` code path has been removed from the automatic startup flow. If you require a rollback, keep a manual backup of `passwords.env` and follow the documented rollback steps; the default application configuration is DB-only.
 
 ### 5. Tests
 - Add comprehensive tests for login, refresh, logout, reset, admin endpoints.
 
 ### 6. Cut-over
-- Switch AUTH_BACKEND to 'db' in config (deploy env variable change)
+  - Ensure AUTH_DATABASE_URL points to the auth DB (Postgres or other supported DB). The 'env' backend is no longer part of the app runtime.
 - Remove passwords.env user lookup code a few deploys later after monitoring
 
 ### 7. Cleanup
@@ -1065,10 +1065,9 @@ These jobs provide early warnings when migration SQL or hashing code paths regre
 
 Prepare a staging deployment that uses DB-backed auth and exercises all auth endpoints prior to production cut over. The repo contains the artifacts and test scripts referenced below.
 
-1) Create a staging environment / compose override that sets:
+1) Create a staging environment / compose override that sets the auth DB and secrets (DB-backed auth is the default):
 
 ```text
-AUTH_BACKEND=db
 AUTH_DATABASE_URL=postgresql://postgres:postgres@postgres:5432/postgres
 JWT_SECRET=<secure secret (from CI secrets)>
 AUTH_HASH_ALGO=argon2
@@ -1079,7 +1078,7 @@ JWT_COOKIE_SECURE=true
 
 ```powershell
 # from project root (windows shell example)
-$env:AUTH_BACKEND='db'; $env:AUTH_DATABASE_URL='postgresql://postgres:postgres@db:5432/postgres'; docker compose -f docker-compose.yml up -d --build
+$env:AUTH_DATABASE_URL='postgresql://postgres:postgres@db:5432/postgres'; docker compose -f docker-compose.yml up -d --build
 ```
 
 3) Smoke-tests (manual/automated): run the following checks after deployment (automatable in CI/CD):
@@ -1133,7 +1132,7 @@ Rollback plan (only if critical issues discovered):
 
 - Immediate rollback condition: evidence of mass token reuse attacks or inability to authenticate existing users at scale.
 - Steps to rollback:
-  1. Revert environment var `AUTH_BACKEND` to `env` (note: this only works if `passwords.env` is still available on the host). This will re-enable legacy env-based auth as a quick fallback.
+  1. NOTE: the runtime feature-flag `AUTH_BACKEND` has been removed. Re-enabling env-based auth requires custom manual steps (keeping `passwords.env` and restoring older code branches) and is not supported by default.
   2. Re-deploy the previous application image or configuration with the env-backend enabled.
   3. Investigate logs/metrics produced during the failed rollout and plan a corrective deployment.
 
@@ -1145,7 +1144,7 @@ NOTE: Reverting to `env` requires `passwords.env` to exist; keep a secure copy f
 
 After the rollout is mature (suggest 1–4 weeks of monitoring and validation):
 
-1. Remove the `env` auth branch and any conditional code paths guarded by `AUTH_BACKEND` (raise errors on 'env').
+1. The `env` auth branch and conditional code paths guarded by `AUTH_BACKEND` have been removed from the codebase in this branch; the app is DB-only by design going forward.
 2. Remove `passwords.env` from deploys and any references in Docker compose, ansible, or repo documentation (leave an archival note in docs if required by policy).
 3. Remove the feature-flag (AUTH_BACKEND) from config if you want to reduce complexity and make `db` the only supported backend.
 4. Run full CI and smoke tests (again).

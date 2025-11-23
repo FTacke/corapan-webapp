@@ -15,7 +15,6 @@ from src.app import auth as auth_module
 def client():
     # Minimal app for endpoint testing
     app = Flask(__name__)
-    app.config["AUTH_BACKEND"] = "db"
     app.config["AUTH_DATABASE_URL"] = "sqlite:///:memory:"
     app.config["AUTH_HASH_ALGO"] = "bcrypt"
     app.config["JWT_SECRET_KEY"] = "test-secret"

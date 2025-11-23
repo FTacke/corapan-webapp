@@ -20,35 +20,35 @@
 
 .md3-login-card {
   background: var(--md-sys-color-surface);
-  border-radius: 12px; /* MD3 shape? */
-  padding: 3rem 2rem;
-  box-shadow: var(--md-sys-elevation-2, 0 4px 6px rgba(0, 0, 0, 0.1));
+  border-radius: var(--radius-md);
+  padding: var(--space-12) var(--space-8);
+  box-shadow: var(--elev-2);
   color: var(--md-sys-color-on-surface);
 }
 
 .md3-login-card__header {
   text-align: center;
-  margin-bottom: 2rem;
+  margin-bottom: var(--space-6);
 }
 
 .md3-login-card__title {
-  font-size: 1.75rem; /* MD3 Headline Small? */
-  font-weight: 500;
-  margin: 0 0 0.5rem 0;
+  font-size: var(--md-sys-typescale-headline-small-font-size);
+  font-weight: var(--md-sys-typescale-headline-small-font-weight);
+  margin: 0 0 var(--space-2) 0;
   color: var(--md-sys-color-on-surface);
 }
 
 .md3-login-card__subtitle {
-  font-size: 0.95rem; /* MD3 Body Medium? */
+  font-size: var(--md-sys-typescale-body-medium-font-size);
   color: var(--md-sys-color-on-surface-variant);
   margin: 0;
 }
 
 .md3-login-card__errors {
-  margin-bottom: 1.5rem;
-  padding: 1rem;
+  margin-bottom: var(--space-6);
+  padding: var(--space-4);
   background: var(--md-sys-color-error-container);
-  border-radius: 8px;
+  border-radius: var(--radius-sm);
   border-left: 4px solid var(--md-sys-color-error);
   color: var(--md-sys-color-on-error-container);
 }
@@ -56,9 +56,9 @@
 .error-message {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: var(--space-3);
   color: var(--md-sys-color-on-error-container);
-  font-size: 0.9rem;
+  font-size: var(--md-sys-typescale-body-small-font-size);
   margin: 0;
 }
 
@@ -71,8 +71,8 @@
 .md3-login-card__form {
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
-  margin-bottom: 2rem;
+  gap: var(--space-6);
+  margin-bottom: var(--space-8);
 }
 
 /* Text Field Styles - reusing MD3 structure if possible, or styling these classes */
@@ -83,17 +83,17 @@
 }
 
 .md3-text-field__label {
-  font-size: 0.875rem;
-  font-weight: 500;
+  font-size: var(--md-sys-typescale-label-medium-font-size);
+  font-weight: var(--md-sys-typescale-label-medium-font-weight);
   color: var(--md-sys-color-on-surface-variant);
-  margin-bottom: 0.5rem;
+  margin-bottom: var(--space-2);
 }
 
 .md3-text-field__input {
-  padding: 0.75rem;
+  padding: var(--space-3);
   border: 1px solid var(--md-sys-color-outline);
-  border-radius: 4px;
-  font-size: 1rem;
+  border-radius: var(--radius-sm);
+  font-size: var(--md-sys-typescale-body-large-font-size);
   font-family: inherit;
   transition: border-color 0.2s;
   background: var(--md-sys-color-surface);
@@ -107,18 +107,18 @@
 }
 
 .md3-button {
-  padding: 0.75rem 1.5rem;
-  font-size: 1rem;
-  font-weight: 500;
+  padding: var(--space-3) var(--space-6);
+  font-size: var(--md-sys-typescale-body-large-font-size);
+  font-weight: var(--md-sys-typescale-base-font-weight-medium);
   border: none;
-  border-radius: 20px; /* MD3 pill shape */
+  border-radius: 9999px; /* MD3 pill shape */
   cursor: pointer;
   transition: all 0.2s;
   font-family: inherit;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 0.5rem;
+  gap: var(--space-2);
 }
 
 .md3-button--contained {

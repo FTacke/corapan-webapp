@@ -365,7 +365,8 @@ export class BookmarkManager {
       return;
     }
 
-    let html = "<ul>";
+    // Render using real DOM nodes (avoid inline event attributes for CSP)
+    const ul = document.createElement('ul');
 
     sorted.forEach((bookmark) => {
       const segmentIndex = bookmark.segment_index;
@@ -384,26 +385,51 @@ export class BookmarkManager {
       const time = (segment.words?.[0]?.start_ms || 0) / 1000;
       const timeStr = this._formatTime(time);
 
-      html += `
-        <li onclick="window.bookmarkManager?.jumpToSegment(${segmentIndex})">
-          <div class="md3-editor-bookmark-header">
-            <span class="md3-editor-bookmark-time">${speakerCode} ${timeStr}</span>
-            <button 
-              class="md3-editor-bookmark-remove-btn" 
-              onclick="event.stopPropagation(); window.bookmarkManager?.removeBookmark(${segmentIndex})"
-              title="Bookmark entfernen"
-            >
-              <i class="bi bi-x"></i>
-            </button>
-          </div>
-          <div class="md3-editor-bookmark-text">${preview}</div>
-          ${bookmark.note ? `<div style="font-size: 0.6875rem; color: var(--md-sys-color-tertiary); font-style: italic; margin-top: var(--space-1);">Note: ${bookmark.note}</div>` : ""}
-        </li>
-      `;
+      const li = document.createElement('li');
+      li.className = 'md3-editor-bookmark-item';
+
+      // click on list item jumps to segment
+      li.addEventListener('click', () => this.jumpToSegment(segmentIndex));
+
+      const header = document.createElement('div');
+      header.className = 'md3-editor-bookmark-header';
+
+      const timeSpan = document.createElement('span');
+      timeSpan.className = 'md3-editor-bookmark-time';
+      timeSpan.textContent = `${speakerCode} ${timeStr}`;
+
+      const removeBtn = document.createElement('button');
+      removeBtn.className = 'md3-editor-bookmark-remove-btn';
+      removeBtn.title = 'Bookmark entfernen';
+      removeBtn.innerHTML = '<i class="bi bi-x"></i>';
+      removeBtn.addEventListener('click', (ev) => {
+        ev.stopPropagation();
+        this.removeBookmark(segmentIndex);
+      });
+
+      header.appendChild(timeSpan);
+      header.appendChild(removeBtn);
+
+      const textDiv = document.createElement('div');
+      textDiv.className = 'md3-editor-bookmark-text';
+      textDiv.textContent = preview;
+
+      li.appendChild(header);
+      li.appendChild(textDiv);
+
+      if (bookmark.note) {
+        const noteEl = document.createElement('div');
+        noteEl.className = 'md3-editor-bookmark-note';
+        noteEl.textContent = `Note: ${bookmark.note}`;
+        li.appendChild(noteEl);
+      }
+
+      ul.appendChild(li);
     });
 
-    html += "</ul>";
-    this.bookmarkList.innerHTML = html;
+    // replace contents
+    this.bookmarkList.innerHTML = '';
+    this.bookmarkList.appendChild(ul);
 
     // Update visual indicators in transcript
     this._updateBookmarkIndicators();

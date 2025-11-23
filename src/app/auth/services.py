@@ -257,6 +257,22 @@ def anonymize_user(user_id: str) -> None:
         session.query(ResetToken).filter(ResetToken.user_id == user_id).update({ResetToken.used_at: datetime.now(timezone.utc)})
 
 
+def anonymize_soft_deleted_users_older_than(days: int) -> int:
+    """Anonymize all users that were soft-deleted at least `days` days ago.
+
+    Returns the number of users anonymized.
+    """
+    cutoff = datetime.now(timezone.utc) - timedelta(days=int(days))
+    anonymized = 0
+    with get_session() as session:
+        stmt = select(User).where(User.deleted_at != None, User.deleted_at <= cutoff)
+        rows = session.execute(stmt).scalars().all()
+        for u in rows:
+            anonymize_user(str(u.id))
+            anonymized += 1
+    return anonymized
+
+
 # Account check
 def check_account_status(user: User) -> AccountStatus:
     now = datetime.now(timezone.utc)

@@ -77,9 +77,12 @@
               <div class="md3-user-menu__divider" role="separator"></div>
             {% endif %}
             {# Logout via GET (no CSRF, idempotent) #}
-            <a href="{{ url_for('auth.logout_any') }}" 
-               class="md3-user-menu__item" 
-               role="menuitem">
+            <a href="{{ url_for('auth.logout_any') }}"
+              data-logout="fetch"
+              data-logout-method="POST"
+              data-logout-url="{{ url_for('auth.logout_any') }}"
+              class="md3-user-menu__item md3-user-menu__item--logout"
+              role="menuitem">
               <span class="material-symbols-rounded md3-user-menu__icon">logout</span>
               <span class="md3-user-menu__label">Cerrar sesión</span>
             </a>

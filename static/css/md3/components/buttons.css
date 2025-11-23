@@ -29,6 +29,45 @@
   min-height: 48px;
 }
 
+/* Compatibility aliases (legacy class names used in templates)
+   These keep older templates working while the canonical names are used
+   across the codebase. They rely on the tokenized implementations above.
+*/
+.md3-button--contained { /* legacy alias -> filled */
+  /* mirror the filled button behavior */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-6);
+  border-radius: 9999px;
+  border: none;
+  background: var(--md-sys-color-primary);
+  color: var(--md-sys-color-on-primary);
+  font-size: var(--md-sys-typescale-label-large-font-size);
+  font-weight: var(--md-sys-typescale-label-large-font-weight);
+  line-height: var(--md-sys-typescale-label-large-line-height);
+  letter-spacing: var(--md-sys-typescale-label-large-letter-spacing);
+  text-decoration: none;
+  cursor: pointer;
+  transition: background-color 200ms ease;
+  min-height: 48px;
+}
+
+/* destructive alias used by some templates for 'danger' style */
+.md3-destructive, .md3-button--destructive {
+  background: var(--md-sys-color-error);
+  color: var(--md-sys-color-on-error);
+  border: none;
+  padding: var(--space-3) var(--space-6);
+  border-radius: 9999px;
+  min-height: 48px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+}
+
 .md3-button--filled:hover {
   background-color: color-mix(
     in srgb,
@@ -174,6 +213,18 @@
 .md3-button--danger:focus-visible {
   outline: 2px solid var(--md-sys-color-error);
   outline-offset: 2px;
+}
+
+/* Outlined + Danger variant — low emphasis but error color */
+.md3-button--outlined.md3-button--danger {
+  background: transparent;
+  border-color: var(--md-sys-color-error);
+  color: var(--md-sys-color-error);
+}
+
+.md3-button--outlined.md3-button--danger:hover {
+  background: color-mix(in srgb, var(--md-sys-color-error) 8%, transparent);
+  border-color: color-mix(in srgb, var(--md-sys-color-error) 92%, var(--md-sys-color-outline) 8%);
 }
 
 /* Button Icon */

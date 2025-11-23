@@ -18,7 +18,6 @@ def client():
     static_dir = project_root / "static"
 
     app = Flask(__name__, template_folder=str(template_dir), static_folder=str(static_dir))
-    app.config["AUTH_BACKEND"] = "db"
     app.config["AUTH_DATABASE_URL"] = "sqlite:///:memory:"
     app.config["AUTH_HASH_ALGO"] = "bcrypt"
     app.config["JWT_SECRET_KEY"] = "test-secret"
