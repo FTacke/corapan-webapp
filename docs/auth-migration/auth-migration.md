@@ -247,6 +247,63 @@ CREATE TABLE IF NOT EXISTS reset_tokens (
  - Schalte die Feature-Flag `AUTH_BACKEND=db` in Staging on, teste Verfügbarkeit, erst dann in Prod.
  - Entferne `passwords.env`-abhängige Pfade erst wenn alle Backups, Migrationsergebnisse und Tests bestätigt wurden.
 
+---
+
+## Schritt 1 — Verfügbare Migrationsartefakte (konkret)
+
+Die erste technische Migrationsstufe (Datenbankschema) wurde als ausführbare Artefakte angelegt und im Repository bereitgestellt:
+
+- SQL (Postgres): `migrations/0001_create_auth_schema_postgres.sql`
+- SQL (SQLite): `migrations/0001_create_auth_schema_sqlite.sql`
+- SQLAlchemy ORM models: `src/app/auth/models.py`
+- Local migration helper script (SQLite): `scripts/apply_auth_migration.py`
+- Validation test to run against SQLite: `tests/test_migrations_sqlite.py`
+
+Anwenden (lokal / schneller Test - SQLite):
+
+```powershell
+# from repository root
+python scripts/apply_auth_migration.py --db data/db/auth.db
+# Or to run a dry run in-memory, run the unit test:
+pytest -q tests/test_migrations_sqlite.py
+```
+
+### Down-Migration / Rollback (Beispiel)
+
+Beim Zurückrollen gehen Schemaänderungen und eingefügte Daten verloren. Eine Down-Migration kann in einer Revision so aussehen (Postgres/SQLite kompatible Version):
+
+```sql
+BEGIN;
+DROP TABLE IF EXISTS reset_tokens;
+DROP TABLE IF EXISTS refresh_tokens;
+ALTER TABLE users DROP COLUMN IF EXISTS deletion_requested_at;
+ALTER TABLE users DROP COLUMN IF EXISTS deleted_at;
+ALTER TABLE users DROP COLUMN IF EXISTS locked_until;
+ALTER TABLE users DROP COLUMN IF EXISTS login_failed_count;
+ALTER TABLE users DROP COLUMN IF EXISTS last_login_at;
+ALTER TABLE users DROP COLUMN IF EXISTS valid_from;
+ALTER TABLE users DROP COLUMN IF EXISTS access_expires_at;
+COMMIT;
+```
+
+Wichtig: Vor jeder Down-Migration MUSS ein vollständiges, verschlüsseltes Backup vorhanden sein.
+
+### Versionierung & Deployment-Reihenfolge (Empfehlung)
+
+1) Erzeuge eine Versioned Migration (z. B. Alembic revision) und prüfe SQL in Staging.
+2) Nimm ein vollständiges Backup der Product-DB (verschlüsselt) und dokumentiere Restore-Schritte.
+3) Setze Maintenance-Window, lege DB im Read-Only-Modus (falls möglich) und wende Migration an.
+4) Rolle den Migrations-Commited Code schrittweise aus: Feature-flagged Support für `passwords.env` weiterhin aktiv, neuer DB-Code in Staging testen.
+5) Nach erfolgreichen Tests: switch feature-flag to db auth and monitor for 72h.
+6) Nach Stabilität: schedule removal of old codepaths in subsequent release.
+
+### Kollisions- und Konsistenzprüfungen (Preflight)
+
+- Suche vor Migration in der Ziel-DB nach bestehenden Objekten/tables named `users`, `refresh_tokens`, `reset_tokens`.
+- Prüfe vorhandene Daten auf Duplikate (email/username) – löse Konflikte vor der Migration (deduplicate or map accounts).
+- Überprüfe Indizes und DB-Version (Postgres extension gen_random_uuid). Falls `gen_random_uuid()` nicht verfügbar, verwende `uuid_generate_v4()` oder insert via application UUID generation.
+
+
 
 ---
 
