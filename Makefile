@@ -78,3 +78,58 @@ docs:
 	@echo "Opening documentation at docs/index.md..."
 	@echo "Rendered markdown available in browser (if running live server)"
 	@python -c "import webbrowser; webbrowser.open('file://$(PWD)/docs/index.md')" 2>/dev/null || echo "Manual: open docs/index.md"
+
+
+# Dev convenience targets for auth flows
+.PHONY: dev-sqlite dev-postgres auth-migrate-sqlite auth-seed-e2e auth-create-admin
+
+
+# Run a local sqlite-based dev server with auth DB migration and seed
+dev-sqlite: auth-migrate-sqlite auth-create-admin
+	@echo "Starting Flask dev server (sqlite auth) (http://localhost:8000)..."
+	FLASK_ENV=development python -m src.app.main
+
+
+# Start a development Postgres DB (docker-compose.dev-postgres.yml), apply SQL, create admin
+dev-postgres:
+	@echo "Bringing up dev Postgres (docker-compose.dev-postgres.yml)..."
+	docker compose -f docker-compose.dev-postgres.yml up -d authdb
+	@echo "Waiting for DB to be ready..."
+	# simple wait/check loop
+	python - <<'PY'
+import time, sys, subprocess
+for i in range(20):
+    try:
+        subprocess.check_call(['docker','exec','corapan_auth_db','pg_isready','-U','postgres'], stdout=subprocess.DEVNULL)
+        print('Postgres ready')
+        sys.exit(0)
+    except Exception:
+        time.sleep(1)
+print('DB did not become ready in time', file=sys.stderr)
+sys.exit(1)
+PY
+	@echo "Applying Postgres SQL migration..."
+	docker exec -i corapan_auth_db psql -U postgres -d corapan_auth -f /app/migrations/0001_create_auth_schema_postgres.sql
+	@echo "Creating initial admin..."
+	# ensure the admin can be created — uses env or defaults
+	AUTH_DATABASE_URL=postgresql://postgres:postgres@localhost:55432/corapan_auth START_ADMIN_PASSWORD=admin123 python scripts/create_initial_admin.py
+	@echo "Now start the Flask dev server (you can use make dev or run locally)"
+	@echo "Starting Flask dev server (postgres auth) (http://localhost:8000)..."
+	@echo "If you want to use a custom JWT_SECRET, set it before running this target."
+	AUTH_DATABASE_URL=postgresql://postgres:postgres@localhost:55432/corapan_auth FLASK_ENV=development python -m src.app.main
+
+
+auth-migrate-sqlite:
+	@echo "Migrating sqlite auth DB (data/db/auth.db)..."
+	python scripts/apply_auth_migration.py --db data/db/auth.db
+	@echo "✓ sqlite migration applied"
+
+auth-seed-e2e:
+	@echo "Seeding E2E user in data/db/auth_e2e.db"
+	python scripts/seed_e2e_db.py --db data/db/auth_e2e.db --user e2e_user --password password123
+	@echo "✓ Seeded E2E user"
+
+auth-create-admin:
+	@echo "Creating initial admin user (db default: data/db/auth.db)"
+	python scripts/create_initial_admin.py
+	@echo "✓ Created/updated admin user"

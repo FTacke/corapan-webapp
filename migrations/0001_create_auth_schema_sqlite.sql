@@ -16,6 +16,7 @@ CREATE TABLE IF NOT EXISTS users (
   access_expires_at TIMESTAMP NULL,
   valid_from TIMESTAMP NULL,
   last_login_at TIMESTAMP NULL,
+  display_name TEXT NULL,
   login_failed_count INTEGER NOT NULL DEFAULT 0,
   locked_until TIMESTAMP NULL,
   deleted_at TIMESTAMP NULL,

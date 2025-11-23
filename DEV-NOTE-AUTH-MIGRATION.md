@@ -62,4 +62,6 @@ If you'd like, I can now:
 - Remove the last inline-style occurrences app-wide (search+replace to CSS classes in static/js) so `style-src 'unsafe-inline'` can be fully removed from the docs and any remaining comments.
 - Run a full test suite or CI smoke in a disposable environment.
 
+For local development and quick onboarding, `startme.md` now contains a short 5-minute quickstart for both a SQLite-based and a Postgres (docker) dev flow. If you plan to reuse this repository as a template, `docs/how-to/template-usage.md` summarizes the minimal steps to rebrand and initialize auth in a new project.
+
 If you want me to continue, say which of the remaining items is highest priority next (e.g., global inline style removal, Playwright test hardening, or add a scheduled worker job for anonymization in deployment manifests).

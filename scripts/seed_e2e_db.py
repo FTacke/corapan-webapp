@@ -22,13 +22,18 @@ def main():
     p = Path(args.db)
     p.parent.mkdir(parents=True, exist_ok=True)
 
-    # minimal Flask-like config object for init_engine
-    class C:
-        pass
+    # make src package importable when running from the repository root
+    import sys
 
-    cfg = C()
-    cfg.AUTH_DATABASE_URL = f"sqlite:///{p.as_posix()}"
-    cfg.AUTH_HASH_ALGO = "bcrypt"
+    ROOT = Path(__file__).resolve().parents[1]
+    if str(ROOT) not in sys.path:
+        sys.path.insert(0, str(ROOT))
+
+    # minimal Flask-like config object for init_engine (mapping-like)
+    cfg = {
+        "AUTH_DATABASE_URL": f"sqlite:///{p.as_posix()}"
+    }
+    cfg["AUTH_HASH_ALGO"] = "bcrypt"
 
     # initialize auth engine and create tables
     from src.app.extensions.sqlalchemy_ext import init_engine, get_engine, get_session
@@ -38,6 +43,7 @@ def main():
     # use a tiny fake app container since init_engine expects an app with config
     class AppLike:
         def __init__(self, cfg):
+            # keep mapping-style config for init_engine
             self.config = cfg
 
     app = AppLike(cfg)
@@ -45,26 +51,39 @@ def main():
     engine = get_engine()
     Base.metadata.create_all(bind=engine)
 
-    # seed user (id, username, email, hash, role)
-    import secrets
+    # seed user (id, username, email, hash, role) — we need an app context for hashing
+    from flask import Flask
+    tmp_app = Flask("seed_e2e_db")
+    tmp_app.config.update(cfg)
 
-    with get_session() as session:
-        if session.query(User).filter(User.username == args.user).first():
-            print("User already present — skipping")
-            return
+    def _safe_hash(pw: str) -> str:
+        try:
+            return services.hash_password(pw)
+        except Exception:
+            tmp_app.logger.debug("argon2 missing or error — falling back to bcrypt")
+            tmp_app.config["AUTH_HASH_ALGO"] = "bcrypt"
+            return services.hash_password(pw)
 
-        u = User(
+    with tmp_app.app_context():
+        import secrets
+
+        with get_session() as session:
+            if session.query(User).filter(User.username == args.user).first():
+                print("User already present — skipping")
+                return
+
+            u = User(
             id=str(secrets.token_hex(8)),
             username=args.user,
             email=f"{args.user}@example.org",
-            password_hash=services.hash_password(args.password),
+            password_hash=_safe_hash(args.password),
             role="user",
             is_active=True,
             must_reset_password=False,
             created_at=datetime.now(timezone.utc),
             updated_at=datetime.now(timezone.utc),
         )
-        session.add(u)
+            session.add(u)
 
     print(f"Seeded {args.user} in {p}")
 

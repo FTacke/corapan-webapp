@@ -41,6 +41,10 @@ Diese Anwendung dient als Frontend und API-Layer für das CO.RA.PAN-Projekt. Sie
 
 Authentication: the project migrated to a DB-backed authentication system and now assumes DB-backed auth by default. The legacy `passwords.env` approach is deprecated and no longer automatically loaded by the app; it is kept in `passwords.env.template` for manual rollback scenarios only. See `docs/auth-migration/auth-migration.md` for details and rollout instructions.
 
+## Using this repo as a template
+
+This repository is intentionally structured to act as a template for new projects that need a secure DB-backed authentication system and a small MD3-based UI foundation. For a short checklist and recommended steps when reusing this codebase, see `docs/how-to/template-usage.md` and follow `startme.md` for quick developer onboarding.
+
 ## 4. Voraussetzungen
 
 - **Python:** Version 3.12 oder höher

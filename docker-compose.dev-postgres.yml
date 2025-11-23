@@ -1,0 +1,21 @@
+version: '3.8'
+
+services:
+  authdb:
+    image: postgres:15
+    container_name: corapan_auth_db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: corapan_auth
+    ports:
+      - "55432:5432" # host:container (use 55432 to avoid colliding with local DBs)
+    volumes:
+      - ./data/db/postgres_dev:/var/lib/postgresql/data
+      - ./:/app:ro
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "postgres"]
+      interval: 5s
+      timeout: 2s
+      retries: 20
+    restart: unless-stopped
