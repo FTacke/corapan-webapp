@@ -45,7 +45,7 @@ console.log("[Auth Setup] ✅ Fetch interceptor installed");
 document.addEventListener("turbo:before-fetch-request", (event) => {
   const url = event.detail.fetchOptions.url || "";
 
-  if (url.includes("/auth/login")) {
+  if (url.includes("/auth/login") || url.includes("/login")) {
     // Force full page reload for login (don't use Turbo cache)
     event.detail.fetchOptions.headers = event.detail.fetchOptions.headers || {};
     event.detail.fetchOptions.headers["Turbo-Force-Full-Page-Load"] = "true";
@@ -56,7 +56,7 @@ document.addEventListener("turbo:before-fetch-request", (event) => {
 // Also disable Turbo for form submissions on /auth/login
 document.addEventListener("turbo:submit-start", (event) => {
   const form = event.detail.formSubmission.form;
-  if (form && form.action && form.action.includes("/auth/login")) {
+  if (form && form.action && (form.action.includes("/auth/login") || form.action.includes("/login"))) {
     form.setAttribute("data-turbo", "false");
     console.log("[Auth] Turbo disabled for login form");
   }
@@ -64,7 +64,7 @@ document.addEventListener("turbo:submit-start", (event) => {
 
 // Alternative: Mark login form with data-turbo="false" on page load
 document.addEventListener("turbo:load", () => {
-  const loginForms = document.querySelectorAll('form[action*="/auth/login"]');
+  const loginForms = document.querySelectorAll('form[action*="/auth/login"], form[action*="/login"]');
   loginForms.forEach((form) => {
     form.setAttribute("data-turbo", "false");
     console.log("[Auth] Marked login form with data-turbo=false");
@@ -167,7 +167,7 @@ console.log("[Auth Setup] ✅ Session verification installed");
 document.addEventListener("htmx:afterRequest", function (evt) {
   try {
     const path = evt.detail.requestConfig.path || "";
-    if (path && path.includes("/auth/login")) {
+    if (path && (path.includes("/auth/login") || path.includes("/login"))) {
       // re-check auth state (will pick up new cookies if any)
       verifyAuth();
     }
@@ -180,7 +180,7 @@ document.addEventListener("htmx:afterRequest", function (evt) {
 document.addEventListener("htmx:afterRequest", function (evt) {
   try {
     const path = evt.detail.requestConfig.path || "";
-    if (path && path.includes("/auth/login")) {
+    if (path && (path.includes("/auth/login") || path.includes("/login"))) {
       // re-check auth state (will pick up new cookies if any)
       verifyAuth();
     }

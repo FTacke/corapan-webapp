@@ -2,19 +2,21 @@
 {% from 'partials/page_navigation.html' import page_navigation %}
 {% block page_title %}Quiénes somos · CO.RA.PAN{% endblock %}
 {% block content %}
-<article class="md3-text-page">
-  <section class="md3-hero md3-hero--container md3-hero--with-icon" role="main" aria-label="Quiénes somos">
-    <div class="md3-hero__container">
+<div class="md3-page" role="main" aria-label="Quiénes somos">
+  <header class="md3-page__header">
+    <div class="md3-hero md3-hero--card md3-hero--with-icon md3-hero__container">
       <span class="material-symbols-rounded md3-hero__icon" aria-hidden="true">assignment_globe</span>
       <div class="md3-hero__content">
         <span class="md3-hero__eyebrow">Proyecto</span>
-        <h1 class="md3-hero__title">Quiénes somos</h1>
+        <h1 class="md3-hero__title md3-headline-medium">Quiénes somos</h1>
       </div>
     </div>
-  </section>
+  </header>
 
-  <div class="md3-text-content">
-      <h2 class="md3-title-large md3-text-heading">Créditos</h2>
+  <main class="md3-text-page">
+    <div class="md3-text-content">
+      <section class="md3-text-section">
+      <h2 class="md3-title-large md3-section-title md3-text-heading">Créditos</h2>
       <dl class="md3-text-dl md3-body-medium">
         <div class="md3-text-dl__item">
           <dt class="md3-label-large">Responsable del proyecto y diseño</dt>
@@ -39,7 +41,8 @@
       </dl>
     </section>
   </div>
-</article>
+  </main>
+</div>
 
 {{ page_navigation(prev_title="Estadísticas", prev_url=url_for('public.proyecto_estadisticas'), next_title="Cómo citar", next_url=url_for('public.proyecto_como_citar')) }}
 {% endblock %}

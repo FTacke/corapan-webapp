@@ -1,3 +1,4 @@
+  - `templates/pages/corpus_guia.html` — migration completed (2025-11-24): unified to `md3-page` + `md3-hero--card` + `md3-text-page` (Guía de Búsqueda). Preserved images and interactive elements.
 # MD3-Migrationsplan — CO.RA.PAN (Gold‑Standard)
 
 Ziel: ein konsistentes, dokumentiertes und migrationssicheres MD3‑Designsystem. Tokens bleiben einzige Quelle der Wahrheit; Komponenten, Layouts und Utilities werden kanonisiert und Legacy‑Aliases schrittweise auslaufen.
@@ -110,6 +111,18 @@ Phase 1 — New templates & core only
 Phase 2 — Migrate high‑priority pages
 - Migrate one page per major category while preserving behavior (examples below):
   - Text page: `templates/pages/...` such as `about`, `impressum`
+
+  NOTE: `templates/pages/impressum.html` — migration completed (2025-11-24). The page now uses canonical `md3-page`/`md3-page__section` classes, `md3-stack--*` spacing, and no inline margin/padding or legacy `--md3-*` tokens.
+
+  NOTE: `templates/pages/privacy.html` (Datenschutzerklärung) — migration completed (2025-11-24): now uses `md3-page` + `md3-hero--card` with icon and `md3-text-page` for main content (keeps original content and interactive elements).
+
+  NOTE: Proyecto pages — migration completed (2025-11-24): updated the following templates to the canonical text page preset with a card-hero header + icon while preserving embedded images and interactive elements:
+  - `templates/pages/proyecto_overview.html`
+  - `templates/pages/proyecto_diseno.html`
+  - `templates/pages/proyecto_estadisticas.html`
+  - `templates/pages/proyecto_quienes_somos.html`
+  - `templates/pages/proyecto_como_citar.html`
+  - `templates/pages/proyecto_referencias.html`
   - Form page: `templates/auth/*` and `templates/search/advanced.html`
   - Dashboard: `templates/pages/admin_dashboard.html`
 - For each page update: change markup to canonical classes, update one reference per old alias to include `/* TODO: migrated */`.

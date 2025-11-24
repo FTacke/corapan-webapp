@@ -86,9 +86,7 @@
 
 /* Country Selector Section */
 .md3-stats-country-section {
-  margin-top: var(--space-12);
-  padding-top: var(--space-10);
-  border-top: 0px solid var(--md-sys-color-outline-variant);
+
 }
 
 .md3-stats-country-selector {

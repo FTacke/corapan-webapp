@@ -375,7 +375,8 @@ document.addEventListener("keydown", (event) => {
   }
 });
 
-const userMenuToggle = navbarRoot?.querySelector("[data-user-menu-toggle]");
+// Accept new account trigger selector or legacy user menu toggle
+const userMenuToggle = navbarRoot?.querySelector("[data-account-menu-trigger], [data-user-menu-toggle]");
 const userMenu = navbarRoot?.querySelector("[data-user-menu]");
 let userMenuOpen = false;
 

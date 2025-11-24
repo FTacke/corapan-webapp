@@ -14,6 +14,34 @@
   width: 100%; /* Ensure cards don't overflow container */
 }
 
+/* Canonical md3-card mapping (keeps parity with legacy .card classes) */
+.md3-card {
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+  box-sizing: border-box;
+  width: 100%;
+}
+
+/* Tonal variant (canonical) */
+.md3-card--tonal,
+.md3-card.md3-card--tonal {
+  background: var(--md-sys-color-surface-container);
+  border: none;
+  box-shadow: var(--elev-1);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+}
+
+/* Outlined variant */
+.md3-card--outlined,
+.md3-card.md3-card--outlined {
+  background: var(--md-sys-color-surface-container-low);
+  border: 1px solid var(--md-sys-color-outline-variant);
+  box-shadow: none;
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+}
+
 .card .card-title {
   font-size: var(--md-sys-typescale-title-medium-font-size);
   font-weight: var(--md-sys-typescale-title-medium-font-weight);
@@ -107,13 +135,28 @@
 
 /* md3-card header spacing & title normalization */
 .md3-card__header {
-  padding-top: 0; /* card padding handles spacing */
-  margin: 0 0 var(--space-2) 0;
+  /* Normalize card header spacing to MD3 expectations:
+     - top + sides: ~16px (var(--space-4))
+     - bottom: 0 (title controls vertical rhythm)
+     This plays nicely with .md3-card padding which is also var(--space-4).
+     Having a header wrapper allows consistent spacing whether templates
+     use explicit header blocks or only a title element. */
+  padding: var(--space-4) var(--space-4) 0;
+  margin: 0 0 0 0;
 }
 
+/* Ensure title spacing below the header matches MD3 approx 12px */
+.md3-card__header .md3-title-medium,
+.md3-card__header .card-title,
+.card .card-title,
+.md3-card__header .md3-title-large {
+  margin: 0 0 var(--space-3) 0;
+}
+
+/* Keep previous reset for titles inside header in case some templates rely on it */
 .md3-card__header .md3-title-medium,
 .md3-card__header .card-title {
-  margin: 0; /* remove extra browser margins inside card header */
+  margin-top: 0;
 }
 
 /* Code blocks with tonal styling */

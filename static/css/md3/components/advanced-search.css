@@ -539,7 +539,7 @@ body.token-active #adv-summary {
 }
 
 /* Dialog Base */
-.md3-dialog {
+.md3-dialog--advanced {
   background: var(--md-sys-color-surface);
   border-radius: var(--radius-lg);
   box-shadow: var(--elev-3);
@@ -551,7 +551,7 @@ body.token-active #adv-summary {
   transition: transform 0.2s ease;
 }
 
-.md3-dialog-overlay.active .md3-dialog {
+.md3-dialog-overlay.active .md3-dialog--advanced {
   transform: scale(1);
 }
 

@@ -1103,8 +1103,11 @@ dialog.md3-dialog[open] {
 
 /* Note: Use .md3-dialog-overlay for global overlay/backdrop styling instead of <dialog>::backdrop */
 
-/* Dialog */
-.md3-dialog {
+.nuke-me-keep-compat {
+}
+/* Dialog (editor-specific variant)
+  Use a modifier to avoid overriding global dialog rules. */
+.md3-dialog--editor {
   background: var(--md-sys-color-surface);
   border-radius: var(--radius-lg);
   box-shadow: var(--elev-3);
@@ -1119,18 +1122,18 @@ dialog.md3-dialog[open] {
 /* Ensure dialog content uses surface tokens explicitly so dialogs are
    not rendered in an unexpected 'dark' appearance when page-level themes
    or container contexts change. */
-.md3-dialog,
-.md3-dialog * {
+.md3-dialog--editor,
+.md3-dialog--editor * {
   background: transparent !important; /* inner elements may override */
   color: inherit !important;
 }
 
-.md3-dialog[open] {
+.md3-dialog--editor[open] {
   background: var(--md-sys-color-surface) !important;
   color: var(--md-sys-color-on-surface) !important;
 }
 
-.md3-dialog-overlay.active .md3-dialog {
+.md3-dialog-overlay.active .md3-dialog--editor {
   transform: scale(1);
 }
 

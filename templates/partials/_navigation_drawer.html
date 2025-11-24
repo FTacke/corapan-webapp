@@ -1,6 +1,6 @@
 {# MD3 Navigation Drawer - Modal (Compact/Medium) & Standard (Expanded) #}
-{% set user_name = g.get('user') %}
-{% set user_role = g.get('role') %}
+{% set user_name = g.user %}
+{% set user_role = g.role %}
 {% set is_authenticated = user_name is not none %}
 {% set role_value = user_role.value if user_role else '' %}
 {% set active_endpoint = request.endpoint %}
@@ -146,7 +146,7 @@
           <a href="{{ url_for('auth.admin_users_page') }}" 
              class="md3-navigation-drawer__item">
             <span class="material-symbols-rounded md3-navigation-drawer__icon">group</span>
-            <span class="md3-navigation-drawer__label">Usuarios</span>
+            <span class="md3-navigation-drawer__label">Benutzer</span>
           </a>
         {% endif %}
         
@@ -154,23 +154,21 @@
         <a href="{{ url_for('auth.account_password_page') }}" 
            class="md3-navigation-drawer__item">
           <span class="material-symbols-rounded md3-navigation-drawer__icon">lock_reset</span>
-          <span class="md3-navigation-drawer__label">Contraseña</span>
+          <span class="md3-navigation-drawer__label">Passwort</span>
         </a>
 
         {# Authenticated: Logout Link (GET, no CSRF) #}
         <a href="{{ url_for('auth.logout_any') }}" 
            class="md3-navigation-drawer__item md3-navigation-drawer__item--logout">
           <span class="material-symbols-rounded md3-navigation-drawer__icon">logout</span>
-          <span class="md3-navigation-drawer__label">Cerrar sesión</span>
+          <span class="md3-navigation-drawer__label">Abmelden</span>
         </a>
       {% else %}
-        {# Unauthenticated: Login Button - htmx powered to open sheet #}
-        <a hx-get="{{ url_for('auth.login_sheet', next=request.path) }}"
-           hx-target="body"
-           hx-swap="beforeend"
-           class="md3-navigation-drawer__item">
+          {# Unauthenticated: Login — navigate to canonical page /login #}
+          <a href="{{ url_for('public.login', next=request.path) }}"
+            class="md3-navigation-drawer__item">
           <span class="material-symbols-rounded md3-navigation-drawer__icon">account_circle</span>
-          <span class="md3-navigation-drawer__label">Iniciar sesión</span>
+          <span class="md3-navigation-drawer__label">Anmelden</span>
         </a>
       {% endif %}
     </nav>
@@ -278,7 +276,7 @@
         <a href="{{ url_for('auth.admin_users_page') }}" 
            class="md3-navigation-drawer__item">
           <span class="material-symbols-rounded md3-navigation-drawer__icon">group</span>
-          <span class="md3-navigation-drawer__label">Usuarios</span>
+          <span class="md3-navigation-drawer__label">Benutzer</span>
         </a>
       {% endif %}
       
@@ -286,7 +284,7 @@
       <a href="{{ url_for('auth.account_profile_page') }}" 
          class="md3-navigation-drawer__item">
         <span class="material-symbols-rounded md3-navigation-drawer__icon">account_circle</span>
-        <span class="md3-navigation-drawer__label">Perfil</span>
+        <span class="md3-navigation-drawer__label">Profil</span>
       </a>
 
       {# Authenticated: Logout Link (GET, no CSRF) #}
@@ -296,16 +294,14 @@
         data-logout-method="POST"
         class="md3-navigation-drawer__item md3-navigation-drawer__item--logout">
         <span class="material-symbols-rounded md3-navigation-drawer__icon">logout</span>
-        <span class="md3-navigation-drawer__label">Cerrar sesión</span>
+        <span class="md3-navigation-drawer__label">Abmelden</span>
       </a>
     {% else %}
-      {# Unauthenticated: Login Button - htmx powered to open sheet #}
-      <a hx-get="{{ url_for('auth.login_sheet', next=request.path) }}"
-         hx-target="body"
-         hx-swap="beforeend"
-         class="md3-navigation-drawer__item">
+      {# Unauthenticated: Login — navigate to canonical page /login #}
+      <a href="{{ url_for('public.login', next=request.path) }}"
+        class="md3-navigation-drawer__item">
         <span class="material-symbols-rounded md3-navigation-drawer__icon">account_circle</span>
-        <span class="md3-navigation-drawer__label">Iniciar sesión</span>
+        <span class="md3-navigation-drawer__label">Anmelden</span>
       </a>
     {% endif %}
   </nav>

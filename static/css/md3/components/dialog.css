@@ -44,6 +44,37 @@
   overflow: hidden;
 }
 
+/* Surface wrapper (semantic surface inside the dialog element) */
+.md3-dialog__surface {
+  /* Neutral dialog surface: visual separation from page and card surfaces.
+     Use a slightly tinted container surface as the default dialog background
+     (prevents page/auth surfaces from bleeding into modal surfaces). */
+  padding: var(--space-6);
+  max-width: 560px;
+  width: min(100% - calc(var(--space-4) * 2), 560px);
+  /* MD3 lever: dialogs look best with a larger radius than cards */
+  border-radius: 28px;
+  background: var(--md-sys-color-surface-container-high);
+  box-sizing: border-box;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+/* Plain variant: dialogs that should use neutral surface (non-tonal, like page surfaces) */
+.md3-dialog--tonal .md3-dialog__surface {
+  /* Tonal variant: use container-high background when a dialog should appear as a tonal card */
+  background: var(--md-sys-color-surface-container-high);
+}
+
+.md3-dialog__surface .md3-outlined-textfield__label {
+  /* Labels inside dialog surfaces should use the dialog surface token so
+     the label appears to merge visually with the dialog (not the page). */
+  background: var(--md-sys-color-surface-container-high);
+  padding-inline: 4px;
+}
+
 /* Dialog Header */
 .md3-dialog__header {
   display: flex;
@@ -58,28 +89,29 @@
   padding: var(--space-2) var(--space-4) var(--space-1);
   font-size: 1.25rem;
   font-weight: 600;
-  color: var(--md-sys-color-on-surface);
+  color: var(--md-sys-color-primary);
   letter-spacing: 0.15px;
 }
 
 /* Dialog Content */
 .md3-dialog__content {
   padding: 0 0 var(--space-3) 0;
-  font-size: 0.875rem;
+  font-size: 0.9375rem; /* slightly larger body for dialogs */
   line-height: 1.5;
-  color: var(--md-sys-color-on-surface-variant);
+  color: var(--md-sys-color-on-surface);
   flex-grow: 1;
   overflow-y: auto;
 }
 
 /* Dialog Actions */
 .md3-dialog__actions {
-  padding: var(--space-3) 0 0 0;
+  padding: var(--space-4) 0 0 0;
   display: flex;
   justify-content: flex-end;
   gap: var(--space-3);
-  border-top: 1px solid var(--md-sys-color-outline-variant);
-  margin-top: auto;
+  /* avoid heavy divider; keep actions visually separate by padding only */
+  border-top: none;
+  margin-top: var(--space-4);
   flex-shrink: 0;
 }
 
@@ -109,4 +141,26 @@
   background: var(--md-sys-color-surface-container-low);
   border: 1px solid var(--md-sys-color-outline-variant);
   border-radius: var(--radius-md);
+}
+
+/* Helper row for code + icon actions inside dialogs (e.g. invite link + copy) */
+.md3-dialog__code-row {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+}
+.md3-dialog__code-row .md3-code-block__content,
+.md3-dialog__code-row pre {
+  flex: 1 1 auto;
+  margin: 0;
+}
+
+/* Meta / small info text inside dialogs */
+.md3-dialog__content .md3-body-small.md3-text-variant {
+  color: var(--md-sys-color-on-surface-variant);
+}
+
+/* Local stack variant for dialog internals — smaller than page sections */
+.md3-stack--dialog > * + * {
+  margin-top: var(--space-4); /* 16px between elements in dialogs */
 }

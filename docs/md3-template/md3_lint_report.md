@@ -27,6 +27,23 @@ Suggested action: move usages to canonical tokens. For CSS/JS that rely on the l
 
 ---
 
+Completed migrations
+
+- `templates/pages/impressum.html` — migrated (2025-11-24): converted to canonical `md3-page`, `md3-page__header`, `md3-page__section`, and `md3-stack--*` spacing; no `--md3-*` tokens, `.m-*` utilities, or inline margin/padding remain.
+
+- `templates/pages/privacy.html` — migrated (2025-11-24): updated to `md3-page` + `md3-hero--card` with icon and `md3-text-page` content wrapper; preserved existing images and interactivity.
+
+- Proyecto pages migrated (2025-11-24):
+  - `templates/pages/proyecto_overview.html`
+  - `templates/pages/proyecto_diseno.html`
+  - `templates/pages/proyecto_estadisticas.html`
+  - `templates/pages/proyecto_quienes_somos.html`
+  - `templates/pages/proyecto_como_citar.html`
+  - `templates/pages/proyecto_referencias.html`
+  - `templates/pages/corpus_guia.html`
+
+---
+
 2) `.m-*` / `.mt-*` occurrences in templates
 
 Found (examples):

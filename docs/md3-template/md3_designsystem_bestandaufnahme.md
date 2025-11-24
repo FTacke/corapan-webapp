@@ -227,6 +227,63 @@ Behaviour & accessibility
 Examples
 - In `templates/search/advanced.html` the CQL guide uses `md3-dialog md3-dialog--large` with actions (text + filled buttons).
 
+Design rules — canonical dialog pattern (applies to ALL dialogs)
+- Structure (must be used everywhere):
+   - `<dialog class="md3-dialog" aria-modal="true" aria-labelledby="…">`
+      - `.md3-dialog__container` (inner wrapper)
+         - `.md3-dialog__surface`
+            - `.md3-dialog__header` — contains title / icon
+            - `.md3-dialog__content` — body (use `md3-body-medium` for main text)
+            - `.md3-dialog__actions` — action row (buttons)
+
+- Surface / colors
+   - Dialog surfaces must use a neutral surface token (not page-specific/brand card colors):
+      - `background: var(--md-sys-color-surface-container-high)`
+   - Do not use page / card classes (e.g. `md3-auth-card` or `md3-auth-dialog__surface`) on dialog surfaces.
+
+- Typography
+   - Title: `h2.md3-title-large.md3-dialog__title` — color: `var(--md-sys-color-primary)`
+   - Body text inside `.md3-dialog__content`: use `md3-body-medium` with `color: var(--md-sys-color-on-surface)`
+   - Meta / hint text (small): `md3-body-small md3-text-variant` → `color: var(--md-sys-color-on-surface-variant)`
+
+- Spacing & sizing
+   - `.md3-dialog__surface` padding: 24px top/bottom, 24px left/right (`--space-6` tokens). Larger screens may use slightly larger left/right padding.
+   - Max width: 480–560px (default 560px), responsive to small devices (`width: 100%` constrained by container).
+   - Use `.md3-stack--dialog` inside `.md3-dialog__content` for intra-dialog spacing (16px gap) — avoid large page-section classes inside dialogs.
+   - Actions row is right-aligned, no heavy top divider (keep visual separation by padding only).
+
+- Code blocks & icon-actions (special case: invite links, tokens)
+   - Use a dialog-specific helper row: `.md3-dialog__code-row` as a flex row with gap and left-anchored code block + right icon button.
+   - Code block styling: `background: var(--md-sys-color-surface-container-low); padding: var(--space-4); border-radius: var(--radius-md)`
+
+Example — standard dialog with code row (invite link)
+```html
+<dialog class="md3-dialog" aria-modal="true" aria-labelledby="invite-title">
+   <div class="md3-dialog__container">
+      <div class="md3-dialog__surface">
+         <header class="md3-dialog__header">
+            <h2 id="invite-title" class="md3-title-large md3-dialog__title">Benutzer angelegt</h2>
+         </header>
+
+         <div class="md3-dialog__content md3-stack--dialog">
+            <p class="md3-body-medium">Bitte sende diesen Link an den neuen Benutzer:</p>
+
+            <div class="md3-dialog__code-row md3-code-block">
+               <pre class="md3-code-block__content">https://example.com/auth/password/reset?token=...</pre>
+               <button class="md3-icon-button" title="Kopieren" aria-label="Invite-Link kopieren">…</button>
+            </div>
+
+            <p class="md3-body-small md3-text-variant">Gültig bis: …</p>
+         </div>
+
+         <div class="md3-dialog__actions">
+            <button class="md3-button md3-button--filled">Schließen</button>
+         </div>
+      </div>
+   </div>
+</dialog>
+```
+
 ---
 
 ## 7. Navigation

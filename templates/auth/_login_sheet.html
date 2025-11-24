@@ -1,75 +1,74 @@
-{% set user_name = g.get('user') %}
-{% set user_role = g.get('role') %}
+{% set user_name = g.user %}
+{% set user_role = g.role %}
 
 <!-- Login Sheet: Rendered as htmx fragment (GET /auth/login_sheet) -->
 <link rel="stylesheet" href="{{ url_for('static', filename='css/md3/components/login.css') }}">
 
-<div id="login-sheet" class="md3-login-sheet" role="dialog" aria-modal="true">
+<div id="login-sheet" class="md3-sheet" role="dialog" aria-modal="true" aria-label="Re-Authentifizierung">
   <!-- Backdrop (clickable to dismiss) -->
-  <div class="md3-login-backdrop"></div>
+  <div class="md3-sheet__backdrop"></div>
   
   <!-- Sheet Container -->
-  <div class="md3-login-sheet__container">
-    <!-- Form with HTMX boost for seamless redirect -->
+  <div class="md3-sheet__surface md3-sheet__container" role="document">
+    <!-- Form with HTMX for seamless updates -->
     <form id="login-form" 
           class="md3-login-sheet__form" 
           method="post" 
           action="{{ url_for('auth.login_post') }}"
-          hx-boost="true">
+          hx-post="{{ url_for('auth.login_post') }}"
+          hx-target="#login-sheet"
+          hx-swap="outerHTML">
       
-      <!-- Title with Close Button -->
-      <div class="md3-login-sheet__header">
-        <h2 class="md3-login-sheet__title">Iniciar sesión</h2>
-        <button type="button" 
-          class="md3-login-sheet__close-button" 
-          aria-label="Cerrar">
-          <span class="material-symbols-rounded md3-button__icon" aria-hidden="true">close</span>
-        </button>
-      </div>
-      
-      <!-- Error Messages (if any) -->
-      {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}
-          <div class="md3-login-sheet__errors" role="alert" aria-live="assertive">
-            {% for category, message in messages %}
-              <p class="error-message error-message--{{ category }}">
-                <span class="material-symbols-rounded" aria-hidden="true">warning</span>
-                <span class="error-message__text">{{ message }}</span>
-              </p>
-            {% endfor %}
+          <!-- Title with Close Button -->
+          <div class="md3-sheet__header">
+            <h2 class="md3-title-large md3-sheet__title">Anmelden</h2>
+            <button type="button" 
+              class="md3-sheet__close-button" 
+              aria-label="Schließen">
+              <span class="material-symbols-rounded md3-button__icon" aria-hidden="true">close</span>
+            </button>
           </div>
-        {% endif %}
-      {% endwith %}
+      
       
       <!-- Username Field -->
-      <div class="md3-text-field">
+      <div class="md3-outlined-textfield">
         <input 
           type="text" 
-          class="md3-text-field__input" 
+          class="md3-outlined-textfield__input" 
           name="username" 
           id="login-username"
           placeholder=" "
           autocomplete="username" 
           required
           autofocus
-          aria-label="Nombre de usuario"
+          aria-label="Benutzername"
         >
-        <label class="md3-text-field__label" for="login-username">Cuenta</label>
+        <label class="md3-outlined-textfield__label" for="login-username">Benutzername</label>
+        <div class="md3-outlined-textfield__outline">
+          <div class="md3-outlined-textfield__outline-start"></div>
+          <div class="md3-outlined-textfield__outline-notch"></div>
+          <div class="md3-outlined-textfield__outline-end"></div>
+        </div>
       </div>
       
       <!-- Password Field -->
-      <div class="md3-text-field">
+      <div class="md3-outlined-textfield">
         <input 
           type="password" 
-          class="md3-text-field__input" 
+          class="md3-outlined-textfield__input" 
           name="password" 
           id="login-password"
           placeholder=" "
           autocomplete="current-password" 
           required
-          aria-label="Contraseña"
+          aria-label="Passwort"
         >
-        <label class="md3-text-field__label" for="login-password">Contraseña</label>
+        <label class="md3-outlined-textfield__label" for="login-password">Passwort</label>
+        <div class="md3-outlined-textfield__outline">
+          <div class="md3-outlined-textfield__outline-start"></div>
+          <div class="md3-outlined-textfield__outline-notch"></div>
+          <div class="md3-outlined-textfield__outline-end"></div>
+        </div>
       </div>
       
       <!-- Hidden next URL for intended redirect -->
@@ -79,11 +78,32 @@
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
       {% endif %}
       
-      <!-- Full-Width Submit Button -->
-      <button type="submit" class="md3-login-sheet__button">
-        <span class="material-symbols-rounded md3-button__icon" aria-hidden="true">login</span>
-        <span>Entrar</span>
-      </button>
+      {# Field-scoped supporting text (preferred) or a compact error banner above fields #}
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          <div class="md3-sheet__errors" role="alert" aria-live="assertive">
+            {% for category, message in messages %}
+              <div class="md3-textfield__supporting-text md3-textfield__supporting-text--error">
+                <span class="material-symbols-rounded" aria-hidden="true">warning</span>
+                <span>{{ message }}</span>
+              </div>
+            {% endfor %}
+          </div>
+        {% endif %}
+      {% endwith %}
+
+      <div class="md3-sheet__helper md3-stack--section">
+        <a class="md3-button md3-button--text" href="{{ url_for('auth.password_forgot_page') }}">Passwort vergessen?</a>
+      </div>
+
+      <!-- Actions -->
+      <div class="md3-sheet__actions">
+        <button type="submit" class="md3-button md3-button--filled md3-sheet__button">
+          <span class="material-symbols-rounded md3-button__icon" aria-hidden="true">login</span>
+          <span>Anmelden</span>
+        </button>
+        <button type="button" class="md3-button md3-button--text md3-sheet__secondary" data-action="sheet-close">Abbrechen</button>
+      </div>
     </form>
   </div>
 </div>

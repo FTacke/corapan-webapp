@@ -2,18 +2,19 @@
 {% from 'partials/page_navigation.html' import page_navigation %}
 {% block page_title %}CO.RA.PAN · El proyecto{% endblock %}
 {% block content %}
-<article class="md3-text-page">
-  <section class="md3-hero md3-hero--container md3-hero--with-icon" role="main" aria-label="El proyecto CO.RA.PAN">
-    <div class="md3-hero__container">
+<div class="md3-page" role="main" aria-label="El proyecto CO.RA.PAN">
+  <header class="md3-page__header">
+    <div class="md3-hero md3-hero--card md3-hero--with-icon md3-hero__container">
       <span class="material-symbols-rounded md3-hero__icon" aria-hidden="true">assignment_globe</span>
       <div class="md3-hero__content">
         <span class="md3-hero__eyebrow">Proyecto</span>
-        <h1 class="md3-hero__title">El proyecto CO.RA.PAN</h1>
+        <h1 class="md3-hero__title md3-headline-medium">El proyecto CO.RA.PAN</h1>
       </div>
     </div>
-  </section>
+  </header>
 
-  <div class="md3-text-content">
+  <main class="md3-text-page">
+    <div class="md3-text-content">
     <section class="md3-text-section">
       <p class="md3-body-large">
         El Corpus Radiofónico Panhispánico (CO.RA.PAN) parte de una constatación fundamental: a pesar de los avances en la descripción del español pluricéntrico, todavía falta una base empírica sistemática y comparable que permita medir y describir las variedades nacionales del español estándar en todo el ámbito hispanohablante. La mayoría de los estudios existentes se concentran en la variación comunitaria o en los niveles coloquiales, mientras que la lengua estándar hablada, es decir, aquella empleada por profesionales en contextos formales de comunicación, sigue siendo un campo poco explorado.
@@ -24,7 +25,7 @@
     </section>
 
     <section class="md3-text-section">
-      <h2 class="md3-title-large md3-text-heading">Marco conceptual</h2>
+      <h2 class="md3-title-large md3-section-title md3-text-heading">Marco conceptual</h2>
       <p class="md3-body-large">
         El punto de partida es la idea de que la evolución reciente del español se caracteriza por procesos simultáneos de destandarización y restandarización. La destandarización implica una pérdida de relevancia del modelo peninsular tradicional como única referencia normativa; la restandarización, por su parte, describe la emergencia de nuevos estándares nacionales o neoestándares, que surgen de la práctica comunicativa moderna y responden mejor a las necesidades discursivas actuales.
       </p>
@@ -37,7 +38,7 @@
     </section>
 
     <section class="md3-text-section">
-      <h2 class="md3-title-large md3-text-heading">Normas de uso y normas mediáticas</h2>
+      <h2 class="md3-title-large md3-section-title md3-text-heading">Normas de uso y normas mediáticas</h2>
       <p class="md3-body-large">
         El proyecto parte de una visión funcional de la normatividad lingüística: las normas de uso describen lo que los hablantes realmente hacen en contextos socialmente prestigiosos, y las normas mediáticas son la cristalización visible de esas prácticas en los medios de difusión masiva. La radio, por su alcance y regularidad, constituye un espacio privilegiado para observar cómo se difunden y legitiman las variantes nacionales del español.
       </p>
@@ -47,7 +48,7 @@
     </section>
 
     <section class="md3-text-section">
-      <h2 class="md3-title-large md3-text-heading">Diseño comparativo</h2>
+      <h2 class="md3-title-large md3-section-title md3-text-heading">Diseño comparativo</h2>
       <p class="md3-body-large">
         CO.RA.PAN reúne material oral comparable procedente de todos los países hispanohablantes. En cada caso, se registran emisiones que representan diferentes grados de formalidad:
       </p>
@@ -66,8 +67,8 @@
         <li>Comparativo panhispánico, que mide las distancias y afinidades entre las variedades nacionales y permite observar la distribución geográfica y funcional de las variantes que configuran el español pluricéntrico actual.</li>
       </ul>
     </section>
-    <section class="md3-text-section md3-text-section--divider">
-      <h2 class="md3-title-large md3-text-heading">Referencias</h2>
+    <section class="md3-text-section">
+      <h2 class="md3-title-large md3-section-title md3-text-heading">Referencias</h2>
       <ul class="md3-text-list md3-body-medium">
         <li>
           Amorós-Negre, Carla (2014): <em>Las lenguas en la sociedad</em>. Madrid: Síntesis.
@@ -193,7 +194,8 @@
       </ul>
     </section>
   </div>
-</article>
+  </main>
+</div>
 
 {{ page_navigation(next_title="Diseño", next_url=url_for('public.proyecto_diseno')) }}
 {% endblock %}

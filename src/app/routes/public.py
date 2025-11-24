@@ -25,6 +25,23 @@ def landing_page():
     return render_template("pages/index.html", page_name="index")
 
 
+@blueprint.get("/login", endpoint="login")
+def login_page():
+    """Render a full-page login screen.
+
+    This is the canonical login page for the site (public /login). It
+    renders the existing template `templates/auth/login.html` and accepts
+    an optional `next` query parameter for redirect-after-login.
+    """
+    next_url = request.args.get("next") or request.referrer or ""
+    # Render the full login page (no caching)
+    response = make_response(render_template("auth/login.html", next=next_url))
+    response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, private"
+    response.headers["Pragma"] = "no-cache"
+    response.headers["Vary"] = "Cookie"
+    return response, 200
+
+
 @blueprint.get("/health")
 def health_check():
     """

@@ -2,20 +2,22 @@
 {% from 'partials/page_navigation.html' import page_navigation %}
 {% block page_title %}Cómo citar · CO.RA.PAN{% endblock %}
 {% block content %}
-<article class="md3-text-page">
-  <section class="md3-hero md3-hero--container md3-hero--with-icon" role="main" aria-label="Cómo citar el corpus">
-    <div class="md3-hero__container">
+<div class="md3-page" role="main" aria-label="Cómo citar el corpus">
+  <header class="md3-page__header">
+    <div class="md3-hero md3-hero--card md3-hero--with-icon md3-hero__container">
       <span class="material-symbols-rounded md3-hero__icon" aria-hidden="true">assignment_globe</span>
       <div class="md3-hero__content">
         <span class="md3-hero__eyebrow">Proyecto</span>
-        <h1 class="md3-hero__title">Cómo citar</h1>
+        <h1 class="md3-hero__title md3-headline-medium">Cómo citar</h1>
       </div>
     </div>
-  </section>
+  </header>
 
-  <div class="md3-text-content">
+  <main class="md3-text-page">
+    <div class="md3-text-content">
     <!-- Referencia general del corpus -->
-      <h2 class="md3-title-large md3-text-heading">Referencia general del corpus</h2>
+      <section class="md3-text-section">
+      <h2 class="md3-title-large md3-section-title md3-text-heading">Referencia general del corpus</h2>
       <div class="md3-text-citation md3-body-medium">
         <p class="md3-body-large">
           Tacke, F. (2025). <em>CO.RA.PAN — Corpus Radiofónico Panhispánico</em> (versión 1.0) [Corpus]. Philipps-Universität Marburg; Zenodo. 
@@ -26,7 +28,7 @@
       </div>
 
       <div class="md3-code-block">
-        <h2 class="md3-title-large md3-text-heading">Citas en bibtex</h2>
+        <h2 class="md3-title-large md3-section-title md3-text-heading">Citas en bibtex</h2>
         <pre class="highlight"><code id="bibtex-code" class="language-bibtex">@dataset{CO.RA.PAN,
   author = {Tacke, Felix},
   title = {CO.RA.PAN: Corpus Radiofónico Panhispánico},
@@ -38,7 +40,8 @@
     </section>
 
     <!-- Acceso a los datos -->
-      <h2 class="md3-title-large md3-text-heading">Acceso a los datos</h2>
+      <section class="md3-text-section">
+      <h2 class="md3-title-large md3-section-title md3-text-heading">Acceso a los datos</h2>
       <p class="md3-body-large">
         El acceso a los datos se organiza en tres niveles:
       </p>
@@ -48,7 +51,7 @@
         <!-- Webapp -->
         <div class="md3-card md3-card--tonal doi-resource-card">
           <div class="card-body">
-            <h3 class="card-title md3-title-medium">Webapp</h3>
+            <h3 class="card-title md3-title-medium md3-subsection-title">Webapp</h3>
             <p class="md3-body-large">Corpus interactivo: Interfaz de búsqueda avanzada y reproductor de audio con transcripciones anotadas.</p>
             <p>
               <a href="https://doi.org/10.5281/zenodo.15359652" target="_blank" rel="noopener noreferrer" class="doi-link">
@@ -61,7 +64,7 @@
         <!-- Full Corpus -->
         <div class="md3-card md3-card--tonal doi-resource-card">
           <div class="card-body">
-            <h3 class="card-title md3-title-medium">Full Corpus</h3>
+            <h3 class="card-title md3-title-medium md3-subsection-title">Full Corpus</h3>
             <p class="md3-body-large">Corpus completo en acceso restringido, protegido por derechos de autor. Solo para proyectos de investigación autorizados.</p>
             <p>
               <a href="https://doi.org/10.5281/zenodo.15360942" target="_blank" rel="noopener noreferrer" class="doi-link">
@@ -74,7 +77,7 @@
         <!-- Sample Corpus -->
         <div class="md3-card md3-card--tonal doi-resource-card">
           <div class="card-body">
-            <h3 class="card-title md3-title-medium">Sample Corpus</h3>
+            <h3 class="card-title md3-title-medium md3-subsection-title">Sample Corpus</h3>
             <p class="md3-body-large">Corpus de ejemplo con transcritos y estructura de datos, disponible públicamente para exploración y estudio.</p>
             <p>
               <a href="https://doi.org/10.5281/zenodo.15378479" target="_blank" rel="noopener noreferrer" class="doi-link">
@@ -87,7 +90,8 @@
     </section>
 
     <!-- Recomendación de cita -->
-      <h2 class="md3-title-large md3-text-heading">Recomendación de cita</h2>
+      <section class="md3-text-section">
+      <h2 class="md3-title-large md3-section-title md3-text-heading">Recomendación de cita</h2>
         <p class="md3-body-large">
           Para cualquier uso académico del corpus, cite la referencia anterior.
           Cuando se mencionen resultados de búsquedas o ejemplos concretos, indique además:
@@ -101,7 +105,7 @@
         Las <em>token_id</em> son identificadores permanentes que garantizan la trazabilidad y reproducibilidad de todos los datos y metadatos asociados (p. ej. <span class="tooltip-token">COL06f13</span>, <span class="tooltip-token">CHLd7aaa</span>, <span class="tooltip-token">BOL286ef</span>).
         </p>
         
-        <h2 class="md3-title-large md3-text-heading">Ejemplo de cita</h2>
+        <h2 class="md3-title-large md3-section-title md3-text-heading">Ejemplo de cita</h2>
         <div class="md3-text-citation md3-body-medium">
           <p class="md3-body-large">
             CO.RA.PAN v 1.0, token <span class="tooltip-token">CHLd7aaa</span> (consulta 26 oct 2025).
@@ -111,7 +115,7 @@
 
     <!-- Licencia y uso -->
     <section class="md3-text-section">
-      <h2 class="md3-title-large md3-text-heading">Licencia y uso</h2>
+      <h2 class="md3-title-large md3-section-title md3-text-heading">Licencia y uso</h2>
 
       <p class="md3-body-large">
         El corpus CO.RA.PAN está disponible bajo licencia <strong>CC BY-NC-SA 4.0</strong> (Creative Commons Atribución-NoComercial-CompartirIgual 4.0 Internacional) con las siguientes restricciones:.
@@ -123,7 +127,8 @@
       </ul>
     </section>
   </div>
-</article>
+  </main>
+</div>
 
 {{ page_navigation(prev_title="Quiénes somos", prev_url=url_for('public.proyecto_quienes_somos')) }}
 {% endblock %}

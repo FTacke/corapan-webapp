@@ -12,28 +12,27 @@
 
 {% block content %}
 <div class="md3-page">
-  <div class="md3-page__header md3-stack--section">
-    <div class="md3-hero__eyebrow">Eyebrow</div>
-    <h1 class="md3-hero__title">Page Title</h1>
-    <p class="md3-hero__intro">Short intro that sets context for the page and explains the primary purpose.</p>
-  </div>
 
-  <div class="md3-page__section md3-stack--section">
-    <article class="md3-text-page">
-      <h2 class="md3-title-medium">Section title</h2>
-      <p class="md3-body-medium">Paragraph text should rely on `md3-body-*` utility classes and token-driven spacing. Avoid inline margins or .m-* utilities.</p>
-
-      <div class="md3-helpers md3-stack--section">
-        <p class="md3-body-small md3-page__meta">Meta / subtext</p>
-        <a class="md3-button md3-button--text" href="#">Secondary action</a>
+  <header class="md3-page__header">
+    <div class="md3-hero md3-hero--card md3-hero__container">
+      <div class="md3-hero__icon" aria-hidden="true">
+        <span class="material-icons">description</span>
       </div>
-    </article>
-  </div>
+      <p class="md3-body-small md3-hero__eyebrow">Sekundärer Titel</p>
+      <h1 class="md3-headline-medium md3-hero__title">Seitentitel</h1>
+      <p class="md3-body-medium md3-hero__intro">Kurze Einleitung oder Untertitel.</p>
+    </div>
+  </header>
 
-  <div class="md3-page__section md3-stack--page">
-    <footer class="md3-footer__section">
-      <p class="md3-body-small">© CO.RA.PAN</p>
-    </footer>
-  </div>
+  <main class="md3-text-page">
+    <!-- Use md3-text-section for canonical content blocks -->
+    <section class="md3-text-section">
+      <h2 class="md3-title-large md3-section-title">Abschnittstitel</h2>
+      <p class="md3-body-large">Beispieltext — Paragraphs should use token-driven spacing and canonical typography.</p>
+      <h3 class="md3-title-medium md3-subsection-title">Unterabschnitt</h3>
+      <p class="md3-body-medium">Unterabschnitts-Text (H3 → md3-title-medium + md3-subsection-title).</p>
+    </section>
+  </main>
+
 </div>
 {% endblock %}

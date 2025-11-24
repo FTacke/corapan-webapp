@@ -247,23 +247,21 @@ def login_form() -> Response:
     """
     next_url = _safe_next(request.args.get("next") or request.referrer)
 
-    # HTMX request: redirect via header
+    # HTMX & full-page behavior: redirect to the canonical full-page login
+    # We prefer the root /login page as the canonical destination for user
+    # driven login flows. The POST handler remains at /auth/login.
+    target = (
+        url_for("public.login", next=next_url)
+        if next_url
+        else url_for("public.login")
+    )
+
+    # Keep HTMX-friendly response (client will follow HX-Redirect)
     if request.headers.get("HX-Request"):
         response = make_response("", 204)
-        response.headers["HX-Redirect"] = (
-            url_for("auth.login_sheet", next=next_url)
-            if next_url
-            else url_for("auth.login_sheet")
-        )
+        response.headers["HX-Redirect"] = target
         return response
 
-    # Full-page request: redirect to inicio with login flag
-    # Inicio-Template wird das Sheet via JS laden
-    target = (
-        url_for("public.landing_page", login=1, next=next_url)
-        if next_url
-        else url_for("public.landing_page", login=1)
-    )
     return redirect(target, 303)
 
 
@@ -308,16 +306,19 @@ def login_post() -> Response:
 
     if not identifier:
         current_app.logger.warning(f"Failed login attempt - missing identifier from {request.remote_addr}")
-        # Localized (Spanish) message for missing identifier
-        flash("Cuenta desconocida.", "error")
-        return render_template("auth/_login_sheet.html", next=next_url or ""), 400
+        # Friendly German message for missing identifier
+        flash("Bitte geben Sie Benutzername oder E-Mail an.", "error")
+        # Return 200 for HTMX to ensure swap happens, 400 for standard form
+        status_code = 200 if request.headers.get("HX-Request") else 400
+        return render_template("auth/_login_sheet.html", next=next_url or ""), status_code
 
     user = auth_services.find_user_by_username_or_email(identifier)
     if not user:
         current_app.logger.warning(f"Failed login attempt - unknown user: {identifier} from {request.remote_addr}")
-        # Localized (Spanish) message for unknown user
-        flash("Cuenta desconocida.", "error")
-        return render_template("auth/_login_sheet.html", next=next_url or ""), 400
+        # Generic German error message (avoid account enumeration)
+        flash("Benutzername oder Passwort ist falsch.", "error")
+        status_code = 200 if request.headers.get("HX-Request") else 400
+        return render_template("auth/_login_sheet.html", next=next_url or ""), status_code
 
     # check account status and password
     status = auth_services.check_account_status(user)
@@ -332,8 +333,8 @@ def login_post() -> Response:
         except Exception:
             current_app.logger.debug("Failed to increment auth_login_failure metric")
         current_app.logger.warning(f"Failed login attempt - wrong password: {identifier} from {request.remote_addr}")
-        # Localized (Spanish) message for invalid credentials
-        flash("Nombre de usuario o contraseña incorrectos.", "error")
+        # Generic German error message for invalid credentials
+        flash("Benutzername oder Passwort ist falsch.", "error")
         return render_template("auth/_login_sheet.html", next=next_url or ""), 400
 
     # Success: create tokens and set cookies
@@ -345,7 +346,14 @@ def login_post() -> Response:
     access_token = auth_services.create_access_token_for_user(user)
     raw_refresh, _ = auth_services.create_refresh_token_for_user(user, user_agent=request.headers.get("User-Agent"), ip_address=request.remote_addr)
 
-    target = next_url or url_for("public.landing_page")
+    # If the account requires a forced password reset, redirect the client
+    # to the account password page and keep mustReset indicator. The token
+    # still includes must_reset_password so server-side checks may continue
+    # to enforce this state.
+    if user.must_reset_password:
+        target = url_for("auth.account_password_page") + "?mustReset=1"
+    else:
+        target = next_url or url_for("public.landing_page")
     if request.headers.get("HX-Request"):
         response = make_response("", 204)
         response.headers["HX-Redirect"] = target
@@ -673,7 +681,7 @@ def logout_any() -> Response:
     response.headers["Expires"] = "0"
 
     method = request.method
-    flash("Has cerrado sesión correctamente.", "success")
+    flash("Sie wurden erfolgreich abgemeldet.", "success")
     current_app.logger.info(
         f"User logged out via {method} from {request.remote_addr} -> {redirect_to}"
     )

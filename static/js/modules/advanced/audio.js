@@ -82,7 +82,7 @@ export class AdvancedAudioManager {
           window.IS_AUTHENTICATED !== true
         ) {
           alert(
-            "Para ver la transcripción completa y abrir el reproductor, por favor inicia sesión.",
+            "Um die vollständige Transkription zu sehen und den Player zu öffnen, müssen Sie sich anmelden.",
           );
           return;
         }
@@ -113,7 +113,7 @@ export class AdvancedAudioManager {
 
   showAuthRequiredMessage() {
     const msg =
-      "Para ver funciones avanzadas (p. ej. abrir el reproductor completo) debes iniciar sesión.";
+      "Um erweiterte Funktionen (z. B. den kompletten Player) zu nutzen, müssen Sie sich anmelden.";
     if (window.toast) {
       window.toast(msg);
     } else {
@@ -136,7 +136,8 @@ export class AdvancedAudioManager {
     if (window.htmx) {
       htmx.ajax("GET", loginUrl, { target: "#modal-root", swap: "beforeend" });
     } else {
-      window.location.href = `/auth/login?next=${encodeURIComponent(targetUrl)}`;
+      // fallback to canonical login page when HTMX is unavailable
+      window.location.href = `/login?next=${encodeURIComponent(targetUrl)}`;
     }
     return;
   }

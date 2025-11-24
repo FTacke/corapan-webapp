@@ -282,7 +282,8 @@ function openLoginSheet(nextTarget = "") {
           { target: "#modal-root", swap: "beforeend" },
         );
       } else {
-        window.location.href = `/auth/login?next=${encodeURIComponent(nextTarget)}`;
+        // Fallback: navigate to canonical full page login when HTMX not available
+        window.location.href = `/login?next=${encodeURIComponent(nextTarget)}`;
       }
     } else {
       // Trigger the global open-login button (already has scroll handling)

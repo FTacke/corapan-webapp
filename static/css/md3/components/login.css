@@ -15,13 +15,14 @@
 
 .md3-login-page__wrapper {
   width: 100%;
-  max-width: 400px;
+  max-width: 480px; /* slightly larger and consistent with auth-card */
 }
 
 .md3-login-card {
   background: var(--md-sys-color-surface);
   border-radius: var(--radius-md);
-  padding: var(--space-12) var(--space-8);
+  /* Align with auth spacing requirements: ~24-32px vertical padding */
+  padding: var(--space-8) var(--space-6);
   box-shadow: var(--elev-2);
   color: var(--md-sys-color-on-surface);
 }
@@ -71,7 +72,7 @@
 .md3-login-card__form {
   display: flex;
   flex-direction: column;
-  gap: var(--space-6);
+  gap: var(--space-4);
   margin-bottom: var(--space-8);
 }
 
@@ -173,7 +174,7 @@
 /* ============================================
    LOGIN SHEET (Overlay)
    ============================================ */
-.md3-login-sheet {
+.md3-login-sheet, .md3-sheet {
   position: fixed;
   top: 0;
   left: 0;
@@ -181,11 +182,22 @@
   height: 100%;
   z-index: 1000;
   display: flex;
+  /* Center by default, but on wide viewports move slightly toward top */
   align-items: center;
   justify-content: center;
 }
 
-.md3-login-backdrop {
+@media (min-width: 840px) {
+  .md3-login-sheet, .md3-sheet {
+    align-items: flex-start;
+    padding-top: var(--space-12); /* give breathing room on big screens */
+  }
+  .md3-login-sheet__container, .md3-sheet__surface {
+    margin-top: 0.5rem; /* small offset from very top */
+  }
+}
+
+.md3-login-backdrop, .md3-sheet__backdrop {
   position: absolute;
   top: 0;
   left: 0;
@@ -195,31 +207,33 @@
   backdrop-filter: blur(2px);
 }
 
-.md3-login-sheet__container {
+.md3-login-sheet__container, .md3-sheet__surface {
   position: relative;
-  width: 90%;
-  max-width: 400px;
+  width: 100%;
+  max-width: 560px; /* Keep sheet large but constrained */
   background: var(--md-sys-color-surface-container-high);
-  border-radius: 16px;
-  padding: 1.5rem;
+  /* Dialog-like surface: visually distinct from full page cards */
+  border-radius: 28px;
+  padding: 24px; /* compact and consistent padding inside dialogs/sheets */
   box-shadow: var(--md-sys-elevation-3, 0 8px 12px rgba(0,0,0,0.2));
   z-index: 1001;
+  margin: 1rem; /* Add margin to prevent touching edges on small screens */
 }
 
-.md3-login-sheet__header {
+.md3-login-sheet__header, .md3-sheet__header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 1.5rem;
 }
 
-.md3-login-sheet__title {
+.md3-login-sheet__title, .md3-sheet__title {
   margin: 0;
   font-size: 1.5rem;
   color: var(--md-sys-color-on-surface);
 }
 
-.md3-login-sheet__close-button {
+.md3-login-sheet__close-button, .md3-sheet__close-button {
   background: transparent;
   border: none;
   color: var(--md-sys-color-on-surface-variant);
@@ -235,36 +249,44 @@
   background: var(--md-sys-color-surface-variant);
 }
 
-.md3-login-sheet__form {
+.md3-login-sheet__form, .md3-sheet__form {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: var(--space-4);
 }
 
-.md3-login-sheet__errors {
+.md3-login-sheet__errors, .md3-sheet__errors {
   background: var(--md-sys-color-error-container);
   color: var(--md-sys-color-on-error-container);
-  padding: 0.75rem;
-  border-radius: 8px;
-  margin-bottom: 1rem;
+  padding: var(--space-3);
+  border-radius: var(--radius-sm);
+  margin-bottom: var(--space-3);
 }
 
-.md3-login-sheet__button {
+/* Make outlined textfields more visible on sheet surfaces (improve contrast) */
+.md3-sheet__surface .md3-outlined-textfield__outline .md3-outlined-textfield__outline-start,
+.md3-sheet__surface .md3-outlined-textfield__outline .md3-outlined-textfield__outline-notch,
+.md3-sheet__surface .md3-outlined-textfield__outline .md3-outlined-textfield__outline-end {
+  /* Keep outlines neutral on dialog surfaces — color only, not weight */
+  border-color: var(--md-sys-color-outline-variant);
+}
+
+.md3-sheet__surface .md3-outlined-textfield__input {
+  min-height: 48px;
+  padding: var(--space-3);
+  background: transparent;
+}
+
+/* subtle elevated touch for focused fields inside sheets */
+.md3-sheet__surface .md3-outlined-textfield:focus-within .md3-outlined-textfield__outline {
+  /* Subtle focus ring — color only (no outline width change) */
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--md-sys-color-primary) 8%, transparent);
+}
+
+.md3-login-sheet__button, .md3-sheet__button {
   margin-top: 1rem;
-  padding: 0.75rem;
-  background: var(--md-sys-color-primary);
-  color: var(--md-sys-color-on-primary);
-  border: none;
-  border-radius: 20px;
-  font-weight: 500;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
+  width: 100%; /* Ensure full width if that was the intention */
 }
 
-.md3-login-sheet__button:hover {
-  background: var(--md-sys-color-primary-container);
-  color: var(--md-sys-color-on-primary-container);
-}
+/* Removed overrides that conflict with canonical .md3-button--filled */
+

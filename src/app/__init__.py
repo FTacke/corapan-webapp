@@ -177,24 +177,61 @@ def register_auth_context(app: Flask) -> None:
             identity = get_jwt_identity()
             token = get_jwt() or {}
 
-            g.user = identity
+            # Prefer exposing the human-friendly username to templates / g.user
+            # The JWT identity is a stable user_id; additional claims include
+            # the username. Use the username claim when present so templates
+            # (e.g. top-app-bar) show readable names instead of internal IDs.
+            g.user = token.get('username') or identity
             role_value = token.get("role")
             try:
                 g.role = Role(role_value) if role_value else None
             except (ValueError, KeyError):
                 g.role = None
+            # Expose must_reset_password flag to request context
+            g.must_reset_password = bool(token.get("must_reset_password", False))
         except Exception:  # noqa: BLE001
             # Token error - treat as no authentication
             g.user = None
             g.role = None
 
+        # If the account requires a password reset, block access to other
+        # routes until the user completes the password change.
+        # Allowed routes include the password change page, reset APIs and
+        # static assets so the user can complete the flow.
+        allowed_prefixes = (
+            "/static/",
+            "/favicon",
+            "/robots.txt",
+            "/health",
+            "/auth/account/password",
+            "/auth/change-password",
+            "/auth/reset-password",
+            "/auth/password/reset",
+            "/auth/password/forgot",
+            "/auth/login",
+            "/login",
+            "/auth/login_sheet",
+            "/auth/logout_any",
+        )
+
+        if getattr(g, "user", None) and getattr(g, "must_reset_password", False):
+            # allow only specific routes to proceed
+            if not any(request.path.startswith(p) for p in allowed_prefixes):
+                # For API/HTMX clients return a 403 with a specific code
+                if request.headers.get("HX-Request") or request.is_json:
+                    return jsonify({"error": "password_reset_required"}), 403
+                # For standard HTML, redirect to the account password page
+                return redirect(url_for("auth.account_password_page") + "?mustReset=1", 303)
+
     @app.context_processor
     def _inject_auth_context():
         """Expose auth state to templates."""
         user = getattr(g, "user", None)
+        must_reset = getattr(g, "must_reset_password", False)
         return {
             "is_authenticated": bool(user),
             "current_user": user,
+            "must_reset_password": must_reset,
         }
 
 

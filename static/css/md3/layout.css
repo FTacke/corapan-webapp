@@ -19,6 +19,20 @@
  */
 
 /* --- Canonical page layout helpers (token driven) --- */
+.md3-text-page {
+  /* Canonical narrow text page container used for long-form pages
+     (Impressum / Datenschutzerklärung / Proyecto pages). The width
+     mirrors existing templates' text-content max-width to preserve
+     current layout (900px). Using a variable so this can be referenced
+     by other components (hero containers) to ensure visual parity. */
+  --text-page-max-width: 900px; /* exact value observed in current text-pages.css */
+  margin: 0 auto;
+  max-width: var(--text-page-max-width);
+  padding-bottom: var(--space-10);
+  width: 100%;
+  box-sizing: border-box;
+}
+
 .md3-page {
   /* Edge padding: use the token that matches current common site padding
      (templates and md3-container commonly use 1.5rem = 24px) */
@@ -39,6 +53,48 @@
      Many templates use .mt-4 / 1.5rem between blocks — map to token --space-6 (24px). */
   padding-top: var(--space-6);
   padding-bottom: var(--space-6);
+}
+.md3-auth-page {
+  /* Centered auth page container for login/profile/password flows.
+     Keeps a safe max-width for auth content and token-driven padding.
+     Use .md3-page__section.md3-auth-page on pages to limit card width. */
+  max-width: 720px;
+  margin-inline: auto;
+  padding-inline: var(--space-4);
+  padding-block: var(--space-6);
+  box-sizing: border-box;
+}
+
+.md3-auth-card {
+  /* Auth pages use a constrained card for forms — centered and token-driven.
+     Keep values token-based and avoid hard-coded px in templates. */
+  max-width: 480px; /* canonical width for auth cards */
+  margin-left: auto;
+  margin-right: auto;
+  width: 100%;
+  padding: var(--space-4);
+  border-radius: var(--radius-md);
+  background: var(--md-sys-color-surface);
+  box-sizing: border-box;
+}
+
+/* Auth-specific form helper: column layout + consistent gap between controls */
+.md3-auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+/* Responsive tweaks for auth page / card */
+@media (max-width: 599px) {
+  .md3-auth-page {
+    padding-block: var(--space-4);
+    padding-inline: var(--space-3);
+  }
+
+  .md3-auth-card {
+    padding: var(--space-3);
+  }
 }
 .md3-align--center { margin-left: auto; margin-right: auto; }
 

@@ -217,8 +217,8 @@ body[data-scrolled="true"] .md3-top-app-bar__title-page {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 40px;
-  height: 40px;
+  width: 48px;
+  height: 48px;
   padding: 0;
   border: none;
   background: transparent;
@@ -356,6 +356,128 @@ body[data-scrolled="true"] .md3-top-app-bar__title-page {
   font-weight: 600;
   font-size: 1rem;
   line-height: 1;
+}
+
+/* ============================================
+   Account Button (MD3) - new replacement for avatar trigger
+   --------------------------------------------
+   - Uses MD3 tokens (no hard colors)
+   - Shows icon + username + role label on larger screens
+   - Collapses to icon-only on small screens
+   - Has a subtle status-dot
+   ============================================ */
+
+.md3-top-app-bar__account-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.25rem 0.75rem;
+  border-radius: 999px;
+  border: none;
+  background: color-mix(in srgb, var(--md-sys-color-surface-variant) 10%, transparent);
+  cursor: pointer;
+  position: relative;
+  font: inherit;
+  color: var(--md-sys-color-on-surface);
+  min-height: 40px;
+}
+
+.md3-top-app-bar__account-button:hover {
+  background-color: color-mix(in srgb, var(--md-sys-color-surface-variant) 16%, transparent);
+}
+
+.md3-top-app-bar__account-button:focus-visible {
+  outline: 2px solid var(--md-sys-color-primary);
+  outline-offset: 2px;
+}
+
+.md3-top-app-bar__account-icon {
+  font-size: 24px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Account name + role block */
+.md3-top-app-bar__account-text {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  line-height: 1.1;
+  min-width: 0; /* prevent overflow in flex */
+}
+
+.md3-top-app-bar__account-name {
+  font-size: 0.875rem;
+  font-weight: 500;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  max-width: 160px;
+}
+
+.md3-top-app-bar__account-role {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.75rem;
+  color: var(--md-sys-color-on-surface-variant);
+}
+
+.md3-top-app-bar__role-icon {
+  font-size: 16px;
+}
+
+.md3-top-app-bar__role-icon--admin {
+  color: var(--md-sys-color-error);
+}
+
+.md3-top-app-bar__role-icon--editor {
+  color: var(--md-sys-color-secondary);
+}
+
+.md3-top-app-bar__role-icon--user {
+  color: var(--md-sys-color-primary);
+}
+
+/* Login/Guest neutral variant */
+.md3-top-app-bar__account-button--guest {
+  background: transparent;
+  color: var(--md-sys-color-on-surface-variant);
+}
+
+/* Status Dot */
+.md3-top-app-bar__account-status-dot {
+  position: absolute;
+  right: 6px;
+  bottom: 6px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: var(--md-sys-color-primary);
+  box-shadow: 0 0 0 2px var(--md-sys-color-surface);
+}
+
+.md3-top-app-bar__account-button--guest .md3-top-app-bar__account-status-dot {
+  display: none;
+}
+
+/* ============================================
+   Responsive: collapse text on small screens
+   ============================================ */
+@media (max-width: 640px) {
+  .md3-top-app-bar__account-text {
+    display: none; /* only icons on small screens */
+  }
+
+  .md3-top-app-bar__account-button {
+    padding-inline: 0.5rem;
+  }
+
+  .md3-top-app-bar__account-status-dot {
+    right: 2px;
+    bottom: 2px;
+  }
 }
 
 /* User Menu Dropdown (Dashboard + Logout) */
@@ -507,7 +629,6 @@ body[data-scrolled="true"] .md3-top-app-bar__title-page {
 .md3-theme-toggle {
   /* Filled Tonal Variant für bessere Sichtbarkeit über transparentem Hintergrund */
   background: var(--md-sys-color-surface-container-high);
-  border: 1px solid var(--md-sys-color-outline-variant);
   color: var(--md-sys-color-on-surface);
   transition: all 200ms cubic-bezier(0.4, 0, 0.2, 1);
 }
@@ -591,4 +712,61 @@ body[data-scrolled="true"] .md3-top-app-bar__title-page {
   --app-bar-height-large: 152px;
   --app-bar-transition-duration: 300ms;
   --app-bar-transition-easing: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ============================================
+   Account Button & Badges (New MD3 Design)
+   ============================================ */
+
+/* Account-Button: Text-Button mit Icon */
+.md3-account-button {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding-inline: var(--space-2);
+  height: 40px;
+  border-radius: 9999px; /* Pill shape for text button */
+  color: var(--md-sys-color-on-surface);
+}
+
+/* Username-Typo */
+.md3-account-button__user {
+  font-size: var(--md-sys-typescale-label-large-font-size);
+  font-weight: var(--md-sys-typescale-label-large-font-weight);
+  line-height: var(--md-sys-typescale-label-large-line-height);
+  letter-spacing: var(--md-sys-typescale-label-large-letter-spacing);
+  color: var(--md-sys-color-on-surface);
+}
+
+/* Role-Badge nach MD3-Badge-Pattern */
+.md3-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding-inline: 8px;
+  height: 30px;
+  border-radius: 9999px;
+  font-size: var(--md-sys-typescale-label-small-font-size);
+  font-weight: var(--md-sys-typescale-label-small-font-weight);
+  line-height: 1;
+}
+
+.md3-badge__icon {
+
+}
+
+/* Role Colors */
+.md3-badge--role-admin {
+  background: color-mix(in srgb, var(--md-sys-color-error) 16%, transparent);
+  color: var(--md-sys-color-error);
+}
+
+.md3-badge--role-editor {
+  background: color-mix(in srgb, var(--md-sys-color-primary) 16%, transparent);
+  color: var(--md-sys-color-primary);
+}
+
+.md3-badge--role-user {
+  background: color-mix(in srgb, var(--md-sys-color-secondary) 16%, transparent);
+  color: var(--md-sys-color-secondary);
 }

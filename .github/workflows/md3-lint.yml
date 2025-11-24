@@ -1,0 +1,32 @@
+name: MD3 Lint
+
+on:
+  pull_request:
+    paths:
+      - 'templates/pages/**'
+  push:
+    branches:
+      - feature/auth-migration
+    paths:
+      - 'templates/pages/**'
+
+jobs:
+  md3-lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.12'
+
+      - name: Install deps
+        run: |
+          python -m pip install --upgrade pip
+          pip install --no-cache-dir -r requirements.txt || true
+
+      - name: Run md3-lint
+        run: |
+          python scripts/md3-lint.py

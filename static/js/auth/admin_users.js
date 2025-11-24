@@ -75,7 +75,7 @@ document.addEventListener('DOMContentLoaded', function () {
             fetch(`/admin/users/${encodeURIComponent(uid)}`)
               .then(r => r.json())
               .then(data => {
-                let html = `<div class="mb-3">
+                let html = `<div class="md3-stack--dialog">
                     <div><strong>Benutzername:</strong> ${data.username}</div>
                     <div><strong>Email:</strong> ${data.email || '-'}</div>
                     <div><strong>Rolle:</strong> ${data.role}</div>
@@ -145,12 +145,22 @@ document.addEventListener('DOMContentLoaded', function () {
   
   if (copyInviteBtn && inviteLinkCode) {
     copyInviteBtn.addEventListener('click', () => {
-      navigator.clipboard.writeText(inviteLinkCode.textContent).then(() => {
+      const text = inviteLinkCode.textContent || inviteLinkCode.innerText || '';
+      navigator.clipboard.writeText(text).then(() => {
         const originalIcon = copyInviteBtn.innerHTML;
         copyInviteBtn.innerHTML = '<span class="material-symbols-rounded">check</span>';
+        // update screen-reader live region if present
+        const status = document.getElementById('invite-copy-status');
+        if (status) status.textContent = 'Invite-Link in die Zwischenablage kopiert.';
         setTimeout(() => {
           copyInviteBtn.innerHTML = originalIcon;
+          if (status) status.textContent = '';
         }, 2000);
+      }).catch(err => {
+        // fallback: inform via live region
+        const status = document.getElementById('invite-copy-status');
+        if (status) status.textContent = 'Kopieren fehlgeschlagen.';
+        console.error('Clipboard error', err);
       });
     });
   }
@@ -159,6 +169,12 @@ document.addEventListener('DOMContentLoaded', function () {
     createBtn.addEventListener('click', () => {
       createForm.reset();
       createDialog.showModal();
+      // Put keyboard focus into the username field so users can start typing immediately
+      const first = document.getElementById('new-username');
+      if (first) {
+        // small timeout to ensure showModal has completed in some browsers
+        setTimeout(() => first.focus(), 40);
+      }
     });
   }
 
@@ -187,6 +203,7 @@ document.addEventListener('DOMContentLoaded', function () {
           createDialog.close();
           reload();
           if (resp.inviteLink) {
+            // place the invite link into the pre/code block (escape handled by textContent)
             inviteLinkCode.textContent = resp.inviteLink;
             // show metadata if provided
             if (resp.inviteExpiresAt) {
@@ -242,7 +259,7 @@ document.addEventListener('DOMContentLoaded', function () {
             const uid2 = userDetailDialog.dataset.userId;
             fetch(`/admin/users/${encodeURIComponent(uid2)}`).then(r => r.json()).then(d => {
               // update content quickly
-              let html = `<div class="mb-3">
+              let html = `<div class="md3-stack--dialog">
                     <div><strong>Benutzername:</strong> ${d.username}</div>
                     <div><strong>Email:</strong> ${d.email || '-'}</div>
                     <div><strong>Rolle:</strong> ${d.role}</div>

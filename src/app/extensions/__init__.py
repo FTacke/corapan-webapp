@@ -82,11 +82,7 @@ def register_jwt_handlers() -> None:
         error_code = "access_expired" if token_type == "access" else "refresh_expired"
 
         # API endpoints (including /auth/): Return JSON error with code
-        if (
-            request.path.startswith("/api/")
-            or request.path.startswith("/atlas/")
-            or request.path.startswith("/auth/")
-        ):
+        if request.path.startswith("/api/") or request.path.startswith("/atlas/"):
             return jsonify(
                 {
                     "error": "token_expired",
@@ -111,7 +107,11 @@ def register_jwt_handlers() -> None:
 
         save_return_url()
         referrer = request.referrer or url_for("public.landing_page")
-        flash("Tu sesión ha expirado. Por favor inicia sesión nuevamente.", "info")
+        try:
+            flash("Tu sesión ha expirado. Por favor inicia sesión nuevamente.", "info")
+        except RuntimeError:
+            # Session unavailable (e.g. tests without secret_key) - ignore flash
+            pass
 
         # Add ?showlogin=1 to URL (preserves scroll position)
         separator = "&" if "?" in referrer else "?"
@@ -135,11 +135,7 @@ def register_jwt_handlers() -> None:
             return jsonify({"authenticated": False}), 200
 
         # API endpoints (including /auth/): Return JSON error with code
-        if (
-            request.path.startswith("/api/")
-            or request.path.startswith("/atlas/")
-            or request.path.startswith("/auth/")
-        ):
+        if request.path.startswith("/api/") or request.path.startswith("/atlas/"):
             return jsonify(
                 {
                     "error": "invalid_token",
@@ -164,7 +160,10 @@ def register_jwt_handlers() -> None:
 
         save_return_url()
         referrer = request.referrer or url_for("public.landing_page")
-        flash("Token inválido. Por favor inicia sesión nuevamente.", "info")
+        try:
+            flash("Token inválido. Por favor inicia sesión nuevamente.", "info")
+        except RuntimeError:
+            pass
 
         # Add ?showlogin=1 to URL (preserves scroll position)
         separator = "&" if "?" in referrer else "?"
@@ -190,12 +189,15 @@ def register_jwt_handlers() -> None:
             # Fallback: return 200 for public routes (should not happen)
             return jsonify({"authenticated": False}), 200
 
-        # API endpoints (including /auth/): Return JSON error with code
-        if (
-            request.path.startswith("/api/")
-            or request.path.startswith("/atlas/")
-            or request.path.startswith("/auth/")
-        ):
+        # For certain auth-related HTML pages we want to redirect the browser
+        # to the login UI (not return JSON). These are server-rendered pages
+        # under /auth/account and /auth/password.
+        if request.path.startswith("/auth/account") or request.path.startswith("/auth/password"):
+            # fall through to HTML redirect behavior below
+            pass
+
+        # API endpoints: Return JSON error with code
+        if request.path.startswith("/api/") or request.path.startswith("/atlas/"):
             return jsonify(
                 {
                     "error": "unauthorized",
@@ -220,7 +222,10 @@ def register_jwt_handlers() -> None:
 
         save_return_url()
         referrer = request.referrer or url_for("public.landing_page")
-        flash("Por favor inicia sesión para acceder a este contenido.", "info")
+        try:
+            flash("Por favor inicia sesión para acceder a este contenido.", "info")
+        except RuntimeError:
+            pass
 
         # Add ?showlogin=1 to URL (preserves scroll position)
         separator = "&" if "?" in referrer else "?"

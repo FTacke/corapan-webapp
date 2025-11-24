@@ -51,8 +51,11 @@
 }
 
 .md3-text-content {
-  max-width: 900px;
-  margin: var(--space-8) auto 0;
+  /* Keep existing text width but reference canonical variable so all pages match
+     the new .md3-text-page preset. Reduce top margin to tighten vertical rhythm
+     between hero and main content to be visually closer to the previous layout. */
+  max-width: var(--text-page-max-width, 900px);
+  margin: var(--space-6) auto 0;
   width: 100%;
   box-sizing: border-box;
   /* NO horizontal padding - Edge-Padding comes from page wrapper */
@@ -89,6 +92,19 @@
   padding-left: 0.5rem; /* Zusätzlicher Abstand zwischen Marker und Text */
 }
 
+/* Ensure images inside text content scale to the available width */
+.md3-text-content img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* Reduce the vertical gaps between consecutive sections in text pages so
+   the Proyecto overview is less airy and aligns better with historical spacing. */
+/* We intentionally do not add extra margins between top-level children here,
+   because each section uses its own padding (.md3-page__section). Keeping
+   spacing single-sourced avoids stacked gaps between sections. */
+
 /* Definition List for Credits/Metadata */
 .md3-text-dl {
   margin: 0;
@@ -116,6 +132,22 @@
 .md3-text-heading {
   color: var(--md-sys-color-primary);
   margin: var(--space-8) 0 var(--space-4);
+}
+
+/* Section / Subsection utility helpers for text pages
+   - Use MD3 tokens ONLY for colors/spacing
+   - Typographic sizes are provided via md3-title-medium on the element
+ */
+.md3-section-title {
+  color: var(--md-sys-color-primary);
+  margin-top: var(--space-8);
+  margin-bottom: var(--space-3);
+}
+
+.md3-subsection-title {
+  color: var(--md-sys-color-on-surface);
+  margin-top: var(--space-6);
+  margin-bottom: var(--space-2);
 }
 
 .editor-overview {
@@ -265,7 +297,7 @@
   border-bottom-color: var(--md-sys-color-tertiary);
 }
 
-.md3-text-page a:hover:not(.md3-button):not(.md3-button--filled):not(.md3-button--outlined):not(.md3-button--text):not(.md3-button--danger):not(.md3-button--tonal) {
+.md3-text-content a:hover:not(.md3-button):not(.md3-button--filled):not(.md3-button--outlined):not(.md3-button--text):not(.md3-button--danger):not(.md3-button--tonal) {
   color: var(--md-sys-color-primary);
   background: var(--md-sys-color-primary-container);
   border-bottom-color: var(--md-sys-color-on-primary-container);

@@ -45,17 +45,18 @@ def player_page():
         # HTMX request: Client-side redirect via header
         if request.headers.get("HX-Request"):
             from urllib.parse import quote
-
             response = make_response("", 204)
             # Double-encode next parameter to preserve query string through HTMX redirect
             # (HTMX decodes once when following HX-Redirect header)
             double_encoded_next = quote(quote(next_url, safe=""), safe="")
-            redirect_url = f"/auth/login_sheet?next={double_encoded_next}"
+            # The canonical login page is /login (full-page). Route-guards should
+            # send users to /login (not the sheet) for primary login.
+            redirect_url = f"/login?next={double_encoded_next}"
             response.headers["HX-Redirect"] = redirect_url
             return response
 
-        # Full-page request: Server-side redirect to landing page with login flag
-        return redirect(url_for("public.landing_page", login=1, next=next_url), 303)
+        # Full-page request: Server-side redirect to canonical login page
+        return redirect(url_for("public.login", next=next_url), 303)
 
     # Authenticated: Render player
     transcription = request.args.get("transcription")

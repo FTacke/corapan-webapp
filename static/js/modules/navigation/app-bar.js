@@ -11,7 +11,8 @@
  */
 function initUserMenu() {
   // Delegate: Find elements whenever they exist (after any page reload)
-  const btn = document.querySelector("[data-user-menu-toggle]");
+  // Accept either the new account trigger or the legacy user-menu toggle
+  const btn = document.querySelector("[data-account-menu-trigger], [data-user-menu-toggle]");
   const menu = document.querySelector("[data-user-menu]");
 
   if (!btn || !menu) {
@@ -103,7 +104,7 @@ export class TopAppBar {
     const userMenuRoot = document.querySelector("[data-user-menu-root]");
     if (!userMenuRoot) return;
 
-    const toggle = userMenuRoot.querySelector("[data-user-menu-toggle]");
+    const toggle = userMenuRoot.querySelector("[data-account-menu-trigger], [data-user-menu-toggle]");
     const dropdown = userMenuRoot.querySelector("[data-user-menu]");
 
     if (!toggle || !dropdown) return;
@@ -175,7 +176,7 @@ export class TopAppBar {
     });
 
     // Close on backdrop click
-    const backdrop = loginSheet.querySelector(".md3-login-backdrop");
+    const backdrop = loginSheet.querySelector('.md3-sheet__backdrop, .md3-login-backdrop');
     if (backdrop) {
       backdrop.addEventListener("click", () =>
         this.closeLoginSheet(loginSheet),

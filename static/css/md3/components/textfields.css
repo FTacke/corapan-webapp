@@ -36,7 +36,8 @@
 .md3-outlined-textfield__input--select {
   appearance: none;
   cursor: pointer;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none'%3E%3Cpath d='M7 10l5 5 5-5z' fill='%230a5981'/%3E%3C/svg%3E");
+    /* Use currentColor so the select arrow follows the field's text color / theme tokens */
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='currentColor'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
   background-position: right 8px center;
   padding-right: 40px;
@@ -92,11 +93,10 @@
   transform: translateY(-50%);
   color: var(--md-sys-color-on-surface-variant);
   font-size: 16px;
-  /* Use the surface container background explicitly so the outlined border does not show through */
-  background: var(
-    --md-sys-color-surface-container,
-    var(--md-sys-color-surface, #fff)
-  );
+  /* Use the main page surface as default label background so labels do not
+     create hard, contrasting panels across pages. Dialogs override this
+     to use a dialog-specific container token (see dialog.css). */
+  background: var(--md-sys-color-surface, #fff);
   padding: 0 var(--space-2);
   pointer-events: none;
   transition: all 200ms cubic-bezier(0.2, 0, 0, 1);
@@ -109,10 +109,7 @@
   color: var(--md-sys-color-on-surface-variant);
   transform: translateY(0);
   /* Make label background match the parent field's background */
-  background: var(
-    --md-sys-color-surface-container,
-    var(--md-sys-color-surface, #fff)
-  );
+  background: var(--md-sys-color-surface, #fff);
 }
 
 .md3-outlined-textfield__input:focus ~ .md3-outlined-textfield__label,
@@ -138,7 +135,7 @@
   top: -10px;
   font-size: 12px;
   transform: translateY(0);
-  background: var(--md-sys-color-surface-container);
+  background: var(--md-sys-color-surface);
   padding: 0 var(--space-2);
 }
 
@@ -197,16 +194,21 @@
 .md3-outlined-textfield__input:focus
   ~ .md3-outlined-textfield__outline
   .md3-outlined-textfield__outline-end {
+  /* Keep border-width constant to avoid layout shifts; only change color */
   border-color: var(--md-sys-color-primary);
-  border-width: 2px;
 }
 
 .md3-outlined-textfield__input:focus
   ~ .md3-outlined-textfield__outline
   .md3-outlined-textfield__outline-notch {
+  /* Avoid expanding border widths, only change color */
   border-color: var(--md-sys-color-primary);
-  border-top-width: 2px;
-  border-bottom-width: 2px;
+}
+
+/* Visual focus ring without changing border width (prevents jumps) */
+.md3-outlined-textfield:focus-within .md3-outlined-textfield__outline {
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--md-sys-color-primary) 10%, transparent);
+  border-radius: var(--radius-sm);
 }
 
 /* ============================================================================

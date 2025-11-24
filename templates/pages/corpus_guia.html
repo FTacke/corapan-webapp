@@ -3,19 +3,20 @@
 {% block page_title %}Guía de Búsqueda · CO.RA.PAN{% endblock %}
 
 {% block content %}
-<article class="md3-text-page">
-  <section class="md3-hero md3-hero--container md3-hero--with-icon" role="main" aria-label="Guía de Búsqueda">
-    <div class="md3-hero__container">
+<div class="md3-page" role="main" aria-label="Guía de Búsqueda">
+  <header class="md3-page__header">
+    <div class="md3-hero md3-hero--card md3-hero--with-icon md3-hero__container" role="main" aria-label="Guía de Búsqueda">
       <span class="material-symbols-rounded md3-hero__icon" aria-hidden="true">school</span>
       <div class="md3-hero__content">
         <span class="md3-hero__eyebrow">Ayuda</span>
-        <h1 class="md3-hero__title">Guía paso a paso para buscar en CO.RA.PAN</h1>
+        <h1 class="md3-hero__title md3-headline-medium">Guía paso a paso para buscar en CO.RA.PAN</h1>
         <p class="md3-hero__intro">Aprende a utilizar todas las herramientas de búsqueda, desde lo más básico hasta consultas avanzadas.</p>
       </div>
     </div>
-  </section>
+  </header>
 
-  <div class="md3-text-content">
+  <main class="md3-text-page">
+    <div class="md3-text-content">
     
     <!-- INTRODUCCIÓN -->
     <section class="md3-text-section">
@@ -24,16 +25,16 @@
       </p>
     </section>
 
-    <hr class="md3-divider">
+    <!-- divider removed — replaced by canonical section spacing -->
 
     <!-- 1. BÚSQUEDA SIMPLE -->
     <section class="md3-text-section">
-      <h2 class="md3-title-large md3-text-heading">1. Consulta Simple: Para empezar</h2>
+      <h2 class="md3-title-large md3-section-title md3-text-heading">1. Consulta Simple: Para empezar</h2>
       <p class="md3-body-large">
         La pestaña <strong>"Consulta simple"</strong> es ideal si buscas una palabra concreta o una frase exacta. Es como usar Google, pero aplicado a nuestro corpus.
       </p>
 
-      <h3 class="md3-title-medium">¿Cómo funciona?</h3>
+      <h3 class="md3-title-medium md3-subsection-title">¿Cómo funciona?</h3>
       <ol class="md3-body-large md3-text-list">
         <li>Escribe la palabra en el cuadro de texto (por ejemplo: <code>casa</code>).</li>
         <li>Elige el <strong>Tipo</strong> de búsqueda:
@@ -48,16 +49,16 @@
       </ol>
     </section>
 
-    <hr class="md3-divider">
+    <!-- divider removed — replaced by canonical section spacing -->
 
     <!-- 2. MODO AVANZADO -->
     <section class="md3-text-section">
-      <h2 class="md3-title-large md3-text-heading">2. Modo Avanzado: Para profundizar</h2>
+      <h2 class="md3-title-large md3-section-title md3-text-heading">2. Modo Avanzado: Para profundizar</h2>
       <p class="md3-body-large">
         La pestaña <strong>"Modo avanzado (CQL)"</strong> te permite buscar patrones gramaticales o secuencias de palabras. ¿Quieres buscar un verbo seguido de un sustantivo? ¿O todas las formas de futuro? Aquí es donde ocurre la magia.
       </p>
 
-      <h3 class="md3-title-medium">El Constructor de Patrones</h3>
+      <h3 class="md3-title-medium md3-subsection-title">El Constructor de Patrones</h3>
       <p class="md3-body-large">
         No necesitas saber programar. Usa el botón <strong>"Añadir palabra"</strong> para agregar "bloques" a tu búsqueda. Cada bloque representa una palabra en la secuencia.
       </p>
@@ -71,17 +72,17 @@
         </li>
       </ul>
 
-      <h3 class="md3-title-medium">Ayuda con Inteligencia Artificial</h3>
+      <h3 class="md3-title-medium md3-subsection-title">Ayuda con Inteligencia Artificial</h3>
       <p class="md3-body-large">
         Si te sientes perdido o quieres hacer algo muy complejo (como buscar "futuros perifrásticos"), hemos incluido una ayuda especial. Busca el enlace <strong>"(Cómo hacerlo)"</strong> o el botón de ayuda. Allí encontrarás un "prompt" (instrucción) que puedes copiar y pegar en ChatGPT o tu IA favorita para que ella escriba el código de búsqueda (CQL) por ti.
       </p>
     </section>
 
-    <hr class="md3-divider">
+    <!-- divider removed — replaced by canonical section spacing -->
 
     <!-- 3. BÚSQUEDA POR TOKEN -->
     <section class="md3-text-section">
-      <h2 class="md3-title-large md3-text-heading">3. Búsqueda por Token: Precisión quirúrgica</h2>
+      <h2 class="md3-title-large md3-section-title md3-text-heading">3. Búsqueda por Token: Precisión quirúrgica</h2>
       <p class="md3-body-large">
         Esta es una función para usuarios muy específicos. En nuestro corpus, cada palabra pronunciada tiene un número de identificación único (Token-ID).
       </p>
@@ -90,11 +91,11 @@
       </p>
     </section>
 
-    <hr class="md3-divider">
+    <!-- divider removed — replaced by canonical section spacing -->
 
     <!-- 4. RESULTADOS Y ESTADÍSTICAS -->
     <section class="md3-text-section">
-      <h2 class="md3-title-large md3-text-heading">4. Resultados y Estadísticas</h2>
+      <h2 class="md3-title-large md3-section-title md3-text-heading">4. Resultados y Estadísticas</h2>
       <p class="md3-body-large">
         Una vez que haces una búsqueda, verás dos pestañas nuevas abajo:
       </p>
@@ -116,6 +117,7 @@
       </ul>
     </section>
 
-  </div>
-</article>
+    </div>
+  </main>
+</div>
 {% endblock %}

@@ -1,0 +1,107 @@
+/* Auth & Profile Pages - MD3 Standards */
+
+/* 1) MD3-CARD-STANDARDS */
+.md3-auth-card {
+  max-width: 480px;
+  margin-inline: auto;
+  /* Use canonical token for card surface */
+  background: var(--md-sys-color-surface-container-high);
+  border-radius: var(--radius-sm);
+}
+
+.md3-card__header,
+.md3-card__content {
+  padding: var(--space-4);
+}
+
+.md3-card__header > h1,
+.md3-card__header > h2 {
+  margin: 0;
+}
+
+/* Auth-specific card header spacing & color */
+.md3-auth-card .md3-card__header {
+  padding-top: var(--space-6);
+  padding-bottom: var(--space-3);
+}
+
+.md3-auth-card .md3-card__title {
+  color: var(--md-sys-color-primary);
+}
+
+/* 2) MD3-TYPO & SPACING */
+.md3-card__content > * + * {
+  margin-top: var(--space-4);
+}
+
+.md3-auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4); /* 16px vertical rhythm for form fields */
+  margin-top: var(--space-4);
+}
+
+/* Remove utility classes effect if present */
+.md3-auth-card .mt-3,
+.md3-auth-card .mb-3 {
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
+}
+
+/* 3) MD3-OUTLINED TEXTFIELDS (Auth specific overrides) */
+.md3-auth-card .md3-outlined-textfield,
+.md3-dialog__surface .md3-outlined-textfield {
+  width: 100%;
+}
+
+.md3-auth-card .md3-outlined-textfield__label {
+  /* Labels on auth page cards should blend with the card/page surface */
+  background: var(--md-sys-color-surface);
+  padding-inline: 4px;
+}
+
+.md3-auth-card .md3-outlined-textfield__input,
+.md3-dialog__surface .md3-outlined-textfield__input,
+.md3-sheet__surface .md3-outlined-textfield__input {
+  background: transparent;
+  color: var(--md-sys-color-on-surface);
+}
+
+.md3-auth-card .md3-outlined-textfield__outline,
+.md3-dialog__surface .md3-outlined-textfield__outline,
+.md3-sheet__surface .md3-outlined-textfield__outline {
+  border-color: var(--md-sys-color-outline-variant);
+}
+
+.md3-auth-card .md3-outlined-textfield--focused .md3-outlined-textfield__outline,
+.md3-dialog__surface .md3-outlined-textfield--focused .md3-outlined-textfield__outline,
+.md3-sheet__surface .md3-outlined-textfield--focused .md3-outlined-textfield__outline {
+  border-color: var(--md-sys-color-primary);
+}
+
+/* 4) MD3-BUTTON-STANDARDS (Auth specific) */
+/* Removed overrides to enforce canonical button styles (pill shape, 48px height, etc.) */
+
+.md3-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-2);
+  margin-top: var(--space-4);
+}
+
+/* 5) DIALOGE UND SHEETS
+   Dialog surface and generic dialog styling are handled centrally in
+   static/css/md3/components/dialog.css so auth-specific page styles
+   must not override dialog surfaces. */
+
+/* 6) PAGE LAYOUT & SPACING */
+.md3-auth-page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4); /* Space between cards */
+  padding-bottom: var(--space-6);
+}
+
+.md3-auth-page > .md3-card {
+  margin-bottom: 0; /* Let gap handle spacing */
+}
