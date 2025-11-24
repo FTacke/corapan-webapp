@@ -2,8 +2,15 @@
 """Check database structure."""
 
 import sqlite3
+from pathlib import Path
 
-conn = sqlite3.connect("data/db/transcription.db")
+db_path = Path("data/db/transcription.db")
+if not db_path.exists():
+    print("transcription.db not found at data/db/transcription.db — this DB is deprecated in the current layout.")
+    print("If you need search/corpus DB locally, either create it via the full JSON->DB pipeline, use BlackLab, or run scripts/create_minimal_transcription_db.py for a tiny placeholder.")
+    raise SystemExit(1)
+
+conn = sqlite3.connect(str(db_path))
 cursor = conn.cursor()
 
 print("=== TABLES ===")

@@ -1,4 +1,10 @@
-/* MD3 Card Components — canonical styles from md3_preview.css */
+/* MD3 Card Components — canonical styles from md3_preview.css
+ *
+ * Migration note: Historically `.card`, `.card-outlined`, `.card-elevated`
+ * variants have been used. Prefer `.md3-card` and `.md3-card--outlined` /
+ * `.md3-card--elevated` variants in new code. Older `.card-*` names remain
+ * as compatibility aliases and should be marked `@deprecated`.
+ */
 
 /* Base card class */
 .card {
@@ -37,6 +43,17 @@
   box-shadow: none;
   border-radius: var(--radius-md);
   padding: var(--space-4);
+}
+
+/* Danger variant for outlined cards (e.g. account deletion) */
+.card-outlined--danger,
+.md3-card.card-outlined--danger {
+  border-color: var(--md-sys-color-error);
+}
+
+.card-outlined--danger .card-title,
+.md3-card.card-outlined--danger .md3-card__header .md3-title-medium {
+  color: var(--md-sys-color-error);
 }
 
 .card-filled {
@@ -86,6 +103,17 @@
   box-shadow: var(--elev-1);
   border-radius: var(--radius-md);
   padding: var(--space-4);
+}
+
+/* md3-card header spacing & title normalization */
+.md3-card__header {
+  padding-top: 0; /* card padding handles spacing */
+  margin: 0 0 var(--space-2) 0;
+}
+
+.md3-card__header .md3-title-medium,
+.md3-card__header .card-title {
+  margin: 0; /* remove extra browser margins inside card header */
 }
 
 /* Code blocks with tonal styling */

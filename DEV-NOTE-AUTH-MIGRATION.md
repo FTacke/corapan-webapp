@@ -65,3 +65,25 @@ If you'd like, I can now:
 For local development and quick onboarding, `startme.md` now contains a short 5-minute quickstart for both a SQLite-based and a Postgres (docker) dev flow. If you plan to reuse this repository as a template, `docs/how-to/template-usage.md` summarizes the minimal steps to rebrand and initialize auth in a new project.
 
 If you want me to continue, say which of the remaining items is highest priority next (e.g., global inline style removal, Playwright test hardening, or add a scheduled worker job for anonymization in deployment manifests).
+
+---
+
+Dev convenience: Resetting SQLite-based auth (Variant A)
+
+Added a small convenience flow for local devs so you can always get a clean
+auth DB and a working admin user with a single command:
+
+1. `make auth-reset-dev` — deletes `data/db/auth.db`, reapplies the sqlite
+  migration and creates an admin user `admin` using the password provided via
+  `START_ADMIN_PASSWORD` (fallback: `change-me`).
+
+Mini self-tests (manual):
+
+1. Run `make auth-reset-dev` → start the app → login with `admin` / your password
+  (or `change-me`). This should succeed.
+2. Try entering a wrong password multiple times to trigger the lockout.
+  Then run `make auth-reset-dev` again — the admin account must be unlocked and
+  accept the correct password after the reset.
+
+These helpers are intentionally safe for dev — they do not change auth core
+logic or production migrations; use them to recover a developer environment.

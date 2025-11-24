@@ -203,9 +203,17 @@ def password_reset_page() -> Response:
 
 
 @blueprint.get("/account/profile/page")
-@jwt_required(optional=True)
+@jwt_required()
 def account_profile_page() -> Response:
-    return render_template("auth/account_profile.html"), 200
+    user = None
+    identity = get_jwt_identity()
+    if identity:
+        user = auth_services.find_user_by_username_or_email(identity)
+    elif g.user:
+        # Fallback to g.user if set by other means (e.g. session)
+        user = auth_services.find_user_by_username_or_email(g.user)
+        
+    return render_template("auth/account_profile.html", user=user), 200
 
 
 @blueprint.get("/account/password/page")
@@ -300,13 +308,15 @@ def login_post() -> Response:
 
     if not identifier:
         current_app.logger.warning(f"Failed login attempt - missing identifier from {request.remote_addr}")
-        flash("Unknown account.", "error")
+        # Localized (Spanish) message for missing identifier
+        flash("Cuenta desconocida.", "error")
         return render_template("auth/_login_sheet.html", next=next_url or ""), 400
 
     user = auth_services.find_user_by_username_or_email(identifier)
     if not user:
         current_app.logger.warning(f"Failed login attempt - unknown user: {identifier} from {request.remote_addr}")
-        flash("Unknown account.", "error")
+        # Localized (Spanish) message for unknown user
+        flash("Cuenta desconocida.", "error")
         return render_template("auth/_login_sheet.html", next=next_url or ""), 400
 
     # check account status and password
@@ -322,7 +332,8 @@ def login_post() -> Response:
         except Exception:
             current_app.logger.debug("Failed to increment auth_login_failure metric")
         current_app.logger.warning(f"Failed login attempt - wrong password: {identifier} from {request.remote_addr}")
-        flash("Invalid credentials.", "error")
+        # Localized (Spanish) message for invalid credentials
+        flash("Nombre de usuario o contraseña incorrectos.", "error")
         return render_template("auth/_login_sheet.html", next=next_url or ""), 400
 
     # Success: create tokens and set cookies
@@ -483,11 +494,17 @@ def account_profile_patch() -> Response:
         return jsonify({"error": "user_not_found"}), 404
 
     data = request.get_json() or {}
-    # allowed fields: display_name, email
+    # allowed fields: username, display_name, email
+    username = data.get("username")
     display = data.get("display_name")
     email = data.get("email")
-    # update using service helper
-    auth_services.update_user_profile(str(user.id), display_name=display, email=email)
+    # update using service helper, handle uniqueness / validation
+    try:
+        auth_services.update_user_profile(str(user.id), username=username, display_name=display, email=email)
+    except ValueError as e:
+        if str(e) == 'username_exists':
+            return jsonify({"error": "username_exists", "message": "Benutzername bereits vergeben."}), 409
+        raise
     return jsonify({"ok": True}), 200
 
 
@@ -627,10 +644,17 @@ def logout_any() -> Response:
     Redirect logic: Smart (public → stay, protected → inicio)
     Cookies cleared: access_token_cookie, refresh_token_cookie
     """
-    redirect_to = _next_url_after_logout()
+    # For API/AJAX requests (POST), return JSON to avoid redirect issues in JS
+    if request.method == "POST":
+        response = jsonify({"msg": "logout successful"})
+    else:
+        # For browser navigation (GET), redirect
+        redirect_to = _next_url_after_logout()
+        response = make_response(redirect(redirect_to, 303))
+    
+    # Clear access token cookie (flask-jwt-extended)
+    unset_jwt_cookies(response)
 
-    # Clear JWT cookies or revoke DB refresh token
-    response = make_response(redirect(redirect_to, 303))
     # Revoke refresh token if present (DB-backed)
     raw = request.cookies.get("refreshToken")
     if raw:
@@ -644,6 +668,8 @@ def logout_any() -> Response:
     # Force browser to reload page after redirect
     response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
     response.headers["Pragma"] = "no-cache"
+    
+    return response
     response.headers["Expires"] = "0"
 
     method = request.method

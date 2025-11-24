@@ -133,3 +133,14 @@ auth-create-admin:
 	@echo "Creating initial admin user (db default: data/db/auth.db)"
 	python scripts/create_initial_admin.py
 	@echo "✓ Created/updated admin user"
+
+
+.PHONY: auth-reset-dev
+auth-reset-dev:
+	@echo "Resetting sqlite auth DB (data/db/auth.db) and creating admin user"
+	python scripts/apply_auth_migration.py --db data/db/auth.db --reset
+	@echo "Creating initial admin user 'admin' (password from START_ADMIN_PASSWORD or 'change-me')"
+	# Set a fallback dev password if START_ADMIN_PASSWORD not provided
+	START_ADMIN_PASSWORD="${START_ADMIN_PASSWORD:-change-me}"; \
+	python scripts/create_initial_admin.py --db data/db/auth.db --username admin --password "$$START_ADMIN_PASSWORD"
+	@echo "✓ auth DB reset and admin created (username: admin)"

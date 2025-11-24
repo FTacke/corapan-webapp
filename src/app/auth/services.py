@@ -59,20 +59,38 @@ def hash_password(plain: str) -> str:
 
 
 def verify_password(plain: str, hashed: str) -> bool:
-    algo = current_app.config.get("AUTH_HASH_ALGO", "argon2")
+    """Verify a password against a stored hash.
+
+    For development environments the runtime hashing backend may differ from
+    whatever was available when a password hash was created (e.g. argon2
+    backend missing). To make local logins resilient we attempt verification
+    using both argon2 and bcrypt before falling back to a direct bcrypt
+    module check. This keeps behaviour backward-compatible and safe for dev
+    setups.
+    """
+    # Try argon2 first (best/modern algorithm), then bcrypt, then raw bcrypt
+    # check with truncation (bcrypt limit of 72 bytes).
     try:
-        if algo == "argon2":
-            return argon2.verify(plain, hashed)
         try:
-            return bcrypt.verify(plain, hashed)
+            if argon2.verify(plain, hashed):
+                return True
         except Exception:
-            # try direct bcrypt module verification with truncation when passlib fails
+            # ignore and try bcrypt
+            pass
+
+        try:
+            if bcrypt.verify(plain, hashed):
+                return True
+        except Exception:
+            # passlib bcrypt failed — try low-level bcrypt.checkpw with truncation
             try:
                 b = plain.encode("utf-8")[:72]
                 return _bcrypt_module.checkpw(b, hashed.encode("utf-8"))
             except Exception:
                 return False
+
     except Exception:
+        # Any unexpected error => treat as failed verification
         return False
 
 
@@ -316,12 +334,22 @@ def update_user_password(user_id: str, new_hashed: str) -> None:
         user.must_reset_password = False
 
 
-def update_user_profile(user_id: str, display_name: Optional[str] = None, email: Optional[str] = None) -> None:
+def update_user_profile(user_id: str, username: Optional[str] = None, display_name: Optional[str] = None, email: Optional[str] = None) -> None:
     with get_session() as session:
         stmt = select(User).where(User.id == user_id)
         user = session.execute(stmt).scalars().first()
         if not user:
             raise KeyError("user_not_found")
+        # username update (if provided) — ensure uniqueness
+        if username is not None:
+            new_u = username.strip().lower()
+            if new_u and new_u != user.username:
+                # check whether another user already uses this username
+                stmt2 = select(User).where(User.username == new_u)
+                existing = session.execute(stmt2).scalars().first()
+                if existing:
+                    raise ValueError("username_exists")
+                user.username = new_u
         if display_name is not None:
             setattr(user, "display_name", display_name)
         if email is not None:
@@ -340,10 +368,18 @@ def mark_user_deleted(user_id: str) -> None:
 
 
 def create_reset_token_for_user(user: User) -> Tuple[str, ResetToken]:
+    """Create a reset token for a user.
+
+    Expiration is configurable via the Flask config key
+    'AUTH_RESET_TOKEN_EXP_DAYS' (default: 7 days).
+    Returns the raw token string and the created ResetToken row.
+    """
     raw = secrets.token_urlsafe(48)
     token_hash = _hash_refresh_token(raw)
     rid = str(uuid.uuid4())
-    expires_at = datetime.now(timezone.utc) + timedelta(hours=1)
+    # Default to 7 days unless overridden in app config
+    days = int(current_app.config.get("AUTH_RESET_TOKEN_EXP_DAYS", 7))
+    expires_at = datetime.now(timezone.utc) + timedelta(days=days)
     rt = ResetToken(
         id=rid,
         user_id=str(user.id),

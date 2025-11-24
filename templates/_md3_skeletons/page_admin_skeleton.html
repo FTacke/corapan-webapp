@@ -1,0 +1,50 @@
+{#
+  Canonical Admin / Dashboard Skeleton
+  ----------------------------------
+  - .md3-page with .md3-grid--responsive and .md3-card usage.
+  - Use .md3-grid--responsive as default grid for cards and stats.
+#}
+
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="md3-page">
+  <div class="md3-page__header md3-stack--section">
+    <div class="md3-hero__eyebrow">Admin</div>
+    <h1 class="md3-hero__title">Dashboard</h1>
+    <p class="md3-hero__intro">High-level overview and metrics using token-driven spacing.</p>
+  </div>
+
+  <div class="md3-page__section">
+    <section class="md3-grid--responsive">
+      <div class="md3-card card-elevated">
+        <h3 class="md3-title-medium">Active Users</h3>
+        <p class="md3-display-small">1,234</p>
+      </div>
+      <div class="md3-card card-elevated">
+        <h3 class="md3-title-medium">Searches</h3>
+        <p class="md3-display-small">456k</p>
+      </div>
+      <div class="md3-card card-elevated">
+        <h3 class="md3-title-medium">Errors</h3>
+        <p class="md3-display-small">12</p>
+      </div>
+    </section>
+  </div>
+
+  <div class="md3-page__section md3-stack--page">
+    <div class="md3-card card-outlined">
+      <h2 class="md3-title-medium">Recent Activity</h2>
+      <div class="md3-table-container">
+        <table class="md3-table">
+          <thead><tr><th>User</th><th>Action</th><th>Date</th></tr></thead>
+          <tbody>
+            <tr><td>admin</td><td>Deployed migration</td><td>2025-11-20</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}

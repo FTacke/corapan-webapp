@@ -24,7 +24,23 @@ export function initCsrfProtection() {
     }
     
     // Try csrf_access_token first, then csrf_refresh_token as fallback
-    const csrf = getCookie("csrf_access_token") || getCookie("csrf_refresh_token");
+    let csrf = getCookie("csrf_access_token") || getCookie("csrf_refresh_token");
+
+    // If no cookie token present, check for hidden csrf_token form field
+    if (!csrf) {
+      try {
+        // evt.detail.elt may be the element being submitted / triggered
+        const elt = evt.detail.elt || document.querySelector('form[action*="/auth/login"]') || document.querySelector('form');
+        if (elt) {
+          // find hidden input named csrf_token inside the element or its form
+          const input = elt.querySelector ? elt.querySelector('input[name="csrf_token"]') : null;
+          if (input && input.value) csrf = input.value;
+        }
+      } catch (e) {
+        // ignore DOM read errors
+      }
+    }
+
     if (csrf) {
       evt.detail.headers["X-CSRF-TOKEN"] = csrf;
       console.debug('[CSRF] Injected token for', method, evt.detail.path);

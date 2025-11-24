@@ -28,19 +28,17 @@
 
     return fetch(url, opts)
       .then((res) => {
-        // If server indicates redirect, follow it in JS by reloading
-        if (res.redirected) {
+        // Regardless of server response (JSON or redirect), navigate to the
+        // site root. This avoids showing raw JSON errors to users after logout
+        // when using fetch-based logout handling.
+        // Prefer server-sent redirect URL when present.
+        if (res.redirected && res.url) {
           window.location.href = res.url;
           return;
         }
 
-        // Always attempt to reload so client UI state (g, session) is cleared
-        try {
-          window.location.reload();
-        } catch (e) {
-          // fallback to navigate to the root
-          window.location.href = '/';
-        }
+        // Otherwise go to index/root to present the logged-out landing page.
+        window.location.href = '/';
       })
       .catch((err) => {
         console.error('[Logout] Failed', err);

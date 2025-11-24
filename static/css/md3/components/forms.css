@@ -2,7 +2,9 @@
    MD3 Forms - Corpus-specific layouts (From Legacy md3-components.css)
    ============================================================================
    TRANSFERRED FROM: static/css/md3-components.css (Lines 1471-1732)
-   STATUS: ⚠️ Uses legacy MD3 tokens (--md3-*), needs migration to --md-sys-*
+  STATUS: ⚠️ Uses some legacy MD3 tokens (--md3-*) in older rules; these
+  should be migrated. NOTE: This file also contains a custom checkbox
+  implementation which is NOT MD3-canonical. See the TODO below.
    CUSTOM: Corpus search form, filter grid, regional filter section
    ============================================================================ */
 
@@ -71,11 +73,16 @@
 }
 
 /* ============================================================================
-   Material Design 3 Checkbox (Custom Implementation)
-   ============================================================================
-   STATUS: ⚠️ Custom implementation, NOT from MD3 spec
-   TODO: Replace with canonical MD3 checkbox component
-   ============================================================================ */
+  Material Design 3 Checkbox (Custom Implementation)
+
+  STATUS: ⚠️ Custom implementation, NOT canonical MD3
+  @deprecated: this custom checkbox is a legacy implementation. It is
+  kept to preserve current UI behavior, but the long-term plan is to
+  replace it with a canonical `.md3-checkbox` implementation that
+  matches the MD3 spec (focus ring, correct ripple behaviour, aria states).
+  TODO: Provide a canonical `.md3-checkbox` implementation in a later
+  change and migrate templates to `.md3-checkbox-legacy` when necessary.
+  ============================================================================ */
 
 .md3-checkbox-container {
   display: flex;

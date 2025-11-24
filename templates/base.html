@@ -75,8 +75,12 @@
     <noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.2/font/bootstrap-icons.min.css"></noscript>
     <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='img/favicon.ico') }}">
     <!-- MD3 Design System Foundation -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/md3/tokens.css') }}">
+        <link rel="stylesheet" href="{{ url_for('static', filename='css/md3/tokens.css') }}">
+        <!-- Legacy tokens shim: temporary mapping of --md3-* names to canonical tokens
+          (remove after migrating templates to --md-sys-* / --space-*) -->
+        <link rel="stylesheet" href="{{ url_for('static', filename='css/md3/tokens-legacy-shim.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/md3/typography.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/md3/layout.css') }}">
     <!-- MD3 Components for Navigation/Footer -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/md3/components/buttons.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/md3/components/navbar.css') }}">
@@ -90,6 +94,8 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/md3/components/hero.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/md3/components/text-pages.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/md3/components/cards.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/md3/components/dialog.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/md3/components/textfields.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/md3/components/layout-helpers.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/md3/components/stats.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/md3/components/como-citar.css') }}">

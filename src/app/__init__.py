@@ -56,7 +56,11 @@ def create_app(env_name: str | None = None) -> Flask:
     setup_logging(app)
 
     # SCHEMA VALIDATION: Prüfe DB-Schema beim Start
-    _validate_db_schema_on_startup(app)
+    # Allow dev / minimal Variant A to skip expecting transcription.db via config.
+    if app.config.get("EXPECT_TRANSCRIPTION_DB", True):
+        _validate_db_schema_on_startup(app)
+    else:
+        app.logger.info("[STARTUP] Skipping transcription.db schema validation (EXPECT_TRANSCRIPTION_DB=False)")
 
     return app
 
@@ -223,7 +227,7 @@ def register_security_headers(app: Flask) -> None:
             # we removed 'unsafe-inline' for scripts after moving inline scripts to external files
             "script-src 'self' https://code.jquery.com https://cdn.jsdelivr.net "
             "https://cdn.datatables.net https://cdnjs.cloudflare.com https://unpkg.com; "
-            "style-src 'self' https://cdn.jsdelivr.net https://cdn.datatables.net "
+            "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdn.datatables.net "
             "https://cdnjs.cloudflare.com https://unpkg.com https://fonts.googleapis.com; "
             "img-src 'self' data: https: blob:; "
             "font-src 'self' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net "

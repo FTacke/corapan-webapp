@@ -419,11 +419,28 @@ def search_tokens(params: SearchParams) -> dict[str, object]:
         connection.row_factory = sqlite3.Row
         cursor = connection.cursor()
 
-        # SCHEMA VALIDIERUNG beim Start
+        # SCHEMA VALIDIERUNG beim Start — allow skipping for Variant A (dev) via app config
         try:
-            _validate_db_schema(cursor)
-        except RuntimeError as e:
-            logger.error(f"Schema validation failed: {e}")
+            # attempt to read Flask config if available; default to expecting DB
+            expect_db = True
+            try:
+                from flask import current_app
+
+                expect_db = current_app.config.get("EXPECT_TRANSCRIPTION_DB", True)
+            except Exception:
+                # not running in app context or current_app not available
+                expect_db = True
+
+            if expect_db:
+                try:
+                    _validate_db_schema(cursor)
+                except RuntimeError as e:
+                    logger.error(f"Schema validation failed: {e}")
+                    raise
+            else:
+                logger.info("[DB SCHEMA] Skipping transcription.db schema validation (EXPECT_TRANSCRIPTION_DB=False)")
+        except Exception:
+            # propagate unexpected errors
             raise
 
         if sql_words:

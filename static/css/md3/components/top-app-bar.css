@@ -1,5 +1,8 @@
 /* ============================================
-   MD3 Top App Bar - Adaptive Opazität
+  MD3 Top App Bar - Adaptive Opazität
+  (CANONICAL) — this file defines the canonical top-app-bar markup
+  and behavior. Templates should rely on `.md3-top-app-bar` and the
+  documented slot classes for consistent integration.
    ============================================
    Compact/Medium (<840px): OPAK mit Elevation - Burger links, Login/Account rechts
    Expanded (≥840px): TRANSPARENT - KEIN Burger (permanenter Drawer), Login/Account rechts

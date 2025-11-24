@@ -1,12 +1,26 @@
 /* 
  * MD3 Token System - Canonical Definition
- * 
- * API:
- * - Colors: --md-sys-color-* (MD3) + --app-* (Project specific)
- * - Typography: --md-sys-typescale-*-{font-family, font-weight, font-size, line-height, letter-spacing}
- * - Spacing: --space-{1,2,3,4,5,6,8,10,12}
- * 
- * Note: No aliases or backward compatibility variables allowed.
+ *
+ * API (canonical):
+ * - Colors:       --md-sys-color-* (canonical)
+ * - Typography:   --md-sys-typescale-* (canonical)
+ * - Spacing:      --space-{1,2,3,4,5,6,8,10,12}
+ * - Shape/Elevation: --radius-*, --elev-*
+ *
+ * BACKWARDS COMPATIBILITY / MIGRATION NOTE
+ * ---------------------------------------
+ * Historically the project used "--md3-*" token names and other
+ * legacy variable sets. The long-term canonical names are the
+ * --md-sys-* / --space-* set above. During the migration period
+ * a *shim* of aliases is provided in
+ *   static/css/md3/tokens-legacy-shim.css
+ * which maps the most commonly-used `--md3-*` names to the
+ * canonical tokens. New code and templates MUST use `--md-sys-*`
+ * and `--space-*` tokens — do not add new `--md3-*` usages.
+ *
+ * RULES:
+ *  - --md-sys-* = canonical
+ *  - --md3-*      = legacy alias (temporary; will be removed later)
  */
 
 /* MD3 Farb-Tokens — generiert und gepflegt mit generate-tokens.py */

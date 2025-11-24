@@ -265,7 +265,7 @@
   border-bottom-color: var(--md-sys-color-tertiary);
 }
 
-.md3-text-page a:hover {
+.md3-text-page a:hover:not(.md3-button):not(.md3-button--filled):not(.md3-button--outlined):not(.md3-button--text):not(.md3-button--danger):not(.md3-button--tonal) {
   color: var(--md-sys-color-primary);
   background: var(--md-sys-color-primary-container);
   border-bottom-color: var(--md-sys-color-on-primary-container);
@@ -304,7 +304,7 @@
 
 .md3-text-page a img:hover,
 .md3-text-citation a:hover,
-.card a:hover:not(.md3-button-filled):not(.btn) {
+.card a:hover:not(.md3-button):not(.md3-button--filled):not(.btn) {
   background: transparent;
   opacity: 0.85;
   /* Subtle hover feedback without background */

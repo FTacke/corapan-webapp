@@ -1,7 +1,7 @@
 /* ============================================================================
    MD3 Buttons - Canonical Implementation
    ============================================================================
-   Strict MD3 Button implementation per specification.
+  Strict MD3 Button implementation per specification.
    - Uses --md-sys-color-* tokens
    - Uses --md-sys-typescale-* tokens
    - Uses --space-* tokens
@@ -29,10 +29,22 @@
   min-height: 48px;
 }
 
-/* Compatibility aliases (legacy class names used in templates)
-   These keep older templates working while the canonical names are used
-   across the codebase. They rely on the tokenized implementations above.
-*/
+/* Ensure anchor elements styled as filled buttons don't get overridden by link styles */
+a.md3-button.md3-button--filled,
+.md3-button.md3-button--filled {
+  color: var(--md-sys-color-on-primary) !important;
+}
+
+./* ------------------------------------------------------------
+  Compatibility aliases (legacy class names used in templates)
+
+  These keep older templates working while the project migrates to the
+  canonical names. Aliases are DEPRECATED and carry a clear tag below.
+
+  NOTE: Do not use the deprecated aliases in new templates — prefer
+  `.md3-button--filled` / `--tonal` / `--outlined` / `--text`.
+  ------------------------------------------------------------ */
+/* @deprecated: use .md3-button--filled */
 .md3-button--contained { /* legacy alias -> filled */
   /* mirror the filled button behavior */
   display: inline-flex;
@@ -55,6 +67,7 @@
 }
 
 /* destructive alias used by some templates for 'danger' style */
+/* @deprecated: prefer modifier classes in combination with canonical variants, e.g. .md3-button--filled.md3-button--danger */
 .md3-destructive, .md3-button--destructive {
   background: var(--md-sys-color-error);
   color: var(--md-sys-color-on-error);
@@ -75,6 +88,17 @@
     var(--md-sys-color-on-primary) 8%
   ) !important;
   box-shadow: var(--elev-1);
+}
+
+/* Make hover layout-stable: do not change padding/size on hover */
+.md3-button:hover,
+.md3-button--filled:hover,
+.md3-button--outlined:hover,
+.md3-button--danger:hover,
+.md3-button--warning:hover {
+  padding: var(--space-3) var(--space-6);
+  min-height: 48px;
+  box-sizing: border-box;
 }
 
 .md3-button--filled:focus-visible {
@@ -215,6 +239,41 @@
   outline-offset: 2px;
 }
 
+/* Warning Button (Warning State) */
+.md3-button--warning {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-6);
+  border-radius: 9999px;
+  border: none;
+  background: var(--md-sys-color-warning);
+  color: var(--md-sys-color-on-warning);
+  font-size: var(--md-sys-typescale-label-large-font-size);
+  font-weight: var(--md-sys-typescale-label-large-font-weight);
+  line-height: var(--md-sys-typescale-label-large-line-height);
+  letter-spacing: var(--md-sys-typescale-label-large-letter-spacing);
+  text-decoration: none;
+  cursor: pointer;
+  transition: background-color 200ms ease, box-shadow 200ms ease;
+  min-height: 48px;
+}
+
+.md3-button--warning:hover {
+  background-color: color-mix(
+    in srgb,
+    var(--md-sys-color-warning) 92%,
+    var(--md-sys-color-on-warning) 8%
+  ) !important;
+  box-shadow: var(--elev-1);
+}
+
+.md3-button--warning:focus-visible {
+  outline: 2px solid var(--md-sys-color-warning);
+  outline-offset: 2px;
+}
+
 /* Outlined + Danger variant — low emphasis but error color */
 .md3-button--outlined.md3-button--danger {
   background: transparent;
@@ -228,13 +287,21 @@
 }
 
 /* Button Icon */
-.md3-button__icon {
+/* Ensure icons inside buttons render smaller than the raw material-symbols default
+   use a more specific selector to win over .material-symbols-rounded which is
+   declared later in material-symbols-fallback.css */
+.md3-button__icon,
+.md3-button .material-symbols-rounded.md3-button__icon,
+.md3-button__icon.material-symbols-rounded {
   font-size: 18px;
   width: 18px;
   height: 18px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  align-self: center;
+  line-height: 1;
+  vertical-align: middle;
 }
 
 /* Disabled State */

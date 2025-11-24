@@ -1,4 +1,69 @@
-/* MD3 Layout Utilities */
+/*
+ * MD3 Layout Utilities — Core
+ *
+ * Canonical layout classes (use these in NEW templates):
+ *  - .md3-page                 — Page shell (outer container)
+ *  - .md3-page__header         — Hero/header area (eyebrow, title, intro)
+ *  - .md3-page__section        — Logical sections inside a page
+ *  - .md3-stack--page          — vertical rhythm between sections (uses --space-6 / --space-8)
+ *  - .md3-stack--section       — spacing inside a section (title → body → actions)
+ *  - .md3-grid--responsive     — default responsive grid for cards / stats
+ *
+ * Deprecated utilities and migration guidance
+ * -------------------------------------------
+ * The repository currently contains a Bootstrap-like set of utility
+ * classes (.m-*, .mt-*, .mb-*, .mx-auto, etc.). These are marked
+ * deprecated — please prefer the token-driven semantic layout classes
+ * above for new templates. The old utilities remain for backward
+ * compatibility during the migration.
+ */
+
+/* --- Canonical page layout helpers (token driven) --- */
+.md3-page {
+  /* Edge padding: use the token that matches current common site padding
+     (templates and md3-container commonly use 1.5rem = 24px) */
+  padding: 0 var(--space-6); /* 24px horizontal edge padding — replaces legacy .m-4 / mt-4 usage */
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.md3-page__header {
+  /* Provide consistent header vertical rhythm. Use --space-6 (24px)
+     to match hero components and the dominant page spacing in templates. */
+  padding-top: var(--space-6);
+  padding-bottom: var(--space-6);
+}
+
+.md3-page__section {
+  /* Section vertical padding: use the repository's dominant spacing.
+     Many templates use .mt-4 / 1.5rem between blocks — map to token --space-6 (24px). */
+  padding-top: var(--space-6);
+  padding-bottom: var(--space-6);
+}
+.md3-align--center { margin-left: auto; margin-right: auto; }
+
+.md3-stack--page > * + * {
+  /* Major page-level rhythm: use a larger gap between top-level sections.
+     Chosen because templates commonly use mt-4 / 1.5rem for section spacing
+     but larger separations are occasionally applied; pick --space-8 to
+     clearly separate top-level content areas. */
+  margin-top: var(--space-8); /* 32px (major section spacing) */
+}
+
+.md3-stack--section > * + * {
+  /* Section-local rhythm: map the most commonly used margin (.mt-4)
+     to token --space-6 (24px). This keeps visuals consistent with
+     current templates where .mt-4 / 1.5rem appears most often between
+     headings and body content. */
+  margin-top: var(--space-6); /* 24px (section spacing) */
+}
+
+.md3-grid--responsive {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: var(--space-4);
+}
+
 
 .md3-container {
   max-width: 1200px;
@@ -35,3 +100,159 @@
 .md3-space-16 {
   margin: 4rem;
 }
+
+/* Spacing Utilities (Bootstrap-like) — DEPRECATED
+  ------------------------------------------------
+  These utility classes are retained for compatibility but are
+  considered legacy. Use `.md3-stack--*`, `.md3-page__section` or
+  token-driven spacing in new templates instead. Avoid using new
+  `.m-*` utilities in new code.
+*/
+.m-0 { margin: 0 !important; }
+.mt-0 { margin-top: 0 !important; }
+.mb-0 { margin-bottom: 0 !important; }
+
+.m-1 { margin: 0.25rem !important; }
+.mt-1 { margin-top: 0.25rem !important; }
+.mb-1 { margin-bottom: 0.25rem !important; }
+.mr-1 { margin-right: 0.25rem !important; }
+.ml-1 { margin-left: 0.25rem !important; }
+
+.m-2 { margin: 0.5rem !important; }
+.mt-2 { margin-top: 0.5rem !important; }
+.mb-2 { margin-bottom: 0.5rem !important; }
+.mr-2 { margin-right: 0.5rem !important; }
+.ml-2 { margin-left: 0.5rem !important; }
+
+.m-3 { margin: 1rem !important; }
+.mt-3 { margin-top: 1rem !important; }
+.mb-3 { margin-bottom: 1rem !important; }
+.mr-3 { margin-right: 1rem !important; }
+.ml-3 { margin-left: 1rem !important; }
+
+.m-4 { margin: 1.5rem !important; }
+.mt-4 { margin-top: 1.5rem !important; }
+.mb-4 { margin-bottom: 1.5rem !important; }
+.mr-4 { margin-right: 1.5rem !important; }
+.ml-4 { margin-left: 1.5rem !important; }
+
+.m-5 { margin: 3rem !important; }
+.mt-5 { margin-top: 3rem !important; }
+.mb-5 { margin-bottom: 3rem !important; }
+
+.m-auto { margin: 0 auto !important; }
+.mx-auto { margin-left: auto !important; margin-right: auto !important; }
+
+/* Width Utilities */
+.w-100 { width: 100% !important; }
+.max-w-400 { max-width: 400px; }
+.max-w-600 { max-width: 600px; }
+
+/* Flex Utilities */
+.d-flex { display: flex !important; }
+.flex-column { flex-direction: column !important; }
+.align-items-center { align-items: center !important; }
+.justify-content-between { justify-content: space-between !important; }
+.gap-2 { gap: 0.5rem; }
+.gap-3 { gap: 1rem; }
+
+/* Form spacing helpers and sane defaults for dialogs / cards */
+.md3-text-field + .md3-text-field {
+  margin-top: var(--space-3);
+}
+
+.md3-text-field + .md3-actions,
+.md3-text-field.mb-3 + .md3-actions,
+.md3-text-field.mb-4 + .md3-actions {
+  margin-top: var(--space-3);
+}
+
+.md3-actions {
+  display: flex;
+  gap: var(--space-3);
+  margin-top: var(--space-3);
+  justify-content: flex-start;
+  align-items: center;
+}
+
+/* Generic form layout: use token-driven gap for consistent spacing
+   across all MD3 forms. This avoids inline styles and keeps spacing
+   consistent across cards, dialogs and pages. */
+.md3-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+/* Ensure actions inside a form align visually with other fields
+   and don't rely on extra bottom margins on fields. */
+.md3-form .md3-actions {
+  margin-top: 0;
+}
+
+/* For screens where compactness is desired (e.g. account pages) we
+   keep a small utility class '.md3-form--compact' to override the
+   default gap without changing component tokens globally. */
+.md3-form--compact {
+  gap: var(--space-2) !important;
+}
+
+/* When a form uses the .md3-form layout, prefer the native gap instead
+   of individual margin utilities; override utility bottoms inside forms
+   so spacing is consistent and avoids accidental zero-gap situations. */
+.md3-form > .mb-1,
+.md3-form > .mb-2,
+.md3-form > .mb-3,
+.md3-form > .mb-4,
+.md3-form > .mb-5 {
+  margin-bottom: 0 !important;
+}
+
+/* Ensure consecutive fields inside a form rely on gap rather than
+   extra element-level margins; this helps keep spacing predictable. */
+.md3-form > .md3-text-field + .md3-text-field {
+  margin-top: 0 !important;
+}
+
+/* Make sure the actions are spaced by the form's gap, not additional
+   margins. */
+.md3-form > .md3-actions {
+  margin-top: 0 !important;
+}
+
+/* Column width helpers for tables (useful for admin tables) */
+.col-w-10 { width: 10% !important; }
+.col-w-15 { width: 15% !important; }
+.col-w-20 { width: 20% !important; }
+.col-w-25 { width: 25% !important; }
+
+/* Make code blocks wrap long strings cleanly inside dialogs / tables */
+.md3-code-block__content {
+  word-break: break-all; /* safe default for tokens/links */
+  white-space: pre-wrap;
+}
+
+/* Ensure tables inside cards are visually aligned and have a top gap */
+.md3-card__content > .md3-table-container {
+  margin-top: var(--space-3);
+  overflow-x: auto;
+}
+
+.md3-table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: auto;
+}
+
+.md3-table th,
+.md3-table td {
+  padding: var(--space-3) var(--space-3);
+  border-bottom: 1px solid var(--md-sys-color-outline-variant);
+  text-align: left;
+}
+
+.md3-table thead th {
+  background: transparent;
+  font-weight: 600;
+}
+

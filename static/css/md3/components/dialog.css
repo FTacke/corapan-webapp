@@ -1,0 +1,112 @@
+/* ============================================================================
+   MD3 Dialogs - Canonical Implementation
+   ============================================================================
+   Generic dialog styles extracted from advanced-search.css for global use.
+   ============================================================================ */
+
+/* Dialog Base */
+.md3-dialog {
+  background: var(--md-sys-color-surface);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--elev-3);
+  min-width: 280px;
+  max-width: 560px;
+  display: none;
+  flex-direction: column;
+  transform: scale(0.9);
+  transition: transform 0.2s ease;
+  border: none; /* Reset native border */
+  padding: 0; /* Reset native padding */
+  color: var(--md-sys-color-on-surface);
+}
+
+/* Native dialog backdrop */
+.md3-dialog::backdrop {
+  background: rgba(0, 0, 0, 0.32);
+  backdrop-filter: blur(2px);
+}
+
+/* When open */
+.md3-dialog[open] {
+  transform: scale(1);
+  display: flex; /* Override native display: block */
+}
+
+/* Dialog Container (Inner Wrapper) */
+.md3-dialog__container {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: flex-start;
+  padding: var(--space-4);
+  max-width: 90vw;
+  max-height: 90vh;
+  overflow: hidden;
+}
+
+/* Dialog Header */
+.md3-dialog__header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  margin-bottom: var(--space-4);
+}
+
+/* Dialog Title */
+.md3-dialog__title {
+  margin: 0;
+  padding: var(--space-2) var(--space-4) var(--space-1);
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--md-sys-color-on-surface);
+  letter-spacing: 0.15px;
+}
+
+/* Dialog Content */
+.md3-dialog__content {
+  padding: 0 0 var(--space-3) 0;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: var(--md-sys-color-on-surface-variant);
+  flex-grow: 1;
+  overflow-y: auto;
+}
+
+/* Dialog Actions */
+.md3-dialog__actions {
+  padding: var(--space-3) 0 0 0;
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-3);
+  border-top: 1px solid var(--md-sys-color-outline-variant);
+  margin-top: auto;
+  flex-shrink: 0;
+}
+
+/* Dialog Icon */
+.md3-dialog__icon {
+  color: var(--md-sys-color-secondary);
+  font-size: 24px;
+}
+
+/* Large Variant */
+.md3-dialog--large {
+  max-width: 900px;
+  width: min(900px, 95vw);
+}
+
+/* Error Variant */
+.md3-dialog--error .md3-dialog__title {
+  color: var(--md-sys-color-error);
+}
+
+/* Code block inside dialog */
+.md3-dialog__content .md3-code-block pre {
+  max-height: 56vh;
+  overflow-y: auto;
+  margin: 0;
+  padding: var(--space-4);
+  background: var(--md-sys-color-surface-container-low);
+  border: 1px solid var(--md-sys-color-outline-variant);
+  border-radius: var(--radius-md);
+}

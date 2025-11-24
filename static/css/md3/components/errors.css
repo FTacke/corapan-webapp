@@ -81,5 +81,12 @@ body {
   flex-wrap: wrap;
 }
 
+/* Small inline error text for forms / dialogs */
+.md3-error-text {
+  color: var(--md-sys-color-error);
+  font-size: var(--md-sys-typescale-body-small-font-size);
+  margin-top: var(--space-2);
+}
+
 /* Buttons are already styled by md3/components/buttons.css, 
    but we might need to ensure they are loaded or use specific classes */

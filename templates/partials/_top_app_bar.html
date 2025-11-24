@@ -23,7 +23,7 @@
             aria-controls="navigation-drawer-modal"
             aria-expanded="false"
             data-action="open-drawer">
-      <span class="material-symbols-rounded">menu</span>
+      <span class="material-symbols-rounded md3-button__icon" aria-hidden="true">menu</span>
     </button>
 
     {# Center: Adaptive Title (Site → Page beim Scrollen) #}
@@ -66,13 +66,21 @@
                aria-label="Benutzermenü"
                data-user-menu
                hidden>
+            {# Common profile actions for authenticated users #}
+            <a href="{{ url_for('auth.account_profile_page') }}" class="md3-user-menu__item" role="menuitem">
+              <span class="material-symbols-rounded md3-user-menu__icon">account_circle</span>
+              <span class="md3-user-menu__label">Perfil</span>
+            </a>
             {% if role_value == 'admin' %}
+              <div class="md3-user-menu__divider" role="separator"></div>
               {# Admin Dashboard Link #}
-              <a href="{{ url_for('admin.dashboard') }}" 
-                 class="md3-user-menu__item" 
-                 role="menuitem">
+              <a href="{{ url_for('admin.dashboard') }}" class="md3-user-menu__item" role="menuitem">
                 <span class="material-symbols-rounded md3-user-menu__icon">dashboard</span>
                 <span class="md3-user-menu__label">Dashboard</span>
+              </a>
+              <a href="{{ url_for('auth.admin_users_page') }}" class="md3-user-menu__item" role="menuitem">
+                <span class="material-symbols-rounded md3-user-menu__icon">group</span>
+                <span class="md3-user-menu__label">Usuarios</span>
               </a>
               <div class="md3-user-menu__divider" role="separator"></div>
             {% endif %}

@@ -6,13 +6,13 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from flask import Blueprint, jsonify, request, current_app
+from flask import Blueprint, jsonify, request, current_app, url_for
 from flask_jwt_extended import jwt_required
 
 from ..auth import Role
 from ..auth.decorators import require_role
 from ..auth import services as auth_services
-from ..auth.models import User as UserModel
+from ..auth.models import User as UserModel, ResetToken as ResetTokenModel
 import secrets
 from sqlalchemy import select
 
@@ -88,6 +88,20 @@ def get_user(id):
         "login_failed_count": user.login_failed_count,
         "locked_until": user.locked_until.isoformat() if user.locked_until else None,
     }
+    # Attach recent reset token metadata (non-sensitive: no raw token)
+    with auth_services.get_session() as session:
+        stmt = select(ResetTokenModel).where(ResetTokenModel.user_id == id).order_by(ResetTokenModel.created_at.desc()).limit(5)
+        tokens = session.execute(stmt).scalars().all()
+        obj["resetTokens"] = [
+            {
+                "id": t.id,
+                "created_at": t.created_at.isoformat(),
+                "expires_at": t.expires_at.isoformat(),
+                "used_at": t.used_at.isoformat() if t.used_at else None,
+            }
+            for t in tokens
+        ]
+
     return jsonify(obj)
 
 
@@ -129,8 +143,25 @@ def create_user():
     # generate invite/reset token and log
     raw, tokenrow = auth_services.create_reset_token_for_user(u)
     current_app.logger.info(f"Invite created for {u.username}: token={raw}")
+    
+    # Return the token so the admin can copy it (since we don't have email sending set up yet)
+    # Use password_reset_page instead of login page to ensure the token is handled correctly
+    invite_link = url_for("auth.password_reset_page", token=raw, _external=True)
 
-    return jsonify({"ok": True, "userId": uid, "inviteSent": True}), 201
+    # Include token metadata so the admin UI can show expiry and the token id
+    return (
+        jsonify(
+            {
+                "ok": True,
+                "userId": uid,
+                "inviteSent": True,
+                "inviteLink": invite_link,
+                "inviteId": tokenrow.id,
+                "inviteExpiresAt": tokenrow.expires_at.isoformat(),
+            }
+        ),
+        201,
+    )
 
 
 @bp.patch("/<id>")
@@ -170,7 +201,18 @@ def admin_reset_password(id):
         return jsonify({"error": "not_found"}), 404
     raw, tokenrow = auth_services.create_reset_token_for_user(user)
     current_app.logger.info(f"Admin-reset for {user.username}: token={raw}")
-    return jsonify({"ok": True})
+
+    invite_link = url_for("auth.password_reset_page", token=raw, _external=True)
+
+    # Return link and meta so UI can surface the invite link for the admin
+    return jsonify(
+        {
+            "ok": True,
+            "inviteLink": invite_link,
+            "inviteId": tokenrow.id,
+            "inviteExpiresAt": tokenrow.expires_at.isoformat(),
+        }
+    )
 
 
 @bp.post("/<id>/lock")

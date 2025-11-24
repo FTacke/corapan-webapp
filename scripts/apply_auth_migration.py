@@ -39,5 +39,25 @@ def apply_sqlite_migration(db_file: Path) -> None:
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--db", help="Path to sqlite DB file", default=str(DEFAULT_DB))
+    parser.add_argument(
+        "--reset",
+        action="store_true",
+        help="DELETE the sqlite DB file before applying migration (dev-only convenience).",
+    )
     args = parser.parse_args()
-    apply_sqlite_migration(Path(args.db))
+    db_file = Path(args.db)
+
+    if args.reset:
+        # only operate on local sqlite path files — this script is intentionally
+        # simple and expects a plain filesystem path for the sqlite DB.
+        if db_file.exists():
+            try:
+                db_file.unlink()
+                print(f"Deleted existing DB file: {db_file}")
+            except OSError as e:
+                print(f"Warning: failed to delete DB file {db_file}: {e}")
+        else:
+            print(f"DB file does not exist, nothing to remove: {db_file}")
+
+    print(f"Applying migration SQL to: {db_file} (sql: {SQL_FILE})")
+    apply_sqlite_migration(db_file)

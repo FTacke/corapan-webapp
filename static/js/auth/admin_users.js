@@ -1,23 +1,277 @@
 document.addEventListener('DOMContentLoaded', function () {
+  const listBody = document.getElementById('list-body');
+  const refreshBtn = document.getElementById('refresh');
+  const createBtn = document.getElementById('create');
+  const createDialog = document.getElementById('create-user-dialog');
+  const createForm = document.getElementById('create-user-form');
+  const cancelCreateBtn = document.getElementById('cancel-create');
+  const inviteDialog = document.getElementById('invite-dialog');
+  const inviteLinkCode = document.getElementById('invite-link');
+  const closeInviteBtn = document.getElementById('close-invite');
+  const copyInviteBtn = document.getElementById('copy-invite');
+  const userDetailDialog = document.getElementById('user-detail-dialog');
+  const userDetailContent = document.getElementById('user-detail-content');
+  const userDetailTitle = document.getElementById('user-detail-title');
+  const userDetailClose = document.getElementById('user-detail-close');
+  const userDetailGenInvite = document.getElementById('user-detail-gen-invite');
+  const inviteMeta = document.getElementById('invite-meta');
+
+  function formatDate(isoString) {
+    if (!isoString) return '-';
+    return new Date(isoString).toLocaleString();
+  }
+
+  function renderRow(user) {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td><span class="md3-body-medium">${user.username}</span></td>
+      <td><span class="md3-body-small">${user.email || '-'}</span></td>
+      <td><span class="md3-badge md3-badge--small">${user.role}</span></td>
+      <td>
+        <span class="md3-badge ${user.is_active ? 'md3-badge--success' : 'md3-badge--error'}">
+          ${user.is_active ? 'Aktiv' : 'Inaktiv'}
+        </span>
+      </td>
+      <td><span class="md3-body-small">${formatDate(user.created_at)}</span></td>
+      <td class="d-flex gap-2">
+        <button class="md3-icon-button edit-user-btn" data-id="${user.id}" title="Bearbeiten">
+          <span class="material-symbols-rounded">edit</span>
+        </button>
+        <button class="md3-icon-button reset-user-btn" data-id="${user.id}" title="Passwort zurücksetzen / Invite erneuern">
+          <span class="material-symbols-rounded">history_edu</span>
+        </button>
+      </td>
+    `;
+    return tr;
+  }
+
   function reload() {
-    return fetch('/admin/users')
+    listBody.innerHTML = '<tr><td colspan="6" class="md3-text-center">Lade...</td></tr>';
+    
+    fetch('/admin/users')
       .then((r) => {
-        if (!r.ok) {
-          document.getElementById('list').textContent = 'Failed';
-          return;
-        }
+        if (!r.ok) throw new Error('Failed to load users');
         return r.json();
       })
-      .then((j) => {
-        if (!j) return;
-        document.getElementById('list').textContent = JSON.stringify(j.items || j, null, 2);
+      .then((data) => {
+        listBody.innerHTML = '';
+        if (!data.items || data.items.length === 0) {
+          listBody.innerHTML = '<tr><td colspan="6" class="md3-text-center">Keine Benutzer gefunden.</td></tr>';
+          return;
+        }
+        data.items.forEach(user => {
+          listBody.appendChild(renderRow(user));
+        });
+        
+        // Attach event listeners to new buttons
+        document.querySelectorAll('.edit-user-btn').forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            const uid = e.currentTarget.dataset.id;
+            // Fetch detail and show in dialog
+            userDetailContent.innerHTML = '<p class="md3-body-small md3-text-variant">Lade Benutzerdaten…</p>';
+            userDetailTitle.textContent = `Benutzer: ${user.username}`;
+            // attach a small state id on the dialog to keep track
+            userDetailDialog.dataset.userId = uid;
+            fetch(`/admin/users/${encodeURIComponent(uid)}`)
+              .then(r => r.json())
+              .then(data => {
+                let html = `<div class="mb-3">
+                    <div><strong>Benutzername:</strong> ${data.username}</div>
+                    <div><strong>Email:</strong> ${data.email || '-'}</div>
+                    <div><strong>Rolle:</strong> ${data.role}</div>
+                    <div><strong>Status:</strong> ${data.is_active ? 'Aktiv' : 'Inaktiv'}</div>
+                  </div>`;
+                // show recent reset tokens
+                if (data.resetTokens && data.resetTokens.length) {
+                  html += '<h4 class="md3-title-small">Reset Tokens</h4><ul class="md3-list">';
+                  data.resetTokens.forEach(t => {
+                    html += `<li class="md3-list-item"><div class="md3-list-item__text">ID: ${t.id}</div><div class="md3-list-item__meta">Erstellt: ${new Date(t.created_at).toLocaleString()} • Läuft ab: ${new Date(t.expires_at).toLocaleString()} ${t.used_at ? '• Verwendet' : ''}</div></li>`;
+                  });
+                  html += '</ul>';
+                } else {
+                  html += '<p class="md3-body-small md3-text-variant">Keine kürzlichen Reset-Token.</p>';
+                }
+                userDetailContent.innerHTML = html;
+                try { userDetailDialog.showModal(); } catch (e) { userDetailDialog.setAttribute('open','true'); }
+              })
+              .catch(err => {
+                console.error(err);
+                userDetailContent.innerHTML = '<p class="md3-body-small md3-text-error">Fehler beim Laden der Benutzerdaten.</p>';
+                try { userDetailDialog.showModal(); } catch (e) { userDetailDialog.setAttribute('open','true'); }
+              });
+          });
+        });
+
+        document.querySelectorAll('.reset-user-btn').forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            const uid = e.currentTarget.dataset.id;
+            if (!confirm('Einen neuen Invite-Link für den Benutzer erzeugen? (bestehende Token bleiben erhalten)')) return;
+
+            fetch(`/admin/users/${encodeURIComponent(uid)}/reset-password`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+            })
+            .then(r => r.json())
+            .then(resp => {
+              if (resp.ok && resp.inviteLink) {
+                inviteLinkCode.textContent = resp.inviteLink;
+                if (resp.inviteExpiresAt) {
+                  inviteMeta.textContent = `Gültig bis: ${new Date(resp.inviteExpiresAt).toLocaleString()}`;
+                } else {
+                  inviteMeta.textContent = '';
+                }
+                inviteDialog.showModal();
+              } else if (resp.ok) {
+                alert('Passwort-Reset erzeugt, aber kein Link erhalten.');
+              } else {
+                alert('Fehler: ' + (resp.error || 'Unbekannter Fehler'));
+              }
+            })
+            .catch(err => {
+              console.error(err);
+              alert('Netzwerkfehler beim Anfordern des Reset-Links.');
+            });
+          });
+        });
       })
-      .catch(() => {
-        document.getElementById('list').textContent = 'Failed';
+      .catch((err) => {
+        console.error(err);
+        listBody.innerHTML = '<tr><td colspan="6" class="md3-text-center md3-text-error">Fehler beim Laden der Benutzer.</td></tr>';
       });
   }
 
-  const refresh = document.getElementById('refresh');
-  if (refresh) refresh.addEventListener('click', reload);
+  // Event Listeners
+  if (refreshBtn) refreshBtn.addEventListener('click', reload);
+  
+  if (copyInviteBtn && inviteLinkCode) {
+    copyInviteBtn.addEventListener('click', () => {
+      navigator.clipboard.writeText(inviteLinkCode.textContent).then(() => {
+        const originalIcon = copyInviteBtn.innerHTML;
+        copyInviteBtn.innerHTML = '<span class="material-symbols-rounded">check</span>';
+        setTimeout(() => {
+          copyInviteBtn.innerHTML = originalIcon;
+        }, 2000);
+      });
+    });
+  }
+  
+  if (createBtn && createDialog) {
+    createBtn.addEventListener('click', () => {
+      createForm.reset();
+      createDialog.showModal();
+    });
+  }
+
+  if (cancelCreateBtn && createDialog) {
+    cancelCreateBtn.addEventListener('click', () => {
+      createDialog.close();
+    });
+  }
+
+  if (createForm) {
+    createForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const formData = new FormData(createForm);
+      const data = Object.fromEntries(formData.entries());
+
+      fetch('/admin/users', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      })
+      .then(r => r.json())
+      .then(resp => {
+        if (resp.ok) {
+          createDialog.close();
+          reload();
+          if (resp.inviteLink) {
+            inviteLinkCode.textContent = resp.inviteLink;
+            // show metadata if provided
+            if (resp.inviteExpiresAt) {
+              inviteMeta.textContent = `Gültig bis: ${new Date(resp.inviteExpiresAt).toLocaleString()}`;
+            } else {
+              inviteMeta.textContent = '';
+            }
+            inviteDialog.showModal();
+          } else {
+            alert('Benutzer angelegt, aber kein Invite-Link erhalten.');
+          }
+        } else {
+          alert('Fehler: ' + (resp.error || 'Unbekannter Fehler'));
+        }
+      })
+      .catch(err => {
+        console.error(err);
+        alert('Netzwerkfehler beim Anlegen des Benutzers.');
+      });
+    });
+  }
+
+  if (closeInviteBtn && inviteDialog) {
+    closeInviteBtn.addEventListener('click', () => {
+      inviteDialog.close();
+      inviteLinkCode.textContent = '';
+      if (inviteMeta) inviteMeta.textContent = '';
+    });
+  }
+
+  if (userDetailClose && userDetailDialog) {
+    userDetailClose.addEventListener('click', () => {
+      try { userDetailDialog.close(); } catch (e) { userDetailDialog.removeAttribute('open'); }
+      userDetailContent.innerHTML = '';
+      delete userDetailDialog.dataset.userId;
+    });
+  }
+
+  if (userDetailGenInvite && userDetailDialog) {
+    userDetailGenInvite.addEventListener('click', () => {
+      const uid = userDetailDialog.dataset.userId;
+      if (!uid) return alert('Kein Benutzer ausgewählt');
+      if (!confirm('Einen neuen Invite-Link für den Benutzer erzeugen? (bestehende Token bleiben erhalten)')) return;
+
+      fetch(`/admin/users/${encodeURIComponent(uid)}/reset-password`, { method: 'POST', headers: { 'Content-Type': 'application/json' } })
+        .then(r => r.json())
+        .then(resp => {
+          if (resp.ok && resp.inviteLink) {
+            inviteLinkCode.textContent = resp.inviteLink;
+            if (resp.inviteExpiresAt) inviteMeta.textContent = `Gültig bis: ${new Date(resp.inviteExpiresAt).toLocaleString()}`;
+            inviteDialog.showModal();
+            // refresh user detail to reflect new token
+            const uid2 = userDetailDialog.dataset.userId;
+            fetch(`/admin/users/${encodeURIComponent(uid2)}`).then(r => r.json()).then(d => {
+              // update content quickly
+              let html = `<div class="mb-3">
+                    <div><strong>Benutzername:</strong> ${d.username}</div>
+                    <div><strong>Email:</strong> ${d.email || '-'}</div>
+                    <div><strong>Rolle:</strong> ${d.role}</div>
+                    <div><strong>Status:</strong> ${d.is_active ? 'Aktiv' : 'Inaktiv'}</div>
+                  </div>`;
+              if (d.resetTokens && d.resetTokens.length) {
+                html += '<h4 class="md3-title-small">Reset Tokens</h4><ul class="md3-list">';
+                d.resetTokens.forEach(t => {
+                  html += `<li class="md3-list-item"><div class="md3-list-item__text">ID: ${t.id}</div><div class="md3-list-item__meta">Erstellt: ${new Date(t.created_at).toLocaleString()} • Läuft ab: ${new Date(t.expires_at).toLocaleString()} ${t.used_at ? '• Verwendet' : ''}</div></li>`;
+                });
+                html += '</ul>';
+              } else {
+                html += '<p class="md3-body-small md3-text-variant">Keine kürzlichen Reset-Token.</p>';
+              }
+              userDetailContent.innerHTML = html;
+            });
+          } else if (resp.ok) {
+            alert('Passwort-Reset erzeugt, aber kein Link erhalten.');
+          } else {
+            alert('Fehler: ' + (resp.error || 'Unbekannter Fehler'));
+          }
+        })
+        .catch(err => {
+          console.error(err);
+          alert('Netzwerkfehler beim Erzeugen des Reset-Links.');
+        });
+    });
+  }
+
+  // Initial load
   reload();
 });

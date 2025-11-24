@@ -1116,6 +1116,20 @@ dialog.md3-dialog[open] {
   transition: transform 0.2s ease;
 }
 
+/* Ensure dialog content uses surface tokens explicitly so dialogs are
+   not rendered in an unexpected 'dark' appearance when page-level themes
+   or container contexts change. */
+.md3-dialog,
+.md3-dialog * {
+  background: transparent !important; /* inner elements may override */
+  color: inherit !important;
+}
+
+.md3-dialog[open] {
+  background: var(--md-sys-color-surface) !important;
+  color: var(--md-sys-color-on-surface) !important;
+}
+
 .md3-dialog-overlay.active .md3-dialog {
   transform: scale(1);
 }

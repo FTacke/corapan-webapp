@@ -116,6 +116,33 @@ def test_admin_create_invite_and_no_plaintext(client):
         assert rt is not None
 
 
+def test_admin_create_invite_has_metadata(client):
+    admin = make_admin_and_login(client)
+    r = client.post("/admin/users", json={"username": "invited2", "email": "invite2@example.org"})
+    assert r.status_code == 201
+    assert r.json.get("inviteSent") is True
+    # response should include token id and expiry
+    assert r.json.get("inviteId")
+    assert r.json.get("inviteExpiresAt")
+    # DB token should match
+    uid = r.json.get("userId")
+    with get_session() as session:
+        rt = session.query(ResetToken).filter(ResetToken.user_id == uid).first()
+        assert rt is not None
+        assert rt.id == r.json.get("inviteId")
+
+
+def test_admin_reset_returns_invite_link(client):
+    admin = make_admin_and_login(client)
+    target = create_user("targ2")
+    r = client.post(f"/admin/users/{target.id}/reset-password")
+    assert r.status_code == 200
+    # should contain invite link and metadata
+    assert r.json.get("ok") is True
+    assert r.json.get("inviteLink")
+    assert r.json.get("inviteExpiresAt")
+
+
 def test_admin_patch_lock_unlock_invalidate_delete(client):
     admin = make_admin_and_login(client)
     target = create_user("targ")

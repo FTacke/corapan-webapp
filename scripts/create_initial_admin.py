@@ -1,17 +1,22 @@
 """Create or update an initial admin user in the AUTH database.
 
+NOTE: This script is a development / staging helper and is intentionally
+convenient and non-destructive for local usage. Do NOT run this against
+production databases unless you understand the consequences.
+
 This helper supports both a local sqlite DB file (default) and any SQLAlchemy
 URL provided via the `AUTH_DATABASE_URL` environment variable.
 
 Usage (PowerShell):
-  $env:START_ADMIN_USERNAME='admin'; $env:START_ADMIN_PASSWORD='change-me'; python scripts/create_initial_admin.py
+    $env:START_ADMIN_USERNAME='admin'; $env:START_ADMIN_PASSWORD='change-me'; python scripts/create_initial_admin.py
 
 Or explicit DB file (sqlite):
-  python scripts/create_initial_admin.py --db data/db/auth.db --username admin --password mypass
+    python scripts/create_initial_admin.py --db data/db/auth.db --username admin --password mypass
 
-This script is intentionally small and non-destructive: it will create the
-database tables if missing and either create a new admin user or update an
-existing user with the same username (setting role=admin, is_active=True).
+This script creates tables if missing and will either create a new admin user
+or update an existing user with the same username. When updating it will
+unlock the account, reset the password, clear failed/locked flags and mark the
+user active.
 """
 from __future__ import annotations
 
@@ -25,7 +30,24 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--db", help="Path to sqlite DB file (defaults data/db/auth.db)", default="data/db/auth.db")
     parser.add_argument("--username", default=os.environ.get("START_ADMIN_USERNAME", "admin"))
-    parser.add_argument("--password", default=os.environ.get("START_ADMIN_PASSWORD", "change-me"))
+    parser.add_argument(
+        "--password",
+        default=os.environ.get("START_ADMIN_PASSWORD"),
+        help="Password for the admin user (required unless START_ADMIN_PASSWORD env is set).",
+    )
+    parser.add_argument("--email", default=None, help="Optional email for the admin (defaults to <username>@example.org)")
+    parser.add_argument(
+        "--display-name",
+        dest="display_name",
+        default=None,
+        help="Optional display name for the created admin user",
+    )
+    parser.add_argument(
+        "--allow-production",
+        dest="allow_production",
+        action="store_true",
+        help="Allow running this script in production environments (use with care)",
+    )
     args = parser.parse_args()
 
     # Setup a minimal app-like config for the SQLAlchemy helpers
@@ -35,6 +57,18 @@ def main():
     }
     # allow optional override for the hashing algorithm used by services
     cfg["AUTH_HASH_ALGO"] = os.environ.get("AUTH_HASH_ALGO", "argon2")
+
+    # Prevent accidental execution in production-like envs
+    flask_env = os.environ.get("FLASK_ENV", "").lower()
+    auth_env = os.environ.get("AUTH_ENV", "").lower()
+    if not args.allow_production and (flask_env == "production" or auth_env == "production"):
+        raise RuntimeError(
+            "Refusing to run create_initial_admin in production environment. Use --allow-production to override."
+        )
+
+    # validate password argument (required for safety in Dev/CI runs)
+    if not args.password:
+        parser.error("--password is required (or set START_ADMIN_PASSWORD env)")
 
     # initialize auth engine and create tables
     import sys
@@ -80,29 +114,45 @@ def main():
                     return services.hash_password(pw)
 
             if existing:
+                # Idempotent update: unlock and reset password so admin is always usable in dev/staging
                 existing.role = "admin"
                 existing.is_active = True
-                existing.must_reset_password = True
+                existing.must_reset_password = False
+                existing.login_failed_count = 0
+                existing.locked_until = None
+                existing.deleted_at = None
+                existing.deletion_requested_at = None
                 existing.password_hash = _safe_hash(args.password)
                 existing.updated_at = now
-                print(f"Updated existing user '{args.username}' as admin (must_reset_password=True)")
+                if args.display_name:
+                    existing.display_name = args.display_name
+                print(
+                    f"Updated existing user '{args.username}' as admin (unlocked, password reset)"
+                )
             else:
                 # create a new admin user
-                import secrets
+                import uuid
 
+                # create a new canonical UUID for the user id
                 u = User(
-                    id=str(secrets.token_hex(8)),
+                    id=str(uuid.uuid4()),
                     username=args.username,
-                    email=f"{args.username}@example.org",
+                    email=args.email or f"{args.username}@example.org",
                     password_hash=_safe_hash(args.password),
                     role="admin",
                     is_active=True,
-                    must_reset_password=True,
+                    must_reset_password=False,
+                    login_failed_count=0,
+                    locked_until=None,
+                    deleted_at=None,
+                    deletion_requested_at=None,
                     created_at=now,
                     updated_at=now,
                 )
+                if args.display_name:
+                    u.display_name = args.display_name
                 session.add(u)
-                print(f"Created admin user '{args.username}' (must_reset_password=True)")
+                print(f"Created admin user '{args.username}' (unlocked)")
 
 
 if __name__ == "__main__":

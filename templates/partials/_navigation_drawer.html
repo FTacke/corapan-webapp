@@ -143,8 +143,20 @@
             <span class="material-symbols-rounded md3-navigation-drawer__icon">dashboard</span>
             <span class="md3-navigation-drawer__label">Dashboard</span>
           </a>
+          <a href="{{ url_for('auth.admin_users_page') }}" 
+             class="md3-navigation-drawer__item">
+            <span class="material-symbols-rounded md3-navigation-drawer__icon">group</span>
+            <span class="md3-navigation-drawer__label">Usuarios</span>
+          </a>
         {% endif %}
         
+        {# Change Password Link #}
+        <a href="{{ url_for('auth.account_password_page') }}" 
+           class="md3-navigation-drawer__item">
+          <span class="material-symbols-rounded md3-navigation-drawer__icon">lock_reset</span>
+          <span class="md3-navigation-drawer__label">Contraseña</span>
+        </a>
+
         {# Authenticated: Logout Link (GET, no CSRF) #}
         <a href="{{ url_for('auth.logout_any') }}" 
            class="md3-navigation-drawer__item md3-navigation-drawer__item--logout">
@@ -263,8 +275,20 @@
           <span class="material-symbols-rounded md3-navigation-drawer__icon">dashboard</span>
           <span class="md3-navigation-drawer__label">Dashboard</span>
         </a>
+        <a href="{{ url_for('auth.admin_users_page') }}" 
+           class="md3-navigation-drawer__item">
+          <span class="material-symbols-rounded md3-navigation-drawer__icon">group</span>
+          <span class="md3-navigation-drawer__label">Usuarios</span>
+        </a>
       {% endif %}
       
+      {# Profile Link (for all authenticated users) #}
+      <a href="{{ url_for('auth.account_profile_page') }}" 
+         class="md3-navigation-drawer__item">
+        <span class="material-symbols-rounded md3-navigation-drawer__icon">account_circle</span>
+        <span class="md3-navigation-drawer__label">Perfil</span>
+      </a>
+
       {# Authenticated: Logout Link (GET, no CSRF) #}
       <a href="{{ url_for('auth.logout_any') }}"
         data-logout="fetch"

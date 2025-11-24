@@ -5,6 +5,11 @@ from pathlib import Path
 repo = Path(r"c:\dev\corapan-webapp")
 DB = repo / "data" / "db" / "transcription.db"
 print("DB path", DB)
+if not DB.exists():
+    print("transcription.db not found. This repository no longer requires data/db/transcription.db for Variant A (auth-only dev).")
+    print("To inspect a real corpus DB, create it with the full JSON->DB pipeline or use BlackLab. For quick local tests you can use scripts/create_minimal_transcription_db.py")
+    raise SystemExit(1)
+
 con = sqlite3.connect(DB)
 cur = con.cursor()
 

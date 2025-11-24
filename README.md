@@ -71,6 +71,11 @@ pip install -r requirements.txt
 pip install -e .
 ```
 
+Note: Heavy corpus processing / LOKAL tool dependencies are maintained separately
+in the LOKAL tools repository (they are not required for the webapp Variant A run).
+If you need the JSON→TSV→indexing pipeline, install the dependency file from the
+LOKAL repo instead of installing the large NLP/audio packages into the webapp env.
+
 ### 4. Konfiguration
 Erstellen Sie eine `.env` Datei basierend auf der Vorlage:
 ```powershell
