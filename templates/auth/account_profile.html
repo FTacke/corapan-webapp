@@ -26,24 +26,24 @@
       </header>
       <div class="md3-card__content">
         <form id="profile-form" class="md3-auth-form" novalidate>
-          <div class="md3-outlined-textfield">
+          <div class="md3-outlined-textfield md3-outlined-textfield--block">
             <input id="username" name="username" class="md3-outlined-textfield__input" aria-label="Benutzername" value="{{ user.username if user else '' }}">
             <label class="md3-outlined-textfield__label" for="username">Benutzername</label>
-            <div class="md3-outlined-textfield__outline">
-              <div class="md3-outlined-textfield__outline-start"></div>
-              <div class="md3-outlined-textfield__outline-notch"></div>
-              <div class="md3-outlined-textfield__outline-end"></div>
-            </div>
+              <span class="md3-outlined-textfield__outline">
+                <span class="md3-outlined-textfield__outline-start"></span>
+                <span class="md3-outlined-textfield__outline-notch"></span>
+                <span class="md3-outlined-textfield__outline-end"></span>
+              </span>
           </div>
 
-          <div class="md3-outlined-textfield">
+          <div class="md3-outlined-textfield md3-outlined-textfield--block">
             <input id="email" name="email" class="md3-outlined-textfield__input" aria-label="E-Mail" value="{{ user.email if user and user.email else '' }}">
             <label class="md3-outlined-textfield__label" for="email">E-Mail</label>
-            <div class="md3-outlined-textfield__outline">
-              <div class="md3-outlined-textfield__outline-start"></div>
-              <div class="md3-outlined-textfield__outline-notch"></div>
-              <div class="md3-outlined-textfield__outline-end"></div>
-            </div>
+              <span class="md3-outlined-textfield__outline">
+                <span class="md3-outlined-textfield__outline-start"></span>
+                <span class="md3-outlined-textfield__outline-notch"></span>
+                <span class="md3-outlined-textfield__outline-end"></span>
+              </span>
           </div>
 
           {# display_name removed — not required in Profile UI; keep server-side data intact #}
@@ -81,7 +81,7 @@
       <div class="md3-card__content">
         <p class="md3-body-medium">Hier kannst du dein Konto löschen. Diese Aktion kann nicht rückgängig gemacht werden.</p>
         <div class="md3-actions">
-            <button id="delete-account-btn" class="md3-button md3-button--filled md3-button--danger" type="button">
+            <button id="delete-account-btn" class="md3-button md3-button--filled md3-button--destructive" type="button">
               <span class="material-symbols-rounded md3-button__icon" aria-hidden="true">delete_forever</span>
               Konto löschen
             </button>
@@ -102,25 +102,25 @@
       <div class="md3-dialog__content md3-stack--dialog">
       <p class="md3-body-medium">Bist du sicher, dass du dein Konto löschen möchtest? Alle deine Daten werden unwiderruflich gelöscht. Zum Fortfahren bitte dein Passwort eingeben.</p>
 
-      <div class="md3-outlined-textfield">
+      <div class="md3-outlined-textfield md3-outlined-textfield--block">
         <input id="delete-password" name="password" type="password" class="md3-outlined-textfield__input" required aria-label="Passwort zur Löschung" />
         <label class="md3-outlined-textfield__label" for="delete-password">Dein Passwort</label>
         <button type="button" class="md3-outlined-textfield__icon--trailing" data-toggle="delete-password" aria-label="Passwort anzeigen/verstecken">
           <span class="material-symbols-rounded md3-button__icon" aria-hidden="true">visibility</span>
         </button>
-        <div class="md3-outlined-textfield__outline">
-          <div class="md3-outlined-textfield__outline-start"></div>
-          <div class="md3-outlined-textfield__outline-notch"></div>
-          <div class="md3-outlined-textfield__outline-end"></div>
-        </div>
+        <span class="md3-outlined-textfield__outline">
+          <span class="md3-outlined-textfield__outline-start"></span>
+          <span class="md3-outlined-textfield__outline-notch"></span>
+          <span class="md3-outlined-textfield__outline-end"></span>
+        </span>
       </div>
 
       <div id="delete-error" role="status" aria-live="polite" class="md3-body-small md3-error-text"></div>
     </div>
 
       <div class="md3-dialog__actions">
-      <button class="md3-button md3-button--text" id="cancel-delete">Abbrechen</button>
-      <button class="md3-button md3-button--filled md3-button--danger" id="confirm-delete" type="button">Löschen</button>
+            <button class="md3-button md3-button--text" id="cancel-delete">Abbrechen</button>
+            <button class="md3-button md3-button--filled md3-button--destructive" id="confirm-delete" type="button">Löschen</button>
     </div>
   </div>
 </dialog>

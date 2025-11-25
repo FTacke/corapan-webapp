@@ -8,10 +8,10 @@
 {% endblock %}
 
 {% block content %}
-<div class="page">
-  <header class="page-header">
-    <div class="page-header__eyebrow">Authentifizierung</div>
-    <h1 class="page-title">Anmelden</h1>
+<div class="md3-page">
+  <header class="md3-page__header md3-stack--section">
+    <div class="md3-page__eyebrow md3-body-small">Authentifizierung</div>
+    <h1 class="md3-headline-large">Anmelden</h1>
   </header>
 
   <main class="page-inner">
@@ -49,7 +49,7 @@
               novalidate>
             
             <!-- Username Field -->
-            <div class="md3-outlined-textfield">
+            <div class="md3-outlined-textfield md3-outlined-textfield--block">
               <input 
                 type="text" 
                 class="md3-outlined-textfield__input" 
@@ -61,15 +61,15 @@
                 minlength="1"
                 maxlength="50">
               <label class="md3-outlined-textfield__label" for="login-username">Benutzername oder E‑Mail</label>
-              <div class="md3-outlined-textfield__outline">
-                <div class="md3-outlined-textfield__outline-start"></div>
-                <div class="md3-outlined-textfield__outline-notch"></div>
-                <div class="md3-outlined-textfield__outline-end"></div>
-              </div>
+              <span class="md3-outlined-textfield__outline">
+                <span class="md3-outlined-textfield__outline-start"></span>
+                <span class="md3-outlined-textfield__outline-notch"></span>
+                <span class="md3-outlined-textfield__outline-end"></span>
+              </span>
             </div>
 
             <!-- Password Field -->
-            <div class="md3-outlined-textfield">
+            <div class="md3-outlined-textfield md3-outlined-textfield--block">
               <input 
                 type="password" 
                 class="md3-outlined-textfield__input" 
@@ -80,11 +80,11 @@
                 aria-label="Passwort"
                 minlength="1">
               <label class="md3-outlined-textfield__label" for="login-password">Passwort</label>
-              <div class="md3-outlined-textfield__outline">
-                <div class="md3-outlined-textfield__outline-start"></div>
-                <div class="md3-outlined-textfield__outline-notch"></div>
-                <div class="md3-outlined-textfield__outline-end"></div>
-              </div>
+              <span class="md3-outlined-textfield__outline">
+                <span class="md3-outlined-textfield__outline-start"></span>
+                <span class="md3-outlined-textfield__outline-notch"></span>
+                <span class="md3-outlined-textfield__outline-end"></span>
+              </span>
             </div>
 
             <div class="md3-row--between md3-actions">
