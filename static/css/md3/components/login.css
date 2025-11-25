@@ -162,7 +162,6 @@
 .md3-login-card__footer {
   text-align: center;
   padding-top: 1.5rem;
-  border-top: 1px solid var(--md-sys-color-outline-variant);
 }
 
 .md3-login-card__footer-text {

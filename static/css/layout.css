@@ -244,6 +244,11 @@ h6:focus[tabindex="-1"] {
   border-bottom-color: var(--md-sys-color-primary);
 }
 
+/* Exclude MD3 buttons from page-section link styling */
+.page-section a.md3-button {
+  border-bottom: none;
+}
+
 .page-divider {
   margin: clamp(1.5rem, 3vw, 2rem) 0;
   padding-top: 1.25rem;

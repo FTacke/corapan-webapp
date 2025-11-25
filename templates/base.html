@@ -97,6 +97,7 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/md3/components/dialog.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/md3/components/textfields.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/md3/components/alerts.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/md3/components/snackbar.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/md3/components/login.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/md3/components/layout-helpers.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/md3/components/stats.css') }}">
@@ -115,7 +116,13 @@
     
     {% block extra_head %}{% endblock %}
   </head>
-  <body class="app-shell" {% if page_name %}data-page="{{ page_name }}"{% endif %} data-config='{"allowPublicTempAudio": {{ "true" if allow_public_temp_audio else "false" }}}'>
+  {# Prepare flash messages for snackbar display #}
+  {% set flash_messages = get_flashed_messages(with_categories=true) %}
+  {% set flash_json = [] %}
+  {% for category, message in flash_messages %}
+    {% set _ = flash_json.append({'category': category, 'message': message}) %}
+  {% endfor %}
+  <body class="app-shell" {% if page_name %}data-page="{{ page_name }}"{% endif %} data-config='{"allowPublicTempAudio": {{ "true" if allow_public_temp_audio else "false" }}}' {% if flash_json %}data-flash-messages='{{ flash_json | tojson | e }}'{% endif %}>
      {# MD3 Navigation System #}
      {# status_banner was removed from the top bar in favour of focused account UI.
        If you need an inline status / flash area later, include partials/status_banner.html

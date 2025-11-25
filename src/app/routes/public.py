@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import logging
-from flask import Blueprint, make_response, render_template, request, jsonify
+from flask import Blueprint, make_response, render_template, request, jsonify, redirect, url_for
 from ..services.counters import counter_visits
 from flask_jwt_extended import jwt_required
 import httpx
@@ -32,8 +32,28 @@ def login_page():
     This is the canonical login page for the site (public /login). It
     renders the existing template `templates/auth/login.html` and accepts
     an optional `next` query parameter for redirect-after-login.
+
+    If the user is coming from the landing page (index), we redirect with
+    drawer_animate=1 to trigger the nav-drawer slide-in animation.
     """
-    next_url = request.args.get("next") or request.referrer or ""
+    next_url = request.args.get("next") or ""
+    referrer = request.referrer or ""
+    drawer_animate = request.args.get("drawer_animate")
+    login_success = request.args.get("login_success")
+
+    # Check if user is coming from index page (landing page)
+    # and drawer_animate is not already set
+    if not drawer_animate and not login_success and referrer:
+        from urllib.parse import urlparse
+        parsed = urlparse(referrer)
+        # Check if path is root (/) or empty - user came from landing page
+        if parsed.path in ("/", ""):
+            # Redirect with drawer_animate=1 parameter
+            params = {"drawer_animate": "1"}
+            if next_url:
+                params["next"] = next_url
+            return redirect(url_for("public.login", **params), 303)
+
     # Render the full login page (no caching)
     response = make_response(render_template("auth/login.html", next=next_url))
     response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, private"

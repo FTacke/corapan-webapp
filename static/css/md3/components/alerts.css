@@ -193,24 +193,33 @@
   color: var(--md-sys-color-on-primary-container, #0d3c61);
 }
 
-/* Success Variant - Green tones */
+/* Success Variant - Muted green tones (less prominent than errors) */
 .md3-alert--success {
-  background-color: var(--md-sys-color-success-container, #e6f4ea);
-  border-left-color: var(--md-sys-color-success, #34a853);
-  color: var(--md-sys-color-on-success-container, #0d3d1a);
+  background-color: color-mix(in srgb,
+    var(--md-sys-color-surface) 70%,
+    var(--md-sys-color-success-container, #e6f4ea) 30%
+  );
+  border-left-color: color-mix(in srgb,
+    var(--md-sys-color-outline) 40%,
+    var(--md-sys-color-success, #34a853) 60%
+  );
+  color: var(--md-sys-color-on-surface);
 }
 
 .md3-alert--success .md3-alert__icon {
-  color: var(--md-sys-color-success, #34a853);
+  color: color-mix(in srgb,
+    var(--md-sys-color-on-surface-variant) 30%,
+    var(--md-sys-color-success, #34a853) 70%
+  );
 }
 
 .md3-alert--success .md3-alert__title {
-  color: var(--md-sys-color-on-success-container, #0d3d1a);
+  color: var(--md-sys-color-on-surface);
 }
 
 .md3-alert--success .md3-alert__text,
 .md3-alert--success .md3-alert__message {
-  color: var(--md-sys-color-on-success-container, #0d3d1a);
+  color: var(--md-sys-color-on-surface-variant);
 }
 
 /* ============================================

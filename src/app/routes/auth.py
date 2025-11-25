@@ -154,8 +154,8 @@ def _safe_next(raw: str | None) -> str | None:
     if parsed.netloc and parsed.netloc != request.host:
         return None
 
-    # Auth endpoints → reject (prevent redirect loops)
-    if parsed.path.startswith(("/auth/login", "/auth/logout")):
+    # Auth endpoints and login page → reject (prevent redirect loops)
+    if parsed.path.startswith(("/auth/login", "/auth/logout", "/login")):
         return None
 
     # Build safe path+query
@@ -164,6 +164,60 @@ def _safe_next(raw: str | None) -> str | None:
         safe_url += f"?{parsed.query}"
 
     return safe_url if safe_url else None
+
+
+def _get_role_based_redirect(user) -> str:
+    """
+    Get the default redirect URL based on user role.
+
+    Role-based mapping:
+    - admin: User Management page
+    - editor: Editor Overview
+    - user (or other): Atlas page
+
+    Args:
+        user: The authenticated user object
+
+    Returns:
+        URL string for the appropriate landing page
+    """
+    role = getattr(user, "role", "user") or "user"
+
+    if role == "admin":
+        return url_for("auth.admin_users_page")
+    elif role == "editor":
+        return url_for("editor.overview")
+    else:
+        # Default for 'user' role and any other role
+        return url_for("public.atlas_page")
+
+
+def _get_login_redirect_target(next_url: str | None, user) -> str:
+    """
+    Determine the redirect target after successful login.
+
+    Logic:
+    1. If next_url is provided and is NOT the index page (/):
+       - Redirect to next_url (user came from a specific page)
+    2. If next_url is None, empty, or is the index page:
+       - Use role-based redirect (admin→users, editor→overview, user→atlas)
+
+    Args:
+        next_url: The validated next URL from request, or None
+        user: The authenticated user object
+
+    Returns:
+        The target URL for redirect
+    """
+    # Check if "from index" - next is None, empty, or root path
+    is_from_index = not next_url or next_url in ("/", "")
+
+    if is_from_index:
+        # Use role-based default
+        return _get_role_based_redirect(user)
+    else:
+        # User has a specific destination
+        return next_url
 
 
 # NOTE: login_sheet endpoint has been removed as part of MD3 Goldstandard migration.
@@ -337,7 +391,12 @@ def login_post() -> Response:
     if user.must_reset_password:
         target = url_for("auth.account_password_page") + "?mustReset=1"
     else:
-        target = next_url or url_for("public.landing_page")
+        # Determine target based on next_url or role-based default
+        target = _get_login_redirect_target(next_url, user)
+
+    # Flash success message for snackbar display on target page
+    display_name = user.display_name or user.username
+    flash(f"Erfolgreich angemeldet als {display_name}", "success")
     if request.headers.get("HX-Request"):
         response = make_response("", 204)
         response.headers["HX-Redirect"] = target
