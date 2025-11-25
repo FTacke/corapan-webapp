@@ -74,14 +74,14 @@
 <dialog id="create-user-dialog" class="md3-dialog" role="dialog" aria-modal="true" aria-labelledby="create-user-title">
   <div class="md3-dialog__container">
     <div class="md3-dialog__surface">
-      <form id="create-user-form" method="dialog" class="md3-dialog__form md3-form md3-auth-form">
-        <header class="md3-dialog__header">
-          <h2 id="create-user-title" class="md3-title-large md3-dialog__title">Neuen Benutzer anlegen</h2>
-        </header>
+      <header class="md3-dialog__header">
+        <h2 id="create-user-title" class="md3-title-large md3-dialog__title">Neuen Benutzer anlegen</h2>
+      </header>
 
-        <div class="md3-dialog__content md3-stack--dialog">
-          <p class="md3-body-medium">Der Benutzer erhält einen Einladungs-Link (Reset Token), da wir keine Passwörter im Klartext versenden.</p>
+      <div class="md3-dialog__content md3-stack--dialog">
+        <p class="md3-body-medium">Der Benutzer erhält einen Einladungs-Link (Reset Token), da wir keine Passwörter im Klartext versenden.</p>
 
+        <form id="create-user-form" method="post" class="md3-dialog__form md3-form md3-auth-form">
           <div class="md3-stack--dialog">
             <label class="md3-outlined-textfield md3-outlined-textfield--block">
               <input type="text" id="new-username" name="username" class="md3-outlined-textfield__input" required autofocus aria-label="Benutzername">
@@ -117,13 +117,12 @@
               </div>
             </label>
           </div>
-        </div>
 
-        <div class="md3-dialog__actions">
-          <button type="button" class="md3-button md3-button--text" id="cancel-create">Abbrechen</button>
-          <button type="submit" class="md3-button md3-button--filled">Anlegen</button>
-        </div>
-      </form>
+          <div class="md3-dialog__actions">
+            <button type="button" class="md3-button md3-button--text" id="cancel-create">Abbrechen</button>
+            <button type="submit" class="md3-button md3-button--filled">Anlegen</button>
+          </div>
+        </form>
     </div>
   </div>
 </dialog>
@@ -138,10 +137,10 @@
       <div class="md3-dialog__content md3-stack--dialog">
         <p class="md3-body-medium">Bitte sende diesen Link an den neuen Benutzer:</p>
 
-        <div class="md3-dialog__code-row md3-code-block d-flex align-items-center justify-content-between gap-3">
-          <pre id="invite-link" class="md3-code-block__content" aria-live="polite" aria-atomic="true"></pre>
-          <button id="copy-invite" class="md3-icon-button" title="Kopieren" aria-label="Invite-Link kopieren">
-            <span class="material-symbols-rounded md3-button__icon" aria-hidden="true">content_copy</span>
+        <div class="md3-snippet md3-snippet--code" aria-label="Reset-Link">
+          <code id="invite-link" class="md3-snippet__code" aria-live="polite" aria-atomic="true"></code>
+          <button id="copy-invite" class="md3-button md3-button--icon md3-snippet__copy" title="Kopieren" aria-label="Invite-Link kopieren">
+            <span class="material-symbols-rounded" aria-hidden="true">content_copy</span>
           </button>
         </div>
 
