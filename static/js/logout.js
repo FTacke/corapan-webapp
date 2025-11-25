@@ -26,7 +26,15 @@
       opts.headers['X-CSRF-Token'] = token;
     }
 
-    return fetch(url, opts)
+    // Add a safety timeout so the UI doesn't hang when fetch hangs or server is slow.
+    const fetchWithTimeout = (resource, options = {}, timeout = 3000) => {
+      return Promise.race([
+        fetch(resource, options),
+        new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), timeout))
+      ]);
+    };
+
+    return fetchWithTimeout(url, opts, 3000)
       .then((res) => {
         // Regardless of server response (JSON or redirect), navigate to the
         // site root. This avoids showing raw JSON errors to users after logout
@@ -43,6 +51,7 @@
       .catch((err) => {
         console.error('[Logout] Failed', err);
         // fallback to non-JS behaviour
+        // Force navigation to the logout URL (GET) — ensures we leave protected pages
         window.location.href = url;
       });
   }

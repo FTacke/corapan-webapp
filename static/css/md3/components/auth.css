@@ -41,6 +41,12 @@
   margin-top: var(--space-4);
 }
 
+/* If a paragraph precedes a form in card content (e.g. password forgot)
+   give slightly more breathing room for better form separation */
+.md3-card__content > p + .md3-auth-form {
+  margin-top: var(--space-6);
+}
+
 /* Remove utility classes effect if present */
 .md3-auth-card .mt-3,
 .md3-auth-card .mb-3 {

@@ -46,15 +46,17 @@
 
 /* Surface wrapper (semantic surface inside the dialog element) */
 .md3-dialog__surface {
-  /* Neutral dialog surface: visual separation from page and card surfaces.
-     Use a slightly tinted container surface as the default dialog background
-     (prevents page/auth surfaces from bleeding into modal surfaces). */
+    /* Dialog surfaces should be plain page surfaces (white) — dialogs must
+      not use tonal container backgrounds in our design. This keeps dialog
+      surfaces visually consistent, and prevents the surface from blending
+      into page or card tonal containers. */
   padding: var(--space-6);
   max-width: 560px;
   width: min(100% - calc(var(--space-4) * 2), 560px);
   /* MD3 lever: dialogs look best with a larger radius than cards */
   border-radius: 28px;
-  background: var(--md-sys-color-surface-container-high);
+  /* Use the canonical page surface token — dialogs should be non-tonal */
+  background: var(--md-sys-color-surface);
   box-sizing: border-box;
   margin: 0 auto;
   display: flex;
@@ -71,7 +73,8 @@
 .md3-dialog__surface .md3-outlined-textfield__label {
   /* Labels inside dialog surfaces should use the dialog surface token so
      the label appears to merge visually with the dialog (not the page). */
-  background: var(--md-sys-color-surface-container-high);
+  /* Keep label background aligned with the plain dialog surface */
+  background: var(--md-sys-color-surface);
   padding-inline: 4px;
 }
 

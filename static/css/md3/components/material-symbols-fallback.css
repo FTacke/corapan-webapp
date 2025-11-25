@@ -33,6 +33,8 @@
   text-rendering: optimizeLegibility;
   font-feature-settings: "liga"; /* CRITICAL: Enables ligatures for icon names */
   vertical-align: middle;
+  /* Do not inherit link underlines */
+  text-decoration: none;
 
   /* Variable font settings - schlanker/leichter für bessere Optik */
   font-variation-settings:

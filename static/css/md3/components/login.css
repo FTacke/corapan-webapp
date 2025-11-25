@@ -211,7 +211,9 @@
   position: relative;
   width: 100%;
   max-width: 560px; /* Keep sheet large but constrained */
-  background: var(--md-sys-color-surface-container-high);
+  /* Sheets/dialogs should use the canonical page surface (non-tonal)
+     so overlays appear as independent white surfaces. */
+  background: var(--md-sys-color-surface);
   /* Dialog-like surface: visually distinct from full page cards */
   border-radius: 28px;
   padding: 24px; /* compact and consistent padding inside dialogs/sheets */

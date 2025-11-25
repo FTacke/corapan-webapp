@@ -115,8 +115,10 @@
     {% block extra_head %}{% endblock %}
   </head>
   <body class="app-shell" {% if page_name %}data-page="{{ page_name }}"{% endif %} data-config='{"allowPublicTempAudio": {{ "true" if allow_public_temp_audio else "false" }}}'>
-    {# MD3 Navigation System #}
-    {% include 'partials/status_banner.html' %}
+     {# MD3 Navigation System #}
+     {# status_banner was removed from the top bar in favour of focused account UI.
+       If you need an inline status / flash area later, include partials/status_banner.html
+       in a page-specific template. Keeping the global slot was noisy under the drawer. #}
     
     <header id="top-app-bar">
       {% include 'partials/_top_app_bar.html' %}

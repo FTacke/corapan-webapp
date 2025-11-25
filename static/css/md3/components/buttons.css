@@ -90,6 +90,17 @@ a.md3-button.md3-button--filled,
   box-shadow: var(--elev-1);
 }
 
+/* Ensure filled + destructive uses proper error hover instead of primary hover */
+.md3-button--filled.md3-button--destructive:hover,
+.md3-button--filled.md3-button--destructive:focus-visible {
+  background-color: color-mix(
+    in srgb,
+    var(--md-sys-color-error) 92%,
+    var(--md-sys-color-on-error) 8%
+  ) !important;
+  box-shadow: var(--elev-1);
+}
+
 /* Make hover layout-stable: do not change padding/size on hover */
 .md3-button:hover,
 .md3-button--filled:hover,
