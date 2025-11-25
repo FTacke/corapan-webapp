@@ -4,7 +4,6 @@ let selectNationalElement = null;
 let selectRegionalElement = null;
 let filesContainer = null;
 let tabsContainer = null;
-let loginSheet = null;
 let loginButtons = null;
 
 // Function to get current auth status (checks dynamically)
@@ -255,31 +254,20 @@ function getInitialCenter() {
   return [1, -50];
 }
 
+/**
+ * Redirect to full-page login (MD3 Goldstandard pattern).
+ * The login-sheet overlay was removed in favor of dedicated login page.
+ */
 function openLoginSheet(nextTarget = "") {
-  if (loginSheet) {
-    // Save current scroll position
-    const scrollY = window.scrollY || window.pageYOffset;
-
-    // Lock body scroll position using CSS variable (prevents jump when overflow:hidden is applied)
-    // On desktop (>=840px), we don't use position:fixed, so this is only relevant for mobile
-    document.body.style.setProperty("--scroll-lock-offset", `-${scrollY}px`);
-
-    loginSheet.hidden = false;
-    document.body.classList.add("login-open");
-
-    // Focus input without scrolling
-    const input = loginSheet.querySelector('input[name="username"]');
-    if (input) {
-      input.focus({ preventScroll: true });
-    }
+  if (nextTarget) {
+    // Navigate to full-page login with next parameter (MD3 Goldstandard)
+    window.location.href = `/login?next=${encodeURIComponent(nextTarget)}`;
   } else if (loginButtons.length) {
-    if (nextTarget) {
-      // Navigate to full-page login with next parameter (MD3 Goldstandard)
-      window.location.href = `/login?next=${encodeURIComponent(nextTarget)}`;
-    } else {
-      // Trigger the global open-login button (already has scroll handling)
-      loginButtons[0].click();
-    }
+    // Trigger the global open-login button (already has scroll handling)
+    loginButtons[0].click();
+  } else {
+    // Fallback: go to login page
+    window.location.href = '/login';
   }
 }
 
@@ -755,7 +743,6 @@ export function init() {
   );
   filesContainer = document.querySelector('[data-element="atlas-files"]');
   tabsContainer = document.querySelector('[data-element="atlas-country-tabs"]');
-  loginSheet = document.querySelector('[data-element="login-sheet"]');
   loginButtons = document.querySelectorAll('[data-action="open-login"]');
 
   // Check if we have the required elements

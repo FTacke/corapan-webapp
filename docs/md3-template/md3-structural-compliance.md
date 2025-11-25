@@ -142,7 +142,272 @@ This document defines canonical HTML structures for MD3 components (Pages, Cards
 
 ---
 
-## 2. Typography Rules
+## 2. Alerts, Unterstützende Texte & Fehlermeldungen (Goldstandard)
+
+This section defines canonical patterns for all messages, hints, warnings, and error texts in the application.
+
+### 2.1 Alert Base Structure
+
+**Purpose**: Provide clear visual feedback for errors, warnings, info, and success messages.
+
+**Components**:
+- `.md3-alert`: Base alert container
+- `.md3-alert--banner`: Full-width for page/section alerts
+- `.md3-alert--inline`: Compact for form contexts
+- `.md3-alert__icon`: Material Symbol icon (must come FIRST for font loading)
+- `.md3-alert__content`: Wrapper for title + text
+- `.md3-alert__title`: Bold heading (md3-title-small)
+- `.md3-alert__text`: Body text (md3-body-medium)
+
+**Canonical Structure (with Title + Text)**:
+
+```html
+<div class="md3-alert md3-alert--error md3-alert--inline" role="alert" aria-live="assertive">
+  <span class="material-symbols-rounded md3-alert__icon" aria-hidden="true">error</span>
+  <div class="md3-alert__content">
+    <p class="md3-alert__title">Fehler</p>
+    <p class="md3-alert__text">Die Anmeldedaten sind ungültig. Bitte versuche es erneut.</p>
+  </div>
+</div>
+```
+
+**CRITICAL: Icon Class Order**
+```html
+<!-- ✅ CORRECT: material-symbols-rounded FIRST -->
+<span class="material-symbols-rounded md3-alert__icon" aria-hidden="true">error</span>
+
+<!-- ❌ WRONG: Font class must come first -->
+<span class="md3-alert__icon material-symbols-rounded" aria-hidden="true">error</span>
+```
+
+### 2.2 Alert Layout Variants
+
+| Variant | Class | Padding | Border | Usage |
+|---------|-------|---------|--------|-------|
+| **Banner** | `md3-alert--banner` | Large (space-6) | 6px left | Page/section-level alerts |
+| **Inline** | `md3-alert--inline` | Compact (space-4) | 4px left | Form contexts |
+
+**Banner Example (Page-level)**:
+
+```html
+<section class="md3-page__section">
+  <div class="md3-alert md3-alert--error md3-alert--banner" role="alert" aria-live="assertive">
+    <span class="material-symbols-rounded md3-alert__icon" aria-hidden="true">error</span>
+    <div class="md3-alert__content">
+      <p class="md3-alert__title">Sitzung abgelaufen</p>
+      <p class="md3-alert__text">Bitte melde dich erneut an, um fortzufahren.</p>
+    </div>
+  </div>
+</section>
+```
+
+**Inline Example (Form-level)**:
+
+```html
+<div class="md3-alert md3-alert--error md3-alert--inline" role="alert" aria-live="assertive">
+  <span class="material-symbols-rounded md3-alert__icon" aria-hidden="true">error</span>
+  <div class="md3-alert__content">
+    <p class="md3-alert__title">Fehler</p>
+    <p class="md3-alert__text">Benutzername oder Passwort ist falsch.</p>
+  </div>
+</div>
+```
+
+### 2.3 Alert Color Variants
+
+All variants use MD3 container color tokens:
+
+| Modifier | Background | Border | Text | Icon |
+|----------|------------|--------|------|------|
+| `md3-alert--error` | `--md-sys-color-error-container` | `--md-sys-color-error` | `--md-sys-color-on-error-container` | error |
+| `md3-alert--warning` | `--md-sys-color-warning-container` | `--md-sys-color-warning` | `--md-sys-color-on-warning-container` | warning |
+| `md3-alert--info` | `--md-sys-color-primary-container` | `--md-sys-color-primary` | `--md-sys-color-on-primary-container` | info |
+| `md3-alert--success` | `--md-sys-color-success-container` | `--md-sys-color-success` | `--md-sys-color-on-success-container` | check_circle |
+
+### 2.4 ARIA Roles & Live Regions
+
+| Context | Role | aria-live | Usage |
+|---------|------|-----------|-------|
+| Error alert | `alert` | `assertive` | Immediate announcement |
+| Warning alert | `status` | `polite` | Announced when idle |
+| Info alert | `status` | `polite` | Announced when idle |
+| Success alert | `status` | `polite` | Announced when idle |
+
+### 2.5 Feld-unterstützender Text („supporting text")
+
+**Purpose**: Provide contextual help for form fields.
+
+**Position**: Always directly **below** a textfield, within the form flow.
+
+**Structure**:
+
+```html
+<div class="md3-field-support" id="FIELDID-support">
+  <p class="md3-body-small">Short help text, max 1-2 lines.</p>
+</div>
+```
+
+**Rules**:
+- The associated `<input>` gets `aria-describedby="FIELDID-support"` (combined with `FIELDID-error` if both exist)
+- Styling: muted color (`--md-sys-color-on-surface-variant`), consistent line-height
+- Use `md3-body-small` typography
+
+### 2.6 Feld-Fehlermeldung
+
+**Purpose**: Display validation errors for specific form fields.
+
+**Position**: Directly **below** the field, replacing or alongside supporting text.
+
+**Structure**:
+
+```html
+<div class="md3-field-error" id="FIELDID-error" role="alert" aria-live="assertive">
+  <p class="md3-body-small">Specific error message explaining what to fix.</p>
+</div>
+```
+
+**Rules**:
+- Text color: `--md-sys-color-error`
+- Optional: thin red indicator/border via CSS
+- Rule: "Always at the field" — no detached error texts without clear reference
+- Input must have `aria-invalid="true"` when error is shown
+- Input must have `aria-describedby="FIELDID-error"` pointing to the error
+
+**CSS Classes**:
+- `.md3-field-error` — error container
+- `.md3-field-error--visible` — modifier for show/hide animation
+
+### 2.7 JavaScript Alert Utilities
+
+For dynamically populated alerts, use `alert-utils.js`:
+
+```javascript
+import { showError, showSuccess, clearAlert } from '/static/js/md3/alert-utils.js';
+
+// Show error alert
+showError(statusContainer, 'Die Passwörter stimmen nicht überein.');
+
+// Show success alert
+showSuccess(statusContainer, 'Profil erfolgreich gespeichert.');
+
+// Clear alert
+clearAlert(statusContainer);
+```
+
+**Available Functions**:
+- `showAlert(container, type, title, message, inline)` — Generic alert
+- `showError(container, message, title)` — Error alert
+- `showSuccess(container, message, title)` — Success alert
+- `showInfo(container, message, title)` — Info alert
+- `showWarning(container, message, title)` — Warning alert
+- `clearAlert(container)` — Remove alert
+
+### 2.8 Formular-weite Hinweise/Fehler (Inline Alerts)
+
+**Purpose**: Display messages that apply to the entire form (e.g., login errors, submission success).
+
+**Position**: As compact **inline alert** above the first form row, but still inside `md3-card__content` or `md3-dialog__content`.
+
+**Structure**:
+
+```html
+<div class="md3-alert md3-alert--info md3-alert--inline" role="status" aria-live="polite">
+  <span class="material-symbols-rounded md3-alert__icon" aria-hidden="true">info</span>
+  <div class="md3-alert__content">
+    <p class="md3-alert__title">Hinweis</p>
+    <p class="md3-alert__text">Brief explanation, e.g., "Please log in to access this content."</p>
+  </div>
+</div>
+```
+
+**Variants**:
+| Modifier | Role | Icon | Usage |
+|----------|------|------|-------|
+| `md3-alert--info` | `status` | `info` | Informational messages |
+| `md3-alert--warning` | `status` | `warning` | Warnings (non-blocking) |
+| `md3-alert--error` | `alert` | `error` | Error messages |
+| `md3-alert--success` | `status` | `check_circle` | Success confirmations |
+
+**Rules**:
+- `role="alert"` + `aria-live="assertive"` for errors (immediate announcement)
+- `role="status"` + `aria-live="polite"` for info/warning/success (announced when idle)
+- Typography: `md3-alert__title` for heading, `md3-alert__text` for content
+- `--inline` modifier provides compact padding for form contexts
+
+### 2.9 Seiten- / systemweite Meldungen
+
+**Purpose**: Global status messages (e.g., "Settings saved", "Session expired").
+
+**Position**: Either:
+1. **Page Alert**: Directly below the Hero in an `md3-page__section` with `md3-alert md3-alert--success md3-alert--banner`, or
+2. **Snackbar**: Existing snackbar mechanics, visually aligned to MD3 standard
+
+**Structure (Page Alert)**:
+
+```html
+<section class="md3-page__section">
+  <div class="md3-alert md3-alert--success md3-alert--banner" role="status" aria-live="polite">
+    <span class="material-symbols-rounded md3-alert__icon" aria-hidden="true">check_circle</span>
+    <div class="md3-alert__content">
+      <p class="md3-alert__title">Erfolg</p>
+      <p class="md3-alert__text">Your changes have been saved.</p>
+    </div>
+  </div>
+</section>
+```
+
+**Rules**:
+- No loose, arbitrarily placed `<p>` or `<div>` messages
+- System-wide alerts should be dismissible (optional close button)
+- Use consistent animation (slide-down)
+
+### 2.10 Dialoge/Sheets
+
+**Rules**:
+- Alerts belong in `md3-dialog__content` / `md3-sheet__content`, NOT in header or actions
+- Field errors follow the same pattern as in regular forms — directly below inputs
+- Form-wide alerts at the top of `__content`, before form fields
+
+**Example (Dialog with Error)**:
+
+```html
+<div class="md3-dialog__content md3-stack--dialog">
+  <!-- Form-wide error alert -->
+  <div class="md3-alert md3-alert--error md3-alert--inline" role="alert" aria-live="assertive">
+    <span class="material-symbols-rounded md3-alert__icon" aria-hidden="true">error</span>
+    <div class="md3-alert__content">
+      <p class="md3-alert__title">Fehler</p>
+      <p class="md3-alert__text">Invalid credentials. Please try again.</p>
+    </div>
+  </div>
+  
+  <!-- Form fields -->
+  <div class="md3-outlined-textfield md3-outlined-textfield--block">
+    <input type="text" id="username" aria-invalid="true" aria-describedby="username-error">
+    <!-- ... -->
+  </div>
+  <div class="md3-field-error" id="username-error" role="alert" aria-live="assertive">
+    <p class="md3-body-small">Username is required.</p>
+  </div>
+</div>
+```
+
+### 2.11 ARIA Guidelines Summary
+
+| Context | Role | aria-live | Usage |
+|---------|------|-----------|-------|
+| Field error | `alert` | `assertive` | Immediate announcement |
+| Form error alert | `alert` | `assertive` | Immediate announcement |
+| Info/warning/success | `status` | `polite` | Announced when idle |
+| Supporting text | (none) | (none) | Static, linked via `aria-describedby` |
+
+**Input Attributes**:
+- `aria-invalid="true"` when field has error
+- `aria-describedby="FIELDID-support FIELDID-error"` to link both support and error texts
+
+---
+
+## 3. Typography Rules
 
 | Context | Element | Class |
 |---------|---------|-------|
@@ -157,9 +422,9 @@ This document defines canonical HTML structures for MD3 components (Pages, Cards
 
 ---
 
-## 3. Form & Input Rules
+## 4. Form & Input Rules
 
-### 3.1 Textfield Pattern (Goldstandard)
+### 4.1 Textfield Pattern (Goldstandard)
 
 **Canonical MD3 Outlined Textfield**:
 
@@ -196,13 +461,13 @@ This document defines canonical HTML structures for MD3 components (Pages, Cards
 
 **Reference Implementation**: `templates/auth/login.html`
 
-### 3.2 Form Rules
+### 4.2 Form Rules
 
 - Inputs MUST be inside `.md3-form` or `<form class="md3-auth-form">`
 - Submit buttons MUST be inside the `<form>` OR have `form="form-id"` attribute
 - Use `.md3-form__row` and `.md3-form__field` for layout
 
-### 3.3 Button Types
+### 4.3 Button Types
 
 | Type | Class | Usage |
 |------|-------|-------|
@@ -213,7 +478,7 @@ This document defines canonical HTML structures for MD3 components (Pages, Cards
 
 ---
 
-## 4. Spacing Tokens
+## 5. Spacing Tokens
 
 Use CSS custom properties from `static/css/md3/tokens.css`:
 
@@ -230,7 +495,7 @@ Use CSS custom properties from `static/css/md3/tokens.css`:
 
 ---
 
-## 5. ARIA & Accessibility
+## 6. ARIA & Accessibility
 
 | Component | Required Attributes |
 |-----------|---------------------|
@@ -242,24 +507,23 @@ Use CSS custom properties from `static/css/md3/tokens.css`:
 
 ---
 
-## 6. Forbidden Patterns
+## 7. Forbidden Patterns
 
-### 6.1 Legacy Classes (ERROR)
+### 7.1 Legacy Classes (ERROR)
 
 - `class="card"` without `md3-card`
 - `class="card-outlined"` → use `md3-card--outlined`
 - `md3-button--contained` → use `md3-button--filled`
 - `md3-login-sheet` → use `md3-sheet` (if sheet needed)
 
-### 6.2 Login Sheet (DEPRECATED - REMOVED)
+### 7.2 Login Sheet (DELETED)
 
 **Status**: Login-Sheet pattern is completely removed from the codebase.
 
-**Old Pattern** (DO NOT USE):
-- `_login_sheet.html` partial
-- `/auth/login_sheet` endpoint
-- HTMX-based sheet injection for 401 handling
-- `login-sheet.js` controller
+**Deleted Files**:
+- `templates/auth/_login_sheet.html` ❌ DELETED
+- `static/js/modules/auth/login-sheet.js` ❌ DELETED
+- `/auth/login_sheet` endpoint ❌ REMOVED
 
 **New Pattern** (REQUIRED):
 - Full-page login at `/login` with `?next=` parameter
@@ -267,18 +531,18 @@ Use CSS custom properties from `static/css/md3/tokens.css`:
 - No sheet/overlay for authentication
 - Simpler, more accessible, better UX on mobile
 
-### 6.3 Legacy Tokens (ERROR)
+### 7.3 Legacy Tokens (ERROR)
 
 - `--md3-*` tokens → use `--md-sys-*` or `--space-*`
 
-### 6.4 Inline Styles (WARNING)
+### 7.4 Inline Styles (WARNING)
 
 - `style="margin: 12px"` → use `--space-*` tokens
 - `style="padding: 16px"` → use `--space-4`
 
 ---
 
-## 7. Lint Rule IDs
+## 8. Lint Rule IDs
 
 | ID | Severity | Description |
 |----|----------|-------------|
@@ -301,9 +565,9 @@ Use CSS custom properties from `static/css/md3/tokens.css`:
 
 ---
 
-## 8. Exceptions
+## 9. Exceptions
 
-### 8.1 DataTables (search/advanced)
+### 9.1 DataTables (search/advanced)
 
 Files under `templates/search/advanced*` use legacy DataTables layout.
 
@@ -313,7 +577,7 @@ Files under `templates/search/advanced*` use legacy DataTables layout.
 
 ---
 
-## 9. Quick Checklist
+## 10. Quick Checklist
 
 Use this checklist for every page, card, dialog, or form:
 
@@ -326,7 +590,14 @@ Use this checklist for every page, card, dialog, or form:
 ### Accessibility
 - [ ] Dialog has `aria-modal="true"`
 - [ ] Dialog has `aria-labelledby` pointing to title ID
-- [ ] Alerts have `role="alert"` and `aria-live`
+- [ ] Alerts have `role="alert"` or `role="status"` and appropriate `aria-live`
+
+### Alerts & Field Messages
+- [ ] Field errors always below the field as `md3-field-error`
+- [ ] Form/page alerts only as `md3-alert` in content areas, NOT in headers
+- [ ] `role="alert"` only for errors, otherwise `role="status"`
+- [ ] Inputs with errors have `aria-invalid="true"` + `aria-describedby` pointing to error ID
+- [ ] Supporting text uses `md3-field-support` with `aria-describedby` linkage
 
 ### Forms
 - [ ] Submit button inside `<form>` OR has `form="id"`
@@ -350,7 +621,7 @@ Use this checklist for every page, card, dialog, or form:
 
 ---
 
-## 10. Running the Linter
+## 11. Running the Linter
 
 ```bash
 # Full scan with JSON report
@@ -365,7 +636,7 @@ python scripts/md3-lint.py --exit-zero
 
 ---
 
-## 11. Auto-Fix (Conservative)
+## 12. Auto-Fix (Conservative)
 
 ```bash
 # Dry-run to see proposed fixes

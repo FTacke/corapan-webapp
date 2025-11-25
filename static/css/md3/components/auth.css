@@ -2,10 +2,15 @@
 
 /* 1) MD3-CARD-STANDARDS */
 .md3-auth-card {
+  /* Define local background color for consistency */
+  --_auth-card-bg: var(--md-sys-color-surface-container-high);
+  
   max-width: 480px;
   margin-inline: auto;
   /* Use canonical token for card surface */
-  background: var(--md-sys-color-surface-container-high);
+  background: var(--_auth-card-bg);
+  /* LABEL-BG INHERITANCE: Textfield labels inherit this to match card bg */
+  --md3-textfield-label-bg: var(--_auth-card-bg);
   border-radius: var(--radius-sm);
 }
 
@@ -60,11 +65,7 @@
   width: 100%;
 }
 
-.md3-auth-card .md3-outlined-textfield__label {
-  /* Labels on auth page cards should blend with the card/page surface */
-  background: var(--md-sys-color-surface);
-  padding-inline: 4px;
-}
+/* Label background now inherited via --md3-textfield-label-bg from .md3-auth-card */
 
 .md3-auth-card .md3-outlined-textfield__input,
 .md3-dialog__surface .md3-outlined-textfield__input,

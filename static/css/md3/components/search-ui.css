@@ -17,14 +17,31 @@
    ======================================== */
 
 .md3-search-card {
+  /* Define local background color variable for consistency */
+  --_search-card-bg: var(--md-sys-color-surface-container);
+  
   display: flex;
   flex-direction: column;
   gap: var(--space-6, 1.5rem);
   padding: var(--space-6, 1.5rem);
-  background: var(--md-sys-color-surface-container, #f5f5f5);
+  background: var(--_search-card-bg);
   border: 1px solid var(--md-sys-color-outline-variant, #ccc);
   border-radius: var(--radius-lg, 12px);
   margin-bottom: var(--space-6, 1.5rem);
+  /* Label background inheritance for textfields inside search card
+     Uses same variable to guarantee color match */
+  --md3-textfield-label-bg: var(--_search-card-bg);
+}
+
+/* Textfield labels inside search card must match card background exactly
+   Higher specificity to override base textfield rules */
+.md3-search-card .md3-outlined-textfield .md3-outlined-textfield__label {
+  background: var(--md-sys-color-surface-container) !important;
+}
+
+/* Ensure inputs inside search card remain transparent (not white) */
+.md3-search-card .md3-outlined-textfield__input {
+  background: transparent !important;
 }
 
 .md3-search-card__section {
@@ -241,22 +258,26 @@
   transform: translateY(-50%);
   width: 18px;
   height: 18px;
-  border: 2px solid var(--md-sys-color-outline-variant, #cac4d0);
+  border: 2px solid var(--md-sys-color-outline, #79747e);
   border-radius: 2px;
   background: transparent;
   transition:
-    background 0.12s ease,
-    border-color 0.12s ease;
+    background 0.15s ease,
+    border-color 0.15s ease;
 }
 
 .md3-filter-option span::after {
   content: "";
   position: absolute;
-  left: -24px; /* align checkmark inside box */
+  left: -24px; /* center checkmark inside box */
   top: 50%;
-  transform: translateY(-50%) scale(0);
-  color: var(--md-sys-color-on-primary, #fff);
-  font-size: 12px;
+  width: 10px;
+  height: 6px;
+  border-left: 2px solid var(--md-sys-color-on-primary, #fff);
+  border-bottom: 2px solid var(--md-sys-color-on-primary, #fff);
+  transform: translateY(-60%) rotate(-45deg) scale(0);
+  transform-origin: center;
+  transition: transform 0.15s ease;
 }
 
 .md3-filter-option input[type="checkbox"]:checked + span::before {
@@ -265,9 +286,7 @@
 }
 
 .md3-filter-option input[type="checkbox"]:checked + span::after {
-  content: "\2713"; /* check mark */
-  transform: translateY(-50%) scale(1);
-  color: var(--md-sys-color-on-primary, #fff);
+  transform: translateY(-60%) rotate(-45deg) scale(1);
 }
 
 /* Ensure focus outlines for accessibility */
@@ -347,35 +366,41 @@
   outline-offset: 2px;
 }
 
-/* Chip colors for different facets */
+/* Chip colors for different facets - using MD3 token system
+   Each facet gets a tinted version derived from semantic colors */
 .md3-filter-chip--pais {
-  background: rgba(33, 150, 243, 0.12);
-  color: #1565c0;
-  border-color: rgba(33, 150, 243, 0.2);
+  --_chip-tint: var(--md-sys-color-primary);
+  background: color-mix(in oklab, var(--_chip-tint) 12%, transparent);
+  color: color-mix(in oklab, var(--_chip-tint) 80%, var(--md-sys-color-on-surface));
+  border-color: color-mix(in oklab, var(--_chip-tint) 20%, transparent);
 }
 
 .md3-filter-chip--hablante {
-  background: rgba(76, 175, 80, 0.12);
-  color: #2e7d32;
-  border-color: rgba(76, 175, 80, 0.2);
+  --_chip-tint: var(--md-sys-color-tertiary);
+  background: color-mix(in oklab, var(--_chip-tint) 12%, transparent);
+  color: color-mix(in oklab, var(--_chip-tint) 80%, var(--md-sys-color-on-surface));
+  border-color: color-mix(in oklab, var(--_chip-tint) 20%, transparent);
 }
 
 .md3-filter-chip--sexo {
-  background: rgba(156, 39, 176, 0.12);
-  color: #6a1b9a;
-  border-color: rgba(156, 39, 176, 0.2);
+  --_chip-tint: #9c27b0; /* Purple - semantic for gender */
+  background: color-mix(in oklab, var(--_chip-tint) 12%, transparent);
+  color: color-mix(in oklab, var(--_chip-tint) 80%, var(--md-sys-color-on-surface));
+  border-color: color-mix(in oklab, var(--_chip-tint) 20%, transparent);
 }
 
 .md3-filter-chip--modo {
-  background: rgba(255, 152, 0, 0.12);
-  color: #e65100;
-  border-color: rgba(255, 152, 0, 0.2);
+  --_chip-tint: var(--md-sys-color-secondary);
+  background: color-mix(in oklab, var(--_chip-tint) 12%, transparent);
+  color: color-mix(in oklab, var(--_chip-tint) 80%, var(--md-sys-color-on-surface));
+  border-color: color-mix(in oklab, var(--_chip-tint) 20%, transparent);
 }
 
 .md3-filter-chip--discurso {
-  background: rgba(233, 30, 99, 0.12);
-  color: #c2185b;
-  border-color: rgba(233, 30, 99, 0.2);
+  --_chip-tint: var(--md-sys-color-error);
+  background: color-mix(in oklab, var(--_chip-tint) 12%, transparent);
+  color: color-mix(in oklab, var(--_chip-tint) 80%, var(--md-sys-color-on-surface));
+  border-color: color-mix(in oklab, var(--_chip-tint) 20%, transparent);
 }
 
 .md3-filter-chip__close {
@@ -687,25 +712,13 @@
   cursor: not-allowed;
 }
 
-/* Ensure specific CQL/simple inputs use a white background so they are clearly editable/readable
-   even when the global theme applies tinted surfaces. Use high specificity and !important to
-   avoid accidental overrides from other component rules. */
-textarea#cql_query.md3-outlined-textfield__input,
-input#q.md3-outlined-textfield__input,
-input#tokid-input.md3-outlined-textfield__input,
-input#tokid-input,
-input#q {
-  /* Keep the input background white and ensure it respects outline radius/spacing */
-  background-color: var(--md-sys-color-surface, #ffffff) !important;
-  color: var(--md-sys-color-on-surface, #1c1b1f) !important;
-  border-radius: var(--radius-sm, 8px) !important;
-  padding: 12px 16px !important;
-  box-sizing: border-box !important;
-}
+/* REMOVED: Explicit white background rules for inputs that were breaking
+   the MD3 outlined textfield design. The inputs should be transparent
+   and let the outline provide the visual structure. */
 
 textarea#cql_query.md3-outlined-textfield__input[readonly] {
-  /* readonly CQL stays visually white but shouldn't appear editable */
-  background-color: var(--md-sys-color-surface, #ffffff) !important;
+  /* readonly CQL stays visually distinct but shouldn't appear editable */
+  background-color: var(--md-sys-color-surface-container, #f3edf7) !important;
   cursor: not-allowed !important;
   opacity: 1 !important;
 }

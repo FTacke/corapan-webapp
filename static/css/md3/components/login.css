@@ -149,6 +149,16 @@
   text-decoration: underline;
 }
 
+/* Inline link variant (within text) */
+.md3-link--inline {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.md3-link--inline:hover {
+  text-decoration-thickness: 2px;
+}
+
 .md3-login-card__footer {
   text-align: center;
   padding-top: 1.5rem;
@@ -208,12 +218,17 @@
 }
 
 .md3-login-sheet__container, .md3-sheet__surface {
+  /* Define local background color for consistency */
+  --_sheet-bg: var(--md-sys-color-surface);
+  
   position: relative;
   width: 100%;
   max-width: 560px; /* Keep sheet large but constrained */
   /* Sheets/dialogs should use the canonical page surface (non-tonal)
      so overlays appear as independent white surfaces. */
-  background: var(--md-sys-color-surface);
+  background: var(--_sheet-bg);
+  /* LABEL-BG INHERITANCE: Textfield labels inherit this to match sheet bg */
+  --md3-textfield-label-bg: var(--_sheet-bg);
   /* Dialog-like surface: visually distinct from full page cards */
   border-radius: 28px;
   padding: 24px; /* compact and consistent padding inside dialogs/sheets */

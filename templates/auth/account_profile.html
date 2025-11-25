@@ -55,7 +55,8 @@
             </button>
           </div>
         </form>
-        <div id="status"></div>
+        <!-- Status messages (populated by JS) -->
+        <div id="status" class="md3-form-status" role="status" aria-live="polite"></div>
       </div>
     </article>
 
@@ -103,7 +104,7 @@
       <p class="md3-body-medium">Bist du sicher, dass du dein Konto löschen möchtest? Alle deine Daten werden unwiderruflich gelöscht. Zum Fortfahren bitte dein Passwort eingeben.</p>
 
       <div class="md3-outlined-textfield md3-outlined-textfield--block">
-        <input id="delete-password" name="password" type="password" class="md3-outlined-textfield__input" required aria-label="Passwort zur Löschung" />
+        <input id="delete-password" name="password" type="password" class="md3-outlined-textfield__input" required aria-label="Passwort zur Löschung" aria-describedby="delete-error" />
         <label class="md3-outlined-textfield__label" for="delete-password">Dein Passwort</label>
         <button type="button" class="md3-outlined-textfield__icon--trailing" data-toggle="delete-password" aria-label="Passwort anzeigen/verstecken">
           <span class="material-symbols-rounded md3-button__icon" aria-hidden="true">visibility</span>
@@ -115,7 +116,8 @@
         </span>
       </div>
 
-      <div id="delete-error" role="status" aria-live="polite" class="md3-body-small md3-error-text"></div>
+      <!-- Field error (populated by JS) -->
+      <div id="delete-error" class="md3-field-error" role="alert" aria-live="assertive"></div>
     </div>
 
       <div class="md3-dialog__actions">
@@ -125,5 +127,5 @@
   </div>
 </dialog>
 
-<script src="{{ url_for('static', filename='js/auth/account_profile.js') }}" defer></script>
+<script type="module" src="{{ url_for('static', filename='js/auth/account_profile.js') }}"></script>
 {% endblock %}

@@ -1,3 +1,5 @@
+import { showError, showSuccess, clearAlert } from '/static/js/md3/alert-utils.js';
+
 document.addEventListener('DOMContentLoaded', function () {
   const form = document.getElementById('chg');
   if (!form) return;
@@ -21,17 +23,14 @@ document.addEventListener('DOMContentLoaded', function () {
   form.addEventListener('submit', async function (e) {
     e.preventDefault();
     const status = document.getElementById('status');
-    status.textContent = '';
-    status.className = 'mt-3'; // reset classes
+    clearAlert(status);
 
     const oldPassword = document.getElementById('old').value;
     const newPassword = document.getElementById('new').value;
     const confirmPassword = document.getElementById('confirm').value;
 
     if (newPassword !== confirmPassword) {
-      status.textContent = 'Die neuen Passwörter stimmen nicht überein.';
-      status.classList.add('md3-text-error'); // Assuming error text class exists or use style
-      status.style.color = 'var(--md-sys-color-error)';
+      showError(status, 'Die neuen Passwörter stimmen nicht überein.');
       return;
     }
 
@@ -44,12 +43,10 @@ document.addEventListener('DOMContentLoaded', function () {
     const j = await r.json();
     
     if (j.ok) {
-      status.textContent = 'Passwort erfolgreich geändert.';
-      status.style.color = 'var(--md-sys-color-primary)';
+      showSuccess(status, 'Passwort erfolgreich geändert.');
       form.reset();
     } else {
-      status.textContent = j.message || 'Fehler beim Ändern des Passworts.';
-      status.style.color = 'var(--md-sys-color-error)';
+      showError(status, j.message || 'Fehler beim Ändern des Passworts.');
     }
   });
 });

@@ -34,11 +34,17 @@
 }
 
 .md3-page {
+  /* Define local background for consistent label-bg inheritance */
+  --_page-bg: var(--md-sys-color-surface);
+  
   /* Edge padding: use the token that matches current common site padding
      (templates and md3-container commonly use 1.5rem = 24px) */
   padding: 0 var(--space-6); /* 24px horizontal edge padding — replaces legacy .m-4 / mt-4 usage */
   max-width: 1200px;
   margin: 0 auto;
+  /* PAGE-LEVEL LABEL-BG: Default for textfields on page surface.
+     Containers (cards, dialogs) override this with their own background. */
+  --md3-textfield-label-bg: var(--_page-bg);
 }
 
 .md3-page__header {
@@ -58,7 +64,7 @@
   /* Centered auth page container for login/profile/password flows.
      Keeps a safe max-width for auth content and token-driven padding.
      Use .md3-page__section.md3-auth-page on pages to limit card width. */
-  max-width: 720px;
+  max-width: 900px;
   margin-inline: auto;
   padding-inline: var(--space-4);
   padding-block: var(--space-6);
@@ -66,6 +72,9 @@
 }
 
 .md3-auth-card {
+  /* Define local background for consistent label-bg inheritance */
+  --_auth-card-bg: var(--md-sys-color-surface);
+  
   /* Auth pages use a constrained card for forms — centered and token-driven.
      Keep values token-based and avoid hard-coded px in templates. */
   max-width: 480px; /* canonical width for auth cards */
@@ -74,7 +83,9 @@
   width: 100%;
   padding: var(--space-4);
   border-radius: var(--radius-md);
-  background: var(--md-sys-color-surface);
+  background: var(--_auth-card-bg);
+  /* LABEL-BG INHERITANCE: Textfield labels inherit this to match card bg */
+  --md3-textfield-label-bg: var(--_auth-card-bg);
   box-sizing: border-box;
 }
 

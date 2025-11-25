@@ -169,7 +169,8 @@
   /* font-family inherited from typography.css */
   font-size: 14px;
   line-height: 1.4;
-  color: var(--md-sys-color-on-surface-variant);
+  /* Use on-surface for better readability (not on-surface-variant) */
+  color: var(--md-sys-color-on-surface);
   cursor: pointer;
 }
 

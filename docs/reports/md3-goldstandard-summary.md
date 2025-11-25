@@ -46,14 +46,12 @@ This document summarizes the MD3 Goldstandard migration for the CO.RA.PAN webapp
 
 ### Changes Made
 
-**REMOVED Components**:
-- ❌ `/auth/login_sheet` endpoint (src/app/routes/auth.py)
-- ❌ HTMX sheet injection pattern
-- ❌ Login sheet JavaScript handlers
-
-**DEPRECATED Files** (marked for deletion):
-- `templates/auth/_login_sheet.html` - deprecated, kept for reference
-- `static/js/modules/auth/login-sheet.js` - deprecated, kept for reference
+**DELETED Components**:
+- ❌ `/auth/login_sheet` endpoint (src/app/routes/auth.py) — REMOVED
+- ❌ `templates/auth/_login_sheet.html` — DELETED
+- ❌ `static/js/modules/auth/login-sheet.js` — DELETED
+- ❌ HTMX sheet injection pattern — REMOVED
+- ❌ Login sheet JavaScript handlers — REMOVED
 
 **UPDATED Components**:
 | Component | Change |
@@ -66,6 +64,7 @@ This document summarizes the MD3 Goldstandard migration for the CO.RA.PAN webapp
 | `static/js/main.js` | Simplified `openLogin()` to redirect to `/login` |
 | `tests/test_ui_pages.py` | Updated to test `/login` instead of `/auth/login_sheet` |
 | `tests/e2e/playwright/auth.spec.js` | Updated to test full-page login navigation |
+| `templates/partials/status_banner.html` | Updated comments |
 
 ### New Login Flow
 ```

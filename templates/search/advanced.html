@@ -32,19 +32,19 @@
 
 {% block content %}
 <article class="md3-corpus-page">
-  <!-- Hero Header -->
-  <section class="md3-hero md3-hero--container md3-hero--with-icon" aria-label="Consultar corpus">
-    <div class="md3-hero__container">
-      <span class="material-symbols-rounded md3-hero__icon" aria-hidden="true">manage_search</span>
+  <!-- Hero Header (Canonical Format) -->
+  <header class="md3-page__header">
+    <div class="md3-hero md3-hero--card md3-hero__container">
+      <div class="md3-hero__icon" aria-hidden="true"><span class="material-symbols-rounded">manage_search</span></div>
       <div class="md3-hero__content">
-        <span class="md3-hero__eyebrow">Corpus</span>
-        <h1 class="md3-hero__title">Consultar corpus</h1>
+        <p class="md3-body-small md3-hero__eyebrow">Corpus</p>
+        <h1 class="md3-headline-medium md3-hero__title">Consultar corpus</h1>
         <p class="md3-hero__intro">
           Búsqueda con CQL (Corpus Query Language) vía BlackLab. Secuencias, POS, lemas, filtros por metadatos.
         </p>
       </div>
     </div>
-  </section>
+  </header>
 
   <!-- Content -->
   <section class="md3-corpus-content">
@@ -62,7 +62,7 @@
           
           <!-- A: QUERY -->
           <div class="md3-search-card__section">
-            <h2 class="md3-search-card__heading">Consulta simple</h2>
+            <h2 class="md3-title-medium md3-search-card__heading">Consulta simple</h2>
             <div class="md3-search-card__query-row">
               <div class="md3-outlined-textfield md3-outlined-textfield--flex">
                 <input type="text" id="q" name="q" class="md3-outlined-textfield__input" placeholder=" Consulta" value="{{ request.args.get('q', '') }}">
@@ -102,7 +102,7 @@
 
           <!-- C: OPTIONS (Simple) -->
           <div class="md3-search-card__section">
-            <h2 class="md3-search-card__heading">Opciones</h2>
+            <h2 class="md3-title-medium md3-search-card__heading">Opciones</h2>
             <div class="md3-options-row">
               <label class="md3-checkbox-container">
                 <input type="checkbox" id="include-regional-simple" name="include_regional" value="1">
@@ -139,7 +139,7 @@
           <!-- E1: PATTERN BUILDER -->
           <div class="md3-expert-section overflow-visible">
               <div class="md3-expert-header">
-                <h2 class="md3-expert-section__title">Modo avanzado (CQL)</h2>
+                <h2 class="md3-title-medium md3-expert-section__title">Modo avanzado (CQL)</h2>
               </div>
               
               <!-- Pattern Builder Container -->
@@ -147,7 +147,7 @@
                   <!-- Token rows will be injected here -->
               </div>
 
-              <div class="md3-pattern-actions mt-4">
+              <div class="md3-pattern-actions md3-mt-4">
                     <button type="button" id="add-token-btn" class="md3-button md3-button--outlined">
                       <span class="material-symbols-rounded md3-button__icon" aria-hidden="true">add</span>
                       <span>Añadir palabra</span>
@@ -158,7 +158,7 @@
           <!-- E2: CQL PREVIEW -->
             <div class="md3-expert-section">
               <hr class="md3-divider" />
-              <h3 class="md3-expert-section__title">Consulta CQL</h3>
+              <h3 class="md3-title-small md3-expert-section__title">Consulta CQL</h3>
               <div class="md3-cql-preview">
                   <div class="md3-outlined-textfield md3-outlined-textfield--textarea">
                     <textarea id="cql_query" name="cql_query" class="md3-outlined-textfield__input" rows="4" readonly>{{ request.args.get('cql_query', '') }}</textarea>
@@ -170,7 +170,7 @@
                     </div>
                   </div>
                   
-                      <label class="md3-checkbox-container mt-2">
+                      <label class="md3-checkbox-container md3-mt-2">
                         <input type="checkbox" id="cql_manual_edit" name="cql_manual_edit">
                         <span class="md3-checkbox"><svg class="md3-checkbox__checkmark" viewBox="0 0 18 18"><path class="md3-checkbox__checkmark-path" fill="none" stroke="white" d="M1.73,9.29 l4.75,4.75 l10.04,-10.04"></path></svg></span>
                         <span class="md3-checkbox__label">Permitir editar manualmente <a href="#" id="cql-guide-link" class="md3-link md3-link--inline">(Cómo hacerlo)</a></span>
@@ -199,7 +199,7 @@
 
           <!-- C: OPTIONS (Advanced) -->
           <div class="md3-search-card__section">
-            <h2 class="md3-search-card__heading">Opciones</h2>
+            <h2 class="md3-title-medium md3-search-card__heading">Opciones</h2>
             <div class="md3-options-row">
               <label class="md3-checkbox-container">
                 <input type="checkbox" id="include-regional-advanced" name="include_regional" value="1">
@@ -358,7 +358,7 @@ Ahora convierte la siguiente descripción en una consulta CQL precisa para CORAP
            SUB-TABS: RESULTADOS | ESTADÍSTICAS
            Hidden by default, shown after successful search
            ======================================== -->
-      <div id="search-sub-tabs" role="tablist" class="md3-stats-tabs mt-6 hidden">
+      <div id="search-sub-tabs" role="tablist" class="md3-stats-tabs md3-mt-6 hidden">
           <button type="button" role="tab" id="tab-resultados" class="md3-stats-tab md3-stats-tab--active" data-view="results" aria-controls="panel-resultados" aria-selected="true">
           <span class="material-symbols-rounded md3-button__icon" aria-hidden="true">table</span>
           <span>Resultados</span>
@@ -428,10 +428,17 @@ Ahora convierte la siguiente descripción en una consulta CQL precisa para CORAP
             <!-- Controls Line -->
             <div class="md3-stats-controls" style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
                 <div class="md3-stats-filter md3-stats-filter-group" style="display: flex; align-items: center; gap: 0.5rem;">
-                  <label for="stats-country-filter" class="md3-stats-filter-label">Seleccionar:</label>
-                  <select id="stats-country-filter" class="md3-stats-filter-select">
-                    <option value="">Todos los países</option>
-                  </select>
+                  <div class="md3-outlined-textfield md3-outlined-textfield--compact">
+                    <select id="stats-country-filter" class="md3-outlined-textfield__input md3-outlined-textfield__input--select">
+                      <option value="">Todos los países</option>
+                    </select>
+                    <label for="stats-country-filter" class="md3-outlined-textfield__label md3-outlined-textfield__label--select">Seleccionar</label>
+                    <div class="md3-outlined-textfield__outline">
+                      <div class="md3-outlined-textfield__outline-start"></div>
+                      <div class="md3-outlined-textfield__outline-notch"></div>
+                      <div class="md3-outlined-textfield__outline-end"></div>
+                    </div>
+                  </div>
                 </div>
                 
                 <button type="button" id="btn-download-stats-csv" class="md3-button md3-button--outlined md3-stats-action-end">
@@ -445,11 +452,11 @@ Ahora convierte la siguiente descripción en una consulta CQL precisa para CORAP
 
           <div id="stats-grid" class="md3-stats-charts-grid">
             <!-- País -->
-            <article class="card card-elevated" data-chart="by_country">
+            <article class="md3-card md3-card--elevated" data-chart="by_country">
               <div class="md3-stats-card-header">
                 <div class="md3-stats-card-title-wrapper">
                   <h3 class="md3-title-medium md3-stats-card-title">País</h3>
-                  <p class="md3-body-small text-on-surface-variant m-0" data-meta="by_country">—</p>
+                  <p class="md3-body-small text-on-surface-variant md3-m-0" data-meta="by_country">—</p>
                 </div>
                 <div class="md3-segmented" data-chart-id="country">
                     <button class="md3-segmented-btn is-selected" data-mode="count" aria-pressed="true" aria-label="Mostrar números absolutos">
@@ -460,13 +467,13 @@ Ahora convierte la siguiente descripción en una consulta CQL precisa para CORAP
                   </button>
                 </div>
               </div>
-              <div class="card-content">
+              <div class="md3-card__content">
                 <div class="chart-host" id="chart-country" aria-label="Distribución por país"></div>
               </div>
             </article>
 
             <!-- Tipo de hablante -->
-            <article class="card card-elevated" data-chart="by_speaker_type">
+            <article class="md3-card md3-card--elevated" data-chart="by_speaker_type">
               <div class="md3-stats-card-header">
                 <div class="md3-stats-card-title-wrapper">
                   <h3 class="md3-title-medium md3-stats-card-title">Tipo de hablante</h3>
@@ -481,17 +488,17 @@ Ahora convierte la siguiente descripción en una consulta CQL precisa para CORAP
                   </button>
                 </div>
               </div>
-              <div class="card-content">
+              <div class="md3-card__content">
                 <div class="chart-host" id="chart-speaker" aria-label="Distribución por tipo de hablante"></div>
               </div>
             </article>
 
             <!-- Sexo -->
-            <article class="card card-elevated" data-chart="by_sexo">
+            <article class="md3-card md3-card--elevated" data-chart="by_sexo">
               <div class="md3-stats-card-header">
                 <div class="md3-stats-card-title-wrapper">
                   <h3 class="md3-title-medium md3-stats-card-title">Sexo</h3>
-                  <p class="md3-body-small text-on-surface-variant m-0" data-meta="by_sex">—</p>
+                  <p class="md3-body-small text-on-surface-variant md3-m-0" data-meta="by_sex">—</p>
                 </div>
                 <div class="md3-segmented" data-chart-id="sexo">
                   <button class="md3-segmented-btn is-selected" data-mode="count" aria-pressed="true" aria-label="Mostrar números absolutos">
@@ -502,17 +509,17 @@ Ahora convierte la siguiente descripción en una consulta CQL precisa para CORAP
                   </button>
                 </div>
               </div>
-              <div class="card-content">
+              <div class="md3-card__content">
                 <div class="chart-host" id="chart-sexo" aria-label="Distribución por sexo"></div>
               </div>
             </article>
 
             <!-- Registro -->
-            <article class="card card-elevated" data-chart="by_modo">
+            <article class="md3-card md3-card--elevated" data-chart="by_modo">
               <div class="md3-stats-card-header">
                 <div class="md3-stats-card-title-wrapper">
                   <h3 class="md3-title-medium md3-stats-card-title">Modo de habla</h3>
-                  <p class="md3-body-small text-on-surface-variant m-0" data-meta="by_modo">—</p>
+                  <p class="md3-body-small text-on-surface-variant md3-m-0" data-meta="by_modo">—</p>
                 </div>
                 <div class="md3-segmented" data-chart-id="modo">
                   <button class="md3-segmented-btn is-selected" data-mode="count" aria-pressed="true" aria-label="Mostrar números absolutos">
@@ -523,17 +530,17 @@ Ahora convierte la siguiente descripción en una consulta CQL precisa para CORAP
                   </button>
                 </div>
               </div>
-              <div class="card-content">
+              <div class="md3-card__content">
                 <div class="chart-host" id="chart-modo" aria-label="Distribución por modo de habla"></div>
               </div>
             </article>
 
             <!-- Discurso -->
-            <article class="card card-elevated" data-chart="by_discourse">
+            <article class="md3-card md3-card--elevated" data-chart="by_discourse">
               <div class="md3-stats-card-header">
                 <div class="md3-stats-card-title-wrapper">
                   <h3 class="md3-title-medium md3-stats-card-title">Discurso</h3>
-                  <p class="md3-body-small text-on-surface-variant m-0" data-meta="by_discourse">—</p>
+                  <p class="md3-body-small text-on-surface-variant md3-m-0" data-meta="by_discourse">—</p>
                 </div>
                 <div class="md3-segmented" data-chart-id="discourse">
                   <button class="md3-segmented-btn is-selected" data-mode="count" aria-pressed="true" aria-label="Mostrar números absolutos">
@@ -544,7 +551,7 @@ Ahora convierte la siguiente descripción en una consulta CQL precisa para CORAP
                   </button>
                 </div>
               </div>
-              <div class="card-content">
+              <div class="md3-card__content">
                 <div class="chart-host" id="chart-discourse" aria-label="Distribución por discurso"></div>
               </div>
             </article>
@@ -560,7 +567,7 @@ Ahora convierte la siguiente descripción en una consulta CQL precisa para CORAP
         
         <!-- Token Input Section -->
         <div class="md3-search-card__section">
-          <h2 class="md3-search-card__heading">Buscar por Token-IDs</h2>
+          <h2 class="md3-title-medium md3-search-card__heading">Buscar por Token-IDs</h2>
           
           <!-- Input Row -->
           <div class="md3-search-card__query-row">
@@ -608,9 +615,9 @@ Ahora convierte la siguiente descripción en una consulta CQL precisa para CORAP
       </form>
       
       <!-- Token Results Section -->
-      <section id="token-results" class="md3-view-content hidden mt-8">
+      <section id="token-results" class="md3-view-content hidden md3-mt-8">
         <!-- Token Sub-Tabs (Resultados | Estadísticas) -->
-        <div id="token-sub-tabs" role="tablist" class="md3-token-stats-tabs md3-stats-tabs mt-2 flex">
+        <div id="token-sub-tabs" role="tablist" class="md3-token-stats-tabs md3-stats-tabs md3-mt-2 flex">
           <button type="button" role="tab" id="token-tab-resultados" class="md3-token-stats-tab md3-stats-tab md3-stats-tab--active" data-view="results" aria-controls="token-panel-resultados" aria-selected="true">
             <span class="material-symbols-rounded md3-button__icon" aria-hidden="true">table</span>
             <span>Resultados</span>
@@ -647,7 +654,7 @@ Ahora convierte la siguiente descripción en una consulta CQL precisa para CORAP
         </div>
 
         <div id="token-panel-estadisticas" role="tabpanel" aria-labelledby="token-tab-estadisticas" class="md3-view-content" hidden>
-          <div class="md3-body-medium p-4">
+          <div class="md3-body-medium md3-p-4">
             <div id="stats-grid" class="md3-stats-grid">
               <div id="chart-country"></div>
               <div id="chart-speaker"></div>

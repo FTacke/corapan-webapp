@@ -1,3 +1,5 @@
+import { showError, showSuccess, clearAlert } from '/static/js/md3/alert-utils.js';
+
 document.addEventListener('DOMContentLoaded', function () {
   const form = document.getElementById('reset');
   if (!form) return;
@@ -21,16 +23,14 @@ document.addEventListener('DOMContentLoaded', function () {
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
     const status = document.getElementById('status');
-    status.textContent = '';
-    status.className = 'mt-3';
+    clearAlert(status);
 
     const token = document.getElementById('token').value;
     const newPassword = document.getElementById('new').value;
     const confirmPassword = document.getElementById('confirm').value;
 
     if (newPassword !== confirmPassword) {
-      status.textContent = 'Die Passwörter stimmen nicht überein.';
-      status.style.color = 'var(--md-sys-color-error)';
+      showError(status, 'Die Passwörter stimmen nicht überein.');
       return;
     }
 
@@ -43,16 +43,14 @@ document.addEventListener('DOMContentLoaded', function () {
     const data = await resp.json();
     
     if (data.ok) {
-      status.textContent = 'Passwort erfolgreich gesetzt. Du kannst dich jetzt anmelden.';
-      status.style.color = 'var(--md-sys-color-primary)';
+      showSuccess(status, 'Passwort erfolgreich gesetzt. Du kannst dich jetzt anmelden.');
       form.reset();
       // Optional: Redirect to login after a delay
       setTimeout(() => {
         window.location.href = '/';
       }, 2000);
     } else {
-      status.textContent = data.message || 'Fehler beim Setzen des Passworts.';
-      status.style.color = 'var(--md-sys-color-error)';
+      showError(status, data.message || 'Fehler beim Setzen des Passworts.');
     }
   });
 });

@@ -81,41 +81,40 @@
       <div class="md3-dialog__content md3-stack--dialog">
         <p class="md3-body-medium">Der Benutzer erhält einen Einladungs-Link (Reset Token), da wir keine Passwörter im Klartext versenden.</p>
 
-        <form id="create-user-form" method="post" class="md3-dialog__form md3-form md3-auth-form">
-          <div class="md3-stack--dialog">
-            <label class="md3-outlined-textfield md3-outlined-textfield--block">
-              <input type="text" id="new-username" name="username" class="md3-outlined-textfield__input" required autofocus aria-label="Benutzername">
-              <span class="md3-outlined-textfield__label">Benutzername</span>
-              <div class="md3-outlined-textfield__outline">
-                <div class="md3-outlined-textfield__outline-start"></div>
-                <div class="md3-outlined-textfield__outline-notch"></div>
-                <div class="md3-outlined-textfield__outline-end"></div>
-              </div>
-            </label>
+        <form id="create-user-form" method="post" class="md3-form">
+          <!-- Textfields: gap via .md3-form (--space-3 / 12px) -->
+          <div class="md3-outlined-textfield md3-outlined-textfield--block">
+            <input type="text" id="new-username" name="username" class="md3-outlined-textfield__input" required autofocus aria-label="Benutzername">
+            <label class="md3-outlined-textfield__label" for="new-username">Benutzername</label>
+            <div class="md3-outlined-textfield__outline">
+              <div class="md3-outlined-textfield__outline-start"></div>
+              <div class="md3-outlined-textfield__outline-notch"></div>
+              <div class="md3-outlined-textfield__outline-end"></div>
+            </div>
+          </div>
 
-            <label class="md3-outlined-textfield md3-outlined-textfield--block">
-              <input type="email" id="new-email" name="email" class="md3-outlined-textfield__input" aria-label="Email (optional)">
-              <span class="md3-outlined-textfield__label">Email (optional)</span>
-              <div class="md3-outlined-textfield__outline">
-                <div class="md3-outlined-textfield__outline-start"></div>
-                <div class="md3-outlined-textfield__outline-notch"></div>
-                <div class="md3-outlined-textfield__outline-end"></div>
-              </div>
-            </label>
+          <div class="md3-outlined-textfield md3-outlined-textfield--block">
+            <input type="email" id="new-email" name="email" class="md3-outlined-textfield__input" aria-label="Email (optional)">
+            <label class="md3-outlined-textfield__label" for="new-email">Email (optional)</label>
+            <div class="md3-outlined-textfield__outline">
+              <div class="md3-outlined-textfield__outline-start"></div>
+              <div class="md3-outlined-textfield__outline-notch"></div>
+              <div class="md3-outlined-textfield__outline-end"></div>
+            </div>
+          </div>
 
-            <label class="md3-outlined-textfield md3-outlined-textfield--block w-100">
-              <select id="new-role" name="role" class="md3-outlined-textfield__input md3-outlined-textfield__input--select" aria-label="Rolle">
-                <option value="user" selected>User</option>
-                <option value="editor">Editor</option>
-                <option value="admin">Admin</option>
-              </select>
-              <span class="md3-outlined-textfield__label md3-outlined-textfield__label--select">Rolle</span>
-              <div class="md3-outlined-textfield__outline">
-                <div class="md3-outlined-textfield__outline-start"></div>
-                <div class="md3-outlined-textfield__outline-notch"></div>
-                <div class="md3-outlined-textfield__outline-end"></div>
-              </div>
-            </label>
+          <div class="md3-outlined-textfield md3-outlined-textfield--block">
+            <select id="new-role" name="role" class="md3-outlined-textfield__input md3-outlined-textfield__input--select" aria-label="Rolle">
+              <option value="user" selected>User</option>
+              <option value="editor">Editor</option>
+              <option value="admin">Admin</option>
+            </select>
+            <label class="md3-outlined-textfield__label md3-outlined-textfield__label--select" for="new-role">Rolle</label>
+            <div class="md3-outlined-textfield__outline">
+              <div class="md3-outlined-textfield__outline-start"></div>
+              <div class="md3-outlined-textfield__outline-notch"></div>
+              <div class="md3-outlined-textfield__outline-end"></div>
+            </div>
           </div>
 
           <div class="md3-dialog__actions">

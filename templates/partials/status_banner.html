@@ -3,15 +3,12 @@
 {%- set is_authenticated = user_name is not none -%}
 
 <div class="md3-status-banner" role="status" aria-live="polite"> 
-  {# Minimal banner content — interactive login overlays are loaded by HTMX from
-     the /auth/login_sheet endpoint which renders `templates/auth/_login_sheet.html`.
-     This prevents duplication of sheet markup in the base include and keeps
-     login sheet presentation centralized in `login.css` and `auth/_login_sheet.html`.
+  {# Minimal banner content — MD3 Goldstandard uses full-page login at /login.
+     Login sheet pattern was removed in favor of simple redirect-based auth.
   #}
   {% if is_authenticated %}
     Willkommen, {{ user_name }}.
   {% else %}
-    {# Use the top app bar or other triggers to open the login sheet via HTMX #}
     <span class="md3-body-small">Noch nicht angemeldet</span>
   {% endif %}
 </div>

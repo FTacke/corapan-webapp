@@ -25,7 +25,10 @@
 /* Tonal variant (canonical) */
 .md3-card--tonal,
 .md3-card.md3-card--tonal {
-  background: var(--md-sys-color-surface-container);
+  --_card-bg: var(--md-sys-color-surface-container);
+  background: var(--_card-bg);
+  /* LABEL-BG INHERITANCE: Textfield labels inherit this to match card bg */
+  --md3-textfield-label-bg: var(--_card-bg);
   border: none;
   box-shadow: var(--elev-1);
   border-radius: var(--radius-md);
@@ -35,10 +38,35 @@
 /* Outlined variant */
 .md3-card--outlined,
 .md3-card.md3-card--outlined {
-  background: var(--md-sys-color-surface-container-low);
+  --_card-bg: var(--md-sys-color-surface-container-low);
+  background: var(--_card-bg);
+  /* LABEL-BG INHERITANCE: Textfield labels inherit this to match card bg */
+  --md3-textfield-label-bg: var(--_card-bg);
   border: 1px solid var(--md-sys-color-outline-variant);
   box-shadow: none;
   border-radius: var(--radius-md);
+  padding: var(--space-4);
+}
+
+/* Elevated variant (canonical) */
+.md3-card--elevated,
+.md3-card.md3-card--elevated {
+  --_card-bg: var(--md-sys-color-surface-container-low);
+  background: var(--_card-bg);
+  /* LABEL-BG INHERITANCE: Textfield labels inherit this to match card bg */
+  --md3-textfield-label-bg: var(--_card-bg);
+  border: none;
+  box-shadow: var(--elev-1);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+}
+
+.md3-card--elevated:hover {
+  box-shadow: var(--elev-2);
+}
+
+/* MD3 Card Content */
+.md3-card__content {
   padding: var(--space-4);
 }
 

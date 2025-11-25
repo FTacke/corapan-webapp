@@ -339,9 +339,15 @@ body.token-active #adv-summary {
      Default to the lightest tonal container so they appear 'white' within a
      surface-container parent. Allow an app-level override token so product
      teams can tune the exact look without editing this file. */
-  background-color: var(--app-cql-token-background, var(--md-sys-color-surface-container-lowest, var(--md-sys-color-surface, #ffffff))) !important;
+  --_token-row-bg: var(--app-cql-token-background, var(--md-sys-color-surface-container-lowest, var(--md-sys-color-surface, #ffffff)));
+  background-color: var(--_token-row-bg) !important;
   /* Prevent background images/gradients from changing the appearance */
   background-image: none !important;
+}
+
+/* Textfield labels inside token rows - use !important to override base rules */
+.cql-token-row .md3-outlined-textfield .md3-outlined-textfield__label {
+  background: var(--app-cql-token-background, var(--md-sys-color-surface-container-lowest, var(--md-sys-color-surface, #ffffff))) !important;
 }
 
 /* Compact numeric fields */

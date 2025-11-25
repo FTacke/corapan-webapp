@@ -86,10 +86,15 @@
    ============================================================================ */
 
 .md3-corpus-content {
+  /* Corpus content sits on app background */
+  --_corpus-content-bg: var(--md-sys-color-background, #c7d5d8);
+  
   max-width: 1400px;
   margin: 0 auto;
   /* NO horizontal padding - Edge-Padding from page wrapper */
   padding: 0;
+  /* Label background inheritance for textfields */
+  --md3-textfield-label-bg: var(--_corpus-content-bg);
 }
 
 /* ============================================================================

@@ -61,8 +61,24 @@ RULES = {
     "MD3-CARD-001": ("ERROR", "Card missing md3-card__content"),
     "MD3-CARD-002": ("ERROR", "Card has actions/footer before content"),
     
+    # Hero structure rules (new)
+    "MD3-HERO-001": ("ERROR", "Hero missing canonical structure (md3-hero--card md3-hero__container)"),
+    "MD3-HERO-002": ("ERROR", "Hero icon using <span> directly (use <div class='md3-hero__icon'><span>)"),
+    "MD3-HERO-003": ("WARNING", "Hero eyebrow using <span> instead of <p>"),
+    "MD3-HERO-004": ("WARNING", "Hero title missing md3-headline-medium class"),
+    
     # Form rules
     "MD3-FORM-001": ("ERROR", "Submit button outside form without form attribute"),
+    
+    # Alert & Field Message rules (NEW)
+    "MD3-ALERT-001": ("ERROR", "role=\"alert\" without .md3-alert or .md3-field-error"),
+    "MD3-ALERT-002": ("WARNING", "Legacy alert class without MD3 equivalent"),
+    "MD3-ALERT-003": ("WARNING", "Alert missing title (.md3-alert__title element)"),
+    "MD3-ALERT-004": ("ERROR", "Error alert with wrong role (must be role=\"alert\")"),
+    "MD3-ALERT-005": ("ERROR", "Alert icon class order wrong (material-symbols-rounded must come first)"),
+    "MD3-FIELD-ERROR-001": ("WARNING", "Error text not directly after md3-outlined-textfield block"),
+    "MD3-FIELD-ERROR-002": ("WARNING", "Input with aria-invalid=\"true\" without linked md3-field-error"),
+    "MD3-FIELD-SUPPORT-001": ("INFO", "Field support/error inventory entry"),
     
     # Legacy patterns (ERROR)
     "MD3-LEGACY-001": ("ERROR", "Legacy card class usage (use md3-card)"),
@@ -105,9 +121,18 @@ PATTERNS = {
 DATATABLES_PATHS = {'templates/search/advanced'}
 DATATABLES_CSS = {'static/css/md3/components/advanced-search.css'}  # DataTables styling
 NON_CRITICAL_PATHS = {'LOKAL/', 'docs/', 'test-results/'}  # Design previews, docs, test outputs
-LEGACY_MIGRATION_PATHS = {'static/css/player-mobile.css', 'templates/pages/'}  # Legacy pages in migration
+LEGACY_MIGRATION_PATHS = {'static/css/player-mobile.css'}  # Player CSS (special zone)
+SPECIAL_CSS_ZONE = {'static/css/player-mobile.css', 'static/css/editor.css', 'static/css/special/'}  # Special CSS zone
+# Player/Editor pages excluded from structural changes
+EXCLUDED_PAGES = {
+    'templates/pages/player.html',
+    'templates/pages/editor.html',
+    'templates/pages/index.html',  # Homepage uses special card layout
+}
 ALLOWED_LEGACY_TOKEN_FILES = {'static/css/md3/tokens-legacy-shim.css'}
 IGNORED_DIRS = {'.venv', 'node_modules', '.git', 'build', '__pycache__', 'data'}
+# Pages excluded from Hero validation (login page has no Hero by design)
+NO_HERO_PAGES = {'templates/auth/login.html'}
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -136,11 +161,17 @@ def is_non_critical_path(path: str) -> bool:
 
 
 def is_legacy_migration_path(path: str) -> bool:
-    """Check if path is in legacy migration area (player, pages)."""
+    """Check if path is in legacy migration area (special CSS zone)."""
     normalized = path.replace('\\', '/')
     if normalized in LEGACY_MIGRATION_PATHS:
         return True
     return any(normalized.startswith(lm) for lm in LEGACY_MIGRATION_PATHS)
+
+
+def is_special_css_zone(path: str) -> bool:
+    """Check if path is in special CSS zone (player, editor - excluded from token checks)."""
+    normalized = path.replace('\\', '/')
+    return any(normalized.startswith(z.rstrip('/')) for z in SPECIAL_CSS_ZONE)
 
 
 def should_skip_file(path: Path) -> bool:
@@ -223,13 +254,16 @@ def lint_card_structure(content: str, rel_path: str) -> List[LintIssue]:
         block_end = min(start_pos + 3000, len(content))
         card_block = content[start_pos:block_end]
         
-        # Check for md3-card__content
-        if 'md3-card__content' not in card_block:
+        # Check for md3-card__content (or variant like md3-metric-card__content)
+        has_content = 'md3-card__content' in card_block or '__content' in card_block
+        if not has_content:
             issues.append(LintIssue("MD3-CARD-001", "ERROR", rel_path, line,
                                     "Card missing md3-card__content", tag[:60]))
         
         # Check order: actions/footer should come after content
         content_pos = card_block.find('md3-card__content')
+        if content_pos == -1:
+            content_pos = card_block.find('__content')  # Accept variant
         actions_pos = card_block.find('md3-card__actions')
         footer_pos = card_block.find('md3-card__footer')
         
@@ -240,6 +274,78 @@ def lint_card_structure(content: str, rel_path: str) -> List[LintIssue]:
             if footer_pos > 0 and footer_pos < content_pos:
                 issues.append(LintIssue("MD3-CARD-002", "ERROR", rel_path, line,
                                         "Card has __footer before __content", ""))
+    
+    return issues
+
+
+def lint_hero_structure(content: str, rel_path: str) -> List[LintIssue]:
+    """Validate MD3 Hero canonical structure.
+    
+    Canonical Hero pattern:
+    <header class="md3-page__header">
+      <div class="md3-hero md3-hero--card md3-hero__container">
+        <div class="md3-hero__icon" aria-hidden="true"><span class="material-symbols-rounded">ICON</span></div>
+        <div class="md3-hero__content">
+          <p class="md3-body-small md3-hero__eyebrow">EYEBROW</p>
+          <h1 class="md3-headline-medium md3-hero__title">TITLE</h1>
+        </div>
+      </div>
+    </header>
+    """
+    issues = []
+    
+    # Skip pages that don't need Hero
+    if rel_path.replace('\\', '/') in NO_HERO_PAGES:
+        return issues
+    
+    # Find all md3-hero elements
+    hero_pattern = re.compile(r'<(?:div|section)[^>]*class\s*=\s*"([^"]*\bmd3-hero\b[^"]*)"[^>]*>', re.I)
+    
+    for match in hero_pattern.finditer(content):
+        line = get_line_number(content, match.start())
+        tag = match.group(0)
+        classes = match.group(1)
+        
+        start_pos = match.start()
+        block_end = min(start_pos + 2000, len(content))
+        hero_block = content[start_pos:block_end]
+        
+        # Check for canonical classes
+        if 'md3-hero--card' not in classes or 'md3-hero__container' not in classes:
+            # Check for old patterns
+            if 'md3-hero--container' in classes or 'md3-hero--with-icon' in classes:
+                issues.append(LintIssue("MD3-HERO-001", "ERROR", rel_path, line,
+                                        "Hero using old pattern (md3-hero--container/--with-icon), use md3-hero--card md3-hero__container",
+                                        tag[:80]))
+        
+        # Check icon structure: should be <div class="md3-hero__icon"><span>...</span></div>
+        # Bad: <span class="md3-hero__icon">...</span> or <span class="material-symbols-rounded md3-hero__icon">
+        bad_icon_patterns = [
+            re.compile(r'<span[^>]*class\s*=\s*"[^"]*md3-hero__icon[^"]*"[^>]*>', re.I),
+            re.compile(r'<span[^>]*class\s*=\s*"[^"]*material-symbols[^"]*md3-hero__icon[^"]*"[^>]*>', re.I),
+        ]
+        for bad_pattern in bad_icon_patterns:
+            if bad_pattern.search(hero_block):
+                issues.append(LintIssue("MD3-HERO-002", "ERROR", rel_path, line,
+                                        "Hero icon using <span> directly, should use <div class='md3-hero__icon'><span>...</span></div>",
+                                        ""))
+                break
+        
+        # Check eyebrow: should use <p> not <span>
+        eyebrow_span = re.search(r'<span[^>]*class\s*=\s*"[^"]*md3-hero__eyebrow[^"]*"[^>]*>', hero_block, re.I)
+        if eyebrow_span:
+            issues.append(LintIssue("MD3-HERO-003", "WARNING", rel_path, line,
+                                    "Hero eyebrow using <span>, should use <p class='md3-body-small md3-hero__eyebrow'>",
+                                    ""))
+        
+        # Check title has md3-headline-medium
+        title_match = re.search(r'<h1[^>]*class\s*=\s*"([^"]*md3-hero__title[^"]*)"[^>]*>', hero_block, re.I)
+        if title_match:
+            title_classes = title_match.group(1)
+            if 'md3-headline-medium' not in title_classes:
+                issues.append(LintIssue("MD3-HERO-004", "WARNING", rel_path, line,
+                                        "Hero title missing md3-headline-medium class",
+                                        ""))
     
     return issues
 
@@ -290,15 +396,18 @@ def lint_legacy_patterns(content: str, rel_path: str) -> List[LintIssue]:
     issues = []
     
     # Legacy card class (class="card" without md3-card)
-    # Exclude md3-hero--card which is a valid hero modifier, not a legacy card
-    for match in re.finditer(r'class\s*=\s*"([^"]*\bcard\b[^"]*)"', content):
+    # Matches: card, card-body, card-header, etc. but NOT md3-card, md3-hero--card, md3-metric-card, md3-admin-card
+    for match in re.finditer(r'class\s*=\s*"([^"]*)"', content):
         cls = match.group(1)
-        # Skip if it's an md3-card or md3-hero--card (valid patterns)
-        if 'md3-card' in cls or 'md3-hero--card' in cls:
-            continue
-        line = get_line_number(content, match.start())
-        issues.append(LintIssue("MD3-LEGACY-001", "ERROR", rel_path, line,
-                                "Legacy card class usage (use md3-card)", match.group(0)[:60]))
+        # Check for standalone 'card' class or Bootstrap card classes (card-body, card-header)
+        card_pattern = re.compile(r'\bcard(?:-(?:body|header|footer|title))?\b')
+        if card_pattern.search(cls):
+            # Skip if it's an md3-* card pattern (valid)
+            if 'md3-card' in cls or 'md3-hero--card' in cls or 'md3-metric-card' in cls or 'md3-admin-card' in cls:
+                continue
+            line = get_line_number(content, match.start())
+            issues.append(LintIssue("MD3-LEGACY-001", "ERROR", rel_path, line,
+                                    "Legacy card class usage (use md3-card)", match.group(0)[:60]))
     
     # Legacy --md3-* tokens
     for match in PATTERNS['legacy_token'].finditer(content):
@@ -360,6 +469,172 @@ def lint_textfield_patterns(content: str, rel_path: str) -> List[LintIssue]:
         issues.append(LintIssue("MD3-TEXTFIELD-001", "WARNING", rel_path, line,
                                 "Using md3-text-field (prefer md3-outlined-textfield)",
                                 "md3-text-field"))
+    
+    return issues
+
+
+def lint_alert_patterns(content: str, rel_path: str) -> List[LintIssue]:
+    """Check for MD3 alert and field message compliance.
+    
+    Rules:
+    - MD3-ALERT-001: role="alert" without .md3-alert or .md3-field-error
+    - MD3-ALERT-002: Legacy alert classes without MD3 equivalent
+    - MD3-ALERT-003: Alert missing title (.md3-alert__title element)
+    - MD3-ALERT-004: Error alert with wrong role (must be role="alert")
+    - MD3-ALERT-005: Alert icon class order wrong (material-symbols-rounded must come first)
+    - MD3-FIELD-ERROR-001: Error text not directly after textfield
+    - MD3-FIELD-ERROR-002: Input with aria-invalid without linked error
+    """
+    issues = []
+    
+    # MD3-ALERT-001: role="alert" without proper MD3 class
+    role_alert_pattern = re.compile(r'<[^>]*role\s*=\s*["\']alert["\'][^>]*>', re.I)
+    for match in role_alert_pattern.finditer(content):
+        tag = match.group(0)
+        line = get_line_number(content, match.start())
+        
+        # Check if it has md3-alert or md3-field-error class
+        has_md3_class = 'md3-alert' in tag or 'md3-field-error' in tag
+        if not has_md3_class:
+            issues.append(LintIssue("MD3-ALERT-001", "ERROR", rel_path, line,
+                                    "role=\"alert\" without .md3-alert or .md3-field-error class",
+                                    tag[:80]))
+    
+    # MD3-ALERT-002: Legacy alert classes
+    legacy_alert_classes = ['alert-danger', 'alert-info', 'alert-warning', 'alert-success',
+                            'form-error', 'help-block', 'hint']
+    for legacy_class in legacy_alert_classes:
+        pattern = re.compile(rf'\bclass\s*=\s*"[^"]*\b{legacy_class}\b[^"]*"', re.I)
+        for match in pattern.finditer(content):
+            tag = match.group(0)
+            line = get_line_number(content, match.start())
+            # Skip if it also has md3-alert
+            if 'md3-alert' not in tag:
+                issues.append(LintIssue("MD3-ALERT-002", "WARNING", rel_path, line,
+                                        f"Legacy alert class '{legacy_class}' without MD3 equivalent",
+                                        tag[:60]))
+    
+    # MD3-ALERT-003: Alert missing title
+    # Find md3-alert elements and check if they have md3-alert__title inside
+    alert_block_pattern = re.compile(
+        r'<div[^>]*class\s*=\s*"[^"]*\bmd3-alert\b[^"]*"[^>]*>.*?</div>',
+        re.I | re.DOTALL
+    )
+    for match in alert_block_pattern.finditer(content):
+        block = match.group(0)
+        line = get_line_number(content, match.start())
+        # Check if it contains md3-alert__title
+        if 'md3-alert__title' not in block:
+            # Extract first line for context
+            first_tag = re.match(r'<[^>]+>', block)
+            context = first_tag.group(0)[:60] if first_tag else block[:60]
+            issues.append(LintIssue("MD3-ALERT-003", "WARNING", rel_path, line,
+                                    "Alert missing .md3-alert__title element",
+                                    context))
+    
+    # MD3-ALERT-004: Error alert with wrong role
+    error_alert_pattern = re.compile(
+        r'<[^>]*class\s*=\s*"[^"]*\bmd3-alert--error\b[^"]*"[^>]*>',
+        re.I
+    )
+    for match in error_alert_pattern.finditer(content):
+        tag = match.group(0)
+        line = get_line_number(content, match.start())
+        # Check for role="alert"
+        if 'role="alert"' not in tag and "role='alert'" not in tag:
+            issues.append(LintIssue("MD3-ALERT-004", "ERROR", rel_path, line,
+                                    "Error alert must have role=\"alert\"",
+                                    tag[:80]))
+    
+    # MD3-ALERT-005: Icon class order wrong
+    icon_wrong_order_pattern = re.compile(
+        r'class\s*=\s*"md3-alert__icon\s+material-symbols-rounded"',
+        re.I
+    )
+    for match in icon_wrong_order_pattern.finditer(content):
+        line = get_line_number(content, match.start())
+        issues.append(LintIssue("MD3-ALERT-005", "ERROR", rel_path, line,
+                                "Icon class order wrong: 'material-symbols-rounded' must come FIRST",
+                                match.group(0)))
+    
+    # MD3-FIELD-ERROR-002: aria-invalid="true" without linked md3-field-error
+    aria_invalid_pattern = re.compile(r'<input[^>]*aria-invalid\s*=\s*["\']true["\'][^>]*>', re.I)
+    for match in aria_invalid_pattern.finditer(content):
+        tag = match.group(0)
+        line = get_line_number(content, match.start())
+        
+        # Check for aria-describedby
+        describedby_match = re.search(r'aria-describedby\s*=\s*["\']([^"\']+)["\']', tag)
+        if describedby_match:
+            # Check if any of the referenced IDs exist as md3-field-error
+            ids = describedby_match.group(1).split()
+            has_error_ref = False
+            for ref_id in ids:
+                # Look for md3-field-error with this ID nearby
+                error_pattern = re.compile(rf'id\s*=\s*["\']?{re.escape(ref_id)}["\']?[^>]*class\s*=\s*"[^"]*md3-field-error', re.I)
+                error_pattern_alt = re.compile(rf'class\s*=\s*"[^"]*md3-field-error[^"]*"[^>]*id\s*=\s*["\']?{re.escape(ref_id)}', re.I)
+                if error_pattern.search(content) or error_pattern_alt.search(content):
+                    has_error_ref = True
+                    break
+            if not has_error_ref:
+                issues.append(LintIssue("MD3-FIELD-ERROR-002", "WARNING", rel_path, line,
+                                        "Input with aria-invalid=\"true\" but aria-describedby doesn't reference md3-field-error",
+                                        tag[:80]))
+        else:
+            issues.append(LintIssue("MD3-FIELD-ERROR-002", "WARNING", rel_path, line,
+                                    "Input with aria-invalid=\"true\" without aria-describedby",
+                                    tag[:80]))
+    
+    return issues
+
+
+def inventory_alert_patterns(content: str, rel_path: str) -> List[LintIssue]:
+    """Inventory all md3-field-support and md3-field-error elements."""
+    issues = []
+    
+    # Find md3-field-support
+    support_pattern = re.compile(r'<[^>]*class\s*=\s*"[^"]*md3-field-support[^"]*"[^>]*>', re.I)
+    for match in support_pattern.finditer(content):
+        line = get_line_number(content, match.start())
+        tag = match.group(0)
+        # Extract ID if present
+        id_match = re.search(r'id\s*=\s*["\']([^"\']+)["\']', tag)
+        field_id = id_match.group(1) if id_match else "(no-id)"
+        issues.append(LintIssue("MD3-FIELD-SUPPORT-001", "INFO", rel_path, line,
+                                f"Field support: id={field_id}",
+                                tag[:60]))
+    
+    # Find md3-field-error
+    error_pattern = re.compile(r'<[^>]*class\s*=\s*"[^"]*md3-field-error[^"]*"[^>]*>', re.I)
+    for match in error_pattern.finditer(content):
+        line = get_line_number(content, match.start())
+        tag = match.group(0)
+        # Extract ID if present
+        id_match = re.search(r'id\s*=\s*["\']([^"\']+)["\']', tag)
+        field_id = id_match.group(1) if id_match else "(no-id)"
+        issues.append(LintIssue("MD3-FIELD-SUPPORT-001", "INFO", rel_path, line,
+                                f"Field error: id={field_id}",
+                                tag[:60]))
+    
+    # Find md3-alert
+    alert_pattern = re.compile(r'<[^>]*class\s*=\s*"[^"]*md3-alert[^"]*"[^>]*>', re.I)
+    for match in alert_pattern.finditer(content):
+        line = get_line_number(content, match.start())
+        tag = match.group(0)
+        # Determine variant
+        variant = "default"
+        if 'md3-alert--error' in tag:
+            variant = "error"
+        elif 'md3-alert--warning' in tag:
+            variant = "warning"
+        elif 'md3-alert--info' in tag:
+            variant = "info"
+        elif 'md3-alert--success' in tag:
+            variant = "success"
+        inline = "inline" if 'md3-alert--inline' in tag else "full"
+        issues.append(LintIssue("MD3-FIELD-SUPPORT-001", "INFO", rel_path, line,
+                                f"Alert: variant={variant}, type={inline}",
+                                tag[:60]))
     
     return issues
 
@@ -444,32 +719,44 @@ def scan_file(path: Path, root: Path, options: dict) -> List[LintIssue]:
     is_datatables = is_datatables_path(rel_path)
     is_non_critical = is_non_critical_path(rel_path)
     is_legacy_migration = is_legacy_migration_path(rel_path)
+    is_excluded_page = rel_path in EXCLUDED_PAGES
     
     # Check file type
     is_html = path.suffix.lower() in {'.html', '.jinja', '.jinja2'}
     is_css = path.suffix.lower() == '.css'
     is_md3_component_css = rel_path.startswith('static/css/md3/components/')
     is_allowed_legacy = rel_path in ALLOWED_LEGACY_TOKEN_FILES
+    is_special_css_zone = any(rel_path.startswith(z.rstrip('/')) for z in SPECIAL_CSS_ZONE)
     
     # HTML template checks
     if is_html:
+        # Skip excluded pages (player, editor, etc.)
+        if is_excluded_page:
+            return issues
+        
         # Structural checks
         file_issues = []
         file_issues.extend(lint_dialog_structure(content, rel_path))
         file_issues.extend(lint_card_structure(content, rel_path))
+        file_issues.extend(lint_hero_structure(content, rel_path))  # Hero validation
         file_issues.extend(lint_form_structure(content, rel_path))
         file_issues.extend(lint_legacy_patterns(content, rel_path))
         file_issues.extend(lint_spacing_patterns(content, rel_path))
         file_issues.extend(lint_textfield_patterns(content, rel_path))
         
+        # Alert & field message checks (NEW - always run, even for DataTables)
+        file_issues.extend(lint_alert_patterns(content, rel_path))
+        
         # Inventory (if requested)
         if options.get('inventory'):
             file_issues.extend(inventory_form_fields(content, rel_path))
+            file_issues.extend(inventory_alert_patterns(content, rel_path))
         
-        # DataTables exception: convert errors to INFO
+        # DataTables exception: convert STRUCTURAL errors to INFO, but keep alert errors
         if is_datatables:
             for issue in file_issues:
-                if issue.severity == "ERROR":
+                # Only downgrade structural rules, not alert rules
+                if issue.severity == "ERROR" and not issue.rule_id.startswith("MD3-ALERT"):
                     issue.severity = "INFO"
                     issue.rule_id = "MD3-DATATABLES-001"
                     issue.message = f"[DataTables] {issue.message}"

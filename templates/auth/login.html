@@ -25,17 +25,18 @@
         </header>
 
         <div class="md3-card__content">
-          <p class="body-large">Melde dich mit deinem Benutzernamen oder deiner E‑Mail an.</p>
+          <p class="md3-body-medium">Melde dich mit deinem Benutzernamen oder deiner E‑Mail an.</p>
 
           <!-- Error Messages (if any) -->
-          {# Global form error banner (MD3, compact) #}
+          {# Global form error banner (MD3, compact inline) #}
           {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
-              <div class="md3-alert md3-alert--error" role="alert" aria-live="assertive">
-                <span class="md3-alert__icon material-symbols-rounded">error</span>
-                <div class="md3-alert__text">
+              <div class="md3-alert md3-alert--error md3-alert--inline" role="alert" aria-live="assertive">
+                <span class="material-symbols-rounded md3-alert__icon" aria-hidden="true">error</span>
+                <div class="md3-alert__content">
+                  <p class="md3-alert__title">Fehler</p>
                   {% for category, message in messages %}
-                    <div>{{ message }}</div>
+                    <p class="md3-alert__text">{{ message }}</p>
                   {% endfor %}
                 </div>
               </div>

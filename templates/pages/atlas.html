@@ -3,24 +3,23 @@
 {% block page_title %}Atlas · CO.RA.PAN{% endblock %}
 
 {% block content %}
-<article class="md3-atlas-page">
-  <!-- Hero Header (Container Hero - Tonal with Icon) -->
-  <section class="md3-hero md3-hero--container md3-hero--with-icon" role="main" aria-label="Atlas panhispánico">
-    <div class="md3-hero__container">
-      <span class="material-symbols-rounded md3-hero__icon" aria-hidden="true">globe_location_pin</span>
+<div class="md3-page">
+  <header class="md3-page__header">
+    <div class="md3-hero md3-hero--card md3-hero__container">
+      <div class="md3-hero__icon" aria-hidden="true"><span class="material-symbols-rounded">public</span></div>
       <div class="md3-hero__content">
-        <span class="md3-hero__eyebrow">Atlas</span>
-        <h1 class="md3-hero__title">Atlas panhispánico</h1>
-        <p class="md3-hero__intro">
+        <p class="md3-body-small md3-hero__eyebrow">Atlas</p>
+        <h1 class="md3-headline-medium md3-hero__title">Atlas panhispánico</h1>
+        <p class="md3-body-medium md3-hero__intro">
           Explora la red de emisoras y muestras del corpus. Selecciona una capital para ver las grabaciones
           correspondientes o recorre todas las ciudades para comparar duraciones y recuentos de palabras.
         </p>
       </div>
     </div>
-  </section>
+  </header>
 
   <!-- Content Area with spacing -->
-  <div class="md3-atlas-content">
+  <main class="md3-atlas-content">
     <!-- Map & Controls Layout -->
     <section class="md3-atlas-layout">
       <div class="md3-atlas-controls-row">
@@ -46,6 +45,6 @@
 
     <!-- Files Section (Tabbed) -->
     <section class="md3-atlas-files" data-element="atlas-files"></section>
-  </div>
-</article>
+  </main>
+</div>
 {% endblock %}

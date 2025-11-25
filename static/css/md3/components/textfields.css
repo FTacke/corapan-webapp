@@ -108,10 +108,11 @@
   transform: translateY(-50%);
   color: var(--md-sys-color-on-surface-variant);
   font-size: 16px;
-  /* Use the main page surface as default label background so labels do not
-     create hard, contrasting panels across pages. Dialogs override this
-     to use a dialog-specific container token (see dialog.css). */
-  background: var(--md-sys-color-surface, #fff);
+  /* SYSTEMATIC LABEL BACKGROUND:
+     Uses inherited --md3-textfield-label-bg from container, with fallback
+     to page surface. Containers (cards, dialogs, sheets) set this property
+     to match their background. See docs/md3-template/md3-spacing-system.md */
+  background: var(--md3-textfield-label-bg, var(--md-sys-color-surface, #fff));
   padding: 0 var(--space-2);
   pointer-events: none;
   transition: all 200ms cubic-bezier(0.2, 0, 0, 1);
@@ -123,8 +124,8 @@
   font-size: 12px;
   color: var(--md-sys-color-on-surface-variant);
   transform: translateY(0);
-  /* Make label background match the parent field's background */
-  background: var(--md-sys-color-surface, #fff);
+  /* Inherit from container via --md3-textfield-label-bg */
+  background: var(--md3-textfield-label-bg, var(--md-sys-color-surface, #fff));
 }
 
 .md3-outlined-textfield__input:focus ~ .md3-outlined-textfield__label,
@@ -134,10 +135,8 @@
   font-size: 12px;
   color: var(--md-sys-color-on-surface-variant);
   transform: translateY(0);
-  background: var(
-    --md-sys-color-surface-container,
-    var(--md-sys-color-surface, #fff)
-  );
+  /* Inherit from container via --md3-textfield-label-bg */
+  background: var(--md3-textfield-label-bg, var(--md-sys-color-surface, #fff));
   padding: 0 var(--space-2);
 }
 
@@ -150,8 +149,30 @@
   top: -10px;
   font-size: 12px;
   transform: translateY(0);
-  background: var(--md-sys-color-surface);
+  /* Inherit from container via --md3-textfield-label-bg */
+  background: var(--md3-textfield-label-bg, var(--md-sys-color-surface, #fff));
   padding: 0 var(--space-2);
+}
+
+/* Textarea variant - label positioning for multiline */
+.md3-outlined-textfield--textarea {
+  min-width: 100%;
+}
+
+.md3-outlined-textfield--textarea .md3-outlined-textfield__input {
+  resize: vertical;
+  min-height: 100px;
+}
+
+.md3-outlined-textfield--textarea .md3-outlined-textfield__label {
+  top: var(--space-4);
+  transform: translateY(0);
+}
+
+.md3-outlined-textfield--textarea .md3-outlined-textfield__input:focus ~ .md3-outlined-textfield__label,
+.md3-outlined-textfield--textarea .md3-outlined-textfield__input:not(:placeholder-shown) ~ .md3-outlined-textfield__label {
+  top: -10px;
+  font-size: 12px;
 }
 
 .md3-outlined-textfield__outline {

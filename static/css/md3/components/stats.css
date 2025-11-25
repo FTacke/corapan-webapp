@@ -408,11 +408,29 @@
   color: var(--md-sys-color-on-surface);
 }
 
+/* View content panels inherit from app background */
+.md3-view-content {
+  --_view-content-bg: var(--md-sys-color-background, #c7d5d8);
+}
+
+/* Textfield labels inside view content - use !important to override base rules */
+.md3-view-content .md3-outlined-textfield .md3-outlined-textfield__label {
+  background: var(--md-sys-color-background, #c7d5d8) !important;
+}
+
 /* Country Filter */
 .md3-stats-filter {
+  /* Stats filter sits on app background */
+  --_stats-filter-bg: var(--md-sys-color-background, #c7d5d8);
+  
   display: flex;
   align-items: center;
   gap: var(--space-2);
+}
+
+/* Textfield labels inside stats filter - use !important to override base rules */
+.md3-stats-filter .md3-outlined-textfield .md3-outlined-textfield__label {
+  background: var(--md-sys-color-background, #c7d5d8) !important;
 }
 
 .md3-stats-filter-label {

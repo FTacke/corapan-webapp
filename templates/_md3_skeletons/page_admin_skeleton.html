@@ -1,19 +1,24 @@
 {#
   Canonical Admin / Dashboard Skeleton
   ----------------------------------
-  - .md3-page with .md3-grid--responsive and .md3-card usage.
-  - Use .md3-grid--responsive as default grid for cards and stats.
+  - .md3-page with canonical Hero
+  - .md3-grid--responsive for cards and stats
 #}
 
 {% extends 'base.html' %}
 
 {% block content %}
 <div class="md3-page">
-  <div class="md3-page__header md3-stack--section">
-    <div class="md3-page__eyebrow md3-body-small">Admin</div>
-    <h1 class="md3-headline-large">Dashboard</h1>
-    <p class="md3-body-medium">High-level overview and metrics using token-driven spacing.</p>
-  </div>
+  <!-- Canonical Hero -->
+  <header class="md3-page__header">
+    <div class="md3-hero md3-hero--card md3-hero__container">
+      <div class="md3-hero__icon" aria-hidden="true"><span class="material-symbols-rounded">dashboard</span></div>
+      <div class="md3-hero__content">
+        <p class="md3-body-small md3-hero__eyebrow">Admin</p>
+        <h1 class="md3-headline-medium md3-hero__title">Dashboard</h1>
+      </div>
+    </div>
+  </header>
 
   <div class="md3-page__section">
     <section class="md3-grid--responsive">

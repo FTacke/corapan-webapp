@@ -1,10 +1,14 @@
 <!-- templates/_md3_skeletons/page_large_form_skeleton.html -->
 <div class="md3-page md3-page--form">
+  <!-- Canonical Hero -->
   <header class="md3-page__header">
-    <h1 class="md3-title-large">Seitentitel (H1)</h1>
-    <p class="md3-body-medium md3-page__subtitle">
-      Kurze Beschreibung des Formulars. Maximal 1–2 Zeilen.
-    </p>
+    <div class="md3-hero md3-hero--card md3-hero__container">
+      <div class="md3-hero__icon" aria-hidden="true"><span class="material-symbols-rounded">assignment</span></div>
+      <div class="md3-hero__content">
+        <p class="md3-body-small md3-hero__eyebrow">Formulario</p>
+        <h1 class="md3-headline-medium md3-hero__title">Seitentitel</h1>
+      </div>
+    </div>
   </header>
 
   <main class="md3-page__main">
@@ -72,8 +76,13 @@
                 <span class="md3-outlined-textfield__outline-end"></span>
               </span>
             </div>
-            <div class="md3-field-error" aria-live="polite">
-              <!-- Optionaler Fehlertest -->
+            <!-- Field error: use md3-field-error with proper ARIA -->
+            <div class="md3-field-error" id="email-error" role="alert" aria-live="assertive">
+              <!-- Error message populated by JS -->
+            </div>
+            <!-- OR: Field support text (non-error hints) -->
+            <div class="md3-field-support" id="email-support">
+              <p class="md3-body-small">Wir senden keine Werbung an diese Adresse.</p>
             </div>
           </div>
         </div>

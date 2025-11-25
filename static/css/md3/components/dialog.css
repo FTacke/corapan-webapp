@@ -70,15 +70,10 @@
 /* Plain variant: dialogs that should use neutral surface (non-tonal, like page surfaces) */
 .md3-dialog--tonal .md3-dialog__surface {
   /* Tonal variant: use container-high background when a dialog should appear as a tonal card */
-  background: var(--md-sys-color-surface-container-high);
-}
-
-.md3-dialog__surface .md3-outlined-textfield__label {
-  /* Labels inside dialog surfaces should use the dialog surface token so
-     the label appears to merge visually with the dialog (not the page). */
-  /* Keep label background aligned with the plain dialog surface */
-  background: var(--md-sys-color-surface);
-  padding-inline: 4px;
+  --_dialog-bg: var(--md-sys-color-surface-container-high);
+  background: var(--_dialog-bg);
+  /* LABEL-BG INHERITANCE: Match tonal background */
+  --md3-textfield-label-bg: var(--_dialog-bg);
 }
 
 /* Dialog Header */
@@ -92,7 +87,7 @@
 /* Dialog Title */
 .md3-dialog__title {
   margin: 0;
-  padding: var(--space-2) var(--space-4) var(--space-1);
+  padding: var(--space-2) 0 var(--space-1);  /* Vertical only - surface already has horizontal padding */
   font-size: 1.25rem;
   font-weight: 600;
   color: var(--md-sys-color-primary);
@@ -162,7 +157,7 @@
   gap: var(--space-3);
   padding: var(--space-4);
   border-radius: var(--radius-md);
-  background: var(--md-sys-color-surface-container-highest);
+  background: var(--md-sys-color-surface-container-mid);
   font-family: var(--md-sys-typescale-body-small-font, ui-monospace, monospace);
 }
 

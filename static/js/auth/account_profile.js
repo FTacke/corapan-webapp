@@ -1,25 +1,24 @@
+import { showError, showSuccess, clearAlert } from '/static/js/md3/alert-utils.js';
+
 document.addEventListener('DOMContentLoaded', () => {
   const saveBtn = document.getElementById('save');
   if (saveBtn) {
     saveBtn.addEventListener('click', async () => {
       const status = document.getElementById('status');
-      status.textContent = '';
-      status.className = 'mt-3';
+      clearAlert(status);
 
       const body = { username: document.getElementById('username').value, email: document.getElementById('email').value };
       const r = await fetch('/auth/account/profile', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
       const j = await r.json();
       
       if (r.status === 200 && j.ok) {
-        status.textContent = 'Profil erfolgreich gespeichert.';
-        status.style.color = 'var(--md-sys-color-primary)';
+        showSuccess(status, 'Profil erfolgreich gespeichert.');
       } else {
         if (r.status === 409 && j.error === 'username_exists') {
-          status.textContent = 'Benutzername bereits vergeben.';
+          showError(status, 'Benutzername bereits vergeben.');
         } else {
-          status.textContent = j.message || 'Fehler beim Speichern.';
+          showError(status, j.message || 'Fehler beim Speichern.');
         }
-        status.style.color = 'var(--md-sys-color-error)';
       }
     });
   }
