@@ -122,6 +122,7 @@ export class AdvancedAudioManager {
   }
 
   async openLoginForTarget(targetUrl, postAction = null) {
+    // Save redirect URL in session for after login (optional server-side persistence)
     try {
       await fetch("/auth/save-redirect", {
         method: "POST",
@@ -132,13 +133,8 @@ export class AdvancedAudioManager {
     } catch (e) {
       console.warn("[Auth] Could not save redirect to server", e);
     }
-    const loginUrl = `/auth/login_sheet?next=${encodeURIComponent(targetUrl)}`;
-    if (window.htmx) {
-      htmx.ajax("GET", loginUrl, { target: "#modal-root", swap: "beforeend" });
-    } else {
-      // fallback to canonical login page when HTMX is unavailable
-      window.location.href = `/login?next=${encodeURIComponent(targetUrl)}`;
-    }
+    // Navigate to full-page login with next parameter (MD3 Goldstandard)
+    window.location.href = `/login?next=${encodeURIComponent(targetUrl)}`;
     return;
   }
 

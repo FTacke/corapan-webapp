@@ -1,10 +1,28 @@
 /**
- * Login Sheet Controller
+ * ================================================================================
+ * DEPRECATED - DO NOT USE
+ * ================================================================================
+ * This module has been deprecated as part of the MD3 Goldstandard migration.
+ * 
+ * Login is now exclusively handled via the full-page login:
+ *   /login?next=intended_url
+ * 
+ * All authentication flows redirect to the login page instead of opening a sheet.
+ * This file is kept temporarily for reference but should be deleted after
+ * verifying no code paths import it.
+ * 
+ * See: docs/md3-template/md3-structural-compliance.md section 6.2
+ * ================================================================================
+ */
+
+/**
+ * Login Sheet Controller (DEPRECATED)
  * Handles interactions for the login sheet overlay.
  */
 
 export function initLoginSheet() {
-    // Initialize all visible sheets that have not been initialized yet.
+    console.warn('[DEPRECATED] initLoginSheet() - Login sheet pattern removed. Use full-page login instead.');
+    // Legacy initialization kept for backwards compatibility during transition
     const sheets = document.querySelectorAll('.md3-login-sheet, .md3-sheet');
     sheets.forEach((sheet) => {
         if (!sheet || sheet.dataset.initialized) return;
@@ -43,29 +61,4 @@ export function initLoginSheet() {
     });
 }
 
-// Ensure global login-sheet hooks are only attached once (idempotent)
-if (!window.__loginSheetGlobalInit) {
-    window.__loginSheetGlobalInit = true;
-
-    // Global listener for htmx:beforeSwap to handle redirect
-    document.body.addEventListener('htmx:beforeSwap', function(evt) {
-    if (!evt.detail || !evt.detail.xhr) return;
-    // If server returned 204 with HX-Redirect we can remove any active sheet
-    if (evt.detail.xhr.status === 204 && evt.detail.xhr.getResponseHeader('HX-Redirect')) {
-        const sheet = document.querySelector('.md3-login-sheet, .md3-sheet');
-        if (sheet) sheet.remove();
-    }
-    });
-
-    // Initialize when the module is loaded (if the sheet is already in DOM)
-    // Also re-check after any HTMX swap (e.g. when opening from nav drawer)
-    document.body.addEventListener('htmx:afterSwap', function(evt) {
-    // If a sheet was swapped/inserted, initialize it.
-    if (document.querySelector('.md3-login-sheet, .md3-sheet')) {
-        initLoginSheet();
-    }
-    });
-
-    // Also try to init immediately in case it's already there
-    initLoginSheet();
-}
+// NOTE: Global hooks removed - no longer needed with full-page login

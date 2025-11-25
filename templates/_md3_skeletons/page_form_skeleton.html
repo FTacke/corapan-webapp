@@ -19,39 +19,45 @@
   </div>
 
   <div class="md3-page__section">
-    <div class="md3-card md3-card--outlined max-w-600 md3-form" role="region" aria-label="Form example">
-      <div class="md3-outlined-textfield md3-outlined-textfield--block">
-        <input class="md3-outlined-textfield__input" name="username" placeholder="" aria-label="Username" />
-        <label class="md3-outlined-textfield__label">Username</label>
-        <span class="md3-outlined-textfield__outline">
-          <span class="md3-outlined-textfield__outline-start"></span>
-          <span class="md3-outlined-textfield__outline-notch"></span>
-          <span class="md3-outlined-textfield__outline-end"></span>
-        </span>
-      </div>
+    <article class="md3-card md3-card--outlined max-w-600" role="region" aria-label="Form example">
+      <div class="md3-card__content">
+        <form class="md3-form">
+          <div class="md3-outlined-textfield md3-outlined-textfield--block">ck">
+            <input class="md3-outlined-textfield__input" name="username" placeholder="" aria-label="Username" />
+            <label class="md3-outlined-textfield__label">Username</label>
+            <span class="md3-outlined-textfield__outline">
+              <span class="md3-outlined-textfield__outline-start"></span>
+              <span class="md3-outlined-textfield__outline-notch"></span>
+              <span class="md3-outlined-textfield__outline-end"></span>
+            </span>
+          </div>
 
-      <div class="md3-outlined-textfield md3-outlined-textfield--block">
-        <input class="md3-outlined-textfield__input" name="password" type="password" aria-label="Password" />
-        <label class="md3-outlined-textfield__label">Password</label>
-        <span class="md3-outlined-textfield__outline">
-          <span class="md3-outlined-textfield__outline-start"></span>
-          <span class="md3-outlined-textfield__outline-notch"></span>
-          <span class="md3-outlined-textfield__outline-end"></span>
-        </span>
-      </div>
+          <div class="md3-outlined-textfield md3-outlined-textfield--block">
+            <input class="md3-outlined-textfield__input" name="password" type="password" aria-label="Password" />
+            <label class="md3-outlined-textfield__label">Password</label>
+            <span class="md3-outlined-textfield__outline">
+              <span class="md3-outlined-textfield__outline-start"></span>
+              <span class="md3-outlined-textfield__outline-notch"></span>
+              <span class="md3-outlined-textfield__outline-end"></span>
+            </span>
+          </div>
 
-      <div class="md3-actions">
-        <button class="md3-button md3-button--filled" type="submit">Submit</button>
-        <button class="md3-button md3-button--outlined" type="button">Cancel</button>
+          <div class="md3-actions">
+            <button class="md3-button md3-button--filled" type="submit">Submit</button>
+            <button class="md3-button md3-button--outlined" type="button">Cancel</button>
+          </div>
+        </form>
       </div>
-    </div>
+    </article>
   </div>
 
   <div class="md3-page__section md3-stack--page">
-    <div class="md3-card max-w-600">
-      <h3 class="md3-title-medium">Additional info</h3>
-      <p class="md3-body-medium">Explain additional steps, security notes and helpers.</p>
-    </div>
+    <article class="md3-card md3-card--outlined max-w-600">
+      <div class="md3-card__content">
+        <h3 class="md3-title-medium">Additional info</h3>
+        <p class="md3-body-medium">Explain additional steps, security notes and helpers.</p>
+      </div>
+    </article>
   </div>
 </div>
 {% endblock %}

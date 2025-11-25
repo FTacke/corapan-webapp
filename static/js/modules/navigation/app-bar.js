@@ -75,7 +75,7 @@ function closeUserMenu(btn, menu) {
  * - Burger links (nur Compact/Medium)
  * - Login/Avatar rechts
  * - User Menu mit Logout
- * - Login Sheet
+ * - Login redirect (MD3 Goldstandard: full-page login)
  */
 export class TopAppBar {
   constructor() {
@@ -96,8 +96,8 @@ export class TopAppBar {
     // User menu functionality
     this.initUserMenu();
 
-    // Login sheet functionality
-    this.initLoginSheet();
+    // Login handler (MD3 Goldstandard: full-page login)
+    this.initLoginHandler();
 
     // Optional: Check for ?showlogin=1 query parameter
     this.checkAutoOpenLogin();
@@ -162,74 +162,36 @@ export class TopAppBar {
   }
 
   /**
-   * Login Sheet (Bottom Sheet auf Mobile, Dialog auf Desktop)
+   * Login redirect handler
+   * MD3 Goldstandard: Login is always full-page, no sheet overlay
    */
-  initLoginSheet() {
-    const loginSheet = document.querySelector('[data-element="login-sheet"]');
-    if (!loginSheet) return;
-
+  initLoginHandler() {
+    // "open-login" buttons now navigate to full-page login
     const openButtons = document.querySelectorAll('[data-action="open-login"]');
-    const closeButtons = document.querySelectorAll(
-      '[data-action="close-login"]',
-    );
-
     openButtons.forEach((btn) => {
-      btn.addEventListener("click", () => this.openLoginSheet(loginSheet));
+      btn.addEventListener("click", (e) => {
+        e.preventDefault();
+        // Get current URL as next parameter for redirect after login
+        const currentUrl = window.location.pathname + window.location.search;
+        window.location.href = `/login?next=${encodeURIComponent(currentUrl)}`;
+      });
     });
-
-    closeButtons.forEach((btn) => {
-      btn.addEventListener("click", () => this.closeLoginSheet(loginSheet));
-    });
-
-    // Close on backdrop click
-    const backdrop = loginSheet.querySelector('.md3-sheet__backdrop, .md3-login-backdrop');
-    if (backdrop) {
-      backdrop.addEventListener("click", () =>
-        this.closeLoginSheet(loginSheet),
-      );
-    }
-
-    // Close on ESC
-    document.addEventListener("keydown", (e) => {
-      if (e.key === "Escape" && !loginSheet.hidden) {
-        this.closeLoginSheet(loginSheet);
-      }
-    });
-  }
-
-  openLoginSheet(sheet) {
-    sheet.hidden = false;
-    document.body.classList.add("overflow-hidden");
-
-    // Focus first input
-    const firstInput = sheet.querySelector(
-      'input[type="text"], input[name="username"]',
-    );
-    if (firstInput) {
-      setTimeout(() => firstInput.focus(), 150);
-    }
-  }
-
-  closeLoginSheet(sheet) {
-    sheet.hidden = true;
-    document.body.classList.remove("overflow-hidden");
   }
 
   /**
-   * Auto-open login if ?showlogin=1 in URL
+   * Auto-redirect to login if ?showlogin=1 in URL
+   * MD3 Goldstandard: Redirect to /login with next parameter
    */
   checkAutoOpenLogin() {
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.get("showlogin") === "1") {
-      const loginSheet = document.querySelector('[data-element="login-sheet"]');
-      if (loginSheet) {
-        setTimeout(() => this.openLoginSheet(loginSheet), 300);
-
-        // Remove query parameter from URL without reload
-        const url = new URL(window.location);
-        url.searchParams.delete("showlogin");
-        window.history.replaceState({}, "", url);
-      }
+      // Build clean next URL (without showlogin param)
+      const url = new URL(window.location);
+      url.searchParams.delete("showlogin");
+      const nextUrl = url.pathname + url.search;
+      
+      // Redirect to full-page login
+      window.location.href = `/login?next=${encodeURIComponent(nextUrl)}`;
     }
   }
 }

@@ -65,7 +65,7 @@ test('login sheet shows Spanish MD3 warning for invalid credentials', async ({ p
   expect(err).toContain('Benutzername oder Passwort ist falsch');
 });
 
-test('login sheet opens from top-app-bar and renders without errors', async ({ page }) => {
+test('login link navigates to full-page login (MD3 Goldstandard)', async ({ page }) => {
   const base = process.env.E2E_BASE_URL || 'http://127.0.0.1:8000';
 
   await page.goto(`${base}/`);
@@ -73,14 +73,14 @@ test('login sheet opens from top-app-bar and renders without errors', async ({ p
   // Click the top-right login icon (unauthenticated state)
   await page.click('a[aria-label="Anmelden"]');
 
-  // Wait for the sheet to appear
-  const sheet = page.locator('#login-sheet');
-  await expect(sheet).toBeVisible({ timeout: 3000 });
+  // Wait for navigation to full-page login
+  await page.waitForURL(/\/login/);
 
-  // Ensure we don't get a 403 or 500 in HTMX request logs by checking there is
-  // an actionable submit button and the form is present.
+  // Ensure login form is present on the full page
   await expect(page.locator('#login-form')).toBeVisible();
-  // Scope the submit button check to the login form to avoid matching
-  // other submit buttons on the page (strict mode detects multiple matches).
   await expect(page.locator('#login-form button[type=submit]')).toBeVisible();
+  
+  // Verify page has proper heading
+  await expect(page.locator('h2:has-text("Anmelden")')).toBeVisible();
 });
+

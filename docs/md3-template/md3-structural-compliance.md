@@ -104,6 +104,42 @@ This document defines canonical HTML structures for MD3 components (Pages, Cards
 </div>
 ```
 
+### 1.5 Hero Structure (Goldstandard)
+
+**Canonical Hero-Card mit Icon**:
+
+```html
+<header class="md3-page__header">
+  <div class="md3-hero md3-hero--card md3-hero__container">
+    <div class="md3-hero__icon" aria-hidden="true">
+      <span class="material-symbols-rounded">icon_name</span>
+    </div>
+    <div class="md3-hero__content">
+      <p class="md3-body-small md3-hero__eyebrow">Category / Context</p>
+      <h1 class="md3-headline-medium md3-hero__title">Page Title</h1>
+    </div>
+  </div>
+</header>
+```
+
+**Rules**:
+- Hero MUST be inside `md3-page__header`
+- Hero container has `md3-hero md3-hero--card md3-hero__container`
+- Icon uses `md3-hero__icon` with `aria-hidden="true"`
+- Content uses `md3-hero__content` with eyebrow and title
+- Title is H1 with `md3-headline-medium md3-hero__title`
+- Eyebrow is optional, uses `md3-body-small md3-hero__eyebrow`
+
+**Reference Implementation**: `templates/pages/impressum.html`
+
+**Pages requiring Hero**:
+- Text pages (impressum, proyecto, datenschutz)
+- Auth pages (account_profile, account_password, admin_users)
+- Editor overview, atlas pages
+- Search pages (advanced.html - Hero only, DataTables preserved)
+
+**Hero CSS**: `static/css/md3/components/hero.css`
+
 ---
 
 ## 2. Typography Rules
@@ -123,12 +159,21 @@ This document defines canonical HTML structures for MD3 components (Pages, Cards
 
 ## 3. Form & Input Rules
 
-### 3.1 Textfield Pattern
+### 3.1 Textfield Pattern (Goldstandard)
+
+**Canonical MD3 Outlined Textfield**:
 
 ```html
 <div class="md3-outlined-textfield md3-outlined-textfield--block">
-  <input class="md3-outlined-textfield__input" id="field-id" name="field" />
-  <label class="md3-outlined-textfield__label" for="field-id">Label</label>
+  <input 
+    type="text" 
+    class="md3-outlined-textfield__input" 
+    id="field-id" 
+    name="field"
+    autocomplete="appropriate-value"
+    required
+    aria-label="Accessible Label">
+  <label class="md3-outlined-textfield__label" for="field-id">Visible Label</label>
   <span class="md3-outlined-textfield__outline">
     <span class="md3-outlined-textfield__outline-start"></span>
     <span class="md3-outlined-textfield__outline-notch"></span>
@@ -136,6 +181,20 @@ This document defines canonical HTML structures for MD3 components (Pages, Cards
   </span>
 </div>
 ```
+
+**Rules**:
+- Wrapper: `div.md3-outlined-textfield.md3-outlined-textfield--block`
+- Input: `input.md3-outlined-textfield__input` with `id`, `name`, `autocomplete`
+- Label: `label.md3-outlined-textfield__label` with `for` pointing to input ID
+- Outline: span wrapper with 3 outline parts (start, notch, end)
+- Order: Input → Label → Outline (CSS requires this order)
+
+**DO NOT USE**:
+- `<label>` wrapping `<input>` (breaks MD3 outline animation)
+- Inline `placeholder` instead of label (accessibility issue)
+- Missing outline structure (breaks visual styling)
+
+**Reference Implementation**: `templates/auth/login.html`
 
 ### 3.2 Form Rules
 
@@ -190,13 +249,29 @@ Use CSS custom properties from `static/css/md3/tokens.css`:
 - `class="card"` without `md3-card`
 - `class="card-outlined"` → use `md3-card--outlined`
 - `md3-button--contained` → use `md3-button--filled`
-- `md3-login-sheet` → use `md3-sheet`
+- `md3-login-sheet` → use `md3-sheet` (if sheet needed)
 
-### 6.2 Legacy Tokens (ERROR)
+### 6.2 Login Sheet (DEPRECATED - REMOVED)
+
+**Status**: Login-Sheet pattern is completely removed from the codebase.
+
+**Old Pattern** (DO NOT USE):
+- `_login_sheet.html` partial
+- `/auth/login_sheet` endpoint
+- HTMX-based sheet injection for 401 handling
+- `login-sheet.js` controller
+
+**New Pattern** (REQUIRED):
+- Full-page login at `/login` with `?next=` parameter
+- 401 responses redirect to `/login?next=intended_url`
+- No sheet/overlay for authentication
+- Simpler, more accessible, better UX on mobile
+
+### 6.3 Legacy Tokens (ERROR)
 
 - `--md3-*` tokens → use `--md-sys-*` or `--space-*`
 
-### 6.3 Inline Styles (WARNING)
+### 6.4 Inline Styles (WARNING)
 
 - `style="margin: 12px"` → use `--space-*` tokens
 - `style="padding: 16px"` → use `--space-4`

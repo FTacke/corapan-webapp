@@ -427,50 +427,17 @@ userMenu?.addEventListener("click", (event) => {
 let previouslyFocusedForLogin = null;
 let scrollPositionBeforeLogin = 0;
 
+/**
+ * Open login - MD3 Goldstandard: Navigate to full-page login
+ * No more sheet/overlay pattern.
+ */
 function openLogin() {
-  // Get loginSheet dynamically each time (survives page reloads)
-  const loginSheet = document.querySelector('[data-element="login-sheet"]');
-  if (!loginSheet) return;
-
-  // Save current scroll position to restore later if needed
-  scrollPositionBeforeLogin = window.scrollY || window.pageYOffset;
-
-  // Lock body scroll position using CSS variable (prevents jump when overflow:hidden is applied)
-  document.body.style.setProperty(
-    "--scroll-lock-offset",
-    `-${scrollPositionBeforeLogin}px`,
-  );
-
-  loginSheet.hidden = false;
-  document.body.classList.add("login-open");
-  previouslyFocusedForLogin = document.activeElement;
-
-  // Focus input without scrolling the page
-  const input = loginSheet.querySelector('input[name="username"]');
-  if (input) {
-    // Use preventScroll to avoid automatic scroll-to-focused-element
-    input.focus({ preventScroll: true });
-  }
+  // Get current URL as next parameter for redirect after login
+  const currentUrl = window.location.pathname + window.location.search;
+  window.location.href = `/login?next=${encodeURIComponent(currentUrl)}`;
 }
 
-function closeLogin() {
-  // Get loginSheet dynamically each time (survives page reloads)
-  const loginSheet = document.querySelector('[data-element="login-sheet"]');
-  if (!loginSheet) return;
-
-  loginSheet.hidden = true;
-  document.body.classList.remove("login-open");
-
-  // Remove scroll lock CSS variable
-  document.body.style.removeProperty("--scroll-lock-offset");
-
-  // Restore scroll position
-  window.scrollTo(0, scrollPositionBeforeLogin);
-
-  if (previouslyFocusedForLogin) {
-    previouslyFocusedForLogin.focus({ preventScroll: true });
-  }
-}
+// Legacy closeLogin removed - not needed with full-page login
 
 // Use event delegation to handle login buttons (works after page reload)
 document.addEventListener("click", (event) => {
@@ -480,49 +447,21 @@ document.addEventListener("click", (event) => {
   const openButton = target.closest('[data-action="open-login"]');
   if (openButton) {
     event.preventDefault();
-    console.log("[Auth] Opening login sheet");
+    console.log("[Auth] Redirecting to login page (MD3 Goldstandard)");
     openLogin();
     return;
   }
 
-  // Check if clicked element or its parent is a close-login button
-  const closeButton = target.closest('[data-action="close-login"]');
-  if (closeButton) {
-    event.preventDefault();
-    console.log("[Auth] Closing login sheet");
-    closeLogin();
-    return;
-  }
-});
-
-// Close login sheet when clicking on backdrop (event delegation)
-document.addEventListener("click", (event) => {
-  const loginSheet = document.querySelector('[data-element="login-sheet"]');
-  if (event.target === loginSheet) {
-    closeLogin();
-  }
+  // close-login buttons no longer needed with full-page login
 });
 
 // Login form submission handler (event delegation for page reload resilience)
 document.addEventListener("submit", (event) => {
-  // Check if this is the login form
-  const loginSheet = document.querySelector('[data-element="login-sheet"]');
-  const loginForm = loginSheet?.querySelector("form");
-
-  if (event.target === loginForm) {
-    // Don't prevent default - let form submit naturally
-    // This ensures cookies are set correctly by the browser
-
+  // Standard form submission - let the browser handle it
+  // The login page form submits directly to /auth/login
+  const form = event.target;
+  if (form && form.id === "login-form") {
     console.log("[Auth] Login form submitted");
-
-    // No sessionStorage-based redirect mechanism used anymore
-
-    // Visual feedback - close login sheet
-    // Note: Sheet will be hidden by page navigation anyway
-    if (loginSheet && !loginSheet.hidden) {
-      loginSheet.style.opacity = "0";
-    }
-
     // Form submits naturally - browser handles redirect with cookies
   }
 });
@@ -554,29 +493,22 @@ function syncLogoutCsrf() {
 }
 
 function ensureLoginHiddenForAuthenticated() {
-  if (!navbarRoot || !loginSheet) return;
-  const isAuthenticated = navbarRoot.dataset.auth === "true";
-  if (isAuthenticated) {
-    loginSheet.hidden = true;
-    document.body.classList.remove("login-open");
-  }
+  // No longer needed with full-page login (removed login sheet handling)
+  return;
 }
 
 syncLogoutCsrf();
-ensureLoginHiddenForAuthenticated();
 
-// Open login sheet if redirected with ?showlogin=1 query parameter
-// Using query param instead of hash avoids automatic scroll-to-anchor behavior
+// Auto-redirect to login if ?showlogin=1 in URL (MD3 Goldstandard)
 const urlParams = new URLSearchParams(window.location.search);
 if (urlParams.has("showlogin")) {
-  // Remove showlogin parameter from URL without reload (clean URL)
+  // Build clean next URL (without showlogin param)
   urlParams.delete("showlogin");
   const newSearch = urlParams.toString();
-  const newUrl = window.location.pathname + (newSearch ? "?" + newSearch : "");
-  history.replaceState(null, "", newUrl);
-
-  // Open login sheet (scroll position is preserved automatically)
-  openLogin();
+  const nextUrl = window.location.pathname + (newSearch ? "?" + newSearch : "");
+  
+  // Redirect to full-page login
+  window.location.href = `/login?next=${encodeURIComponent(nextUrl)}`;
 }
 
 // Mark active navigation link

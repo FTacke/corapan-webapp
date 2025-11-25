@@ -73,8 +73,8 @@ def test_ui_pages_render(client):
     r = client.get('/auth/password/reset')
     assert r.status_code == 200
 
-    # login sheet present
-    r = client.get('/auth/login_sheet')
+    # login page (full-page, MD3 Goldstandard - replaces login_sheet)
+    r = client.get('/login')
     assert r.status_code == 200
 
     # account pages should return 200 even without auth (login prompt)
@@ -88,9 +88,9 @@ def test_admin_ui_requires_admin(client):
     user = create_user('plain')
     admin = create_user('bob', role='admin')
 
-    # try admin page without auth - should be unauthorized
+    # try admin page without auth - should redirect to login (302) or return 401/403
     r = client.get('/auth/admin_users')
-    assert r.status_code in (401, 403)
+    assert r.status_code in (302, 401, 403)
 
     # login as admin and retry
     resp = client.post('/auth/login', json={'username': 'bob', 'password': 'password123'})

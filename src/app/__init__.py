@@ -210,7 +210,7 @@ def register_auth_context(app: Flask) -> None:
             "/auth/password/forgot",
             "/auth/login",
             "/login",
-            "/auth/login_sheet",
+            # NOTE: /auth/login_sheet removed - MD3 Goldstandard uses full-page login
             "/auth/logout_any",
         )
 

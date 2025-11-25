@@ -1,7 +1,26 @@
+{#
+  ================================================================================
+  DEPRECATED - DO NOT USE
+  ================================================================================
+  This template has been deprecated as part of the MD3 Goldstandard migration.
+  
+  Login is now exclusively handled via the full-page login template:
+    templates/auth/login.html  →  /login?next=...
+  
+  This file is kept temporarily for reference but should be deleted after
+  verifying no code paths render it. All usages have been migrated:
+  - /auth/login_sheet endpoint → REMOVED
+  - JS modules → redirect to /login?next=...
+  - HTMX 401 handling → redirect to /login?next=...
+  
+  See: docs/md3-template/md3-structural-compliance.md section 6.2
+  ================================================================================
+#}
+
 {% set user_name = g.user %}
 {% set user_role = g.role %}
 
-<!-- Login Sheet: Rendered as htmx fragment (GET /auth/login_sheet) -->
+<!-- DEPRECATED: Login Sheet - replaced by full-page login -->
 <link rel="stylesheet" href="{{ url_for('static', filename='css/md3/components/login.css') }}">
 
 <div id="login-sheet" class="md3-sheet" role="dialog" aria-modal="true" aria-label="Re-Authentifizierung">
@@ -12,7 +31,7 @@
   <div class="md3-sheet__surface md3-sheet__container" role="document">
     <!-- Form with HTMX for seamless updates -->
     <form id="login-form" 
-          class="md3-login-sheet__form" 
+          class="md3-sheet__form" 
           method="post" 
           action="{{ url_for('auth.login_post') }}"
           hx-post="{{ url_for('auth.login_post') }}"

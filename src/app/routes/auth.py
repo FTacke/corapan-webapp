@@ -166,27 +166,9 @@ def _safe_next(raw: str | None) -> str | None:
     return safe_url if safe_url else None
 
 
-@blueprint.get("/login_sheet")
-def login_sheet() -> Response:
-    """
-    Render login sheet partial (HTMX fragment).
-
-    Returns only the sheet HTML (no full page layout).
-    Used by navbar, drawer, and on-page auth prompts.
-
-    Template: templates/auth/_login_sheet.html
-    """
-    from flask import render_template
-
-    # Get next URL from query param or referrer
-    next_url = _safe_next(request.args.get("next") or request.referrer)
-
-    response = make_response(
-        render_template("auth/_login_sheet.html", next=next_url or "")
-    )
-    response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, private"
-    response.headers["Vary"] = "Cookie"
-    return response, 200
+# NOTE: login_sheet endpoint has been removed as part of MD3 Goldstandard migration.
+# All authentication flows now use the full-page login at /login with ?next= parameter.
+# See docs/md3-template/md3-structural-compliance.md section 6.2 for details.
 
 
 @blueprint.get("/password/forgot")
@@ -278,7 +260,7 @@ def login_post() -> Response:
     2. Wenn erfolgreich:
        - HTMX: 204 No Content + HX-Redirect zum intended target
        - Full-page: 303 Redirect zum intended target
-    3. Wenn fehler: 400 Bad Request + Sheet mit Fehler anzeigen
+    3. Wenn fehler: Re-render full-page login with error messages
     """
     username = request.form.get("username", "").strip().lower()
     password = request.form.get("password", "")
@@ -304,21 +286,23 @@ def login_post() -> Response:
         identifier = (payload.get("username") or payload.get("email") or "").strip().lower()
         password = payload.get("password", "")
 
+    # Helper to render full-page login with error (replaces old sheet rendering)
+    def _render_login_error(status_code: int = 400) -> Response:
+        """Render full-page login template with flashed error messages."""
+        return render_template("auth/login.html", next=next_url or ""), status_code
+
     if not identifier:
         current_app.logger.warning(f"Failed login attempt - missing identifier from {request.remote_addr}")
         # Friendly German message for missing identifier
         flash("Bitte geben Sie Benutzername oder E-Mail an.", "error")
-        # Return 200 for HTMX to ensure swap happens, 400 for standard form
-        status_code = 200 if request.headers.get("HX-Request") else 400
-        return render_template("auth/_login_sheet.html", next=next_url or ""), status_code
+        return _render_login_error(400)
 
     user = auth_services.find_user_by_username_or_email(identifier)
     if not user:
         current_app.logger.warning(f"Failed login attempt - unknown user: {identifier} from {request.remote_addr}")
         # Generic German error message (avoid account enumeration)
         flash("Benutzername oder Passwort ist falsch.", "error")
-        status_code = 200 if request.headers.get("HX-Request") else 400
-        return render_template("auth/_login_sheet.html", next=next_url or ""), status_code
+        return _render_login_error(400)
 
     # check account status and password
     status = auth_services.check_account_status(user)
@@ -335,7 +319,7 @@ def login_post() -> Response:
         current_app.logger.warning(f"Failed login attempt - wrong password: {identifier} from {request.remote_addr}")
         # Generic German error message for invalid credentials
         flash("Benutzername oder Passwort ist falsch.", "error")
-        return render_template("auth/_login_sheet.html", next=next_url or ""), 400
+        return _render_login_error(400)
 
     # Success: create tokens and set cookies
     try:

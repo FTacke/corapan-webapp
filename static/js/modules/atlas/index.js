@@ -274,17 +274,8 @@ function openLoginSheet(nextTarget = "") {
     }
   } else if (loginButtons.length) {
     if (nextTarget) {
-      // Open login sheet with next param via HTMX
-      if (window.htmx) {
-        htmx.ajax(
-          "GET",
-          `/auth/login_sheet?next=${encodeURIComponent(nextTarget)}`,
-          { target: "#modal-root", swap: "beforeend" },
-        );
-      } else {
-        // Fallback: navigate to canonical full page login when HTMX not available
-        window.location.href = `/login?next=${encodeURIComponent(nextTarget)}`;
-      }
+      // Navigate to full-page login with next parameter (MD3 Goldstandard)
+      window.location.href = `/login?next=${encodeURIComponent(nextTarget)}`;
     } else {
       // Trigger the global open-login button (already has scroll handling)
       loginButtons[0].click();
