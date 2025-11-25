@@ -676,15 +676,21 @@ def logout_any() -> Response:
     # Force browser to reload page after redirect
     response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
     response.headers["Pragma"] = "no-cache"
-    
-    return response
     response.headers["Expires"] = "0"
 
+    # Add a small UI flash (only relevant for browser GET flow) and audit log
     method = request.method
-    flash("Sie wurden erfolgreich abgemeldet.", "success")
+    if method != "POST":
+        try:
+            flash("Sie wurden erfolgreich abgemeldet.", "success")
+        except Exception:
+            # Running in contexts where flash is unavailable/undesired shouldn't break logout
+            current_app.logger.debug("Flash unavailable while logging out (GET)")
+
     current_app.logger.info(
-        f"User logged out via {method} from {request.remote_addr} -> {redirect_to}"
+        f"User logged out via {method} from {request.remote_addr} -> {vars().get('redirect_to', 'N/A')}"
     )
+
     return response
 
 
