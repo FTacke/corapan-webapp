@@ -3,12 +3,16 @@ name: MD3 Lint
 on:
   pull_request:
     paths:
-      - 'templates/pages/**'
+      - 'templates/**'
+      - 'static/css/md3/components/**'
+      - 'scripts/**'
   push:
     branches:
       - feature/auth-migration
     paths:
-      - 'templates/pages/**'
+      - 'templates/**'
+      - 'static/css/md3/components/**'
+      - 'scripts/**'
 
 jobs:
   md3-lint:
@@ -26,6 +30,10 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install --no-cache-dir -r requirements.txt || true
+
+      - name: Run md3-forms/auth guard
+        run: |
+          python scripts/md3-forms-auth-guard.py
 
       - name: Run md3-lint
         run: |

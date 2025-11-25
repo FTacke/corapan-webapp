@@ -29,6 +29,14 @@ jobs:
         # ensure argon2 support is available for tests when using argon2
         if [ "${{ matrix.auth-hash-algo }}" = "argon2" ]; then pip install argon2_cffi; fi
         pip install pytest pytest-dotenv ruff
+
+    - name: Run md3 forms/auth guard
+      run: |
+        python scripts/md3-forms-auth-guard.py
+
+    - name: Run md3-lint
+      run: |
+        python scripts/md3-lint.py
         
     - name: Lint with Ruff
       run: |

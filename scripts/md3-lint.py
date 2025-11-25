@@ -50,6 +50,39 @@ def scan_files(root: Path, include_exts=None):
     return results
 
 
+def lint_md3_components_css(root: Path):
+    """Check static/css/md3/components/*.css for forbidden patterns.
+
+    Rules:
+      - Hex colors (#rrggbb or #rgb) -> error
+      - !important -> error
+      - Legacy selectors (.legacy-checkbox, .legacy-button, .legacy-form) -> error
+    """
+    results = []
+    css_dir = root / 'static' / 'css' / 'md3' / 'components'
+    if not css_dir.exists():
+        return results
+
+    hex_re = re.compile(r'#[0-9a-fA-F]{3,6}\b')
+    important_re = re.compile(r'!important')
+    legacy_sel_re = re.compile(r'\.legacy-(?:checkbox|button|form)')
+
+    for p in css_dir.glob('*.css'):
+        try:
+            txt = p.read_text(encoding='utf8', errors='ignore')
+        except Exception:
+            continue
+
+        for m in hex_re.finditer(txt):
+            results.append(('css_hex_color', str(p.relative_to(root)), m.group(0), txt.count(m.group(0))))
+        for m in important_re.finditer(txt):
+            results.append(('css_important', str(p.relative_to(root)), m.group(0), txt.count(m.group(0))))
+        for m in legacy_sel_re.finditer(txt):
+            results.append(('css_legacy_selector', str(p.relative_to(root)), m.group(0), txt.count(m.group(0))))
+
+    return results
+
+
 def scan_auth_templates(root: Path):
     """Run a few targeted checks inside templates/auth/*.html to detect
     leftover legacy markup or missing canonical classes."""
@@ -129,6 +162,8 @@ def main():
     results = scan_files(root)
     # Add targeted auth template checks
     results += scan_auth_templates(root)
+    # Add md3 components CSS checks
+    results += lint_md3_components_css(root)
 
     errors = []
     warnings = []
@@ -175,6 +210,25 @@ def main():
                     errors.append((key, path, match))
             else:
                 # treat inline style occurrences in non-templates as warnings
+                warnings.append((key, path, match))
+
+        # Auth-specific issues should be errors by default
+        elif key.startswith('auth_'):
+            if normalized in known_paths:
+                warnings.append((key, path, match))
+            else:
+                errors.append((key, path, match))
+
+        # CSS component issues: hex colors, !important, legacy selectors — treat as errors
+        elif key in ('css_hex_color', 'css_important', 'css_legacy_selector'):
+            # everything under static/css/md3/components should be an error
+            if is_css:
+                if normalized in known_paths:
+                    warnings.append((key, path, match))
+                else:
+                    errors.append((key, path, match))
+            else:
+                # If by chance found outside css components, report as warning
                 warnings.append((key, path, match))
 
     # Write a structured report
