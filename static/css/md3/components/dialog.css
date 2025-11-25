@@ -50,9 +50,12 @@
       not use tonal container backgrounds in our design. This keeps dialog
       surfaces visually consistent, and prevents the surface from blending
       into page or card tonal containers. */
-  padding: var(--space-6);
+  /* Keep dialog inner padding aligned with cards for consistent rhythm */
+  padding: var(--space-4);
   max-width: 560px;
-  width: min(100% - calc(var(--space-4) * 2), 560px);
+    /* width accounts for container edge padding (var(--space-4) per side)
+      and caps at 560px for large dialogs */
+    width: min(100% - calc(var(--space-4) * 2), 560px);
   /* MD3 lever: dialogs look best with a larger radius than cards */
   border-radius: 28px;
   /* Use the canonical page surface token — dialogs should be non-tonal */
@@ -151,6 +154,28 @@
   display: flex;
   align-items: flex-start;
   gap: var(--space-3);
+}
+.md3-snippet {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border-radius: var(--radius-md);
+  background: var(--md-sys-color-surface-container-highest);
+  font-family: var(--md-sys-typescale-body-small-font, ui-monospace, monospace);
+}
+
+.md3-snippet--code .md3-snippet__code {
+  display: block;
+  white-space: pre-wrap;
+  word-break: break-all;
+  margin: 0;
+  flex: 1 1 auto;
+}
+
+.md3-snippet__copy {
+  flex-shrink: 0;
 }
 .md3-dialog__code-row .md3-code-block__content,
 .md3-dialog__code-row pre {
