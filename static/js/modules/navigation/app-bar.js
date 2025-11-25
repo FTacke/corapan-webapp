@@ -10,6 +10,9 @@
  * Binds on DOMContentLoaded to ensure DOM is ready.
  */
 function initUserMenu() {
+  // Guard: only initialize once to avoid duplicated listeners when module is loaded twice
+  if (window.__initTopAppUserMenu) return;
+  window.__initTopAppUserMenu = true;
   // Delegate: Find elements whenever they exist (after any page reload)
   // Accept either the new account trigger or the legacy user-menu toggle
   const btn = document.querySelector("[data-account-menu-trigger], [data-user-menu-toggle]");
@@ -76,6 +79,9 @@ function closeUserMenu(btn, menu) {
  */
 export class TopAppBar {
   constructor() {
+    // Prevent double-instantiation across different initializers
+    if (window.__topAppBarInit) return window.__topAppBarInstance;
+
     this.appBar = document.querySelector('[data-element="top-app-bar"]');
 
     if (!this.appBar) {
@@ -232,7 +238,12 @@ export class TopAppBar {
  * Initialize top app bar
  */
 export function initTopAppBar() {
-  return new TopAppBar();
+  const inst = new TopAppBar();
+  if (!window.__topAppBarInit) {
+    window.__topAppBarInit = true;
+    window.__topAppBarInstance = inst;
+  }
+  return inst;
 }
 
 // Export delegated user menu initializer

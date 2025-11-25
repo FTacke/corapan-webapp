@@ -8,6 +8,9 @@
 
 (function () {
   if (typeof window === 'undefined') return;
+  // Avoid double-binding click handlers if script runs multiple times
+  if (window.__logoutInit) return;
+  window.__logoutInit = true;
 
   function performLogout(el) {
     const url = el.dataset.logoutUrl || el.getAttribute('href') || '/auth/logout';
@@ -36,6 +39,12 @@
 
     return fetchWithTimeout(url, opts, 3000)
       .then((res) => {
+        // If server uses HTMX-style redirect headers prefer that value
+        const hxRedirect = res.headers && res.headers.get && res.headers.get('HX-Redirect');
+        if (hxRedirect) {
+          window.location.href = hxRedirect;
+          return;
+        }
         // Regardless of server response (JSON or redirect), navigate to the
         // site root. This avoids showing raw JSON errors to users after logout
         // when using fetch-based logout handling.

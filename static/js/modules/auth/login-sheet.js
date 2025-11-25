@@ -43,24 +43,29 @@ export function initLoginSheet() {
     });
 }
 
-// Global listener for htmx:beforeSwap to handle redirect
-document.body.addEventListener('htmx:beforeSwap', function(evt) {
+// Ensure global login-sheet hooks are only attached once (idempotent)
+if (!window.__loginSheetGlobalInit) {
+    window.__loginSheetGlobalInit = true;
+
+    // Global listener for htmx:beforeSwap to handle redirect
+    document.body.addEventListener('htmx:beforeSwap', function(evt) {
     if (!evt.detail || !evt.detail.xhr) return;
     // If server returned 204 with HX-Redirect we can remove any active sheet
     if (evt.detail.xhr.status === 204 && evt.detail.xhr.getResponseHeader('HX-Redirect')) {
         const sheet = document.querySelector('.md3-login-sheet, .md3-sheet');
         if (sheet) sheet.remove();
     }
-});
+    });
 
-// Initialize when the module is loaded (if the sheet is already in DOM)
-// Also re-check after any HTMX swap (e.g. when opening from nav drawer)
-document.body.addEventListener('htmx:afterSwap', function(evt) {
+    // Initialize when the module is loaded (if the sheet is already in DOM)
+    // Also re-check after any HTMX swap (e.g. when opening from nav drawer)
+    document.body.addEventListener('htmx:afterSwap', function(evt) {
     // If a sheet was swapped/inserted, initialize it.
     if (document.querySelector('.md3-login-sheet, .md3-sheet')) {
         initLoginSheet();
     }
-});
+    });
 
-// Also try to init immediately in case it's already there
-initLoginSheet();
+    // Also try to init immediately in case it's already there
+    initLoginSheet();
+}
