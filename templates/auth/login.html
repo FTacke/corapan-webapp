@@ -10,8 +10,9 @@
 {% block content %}
 <div class="md3-page">
   <header class="md3-page__header md3-stack--section">
-    <div class="md3-page__eyebrow md3-body-small">Authentifizierung</div>
-    <h1 class="md3-headline-large">Anmelden</h1>
+    <!-- Page header kept intentionally minimal for login pages; visually hidden H1 for accessibility -->
+    <!-- Keep H1 empty so page-title logic (pickTitle) prefers site title / suffix instead -->
+    <h1 class="sr-only"></h1>
   </header>
 
   <main class="page-inner">
