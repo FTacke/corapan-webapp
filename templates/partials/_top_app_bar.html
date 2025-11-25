@@ -109,7 +109,11 @@
               </a>
               <div class="md3-user-menu__divider" role="separator"></div>
             {% endif %}
-            {# Logout via GET (no CSRF, idempotent) #}
+            {# Logout via GET (no CSRF, idempotent)
+              Desired client behaviour: perform a full page redirect after logout
+              (no partial fragment replacement / no login-sheet). The frontend
+              uses `data-logout="fetch"` and should navigate to a server-provided
+              redirect or to the site root. #}
             <a href="{{ url_for('auth.logout_any') }}"
               data-logout="fetch"
               data-logout-method="POST"
