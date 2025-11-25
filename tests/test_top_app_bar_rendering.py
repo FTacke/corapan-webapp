@@ -27,10 +27,9 @@ def test_account_button_admin_renders():
         g.role = Role.ADMIN
 
         html = render_template("partials/_top_app_bar.html")
-        assert 'md3-account-button' in html
+        assert 'md3-top-app-bar__account-chip' in html
         assert 'alice' in html
         assert 'admin_panel_settings' in html
-        assert 'Admin' in html
 
 
 def test_account_button_editor_renders():
@@ -42,10 +41,9 @@ def test_account_button_editor_renders():
         g.role = Role.EDITOR
 
         html = render_template("partials/_top_app_bar.html")
-        assert 'md3-account-button' in html
+        assert 'md3-top-app-bar__account-chip' in html
         assert 'bob' in html
         assert 'person_edit' in html
-        assert 'Editor' in html
 
 
 def test_account_button_user_renders():
@@ -57,10 +55,9 @@ def test_account_button_user_renders():
         g.role = Role.USER
 
         html = render_template("partials/_top_app_bar.html")
-        assert 'md3-account-button' in html
+        assert 'md3-top-app-bar__account-chip' in html
         assert 'carla' in html
         assert 'person_check' in html
-        assert 'Usuario' in html
 
 
 def test_guest_shows_login_button():

@@ -66,19 +66,15 @@ a.md3-button.md3-button--filled,
   min-height: 48px;
 }
 
-/* destructive alias used by some templates for 'danger' style */
-/* @deprecated: prefer modifier classes in combination with canonical variants, e.g. .md3-button--filled.md3-button--danger */
-.md3-destructive, .md3-button--destructive {
+/* Compatibility alias: .md3-button--destructive -> canonical .md3-button--danger
+   Keep a compatibility alias for a short migration period; prefer using
+   `.md3-button--filled.md3-button--danger` or combine .md3-button--filled +
+   .md3-button--danger modifiers. */
+.md3-destructive,
+.md3-button--destructive {
+  /* Alias to danger tokens */
   background: var(--md-sys-color-error);
   color: var(--md-sys-color-on-error);
-  border: none;
-  padding: var(--space-3) var(--space-6);
-  border-radius: 9999px;
-  min-height: 48px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--space-2);
 }
 
 .md3-button--filled:hover {
@@ -91,13 +87,13 @@ a.md3-button.md3-button--filled,
 }
 
 /* Ensure filled + destructive uses proper error hover instead of primary hover */
+/* Filled + danger hover/focus — use token-driven container for hover */
+.md3-button--filled.md3-button--danger:hover,
+.md3-button--filled.md3-button--danger:focus-visible,
 .md3-button--filled.md3-button--destructive:hover,
 .md3-button--filled.md3-button--destructive:focus-visible {
-  background-color: color-mix(
-    in srgb,
-    var(--md-sys-color-error) 92%,
-    var(--md-sys-color-on-error) 8%
-  ) !important;
+  background-color: var(--md-sys-color-error-container) !important;
+  color: var(--md-sys-color-on-error-container) !important;
   box-shadow: var(--elev-1);
 }
 
@@ -236,12 +232,13 @@ a.md3-button.md3-button--filled,
   min-height: 48px;
 }
 
+/* For filled danger buttons, use the canonical token mix:
+   Base: --md-sys-color-error / --md-sys-color-on-error
+   Hover: --md-sys-color-error-container / --md-sys-color-on-error-container
+*/
 .md3-button--danger:hover {
-  background-color: color-mix(
-    in srgb,
-    var(--md-sys-color-error) 92%,
-    var(--md-sys-color-on-error) 8%
-  ) !important;
+  background: var(--md-sys-color-error-container) !important;
+  color: var(--md-sys-color-on-error-container) !important;
   box-shadow: var(--elev-1);
 }
 

@@ -48,7 +48,7 @@
         {# Authenticated: Account button (MD3) - Text button with badge #}
         <div class="md3-user-menu" data-user-menu-root>
           <button
-              class="md3-button md3-button--text md3-account-button"
+              class="md3-top-app-bar__account-chip md3-button md3-button--text md3-top-app-bar__account-chip--{{ role_value }}"
               type="button"
               aria-haspopup="menu"
               aria-expanded="false"
@@ -56,32 +56,26 @@
               aria-controls="user-menu-dropdown"
               data-account-menu-trigger
               data-user-menu-toggle>
-            
-            <span class="material-symbols-rounded md3-button__icon" aria-hidden="true">
-              account_circle
-            </span>
-
-            <span class="md3-account-button__user">
-              {{ user_name }}
-            </span>
-
-            {# Role Badge #}
+            {# Combined account chip: leading role icon + username label. No extra role text. #}
             {% if role_value == 'admin' %}
-                <span class="md3-badge md3-badge--role-admin">
-                  <span class="material-symbols-rounded md3-badge__icon" aria-hidden="true">admin_panel_settings</span>
-                  <span class="md3-badge__label">Admin</span>
-                </span>
+              <span class="material-symbols-rounded md3-top-app-bar__account-chip-icon" aria-hidden="true">admin_panel_settings</span>
             {% elif role_value == 'editor' %}
-                <span class="md3-badge md3-badge--role-editor">
-                  <span class="material-symbols-rounded md3-badge__icon" aria-hidden="true">person_edit</span>
-                  <span class="md3-badge__label">Editor</span>
-                </span>
+              <span class="material-symbols-rounded md3-top-app-bar__account-chip-icon" aria-hidden="true">person_edit</span>
             {% else %}
-                <span class="md3-badge md3-badge--role-user">
-                  <span class="material-symbols-rounded md3-badge__icon" aria-hidden="true">person_check</span>
-                  <span class="md3-badge__label">Usuario</span>
-                </span>
+              <span class="material-symbols-rounded md3-top-app-bar__account-chip-icon" aria-hidden="true">person_check</span>
             {% endif %}
+
+            <span class="md3-top-app-bar__account-chip-label">
+              {%- if g.user -%}
+                {%- if g.user.display_name -%}
+                  {{ g.user.display_name }}
+                {%- elif g.user.username -%}
+                  {{ g.user.username }}
+                {%- else -%}
+                  {{ g.user }}
+                {%- endif -%}
+              {%- endif -%}
+            </span>
           </button>
 
           {# Logout Menu (NUR "Abmelden", keine Profile-Details) #}

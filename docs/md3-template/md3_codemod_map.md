@@ -72,7 +72,7 @@ Notes: `static/css/md3/components/cards.css` already contains both `.card-*` and
 | Legacy | Canonical | Context | Notes |
 |---|---|---|---|
 | `.md3-button--contained` | `.md3-button--filled` | `static/css/md3/components/login.css` and occasional templates | `.md3-button--contained` implemented as a compatibility alias; codemod replace usage in templates and JS to `.md3-button--filled`.
-| `.md3-button--destructive` / `.md3-destructive` | `.md3-button--filled.md3-button--destructive` (or use a modifier like `.md3-button--danger`) | Several templates & CSS | Recommendation: keep `.md3-button--filled` as the base and add a danger/destructive modifier (explicitly documented in `components/buttons.css`). Update templates to use canonical pattern.
+| `.md3-button--destructive` / `.md3-destructive` | `.md3-button--danger` (preferred) or `.md3-button--filled.md3-button--danger` | Several templates & CSS | Recommendation: replace legacy aliases with the canonical modifier `.md3-button--danger`. Keep the compatibility alias in `components/buttons.css` only briefly until templates are migrated; prefer `.md3-button--danger` in new templates.
 
 ---
 

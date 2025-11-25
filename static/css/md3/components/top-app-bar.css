@@ -224,6 +224,8 @@ body[data-scrolled="true"] .md3-top-app-bar__title-page {
   background: transparent;
   color: var(--md-sys-color-on-surface);
   border-radius: 50%;
+  /* Anchors used as icon buttons should not show link underlines */
+  text-decoration: none;
   cursor: pointer;
   transition: background-color 200ms ease;
   flex-shrink: 0;
@@ -380,6 +382,153 @@ body[data-scrolled="true"] .md3-top-app-bar__title-page {
   font: inherit;
   color: var(--md-sys-color-on-surface);
   min-height: 40px;
+}
+
+/* ============================================
+   Account chip (Assist Chip style: icon + label)
+   Replaces the prior Role Badge + Username layout with a single
+   compact, accessible component that signals the user's role
+   via a leading icon inside a pill-shaped 'chip'.
+   ============================================ */
+
+.md3-top-app-bar__account-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.2rem 0.8rem;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  /* default visible container background so chip is always legible */
+  background-color: var(--md-sys-color-surface-container-high);
+  color: var(--md-sys-color-on-surface);
+  height: 48px; /* match icon buttons / theme toggle */
+  min-height: 48px;
+  font-size: 0.875rem;
+  cursor: pointer;
+}
+
+/* Highest specificity — scoped inside the top app bar actions so it cannot be
+   overridden by generic button rules elsewhere. Keep contrast & add subtle
+   elevation so the chip is always visible even when the bar is transparent. */
+.md3-top-app-bar .md3-top-app-bar__actions .md3-button--text.md3-top-app-bar__account-chip,
+.md3-top-app-bar .md3-top-app-bar__actions .md3-button.md3-top-app-bar__account-chip,
+.md3-top-app-bar .md3-top-app-bar__actions .md3-top-app-bar__account-chip {
+  background-color: var(--md-sys-color-surface-container-high);
+  transition: background-color 180ms ease, box-shadow 180ms ease;
+}
+
+/* Stronger-specificity override to ensure chip padding wins over
+   global .md3-button--text rules (avoids layout shift on hover). */
+.md3-button--text.md3-top-app-bar__account-chip,
+.md3-button.md3-top-app-bar__account-chip {
+  padding: 0.2rem 0.8rem; /* use the chip's compact token */
+  transition: background-color 180ms ease; /* don't include padding */
+}
+.md3-button--text.md3-top-app-bar__account-chip:hover,
+.md3-button.md3-top-app-bar__account-chip:hover {
+  padding: 0.2rem 0.8rem; /* explicitly keep padding stable on hover */
+}
+
+.md3-top-app-bar__account-chip:hover {
+  background-color: color-mix(in srgb, var(--md-sys-color-surface-variant) 8%, transparent);
+}
+
+/* Role color accents */
+/* Admin: tonal background, icon tinted with error color */
+.md3-top-app-bar__account-chip--admin {
+  border-color: color-mix(in srgb, var(--md-sys-color-error) 18%, transparent);
+  /* tonal background layered on top of the surface-container so it's visible on transparent bars */
+  background-color: color-mix(in srgb, var(--md-sys-color-error) 14%, var(--md-sys-color-surface-container-high));
+}
+.md3-top-app-bar .md3-top-app-bar__actions .md3-top-app-bar__account-chip--admin,
+.md3-top-app-bar .md3-top-app-bar__actions .md3-button--text.md3-top-app-bar__account-chip--admin {
+  /* same tonal background but scoped with higher specificity */
+  background-color: color-mix(in srgb, var(--md-sys-color-error) 16%, var(--md-sys-color-surface-container-high));
+}
+.md3-top-app-bar .md3-top-app-bar__actions .md3-top-app-bar__account-chip--admin:hover,
+.md3-top-app-bar .md3-top-app-bar__actions .md3-button--text.md3-top-app-bar__account-chip--admin:hover {
+  background-color: color-mix(in srgb, var(--md-sys-color-error) 22%, var(--md-sys-color-surface-container-high));
+}
+.md3-top-app-bar__account-chip--admin:hover {
+  background-color: color-mix(in srgb, var(--md-sys-color-error) 22%, var(--md-sys-color-surface));
+}
+.md3-top-app-bar__account-chip--admin .md3-top-app-bar__account-chip-icon {
+  color: var(--md-sys-color-error);
+}
+
+/* Editor: tonal background, icon tinted with primary color */
+.md3-top-app-bar__account-chip--editor {
+  border-color: color-mix(in srgb, var(--md-sys-color-primary) 18%, transparent);
+  background-color: color-mix(in srgb, var(--md-sys-color-primary) 14%, var(--md-sys-color-surface-container-high));
+}
+.md3-top-app-bar .md3-top-app-bar__actions .md3-top-app-bar__account-chip--editor,
+.md3-top-app-bar .md3-top-app-bar__actions .md3-button--text.md3-top-app-bar__account-chip--editor {
+  background-color: color-mix(in srgb, var(--md-sys-color-primary) 16%, var(--md-sys-color-surface-container-high));
+}
+.md3-top-app-bar .md3-top-app-bar__actions .md3-top-app-bar__account-chip--editor:hover,
+.md3-top-app-bar .md3-top-app-bar__actions .md3-button--text.md3-top-app-bar__account-chip--editor:hover {
+  background-color: color-mix(in srgb, var(--md-sys-color-primary) 22%, var(--md-sys-color-surface-container-high));
+}
+.md3-top-app-bar__account-chip--editor:hover {
+  background-color: color-mix(in srgb, var(--md-sys-color-primary) 22%, var(--md-sys-color-surface));
+}
+.md3-top-app-bar__account-chip--editor .md3-top-app-bar__account-chip-icon {
+  color: var(--md-sys-color-primary);
+}
+
+/* Regular user: tonal background, icon tinted with secondary color */
+.md3-top-app-bar__account-chip--user {
+  border-color: color-mix(in srgb, var(--md-sys-color-secondary) 18%, transparent);
+  background-color: color-mix(in srgb, var(--md-sys-color-secondary) 14%, var(--md-sys-color-surface-container-high));
+}
+.md3-top-app-bar .md3-top-app-bar__actions .md3-top-app-bar__account-chip--user,
+.md3-top-app-bar .md3-top-app-bar__actions .md3-button--text.md3-top-app-bar__account-chip--user {
+  background-color: color-mix(in srgb, var(--md-sys-color-secondary) 16%, var(--md-sys-color-surface-container-high));
+}
+.md3-top-app-bar .md3-top-app-bar__actions .md3-top-app-bar__account-chip--user:hover,
+.md3-top-app-bar .md3-top-app-bar__actions .md3-button--text.md3-top-app-bar__account-chip--user:hover {
+  background-color: color-mix(in srgb, var(--md-sys-color-secondary) 22%, var(--md-sys-color-surface-container-high));
+}
+.md3-top-app-bar__account-chip--user:hover {
+  background-color: color-mix(in srgb, var(--md-sys-color-secondary) 22%, var(--md-sys-color-surface));
+}
+.md3-top-app-bar__account-chip--user .md3-top-app-bar__account-chip-icon {
+  color: var(--md-sys-color-secondary);
+}
+
+.md3-top-app-bar__account-chip-icon {
+  font-size: 18px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.md3-top-app-bar__account-chip-label {
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  max-width: 160px; /* keeps chip compact */
+  /* label should be readable: use full on-surface token, not the muted variant */
+  color: var(--md-sys-color-on-surface);
+}
+
+/* Ensure chip collapses sensibly on smaller screens (icon-only) */
+@media (max-width: 640px) {
+  .md3-top-app-bar__account-chip-label {
+    display: none;
+  }
+  /* mobile: keep a slightly tighter chip width (still override button default) */
+  /* Make the chip a perfect circle on small screens: center the icon and
+     remove horizontal padding so it's square (width = height) */
+  .md3-button--text.md3-top-app-bar__account-chip,
+  .md3-button.md3-top-app-bar__account-chip,
+  .md3-top-app-bar__account-chip {
+    padding: 0; /* remove horizontal padding so circle fits */
+    width: 48px;
+    height: 48px; /* match the icon button */
+    border-radius: 50%; /* make round */
+    justify-content: center; /* center icon */
+  }
 }
 
 .md3-top-app-bar__account-button:hover {
@@ -751,9 +900,7 @@ body[data-scrolled="true"] .md3-top-app-bar__title-page {
   line-height: 1;
 }
 
-.md3-badge__icon {
-
-}
+/* small icon inside a badge (no extra rules needed here) */
 
 /* Role Colors */
 .md3-badge--role-admin {

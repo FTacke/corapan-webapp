@@ -10,7 +10,7 @@ Summary (high level)
 - Legacy token names `--md3-*`: multiple occurrences in CSS/JS/docs. These should be migrated to `--md-sys-*` or `--space-*` as appropriate.
 - Utility spacing classes `.m-*`, `.mt-*`, `.mb-*`, `.mx-auto` etc.: used across templates — prefer semantic `.md3-stack--*` or `.md3-page__section` instead.
 - Inline style attributes (style="padding/margin/...)` found in docs and a few JS templates which should be replaced by token-driven classes.
-- Legacy button alias `.md3-button--contained` and `.md3-button--destructive` used in some CSS/templates; these have been marked `@deprecated` in `components/buttons.css`.
+- Legacy button alias `.md3-button--contained` and the older `.md3-button--destructive`/`.md3-destructive` naming appear in some places; these are marked `@deprecated` in `components/buttons.css` and should be replaced by the canonical modifier `.md3-button--danger` (or `.md3-button--filled.md3-button--danger` where filled/contained appearance is required).
 - `.card-*` vs `.md3-card` duplicates: many templates still use `.card`, `.card-outlined`, `.card-elevated` — map to `.md3-card` variants.
 
 ---
