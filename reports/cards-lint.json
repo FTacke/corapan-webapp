@@ -1,0 +1,50 @@
+{
+  "generated": "2025-11-26T21:12:07.871012",
+  "summary": {
+    "total": 4,
+    "errors": 0,
+    "warnings": 4,
+    "info": 0
+  },
+  "by_rule": {
+    "MD3-CSS-002": {
+      "count": 4,
+      "severity": "WARNING",
+      "description": "!important in md3 components CSS"
+    }
+  },
+  "issues": [
+    {
+      "rule_id": "MD3-CSS-002",
+      "severity": "WARNING",
+      "file": "static/css/md3/components/index.css",
+      "line": 103,
+      "message": "!important usage (remove)",
+      "match": "!important"
+    },
+    {
+      "rule_id": "MD3-CSS-002",
+      "severity": "WARNING",
+      "file": "static/css/md3/components/index.css",
+      "line": 108,
+      "message": "!important usage (remove)",
+      "match": "!important"
+    },
+    {
+      "rule_id": "MD3-CSS-002",
+      "severity": "WARNING",
+      "file": "static/css/md3/components/index.css",
+      "line": 116,
+      "message": "!important usage (remove)",
+      "match": "!important"
+    },
+    {
+      "rule_id": "MD3-CSS-002",
+      "severity": "WARNING",
+      "file": "static/css/md3/components/index.css",
+      "line": 117,
+      "message": "!important usage (remove)",
+      "match": "!important"
+    }
+  ]
+}

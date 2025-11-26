@@ -18,15 +18,21 @@ Usage:
     python scripts/md3-lint.py --json-out report.json    # JSON output
     python scripts/md3-lint.py --exit-zero               # Allow errors (CI)
 
-See: docs/md3-template/md3-structural-compliance.md
+See: docs/md3/40_tooling_and_ci.md
 """
 import re
 import json
+import sys
+import io
 from pathlib import Path
 import argparse
 from dataclasses import dataclass, field, asdict
 from typing import List, Dict, Optional, Set
 from datetime import datetime
+
+# Fix Windows console encoding for emoji output
+if sys.stdout.encoding != 'utf-8':
+    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -953,7 +959,7 @@ def main():
                         help='Root directory to scan')
     parser.add_argument('--focus', nargs='+',
                         help='Focus scan on specific paths (relative to root)')
-    parser.add_argument('--out', default='docs/md3-template/md3_lint_report_auto.md',
+    parser.add_argument('--out', default='reports/md3-lint-auto.md',
                         help='Markdown report output path')
     parser.add_argument('--json-out', 
                         help='JSON report output path')
