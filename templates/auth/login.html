@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Anmelden - CO.RA.PAN{% endblock %}
+{% block title %}Iniciar sesión - CO.RA.PAN{% endblock %}
 
 {% block extra_head %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/md3/components/login.css') }}">
@@ -9,23 +9,22 @@
 
 {% block content %}
 <div class="md3-page">
-  <header class="md3-page__header md3-stack--section">
-    <!-- Page header kept intentionally minimal for login pages; visually hidden H1 for accessibility -->
-    <!-- Keep H1 empty so page-title logic (pickTitle) prefers site title / suffix instead -->
-    <h1 class="sr-only"></h1>
+  <header class="md3-page__header">
+    <div class="md3-hero md3-hero--card md3-hero__container">
+      <div class="md3-hero__icon" aria-hidden="true"><span class="material-symbols-rounded">login</span></div>
+      <div class="md3-hero__content">
+        <p class="md3-body-small md3-hero__eyebrow">Acceso</p>
+        <h1 class="md3-headline-medium md3-hero__title">Iniciar sesión</h1>
+        <p class="md3-body-medium md3-hero__intro">Accede a tu cuenta para explorar el corpus y sus herramientas.</p>
+      </div>
+    </div>
   </header>
 
-  <main class="page-inner">
-    <section class="page-section">
+  <main class="md3-page__main md3-stack--page">
+    <section class="md3-page__section md3-stack--section">
       <!-- Login Card -->
       <article class="md3-card md3-card--outlined md3-auth-card login-card">
-        <!-- Header -->
-        <header class="md3-card__header">
-          <h2 class="md3-title-large md3-card__title">Anmelden</h2>
-        </header>
-
         <div class="md3-card__content">
-          <p class="md3-body-medium">Melde dich mit deinem Benutzernamen oder deiner E‑Mail an.</p>
 
           <!-- Error Messages (if any) -->
           {# Global form error banner (MD3, compact inline) #}
@@ -34,7 +33,7 @@
               <div class="md3-alert md3-alert--error md3-alert--inline" role="alert" aria-live="assertive">
                 <span class="material-symbols-rounded md3-alert__icon" aria-hidden="true">error</span>
                 <div class="md3-alert__content">
-                  <p class="md3-alert__title">Fehler</p>
+                  <p class="md3-alert__title">Error</p>
                   {% for category, message in messages %}
                     <p class="md3-alert__text">{{ message }}</p>
                   {% endfor %}
@@ -59,10 +58,10 @@
                 id="login-username"
                 autocomplete="username" 
                 required
-                aria-label="Benutzername"
+                aria-label="Usuario o correo electrónico"
                 minlength="1"
                 maxlength="50">
-              <label class="md3-outlined-textfield__label" for="login-username">Benutzername oder E‑Mail</label>
+              <label class="md3-outlined-textfield__label" for="login-username">Usuario o correo electrónico</label>
               <span class="md3-outlined-textfield__outline">
                 <span class="md3-outlined-textfield__outline-start"></span>
                 <span class="md3-outlined-textfield__outline-notch"></span>
@@ -79,9 +78,9 @@
                 id="login-password"
                 autocomplete="current-password" 
                 required
-                aria-label="Passwort"
+                aria-label="Contraseña"
                 minlength="1">
-              <label class="md3-outlined-textfield__label" for="login-password">Passwort</label>
+              <label class="md3-outlined-textfield__label" for="login-password">Contraseña</label>
               <span class="md3-outlined-textfield__outline">
                 <span class="md3-outlined-textfield__outline-start"></span>
                 <span class="md3-outlined-textfield__outline-notch"></span>
@@ -90,9 +89,10 @@
             </div>
 
             <div class="md3-row--between md3-actions">
-               <a class="md3-button md3-button--text" href="{{ url_for('auth.password_forgot_page') }}">Passwort vergessen?</a>
+               <a class="md3-button md3-button--text" href="{{ url_for('auth.password_forgot_page') }}">¿Olvidaste tu contraseña?</a>
                <button type="submit" class="md3-button md3-button--filled">
-                Anmelden
+                <span class="material-symbols-rounded md3-button__icon" aria-hidden="true">login</span>
+                Entrar
               </button>
             </div>
 
@@ -105,11 +105,9 @@
       </article>
       
       <!-- Footer -->
-      <div class="md3-card__footer md3-login-card__footer">
-        <p class="md3-body-small">
-          Bei Problemen kontaktieren Sie bitte den <a href="mailto:felix.tacke@uni-marburg.de" class="md3-link">Admin</a>.
-        </p>
-      </div>
+      <p class="md3-body-small md3-text-variant md3-auth-footer">
+        Si tienes problemas, contacta al <a href="mailto:felix.tacke@uni-marburg.de" class="md3-link">administrador</a>.
+      </p>
     </section>
   </main>
 </div>
