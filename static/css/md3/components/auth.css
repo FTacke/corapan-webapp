@@ -94,6 +94,39 @@
   justify-content: flex-end;
   gap: var(--space-2);
   margin-top: var(--space-4);
+  flex-wrap: wrap;
+}
+
+/* Responsive Actions - Stack on Mobile */
+@media (max-width: 600px) {
+  .md3-actions--stack,
+  .md3-auth-card .md3-actions {
+    flex-direction: column;
+    gap: var(--space-3);
+  }
+  
+  .md3-actions--stack .md3-button,
+  .md3-auth-card .md3-actions .md3-button {
+    width: 100%;
+    justify-content: center;
+  }
+  
+  /* Order: Primary first, then secondary, danger last */
+  .md3-actions .md3-button--filled:not(.md3-button--danger) {
+    order: 1;
+  }
+  
+  .md3-actions .md3-button--outlined:not(.md3-button--danger) {
+    order: 2;
+  }
+  
+  .md3-actions .md3-button--text {
+    order: 3;
+  }
+  
+  .md3-actions .md3-button--danger {
+    order: 4;
+  }
 }
 
 /* 5) DIALOGE UND SHEETS
@@ -112,3 +145,4 @@
 .md3-auth-page > .md3-card {
   margin-bottom: 0; /* Let gap handle spacing */
 }
+

@@ -31,7 +31,8 @@ export function showSnackbar(message, type = 'success', duration = SNACKBAR_DURA
   const iconMap = {
     success: 'check_circle',
     error: 'error',
-    info: 'info'
+    info: 'info',
+    warning: 'warning'
   };
 
   snackbar.innerHTML = `

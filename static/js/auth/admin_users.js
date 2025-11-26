@@ -21,23 +21,48 @@ document.addEventListener('DOMContentLoaded', function () {
     return new Date(isoString).toLocaleString();
   }
 
+  // Role icon mapping for badges
+  const roleIcons = {
+    admin: 'verified_user',
+    editor: 'edit',
+    user: 'person'
+  };
+
+  function renderRoleBadge(role) {
+    const icon = roleIcons[role] || 'person';
+    return `
+      <span class="md3-badge md3-badge--small md3-badge--role-${role}">
+        <span class="material-symbols-rounded md3-badge__icon" aria-hidden="true">${icon}</span>
+        ${role}
+      </span>
+    `;
+  }
+
+  function renderStatusBadge(isActive) {
+    if (isActive) {
+      return `
+        <span class="md3-badge md3-badge--status-active">
+          <span class="material-symbols-rounded md3-badge__icon" aria-hidden="true">check_circle</span>
+          Aktiv
+        </span>
+      `;
+    }
+    return `<span class="md3-badge md3-badge--status-inactive">Inaktiv</span>`;
+  }
+
   function renderRow(user) {
     const tr = document.createElement('tr');
     tr.innerHTML = `
       <td><span class="md3-body-medium">${user.username}</span></td>
       <td><span class="md3-body-small">${user.email || '-'}</span></td>
-      <td><span class="md3-badge md3-badge--small">${user.role}</span></td>
-      <td>
-        <span class="md3-badge ${user.is_active ? 'md3-badge--success' : 'md3-badge--error'}">
-          ${user.is_active ? 'Aktiv' : 'Inaktiv'}
-        </span>
-      </td>
-      <td><span class="md3-body-small">${formatDate(user.created_at)}</span></td>
-      <td class="d-flex gap-2">
-        <button class="md3-icon-button edit-user-btn" data-id="${user.id}" title="Bearbeiten">
+      <td>${renderRoleBadge(user.role)}</td>
+      <td>${renderStatusBadge(user.is_active)}</td>
+      <td class="md3-hide-mobile"><span class="md3-body-small">${formatDate(user.created_at)}</span></td>
+      <td class="md3-table__actions">
+        <button class="md3-button md3-button--icon edit-user-btn" data-id="${user.id}" title="Bearbeiten" aria-label="Benutzer bearbeiten">
           <span class="material-symbols-rounded">edit</span>
         </button>
-        <button class="md3-icon-button reset-user-btn" data-id="${user.id}" title="Passwort zurücksetzen / Invite erneuern">
+        <button class="md3-button md3-button--icon reset-user-btn" data-id="${user.id}" title="Passwort zurücksetzen / Invite erneuern" aria-label="Invite erneuern">
           <span class="material-symbols-rounded">history_edu</span>
         </button>
       </td>
@@ -46,7 +71,7 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 
   function reload() {
-    listBody.innerHTML = '<tr><td colspan="6" class="md3-text-center">Lade...</td></tr>';
+    listBody.innerHTML = '<tr class="md3-table__empty-row"><td colspan="6"><div class="md3-empty-inline"><span class="material-symbols-rounded" aria-hidden="true">hourglass_empty</span><span>Lade...</span></div></td></tr>';
     
     fetch('/admin/users')
       .then((r) => {
@@ -56,7 +81,16 @@ document.addEventListener('DOMContentLoaded', function () {
       .then((data) => {
         listBody.innerHTML = '';
         if (!data.items || data.items.length === 0) {
-          listBody.innerHTML = '<tr><td colspan="6" class="md3-text-center">Keine Benutzer gefunden.</td></tr>';
+          listBody.innerHTML = `
+            <tr class="md3-table__empty-row">
+              <td colspan="6">
+                <div class="md3-empty-inline">
+                  <span class="material-symbols-rounded" aria-hidden="true">person_off</span>
+                  <span>Keine Benutzer gefunden.</span>
+                </div>
+              </td>
+            </tr>
+          `;
           return;
         }
         data.items.forEach(user => {

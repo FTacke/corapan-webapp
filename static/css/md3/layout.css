@@ -299,28 +299,246 @@
   white-space: pre-wrap;
 }
 
+/* ============================================
+   MD3 Tables - Goldstandard
+   ============================================ */
+
+/* Table Container */
+.md3-table-container {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
 /* Ensure tables inside cards are visually aligned and have a top gap */
 .md3-card__content > .md3-table-container {
   margin-top: var(--space-3);
-  overflow-x: auto;
 }
 
+/* Elevated Table Container */
+.md3-table-container--elevated {
+  background: var(--md-sys-color-surface);
+  border-radius: var(--radius-md);
+  box-shadow: var(--elev-1);
+  overflow: hidden;
+}
+
+/* Outlined Table Container */
+.md3-table-container--outlined {
+  border: 1px solid var(--md-sys-color-outline-variant);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+/* Base Table */
 .md3-table {
   width: 100%;
   border-collapse: collapse;
   table-layout: auto;
+  min-width: 500px; /* Prevent excessive compression */
 }
 
 .md3-table th,
 .md3-table td {
-  padding: var(--space-3) var(--space-3);
+  padding: var(--space-3);
   border-bottom: 1px solid var(--md-sys-color-outline-variant);
   text-align: left;
+  font-size: var(--md-sys-typescale-body-medium-font-size);
 }
 
 .md3-table thead th {
-  background: transparent;
+  background: var(--md-sys-color-surface-container);
   font-weight: 600;
+  font-size: var(--md-sys-typescale-label-large-font-size);
+  color: var(--md-sys-color-on-surface-variant);
+  letter-spacing: 0.5px;
+}
+
+.md3-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+/* Table Row Hover */
+.md3-table tbody tr {
+  transition: background-color 150ms ease;
+}
+
+.md3-table tbody tr:hover {
+  background-color: var(--md-sys-color-surface-container-low);
+}
+
+/* Clickable Table Rows */
+.md3-table--clickable tbody tr {
+  cursor: pointer;
+}
+
+/* Selected Row */
+.md3-table tbody tr.is-selected {
+  background-color: color-mix(in srgb, var(--md-sys-color-primary) 12%, transparent);
+}
+
+.md3-table tbody tr.is-selected td:first-child {
+  border-left: 3px solid var(--md-sys-color-primary);
+}
+
+/* Disabled Row */
+.md3-table tbody tr.is-disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.md3-table tbody tr.is-disabled:hover {
+  background-color: transparent;
+}
+
+/* Actions Column */
+.md3-table__actions {
+  display: flex;
+  gap: var(--space-2);
+  justify-content: flex-end;
+}
+
+/* Column Width Utilities */
+.col-w-10 { width: 10%; }
+.col-w-15 { width: 15%; }
+.col-w-20 { width: 20%; }
+.col-w-25 { width: 25%; }
+.col-w-30 { width: 30%; }
+
+/* Empty Row */
+.md3-table__empty-row td {
+  padding: var(--space-6) var(--space-4);
+  text-align: center;
+}
+
+.md3-empty-inline {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  color: var(--md-sys-color-on-surface-variant);
+}
+
+/* ============================================
+   MD3 Empty State
+   ============================================ */
+.md3-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-8);
+  text-align: center;
+  color: var(--md-sys-color-on-surface-variant);
+  min-height: 200px;
+}
+
+.md3-empty-state__icon {
+  font-size: 48px;
+  margin-bottom: var(--space-4);
+  color: var(--md-sys-color-outline);
+}
+
+.md3-empty-state__title {
+  font-family: var(--md-sys-typescale-title-medium-font-family, inherit);
+  font-size: var(--md-sys-typescale-title-medium-font-size, 1rem);
+  font-weight: var(--md-sys-typescale-title-medium-font-weight, 500);
+  line-height: var(--md-sys-typescale-title-medium-line-height, 1.5rem);
+  margin: 0 0 var(--space-2);
+  color: var(--md-sys-color-on-surface);
+}
+
+.md3-empty-state__text {
+  font-family: var(--md-sys-typescale-body-medium-font-family, inherit);
+  font-size: var(--md-sys-typescale-body-medium-font-size, 0.875rem);
+  line-height: var(--md-sys-typescale-body-medium-line-height, 1.25rem);
+  margin: 0 0 var(--space-4);
+  max-width: 320px;
+}
+
+/* Legacy alias */
+.md3-empty-state__hint {
+  font-size: var(--md-sys-typescale-body-small-font-size, 0.75rem);
+  color: var(--md-sys-color-on-surface-variant);
+  margin: 0;
+}
+
+.md3-empty-state .md3-button {
+  margin-top: var(--space-2);
+}
+
+/* ============================================
+   MD3 Icon Button
+   ============================================ */
+.md3-button--icon {
+  width: 40px;
+  height: 40px;
+  min-height: 40px;
+  padding: 0;
+  border-radius: 50%;
+  background: transparent;
+  border: none;
+  color: var(--md-sys-color-on-surface-variant);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 150ms ease;
+}
+
+.md3-button--icon:hover {
+  background-color: var(--md-sys-color-surface-container-highest);
+}
+
+.md3-button--icon:focus-visible {
+  outline: 2px solid var(--md-sys-color-primary);
+  outline-offset: 2px;
+}
+
+.md3-button--icon:disabled {
+  opacity: 0.38;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* ============================================
+   MD3 Toolbar
+   ============================================ */
+.md3-toolbar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+@media (max-width: 600px) {
+  .md3-toolbar {
+    flex-wrap: wrap;
+  }
+  
+  .md3-toolbar .md3-button {
+    flex: 1 1 auto;
+    min-width: 120px;
+  }
+}
+
+/* ============================================
+   Responsive Table Utilities
+   ============================================ */
+@media (max-width: 600px) {
+  .md3-hide-mobile {
+    display: none !important;
+  }
+  
+  .md3-table {
+    min-width: 400px;
+  }
+  
+  .md3-empty-state {
+    padding: var(--space-6);
+  }
+  
+  .md3-empty-state__icon {
+    font-size: 40px;
+  }
 }
 
 /* ============================================
