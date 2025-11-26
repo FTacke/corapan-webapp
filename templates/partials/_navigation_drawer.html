@@ -134,8 +134,17 @@
             <span class="material-symbols-rounded md3-navigation-drawer__icon">edit_document</span>
             <span class="md3-navigation-drawer__label">Editor</span>
           </a>
+          <!-- visual separator under Editor to distinguish the editor tools -->
+          <hr class="md3-divider" aria-hidden="true" />
         {% endif %}
-        
+
+        {# Profil Link (für alle authentifizierten Nutzer) #}
+        <a href="{{ url_for('auth.account_profile_page') }}" 
+           class="md3-navigation-drawer__item">
+          <span class="material-symbols-rounded md3-navigation-drawer__icon">account_circle</span>
+          <span class="md3-navigation-drawer__label">Profil</span>
+        </a>
+
         {# Admin Dashboard Link (nur für Admins) #}
         {% if role_value == 'admin' %}
           <a href="{{ url_for('admin.dashboard') }}" 
@@ -149,26 +158,22 @@
             <span class="md3-navigation-drawer__label">Benutzer</span>
           </a>
         {% endif %}
-        
-        {# Change Password Link #}
-        <a href="{{ url_for('auth.account_password_page') }}" 
-           class="md3-navigation-drawer__item">
-          <span class="material-symbols-rounded md3-navigation-drawer__icon">lock_reset</span>
-          <span class="md3-navigation-drawer__label">Passwort</span>
-        </a>
 
-        {# Authenticated: Logout Link (GET, no CSRF) #}
-        <a href="{{ url_for('auth.logout_any') }}" 
+        {# Authenticated: Logout Link #}
+        <a href="{{ url_for('auth.logout_any') }}"
+           data-logout="fetch"
+           data-logout-url="{{ url_for('auth.logout_any') }}"
+           data-logout-method="POST"
            class="md3-navigation-drawer__item md3-navigation-drawer__item--logout">
           <span class="material-symbols-rounded md3-navigation-drawer__icon">logout</span>
-          <span class="md3-navigation-drawer__label">Abmelden</span>
+          <span class="md3-navigation-drawer__label">Logout</span>
         </a>
       {% else %}
           {# Unauthenticated: Login — navigate to canonical page /login #}
           <a href="{{ url_for('public.login', next=request.path) }}"
             class="md3-navigation-drawer__item">
           <span class="material-symbols-rounded md3-navigation-drawer__icon">account_circle</span>
-          <span class="md3-navigation-drawer__label">Anmelden</span>
+          <span class="md3-navigation-drawer__label">Login</span>
         </a>
       {% endif %}
     </nav>
@@ -264,8 +269,16 @@
           <span class="material-symbols-rounded md3-navigation-drawer__icon">edit_document</span>
           <span class="md3-navigation-drawer__label">Editor</span>
         </a>
+        <hr class="md3-divider" aria-hidden="true" />
       {% endif %}
-      
+
+      {# Profil Link (für alle authentifizierten Nutzer) #}
+      <a href="{{ url_for('auth.account_profile_page') }}" 
+         class="md3-navigation-drawer__item">
+        <span class="material-symbols-rounded md3-navigation-drawer__icon">account_circle</span>
+        <span class="md3-navigation-drawer__label">Profil</span>
+      </a>
+
       {# Admin Dashboard Link (nur für Admins) #}
       {% if role_value == 'admin' %}
         <a href="{{ url_for('admin.dashboard') }}" 
@@ -279,29 +292,22 @@
           <span class="md3-navigation-drawer__label">Benutzer</span>
         </a>
       {% endif %}
-      
-      {# Profile Link (for all authenticated users) #}
-      <a href="{{ url_for('auth.account_profile_page') }}" 
-         class="md3-navigation-drawer__item">
-        <span class="material-symbols-rounded md3-navigation-drawer__icon">account_circle</span>
-        <span class="md3-navigation-drawer__label">Profil</span>
-      </a>
 
-      {# Authenticated: Logout Link (GET, no CSRF) #}
+      {# Authenticated: Logout Link #}
       <a href="{{ url_for('auth.logout_any') }}"
         data-logout="fetch"
         data-logout-url="{{ url_for('auth.logout_any') }}"
         data-logout-method="POST"
         class="md3-navigation-drawer__item md3-navigation-drawer__item--logout">
         <span class="material-symbols-rounded md3-navigation-drawer__icon">logout</span>
-        <span class="md3-navigation-drawer__label">Abmelden</span>
+        <span class="md3-navigation-drawer__label">Logout</span>
       </a>
     {% else %}
       {# Unauthenticated: Login — navigate to canonical page /login #}
       <a href="{{ url_for('public.login', next=request.path) }}"
         class="md3-navigation-drawer__item">
         <span class="material-symbols-rounded md3-navigation-drawer__icon">account_circle</span>
-        <span class="md3-navigation-drawer__label">Anmelden</span>
+        <span class="md3-navigation-drawer__label">Login</span>
       </a>
     {% endif %}
   </nav>

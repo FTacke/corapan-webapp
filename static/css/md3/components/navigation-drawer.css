@@ -35,6 +35,13 @@
   overflow-x: hidden;
 }
 
+/* in static/css/md3/components/navigation-drawer.css */
+.md3-navigation-drawer hr.md3-divider {
+  border: 0;
+  border-top: 1px solid var(--md-sys-color-outline-variant, rgba(0,0,0,0.08));
+  margin: var(--space-3, 0.65rem) 0;
+}
+
 /* ============================================
    Header with Logo
    ============================================ */

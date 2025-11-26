@@ -10,9 +10,7 @@
 
 <header class="md3-top-app-bar" 
         role="banner"
-        data-role="top-app-bar"
         data-element="top-app-bar"
-        data-role="top-app-bar"
         data-size="small"
         data-auth="{{ 'true' if is_authenticated else 'false' }}">
   <div class="md3-top-app-bar__row">
@@ -78,7 +76,7 @@
             </span>
           </button>
 
-          {# Logout Menu (NUR "Abmelden", keine Profile-Details) #}
+          {# User Menu (Profil, Admin-Links, Logout) #}
           <div class="md3-user-menu__dropdown" 
                id="user-menu-dropdown"
                role="menu"
@@ -88,7 +86,7 @@
             {# Common profile actions for authenticated users #}
             <a href="{{ url_for('auth.account_profile_page') }}" class="md3-user-menu__item" role="menuitem">
               <span class="material-symbols-rounded md3-user-menu__icon">account_circle</span>
-              <span class="md3-user-menu__label">Perfil</span>
+              <span class="md3-user-menu__label">Profil</span>
             </a>
             {% if role_value == 'admin' %}
               <div class="md3-user-menu__divider" role="separator"></div>
@@ -99,11 +97,11 @@
               </a>
               <a href="{{ url_for('auth.admin_users_page') }}" class="md3-user-menu__item" role="menuitem">
                 <span class="material-symbols-rounded md3-user-menu__icon">group</span>
-                <span class="md3-user-menu__label">Usuarios</span>
+                <span class="md3-user-menu__label">Benutzer</span>
               </a>
               <div class="md3-user-menu__divider" role="separator"></div>
             {% endif %}
-            {# Logout via GET (no CSRF, idempotent)
+            {# Logout via POST (fetch-based)
               Desired client behaviour: perform a full page redirect after logout
               (no partial fragment replacement / no login-sheet). The frontend
               uses `data-logout="fetch"` and should navigate to a server-provided
@@ -115,7 +113,7 @@
               class="md3-user-menu__item md3-user-menu__item--logout"
               role="menuitem">
               <span class="material-symbols-rounded md3-user-menu__icon">logout</span>
-              <span class="md3-user-menu__label">Cerrar sesión</span>
+              <span class="md3-user-menu__label">Logout</span>
             </a>
           </div>
         </div>
@@ -123,8 +121,8 @@
           {# Unauthenticated: Login Button — navigate to canonical login page (/login) #}
           <a href="{{ url_for('public.login', next=request.full_path|default(request.path)) }}"
             class="md3-icon-button" 
-            aria-label="Iniciar sesión"
-            title="Iniciar sesión">
+            aria-label="Login"
+            title="Login">
           <span class="material-symbols-rounded">account_circle</span>
         </a>
       {% endif %}
