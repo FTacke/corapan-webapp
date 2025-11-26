@@ -296,3 +296,86 @@
 [dir="rtl"] .md3-hero__actions {
   flex-direction: row-reverse;
 }
+
+/* ============================================================================
+   Back Link Pattern - Goldstandard Addition
+   ============================================================================ */
+
+.md3-page__nav {
+  margin-bottom: var(--space-4);
+}
+
+.md3-back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  margin-left: calc(-1 * var(--space-3)); /* Optical alignment with content */
+  border-radius: var(--radius-full);
+  color: var(--md-sys-color-on-surface-variant);
+  font-size: var(--md-sys-typescale-label-large-font-size);
+  font-weight: var(--md-sys-typescale-label-large-font-weight);
+  text-decoration: none;
+  transition: background-color 150ms ease, color 150ms ease;
+}
+
+.md3-back-link:hover {
+  background: var(--md-sys-color-surface-container-highest);
+  color: var(--md-sys-color-primary);
+}
+
+.md3-back-link:focus-visible {
+  outline: 2px solid var(--md-sys-color-primary);
+  outline-offset: 2px;
+}
+
+.md3-back-link .material-symbols-rounded {
+  font-size: 1.25rem;
+}
+
+/* ============================================================================
+   Page Header Wrapper - Goldstandard Addition
+   ============================================================================ */
+
+.md3-page-header {
+  padding-top: var(--space-6);
+  padding-bottom: var(--space-6);
+}
+
+.md3-page-header__nav {
+  margin-bottom: var(--space-4);
+}
+
+.md3-page-header__title {
+  font-size: var(--md-sys-typescale-headline-medium-font-size);
+  font-weight: var(--md-sys-typescale-headline-medium-font-weight);
+  line-height: var(--md-sys-typescale-headline-medium-line-height);
+  color: var(--md-sys-color-primary);
+  margin: 0 0 var(--space-2);
+}
+
+.md3-page-header__subtitle {
+  font-size: var(--md-sys-typescale-body-large-font-size);
+  font-weight: var(--md-sys-typescale-body-large-font-weight);
+  line-height: var(--md-sys-typescale-body-large-line-height);
+  color: var(--md-sys-color-on-surface-variant);
+  margin: 0;
+  max-width: 65ch;
+}
+
+/* Responsive page header */
+@media (max-width: 599px) {
+  .md3-page-header {
+    padding-top: var(--space-4);
+    padding-bottom: var(--space-4);
+  }
+  
+  .md3-page-header__title {
+    font-size: var(--md-sys-typescale-headline-small-font-size);
+  }
+  
+  .md3-back-link {
+    padding: var(--space-1) var(--space-2);
+    font-size: var(--md-sys-typescale-label-medium-font-size);
+  }
+}

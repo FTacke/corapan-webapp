@@ -46,7 +46,7 @@
 
   /* WICHTIG: Desktop gaps überschreiben */
   #transcriptionContainer {
-    gap: var(--md3-space-2) !important; /* Override desktop 1.5rem */
+    gap: var(--space-2) !important; /* Override desktop 1.5rem */
   }
 
   /* ==========================================================================
@@ -96,7 +96,7 @@
     display: block !important; /* NUR erste (Metadata) sichtbar */
     padding: 0.5rem 0.25rem !important;
     margin-bottom: 0.5rem !important;
-    background: var(--md3-color-surface-container-low);
+    background: var(--md-sys-color-surface-container-low);
     border-radius: 0 !important;
   }
 
@@ -104,14 +104,14 @@
   .mobile-layout .sidebar-title {
     font-size: 0.75rem !important;
     margin-bottom: 0.25rem !important;
-    color: var(--md3-color-on-surface-variant);
+    color: var(--md-sys-color-on-surface-variant);
   }
 
   .mobile-layout .sidebar-meta {
     font-size: 0.7rem !important;
     line-height: 1.3 !important;
     margin: 0.125rem 0 !important;
-    color: var(--md3-color-on-surface);
+    color: var(--md-sys-color-on-surface);
   }
 
   /* Full-width transcription container mit Flexbox für Reordering */
@@ -139,7 +139,7 @@
   #transcriptionContainer {
     width: 100% !important;
     max-width: 100% !important;
-    padding: 0 var(--md3-space-2) !important;
+    padding: 0 var(--space-2) !important;
     margin: 0 !important;
     box-sizing: border-box !important;
   }
@@ -149,15 +149,15 @@
      ========================================================================== */
 
   .metadata-header {
-    padding: var(--md3-space-3);
-    background: var(--md3-color-surface-container-low);
-    border-bottom: 1px solid var(--md3-color-outline-variant);
+    padding: var(--space-3);
+    background: var(--md-sys-color-surface-container-low);
+    border-bottom: 1px solid var(--md-sys-color-outline-variant);
   }
 
   .metadata-header h1 {
     font-size: 1.125rem; /* Smaller title */
     line-height: 1.3;
-    margin-bottom: var(--md3-space-2);
+    margin-bottom: var(--space-2);
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -165,10 +165,10 @@
 
   .metadata-info {
     font-size: 0.75rem;
-    color: var(--md3-color-on-surface-variant);
+    color: var(--md-sys-color-on-surface-variant);
     display: flex;
     flex-wrap: wrap;
-    gap: var(--md3-space-2);
+    gap: var(--space-2);
   }
 
   /* ==========================================================================
@@ -178,15 +178,15 @@
   .speaker-name {
     font-size: 0.65rem !important; /* Sehr klein! 10.4px */
     font-weight: 500 !important;
-    color: var(--md3-color-on-surface-variant) !important;
+    color: var(--md-sys-color-on-surface-variant) !important;
     margin: 0 !important;
     margin-bottom: 0.25rem !important;
     padding: 0.25rem 0.5rem !important;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    background: var(--md3-color-surface-container-highest);
-    border-radius: var(--md3-radius-small);
+    background: var(--md-sys-color-surface-container-highest);
+    border-radius: var(--radius-sm);
     display: inline-block !important;
     letter-spacing: 0.02em;
   }
@@ -201,7 +201,7 @@
     display: flex !important;
     flex-direction: column !important; /* Vertikal! */
     gap: 0 !important; /* Kein Gap zwischen Name und Text */
-    margin-bottom: var(--md3-space-3) !important;
+    margin-bottom: var(--space-3) !important;
     padding: 0 !important;
     background: transparent !important;
     border-radius: 0 !important;
@@ -221,7 +221,7 @@
   .speaker-text {
     font-size: 1.125rem !important; /* 18px für Lesbarkeit */
     line-height: 1.35 !important; /* KOMPAKT! Vorher 1.65, jetzt 1.35 */
-    color: var(--md3-color-on-surface) !important;
+    color: var(--md-sys-color-on-surface) !important;
     margin: 0 !important;
     padding: 0 !important;
   }
@@ -233,12 +233,12 @@
     margin: 0 !important;
     display: inline !important; /* Inline, nicht flex */
     cursor: pointer;
-    border-radius: var(--md3-radius-extra-small);
+    border-radius: var(--radius-xs);
   }
 
   .word:active {
-    background: var(--md3-color-primary-container);
-    color: var(--md3-color-on-primary-container);
+    background: var(--md-sys-color-primary-container);
+    color: var(--md-sys-color-on-primary-container);
   }
 
   /* ==========================================================================
@@ -288,14 +288,14 @@
     -webkit-box-sizing: border-box !important;
 
     /* BACKGROUND: Solid, KEIN Glassmorphism */
-    background: var(--md3-color-surface-container) !important;
-    background-color: var(--md3-color-surface-container) !important;
+    background: var(--md-sys-color-surface-container) !important;
+    background-color: var(--md-sys-color-surface-container) !important;
     backdrop-filter: none !important;
     -webkit-backdrop-filter: none !important;
 
     /* BORDER: Nur oben, KEINE Radius */
     border: none !important;
-    border-top: 2px solid var(--md3-color-primary) !important;
+    border-top: 2px solid var(--md-sys-color-primary) !important;
     border-radius: 0 !important;
     border-top-left-radius: 0 !important;
     border-top-right-radius: 0 !important;
@@ -372,7 +372,7 @@
     width: 100% !important;
     text-align: center !important;
     font-size: 0.7rem !important;
-    color: var(--md3-color-on-surface-variant) !important;
+    color: var(--md-sys-color-on-surface-variant) !important;
     font-family: "Consolas, Inconsolata", monospace !important;
     margin: 0 !important;
     padding: 0 !important;
@@ -452,13 +452,13 @@
   .mobile-layout .skip-icon,
   .custom-audio-player .skip-icon {
     font-size: 1.2rem !important;
-    color: var(--md3-color-primary) !important;
+    color: var(--md-sys-color-primary) !important;
   }
 
   .mobile-layout .skip-label,
   .custom-audio-player .skip-label {
     font-size: 0.65rem !important;
-    color: var(--md3-color-on-surface-variant) !important;
+    color: var(--md-sys-color-on-surface-variant) !important;
   }
 
   /* Volume Control: KOMPLETT AUSBLENDEN auf Mobile */
@@ -485,7 +485,7 @@
   .mobile-layout .speed-icon,
   .custom-audio-player .speed-icon {
     font-size: 0.875rem !important;
-    color: var(--md3-color-on-surface-variant) !important;
+    color: var(--md-sys-color-on-surface-variant) !important;
   }
 
   /* ==========================================================================
@@ -499,7 +499,7 @@
 
   /* Reduce overall padding for more space */
   .mobile-layout .player-container {
-    padding: var(--md3-space-2) !important;
+    padding: var(--space-2) !important;
     gap: 0 !important;
     max-width: 100% !important;
     margin: 0 !important;
@@ -508,7 +508,7 @@
   /* Speaker turn spacing: SEHR KOMPAKT */
   .mobile-layout .speaker-turn {
     margin-bottom: var(
-      --md3-space-2
+      --space-2
     ) !important; /* Reduziert von space-4 auf space-2 */
     padding: 0 !important;
     background: transparent !important;
@@ -518,7 +518,7 @@
   /* Transcription Container: MINIMAL padding */
   .mobile-layout #transcriptionContainer {
     padding: 0 0.25rem !important; /* MINIMAL: 4px links/rechts */
-    gap: var(--md3-space-2) !important; /* Kompakter Gap zwischen Turns */
+    gap: var(--space-2) !important; /* Kompakter Gap zwischen Turns */
   }
 
   /* Speaker-Turn: Auch minimaler Padding */
@@ -529,7 +529,7 @@
 
   /* Reduce sidebar section padding */
   .mobile-layout .sidebar-section {
-    padding: var(--md3-space-2) !important;
+    padding: var(--space-2) !important;
   }
 
   /* ==========================================================================
@@ -541,7 +541,7 @@
   .mobile-layout .btn {
     min-height: 44px !important;
     min-width: 44px !important;
-    padding: var(--md3-space-2) var(--md3-space-3) !important;
+    padding: var(--space-2) var(--space-3) !important;
   }
 
   /* Letter marking chips (compact) */
@@ -571,7 +571,7 @@
   /* Hide scroll-to-top button on mobile (saves space) */
   .mobile-layout #scrollToTopBtn {
     bottom: 80px !important; /* Above player */
-    right: var(--md3-space-3) !important;
+    right: var(--space-3) !important;
     width: 44px !important;
     height: 44px !important;
   }
@@ -617,7 +617,7 @@
 
   .custom-audio-player {
     height: 50px !important;
-    padding: var(--md3-space-1) var(--md3-space-2) !important;
+    padding: var(--space-1) var(--space-2) !important;
   }
 
   .play-icon {

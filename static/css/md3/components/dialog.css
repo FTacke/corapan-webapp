@@ -187,3 +187,106 @@
 .md3-stack--dialog > * + * {
   margin-top: var(--space-4); /* 16px between elements in dialogs */
 }
+
+/* ============================================================================
+   MD3 Dialog Responsive - Goldstandard Additions
+   ============================================================================ */
+
+@media (max-width: 599px) {
+  .md3-dialog {
+    max-width: calc(100vw - var(--space-6));
+    margin: var(--space-4);
+  }
+  
+  .md3-dialog__surface {
+    padding: var(--space-4);
+    border-radius: var(--radius-lg);
+    width: 100%;
+    max-width: none;
+  }
+  
+  .md3-dialog__container {
+    padding: var(--space-3);
+  }
+  
+  .md3-dialog__title {
+    font-size: var(--md-sys-typescale-title-large-font-size);
+  }
+  
+  .md3-dialog__actions {
+    flex-direction: column;
+    gap: var(--space-2);
+  }
+  
+  .md3-dialog__actions .md3-button {
+    width: 100%;
+    justify-content: center;
+  }
+  
+  /* Reverse order for stacked: Primary first on mobile */
+  .md3-dialog__actions .md3-button--filled:not(.md3-button--danger) {
+    order: 1;
+  }
+  
+  .md3-dialog__actions .md3-button--danger {
+    order: 2;
+  }
+  
+  .md3-dialog__actions .md3-button--outlined {
+    order: 3;
+  }
+  
+  .md3-dialog__actions .md3-button--text {
+    order: 4;
+  }
+}
+
+/* Danger/Error Dialog Variant */
+.md3-dialog--danger .md3-dialog__icon,
+.md3-dialog--error .md3-dialog__icon {
+  color: var(--md-sys-color-error);
+}
+
+.md3-dialog--danger .md3-dialog__title {
+  color: var(--md-sys-color-error);
+}
+
+/* Full-screen Dialog Variant (primarily for mobile) */
+.md3-dialog--fullscreen {
+  max-width: none;
+  max-height: none;
+  width: 100%;
+  height: 100%;
+  border-radius: 0;
+  margin: 0;
+}
+
+.md3-dialog--fullscreen .md3-dialog__surface {
+  border-radius: 0;
+  max-width: none;
+  width: 100%;
+  height: 100%;
+}
+
+@media (min-width: 600px) {
+  .md3-dialog--fullscreen {
+    max-width: 560px;
+    max-height: 90vh;
+    width: auto;
+    height: auto;
+    border-radius: var(--radius-lg);
+    margin: auto;
+  }
+  
+  .md3-dialog--fullscreen .md3-dialog__surface {
+    border-radius: 28px;
+    width: min(100% - calc(var(--space-4) * 2), 560px);
+    height: auto;
+  }
+}
+
+/* Dialog with divider between content and actions */
+.md3-dialog__actions--divider {
+  border-top: 1px solid var(--md-sys-color-outline-variant);
+  padding-top: var(--space-4);
+}

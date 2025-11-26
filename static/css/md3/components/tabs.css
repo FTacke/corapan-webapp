@@ -1,9 +1,15 @@
 /* ============================================================================
-   MD3 Tabs - From Legacy md3-components.css
+   MD3 Tabs - Goldstandard v1.2
    ============================================================================
-   TRANSFERRED FROM: static/css/md3-components.css (Lines 1734-1788)
-   STATUS: ⚠️ Uses legacy MD3 tokens (--md3-*), needs migration to --md-sys-*
-   PRESERVED: All original states and transitions
+   Canonical tab components with MD3 tokens and motion.
+   
+   Components:
+   - .md3-tabs: Primary tab container
+   - .md3-tab: Individual tab button
+   - .md3-sub-tabs: Secondary/nested tabs
+   - .md3-tabs--compact: Smaller variant for dense UIs
+   
+   Status: ✅ MD3-konform (uses --md-sys-* tokens)
    ============================================================================ */
 
 .md3-tabs {
@@ -184,4 +190,39 @@
     white-space: nowrap;
     flex-shrink: 0;
   }
+}
+
+/* ============================================================================
+   Compact Tabs Variant (for editor country tabs, etc.)
+   ============================================================================ */
+
+.md3-tabs--compact {
+  gap: var(--space-1);
+  margin-bottom: var(--space-4);
+}
+
+.md3-tabs--compact .md3-tab {
+  padding: var(--space-2) var(--space-4);
+  font-size: 13px;
+  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+}
+
+/* Focus-visible state for accessibility */
+.md3-tab:focus-visible {
+  outline: 2px solid var(--md-sys-color-primary);
+  outline-offset: -2px;
+}
+
+.md3-tab:focus-visible::before {
+  opacity: 0.12;
+}
+
+/* Active + focus combined state */
+.md3-tab--active:focus-visible {
+  outline-offset: 2px;
+}
+
+/* Pressed state */
+.md3-tab:active::before {
+  opacity: 0.12;
 }

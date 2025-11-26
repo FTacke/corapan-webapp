@@ -125,6 +125,16 @@
   margin-top: var(--space-6); /* 24px (section spacing) */
 }
 
+/* Compact stack for tight layouts (form fields, inline elements) */
+.md3-stack--compact > * + * {
+  margin-top: var(--space-2); /* 8px (compact spacing) */
+}
+
+/* Card stack for form dialogs and cards */
+.md3-stack--card > * + * {
+  margin-top: var(--space-4); /* 16px (card internal spacing) */
+}
+
 .md3-grid--responsive {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));

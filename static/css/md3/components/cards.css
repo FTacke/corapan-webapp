@@ -224,3 +224,129 @@ pre.highlight code {
   white-space: pre-wrap; /* Inherit wrapping behavior */
   word-wrap: break-word;
 }
+
+/* ============================================================================
+   MD3 Card Actions & Footer - Goldstandard Additions
+   ============================================================================ */
+
+/* Card Actions Zone - for buttons at card bottom */
+.md3-card__actions {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-4) var(--space-5) var(--space-5);
+  border-top: 1px solid var(--md-sys-color-outline-variant);
+  margin-top: var(--space-4);
+}
+
+/* Actions without border (when inside card content) */
+.md3-card__actions--borderless {
+  border-top: none;
+  padding-top: 0;
+  margin-top: var(--space-4);
+}
+
+/* Stacked actions for mobile or compact layouts */
+.md3-card__actions--stacked {
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.md3-card__actions--stacked .md3-button {
+  width: 100%;
+  justify-content: center;
+}
+
+/* Left-aligned actions */
+.md3-card__actions--start {
+  justify-content: flex-start;
+}
+
+/* Space-between actions (e.g., Cancel on left, Confirm on right) */
+.md3-card__actions--between {
+  justify-content: space-between;
+}
+
+/* Card Footer - for metadata/secondary info */
+.md3-card__footer {
+  padding: var(--space-3) var(--space-5);
+  background: var(--md-sys-color-surface-container-low);
+  border-top: 1px solid var(--md-sys-color-outline-variant);
+  border-radius: 0 0 var(--radius-md) var(--radius-md);
+  font-size: var(--md-sys-typescale-body-small-font-size);
+  font-weight: var(--md-sys-typescale-body-small-font-weight);
+  line-height: var(--md-sys-typescale-body-small-line-height);
+  color: var(--md-sys-color-on-surface-variant);
+}
+
+/* Card Description (subtitle under title) */
+.md3-card__description {
+  margin: 0;
+  color: var(--md-sys-color-on-surface-variant);
+  font-size: var(--md-sys-typescale-body-medium-font-size);
+  font-weight: var(--md-sys-typescale-body-medium-font-weight);
+  line-height: var(--md-sys-typescale-body-medium-line-height);
+}
+
+/* Card Title color standardization */
+.md3-card__header .md3-title-large,
+.md3-card__header .md3-title-medium {
+  color: var(--md-sys-color-primary);
+}
+
+/* Danger card variant */
+.md3-card--danger {
+  border-color: var(--md-sys-color-error);
+}
+
+.md3-card--danger .md3-card__header .md3-title-large,
+.md3-card--danger .md3-card__header .md3-title-medium {
+  color: var(--md-sys-color-error);
+}
+
+/* Vertical rhythm inside card content */
+.md3-card__content > * + * {
+  margin-top: var(--space-4);
+}
+
+/* First element in content should not have top margin */
+.md3-card__content > *:first-child {
+  margin-top: 0;
+}
+
+/* ============================================================================
+   Responsive Card Adjustments
+   ============================================================================ */
+@media (max-width: 599px) {
+  .md3-card__header,
+  .md3-card__content,
+  .md3-card__actions,
+  .md3-card__footer {
+    padding-inline: var(--space-4);
+  }
+  
+  /* Stack actions on mobile by default for auth cards */
+  .md3-auth-card .md3-card__actions {
+    flex-direction: column;
+    gap: var(--space-2);
+  }
+  
+  .md3-auth-card .md3-card__actions .md3-button {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+/* Card Grid for layouts */
+.md3-card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: var(--space-4);
+}
+
+@media (max-width: 599px) {
+  .md3-card-grid {
+    grid-template-columns: 1fr;
+  }
+}
