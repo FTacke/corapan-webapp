@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% block page_title %}Panel Administrativo &middot; CO.RA.PAN{% endblock %}
+{% block page_title %}Admin-Dashboard &middot; CO.RA.PAN{% endblock %}
 
 {% block extra_head %}
   <link rel="stylesheet" href="{{ url_for('static', filename='css/md3/tokens.css') }}">
@@ -16,9 +16,9 @@
       <div class="md3-hero__icon" aria-hidden="true"><span class="material-symbols-rounded">dashboard</span></div>
       <div class="md3-hero__content">
         <p class="md3-body-small md3-hero__eyebrow">Admin</p>
-        <h1 class="md3-headline-medium md3-hero__title">Panel Administrativo</h1>
+        <h1 class="md3-headline-medium md3-hero__title">Admin-Dashboard</h1>
         <p class="md3-body-medium md3-hero__intro">
-          Monitoriza accesos, visitas y búsquedas en la plataforma. Los datos se actualizan automáticamente.
+          Überwache Zugriffe, Besuche und Suchanfragen auf der Plattform. Die Daten werden automatisch aktualisiert.
         </p>
       </div>
     </div>
@@ -36,22 +36,22 @@
           <div class="md3-metric-card__icon-wrapper">
             <span class="material-symbols-rounded">public</span>
           </div>
-          <h3 class="md3-title-medium">Visitas</h3>
+          <h3 class="md3-title-medium">Besuche</h3>
         </div>
         <div class="md3-metric-card__content">
           <div class="md3-metric-value-group">
-            <span class="md3-label-medium">Total</span>
+            <span class="md3-label-medium">Gesamt</span>
             <span class="md3-display-small" id="visits-total">-</span>
           </div>
           
           <details class="md3-metric-card__history">
-            <summary>Detalles por mes/día</summary>
+            <summary>Details nach Monat/Tag</summary>
             <div class="md3-details__content">
-              <h4 class="md3-title-small md3-space-3">Este mes</h4>
+              <h4 class="md3-title-small md3-space-3">Dieser Monat</h4>
               <ul class="md3-list" id="visits-days-list">
                 <!-- Populated by JS -->
               </ul>
-              <h4 class="md3-title-small md3-space-3">Histórico mensual</h4>
+              <h4 class="md3-title-small md3-space-3">Monatshistorie</h4>
               <ul class="md3-list" id="visits-months-list">
                 <!-- Populated by JS -->
               </ul>
@@ -66,22 +66,22 @@
           <div class="md3-metric-card__icon-wrapper">
             <span class="material-symbols-rounded">graphic_eq</span>
           </div>
-          <h3 class="md3-title-medium">Acceso al Corpus</h3>
+          <h3 class="md3-title-medium">Corpus-Zugriffe</h3>
         </div>
         <div class="md3-metric-card__content">
           <div class="md3-metric-value-group">
-            <span class="md3-label-medium">Total</span>
+            <span class="md3-label-medium">Gesamt</span>
             <span class="md3-display-small" id="access-total">-</span>
           </div>
           
           <details class="md3-metric-card__history">
-            <summary>Detalles por mes/día</summary>
+            <summary>Details nach Monat/Tag</summary>
             <div class="md3-details__content">
-              <h4 class="md3-title-small md3-space-3">Este mes</h4>
+              <h4 class="md3-title-small md3-space-3">Dieser Monat</h4>
               <ul class="md3-list" id="access-days-list">
                 <!-- Populated by JS -->
               </ul>
-              <h4 class="md3-title-small md3-space-3">Histórico mensual</h4>
+              <h4 class="md3-title-small md3-space-3">Monatshistorie</h4>
               <ul class="md3-list" id="access-months-list">
                 <!-- Populated by JS -->
               </ul>
@@ -96,22 +96,22 @@
           <div class="md3-metric-card__icon-wrapper">
             <span class="material-symbols-rounded">search</span>
           </div>
-          <h3 class="md3-title-medium">Búsquedas</h3>
+          <h3 class="md3-title-medium">Suchanfragen</h3>
         </div>
         <div class="md3-metric-card__content">
           <div class="md3-metric-value-group">
-            <span class="md3-label-medium">Total</span>
+            <span class="md3-label-medium">Gesamt</span>
             <span class="md3-display-small" id="search-total">-</span>
           </div>
           
           <details class="md3-metric-card__history">
-            <summary>Detalles por mes/día</summary>
+            <summary>Details nach Monat/Tag</summary>
             <div class="md3-details__content">
-              <h4 class="md3-title-small md3-space-3">Este mes</h4>
+              <h4 class="md3-title-small md3-space-3">Dieser Monat</h4>
               <ul class="md3-list" id="search-days-list">
                 <!-- Populated by JS -->
               </ul>
-              <h4 class="md3-title-small md3-space-3">Histórico mensual</h4>
+              <h4 class="md3-title-small md3-space-3">Monatshistorie</h4>
               <ul class="md3-list" id="search-months-list">
                 <!-- Populated by JS -->
               </ul>
@@ -126,12 +126,12 @@
     <div class="md3-admin-card md3-admin-card--info md3-space-6">
       <div class="md3-admin-card__header">
         <span class="material-symbols-rounded md3-admin-card__icon">info</span>
-        <h2 class="md3-admin-card__title md3-title-large">Información del Sistema</h2>
+        <h2 class="md3-admin-card__title md3-title-large">Systeminformationen</h2>
       </div>
       <div class="md3-admin-card__body">
         <ul class="md3-admin-list md3-body-medium">
-          <li>Los datos se almacenan en <code>data/counters/</code> y pueden sincronizarse con el backend</li>
-          <li>Los logs del sistema se encuentran en <code>logs/corapan.log</code></li>
+          <li>Die Daten werden in <code>data/counters/</code> gespeichert und können mit dem Backend synchronisiert werden</li>
+          <li>Die Systemlogs befinden sich in <code>logs/corapan.log</code></li>
         </ul>
       </div>
     </div>

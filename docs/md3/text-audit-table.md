@@ -120,10 +120,9 @@
 | `player.html` | Card "Marcar letras" | 🇪🇸 ES | ✅ |
 | `player.html` | Card "Atajos de teclado" | 🇪🇸 ES | ✅ |
 | `player.html` | Buttons "Marcar", Tooltips | 🇪🇸 ES | ✅ |
-| `admin_dashboard.html` | Título "Panel Administrativo" | 🇪🇸 ES | ⚠️ |
-| `admin_dashboard.html` | Cards "Visitas", "Acceso al Corpus", "Búsquedas" | 🇪🇸 ES | ⚠️ |
-
-> **Hinweis `admin_dashboard.html`:** Admin-Dashboard ist derzeit auf Spanisch. Gemäß Sprachregel sollte es auf Deutsch sein (interner Bereich). → **TODO: Prüfen ob gewollt.**
+| `admin_dashboard.html` | Título "Admin-Dashboard" | 🇩🇪 DE | ✅ |
+| `admin_dashboard.html` | Cards "Besuche", "Corpus-Zugriffe", "Suchanfragen" | 🇩🇪 DE | ✅ |
+| `admin_dashboard.html` | "Systeminformationen" | 🇩🇪 DE | ✅ |
 
 ---
 
@@ -156,16 +155,14 @@
 |----------|------|---------|--------|
 | `400.html` | "Solicitud Incorrecta" | 🇪🇸 ES | ✅ |
 | `400.html` | Buttons "Intentar de nuevo", "Volver al inicio" | 🇪🇸 ES | ✅ |
-| `401.html` | "Zugang nicht autorisiert" | 🇩🇪 DE | ⚠️ |
-| `401.html` | Buttons "Anmelden", "Zur Startseite" | 🇩🇪 DE | ⚠️ |
+| `401.html` | "Acceso No Autorizado" | 🇪🇸 ES | ✅ |
+| `401.html` | Buttons "Iniciar sesión", "Volver al inicio" | 🇪🇸 ES | ✅ |
 | `403.html` | "Acceso Prohibido" | 🇪🇸 ES | ✅ |
 | `403.html` | Buttons "Volver al inicio", "Página anterior" | 🇪🇸 ES | ✅ |
 | `404.html` | "Página No Encontrada" | 🇪🇸 ES | ✅ |
 | `404.html` | Buttons "Volver al inicio", "Página anterior" | 🇪🇸 ES | ✅ |
 | `500.html` | "Error Interno del Servidor" | 🇪🇸 ES | ✅ |
 | `500.html` | Buttons "Recargar página", "Volver al inicio" | 🇪🇸 ES | ✅ |
-
-> **Hinweis `401.html`:** 401 (Unauthorized) ist auf Deutsch, andere Error-Pages auf Spanisch. Da 401 den User zum Login leitet (öffentlicher Flow), sollte es evtl. Spanisch sein. → **TODO: Entscheiden ob Deutsch oder Spanisch.**
 
 ---
 
@@ -177,15 +174,14 @@
 | Auth (Login/Password) | ES | ✅ |
 | Auth (Account/Profil) | DE | ✅ |
 | Admin (Users) | DE | ✅ |
-| Admin (Dashboard) | ES | ⚠️ TODO |
+| Admin (Dashboard) | DE | ✅ |
 | Öffentliche Seiten | ES | ✅ |
 | Rechtliche Seiten | DE | ✅ |
 | Footer | DE | ✅ |
-| Error Pages | ES (außer 401) | ⚠️ 401=DE |
+| Error Pages | ES | ✅ |
 
 ---
 
 ## Offene Punkte
 
-1. **`admin_dashboard.html`**: Aktuell Spanisch, sollte gemäß Regel Deutsch sein (Admin = intern).
-2. **`401.html`**: Aktuell Deutsch, andere Error-Pages sind Spanisch. Entscheiden ob Login-Redirect-Flow öffentlich (→ ES) oder intern (→ DE).
+✅ Alle Punkte gelöst — keine offenen TODOs.
