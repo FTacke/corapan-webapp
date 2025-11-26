@@ -6,7 +6,7 @@
   justify-content: center;
   align-items: center;
   padding: var(--space-4);
-  background: var(--md-sys-color-background);
+  background: var(--app-background);
 }
 
 .md3-index-logo__img {

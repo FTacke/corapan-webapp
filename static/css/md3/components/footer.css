@@ -8,7 +8,7 @@
 
 .md3-footer {
   border-top: 0px solid var(--md-sys-color-outline-variant);
-  background: var(--md-sys-color-background);
+  background: var(--app-background);
   color: var(--md-sys-color-on-surface-variant);
   margin-top: var(--space-12);
   /* ~64px margin top for spacing from content */

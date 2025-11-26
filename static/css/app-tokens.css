@@ -7,7 +7,7 @@
   --app-color-on-success-container: #002200;
   
   /* App Background - uses surface-container-lowest for subtle card contrast */
-  --app-background: var(--md-sys-color-surface-container-lowest);
+  --app-background: var(--md-sys-color-surface-container);
   
   /* Mobile menu animation duration (formerly in legacy-shim) */
   --app-mobile-menu-duration: 250ms;

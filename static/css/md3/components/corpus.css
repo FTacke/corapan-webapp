@@ -14,7 +14,7 @@
 /* Base Page Container */
 .md3-corpus-page {
   min-height: calc(100vh - 200px);
-  background: var(--md-sys-color-background);
+  background: var(--app-background);
 }
 
 /* ============================================================================

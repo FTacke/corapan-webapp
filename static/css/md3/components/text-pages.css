@@ -13,7 +13,7 @@
     Arial
   );
   color: var(--md-sys-color-on-surface);
-  background: var(--md-sys-color-background);
+  background: var(--app-background);
 }
 
 /* ============================================================================
@@ -151,7 +151,7 @@
 }
 
 .editor-overview {
-  background: var(--md-sys-color-background);
+  background: var(--app-background);
   color: var(--md-sys-color-on-surface);
   padding: 1rem;
 }
