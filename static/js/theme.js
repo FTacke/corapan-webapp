@@ -43,16 +43,32 @@
   apply(load());
 
   // Attach load handlers to stylesheets that were deferred via data-async-onload
+  // The pattern uses media="print" to prevent render-blocking, then switches to "all" on load
   try {
     document.querySelectorAll('link[data-async-onload]').forEach((lnk) => {
-      lnk.addEventListener('load', function () {
-        try {
-          this.media = 'all';
-        } catch (e) {
-          /* ignore */
-        }
-        this.removeAttribute('data-async-onload');
-      });
+      // Check if already loaded (sheet is accessible when loaded)
+      if (lnk.sheet) {
+        lnk.media = 'all';
+        lnk.removeAttribute('data-async-onload');
+      } else {
+        lnk.addEventListener('load', function () {
+          try {
+            this.media = 'all';
+          } catch (e) {
+            /* ignore */
+          }
+          this.removeAttribute('data-async-onload');
+        });
+        // Fallback: also handle error case
+        lnk.addEventListener('error', function () {
+          // Still switch media so the element doesn't stay in print mode
+          try {
+            this.media = 'all';
+          } catch (e) {
+            /* ignore */
+          }
+        });
+      }
     });
   } catch (e) {
     // defensive

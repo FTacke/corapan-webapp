@@ -298,24 +298,22 @@ export class TranscriptionManager {
     const headerContainer = document.createElement("div");
     headerContainer.classList.add("md3-speaker-header");
 
-    // 1. Edit Icon (links)
-    const editIcon = document.createElement("i");
+    // 1. Edit Icon (links) - MD3: Use Material Symbols
+    const editIcon = document.createElement("span");
+    editIcon.classList.add("material-symbols-rounded", "md3-speaker-edit-icon");
+    
     // Check both flags for editor mode (new: disableNormalClick, legacy: disableClickPlay)
     const isEditorMode = this.disableNormalClick || this.disableClickPlay;
 
     if (isEditorMode) {
-      // Editor mode: pen icon
-      editIcon.classList.add(
-        "fa-solid",
-        "fa-user-pen",
-        "md3-speaker-edit-icon",
-      );
+      // Editor mode: edit icon
+      editIcon.textContent = "edit";
       editIcon.title = "Speaker ändern";
       editIcon.setAttribute("data-segment-index", segmentIndex);
       headerContainer.appendChild(editIcon);
     } else {
-      // Player mode: user icon with native tooltip
-      editIcon.classList.add("fa-solid", "fa-user", "md3-speaker-edit-icon");
+      // Player mode: person icon with native tooltip
+      editIcon.textContent = "person";
 
       // Use native title attribute for tooltip (MD3-compliant)
       const tooltipText = this._getTooltipContentPlainText(speakerCode);

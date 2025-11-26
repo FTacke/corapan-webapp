@@ -275,10 +275,12 @@ body.token-active #adv-summary {
 
 .cql-token-row {
   display: block;
-  background: var(--md-sys-color-surface-container, #ffffff);
+  /* Use surface-container-lowest for clean white background */
+  background: var(--md-sys-color-surface-container-lowest, #ffffff);
   border: 1px solid var(--md-sys-color-outline-variant, #e6e0e6);
   border-radius: var(--radius-sm, 8px);
-  padding: var(--space-3, 0.75rem);
+  padding: var(--space-4, 1rem);
+  margin-bottom: var(--space-4, 1rem);
   position: relative;
   /* subtle elevation */
   box-shadow: 0 6px 18px rgba(16,24,40,0.06), 0 2px 6px rgba(16,24,40,0.04);
@@ -333,21 +335,9 @@ body.token-active #adv-summary {
   background: rgba(0,0,0,0.04);
 }
 
-/* Stronger specificity to prevent other .card rules from overwriting the background */
-.cql-token-row.card {
-  /* Token rows should be visually distinct from the surrounding form.
-     Default to the lightest tonal container so they appear 'white' within a
-     surface-container parent. Allow an app-level override token so product
-     teams can tune the exact look without editing this file. */
-  --_token-row-bg: var(--app-cql-token-background, var(--md-sys-color-surface-container-lowest, var(--md-sys-color-surface, #ffffff)));
-  background-color: var(--_token-row-bg) !important;
-  /* Prevent background images/gradients from changing the appearance */
-  background-image: none !important;
-}
-
-/* Textfield labels inside token rows - use !important to override base rules */
+/* Textfield labels inside token rows need matching background for the notch cutout */
 .cql-token-row .md3-outlined-textfield .md3-outlined-textfield__label {
-  background: var(--app-cql-token-background, var(--md-sys-color-surface-container-lowest, var(--md-sys-color-surface, #ffffff))) !important;
+  background: var(--md-sys-color-surface-container-lowest, #ffffff);
 }
 
 /* Compact numeric fields */

@@ -152,7 +152,8 @@ export class AdvancedAudioManager {
       console.warn("[Advanced Audio] Could not set audio properties", e);
     }
     this.currentPlayButton = $button;
-    $button.html('<i class="fa-solid fa-stop"></i>');
+    // MD3: Use Material Symbols
+    $button.html('<span class="material-symbols-rounded">stop</span>');
     this.currentAudio.addEventListener("playing", () => {
       console.log("[Advanced Audio] Playing started");
     });
@@ -164,17 +165,17 @@ export class AdvancedAudioManager {
       .catch((error) => {
         console.error("Audio playback error:", error);
         alert("Audio konnte nicht abgespielt werden");
-        $button.html('<i class="fa-solid fa-play"></i>');
+        $button.html('<span class="material-symbols-rounded">play_arrow</span>');
       });
     this.currentAudio.addEventListener("ended", () => {
-      $button.html('<i class="fa-solid fa-play"></i>');
+      $button.html('<span class="material-symbols-rounded">play_arrow</span>');
       this.currentAudio = null;
       this.currentPlayButton = null;
     });
     this.currentAudio.addEventListener("error", (e) => {
       console.error("Audio error:", e);
       alert("Audio konnte nicht geladen werden");
-      $button.html('<i class="fa-solid fa-play"></i>');
+      $button.html('<span class="material-symbols-rounded">play_arrow</span>');
       this.currentAudio = null;
       this.currentPlayButton = null;
     });
@@ -187,7 +188,7 @@ export class AdvancedAudioManager {
       this.currentAudio = null;
     }
     if (this.currentPlayButton) {
-      this.currentPlayButton.html('<i class="fa-solid fa-play"></i>');
+      this.currentPlayButton.html('<span class="material-symbols-rounded">play_arrow</span>');
       this.currentPlayButton = null;
     }
   }

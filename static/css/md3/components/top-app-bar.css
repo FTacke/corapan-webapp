@@ -903,11 +903,18 @@ body[data-scrolled="true"] .md3-top-app-bar__title-page {
   white-space: nowrap;
 }
 
-/* Badge Icon */
+/* Badge Icon - Material Symbols use 'font-size' for sizing */
 .md3-badge__icon {
   font-size: 14px;
   width: 14px;
   height: 14px;
+  line-height: 1;
+}
+
+/* Ensure Material Symbols in badges respect the size */
+.md3-badge__icon.material-symbols-rounded {
+  font-size: inherit;
+  font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 14;
 }
 
 /* Small Variant */
@@ -921,6 +928,10 @@ body[data-scrolled="true"] .md3-top-app-bar__title-page {
   font-size: 12px;
   width: 12px;
   height: 12px;
+}
+
+.md3-badge--small .md3-badge__icon.material-symbols-rounded {
+  font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 12;
 }
 
 /* ============================================

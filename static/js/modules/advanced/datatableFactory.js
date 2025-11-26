@@ -33,7 +33,29 @@ export function renderAudioButtons(row) {
   const contextStartSec = (contextStartMs / 1000).toFixed(3);
   const contextEndSec = (contextEndMs / 1000).toFixed(3);
 
-  return `\n    <div class="md3-corpus-audio-buttons">\n      <div class="md3-corpus-audio-row">\n        <span class="md3-corpus-audio-label">Res.:</span>\n        <a class="audio-button" data-filename="${escapeHtml(filename)}" data-start="${startSec}" data-end="${endSec}" data-token-id="${escapeHtml(tokenIdOriginal)}" data-token-id-lower="${escapeHtml(tokenId)}" data-type="pal">\n          <i class="fa-solid fa-play"></i>\n        </a>\n        <a class="download-button" data-filename="${escapeHtml(filename)}" data-start="${startSec}" data-end="${endSec}" data-token-id="${escapeHtml(tokenIdOriginal)}" data-token-id-lower="${escapeHtml(tokenId)}" data-type="pal">\n          <i class="fa-solid fa-download"></i>\n        </a>\n      </div>\n      <div class="md3-corpus-audio-row">\n        <span class="md3-corpus-audio-label">Ctx:</span>\n        <a class="audio-button" data-filename="${escapeHtml(filename)}" data-start="${contextStartSec}" data-end="${contextEndSec}" data-token-id="${escapeHtml(tokenIdOriginal)}" data-token-id-lower="${escapeHtml(tokenId)}" data-type="ctx">\n          <i class="fa-solid fa-play"></i>\n        </a>\n        <a class="download-button" data-filename="${escapeHtml(filename)}" data-start="${contextStartSec}" data-end="${contextEndSec}" data-token-id="${escapeHtml(tokenIdOriginal)}" data-token-id-lower="${escapeHtml(tokenId)}" data-type="ctx">\n          <i class="fa-solid fa-download"></i>\n        </a>\n      </div>\n    </div>\n  `;
+  // MD3: Use Material Symbols instead of FontAwesome
+  return `
+    <div class="md3-corpus-audio-buttons">
+      <div class="md3-corpus-audio-row">
+        <span class="md3-corpus-audio-label">Res.:</span>
+        <a class="audio-button" data-filename="${escapeHtml(filename)}" data-start="${startSec}" data-end="${endSec}" data-token-id="${escapeHtml(tokenIdOriginal)}" data-token-id-lower="${escapeHtml(tokenId)}" data-type="pal">
+          <span class="material-symbols-rounded">play_arrow</span>
+        </a>
+        <a class="download-button" data-filename="${escapeHtml(filename)}" data-start="${startSec}" data-end="${endSec}" data-token-id="${escapeHtml(tokenIdOriginal)}" data-token-id-lower="${escapeHtml(tokenId)}" data-type="pal">
+          <span class="material-symbols-rounded">download</span>
+        </a>
+      </div>
+      <div class="md3-corpus-audio-row">
+        <span class="md3-corpus-audio-label">Ctx:</span>
+        <a class="audio-button" data-filename="${escapeHtml(filename)}" data-start="${contextStartSec}" data-end="${contextEndSec}" data-token-id="${escapeHtml(tokenIdOriginal)}" data-token-id-lower="${escapeHtml(tokenId)}" data-type="ctx">
+          <span class="material-symbols-rounded">play_arrow</span>
+        </a>
+        <a class="download-button" data-filename="${escapeHtml(filename)}" data-start="${contextStartSec}" data-end="${contextEndSec}" data-token-id="${escapeHtml(tokenIdOriginal)}" data-token-id-lower="${escapeHtml(tokenId)}" data-type="ctx">
+          <span class="material-symbols-rounded">download</span>
+        </a>
+      </div>
+    </div>
+  `;
 }
 
 export function renderFileLink(filename, type, row) {
@@ -46,7 +68,12 @@ export function renderFileLink(filename, type, row) {
   if (row && row.token_id) {
     playerUrl += `&token_id=${encodeURIComponent(row.token_id)}`;
   }
-  return `\n    <a href="${playerUrl}" class="player-link" title="${escapeHtml(filename)}">\n      <i class="fa-regular fa-file"></i>\n    </a>\n  `;
+  // MD3: Use Material Symbols
+  return `
+    <a href="${playerUrl}" class="player-link" title="${escapeHtml(filename)}">
+      <span class="material-symbols-rounded">description</span>
+    </a>
+  `;
 }
 
 export function makeBaseConfig() {
@@ -63,22 +90,22 @@ export function makeBaseConfig() {
     buttons: [
       {
         extend: "copyHtml5",
-        text: '<i class="fa-solid fa-copy"></i> Copiar',
+        text: '<span class="material-symbols-rounded">content_copy</span> Copiar',
         exportOptions: { columns: [0, 1, 2, 3, 5, 6, 7, 8, 9, 10, 11] },
       },
       {
         extend: "csvHtml5",
-        text: '<i class="bi bi-filetype-csv"></i> CSV',
+        text: '<span class="material-symbols-rounded">csv</span> CSV',
         exportOptions: { columns: [0, 1, 2, 3, 5, 6, 7, 8, 9, 10, 11] },
       },
       {
         extend: "excelHtml5",
-        text: '<i class="bi bi-filetype-xlsx"></i> Excel',
+        text: '<span class="material-symbols-rounded">table</span> Excel',
         exportOptions: { columns: [0, 1, 2, 3, 5, 6, 7, 8, 9, 10, 11] },
       },
       {
         extend: "pdfHtml5",
-        text: '<i class="bi bi-filetype-pdf"></i> PDF',
+        text: '<span class="material-symbols-rounded">picture_as_pdf</span> PDF',
         orientation: "landscape",
         pageSize: "A4",
         exportOptions: { columns: [0, 1, 2, 3, 5, 6, 7, 8, 9, 10, 11] },

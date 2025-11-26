@@ -256,22 +256,22 @@ export function initAdvancedTable(queryParams) {
     buttons: [
       {
         extend: "copyHtml5",
-        text: '<i class="fa-solid fa-copy"></i> Copiar',
+        text: '<span class="material-symbols-rounded">content_copy</span> Copiar',
         exportOptions: { columns: [0, 1, 2, 3, 5, 6, 7, 8, 9, 10, 11] },
       },
       {
         extend: "csvHtml5",
-        text: '<i class="bi bi-filetype-csv"></i> CSV',
+        text: '<span class="material-symbols-rounded">csv</span> CSV',
         exportOptions: { columns: [0, 1, 2, 3, 5, 6, 7, 8, 9, 10, 11] },
       },
       {
         extend: "excelHtml5",
-        text: '<i class="bi bi-filetype-xlsx"></i> Excel',
+        text: '<span class="material-symbols-rounded">table</span> Excel',
         exportOptions: { columns: [0, 1, 2, 3, 5, 6, 7, 8, 9, 10, 11] },
       },
       {
         extend: "pdfHtml5",
-        text: '<i class="bi bi-filetype-pdf"></i> PDF',
+        text: '<span class="material-symbols-rounded">picture_as_pdf</span> PDF',
         orientation: "landscape",
         pageSize: "A4",
         exportOptions: { columns: [0, 1, 2, 3, 5, 6, 7, 8, 9, 10, 11] },

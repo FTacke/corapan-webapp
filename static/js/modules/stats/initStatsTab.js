@@ -125,9 +125,10 @@ function showError(message = "No se pudieron cargar las estadísticas.") {
   const container = document.getElementById("stats-grid");
   if (!container) return;
 
+  // MD3: Use Material Symbols
   container.innerHTML = `
     <div class="md3-alert md3-alert--error" style="grid-column: 1 / -1;">
-      <i class="fa-solid fa-circle-exclamation"></i>
+      <span class="material-symbols-rounded">error</span>
       <span>${message}</span>
     </div>
   `;

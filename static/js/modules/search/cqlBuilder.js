@@ -79,7 +79,8 @@ export class CqlBuilder {
         const tokenId = this.tokenCounter;
         
         const tokenRow = document.createElement('div');
-        tokenRow.className = 'cql-token-row card p-3 mb-3';
+        // MD3: Use only MD3 class, not Bootstrap .card which adds unwanted background
+        tokenRow.className = 'cql-token-row';
         tokenRow.dataset.id = tokenId;
         tokenRow.innerHTML = `
             <button type="button" class="md3-button md3-button--icon md3-button--text delete-token-btn" aria-label="Eliminar palabra">

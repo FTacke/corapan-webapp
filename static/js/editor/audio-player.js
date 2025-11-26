@@ -155,17 +155,16 @@ export class AudioPlayer {
   }
 
   /**
-   * Update mute icon
+   * Update mute icon - MD3: Use Material Symbols via textContent
    */
   updateMuteIcon() {
-    if (this.audio.muted) {
-      this.muteBtn.className = "fa-solid fa-volume-xmark volume-icon";
+    // The muteBtn is now a <span class="material-symbols-rounded">
+    if (this.audio.muted || this.audio.volume === 0) {
+      this.muteBtn.textContent = 'volume_off';
     } else if (this.audio.volume > 0.5) {
-      this.muteBtn.className = "fa-solid fa-volume-high volume-icon";
-    } else if (this.audio.volume > 0) {
-      this.muteBtn.className = "fa-solid fa-volume-low volume-icon";
+      this.muteBtn.textContent = 'volume_up';
     } else {
-      this.muteBtn.className = "fa-solid fa-volume-xmark volume-icon";
+      this.muteBtn.textContent = 'volume_down';
     }
   }
 

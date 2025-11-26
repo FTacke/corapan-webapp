@@ -328,12 +328,11 @@ import { formatMorphLeipzig } from "./morph_formatter.js";
       updateVolumeIcon(volumeControl.value);
     });
     function updateVolumeIcon(volume) {
-      if (parseFloat(volume) > 0) {
-        muteBtn.classList.remove("fa-volume-xmark");
-        muteBtn.classList.add("fa-volume-high");
+      // MD3: Use Material Symbols icon names via textContent
+      if (parseFloat(volume) > 0 && !visualAudioPlayer.muted) {
+        muteBtn.textContent = 'volume_up';
       } else {
-        muteBtn.classList.remove("fa-volume-high");
-        muteBtn.classList.add("fa-volume-xmark");
+        muteBtn.textContent = 'volume_off';
       }
     }
 
@@ -362,10 +361,11 @@ import { formatMorphLeipzig } from "./morph_formatter.js";
     }
 
     function animateButton(button, baseClass) {
-      button.classList.add("fa-fade");
+      // MD3: Use CSS animation class instead of FA-specific fade
+      button.classList.add("md3-animate-pulse");
       setTimeout(() => {
-        button.classList.remove("fa-fade");
-      }, 1000);
+        button.classList.remove("md3-animate-pulse");
+      }, 300);
     }
 
     let ctrlSpaceActive = false;

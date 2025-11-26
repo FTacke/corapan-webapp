@@ -717,10 +717,13 @@
    and let the outline provide the visual structure. */
 
 textarea#cql_query.md3-outlined-textfield__input[readonly] {
-  /* readonly CQL stays visually distinct but shouldn't appear editable */
-  background-color: var(--md-sys-color-surface-container, #f3edf7) !important;
+  /* readonly CQL stays visually distinct but shouldn't appear editable.
+     Use transparent background so the outline notch is visible.
+     The parent container provides the surface backdrop. */
+  background-color: transparent !important;
   cursor: not-allowed !important;
   opacity: 1 !important;
+  /* Ensure border is visible via outline styling */
 }
 
 .md3-cql-warning {

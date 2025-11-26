@@ -132,11 +132,11 @@ export class EditorPlayer {
 
     // Handle speaker icon clicks to open speaker selection
     container.addEventListener("click", (e) => {
-      // Check if an icon (user-pen or circle-user) was clicked
+      // Check if an icon was clicked - MD3 uses material-symbols-rounded or md3-speaker-edit-icon
       const isIcon =
-        e.target.classList.contains("fa-user-pen") ||
-        e.target.classList.contains("fa-circle-user") ||
-        e.target.classList.contains("md3-speaker-edit-icon");
+        e.target.classList.contains("md3-speaker-edit-icon") ||
+        (e.target.classList.contains("material-symbols-rounded") &&
+          e.target.closest(".md3-speaker-header"));
 
       if (!isIcon) return;
 
