@@ -442,3 +442,76 @@ Ensure your dialog has all required parts:
   </div>
 </dialog>
 ```
+
+---
+
+## 11. App Tokens (`app-tokens.css`)
+
+### CSS-Ladekette
+
+Die Reihenfolge in `templates/base.html` ist kritisch:
+
+```
+1. layout.css          ← Grundlayout, nutzt --app-background
+2. tokens.css          ← MD3 Core Tokens (--md-sys-color-*)
+3. app-tokens.css      ← App-spezifische Overrides (--app-*)
+4. tokens-legacy-shim  ← Legacy-Mappings
+5. typography.css      ← Schriften
+6. layout.css (md3)    ← MD3 Layout
+7. Components...
+```
+
+**WICHTIG:** `app-tokens.css` muss **nach** `tokens.css` geladen werden, damit Overrides greifen!
+
+### Verfügbare App-Tokens
+
+```css
+:root {
+  /* Seitenhintergrund - kann angepasst werden */
+  --app-background: var(--md-sys-color-surface-container-low);
+  
+  /* Login-spezifischer Hintergrund */
+  --app-color-login-bg: #f0f2f5;
+  
+  /* Textfield Label Background für Floating Labels */
+  --app-textfield-label-bg: var(--md-sys-color-surface);
+  
+  /* Mobile Menu Animationsdauer */
+  --app-mobile-menu-duration: 250ms;
+}
+```
+
+### Wie `--app-background` wirkt
+
+1. **FOUC-Prevention** in `base.html` (Inline-Style):
+   ```css
+   :root { --app-background: #ffffff; }
+   @media (prefers-color-scheme: dark) {
+     :root { --app-background: #14141A; }
+   }
+   ```
+   → Verhindert weißen Flash beim Laden
+
+2. **Body-Styling** in `layout.css`:
+   ```css
+   body.app-shell {
+     background: var(--app-background);
+   }
+   ```
+
+3. **Finale Definition** in `app-tokens.css`:
+   ```css
+   :root {
+     --app-background: var(--md-sys-color-surface-container-low);
+   }
+   ```
+   → Überschreibt den FOUC-Fallback mit dem gewünschten Token
+
+### Debugging
+
+Falls Änderungen nicht greifen:
+
+1. Browser DevTools → `body` selektieren → Computed Styles
+2. Prüfen, welche Datei `--app-background` definiert
+3. Falls `tokens.css` angezeigt wird: Ladereihenfolge in `base.html` prüfen
+4. Test: `--app-background: hotpink` in `app-tokens.css` → Seite muss pink werden
