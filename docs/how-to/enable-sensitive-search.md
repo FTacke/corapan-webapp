@@ -1,16 +1,21 @@
 ---
-title: "How to: Enable & Test Case/Accent-Insensitive Search"
-status: active
+title: "How to: Enable & Test Case/Accent-Insensitive Search (Legacy)"
+status: archived
 owner: backend-team
-updated: "2025-11-09"
-tags: [search, deployment, testing, how-to]
+updated: "2025-11-26"
+tags: [search, deployment, testing, how-to, archived]
 links:
   - decisions/ADR-0005-sensitive-search.md
   - reference/sensitive-search-specification.md
   - reference/database-creation-v3.md
 ---
 
-# How to: Enable & Test Case/Accent-Insensitive Search
+# How to: Enable & Test Case/Accent-Insensitive Search (Legacy)
+
+> **⚠️ ARCHIVED**: This guide describes configuration for the legacy SQLite-based search.
+> The application now uses **BlackLab-based search** which handles case/accent sensitivity
+> via CQL query modifiers. The `transcription.db` and `norm` column no longer exist.
+> For current search configuration, see BlackLab documentation.
 
 Step-by-step guide to deploy and verify sensitive/insensitive search functionality.
 

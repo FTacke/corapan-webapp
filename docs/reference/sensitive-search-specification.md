@@ -1,16 +1,20 @@
 ---
-title: "Case/Accent-Insensitive Search: Specification"
-status: active
+title: "Case/Accent-Insensitive Search: Specification (Legacy)"
+status: archived
 owner: backend-team
-updated: "2025-11-09"
-tags: [search, api, database, sql, reference]
+updated: "2025-11-26"
+tags: [search, api, database, sql, reference, archived]
 links:
   - decisions/ADR-0005-sensitive-search.md
   - how-to/enable-sensitive-search.md
   - reference/corpus-search-architecture.md
 ---
 
-# Case/Accent-Insensitive Search: Technical Specification
+# Case/Accent-Insensitive Search: Technical Specification (Legacy)
+
+> **⚠️ ARCHIVED**: This specification describes the legacy SQLite-based sensitive search.
+> The application has migrated to **BlackLab-based search** which handles case/accent
+> sensitivity via CQL query modifiers. The `transcription.db` no longer exists.
 
 Complete technical reference for sensitive/insensitive search implementation.
 

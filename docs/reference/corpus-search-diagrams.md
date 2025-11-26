@@ -1,15 +1,20 @@
 ---
-title: "Corpus Search System Diagrams"
-status: active
+title: "Corpus Search System Diagrams (Legacy)"
+status: archived
 owner: documentation
-updated: "2025-11-08"
-tags: [corpus, diagrams, architecture, flow]
+updated: "2025-11-26"
+tags: [corpus, diagrams, architecture, flow, archived]
 links:
   - ../reference/corpus-search-architecture.md
   - ../how-to/corpus-advanced-search-planning.md
 ---
 
-# Corpus Search System Diagrams
+# Corpus Search System Diagrams (Legacy)
+
+> **⚠️ ARCHIVED**: These diagrams describe the legacy SQLite-based search architecture.
+> The application has migrated to **BlackLab-based search**. The `transcription.db`
+> no longer exists. For current architecture, corpus search flows through BlackLab
+> Server (`blacklab_search.py`) instead of the SQLite-based `corpus_search.py`.
 
 Visuelle Darstellungen der CO.RA.PAN Corpus-Sucharchitektur.
 

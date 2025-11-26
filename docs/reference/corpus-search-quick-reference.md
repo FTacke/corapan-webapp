@@ -1,15 +1,20 @@
 ---
-title: "Corpus Search Quick Reference"
-status: active
+title: "Corpus Search Quick Reference (Legacy)"
+status: archived
 owner: backend-team
-updated: "2025-11-08"
-tags: [corpus, quick-reference, api, parameters]
+updated: "2025-11-26"
+tags: [corpus, quick-reference, api, parameters, archived]
 links:
   - ../reference/corpus-search-architecture.md
   - ../how-to/corpus-advanced-search-planning.md
 ---
 
-# Corpus Search Quick Reference
+# Corpus Search Quick Reference (Legacy)
+
+> **⚠️ ARCHIVED**: This reference describes the legacy SQLite-based search API.
+> The application has migrated to **BlackLab-based search** via `/advanced-api/*` endpoints.
+> The `transcription.db` no longer exists; corpus data is served from BlackLab indexes.
+> For current API reference, see the advanced-api endpoints documentation.
 
 Schnelle Nachschlage-Tabellen und Code-Snippets für das CO.RA.PAN Corpus-Search-System.
 

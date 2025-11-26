@@ -17,6 +17,26 @@ from ..search.cql import build_cql_with_speaker_filter, build_filters
 logger = logging.getLogger(__name__)
 
 
+def _compute_display_pages(current: int, total: int) -> list[int | str]:
+    """Compute page numbers to display in pagination UI.
+
+    Shows at most 9 pages with ellipsis for gaps.
+    """
+    if total <= 9:
+        return list(range(1, total + 1))
+    pages: list[int | str] = []
+    if current > 4:
+        pages.extend([1, "..."])
+    start = max(1, current - 2)
+    end = min(total, current + 2)
+    pages.extend(range(start, end + 1))
+    if end < total - 1:
+        pages.extend(["...", total])
+    elif end == total - 1:
+        pages.append(total)
+    return pages
+
+
 def _build_simple_cql(query: str, search_mode: str, sensitive: int) -> str:
     """Build a CQL string for a simple one-line query.
 
@@ -470,10 +490,8 @@ def search_blacklab(params: Any) -> dict[str, Any]:
         items.append(_hit_to_canonical(h))
 
     total_pages = math.ceil(total / page_size) if page_size else 1
-    # compute display pages similar to corpus_search._compute_display_pages
-    from .corpus_search import _compute_display_pages as _dp
-
-    display_pages = _dp(page, total_pages)
+    # compute display pages for pagination UI
+    display_pages = _compute_display_pages(page, total_pages)
 
     unique_countries = len(
         {it.get("country_code") for it in items if it.get("country_code")}

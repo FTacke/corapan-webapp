@@ -1,16 +1,20 @@
 ---
-title: "Database Creation v3 Reference"
-status: active
+title: "Database Creation v3 Reference (Legacy)"
+status: archived
 owner: backend-team
-updated: "2025-11-08"
-tags: [database, sqlite, blacklab, indexing, reference]
+updated: "2025-11-26"
+tags: [database, sqlite, blacklab, indexing, reference, archived]
 links:
   - ../migration/speaker-code-standardization.md
   - ../how-to/add-new-transcriptions.md
   - database-schema.md
 ---
 
-# Database Creation v3 Reference
+# Database Creation v3 Reference (Legacy)
+
+> **⚠️ ARCHIVED**: This document describes the legacy SQLite-based `transcription.db` creation.
+> The application has migrated to **BlackLab-based search**; `transcription.db` no longer exists.
+> For current corpus indexing, see the BlackLab pipeline: `scripts/blacklab/run_export.py` → `scripts/build_blacklab_index.ps1`.
 
 Referenzdokumentation für `database_creation_v3.py` - Vereinfachte JSON-basierte Datenbankerstellung.
 

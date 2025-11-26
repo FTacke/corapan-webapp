@@ -65,10 +65,7 @@ class BaseConfig:
 
     # Database paths
     # NOTE: This directory contains runtime DBs such as auth.db and stats DBs.
-    # Historically `transcription.db` lived under this directory; the corpus/sqlite
-    # transcription DB is deprecated in the modern pipeline (BlackLab + indexes)
-    # and should not be required for Variant A (dev) runs. Use EXPECT_TRANSCRIPTION_DB
-    # config to opt-in/opt-out of expecting a transcription DB at startup.
+    # Corpus data is served via BlackLab indexes (no transcription.db).
     DB_DIR = PROJECT_ROOT / "data" / "db"
     DB_PUBLIC_DIR = PROJECT_ROOT / "data" / "db_public"
 
@@ -83,12 +80,6 @@ class BaseConfig:
     ALLOW_PUBLIC_TEMP_AUDIO = (
         os.getenv("ALLOW_PUBLIC_TEMP_AUDIO", "false").lower() == "true"
     )
-
-    # Whether the app should expect a pre-built transcription DB (data/db/transcription.db)
-    # Production and most deployments will keep this True. Development Variant A (fast local)
-    # can use DevConfig to set this to False so the app won't require the transcription DB.
-    EXPECT_TRANSCRIPTION_DB = True
-
 
     # Auth DB (used only when AUTH_BACKEND=db) - DSN or fallback to sqlite file
     AUTH_DATABASE_URL = os.getenv(
@@ -122,9 +113,6 @@ class DevConfig(BaseConfig):
     # Template auto-reload for development
     TEMPLATES_AUTO_RELOAD = True
     SEND_FILE_MAX_AGE_DEFAULT = 0
-
-    # For local development Variant A — we don't require the heavyweight transcription DB
-    EXPECT_TRANSCRIPTION_DB = False
 
 
 CONFIG_MAPPING = {

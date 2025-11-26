@@ -157,8 +157,8 @@ Die CO.RA.PAN Webapp ist eine moderne Flask-basierte Anwendung zur Exploration d
 
 ### Backend
 - **Flask 3.x** mit Application Factory Pattern
-- **SQLite** Databases (`data/transcription.db`, `data/stats_all.db`)
-- **BlackLab Server** für Advanced Corpus Search (Java-basiert)
+- **SQLite** Database (`auth.db` for auth, `data/stats_all.db` for stats)
+- **BlackLab Server** für Corpus Search (Java-basiert, indexes under `data/blacklab_index/`)
 - **FFmpeg** und **libsndfile** für Audio-Processing
 - **JWT** für Authentication mit Cookie-basierten Tokens
 
@@ -228,8 +228,9 @@ Die CO.RA.PAN Webapp ist eine moderne Flask-basierte Anwendung zur Exploration d
 - `ALLOW_PUBLIC_TEMP_AUDIO` - Public/Private Audio Snippet Access (default: false)
 
 ### Database Files
-- `data/transcription.db` - Hauptcorpus mit Tokens und Metadaten
+- `auth.db` - Authentication database (users, roles, sessions)
 - `data/stats_all.db` - Aggregierte Statistiken
+- `data/blacklab_index/` - BlackLab-powered corpus index (replaces legacy transcription.db)
 
 ### Media Structure
 - `media/mp3-full/` - Vollständige Audio-Dateien

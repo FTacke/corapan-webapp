@@ -1,4 +1,12 @@
-# CO.RA.PAN - Datenbank-Wartung & Updates
+# CO.RA.PAN - Datenbank-Wartung & Updates (Legacy)
+
+> **⚠️ ARCHIVED**: This document describes maintenance for the legacy `transcription.db`.
+> The application has migrated to **BlackLab-based search**; `transcription.db` no longer exists.
+> For current corpus maintenance, rebuild the BlackLab index using:
+> - Export: `python scripts/blacklab/run_export.py`
+> - Build: `.\\scripts\\build_blacklab_index.ps1`
+>
+> For auth database (`auth.db`) maintenance, use standard SQLite tools.
 
 **Zielgruppe:** Entwickler, Administratoren  
 **Voraussetzungen:** Python 3.12+, SQLite 3.35+

@@ -6,9 +6,9 @@ Das System ermöglicht es, aus den Suchergebnissen im Corpus heraus Audio-Aussch
 
 ---
 
-## 1. Datenstruktur in der Datenbank
+## 1. Datenstruktur im BlackLab-Index
 
-### Tokens-Tabelle (`transcription.db`)
+### Tokens (aus BlackLab-Index)
 
 Jeder gefundene Token hat folgende relevante Felder:
 

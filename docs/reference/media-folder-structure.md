@@ -215,10 +215,15 @@ Total: 132 Full-Dateien → 2492 Split-Dateien
 
 ## 🗄️ Datenbank-Erstellung
 
-**Wichtig:** Die Datenbank-Skripte wurden für die neue Struktur angepasst!
+> **⚠️ Note:** The SQLite-based `transcription.db` has been deprecated and removed.
+> Corpus data is now served via **BlackLab indexes**. For corpus indexing, use:
+> - Export: `python scripts/blacklab/run_export.py`
+> - Build: `.\\scripts\\build_blacklab_index.ps1`
 
-### **Betroffene Skripte:**
-- `LOKAL/database/database_creation.py` - Erstellt stats_all, stats_country, stats_files, transcription.db
+**Legacy information below for historical reference:**
+
+### **Betroffene Skripte (Legacy):**
+- `LOKAL/database/database_creation.py` - Erstellt stats_all, stats_country, stats_files (transcription.db removed)
 - `LOKAL/database/semantic_database_creation.py` - Erstellt semantic_data.db
 
 ### **Änderungen:**

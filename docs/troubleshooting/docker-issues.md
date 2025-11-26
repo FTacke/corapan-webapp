@@ -120,6 +120,10 @@ $env:FLASK_LOG_LEVEL="DEBUG"
 
 ## 📞 Letzte Rettung: Clean Reset
 
+> **Note:** The `transcription.db` references below are legacy. The current
+> architecture uses BlackLab indexes instead. For corpus issues, rebuild the
+> BlackLab index using `scripts/build_blacklab_index.ps1`.
+
 Wenn nichts hilft:
 
 ```bash
@@ -149,8 +153,11 @@ $env:FLASK_APP="src.app.main"
 
 ## 📊 Health Check Script
 
+> **Note:** The database health check below references the legacy `transcription.db`
+> which no longer exists. Use `/health/bls` endpoint to check BlackLab status.
+
 ```python
-# health_check.py
+# health_check.py (legacy - for reference only)
 import sqlite3
 import requests
 from pathlib import Path

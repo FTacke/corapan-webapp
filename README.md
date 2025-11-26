@@ -214,7 +214,7 @@ python -m src.app.main
 - **Security**: CSRF protection, rate limiting, CQL injection prevention
 
 ### 🔧 Configuration
-- **Database**: SQLite (`data/transcription.db`, `data/stats_all.db`)
+- **Database**: SQLite auth database (`auth.db`), stats database (`data/stats_all.db`)
 - **Media Files**: Organized by country in `media/` directory
 - **BlackLab Index**: 146 documents, 1.49M tokens, 15.89 MB index
 - **Access Control**: Public access configurable via `ALLOW_PUBLIC_TEMP_AUDIO`

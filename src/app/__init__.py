@@ -55,13 +55,6 @@ def create_app(env_name: str | None = None) -> Flask:
     register_error_handlers(app)
     setup_logging(app)
 
-    # SCHEMA VALIDATION: Prüfe DB-Schema beim Start
-    # Allow dev / minimal Variant A to skip expecting transcription.db via config.
-    if app.config.get("EXPECT_TRANSCRIPTION_DB", True):
-        _validate_db_schema_on_startup(app)
-    else:
-        app.logger.info("[STARTUP] Skipping transcription.db schema validation (EXPECT_TRANSCRIPTION_DB=False)")
-
     return app
 
 
@@ -81,50 +74,6 @@ def register_maintenance_commands(app: Flask) -> None:
         days = int(app.config.get("AUTH_ACCOUNT_ANONYMIZE_AFTER_DAYS", 30))
         count = services.anonymize_soft_deleted_users_older_than(days)
         app.logger.info(f"Anonymized {count} users soft-deleted older than {days} days")
-
-
-def _validate_db_schema_on_startup(app: Flask) -> None:
-    """
-    Prüft beim App-Start, dass die transcription.db alle erforderlichen CANON_COLS hat.
-    Erstellt fehlende Indizes bei Bedarf.
-    Raises: RuntimeError wenn kritische Spalten fehlen
-    """
-    try:
-        from .services.corpus_search import CANON_COLS, _validate_db_schema
-        from .services.database import open_db
-        import sqlite3
-
-        app.logger.info("[STARTUP] Starting DB schema validation...")
-        with open_db("transcription") as conn:
-            conn.row_factory = sqlite3.Row
-            cursor = conn.cursor()
-            _validate_db_schema(cursor, CANON_COLS)
-
-        app.logger.info(
-            "[STARTUP] DB schema validation passed - all CANON_COLS present"
-        )
-
-        # Stelle sicher, dass der Index für 'norm' existiert
-        app.logger.info("[STARTUP] Creating norm index if not exists...")
-        with open_db("transcription") as conn:
-            cursor = conn.cursor()
-            # Prüfe ob Index existiert
-            cursor.execute("PRAGMA index_info('idx_tokens_norm')")
-            if not cursor.fetchone():
-                app.logger.info("[STARTUP] Creating idx_tokens_norm index...")
-                cursor.execute(
-                    "CREATE INDEX IF NOT EXISTS idx_tokens_norm ON tokens(norm)"
-                )
-                conn.commit()
-                app.logger.info("[STARTUP] idx_tokens_norm index created successfully")
-            else:
-                app.logger.info("[STARTUP] idx_tokens_norm index already exists")
-    except RuntimeError as e:
-        app.logger.error(f"[STARTUP] DB schema validation FAILED: {e}")
-        raise
-    except Exception as e:
-        app.logger.error(f"[STARTUP] Unexpected error during schema validation: {e}")
-        raise
 
 
 def register_context_processors(app: Flask) -> None:

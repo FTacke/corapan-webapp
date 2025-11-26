@@ -1,9 +1,9 @@
 ---
 title: "Corpus Advanced Search Implementation"
-status: draft
+status: archived
 owner: backend-team
-updated: "2025-11-08"
-tags: [corpus, advanced-search, implementation, planning]
+updated: "2025-11-26"
+tags: [corpus, advanced-search, implementation, planning, archived]
 links:
   - ../reference/corpus-search-architecture.md
   - ../decisions/ADR-0001-docs-reorganization.md
@@ -11,6 +11,11 @@ links:
 ---
 
 # Corpus Advanced Search Implementation
+
+> **⚠️ ARCHIVED**: This document describes the original SQLite-based planning approach.
+> The implementation has since migrated to **BlackLab-based search**. References to
+> `transcription.db` are historical only. The current search architecture uses
+> BlackLab indexes under `data/blacklab_index/`. See `docs/reference/` for updated docs.
 
 Detaillierter Planungs- und Implementierungs-Guide für die erweiterte Suchfunktion im CO.RA.PAN Corpus.
 

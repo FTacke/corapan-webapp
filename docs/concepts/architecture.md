@@ -19,7 +19,7 @@ links:
 - Media endpoints read from `media/mp3-full`, `media/mp3-split`, `media/mp3-temp`, and `media/transcripts` with traversal protection.
 - Public toggle (`ALLOW_PUBLIC_TEMP_AUDIO`) controls anonymous access to snippets; authenticated roles always retain playback.
 - Counter service in `src/app/services/counters.py` tracks access, visits, and search requests using JSON stores under `data/counters`.
-- Corpus search service (`src/app/services/corpus_search.py`) queries `db/transcription.db`, applies filters, and surfaces snippet/transcript availability flags.
+- Corpus search is powered by BlackLab (`src/app/services/blacklab_search.py`) with indexed documents under `data/blacklab_index/`.
 
 ## Frontend
 - Base layout (`templates/base.html`) shares navigation, login banner, and footer across all pages.

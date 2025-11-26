@@ -136,13 +136,17 @@ allowTempMedia
 dir /s media\mp3-full\*.mp3
 ```
 
-**Ursache 2:** Falscher Dateiname im Token
+**Ursache 2:** Falscher Dateiname im Index
 
-**Prüfen:**
+> **Note:** The SQL queries below reference the legacy `transcription.db`.
+> With the current BlackLab-based architecture, check filenames via the
+> BlackLab API or inspect the TSV export files under `data/blacklab_export/`.
+
+**Prüfen (legacy):**
 ```sql
-sqlite3 data/db/transcription.db
-SELECT DISTINCT filename FROM tokens LIMIT 10;
-.quit
+-- This is for reference only; transcription.db no longer exists
+-- sqlite3 data/db/transcription.db
+-- SELECT DISTINCT filename FROM tokens LIMIT 10;
 ```
 
 **Sollte zeigen:** `2023-08-10_ARG_Mitre.mp3` (MIT .mp3 Extension)

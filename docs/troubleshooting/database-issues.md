@@ -1,15 +1,20 @@
 ---
-title: "Database Troubleshooting"
-status: active
+title: "Database Troubleshooting (Legacy)"
+status: archived
 owner: backend-team
-updated: "2025-11-07"
-tags: [database, sqlite, troubleshooting, performance]
+updated: "2025-11-26"
+tags: [database, sqlite, troubleshooting, performance, archived]
 links:
   - ../reference/database-maintenance.md
   - docker-issues.md
 ---
 
-# Database Troubleshooting
+# Database Troubleshooting (Legacy)
+
+> **⚠️ ARCHIVED**: This document describes troubleshooting for the legacy `transcription.db`.
+> The application has migrated to **BlackLab-based search**; `transcription.db` no longer exists.
+> For current issues, see BlackLab troubleshooting documentation.
+> Auth database issues can be resolved using `auth.db` directly.
 
 Häufige Datenbank-Probleme und Performance-Issues.
 
