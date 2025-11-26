@@ -64,8 +64,9 @@ Write-Host "BlackLab Server Start (5.x)" -ForegroundColor Cyan
 Write-Host "=========================================" -ForegroundColor Cyan
 Write-Host ""
 
-# Get repository root
-$repoRoot = Split-Path -Parent $PSScriptRoot
+# Get repository root (two levels up from scripts/blacklab -> repo root)
+# $PSScriptRoot is scripts\blacklab, so take the parent twice to reach the repo root
+$repoRoot = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
 
 # Make paths absolute
 $indexPath = Join-Path $repoRoot $INDEX_DIR
