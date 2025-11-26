@@ -41,10 +41,11 @@
 | `login.html` | Título "Iniciar sesión" | 🇪🇸 ES | ✅ |
 | `login.html` | Eyebrow "Acceso" | 🇪🇸 ES | ✅ |
 | `login.html` | Intro "Ingresa tus credenciales..." | 🇪🇸 ES | ✅ |
-| `login.html` | Label "Usuario o correo electrónico" | 🇪🇸 ES | ✅ |
+| `login.html` | Label "Usuario" | 🇪🇸 ES | ✅ |
 | `login.html` | Label "Contraseña" | 🇪🇸 ES | ✅ |
 | `login.html` | Link "¿Olvidaste tu contraseña?" | 🇪🇸 ES | ✅ |
 | `login.html` | Button "Entrar" | 🇪🇸 ES | ✅ |
+| `login.html` | Footer help text under card (centered) | 🇪🇸 ES | ✅ |
 | `password_forgot.html` | Título "Recuperar contraseña" | 🇪🇸 ES | ✅ |
 | `password_forgot.html` | Eyebrow "Acceso" | 🇪🇸 ES | ✅ |
 | `password_forgot.html` | Label "Correo electrónico o usuario" | 🇪🇸 ES | ✅ |
