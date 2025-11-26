@@ -1,15 +1,14 @@
 /* Material Design 3 Chips Component
-   Placeholder to prevent 404 errors.
    Use .md3-chip for selectable chip components.
 */
 
 .md3-chip {
   display: inline-flex;
   align-items: center;
-  padding: 8px 16px;
-  border-radius: 8px;
-  background: #e0e0e0;
-  color: #000;
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-sm);
+  background: var(--md-sys-color-surface-container-high);
+  color: var(--md-sys-color-on-surface);
   font-size: 14px;
   cursor: pointer;
   border: 1px solid transparent;
@@ -17,15 +16,15 @@
 }
 
 .md3-chip:hover {
-  background: #d0d0d0;
+  background: var(--md-sys-color-surface-container-highest);
 }
 
 .md3-chip--selected {
-  background: #6366f1;
-  color: #fff;
+  background: var(--md-sys-color-primary);
+  color: var(--md-sys-color-on-primary);
 }
 
 .md3-chip__icon {
-  margin-right: 8px;
+  margin-right: var(--space-2);
   font-size: 18px;
 }

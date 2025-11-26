@@ -1,119 +1,163 @@
 /* ============================================================================
-   DataTables Theme Lock - Erzwingt Light-Mode-Farben permanent
+   DataTables Theme Lock - MD3 Token-basiertes Theming
    ============================================================================
-   Diese Datei sichert, dass DataTables IMMER in Light-Mode-Farben bleiben,
-   unabhängig vom globalen Theme-Setting (data-theme="dark" oder "auto").
+   Sichert konsistentes DataTables-Styling mit MD3-Tokens.
    
-   Alle Styles nutzen !important um globale Theme-Tokens zu überschreiben.
+   MD3 TOKEN USAGE:
+   - Surface: --md-sys-color-surface
+   - Header: --md-sys-color-surface-container-high
+   - Hover: --md-sys-color-surface-container-low
+   - Selected: --md-sys-color-primary-container
+   - Border: --md-sys-color-outline-variant
+   - Text: --md-sys-color-on-surface / --md-sys-color-on-surface-variant
+   
+   !important Policy: Only used where technically necessary to override
+   third-party DataTables library styles. Marked with NEEDS_IMPORTANT comment.
    ============================================================================ */
 
-/* Force Light Theme für alle DataTable-Komponenten */
+/* DataTable Container Styling */
+.md3-data-table .md3-corpus-table-container,
+.md3-data-table .table-container,
 .md3-corpus-table-container,
 .table-container,
 #corpus-table_wrapper,
 #advanced-table_wrapper,
 #token-results-table_wrapper {
-  /* Use system surface color tokens so dark mode is not forced to light */
-  background: var(--md-sys-color-surface, white) !important;
-  border-color: var(--md-sys-color-outline, #dee2e6) !important;
-  color: var(--md-sys-color-on-surface, #1c1b1f) !important;
+  background: var(--md-sys-color-surface);
+  border-color: var(--md-sys-color-outline-variant);
+  color: var(--md-sys-color-on-surface);
 }
 
+/* Table Base */
 #corpus-table,
 #advanced-table,
 #token-results-table,
 .md3-corpus-table {
-  background: var(--md-sys-color-surface, white) !important;
-  color: var(--md-sys-color-on-surface, #1c1b1f) !important;
+  background: var(--md-sys-color-surface);
+  color: var(--md-sys-color-on-surface);
 }
 
+/* Table Header - MD3 surface-container-high for prominence */
 #corpus-table thead th,
 #advanced-table thead th,
 #token-results-table thead th,
-.md3-corpus-table thead th {
-  background: var(--md-sys-color-surface-container, #f8f9fa) !important;
-  color: var(--md-sys-color-on-surface-variant, #495057) !important;
-  border-color: var(--md-sys-color-outline, #dee2e6) !important;
+.md3-corpus-table thead th,
+.md3-data-table thead th {
+  /* NEEDS_IMPORTANT: third-party DataTables override */
+  background: var(--md-sys-color-surface-container-high) !important;
+  color: var(--md-sys-color-on-surface) !important;
+  border-color: var(--md-sys-color-outline-variant) !important;
+  font: var(--md-sys-typescale-body-medium-font);
+  padding: var(--space-3) var(--space-4);
 }
 
+/* Table Body Cells */
 #corpus-table tbody td,
 #advanced-table tbody td,
 #token-results-table tbody td,
-.md3-corpus-table tbody td {
-  color: var(--md-sys-color-on-surface, #1c1b1f) !important;
+.md3-corpus-table tbody td,
+.md3-data-table tbody td {
+  color: var(--md-sys-color-on-surface);
+  font: var(--md-sys-typescale-body-small-font);
+  padding: var(--space-2) var(--space-4);
+  border-bottom: 1px solid var(--md-sys-color-outline-variant);
 }
 
+/* Alternating Row Background */
 #corpus-table tbody tr:nth-child(even),
 #advanced-table tbody tr:nth-child(even),
 #token-results-table tbody tr:nth-child(even),
-.md3-corpus-table tbody tr:nth-child(even) {
-  background: var(--md-sys-color-surface-variant, #fafafa) !important;
+.md3-corpus-table tbody tr:nth-child(even),
+.md3-data-table tbody tr:nth-child(even) {
+  background: var(--md-sys-color-surface-container-lowest);
 }
 
+/* Hover State - MD3 surface-container-low */
 #corpus-table tbody tr:hover,
 #advanced-table tbody tr:hover,
 #token-results-table tbody tr:hover,
-.md3-corpus-table tbody tr:hover {
-  background: rgba(0, 105, 92, 0.08) !important;
+.md3-corpus-table tbody tr:hover,
+.md3-data-table tbody tr:hover {
+  /* NEEDS_IMPORTANT: third-party DataTables override */
+  background: var(--md-sys-color-surface-container-low) !important;
 }
 
-/* DataTables UI Elements */
-.dataTables_wrapper,
-.dataTables_wrapper * {
-  color: var() !important;
+/* Selected Row State */
+.md3-data-table tbody tr.selected,
+#corpus-table tbody tr.selected,
+#advanced-table tbody tr.selected,
+#token-results-table tbody tr.selected {
+  background: var(--md-sys-color-primary-container);
+  color: var(--md-sys-color-on-primary-container);
 }
 
+/* DataTables UI Elements - Length Select & Filter Input */
+.md3-data-table .dataTables_wrapper .dataTables_length select,
+.md3-data-table .dataTables_wrapper .dataTables_filter input,
 .dataTables_wrapper .dataTables_length select,
 .dataTables_wrapper .dataTables_filter input {
-  background: var(--md-sys-color-surface, white) !important;
-  color: var(--md-sys-color-on-surface, #1c1b1f) !important;
-  border-color: var(--md-sys-color-outline, #dee2e6) !important;
+  /* NEEDS_IMPORTANT: third-party DataTables override */
+  background: var(--md-sys-color-surface) !important;
+  color: var(--md-sys-color-on-surface) !important;
+  border-color: var(--md-sys-color-outline-variant) !important;
 }
 
+/* Pagination Buttons - Base State */
+.md3-data-table .dataTables_wrapper .dataTables_paginate .paginate_button,
 .dataTables_wrapper .dataTables_paginate .paginate_button {
-  background: var(--md-sys-color-surface, white) !important;
-  color: var(--md-sys-color-primary, #0a5981) !important;
-  border-color: var(--md-sys-color-outline, #dee2e6) !important;
+  /* NEEDS_IMPORTANT: third-party DataTables override */
+  background: var(--md-sys-color-surface) !important;
+  color: var(--md-sys-color-primary) !important;
+  border-color: var(--md-sys-color-outline-variant) !important;
 }
 
+/* Pagination Buttons - Hover */
+.md3-data-table .dataTables_wrapper .dataTables_paginate .paginate_button:hover,
 .dataTables_wrapper .dataTables_paginate .paginate_button:hover {
-  background: var(--md-sys-color-surface-2, #f0f1f2) !important;
-  border-color: var(--md-sys-color-primary, #0a5981) !important;
+  /* NEEDS_IMPORTANT: third-party DataTables override */
+  background: var(--md-sys-color-surface-container-low) !important;
+  border-color: var(--md-sys-color-primary) !important;
 }
 
+/* Pagination Buttons - Current/Active */
+.md3-data-table .dataTables_wrapper .dataTables_paginate .paginate_button.current,
 .dataTables_wrapper .dataTables_paginate .paginate_button.current {
-  background: var(--md-sys-color-primary, #0a5981) !important;
-  color: var(--md-sys-color-on-primary, #ffffff) !important;
+  /* NEEDS_IMPORTANT: third-party DataTables override */
+  background: var(--md-sys-color-primary) !important;
+  color: var(--md-sys-color-on-primary) !important;
 }
 
+/* Pagination Buttons - Disabled */
+.md3-data-table .dataTables_wrapper .dataTables_paginate .paginate_button.disabled,
 .dataTables_wrapper .dataTables_paginate .paginate_button.disabled {
-  background: var(--md-sys-color-surface-variant, #f8f9fa) !important;
-  color: var(--md-sys-color-outline, #cac4d0) !important;
+  /* NEEDS_IMPORTANT: third-party DataTables override */
+  background: var(--md-sys-color-surface-variant) !important;
+  color: var(--md-sys-color-outline) !important;
 }
 
-/* Export Buttons */
+/* Export Buttons - Outlined Style */
 .dt-buttons .dt-button {
-  background: var(--md-sys-color-surface, white) !important;
-  color: var(--md-sys-color-primary, #0a5981) !important;
-  border-color: var(--md-sys-color-outline, #dee2e6) !important;
+  background: var(--md-sys-color-surface);
+  color: var(--md-sys-color-primary);
+  border: 1px solid var(--md-sys-color-outline-variant);
 }
 
 .dt-buttons .dt-button:hover {
-  background: var(--md-sys-color-surface-2, #f0f1f2) !important;
-  border-color: var(--md-sys-color-primary, #0a5981) !important;
+  background: var(--md-sys-color-surface-container-low);
+  border-color: var(--md-sys-color-primary);
 }
 
-/* Audio Buttons in Tabelle */
+/* Audio Buttons in Table - Subtle Surface Style */
 .audio-cell .audio-button,
 .audio-cell .download-button {
-  background: var(--md-sys-color-surface-variant, #f8f9fa) !important;
-  color: var(--md-sys-color-primary, #0a5981) !important;
-  border-color: var(--md-sys-color-outline, #dee2e6) !important;
+  background: var(--md-sys-color-surface-container-low);
+  color: var(--md-sys-color-primary);
+  border: 1px solid var(--md-sys-color-outline-variant);
 }
 
 .audio-cell .audio-button:hover,
 .audio-cell .download-button:hover {
-  background: var(--md-sys-color-surface-2, #e9ecef) !important;
+  background: var(--md-sys-color-surface-container);
 }
 
 /* Expliziter Dark-Mode Override */
@@ -126,45 +170,58 @@
    MD3-konformes DataTables Styling für Advanced Search
    ============================================================================ */
 
-/* Table Row Heights */
+/* Table Row Heights - MD3 Spacing Tokens */
 .md3-corpus-table thead th,
-.md3-corpus-table tbody td {
-  padding-block: var(--space-2, 0.5rem) !important;
-  padding-inline: var(--space-3, 0.75rem) !important;
+.md3-corpus-table tbody td,
+.md3-data-table thead th,
+.md3-data-table tbody td {
+  /* NEEDS_IMPORTANT: third-party DataTables override */
+  padding-block: var(--space-2) !important;
+  padding-inline: var(--space-3) !important;
+  min-height: 48px; /* MD3 touch target */
+  line-height: 1.5;
 }
 
 /* Focus Rings (A11y) */
-.md3-corpus-table tbody tr:focus-within {
-  outline: 2px solid var(--md-sys-color-primary, #0a5981) !important;
+.md3-corpus-table tbody tr:focus-within,
+.md3-data-table tbody tr:focus-within {
+  /* NEEDS_IMPORTANT: third-party DataTables override */
+  outline: 2px solid var(--md-sys-color-primary) !important;
   outline-offset: -2px !important;
 }
 
 .md3-corpus-table a:focus-visible,
 .md3-corpus-table button:focus-visible,
-.md3-corpus-table audio:focus-visible {
-  outline: 2px solid var(--md-sys-color-primary, #0a5981) !important;
+.md3-corpus-table audio:focus-visible,
+.md3-data-table a:focus-visible,
+.md3-data-table button:focus-visible {
+  /* NEEDS_IMPORTANT: third-party DataTables override */
+  outline: 2px solid var(--md-sys-color-primary) !important;
   outline-offset: 2px !important;
-  border-radius: var(--radius-sm, 8px);
+  border-radius: var(--radius-sm);
 }
 
 /* KWIC Context Columns */
 .md3-datatable__cell--context {
-  color: var(--md-sys-color-on-surface-variant, #4a4f55) !important;
-  font-size: 0.95rem !important;
+  /* NEEDS_IMPORTANT: third-party DataTables override */
+  color: var(--md-sys-color-on-surface-variant) !important;
+  font-size: var(--md-sys-typescale-body-small-font-size) !important;
   white-space: normal !important;
   word-wrap: break-word !important;
   word-break: break-word !important;
 }
 
 .md3-datatable__cell--match {
+  /* NEEDS_IMPORTANT: third-party DataTables override */
   font-weight: 600 !important;
 }
 
 .md3-datatable__cell--match mark {
-  background-color: rgba(10, 89, 129, 0.15) !important;
-  color: var(--md-sys-color-primary, #0a5981) !important;
+  /* NEEDS_IMPORTANT: third-party DataTables override */
+  background-color: var(--md-sys-color-primary-container) !important;
+  color: var(--md-sys-color-on-primary-container) !important;
   padding: 0.125rem 0.25rem;
-  border-radius: 4px;
+  border-radius: var(--radius-xs, 4px);
 }
 
 /* Audio Column */
@@ -179,39 +236,48 @@
 
 /* Empty Cell Placeholder */
 .md3-datatable__empty {
-  color: var(--md-sys-color-outline, #79747e) !important;
+  /* NEEDS_IMPORTANT: third-party DataTables override */
+  color: var(--md-sys-color-outline) !important;
   font-style: italic;
 }
 
-/* Pagination Buttons MD3-Style */
+/* Pagination Buttons MD3-Style - Specific Overrides */
+.md3-data-table .dataTables_wrapper .dataTables_paginate .paginate_button,
 .dataTables_wrapper .dataTables_paginate .paginate_button {
-  border-radius: var(--radius-sm, 8px) !important;
-  padding: var(--space-2, 0.5rem) var(--space-3, 0.75rem) !important;
-  transition: all 0.2s ease !important;
+  /* NEEDS_IMPORTANT: third-party DataTables override */
+  border-radius: var(--radius-full) !important;
+  padding: var(--space-2) var(--space-3) !important;
+  transition: all 200ms cubic-bezier(0.2, 0, 0, 1) !important;
 }
 
+.md3-data-table .dataTables_wrapper .dataTables_paginate .paginate_button.current,
 .dataTables_wrapper .dataTables_paginate .paginate_button.current {
-  box-shadow: var(--elev-1, 0 1px 2px rgb(0 0 0 / 6%)) !important;
+  /* NEEDS_IMPORTANT: third-party DataTables override */
+  box-shadow: var(--elev-1) !important;
 }
 
 /* Length Select MD3-Style */
+.md3-data-table .dataTables_wrapper .dataTables_length select,
 .dataTables_wrapper .dataTables_length select {
-  border-radius: var(--radius-sm, 8px) !important;
-  padding: var(--space-2, 0.5rem) var(--space-3, 0.75rem) !important;
+  /* NEEDS_IMPORTANT: third-party DataTables override */
+  border-radius: var(--radius-sm) !important;
+  padding: var(--space-2) var(--space-3) !important;
 }
 
 /* Info Text */
 .dataTables_wrapper .dataTables_info {
-  color: var(--md-sys-color-on-surface-variant, #4a4f55) !important;
-  font-size: 0.95rem;
+  /* NEEDS_IMPORTANT: third-party DataTables override */
+  color: var(--md-sys-color-on-surface-variant) !important;
+  font-size: var(--md-sys-typescale-body-small-font-size);
 }
 
 /* Processing Indicator */
 .dataTables_wrapper .dataTables_processing {
-  background: rgba(255, 255, 255, 0.95) !important;
-  border: 1px solid var(--md-sys-color-outline-variant, #cac4d0) !important;
-  border-radius: var(--radius-md, 12px) !important;
-  box-shadow: var(--elev-2, 0 2px 6px rgb(0 0 0 / 10%)) !important;
-  color: var(--md-sys-color-on-surface, #1c1b1f) !important;
-  padding: var(--space-4, 1rem) var(--space-6, 1.5rem) !important;
+  /* NEEDS_IMPORTANT: third-party DataTables override */
+  background: var(--md-sys-color-surface) !important;
+  border: 1px solid var(--md-sys-color-outline-variant) !important;
+  border-radius: var(--radius-md) !important;
+  box-shadow: var(--elev-2) !important;
+  color: var(--md-sys-color-on-surface) !important;
+  padding: var(--space-4) var(--space-6) !important;
 }

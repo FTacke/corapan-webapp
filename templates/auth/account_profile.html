@@ -101,28 +101,29 @@
       </header>
 
       <div class="md3-dialog__content md3-stack--dialog">
-      <p class="md3-body-medium">Bist du sicher, dass du dein Konto löschen möchtest? Alle deine Daten werden unwiderruflich gelöscht. Zum Fortfahren bitte dein Passwort eingeben.</p>
+        <p class="md3-body-medium">Bist du sicher, dass du dein Konto löschen möchtest? Alle deine Daten werden unwiderruflich gelöscht. Zum Fortfahren bitte dein Passwort eingeben.</p>
 
-      <div class="md3-outlined-textfield md3-outlined-textfield--block">
-        <input id="delete-password" name="password" type="password" class="md3-outlined-textfield__input" required aria-label="Passwort zur Löschung" aria-describedby="delete-error" />
-        <label class="md3-outlined-textfield__label" for="delete-password">Dein Passwort</label>
-        <button type="button" class="md3-outlined-textfield__icon--trailing" data-toggle="delete-password" aria-label="Passwort anzeigen/verstecken">
-          <span class="material-symbols-rounded md3-button__icon" aria-hidden="true">visibility</span>
-        </button>
-        <span class="md3-outlined-textfield__outline">
-          <span class="md3-outlined-textfield__outline-start"></span>
-          <span class="md3-outlined-textfield__outline-notch"></span>
-          <span class="md3-outlined-textfield__outline-end"></span>
-        </span>
+        <div class="md3-outlined-textfield md3-outlined-textfield--block">
+          <input id="delete-password" name="password" type="password" class="md3-outlined-textfield__input" required aria-label="Passwort zur Löschung" aria-describedby="delete-error" />
+          <label class="md3-outlined-textfield__label" for="delete-password">Dein Passwort</label>
+          <button type="button" class="md3-outlined-textfield__icon--trailing" data-toggle="delete-password" aria-label="Passwort anzeigen/verstecken">
+            <span class="material-symbols-rounded md3-button__icon" aria-hidden="true">visibility</span>
+          </button>
+          <span class="md3-outlined-textfield__outline">
+            <span class="md3-outlined-textfield__outline-start"></span>
+            <span class="md3-outlined-textfield__outline-notch"></span>
+            <span class="md3-outlined-textfield__outline-end"></span>
+          </span>
+        </div>
+
+        <!-- Field error (populated by JS) -->
+        <div id="delete-error" class="md3-field-error" role="alert" aria-live="assertive"></div>
       </div>
 
-      <!-- Field error (populated by JS) -->
-      <div id="delete-error" class="md3-field-error" role="alert" aria-live="assertive"></div>
-    </div>
-
       <div class="md3-dialog__actions">
-            <button class="md3-button md3-button--text" id="cancel-delete">Abbrechen</button>
-            <button class="md3-button md3-button--filled md3-button--danger" id="confirm-delete" type="button">Löschen</button>
+        <button class="md3-button md3-button--text" id="cancel-delete">Abbrechen</button>
+        <button class="md3-button md3-button--filled md3-button--danger" id="confirm-delete" type="button">Löschen</button>
+      </div>
     </div>
   </div>
 </dialog>

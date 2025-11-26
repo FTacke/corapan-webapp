@@ -5,6 +5,19 @@
   --app-color-on-success: #ffffff;
   --app-color-success-container: #bdfcc9; /* Example light green */
   --app-color-on-success-container: #002200;
+  
+  /* App Background - uses surface-container-lowest for subtle card contrast */
+  --app-background: var(--md-sys-color-surface-container-lowest);
+  
+  /* Mobile menu animation duration (formerly in legacy-shim) */
+  --app-mobile-menu-duration: 250ms;
+  
+  /* Textfield Label Background Inheritance Token
+     This token enables containers (cards, dialogs, sheets) to set the background
+     color for floating textfield labels. Set --app-textfield-label-bg on container
+     elements to match their background color. Default: page surface.
+     See: docs/md3-template/md3-spacing-system.md */
+  --app-textfield-label-bg: var(--md-sys-color-surface);
 }
 
 @media (prefers-color-scheme: dark) {

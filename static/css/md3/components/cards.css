@@ -28,7 +28,7 @@
   --_card-bg: var(--md-sys-color-surface-container);
   background: var(--_card-bg);
   /* LABEL-BG INHERITANCE: Textfield labels inherit this to match card bg */
-  --md3-textfield-label-bg: var(--_card-bg);
+  --app-textfield-label-bg: var(--_card-bg);
   border: none;
   box-shadow: var(--elev-1);
   border-radius: var(--radius-md);
@@ -41,7 +41,7 @@
   --_card-bg: var(--md-sys-color-surface-container-low);
   background: var(--_card-bg);
   /* LABEL-BG INHERITANCE: Textfield labels inherit this to match card bg */
-  --md3-textfield-label-bg: var(--_card-bg);
+  --app-textfield-label-bg: var(--_card-bg);
   border: 1px solid var(--md-sys-color-outline-variant);
   box-shadow: none;
   border-radius: var(--radius-md);
@@ -54,7 +54,7 @@
   --_card-bg: var(--md-sys-color-surface-container-low);
   background: var(--_card-bg);
   /* LABEL-BG INHERITANCE: Textfield labels inherit this to match card bg */
-  --md3-textfield-label-bg: var(--_card-bg);
+  --app-textfield-label-bg: var(--_card-bg);
   border: none;
   box-shadow: var(--elev-1);
   border-radius: var(--radius-md);
@@ -63,6 +63,46 @@
 
 .md3-card--elevated:hover {
   box-shadow: var(--elev-2);
+}
+
+/* ============================================================================
+   Landing Card Variant - Index Page Cards (MD3 Goldstandard)
+   ============================================================================
+   Landing cards match Hero-Card brightness using surface-container-high.
+   They use flex layout to push buttons to bottom-right corner.
+   ============================================================================ */
+.md3-card--landing,
+.md3-card.md3-card--landing {
+  --_card-bg: var(--md-sys-color-surface-container-high);
+  background: var(--_card-bg);
+  /* LABEL-BG INHERITANCE: Textfield labels inherit this to match card bg */
+  --app-textfield-label-bg: var(--_card-bg);
+  border: none;
+  box-shadow: var(--elev-2);
+  border-radius: var(--radius-lg);
+  padding: var(--space-6);
+  /* Flex layout for button alignment at bottom */
+  display: flex;
+  flex-direction: column;
+}
+
+.md3-card--landing .md3-card__content {
+  flex-grow: 1;
+}
+
+.md3-card--landing .md3-card__footer,
+.md3-card--landing .md3-card__actions {
+  margin-top: auto;
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-3);
+  border-top: none;
+  padding: 0;
+  background: transparent;
+}
+
+.md3-card--landing:hover {
+  box-shadow: var(--elev-3);
 }
 
 /* MD3 Card Content */

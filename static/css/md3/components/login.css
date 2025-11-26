@@ -10,7 +10,7 @@
   min-height: 100vh;
   /* Use app background or surface */
   background: var(--app-background); 
-  padding: var(--md3-space-4, 1rem);
+  padding: var(--space-4);
 }
 
 .md3-login-page__wrapper {
@@ -227,7 +227,7 @@
      so overlays appear as independent white surfaces. */
   background: var(--_sheet-bg);
   /* LABEL-BG INHERITANCE: Textfield labels inherit this to match sheet bg */
-  --md3-textfield-label-bg: var(--_sheet-bg);
+  --app-textfield-label-bg: var(--_sheet-bg);
   /* Dialog-like surface: visually distinct from full page cards */
   border-radius: 28px;
   padding: 24px; /* compact and consistent padding inside dialogs/sheets */

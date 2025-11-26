@@ -417,7 +417,7 @@ Ahora convierte la siguiente descripción en una consulta CQL precisa para CORAP
       <!-- Statistics Panel -->
       <div id="panel-estadisticas" role="tabpanel" aria-labelledby="tab-estadisticas" class="md3-view-content" hidden>
         <section class="md3-stats-section">
-          <header class="md3-stats-header" style="display: flex; flex-direction: column; gap: 1rem;">
+          <header class="md3-stats-header md3-stack--section">
             <!-- Summary Line (same style as results) -->
             <div id="stats-summary" class="md3-advanced__summary md3-stats-summary" role="status" aria-live="polite" aria-atomic="true">
                 <span class="md3-advanced__summary-query" id="stats-summary-query"></span>: 
@@ -426,8 +426,8 @@ Ahora convierte la siguiente descripción en una consulta CQL precisa para CORAP
             </div>
 
             <!-- Controls Line -->
-            <div class="md3-stats-controls" style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
-                <div class="md3-stats-filter md3-stats-filter-group" style="display: flex; align-items: center; gap: 0.5rem;">
+            <div class="md3-stats-controls md3-row--between">
+                <div class="md3-stats-filter md3-stats-filter-group md3-row">
                   <div class="md3-outlined-textfield md3-outlined-textfield--compact">
                     <select id="stats-country-filter" class="md3-outlined-textfield__input md3-outlined-textfield__input--select">
                       <option value="">Todos los países</option>
@@ -442,7 +442,7 @@ Ahora convierte la siguiente descripción en una consulta CQL precisa para CORAP
                 </div>
                 
                 <button type="button" id="btn-download-stats-csv" class="md3-button md3-button--outlined md3-stats-action-end">
-                    <span class="material-symbols-rounded md3-button__icon">download</span>
+                    <span class="material-symbols-rounded md3-button__icon" aria-hidden="true">download</span>
                     <span class="md3-button__label">Descargar CSV</span>
                 </button>
             </div>

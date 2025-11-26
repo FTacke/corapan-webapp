@@ -945,13 +945,13 @@ body.app-shell {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  background: #ffd600; /* Gelber Hintergrund */
-  color: #000000; /* Schwarzes Icon */
+  background: var(--md-sys-color-tertiary-container);
+  color: var(--md-sys-color-on-tertiary-container);
   padding: 0.25rem 0.5rem;
   border-radius: var(--radius-sm);
   margin-right: var(--space-2);
   font-size: 1rem;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+  box-shadow: var(--elev-1);
   animation: bookmark-pulse 2s ease-in-out infinite;
 }
 
@@ -1098,7 +1098,7 @@ dialog.md3-dialog[open] {
   inset: 0;
   align-items: center;
   justify-content: center;
-  z-index: var(--md3-z-dialog, 1300);
+  z-index: 1300; /* Dialog layer above navbar */
 }
 
 /* Note: Use .md3-dialog-overlay for global overlay/backdrop styling instead of <dialog>::backdrop */

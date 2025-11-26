@@ -94,7 +94,7 @@
   /* NO horizontal padding - Edge-Padding from page wrapper */
   padding: 0;
   /* Label background inheritance for textfields */
-  --md3-textfield-label-bg: var(--_corpus-content-bg);
+  --app-textfield-label-bg: var(--_corpus-content-bg);
 }
 
 /* ============================================================================

@@ -30,7 +30,7 @@
   margin-bottom: var(--space-6, 1.5rem);
   /* Label background inheritance for textfields inside search card
      Uses same variable to guarantee color match */
-  --md3-textfield-label-bg: var(--_search-card-bg);
+  --app-textfield-label-bg: var(--_search-card-bg);
 }
 
 /* Textfield labels inside search card must match card background exactly

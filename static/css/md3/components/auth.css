@@ -10,7 +10,7 @@
   /* Use canonical token for card surface */
   background: var(--_auth-card-bg);
   /* LABEL-BG INHERITANCE: Textfield labels inherit this to match card bg */
-  --md3-textfield-label-bg: var(--_auth-card-bg);
+  --app-textfield-label-bg: var(--_auth-card-bg);
   border-radius: var(--radius-sm);
 }
 
@@ -65,7 +65,7 @@
   width: 100%;
 }
 
-/* Label background now inherited via --md3-textfield-label-bg from .md3-auth-card */
+/* Label background now inherited via --app-textfield-label-bg from .md3-auth-card */
 
 .md3-auth-card .md3-outlined-textfield__input,
 .md3-dialog__surface .md3-outlined-textfield__input,
