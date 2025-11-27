@@ -26,7 +26,7 @@ param(
     [switch]$SkipInstall,
     [switch]$SkipDevServer,
     [switch]$ResetAuth,
-    [string]$DbPath = 'auth.db',
+    [string]$DbPath = 'data/db/auth.db',
     [string]$StartAdminPassword = 'change-me',
     [switch]$RestartBlackLab
 )

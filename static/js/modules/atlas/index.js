@@ -727,7 +727,7 @@ function setupEventListeners() {
 
 /**
  * Initialize Atlas module
- * Called by app.js after Leaflet is loaded
+ * Called by router.js after Leaflet is loaded
  * @returns {object} mapInstance for cleanup
  */
 export function init() {

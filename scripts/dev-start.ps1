@@ -1,5 +1,5 @@
 param(
-    [string]$DbPath = 'auth.db',
+    [string]$DbPath = 'data/db/auth.db',
     # By default start BlackLab in the background when launching the dev server.
     # You can opt-out with -SkipBlackLab if you don't want to start it.
     [switch]$SkipBlackLab
