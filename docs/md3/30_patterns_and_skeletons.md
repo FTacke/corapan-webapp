@@ -17,7 +17,9 @@ Location: `templates/_md3_skeletons/`
 | `page_admin_skeleton.html` | Admin dashboards and lists |
 | `auth_login_skeleton.html` | Login pages (no Hero) |
 | `auth_profile_skeleton.html` | Profile/account pages |
-| `auth_dialog_skeleton.html` | Modal dialogs |
+| `auth_dialog_skeleton.html` | Auth-specific modal dialogs |
+| `dialog_skeleton.html` | General confirmation/alert dialogs |
+| `sheet_skeleton.html` | Bottom/side sheets for filters, menus |
 
 ---
 

@@ -361,7 +361,7 @@ sudo systemctl restart blacklab-server
 **Pre-Deployment:**
 - [ ] TSV-Export abgeschlossen (146 Dateien)
 - [ ] Lucene-Index gebaut (`data/blacklab_index/`)
-- [ ] systemd-Unit-Files kopiert (`ops/*.service`)
+- [ ] systemd-Unit-Files kopiert (`scripts/ops/*.service`)
 - [ ] Umgebungsvariablen gesetzt (`FLASK_ENV`, `BLS_BASE_URL`)
 - [ ] Firewall-Regeln konfiguriert (Port 8000 offen, 8081 geschlossen)
 

@@ -37,6 +37,10 @@ jobs:
     - name: Run md3-lint
       run: |
         python scripts/md3-lint.py
+
+    - name: Check project structure
+      run: |
+        python scripts/check_structure.py
         
     - name: Lint with Ruff
       run: |

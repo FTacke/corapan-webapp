@@ -1,0 +1,144 @@
+/* =================================================================
+   BRANDING TOKENS
+   
+   This file contains project-specific branding tokens.
+   Override these values when adapting this template for a new project.
+   
+   INSTRUCTIONS FOR NEW PROJECTS:
+   1. Copy this file or edit in place
+   2. Replace color values with your brand colors
+   3. Update project name references
+   4. Link this file in base.html AFTER app-tokens.css
+   
+   Color generation tools:
+   - https://m3.material.io/theme-builder
+   - https://material-foundation.github.io/material-theme-builder/
+   ================================================================= */
+
+:root {
+  /* -----------------------------------------------------------------
+     BRAND: Project Identity
+     ----------------------------------------------------------------- */
+  
+  /* Project name used in templates (update for new projects) */
+  /* Note: Actual text replacement happens in templates, 
+     this comment documents the branding intent */
+  /* --brand-project-name: "CO.RA.PAN"; */
+  /* --brand-project-tagline: "Corpus radial panhispánico"; */
+
+  /* -----------------------------------------------------------------
+     BRAND: Primary Color
+     The main accent color for the project.
+     Used for: buttons, links, key UI elements
+     ----------------------------------------------------------------- */
+  --brand-primary: #1a73e8;              /* CO.RA.PAN: Blue */
+  --brand-on-primary: #ffffff;
+  --brand-primary-container: #d3e3fd;
+  --brand-on-primary-container: #041e49;
+
+  /* -----------------------------------------------------------------
+     BRAND: Secondary Color
+     Supporting accent color.
+     Used for: secondary buttons, chips, less prominent elements
+     ----------------------------------------------------------------- */
+  --brand-secondary: #5f6368;
+  --brand-on-secondary: #ffffff;
+  --brand-secondary-container: #e8eaed;
+  --brand-on-secondary-container: #202124;
+
+  /* -----------------------------------------------------------------
+     BRAND: Tertiary Color
+     Contrast accent for special emphasis.
+     Used for: highlights, special states, complementary accents
+     ----------------------------------------------------------------- */
+  --brand-tertiary: #0d652d;
+  --brand-on-tertiary: #ffffff;
+  --brand-tertiary-container: #a8dab5;
+  --brand-on-tertiary-container: #002106;
+
+  /* -----------------------------------------------------------------
+     BRAND: Error Color
+     Used for error states and destructive actions.
+     ----------------------------------------------------------------- */
+  --brand-error: #d93025;
+  --brand-on-error: #ffffff;
+  --brand-error-container: #fce8e6;
+  --brand-on-error-container: #5f2120;
+
+  /* -----------------------------------------------------------------
+     MAP: Brand → MD3 System Tokens
+     These mappings connect brand tokens to the MD3 design system.
+     Generally no need to modify unless using a different system.
+     ----------------------------------------------------------------- */
+  --md-sys-color-primary: var(--brand-primary);
+  --md-sys-color-on-primary: var(--brand-on-primary);
+  --md-sys-color-primary-container: var(--brand-primary-container);
+  --md-sys-color-on-primary-container: var(--brand-on-primary-container);
+  
+  --md-sys-color-secondary: var(--brand-secondary);
+  --md-sys-color-on-secondary: var(--brand-on-secondary);
+  --md-sys-color-secondary-container: var(--brand-secondary-container);
+  --md-sys-color-on-secondary-container: var(--brand-on-secondary-container);
+  
+  --md-sys-color-tertiary: var(--brand-tertiary);
+  --md-sys-color-on-tertiary: var(--brand-on-tertiary);
+  --md-sys-color-tertiary-container: var(--brand-tertiary-container);
+  --md-sys-color-on-tertiary-container: var(--brand-on-tertiary-container);
+  
+  --md-sys-color-error: var(--brand-error);
+  --md-sys-color-on-error: var(--brand-on-error);
+  --md-sys-color-error-container: var(--brand-error-container);
+  --md-sys-color-on-error-container: var(--brand-on-error-container);
+}
+
+/* -----------------------------------------------------------------
+   DARK MODE OVERRIDES
+   
+   Dark mode uses lighter/adjusted versions of brand colors.
+   Adjust these for proper contrast in dark mode.
+   ----------------------------------------------------------------- */
+@media (prefers-color-scheme: dark) {
+  :root {
+    /* Primary (lighter for dark backgrounds) */
+    --brand-primary: #8ab4f8;
+    --brand-on-primary: #072854;
+    --brand-primary-container: #0b57d0;
+    --brand-on-primary-container: #d3e3fd;
+
+    /* Secondary */
+    --brand-secondary: #9aa0a6;
+    --brand-on-secondary: #202124;
+    --brand-secondary-container: #3c4043;
+    --brand-on-secondary-container: #e8eaed;
+
+    /* Tertiary */
+    --brand-tertiary: #81c995;
+    --brand-on-tertiary: #003912;
+    --brand-tertiary-container: #005020;
+    --brand-on-tertiary-container: #a8dab5;
+
+    /* Error */
+    --brand-error: #f28b82;
+    --brand-on-error: #5f2120;
+    --brand-error-container: #8c1d18;
+    --brand-on-error-container: #fce8e6;
+  }
+}
+
+/* -----------------------------------------------------------------
+   BRAND: Special Elements
+   
+   Project-specific styling that doesn't fit the token system.
+   Add project-specific overrides here.
+   ----------------------------------------------------------------- */
+
+/* Example: Custom hero background for this project */
+/* .md3-hero--brand {
+  background: linear-gradient(135deg, var(--brand-primary) 0%, var(--brand-secondary) 100%);
+} */
+
+/* Example: Project logo styling */
+/* .brand-logo {
+  height: 40px;
+  width: auto;
+} */

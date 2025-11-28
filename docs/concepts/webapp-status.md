@@ -137,7 +137,7 @@ Die CO.RA.PAN Webapp ist eine moderne Flask-basierte Anwendung zur Exploration d
   - [Authentication Flow](authentication-flow.md)
   - [API Auth Endpoints](../reference/api-auth-endpoints.md)
   - [Auth Access Matrix](../reference/auth-access-matrix.md)
-  - [Recent Auth Reports](../reports/2025-11-11-auth-logout-v3-fix.md)
+  - [Recent Auth Reports (archived)](../archived/reports-2025/2025-11-11-auth-logout-v3-fix.md)
 
 #### Security Features
 - **Status**: ✅ Production-hardened

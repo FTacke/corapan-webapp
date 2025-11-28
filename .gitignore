@@ -65,8 +65,8 @@ htmlcov/
 # =============================================================================
 # BlackLab JAR files (large binaries, downloaded by user)
 tools/blacklab/*.jar
-# BlackLab WAR file (large binary, downloaded for local dev)
-opt/*.war
+# BlackLab WAR file and opt/ directory (large binaries for local dev)
+opt/
 
 # =============================================================================
 # Logs (NEVER COMMIT - may contain sensitive data)
@@ -164,6 +164,10 @@ _tmp_*
 coverage.xml
 *.cover
 .hypothesis/
+# Playwright outputs (now under tests/e2e/)
+tests/e2e/playwright-results/
+tests/e2e/playwright-report/
+# Legacy root-level paths (can be removed once no longer generated)
 test-results/
 playwright-report/
 
@@ -199,7 +203,7 @@ auth.db
 #    - static/ (CSS, JS, images - except build outputs)
 #
 # ✅ OPERATIONS:
-#    - ops/*.service (systemd services)
+#    - scripts/ops/*.service (systemd units)
 #    - scripts/*.py, scripts/*.sh, scripts/*.ps1 (automation)
 #
 # ✅ DOCUMENTATION:

@@ -199,6 +199,9 @@ def register_security_headers(app: Flask) -> None:
         # XSS Protection (legacy browsers)
         response.headers["X-XSS-Protection"] = "1; mode=block"
 
+        # Referrer Policy - control information sent in Referer header
+        response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+
         # HSTS - only in production
         if not app.debug:
             response.headers["Strict-Transport-Security"] = (

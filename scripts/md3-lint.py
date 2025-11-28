@@ -126,7 +126,7 @@ PATTERNS = {
 # Exceptions
 DATATABLES_PATHS = {'templates/search/advanced'}
 DATATABLES_CSS = {'static/css/md3/components/advanced-search.css'}  # DataTables styling
-NON_CRITICAL_PATHS = {'LOKAL/', 'docs/', 'test-results/'}  # Design previews, docs, test outputs
+NON_CRITICAL_PATHS = {'LOKAL/', 'docs/', 'tests/e2e/'}  # Design previews, docs, test outputs
 LEGACY_MIGRATION_PATHS = {'static/css/player-mobile.css'}  # Player CSS (special zone)
 SPECIAL_CSS_ZONE = {'static/css/player-mobile.css', 'static/css/editor.css', 'static/css/special/'}  # Special CSS zone
 # Player/Editor pages excluded from structural changes

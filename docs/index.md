@@ -55,16 +55,9 @@ API-Dokumentation, Datenbank-Schema, technische Spezifikationen.
 - **[Media Folder Structure](reference/media-folder-structure.md)** - MP3/Transcript-Organisation
 - **[BlackLab API Proxy](reference/blacklab-api-proxy.md)** - /bls/** Proxy, CQL-Queries, Endpoints
 - **[BLF YAML Schema](reference/blf-yaml-schema.md)** - Index-Konfiguration, Annotations, Metadata
-- **[CQL Escaping Rules](reference/cql-escaping-rules.md)** - CQL security, escaping, injection prevention (NEW)
-- **[Advanced Export Streaming](reference/advanced-export-streaming.md)** - Export endpoint spec, streaming, performance (NEW)
-
-**Search System Analysis (Bestandsaufnahme):**
-- **[ADVANCED SEARCH/BESTANDSAUFNAHME_SIMPLE_VS_ADVANCED.md](ADVANCED SEARCH/BESTANDSAUFNAHME_SIMPLE_VS_ADVANCED.md)** - Vollständige Analyse: Simple vs. Advanced Search
-- **[ADVANCED SEARCH/BESTANDSAUFNAHME_SIMPLE_SEARCH.md](ADVANCED SEARCH/BESTANDSAUFNAHME_SIMPLE_SEARCH.md)** - Simple Search Datenfluss-Details
-- **[ADVANCED SEARCH/BESTANDSAUFNAHME_ADVANCED_SEARCH.md](ADVANCED SEARCH/BESTANDSAUFNAHME_ADVANCED_SEARCH.md)** - Advanced Search BlackLab-Integration
-- **[ADVANCED SEARCH/BESTANDSAUFNAHME_DATATABLES_VERGLEICH.md](ADVANCED SEARCH/BESTANDSAUFNAHME_DATATABLES_VERGLEICH.md)** - Frontend DataTables-Konfiguration
-- **[ADVANCED SEARCH/BESTANDSAUFNAHME_GEMEINSAME_BASIS.md](ADVANCED SEARCH/BESTANDSAUFNAHME_GEMEINSAME_BASIS.md)** - Gemeinsames Mapping-Potenzial
-- **[ADVANCED SEARCH/BESTANDSAUFNAHME_OFFENE_PUNKTE.md](ADVANCED SEARCH/BESTANDSAUFNAHME_OFFENE_PUNKTE.md)** - Stolpersteine & Offene Fragen
+- **[CQL Escaping Rules](reference/cql-escaping-rules.md)** - CQL security, escaping, injection prevention
+- **[Advanced Export Streaming](reference/advanced-export-streaming.md)** - Export endpoint spec, streaming, performance
+- **[Project Structure](reference/project_structure.md)** - Repository structure conventions
 
 ---
 
@@ -78,6 +71,9 @@ Deployment, CI/CD, Server-Konfiguration, Security.
 - **[BlackLab Quick Reference](operations/blacklab-quick-reference.md)** - Quick start commands and troubleshooting
 - **[Development Setup](operations/development-setup.md)** - Local dev environment setup with Make targets
 - **[Deployment Guide](operations/deployment.md)** - Production-Server-Setup, Docker, Updates
+- **[Production Hardening](operations/production_hardening.md)** - Security, performance, monitoring
+- **[Release Checklist](operations/release_checklist.md)** - Pre-release verification steps
+- **[QA Checklist](operations/qa_checklist.md)** - Quality assurance verification
 - **[Git Security Checklist](operations/git-security-checklist.md)** - Security Best Practices
 - **[Rate Limiting Strategy](operations/rate-limiting-strategy.md)** - Advanced Search API rate limits (NEW)
 - **[Advanced Search Monitoring](operations/advanced-search-monitoring.md)** - Logging, metrics, observability (NEW)
@@ -126,37 +122,14 @@ Häufige Probleme und deren Lösungen.
 - **[Database Issues](troubleshooting/database-issues.md)** - Performance, Indizes, SQLite
 - **[Docker Issues](troubleshooting/docker-issues.md)** - Server, Deployment, Health-Checks
 - **[Frontend Issues](troubleshooting/frontend-issues.md)** - DataTables, Audio, Player
-- **[BlackLab Issues](troubleshooting/blacklab-issues.md)** - Server, Indexing, Proxy, Search Errors
 
 ---
 
-### 📊 Reports - Recent Implementation Reports
-
-Aktuelle Fix-Reports und Rollout-Dokumentation (November 2025).
-
-**Authentication & Security:**
-- **[Auth & Logout V3 Final Fix (2025-11-11)](reports/2025-11-11-auth-logout-v3-fix.md)** - GET Logout, CSRF Exemption
-- **[Auth Public Access Fix (2025-11-11)](reports/2025-11-11-auth-public-access-fix.md)** - Public Corpus Access
-- **[Auth Navigation Hardening (2025-11-11)](reports/auth-navigation-hardening-2025-11-11.md)** - Navigation Security
-
-**Advanced Search:**
-- **[Advanced Search Finalization (2025-11-11)](reports/2025-11-11-advanced-search-finalization.md)** - UI Completion
-- **[Advanced Search Fixes (2025-11-11)](reports/2025-11-11-advanced-search-fixes.md)** - Bug Fixes
-- **[CSS Audit Summary (2025-11-11)](reports/2025-11-11-audit-summary.md)** - CSS Compliance
-
-> **Hinweis:** Ältere Reports befinden sich in [archived/](archived/)
-
----
-
-### �📦 Archived - Historische Dokumente
+### 📦 Archived - Historische Dokumente
 
 Abgeschlossene Analysen, obsolete Dokumentation.
 
-- **[Cleaning Up](archived/CleaningUp.md)** - File-Cleanup-Analyse (2024-11)
-- **[Delete Obsolete Documentation](archived/DeleteObsoleteDocumentation.md)** - Obsolete Docs Analysis
-- **[Root Directory Analysis](archived/RootDirectoryDocumentationAnalysis.md)** - Root-File Reorganisation
-- **[Cleanup Completion Report](archived/CLEANUP_COMPLETION_REPORT.md)** - Final Cleanup-Report
-- **[Documentation Summary](archived/DocumentationSummary.md)** - Legacy Documentation Index
+> **Hinweis:** Implementation reports and completed analysis documents are in [archived/](archived/)
 
 ---
 

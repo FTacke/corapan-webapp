@@ -205,6 +205,61 @@ def health_check_bls():
         ), 500
 
 
+@blueprint.get("/health/auth")
+def health_check_auth():
+    """
+    Dedicated Auth DB health check for developer diagnostics.
+
+    Returns the auth database connection status.
+    Useful for verifying the auth backend is operational.
+
+    Response:
+    {
+        "ok": true|false,
+        "backend": "sqlite" | "postgresql",
+        "error": null | "Connection failed"
+    }
+    """
+    from ..extensions.sqlalchemy_ext import get_engine
+    from sqlalchemy import text
+
+    try:
+        engine = get_engine()
+        if engine is None:
+            return jsonify({
+                "ok": False,
+                "backend": None,
+                "error": "Auth engine not initialized (AUTH_DATABASE_URL may be unset)"
+            }), 503
+
+        # Try a simple query to verify connection
+        with engine.connect() as conn:
+            conn.execute(text("SELECT 1"))
+
+        # Determine backend type from URL
+        url = str(engine.url)
+        if "sqlite" in url:
+            backend = "sqlite"
+        elif "postgresql" in url or "postgres" in url:
+            backend = "postgresql"
+        else:
+            backend = "unknown"
+
+        return jsonify({
+            "ok": True,
+            "backend": backend,
+            "error": None
+        }), 200
+
+    except Exception as e:
+        logger.error(f"Auth DB health check error: {e}")
+        return jsonify({
+            "ok": False,
+            "backend": None,
+            "error": f"{type(e).__name__}: {str(e)}"
+        }), 503
+
+
 @blueprint.get("/proyecto")
 def proyecto_page():
     # Previously rendered the single proyecto page. Now show overview.
