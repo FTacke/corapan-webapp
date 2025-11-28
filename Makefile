@@ -112,11 +112,11 @@ PY
 	docker exec -i corapan_auth_db psql -U postgres -d corapan_auth -f /app/migrations/0001_create_auth_schema_postgres.sql
 	@echo "Creating initial admin..."
 	# ensure the admin can be created — uses env or defaults
-	AUTH_DATABASE_URL=postgresql://postgres:postgres@localhost:55432/corapan_auth START_ADMIN_PASSWORD=admin123 python scripts/create_initial_admin.py
+	AUTH_DATABASE_URL=postgresql://corapan_auth:corapan_auth@localhost:54320/corapan_auth START_ADMIN_PASSWORD=admin123 python scripts/create_initial_admin.py
 	@echo "Now start the Flask dev server (you can use make dev or run locally)"
 	@echo "Starting Flask dev server (postgres auth) (http://localhost:8000)..."
 	@echo "If you want to use a custom JWT_SECRET, set it before running this target."
-	AUTH_DATABASE_URL=postgresql://postgres:postgres@localhost:55432/corapan_auth FLASK_ENV=development python -m src.app.main
+	AUTH_DATABASE_URL=postgresql://corapan_auth:corapan_auth@localhost:54320/corapan_auth FLASK_ENV=development python -m src.app.main
 
 
 auth-migrate-sqlite:

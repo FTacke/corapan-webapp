@@ -78,6 +78,7 @@ def main():
     if str(ROOT) not in sys.path:
         sys.path.insert(0, str(ROOT))
 
+    from sqlalchemy.exc import OperationalError, SQLAlchemyError
     from src.app.extensions.sqlalchemy_ext import init_engine, get_engine, get_session
     from src.app.auth.models import Base, User
     from src.app.auth import services
@@ -88,9 +89,22 @@ def main():
             self.config = cfg
 
     app = AppLike(cfg)
-    init_engine(app)
-    engine = get_engine()
-    Base.metadata.create_all(bind=engine)
+    
+    # Fail-fast: attempt to init engine and create tables with error handling
+    try:
+        init_engine(app)
+        engine = get_engine()
+        Base.metadata.create_all(bind=engine)
+    except OperationalError as e:
+        print(f"ERROR: Failed to connect to auth database: {e}", file=sys.stderr)
+        print("  Check that the database is running and AUTH_DATABASE_URL is correct.", file=sys.stderr)
+        sys.exit(1)
+    except SQLAlchemyError as e:
+        print(f"ERROR: Database initialization failed: {e}", file=sys.stderr)
+        sys.exit(1)
+    except Exception as e:
+        print(f"ERROR: Unexpected error during database setup: {e}", file=sys.stderr)
+        sys.exit(1)
 
     # We need a Flask app context for service helpers that read current_app.config
     from flask import Flask

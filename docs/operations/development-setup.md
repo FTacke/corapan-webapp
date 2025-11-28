@@ -2,35 +2,91 @@
 title: "CO.RA.PAN Development Setup"
 status: active
 owner: devops
-updated: "2025-11-10"
-tags: [development, setup, makefile, blacklab]
+updated: "2025-11-28"
+tags: [development, setup, postgres, blacklab, docker]
 ---
 
 # CO.RA.PAN Development Setup
 
-Alles für lokale Entwicklung: Flask MPA + htmx + BlackLab Indexing
+Lokale Entwicklungsumgebung: Flask + PostgreSQL + BlackLab
 
-## Quick Start
+## Empfohlener Quick Start (Ein Befehl)
 
-```bash
-# 1. Install dependencies
-pip install -r requirements.txt
-
-# 2. Start Flask dev server (localhost:8000)
-make dev
-
-# 3. In another terminal: Build BlackLab Index
-make index
-
-# 4. Start BlackLab Server (localhost:8081)
-make bls
-
-# 5. Test proxy
-curl http://localhost:8000/bls/
-
-# 6. Open debug dashboard
-open http://localhost:8000/search/debug_bls/
+```powershell
+# Im Repository-Root ausführen
+.\scripts\dev-setup.ps1
 ```
+
+Dieser Befehl:
+1. Richtet `.venv` + Python-Dependencies ein
+2. Startet PostgreSQL + BlackLab via Docker
+3. Führt die Auth-DB-Migration aus
+4. Startet den Flask Dev-Server unter `http://localhost:8000`
+
+**Login:** `admin` / `change-me`
+
+### Voraussetzungen
+
+- **Docker Desktop** (für PostgreSQL + BlackLab)
+- **Python 3.12+**
+- **PowerShell 5.1+** (Windows)
+
+---
+
+## Tägliches Starten
+
+Wenn alles bereits eingerichtet ist:
+
+```powershell
+.\scripts\dev-start.ps1
+```
+
+---
+
+## SQLite-Fallback (nur für schnelle Tests)
+
+```powershell
+.\scripts\dev-setup.ps1 -UseSQLite
+```
+
+> ⚠️ **Hinweis:** SQLite ist nicht produktionsrepräsentativ. Für Integrations-/Release-Tests immer Postgres verwenden.
+
+---
+
+## Docker-Stack
+
+Der Dev-Stack verwendet `docker-compose.dev-postgres.yml`:
+
+| Service | Container | Port | Beschreibung |
+|---------|-----------|------|-------------|
+| PostgreSQL | `corapan_auth_db` | `54320` | Auth-Datenbank |
+| BlackLab | `blacklab-server-v3` | `8081` | Corpus-Suchserver |
+
+### Manuell starten/stoppen
+
+```powershell
+# Starten
+docker compose -f docker-compose.dev-postgres.yml up -d
+
+# Stoppen
+docker compose -f docker-compose.dev-postgres.yml down
+
+# Logs ansehen
+docker compose -f docker-compose.dev-postgres.yml logs -f
+```
+
+---
+
+## Environment-Variablen
+
+Die Dev-Skripte setzen automatisch:
+
+| Variable | Wert |
+|----------|------|
+| `AUTH_DATABASE_URL` | `postgresql+psycopg://corapan_auth:corapan_auth@localhost:54320/corapan_auth` |
+| `JWT_SECRET_KEY` | `dev-jwt-secret-change-me` |
+| `FLASK_SECRET_KEY` | `dev-secret-change-me` |
+| `BLACKLAB_BASE_URL` | `http://localhost:8081/blacklab-server` |
 
 ---
 
@@ -57,39 +113,27 @@ open http://localhost:8000/search/debug_bls/
 │   └── corapan.blf.yaml            # Index configuration
 │
 ├── scripts/
-│   ├── build_blacklab_index.sh     # Export + Index build
-│   └── run_bls.sh                  # Start BlackLab Server
+│   ├── dev-setup.ps1               # Full dev setup (recommended)
+│   ├── dev-start.ps1               # Quick start for daily use
+│   ├── build_blacklab_index.ps1    # Build corpus index
+│   └── blacklab/                   # BlackLab helper scripts
 │
-├── templates/
-│   ├── base.html                   # Master template
-│   ├── search/
-│   │   └── debug_bls.html          # Debug dashboard
-│
-├── docs/
-│   ├── concepts/
-│   │   └── blacklab-indexing.md    # Design docs
-│   ├── how-to/
-│   │   └── build-blacklab-index.md # Step-by-step guide
-│   ├── reference/
-│   │   ├── blacklab-api-proxy.md   # API docs
-│   │   └── blf-yaml-schema.md      # Config schema
-│   ├── troubleshooting/
-│   │   └── blacklab-issues.md      # Problem solving
+├── docker-compose.dev-postgres.yml # Dev stack (Postgres + BlackLab)
 │
 ├── data/
-│   ├── blacklab_index/             # Lucene index (🚨 don't edit)
-│   └── bl_input/                   # Temp: export TSV files
+│   ├── db/postgres_dev/            # PostgreSQL data (Docker volume)
+│   ├── blacklab_index/             # Lucene index (don't edit manually)
+│   └── blacklab_export/            # TSV export files
 │
-├── media/transcripts/               # JSON v2 corpus
-│   ├── ARG/, MEX/, CHL/, ...      # By country
+├── media/transcripts/               # JSON corpus by country
+│   ├── ARG/, MEX/, CHL/, ...
 │
-├── Makefile                        # Build targets
-└── requirements.txt                # Dependencies
+└── requirements.txt                # Python dependencies
 ```
 
 ---
 
-## Make Targets
+## Make Targets (Alternative)
 
 ```bash
 make help                   # Show all targets

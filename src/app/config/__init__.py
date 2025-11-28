@@ -47,8 +47,9 @@ class BaseConfig:
     SESSION_COOKIE_HTTPONLY = True
 
     # JWT
+    # Prefer JWT_SECRET_KEY; fallback to legacy JWT_SECRET for backwards compatibility
     JWT_SECRET_KEY = os.getenv(
-        "JWT_SECRET", os.getenv("FLASK_SECRET_KEY", DEFAULT_SECRET_SENTINEL)
+        "JWT_SECRET_KEY", os.getenv("JWT_SECRET", os.getenv("FLASK_SECRET_KEY", DEFAULT_SECRET_SENTINEL))
     )
     JWT_TOKEN_LOCATION = ["headers", "cookies"]
     JWT_COOKIE_SECURE = SESSION_COOKIE_SECURE

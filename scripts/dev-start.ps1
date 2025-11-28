@@ -1,54 +1,99 @@
+<#
+.SYNOPSIS
+    Quick dev server start (assumes setup is already complete).
+
+.DESCRIPTION
+    Use this script for daily development after initial setup with dev-setup.ps1.
+    - Checks if Docker services (Postgres + BlackLab) are running, starts them if not
+    - Starts the Flask dev server
+
+    For first-time setup or full reinstall, use: .\scripts\dev-setup.ps1
+
+.EXAMPLE
+    # Default: Postgres mode (starts Docker services if needed)
+    .\scripts\dev-start.ps1
+
+.EXAMPLE
+    # SQLite mode (no Docker DB needed)
+    .\scripts\dev-start.ps1 -UseSQLite
+
+.EXAMPLE
+    # Skip BlackLab (if you only need auth/basic features)
+    .\scripts\dev-start.ps1 -SkipBlackLab
+#>
+
+[CmdletBinding()]
 param(
-    [string]$DbPath = 'data/db/auth.db',
-    # By default start BlackLab in the background when launching the dev server.
-    # You can opt-out with -SkipBlackLab if you don't want to start it.
+    [switch]$UseSQLite,
     [switch]$SkipBlackLab
 )
 
-# Einfache Dev-Umgebung f�r CO.RA.PAN
-# Startet den Flask-Server mit SQLite-Auth-DB im Repo-Root.
+$ErrorActionPreference = 'Stop'
 
-$env:FLASK_SECRET_KEY  = "dev-secret-change-me"
-$env:JWT_SECRET        = "dev-jwt-secret-change-me"
-$env:AUTH_DATABASE_URL = "sqlite:///$DbPath"
-$env:FLASK_ENV         = "development"
+# Repository root
+$repoRoot = Split-Path -Parent $PSScriptRoot
+Set-Location $repoRoot
 
-Write-Host "Starting dev server with AUTH_DATABASE_URL=$($env:AUTH_DATABASE_URL)..."
-
-# Start BlackLab in background (unless explicitly skipped)
-if (-not $SkipBlackLab) {
-    $blacklabScript = Join-Path $PSScriptRoot 'blacklab\start_blacklab_docker_v3.ps1'
-
-    if (Test-Path $blacklabScript) {
-        # Quick check: if Docker is not available, skip starting BlackLab and warn the user
-        $dockerCmd = Get-Command docker -ErrorAction SilentlyContinue
-
-        if (-not $dockerCmd) {
-            Write-Host 'WARN: Docker is not available on PATH — skipping automatic BlackLab startup. Use -SkipBlackLab if intentional.' -ForegroundColor Yellow
-        }
-        else {
-            Write-Host 'Ensuring BlackLab is running in the background...' -ForegroundColor Cyan
-
-            try {
-                # Spawn a separate PowerShell process so `exit` calls in the helper won't kill this script.
-                # Pass the script path as a separate argument (no manual quote escaping required)
-                $args = @('-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', $blacklabScript, '-Detach')
-                Start-Process -FilePath (Get-Command powershell).Source -ArgumentList $args -WindowStyle Hidden -ErrorAction Stop | Out-Null
-                Write-Host 'Requested BlackLab start (background).' -ForegroundColor Green
-            }
-            catch {
-                Write-Host "WARN: Failed to start BlackLab in background: $_" -ForegroundColor Yellow
-                Write-Host 'You can start BlackLab manually with: .\scripts\blacklab\start_blacklab_docker_v3.ps1 -Detach' -ForegroundColor Gray
-            }
-        }
-    }
-    else {
-        Write-Host "WARN: BlackLab start script not found: $blacklabScript" -ForegroundColor Yellow
-    }
-}
-else {
-    Write-Host 'Skipping BlackLab startup (SkipBlackLab was passed).' -ForegroundColor Gray
+# Determine database mode
+if ($UseSQLite) {
+    $dbMode = "sqlite"
+    $dbPath = "data/db/auth.db"
+    $env:AUTH_DATABASE_URL = "sqlite:///$dbPath"
+    Write-Host "Database mode: SQLite" -ForegroundColor Yellow
+} else {
+    $dbMode = "postgres"
+    $env:AUTH_DATABASE_URL = "postgresql+psycopg://corapan_auth:corapan_auth@localhost:54320/corapan_auth"
+    Write-Host "Database mode: PostgreSQL" -ForegroundColor Green
 }
 
-# Run the dev server (Flask)
+# Set common environment variables
+$env:FLASK_SECRET_KEY = "dev-secret-change-me"
+$env:JWT_SECRET_KEY = "dev-jwt-secret-change-me"
+$env:FLASK_ENV = "development"
+$env:BLACKLAB_BASE_URL = "http://localhost:8081/blacklab-server"
+
+Write-Host "Starting CO.RA.PAN dev server..." -ForegroundColor Cyan
+Write-Host "AUTH_DATABASE_URL = $($env:AUTH_DATABASE_URL)"
+
+# Check and start Docker services if needed
+$dockerAvailable = Get-Command docker -ErrorAction SilentlyContinue
+
+if ($dockerAvailable) {
+    $needsStart = @()
+
+    # Check Postgres (unless SQLite mode)
+    if ($dbMode -eq "postgres") {
+        $pgRunning = docker ps --filter "name=corapan_auth_db" --format "{{.Names}}" 2>$null
+        if (-not $pgRunning) {
+            $needsStart += "corapan_auth_db"
+        }
+    }
+
+    # Check BlackLab (unless skipped)
+    if (-not $SkipBlackLab) {
+        $blRunning = docker ps --filter "name=blacklab-server-v3" --format "{{.Names}}" 2>$null
+        if (-not $blRunning) {
+            $needsStart += "blacklab-server-v3"
+        }
+    }
+
+    if ($needsStart.Count -gt 0) {
+        $servicesStr = $needsStart -join ", "
+        Write-Host "Starting Docker services: $servicesStr" -ForegroundColor Yellow
+        & docker compose -f docker-compose.dev-postgres.yml up -d @needsStart
+
+        # Wait briefly for Postgres if starting
+        if ($needsStart -contains "corapan_auth_db") {
+            Write-Host "Waiting for PostgreSQL..." -ForegroundColor Gray
+            Start-Sleep -Seconds 5
+        }
+    } else {
+        Write-Host "Docker services already running." -ForegroundColor Gray
+    }
+} elseif ($dbMode -eq "postgres") {
+    Write-Host "WARN: Docker not available but Postgres mode selected. Use -UseSQLite if needed." -ForegroundColor Yellow
+}
+
+# Run the dev server
+Write-Host "`nStarting Flask dev server at http://localhost:8000" -ForegroundColor Cyan
 python -m src.app.main

@@ -61,33 +61,49 @@ jobs:
       postgres:
         image: postgres:15
         env:
-          POSTGRES_USER: postgres
-          POSTGRES_DB: postgres
-          POSTGRES_PASSWORD: postgres
+          POSTGRES_USER: corapan_auth
+          POSTGRES_DB: corapan_auth
+          POSTGRES_PASSWORD: corapan_auth
         ports:
           - 5432:5432
         options: >-
-          --health-cmd "pg_isready -U postgres" --health-interval 5s --health-timeout 5s --health-retries 10
+          --health-cmd "pg_isready -U corapan_auth -d corapan_auth" --health-interval 5s --health-timeout 5s --health-retries 10
 
     steps:
       - uses: actions/checkout@v4
-      - name: Install PostgreSQL client
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
         run: |
-          sudo apt-get update
-          sudo apt-get install -y postgresql-client
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install argon2_cffi psycopg[binary] pytest pytest-dotenv
 
       - name: Wait for Postgres
         run: |
-          until pg_isready -h localhost -p 5432 -U postgres; do sleep 1; done
+          until pg_isready -h localhost -p 5432 -U corapan_auth; do sleep 1; done
 
-      - name: Apply migration SQL and smoke test
+      - name: Apply migration and create admin
         env:
-          PGPASSWORD: postgres
+          AUTH_DATABASE_URL: postgresql+psycopg://corapan_auth:corapan_auth@localhost:5432/corapan_auth
+          AUTH_HASH_ALGO: argon2
         run: |
-          echo "Applying migration SQL to Postgres..."
-          psql -h localhost -U postgres -d postgres -f migrations/0001_create_auth_schema_postgres.sql
-          echo "Checking tables exist"
-          psql -h localhost -U postgres -d postgres -c "SELECT tablename FROM pg_tables WHERE schemaname='public'" | grep -E "users|refresh_tokens|reset_tokens"
+          python scripts/apply_auth_migration.py --engine postgres
+          python scripts/create_initial_admin.py --username admin --password testpass123
+
+      - name: Run auth tests against Postgres
+        env:
+          FLASK_ENV: testing
+          FLASK_SECRET_KEY: test-key
+          JWT_SECRET_KEY: test-jwt-key
+          AUTH_DATABASE_URL: postgresql+psycopg://corapan_auth:corapan_auth@localhost:5432/corapan_auth
+          AUTH_HASH_ALGO: argon2
+        run: |
+          pytest tests/test_auth_flow.py tests/test_admin_users.py tests/test_role_access.py -v
 
   playwright-e2e:
     runs-on: ubuntu-latest

@@ -35,7 +35,7 @@ Diese Anwendung dient als Frontend und API-Layer für das CO.RA.PAN-Projekt. Sie
 
 - **Backend:** Python 3.12, Flask (Web Framework)
 - **Suchmaschine:** BlackLab Server (Lucene-basiert, via Docker)
-- **Datenbank:** SQLite (für User-Daten und App-Status)
+- **Datenbank:** PostgreSQL (Production & Dev Default), SQLite (Fallback/Quickstart)
 - **Frontend:** Jinja2 Templates, Vanilla JS, CSS (Bootstrap-basiert), ECharts, Leaflet
 - **Deployment:** Gunicorn, Docker Compose
 
@@ -198,7 +198,9 @@ python -m src.app.main
 
 **Environment Variables**:
 - `FLASK_SECRET_KEY` - Flask session secret
-- `JWT_SECRET` - JWT signing key
+- `JWT_SECRET_KEY` - JWT signing key (legacy: `JWT_SECRET`)
+- `AUTH_DATABASE_URL` - Auth database URL (PostgreSQL or SQLite)
+- `BLACKLAB_BASE_URL` - BlackLab server URL
 - `ALLOW_PUBLIC_TEMP_AUDIO` - Allow anonymous audio snippet access (default: false)
 
 ## Current Status (November 2025)
@@ -214,7 +216,7 @@ python -m src.app.main
 - **Security**: CSRF protection, rate limiting, CQL injection prevention
 
 ### 🔧 Configuration
-- **Database**: SQLite auth database (`auth.db`), stats database (`data/stats_all.db`)
+- **Database**: PostgreSQL (production/dev default), SQLite (fallback)
 - **Media Files**: Organized by country in `media/` directory
 - **BlackLab Index**: 146 documents, 1.49M tokens, 15.89 MB index
 - **Access Control**: Public access configurable via `ALLOW_PUBLIC_TEMP_AUDIO`

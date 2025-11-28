@@ -1,6 +1,6 @@
 # CO.RA.PAN Deployment Guide
 
-**Letzte Aktualisierung:** 2025-10-19
+**Letzte Aktualisierung:** 2025-11-28
 
 ---
 
@@ -10,9 +10,46 @@ Dieser Guide beschreibt das Deployment der CO.RA.PAN-Webapp auf dem Production-S
 
 **Server-Setup:**
 - Ubuntu Server mit Docker
+- **PostgreSQL** für Auth-Datenbank (empfohlen)
+- **BlackLab Server** für Corpus-Suche
 - nginx als Reverse Proxy (Port 80/443 → 6000)
 - VPN-Zugang erforderlich
-- Media-Dateien und DB werden extern verwaltet (nicht im Docker-Image)
+- Media-Dateien werden extern verwaltet (nicht im Docker-Image)
+
+---
+
+## 🗄️ Datenbank-Konfiguration
+
+### Production (Empfohlen): PostgreSQL
+
+```bash
+# Environment-Variable setzen
+AUTH_DATABASE_URL=postgresql+psycopg://corapan_auth:<PASSWORD>@<HOST>:5432/corapan_auth
+```
+
+PostgreSQL bietet:
+- Bessere Concurrency als SQLite
+- Robuste ACID-Garantien
+- Einfache Skalierung und Backups
+
+### Fallback: SQLite (nur für einfache Setups)
+
+```bash
+AUTH_DATABASE_URL=sqlite:///data/db/auth.db
+```
+
+> ⚠️ SQLite ist nicht für Produktionsumgebungen mit hoher Last empfohlen.
+
+---
+
+## 🔑 Environment-Variablen
+
+| Variable | Beschreibung | Beispiel |
+|----------|-------------|----------|
+| `FLASK_SECRET_KEY` | Flask Session Secret | `<random-secret>` |
+| `JWT_SECRET_KEY` | JWT Signing Key | `<random-secret>` |
+| `AUTH_DATABASE_URL` | Auth-DB Connection URL | `postgresql+psycopg://...` |
+| `BLACKLAB_BASE_URL` | BlackLab Server URL | `http://localhost:8081/blacklab-server` |
 
 ---
 

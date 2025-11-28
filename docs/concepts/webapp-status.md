@@ -157,7 +157,8 @@ Die CO.RA.PAN Webapp ist eine moderne Flask-basierte Anwendung zur Exploration d
 
 ### Backend
 - **Flask 3.x** mit Application Factory Pattern
-- **SQLite** Database (`auth.db` for auth, `data/stats_all.db` for stats)
+- **PostgreSQL** Database (Production & Dev default für Auth)
+- **SQLite** Database (Fallback/Quickstart: `auth.db` for auth, `data/stats_all.db` for stats)
 - **BlackLab Server** für Corpus Search (Java-basiert, indexes under `data/blacklab_index/`)
 - **FFmpeg** und **libsndfile** für Audio-Processing
 - **JWT** für Authentication mit Cookie-basierten Tokens
@@ -224,8 +225,27 @@ Die CO.RA.PAN Webapp ist eine moderne Flask-basierte Anwendung zur Exploration d
 
 ### Required Environment Variables
 - `FLASK_SECRET_KEY` - Flask Session Secret
-- `JWT_SECRET` - JWT Signing Key
+- `JWT_SECRET_KEY` - JWT Signing Key (legacy: `JWT_SECRET`)
+- `AUTH_DATABASE_URL` - SQLAlchemy URL for Auth-DB (Postgres or SQLite)
+- `BLACKLAB_BASE_URL` - BlackLab Server URL (default: `http://localhost:8081/blacklab-server`)
 - `ALLOW_PUBLIC_TEMP_AUDIO` - Public/Private Audio Snippet Access (default: false)
+
+### Database Configuration
+
+#### Production (Postgres)
+```
+AUTH_DATABASE_URL=postgresql+psycopg://user:pass@host:port/corapan_auth
+```
+
+#### Development (Postgres via Docker)
+```
+AUTH_DATABASE_URL=postgresql+psycopg://corapan_auth:corapan_auth@localhost:54320/corapan_auth
+```
+
+#### Fallback (SQLite - not recommended for integration tests)
+```
+AUTH_DATABASE_URL=sqlite:///data/db/auth.db
+```
 
 ### Database Files
 - `auth.db` - Authentication database (users, roles, sessions)

@@ -2,11 +2,12 @@
 -- Postgres migration: create users, refresh_tokens, reset_tokens tables with recommended indexes and constraints
 
 -- NOTE: Run this in a transaction (e.g., via alembic or psql) and verify in staging first.
+-- NOTE: Uses TEXT for IDs (UUIDs stored as strings) for SQLAlchemy compatibility.
 
 BEGIN;
 
 CREATE TABLE IF NOT EXISTS users (
-  user_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id TEXT PRIMARY KEY,
   username TEXT UNIQUE NOT NULL,
   email TEXT UNIQUE NULL,
   password_hash TEXT NOT NULL,
@@ -36,8 +37,8 @@ CREATE INDEX IF NOT EXISTS idx_users_deleted_at ON users (deleted_at);
 
 -- Refresh tokens table
 CREATE TABLE IF NOT EXISTS refresh_tokens (
-  token_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id UUID NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
+  token_id TEXT PRIMARY KEY,
+  user_id TEXT NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
   token_hash TEXT NOT NULL,
   created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
   expires_at TIMESTAMP WITH TIME ZONE NOT NULL,
@@ -45,7 +46,7 @@ CREATE TABLE IF NOT EXISTS refresh_tokens (
   revoked_at TIMESTAMP WITH TIME ZONE NULL DEFAULT NULL,
   user_agent TEXT NULL DEFAULT NULL,
   ip_address TEXT NULL DEFAULT NULL,
-  replaced_by UUID NULL
+  replaced_by TEXT NULL
 );
 
 CREATE INDEX IF NOT EXISTS idx_refresh_user_id ON refresh_tokens (user_id);
@@ -55,8 +56,8 @@ CREATE INDEX IF NOT EXISTS idx_refresh_revoked_at ON refresh_tokens (revoked_at)
 
 -- Reset tokens
 CREATE TABLE IF NOT EXISTS reset_tokens (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id UUID NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
+  id TEXT PRIMARY KEY,
+  user_id TEXT NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
   token_hash TEXT NOT NULL,
   created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
   expires_at TIMESTAMP WITH TIME ZONE NOT NULL,

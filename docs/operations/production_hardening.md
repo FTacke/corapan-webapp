@@ -192,15 +192,29 @@ sentry_sdk.init(dsn=os.getenv("SENTRY_DSN"))
 1. **Lint/Format** (`ruff check`, `ruff format --check`)
 2. **MD3 Guards** (`md3-forms-auth-guard.py`, `md3-lint.py`)
 3. **Unit/Integration Tests** (`pytest`)
-4. **Postgres Migration Test** (separate job)
+4. **Postgres Integration Tests** (tests against PostgreSQL)
 5. **E2E Tests** (Playwright, after unit tests pass)
 
-### 5.2 Branch Protection
+### 5.2 Database Testing
+
+Tests run against both SQLite (quick) and PostgreSQL (production-representative):
+
+```yaml
+# CI Matrix for database testing
+strategy:
+  matrix:
+    db: [sqlite, postgres]
+```
+
+- **SQLite:** Fast feedback, no external dependencies
+- **PostgreSQL:** Production-representative, required before release
+
+### 5.3 Branch Protection
 
 - PRs to `main` require all checks to pass
 - Matrix testing for `bcrypt` and `argon2` hash algorithms
 
-### 5.3 Secrets Management
+### 5.4 Secrets Management
 
 All sensitive values from environment variables:
 
@@ -208,7 +222,7 @@ All sensitive values from environment variables:
 |----------|---------|
 | `FLASK_SECRET_KEY` | Session encryption |
 | `JWT_SECRET_KEY` | JWT signing (HMAC) |
-| `AUTH_DATABASE_URL` | Auth database connection |
+| `AUTH_DATABASE_URL` | Auth database connection (Postgres in prod) |
 | `SENTRY_DSN` | Error tracking (optional) |
 
 See `.env.example` for complete list.
