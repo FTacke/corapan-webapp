@@ -49,7 +49,7 @@
       <!-- DOI Resources Grid -->
       <div class="doi-resource-grid">
         <!-- Webapp -->
-        <div class="md3-card md3-card--tonal doi-resource-card">
+        <div class="md3-card md3-card--elevated doi-resource-card">
           <div class="md3-card__content">
             <h3 class="md3-title-medium md3-subsection-title">Webapp</h3>
             <p class="md3-body-large">Corpus interactivo: Interfaz de búsqueda avanzada y reproductor de audio con transcripciones anotadas.</p>
@@ -62,7 +62,7 @@
         </div>
 
         <!-- Full Corpus -->
-        <div class="md3-card md3-card--tonal doi-resource-card">
+        <div class="md3-card md3-card--elevated doi-resource-card">
           <div class="md3-card__content">
             <h3 class="md3-title-medium md3-subsection-title">Full Corpus</h3>
             <p class="md3-body-large">Corpus completo en acceso restringido, protegido por derechos de autor. Solo para proyectos de investigación autorizados.</p>
@@ -75,7 +75,7 @@
         </div>
 
         <!-- Sample Corpus -->
-        <div class="md3-card md3-card--tonal doi-resource-card">
+        <div class="md3-card md3-card--elevated doi-resource-card">
           <div class="md3-card__content">
             <h3 class="md3-title-medium md3-subsection-title">Sample Corpus</h3>
             <p class="md3-body-large">Corpus de ejemplo con transcritos y estructura de datos, disponible públicamente para exploración y estudio.</p>
@@ -130,5 +130,5 @@
   </main>
 </div>
 
-{{ page_navigation(prev_title="Quiénes somos", prev_url=url_for('public.proyecto_quienes_somos')) }}
+{{ page_navigation(prev_title="Quiénes somos", prev_url=url_for('public.proyecto_quienes_somos'), next_title="Referencias", next_url=url_for('public.proyecto_referencias')) }}
 {% endblock %}

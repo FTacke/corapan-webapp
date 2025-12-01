@@ -41,14 +41,14 @@ document.addEventListener('DOMContentLoaded', function () {
   function renderStatusBadge(isActive) {
     if (isActive) {
       return `
-        <span class="md3-badge md3-badge--status-active">
+        <span class="md3-badge md3-badge--small md3-badge--status-active">
           <span class="material-symbols-rounded md3-badge__icon" aria-hidden="true">check_circle</span>
           Aktiv
         </span>
       `;
     }
     return `
-      <span class="md3-badge md3-badge--status-inactive">
+      <span class="md3-badge md3-badge--small md3-badge--status-inactive">
         <span class="material-symbols-rounded md3-badge__icon" aria-hidden="true">cancel</span>
         Inaktiv
       </span>
