@@ -203,15 +203,16 @@ python -m src.app.main
 - `BLACKLAB_BASE_URL` - BlackLab server URL
 - `ALLOW_PUBLIC_TEMP_AUDIO` - Allow anonymous audio snippet access (default: false)
 
-## Current Status (November 2025)
+## Current Status (December 2025)
 
 ### ✅ Production-Ready Features
 - **Basic Corpus Search**: Fully operational with token-based queries
 - **Advanced Search**: BlackLab integration complete (Stage 1-3), UI deployed
 - **Authentication System**: JWT-based auth with GET/POST logout support
 - **Audio Player**: Full playback with transcript synchronization
-- **Atlas**: Interactive map with country/region data
-- **Statistics**: ECharts-based visualization dashboard
+- **Atlas**: Interactive map with marker tooltips showing country statistics and deep-links
+- **Corpus Metadata**: Country-tabbed dashboard with file tables and deep-link support
+- **Statistics**: ECharts-based visualization dashboard with country deep-links
 - **Editor**: JSON transcript editing interface for authorized roles
 - **Security**: CSRF protection, rate limiting, CQL injection prevention
 

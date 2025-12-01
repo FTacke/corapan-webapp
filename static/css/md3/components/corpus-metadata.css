@@ -1,0 +1,367 @@
+/* ============================================================================
+   Corpus Metadata Page Styles
+   ============================================================================
+   Country tabs navigation and file tables for metadata dashboard
+   ============================================================================ */
+
+/* ============================================================================
+   Page Layout
+   ============================================================================ */
+
+.md3-metadata-page {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 var(--space-4) var(--space-12);
+}
+
+@media (min-width: 600px) {
+  .md3-metadata-page {
+    padding: 0 var(--space-6) var(--space-12);
+  }
+}
+
+@media (min-width: 1200px) {
+  .md3-metadata-page {
+    padding: 0 var(--space-8) var(--space-12);
+  }
+}
+
+.md3-metadata-content {
+  margin-bottom: var(--space-12);
+}
+
+/* ============================================================================
+   Country Tabs Navigation
+   Uses MD3 tab pattern with scrollable container for many countries
+   ============================================================================ */
+
+.md3-metadata-tabs {
+  display: flex;
+  gap: var(--space-2);
+  border-bottom: 1px solid var(--md-sys-color-outline-variant);
+  margin-bottom: var(--space-6);
+  position: relative;
+  overflow-x: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--md-sys-color-outline-variant) transparent;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: 2px; /* Space for indicator */
+}
+
+/* Hide scrollbar on webkit but keep functionality */
+.md3-metadata-tabs::-webkit-scrollbar {
+  height: 4px;
+}
+
+.md3-metadata-tabs::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.md3-metadata-tabs::-webkit-scrollbar-thumb {
+  background: var(--md-sys-color-outline-variant);
+  border-radius: 2px;
+}
+
+/* Individual Tab - MD3 Pattern */
+.md3-metadata-tab {
+  padding: var(--space-3) var(--space-4);
+  border: none;
+  background: transparent;
+  color: var(--md-sys-color-on-surface-variant);
+  font-size: 0.875rem;
+  font-weight: 500;
+  letter-spacing: 0.1px;
+  cursor: pointer;
+  position: relative;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: color 200ms cubic-bezier(0.2, 0, 0, 1);
+}
+
+/* Hover state layer */
+.md3-metadata-tab::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: var(--md-sys-color-on-surface);
+  opacity: 0;
+  border-radius: var(--radius-xs);
+  transition: opacity 200ms cubic-bezier(0.2, 0, 0, 1);
+}
+
+.md3-metadata-tab:hover::before {
+  opacity: 0.08;
+}
+
+/* Active indicator */
+.md3-metadata-tab::after {
+  content: "";
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: var(--md-sys-color-primary);
+  border-radius: 3px 3px 0 0;
+  transform: scaleX(0);
+  transition: transform 200ms cubic-bezier(0.2, 0, 0, 1);
+}
+
+/* Active state */
+.md3-metadata-tab[aria-selected="true"] {
+  color: var(--md-sys-color-primary);
+}
+
+.md3-metadata-tab[aria-selected="true"]::after {
+  transform: scaleX(1);
+}
+
+/* Focus visible */
+.md3-metadata-tab:focus-visible {
+  outline: 2px solid var(--md-sys-color-primary);
+  outline-offset: 2px;
+}
+
+/* Responsive: Tablet */
+@media (max-width: 1120px) {
+  .md3-metadata-tab {
+    padding: var(--space-2) var(--space-3);
+    font-size: 0.8125rem;
+  }
+}
+
+/* Responsive: Mobile */
+@media (max-width: 599px) {
+  .md3-metadata-tabs {
+    gap: var(--space-1);
+    margin-bottom: var(--space-4);
+  }
+
+  .md3-metadata-tab {
+    padding: var(--space-2) var(--space-3);
+    font-size: 0.75rem;
+  }
+}
+
+/* ============================================================================
+   Tab Panels
+   ============================================================================ */
+
+.md3-metadata-panels {
+  min-height: 300px;
+}
+
+.md3-metadata-panel {
+  display: none;
+  animation: fadeIn 0.3s cubic-bezier(0.2, 0, 0, 1);
+}
+
+.md3-metadata-panel[data-active="true"] {
+  display: block;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ============================================================================
+   Panel Header
+   ============================================================================ */
+
+.md3-metadata-panel-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  margin-bottom: var(--space-6);
+  padding-bottom: var(--space-4);
+  border-bottom: 1px solid var(--md-sys-color-outline-variant);
+}
+
+.md3-metadata-panel-title {
+  margin: 0;
+  font-weight: 500;
+  color: var(--md-sys-color-primary);
+}
+
+.md3-metadata-panel-stats {
+  display: flex;
+  gap: var(--space-6);
+  flex-wrap: wrap;
+}
+
+.md3-metadata-stat {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.md3-metadata-stat-label {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--md-sys-color-on-surface-variant);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.md3-metadata-stat-value {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--md-sys-color-on-surface);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ============================================================================
+   Files Table - MD3 Data Table Pattern
+   ============================================================================ */
+
+.md3-metadata-table-wrapper {
+  overflow-x: auto;
+  border-radius: var(--radius-md);
+  background: var(--md-sys-color-surface);
+  border: 1px solid var(--md-sys-color-outline-variant);
+  box-shadow: var(--md-sys-elevation-1);
+}
+
+.md3-metadata-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 600px;
+}
+
+.md3-metadata-table th,
+.md3-metadata-table td {
+  padding: var(--space-3) var(--space-4);
+  text-align: left;
+  border-bottom: 1px solid var(--md-sys-color-outline-variant);
+}
+
+.md3-metadata-table thead {
+  background: var(--md-sys-color-surface-container-low);
+}
+
+.md3-metadata-table th {
+  font-weight: 500;
+  font-size: 0.75rem;
+  color: var(--md-sys-color-on-surface-variant);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: var(--md-sys-color-surface-container-low);
+}
+
+.md3-metadata-table tbody tr {
+  transition: background-color 200ms cubic-bezier(0.2, 0, 0, 1);
+}
+
+.md3-metadata-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.md3-metadata-table tbody tr:hover {
+  background: var(--md-sys-color-surface-container-highest);
+}
+
+.md3-metadata-table td {
+  color: var(--md-sys-color-on-surface);
+  font-size: 0.875rem;
+  vertical-align: middle;
+}
+
+.md3-metadata-table .right-align {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Mobile adjustments */
+@media (max-width: 599px) {
+  .md3-metadata-table th,
+  .md3-metadata-table td {
+    padding: var(--space-2) var(--space-3);
+    font-size: 0.8125rem;
+  }
+}
+
+/* ============================================================================
+   Loading & Error States
+   ============================================================================ */
+
+.md3-metadata-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-12);
+  gap: var(--space-4);
+  color: var(--md-sys-color-on-surface-variant);
+}
+
+.md3-metadata-loading__spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid var(--md-sys-color-outline-variant);
+  border-top-color: var(--md-sys-color-primary);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.md3-metadata-loading[hidden],
+.md3-metadata-error[hidden] {
+  display: none;
+}
+
+.md3-metadata-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-12);
+  gap: var(--space-4);
+  color: var(--md-sys-color-error);
+  text-align: center;
+}
+
+.md3-metadata-error .material-symbols-rounded {
+  font-size: 48px;
+}
+
+/* ============================================================================
+   Empty State
+   ============================================================================ */
+
+.md3-metadata-empty {
+  padding: var(--space-8);
+  text-align: center;
+  color: var(--md-sys-color-on-surface-variant);
+  background: var(--md-sys-color-surface-container-low);
+  border-radius: var(--radius-sm);
+}
+
+/* ============================================================================
+   Schema Documentation Section
+   ============================================================================ */
+
+.md3-metadata-schema {
+  border-top: 1px solid var(--md-sys-color-outline-variant);
+  padding-top: var(--space-8);
+}
+
+.md3-metadata-schema .md3-text-content {
+  max-width: 800px;
+}

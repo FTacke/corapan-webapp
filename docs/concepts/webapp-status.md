@@ -75,15 +75,25 @@ Die CO.RA.PAN Webapp ist eine moderne Flask-basierte Anwendung zur Exploration d
   - [Media Folder Structure](../reference/media-folder-structure.md)
   - [Audio Folder Files](../reference/audio_folder_files.md)
 
-#### Atlas
+#### Atlas (Karten-Ansicht)
 - **Status**: ✅ Produktionsreif
 - **Features**:
   - Interaktive geolinguistische Karte mit Leaflet
-  - Länder/Regions-Marker mit Metadaten
-  - File-Counts und Speaker-Statistiken pro Location
-  - Integration mit Corpus-Daten
+  - Länder/Regions-Marker mit Metadaten-Tooltips
+  - Tooltips zeigen: Emisoras, Duración total, Palabras transcritas
+  - Deep-Links zu Metadatos und Estadísticas pro Land
+- **Hinweis**: Die früheren Tabellen/Tabs wurden nach `corpus_metadata` migriert
 - **Dokumentation**:
   - [Architecture Overview](architecture.md) (Atlas-Sektion)
+
+#### Corpus Metadata (Metadaten-Dashboard)
+- **Status**: ✅ Produktionsreif
+- **Features**:
+  - Länder-Tab-Navigation für Metadaten-Übersicht
+  - Tabelle mit Grabaciones pro Land (Fecha, Emisora, Archivo, Duración, Palabras)
+  - Deep-Link-Unterstützung via `?country=XXX` Parameter
+  - Schema-Dokumentation für Metadaten-Struktur
+- **Route**: `/corpus/metadata`
 
 #### Statistics Dashboard
 - **Status**: ✅ Produktionsreif (November 2025)
@@ -91,6 +101,7 @@ Die CO.RA.PAN Webapp ist eine moderne Flask-basierte Anwendung zur Exploration d
   - Speaker-Verteilung nach Land, Geschlecht, Typ
   - Wort-Frequenz-Analyse
   - Interaktive Charts mit ECharts
+  - Deep-Link-Unterstützung via `?country=XXX` Parameter
   - Filterung konsistent mit Hauptsuche
 - **API**: `GET /api/stats` (öffentlich, read-only)
 - **Dokumentation**:
