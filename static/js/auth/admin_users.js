@@ -1,24 +1,56 @@
+/**
+ * Admin User Management
+ * 
+ * Handles user listing, creation, editing, and password reset.
+ * MD3-conform implementation with filter chips and edit dialog.
+ */
 document.addEventListener('DOMContentLoaded', function () {
+  // DOM Elements - List
   const listBody = document.getElementById('list-body');
   const refreshBtn = document.getElementById('refresh');
+  const searchInput = document.getElementById('admin-search');
+  const filterInactiveBtn = document.getElementById('filter-inactive');
+  
+  // DOM Elements - Create Dialog
   const createBtn = document.getElementById('create');
   const createDialog = document.getElementById('create-user-dialog');
   const createForm = document.getElementById('create-user-form');
   const cancelCreateBtn = document.getElementById('cancel-create');
+  
+  // DOM Elements - Invite Dialog
   const inviteDialog = document.getElementById('invite-dialog');
   const inviteLinkCode = document.getElementById('invite-link');
   const closeInviteBtn = document.getElementById('close-invite');
   const copyInviteBtn = document.getElementById('copy-invite');
-  const userDetailDialog = document.getElementById('user-detail-dialog');
-  const userDetailContent = document.getElementById('user-detail-content');
-  const userDetailTitle = document.getElementById('user-detail-title');
-  const userDetailClose = document.getElementById('user-detail-close');
-  const userDetailGenInvite = document.getElementById('user-detail-gen-invite');
   const inviteMeta = document.getElementById('invite-meta');
+  
+  // DOM Elements - Edit Dialog
+  const editDialog = document.getElementById('user-edit-dialog');
+  const cancelEditBtn = document.getElementById('cancel-edit');
+  const saveEditBtn = document.getElementById('save-edit');
+  const editUserId = document.getElementById('edit-user-id');
+  const editUsername = document.getElementById('edit-username');
+  const editEmail = document.getElementById('edit-email');
+  const editEmailError = document.getElementById('edit-email-error');
+  const editRole = document.getElementById('edit-role');
+  const editIsActive = document.getElementById('edit-is-active');
+  const editResetPasswordBtn = document.getElementById('edit-reset-password');
+  const editError = document.getElementById('user-edit-error');
 
+  // State
+  let includeInactive = false;
+  let searchDebounce = null;
+
+  // Utility functions
   function formatDate(isoString) {
     if (!isoString) return '-';
-    return new Date(isoString).toLocaleString();
+    return new Date(isoString).toLocaleString('de-DE');
+  }
+
+  function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
   }
 
   // Role icon mapping for badges
@@ -57,18 +89,16 @@ document.addEventListener('DOMContentLoaded', function () {
 
   function renderRow(user) {
     const tr = document.createElement('tr');
+    tr.dataset.userId = user.id;
     tr.innerHTML = `
-      <td><span class="md3-body-medium">${user.username}</span></td>
-      <td><span class="md3-body-small">${user.email || '-'}</span></td>
+      <td><span class="md3-body-medium">${escapeHtml(user.username)}</span></td>
+      <td><span class="md3-body-small">${escapeHtml(user.email || '-')}</span></td>
       <td>${renderRoleBadge(user.role)}</td>
       <td>${renderStatusBadge(user.is_active)}</td>
       <td class="md3-hide-mobile"><span class="md3-body-small">${formatDate(user.created_at)}</span></td>
       <td class="md3-table__actions">
-        <button class="md3-button md3-button--icon edit-user-btn" data-id="${user.id}" title="Bearbeiten" aria-label="Benutzer bearbeiten">
+        <button class="md3-button md3-button--icon edit-user-btn" data-id="${user.id}" title="Benutzer bearbeiten" aria-label="Benutzer bearbeiten">
           <span class="material-symbols-rounded">edit</span>
-        </button>
-        <button class="md3-button md3-button--icon reset-user-btn" data-id="${user.id}" title="Passwort zurücksetzen / Invite erneuern" aria-label="Invite erneuern">
-          <span class="material-symbols-rounded">history_edu</span>
         </button>
       </td>
     `;
@@ -78,7 +108,18 @@ document.addEventListener('DOMContentLoaded', function () {
   function reload() {
     listBody.innerHTML = '<tr class="md3-table__empty-row"><td colspan="6"><div class="md3-empty-inline"><span class="material-symbols-rounded" aria-hidden="true">hourglass_empty</span><span>Lade...</span></div></td></tr>';
     
-    fetch('/admin/users')
+    const params = new URLSearchParams();
+    if (includeInactive) {
+      params.set('include_inactive', '1');
+    }
+    const q = searchInput?.value?.trim();
+    if (q) {
+      params.set('q', q);
+    }
+    
+    const url = '/admin/users' + (params.toString() ? '?' + params.toString() : '');
+    
+    fetch(url, { credentials: 'same-origin' })
       .then((r) => {
         if (!r.ok) throw new Error('Failed to load users');
         return r.json();
@@ -102,76 +143,7 @@ document.addEventListener('DOMContentLoaded', function () {
           listBody.appendChild(renderRow(user));
         });
         
-        // Attach event listeners to new buttons
-        document.querySelectorAll('.edit-user-btn').forEach(btn => {
-          btn.addEventListener('click', (e) => {
-            const uid = e.currentTarget.dataset.id;
-            // Fetch detail and show in dialog
-            userDetailContent.innerHTML = '<p class="md3-body-small md3-text-variant">Lade Benutzerdaten…</p>';
-            userDetailTitle.textContent = `Benutzer: ${user.username}`;
-            // attach a small state id on the dialog to keep track
-            userDetailDialog.dataset.userId = uid;
-            fetch(`/admin/users/${encodeURIComponent(uid)}`)
-              .then(r => r.json())
-              .then(data => {
-                let html = `<div class="md3-stack--dialog">
-                    <div><strong>Benutzername:</strong> ${data.username}</div>
-                    <div><strong>Email:</strong> ${data.email || '-'}</div>
-                    <div><strong>Rolle:</strong> ${data.role}</div>
-                    <div><strong>Status:</strong> ${data.is_active ? 'Aktiv' : 'Inaktiv'}</div>
-                  </div>`;
-                // show recent reset tokens
-                if (data.resetTokens && data.resetTokens.length) {
-                  html += '<h4 class="md3-title-small">Reset Tokens</h4><ul class="md3-list">';
-                  data.resetTokens.forEach(t => {
-                    html += `<li class="md3-list-item"><div class="md3-list-item__text">ID: ${t.id}</div><div class="md3-list-item__meta">Erstellt: ${new Date(t.created_at).toLocaleString()} • Läuft ab: ${new Date(t.expires_at).toLocaleString()} ${t.used_at ? '• Verwendet' : ''}</div></li>`;
-                  });
-                  html += '</ul>';
-                } else {
-                  html += '<p class="md3-body-small md3-text-variant">Keine kürzlichen Reset-Token.</p>';
-                }
-                userDetailContent.innerHTML = html;
-                try { userDetailDialog.showModal(); } catch (e) { userDetailDialog.setAttribute('open','true'); }
-              })
-              .catch(err => {
-                console.error(err);
-                userDetailContent.innerHTML = '<p class="md3-body-small md3-text-error">Fehler beim Laden der Benutzerdaten.</p>';
-                try { userDetailDialog.showModal(); } catch (e) { userDetailDialog.setAttribute('open','true'); }
-              });
-          });
-        });
-
-        document.querySelectorAll('.reset-user-btn').forEach(btn => {
-          btn.addEventListener('click', (e) => {
-            const uid = e.currentTarget.dataset.id;
-            if (!confirm('Einen neuen Invite-Link für den Benutzer erzeugen? (bestehende Token bleiben erhalten)')) return;
-
-            fetch(`/admin/users/${encodeURIComponent(uid)}/reset-password`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-            })
-            .then(r => r.json())
-            .then(resp => {
-              if (resp.ok && resp.inviteLink) {
-                inviteLinkCode.textContent = resp.inviteLink;
-                if (resp.inviteExpiresAt) {
-                  inviteMeta.textContent = `Gültig bis: ${new Date(resp.inviteExpiresAt).toLocaleString()}`;
-                } else {
-                  inviteMeta.textContent = '';
-                }
-                inviteDialog.showModal();
-              } else if (resp.ok) {
-                alert('Passwort-Reset erzeugt, aber kein Link erhalten.');
-              } else {
-                alert('Fehler: ' + (resp.error || 'Unbekannter Fehler'));
-              }
-            })
-            .catch(err => {
-              console.error(err);
-              alert('Netzwerkfehler beim Anfordern des Reset-Links.');
-            });
-          });
-        });
+        attachRowEventListeners();
       })
       .catch((err) => {
         console.error(err);
@@ -179,16 +151,263 @@ document.addEventListener('DOMContentLoaded', function () {
       });
   }
 
+  function attachRowEventListeners() {
+    // Edit button handlers
+    document.querySelectorAll('.edit-user-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const uid = e.currentTarget.dataset.id;
+        openEditDialog(uid);
+      });
+    });
+  }
+
+  // Edit Dialog Functions
+  function openEditDialog(userId) {
+    // Reset form state
+    if (editError) editError.hidden = true;
+    if (editEmailError) editEmailError.textContent = '';
+    if (editEmail) editEmail.classList.remove('md3-outlined-textfield__input--error');
+    
+    // Fetch user data
+    fetch(`/admin/users/${encodeURIComponent(userId)}`, { credentials: 'same-origin' })
+      .then(r => r.json())
+      .then(data => {
+        if (data.error) {
+          throw new Error(data.error);
+        }
+        
+        // Populate form
+        if (editUserId) editUserId.value = data.id;
+        if (editUsername) editUsername.value = data.username;
+        if (editEmail) editEmail.value = data.email || '';
+        if (editRole) editRole.value = data.role;
+        if (editIsActive) editIsActive.checked = data.is_active;
+        
+        // Add floating label class if email has value
+        updateFloatingLabel(editEmail);
+        
+        // Open dialog
+        if (editDialog) {
+          try { editDialog.showModal(); } catch (e) { editDialog.setAttribute('open', 'true'); }
+        }
+      })
+      .catch(err => {
+        console.error('Error loading user:', err);
+        showSnackbar('Fehler beim Laden der Benutzerdaten.', 'error');
+      });
+  }
+
+  function updateFloatingLabel(input) {
+    if (!input) return;
+    const textfield = input.closest('.md3-outlined-textfield');
+    const label = textfield?.querySelector('.md3-outlined-textfield__label');
+    if (label) {
+      if (input.value) {
+        label.classList.add('md3-outlined-textfield__label--floating');
+      } else {
+        label.classList.remove('md3-outlined-textfield__label--floating');
+      }
+    }
+  }
+
+  function validateEmail(email) {
+    if (!email) return true; // Empty is valid (optional)
+    const regex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    return regex.test(email);
+  }
+
+  function saveEdit() {
+    const userId = editUserId?.value;
+    const email = editEmail?.value?.trim() || '';
+    const role = editRole?.value;
+    const isActive = editIsActive?.checked;
+    
+    // Client-side validation
+    if (email && !validateEmail(email)) {
+      if (editEmailError) editEmailError.textContent = 'Ungültiges E-Mail-Format';
+      if (editEmail) editEmail.classList.add('md3-outlined-textfield__input--error');
+      return;
+    }
+    
+    if (editEmailError) editEmailError.textContent = '';
+    if (editEmail) editEmail.classList.remove('md3-outlined-textfield__input--error');
+    if (editError) editError.hidden = true;
+    
+    // Disable save button during request
+    if (saveEditBtn) {
+      saveEditBtn.disabled = true;
+      saveEditBtn.innerHTML = '<span class="material-symbols-rounded md3-button__icon md3-button__icon--loading" aria-hidden="true">progress_activity</span>Speichern...';
+    }
+    
+    fetch(`/admin/users/${encodeURIComponent(userId)}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'same-origin',
+      body: JSON.stringify({
+        email: email || null,
+        role: role,
+        is_active: isActive
+      })
+    })
+    .then(r => r.json())
+    .then(resp => {
+      if (saveEditBtn) {
+        saveEditBtn.disabled = false;
+        saveEditBtn.innerHTML = 'Speichern';
+      }
+      
+      if (resp.ok) {
+        if (editDialog) {
+          try { editDialog.close(); } catch (e) { editDialog.removeAttribute('open'); }
+        }
+        reload();
+        showSnackbar('Benutzer wurde aktualisiert.', 'success');
+      } else {
+        // Show error in dialog
+        const errorMsg = resp.message || resp.error || 'Unbekannter Fehler';
+        if (editError) {
+          const msgEl = editError.querySelector('.md3-alert__message');
+          if (msgEl) msgEl.textContent = errorMsg;
+          editError.hidden = false;
+        }
+      }
+    })
+    .catch(err => {
+      if (saveEditBtn) {
+        saveEditBtn.disabled = false;
+        saveEditBtn.innerHTML = 'Speichern';
+      }
+      console.error('Save error:', err);
+      if (editError) {
+        const msgEl = editError.querySelector('.md3-alert__message');
+        if (msgEl) msgEl.textContent = 'Netzwerkfehler beim Speichern.';
+        editError.hidden = false;
+      }
+    });
+  }
+
+  function resetPasswordFromEditDialog() {
+    const userId = editUserId?.value;
+    if (!userId) return;
+    
+    // Disable button during request
+    if (editResetPasswordBtn) {
+      editResetPasswordBtn.disabled = true;
+      editResetPasswordBtn.innerHTML = '<span class="material-symbols-rounded md3-button__icon md3-button__icon--loading" aria-hidden="true">progress_activity</span>Wird gesendet...';
+    }
+    
+    fetch(`/admin/users/${encodeURIComponent(userId)}/reset-password`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'same-origin'
+    })
+    .then(r => r.json())
+    .then(resp => {
+      if (editResetPasswordBtn) {
+        editResetPasswordBtn.disabled = false;
+        editResetPasswordBtn.innerHTML = '<span class="material-symbols-rounded md3-button__icon" aria-hidden="true">mail</span>Passwort zurücksetzen';
+      }
+      
+      if (resp.ok && resp.inviteLink) {
+        // Show the invite link dialog
+        if (inviteLinkCode) inviteLinkCode.textContent = resp.inviteLink;
+        if (inviteMeta && resp.inviteExpiresAt) {
+          inviteMeta.textContent = `Gültig bis: ${new Date(resp.inviteExpiresAt).toLocaleString('de-DE')}`;
+        } else if (inviteMeta) {
+          inviteMeta.textContent = '';
+        }
+        // Close edit dialog first, then show invite dialog
+        if (editDialog) {
+          try { editDialog.close(); } catch (e) { editDialog.removeAttribute('open'); }
+        }
+        if (inviteDialog) inviteDialog.showModal();
+      } else if (resp.ok) {
+        showSnackbar('Passwort-Reset wurde erstellt.', 'success');
+      } else {
+        showSnackbar('Fehler: ' + (resp.error || 'Unbekannter Fehler'), 'error');
+      }
+    })
+    .catch(err => {
+      if (editResetPasswordBtn) {
+        editResetPasswordBtn.disabled = false;
+        editResetPasswordBtn.innerHTML = '<span class="material-symbols-rounded md3-button__icon" aria-hidden="true">mail</span>Passwort zurücksetzen';
+      }
+      console.error('Reset error:', err);
+      showSnackbar('Netzwerkfehler beim Zurücksetzen.', 'error');
+    });
+  }
+
+  // Snackbar function (fallback if core module not available)
+  function showSnackbar(message, type = 'success') {
+    // Check if the core snackbar module is available
+    if (window.showSnackbar) {
+      window.showSnackbar(message, type);
+      return;
+    }
+    
+    // Fallback: create a basic snackbar
+    const existing = document.querySelector('.md3-snackbar');
+    if (existing) existing.remove();
+    
+    const snackbar = document.createElement('div');
+    snackbar.className = `md3-snackbar md3-snackbar--${type}`;
+    snackbar.setAttribute('role', 'status');
+    snackbar.setAttribute('aria-live', 'polite');
+    
+    const iconMap = { success: 'check_circle', error: 'error', info: 'info' };
+    snackbar.innerHTML = `
+      <span class="material-symbols-rounded md3-snackbar__icon" aria-hidden="true">${iconMap[type] || 'info'}</span>
+      <span class="md3-snackbar__message">${escapeHtml(message)}</span>
+      <button class="md3-snackbar__action" type="button" aria-label="Schließen">OK</button>
+    `;
+    
+    document.body.appendChild(snackbar);
+    requestAnimationFrame(() => snackbar.classList.add('visible'));
+    
+    const dismiss = () => {
+      snackbar.classList.remove('visible');
+      setTimeout(() => snackbar.remove(), 300);
+    };
+    
+    snackbar.querySelector('.md3-snackbar__action').addEventListener('click', dismiss);
+    setTimeout(dismiss, 4000);
+  }
+
   // Event Listeners
   if (refreshBtn) refreshBtn.addEventListener('click', reload);
   
+  // Filter chip toggle
+  if (filterInactiveBtn) {
+    filterInactiveBtn.addEventListener('click', () => {
+      includeInactive = !includeInactive;
+      filterInactiveBtn.classList.toggle('md3-chip--selected', includeInactive);
+      filterInactiveBtn.setAttribute('aria-pressed', includeInactive.toString());
+      
+      // Update icon
+      const icon = filterInactiveBtn.querySelector('.md3-chip__icon');
+      if (icon) {
+        icon.textContent = includeInactive ? 'visibility' : 'visibility_off';
+      }
+      
+      reload();
+    });
+  }
+  
+  // Search input with debounce
+  if (searchInput) {
+    searchInput.addEventListener('input', () => {
+      clearTimeout(searchDebounce);
+      searchDebounce = setTimeout(reload, 300);
+    });
+  }
+  
+  // Copy invite link
   if (copyInviteBtn && inviteLinkCode) {
     copyInviteBtn.addEventListener('click', () => {
       const text = inviteLinkCode.textContent || inviteLinkCode.innerText || '';
       navigator.clipboard.writeText(text).then(() => {
         const originalIcon = copyInviteBtn.innerHTML;
         copyInviteBtn.innerHTML = '<span class="material-symbols-rounded">check</span>';
-        // update screen-reader live region if present
         const status = document.getElementById('invite-copy-status');
         if (status) status.textContent = 'Invite-Link in die Zwischenablage kopiert.';
         setTimeout(() => {
@@ -196,7 +415,6 @@ document.addEventListener('DOMContentLoaded', function () {
           if (status) status.textContent = '';
         }, 2000);
       }).catch(err => {
-        // fallback: inform via live region
         const status = document.getElementById('invite-copy-status');
         if (status) status.textContent = 'Kopieren fehlgeschlagen.';
         console.error('Clipboard error', err);
@@ -204,14 +422,13 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   }
   
+  // Create user dialog
   if (createBtn && createDialog) {
     createBtn.addEventListener('click', () => {
       createForm.reset();
       createDialog.showModal();
-      // Put keyboard focus into the username field so users can start typing immediately
       const first = document.getElementById('new-username');
       if (first) {
-        // small timeout to ensure showModal has completed in some browsers
         setTimeout(() => first.focus(), 40);
       }
     });
@@ -231,9 +448,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
       fetch('/admin/users', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'same-origin',
         body: JSON.stringify(data),
       })
       .then(r => r.json())
@@ -242,25 +458,23 @@ document.addEventListener('DOMContentLoaded', function () {
           createDialog.close();
           reload();
           if (resp.inviteLink) {
-            // place the invite link into the pre/code block (escape handled by textContent)
             inviteLinkCode.textContent = resp.inviteLink;
-            // show metadata if provided
             if (resp.inviteExpiresAt) {
-              inviteMeta.textContent = `Gültig bis: ${new Date(resp.inviteExpiresAt).toLocaleString()}`;
+              inviteMeta.textContent = `Gültig bis: ${new Date(resp.inviteExpiresAt).toLocaleString('de-DE')}`;
             } else {
               inviteMeta.textContent = '';
             }
             inviteDialog.showModal();
           } else {
-            alert('Benutzer angelegt, aber kein Invite-Link erhalten.');
+            showSnackbar('Benutzer angelegt.', 'success');
           }
         } else {
-          alert('Fehler: ' + (resp.error || 'Unbekannter Fehler'));
+          showSnackbar('Fehler: ' + (resp.error || 'Unbekannter Fehler'), 'error');
         }
       })
       .catch(err => {
         console.error(err);
-        alert('Netzwerkfehler beim Anlegen des Benutzers.');
+        showSnackbar('Netzwerkfehler beim Anlegen des Benutzers.', 'error');
       });
     });
   }
@@ -273,60 +487,41 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   }
 
-  if (userDetailClose && userDetailDialog) {
-    userDetailClose.addEventListener('click', () => {
-      try { userDetailDialog.close(); } catch (e) { userDetailDialog.removeAttribute('open'); }
-      userDetailContent.innerHTML = '';
-      delete userDetailDialog.dataset.userId;
+  // Edit dialog handlers
+  if (cancelEditBtn && editDialog) {
+    cancelEditBtn.addEventListener('click', () => {
+      try { editDialog.close(); } catch (e) { editDialog.removeAttribute('open'); }
     });
   }
 
-  if (userDetailGenInvite && userDetailDialog) {
-    userDetailGenInvite.addEventListener('click', () => {
-      const uid = userDetailDialog.dataset.userId;
-      if (!uid) return alert('Kein Benutzer ausgewählt');
-      if (!confirm('Einen neuen Invite-Link für den Benutzer erzeugen? (bestehende Token bleiben erhalten)')) return;
-
-      fetch(`/admin/users/${encodeURIComponent(uid)}/reset-password`, { method: 'POST', headers: { 'Content-Type': 'application/json' } })
-        .then(r => r.json())
-        .then(resp => {
-          if (resp.ok && resp.inviteLink) {
-            inviteLinkCode.textContent = resp.inviteLink;
-            if (resp.inviteExpiresAt) inviteMeta.textContent = `Gültig bis: ${new Date(resp.inviteExpiresAt).toLocaleString()}`;
-            inviteDialog.showModal();
-            // refresh user detail to reflect new token
-            const uid2 = userDetailDialog.dataset.userId;
-            fetch(`/admin/users/${encodeURIComponent(uid2)}`).then(r => r.json()).then(d => {
-              // update content quickly
-              let html = `<div class="md3-stack--dialog">
-                    <div><strong>Benutzername:</strong> ${d.username}</div>
-                    <div><strong>Email:</strong> ${d.email || '-'}</div>
-                    <div><strong>Rolle:</strong> ${d.role}</div>
-                    <div><strong>Status:</strong> ${d.is_active ? 'Aktiv' : 'Inaktiv'}</div>
-                  </div>`;
-              if (d.resetTokens && d.resetTokens.length) {
-                html += '<h4 class="md3-title-small">Reset Tokens</h4><ul class="md3-list">';
-                d.resetTokens.forEach(t => {
-                  html += `<li class="md3-list-item"><div class="md3-list-item__text">ID: ${t.id}</div><div class="md3-list-item__meta">Erstellt: ${new Date(t.created_at).toLocaleString()} • Läuft ab: ${new Date(t.expires_at).toLocaleString()} ${t.used_at ? '• Verwendet' : ''}</div></li>`;
-                });
-                html += '</ul>';
-              } else {
-                html += '<p class="md3-body-small md3-text-variant">Keine kürzlichen Reset-Token.</p>';
-              }
-              userDetailContent.innerHTML = html;
-            });
-          } else if (resp.ok) {
-            alert('Passwort-Reset erzeugt, aber kein Link erhalten.');
-          } else {
-            alert('Fehler: ' + (resp.error || 'Unbekannter Fehler'));
-          }
-        })
-        .catch(err => {
-          console.error(err);
-          alert('Netzwerkfehler beim Erzeugen des Reset-Links.');
-        });
-    });
+  if (saveEditBtn) {
+    saveEditBtn.addEventListener('click', saveEdit);
   }
+
+  if (editResetPasswordBtn) {
+    editResetPasswordBtn.addEventListener('click', resetPasswordFromEditDialog);
+  }
+
+  // Update floating labels on input
+  if (editEmail) {
+    editEmail.addEventListener('input', () => updateFloatingLabel(editEmail));
+    editEmail.addEventListener('focus', () => {
+      const label = editEmail.closest('.md3-outlined-textfield')?.querySelector('.md3-outlined-textfield__label');
+      if (label) label.classList.add('md3-outlined-textfield__label--floating');
+    });
+    editEmail.addEventListener('blur', () => updateFloatingLabel(editEmail));
+  }
+
+  // Close dialogs on backdrop click
+  [createDialog, inviteDialog, editDialog].forEach(dialog => {
+    if (dialog) {
+      dialog.addEventListener('click', (e) => {
+        if (e.target === dialog) {
+          dialog.close();
+        }
+      });
+    }
+  });
 
   // Initial load
   reload();

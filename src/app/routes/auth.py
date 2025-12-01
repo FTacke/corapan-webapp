@@ -335,14 +335,18 @@ def login_post() -> Response:
 
     # Resolve identifier and support JSON payloads
     identifier = username
-    if request.is_json:
+    is_json_request = request.is_json
+    if is_json_request:
         payload = request.get_json()
         identifier = (payload.get("username") or payload.get("email") or "").strip().lower()
         password = payload.get("password", "")
 
     # Helper to render full-page login with error (replaces old sheet rendering)
-    def _render_login_error(status_code: int = 400) -> Response:
-        """Render full-page login template with flashed error messages."""
+    def _render_login_error(status_code: int = 400, error_code: str = None) -> Response:
+        """Render full-page login template with flashed error messages.
+        For JSON requests, return JSON error response instead."""
+        if is_json_request and error_code:
+            return jsonify({"error": error_code}), status_code
         return render_template("auth/login.html", next=next_url or ""), status_code
 
     if not identifier:
@@ -362,7 +366,16 @@ def login_post() -> Response:
     status = auth_services.check_account_status(user)
     if not status.ok:
         current_app.logger.warning(f"Login blocked for {identifier}: {status.code}")
-        return jsonify({"error": status.code}), 403
+        # Map status codes to user-friendly Spanish messages
+        error_messages = {
+            "account_inactive": "Tu cuenta ha sido desactivada. Contacta al administrador.",
+            "account_deleted": "Esta cuenta ya no existe.",
+            "account_not_yet_valid": "Tu cuenta aún no está activa. Vuelve a intentarlo más tarde.",
+            "account_expired": "Tu acceso ha expirado. Contacta al administrador.",
+            "account_locked": "Tu cuenta está temporalmente bloqueada. Inténtalo más tarde.",
+        }
+        flash(error_messages.get(status.code, "No se puede acceder a esta cuenta."), "error")
+        return _render_login_error(403, error_code=status.code)
 
     if not auth_services.verify_password(password, user.password_hash):
         auth_services.on_failed_login(user)

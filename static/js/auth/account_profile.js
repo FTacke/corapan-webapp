@@ -1,18 +1,91 @@
 import { showError, showSuccess, clearAlert } from '/static/js/md3/alert-utils.js';
 
-document.addEventListener('DOMContentLoaded', () => {
+/**
+ * Load current profile data from API and display in the UI
+ */
+async function loadProfileData() {
+  const usernameEl = document.getElementById('current-username');
+  const emailEl = document.getElementById('current-email');
+  
+  try {
+    const response = await fetch('/auth/account/profile', {
+      method: 'GET',
+      credentials: 'same-origin'
+    });
+    
+    if (response.ok) {
+      const data = await response.json();
+      if (usernameEl) usernameEl.textContent = data.username || '–';
+      if (emailEl) emailEl.textContent = data.email || '–';
+    } else {
+      console.warn('Failed to load profile data:', response.status);
+    }
+  } catch (e) {
+    console.error('Error loading profile data:', e);
+  }
+}
+
+document.addEventListener('DOMContentLoaded', async () => {
+  // Load current profile data via API
+  await loadProfileData();
+
+  // Initialize floating labels for inputs
+  document.querySelectorAll('.md3-outlined-textfield__input').forEach(input => {
+    const updateLabel = () => {
+      const label = input.parentElement?.querySelector('.md3-outlined-textfield__label');
+      if (label) {
+        if (input.value) {
+          label.classList.add('md3-outlined-textfield__label--floating');
+        } else {
+          label.classList.remove('md3-outlined-textfield__label--floating');
+        }
+      }
+    };
+    // Update on input/focus/blur
+    input.addEventListener('input', updateLabel);
+    input.addEventListener('focus', () => {
+      const label = input.parentElement?.querySelector('.md3-outlined-textfield__label');
+      if (label) label.classList.add('md3-outlined-textfield__label--floating');
+    });
+    input.addEventListener('blur', updateLabel);
+  });
+
   const saveBtn = document.getElementById('save');
   if (saveBtn) {
     saveBtn.addEventListener('click', async () => {
       const status = document.getElementById('status');
       clearAlert(status);
 
-      const body = { username: document.getElementById('username').value, email: document.getElementById('email').value };
-      const r = await fetch('/auth/account/profile', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+      const usernameInput = document.getElementById('username');
+      const emailInput = document.getElementById('email');
+      const newUsername = usernameInput?.value?.trim();
+      const newEmail = emailInput?.value?.trim();
+      
+      // Only send non-empty values
+      const body = {};
+      if (newUsername) body.username = newUsername;
+      if (newEmail) body.email = newEmail;
+      
+      // Nothing to update
+      if (Object.keys(body).length === 0) {
+        showError(status, 'Bitte mindestens ein Feld ausfüllen.');
+        return;
+      }
+
+      const r = await fetch('/auth/account/profile', { 
+        method: 'PATCH', 
+        headers: { 'Content-Type': 'application/json' }, 
+        credentials: 'same-origin',
+        body: JSON.stringify(body) 
+      });
       const j = await r.json();
       
       if (r.status === 200 && j.ok) {
         showSuccess(status, 'Profil erfolgreich gespeichert.');
+        // Refresh display and clear inputs
+        await loadProfileData();
+        if (usernameInput) usernameInput.value = '';
+        if (emailInput) emailInput.value = '';
       } else {
         if (r.status === 409 && j.error === 'username_exists') {
           showError(status, 'Benutzername bereits vergeben.');
@@ -79,6 +152,7 @@ document.addEventListener('DOMContentLoaded', () => {
           const r = await fetch('/auth/account/delete', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
+            credentials: 'same-origin',
             body: JSON.stringify({ password: pw })
           });
 

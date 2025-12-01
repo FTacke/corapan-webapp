@@ -25,10 +25,26 @@
         <h2 class="md3-title-large">Grunddaten</h2>
       </header>
       <div class="md3-card__content">
+        <!-- Current profile info (loaded via JS) -->
+        <div id="profile-info" class="md3-profile-info">
+          <div class="md3-profile-info__row">
+            <span class="md3-label-medium md3-text-variant">Benutzername</span>
+            <span id="current-username" class="md3-body-large">–</span>
+          </div>
+          <div class="md3-profile-info__row">
+            <span class="md3-label-medium md3-text-variant">E-Mail</span>
+            <span id="current-email" class="md3-body-large">–</span>
+          </div>
+        </div>
+
+        <hr class="md3-divider">
+
         <form id="profile-form" class="md3-auth-form" novalidate>
+          <p class="md3-body-small md3-text-variant">Änderungen eingeben und speichern:</p>
+          
           <div class="md3-outlined-textfield md3-outlined-textfield--block">
-            <input id="username" name="username" class="md3-outlined-textfield__input" aria-label="Benutzername" value="{{ user.username if user else '' }}">
-            <label class="md3-outlined-textfield__label" for="username">Benutzername</label>
+            <input id="username" name="username" class="md3-outlined-textfield__input" aria-label="Neuer Benutzername" placeholder=" ">
+            <label class="md3-outlined-textfield__label" for="username">Neuer Benutzername</label>
               <span class="md3-outlined-textfield__outline">
                 <span class="md3-outlined-textfield__outline-start"></span>
                 <span class="md3-outlined-textfield__outline-notch"></span>
@@ -37,8 +53,8 @@
           </div>
 
           <div class="md3-outlined-textfield md3-outlined-textfield--block">
-            <input id="email" name="email" class="md3-outlined-textfield__input" aria-label="E-Mail" value="{{ user.email if user and user.email else '' }}">
-            <label class="md3-outlined-textfield__label" for="email">E-Mail</label>
+            <input id="email" name="email" type="email" class="md3-outlined-textfield__input" aria-label="Neue E-Mail" placeholder=" ">
+            <label class="md3-outlined-textfield__label" for="email">Neue E-Mail</label>
               <span class="md3-outlined-textfield__outline">
                 <span class="md3-outlined-textfield__outline-start"></span>
                 <span class="md3-outlined-textfield__outline-notch"></span>

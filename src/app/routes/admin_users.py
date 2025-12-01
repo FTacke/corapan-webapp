@@ -4,7 +4,7 @@ All endpoints require JWT auth and admin role.
 """
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime, timezone
 
 from flask import Blueprint, jsonify, request, current_app, url_for
 from flask_jwt_extended import jwt_required
@@ -28,6 +28,7 @@ def list_users():
     q = request.args.get("q")
     role = request.args.get("role")
     status = request.args.get("status")
+    include_inactive = request.args.get("include_inactive", "0") == "1"
     page = int(request.args.get("page", 1))
     size = int(request.args.get("size", 50))
 
@@ -39,13 +40,25 @@ def list_users():
             sel = sel.where((UserModel.username.ilike(f"%{q}%")) | (UserModel.email.ilike(f"%{q}%")))
         if role:
             sel = sel.where(UserModel.role == role)
+        
+        # Status filter: if include_inactive is False (default), show only active users
         if status:
             if status == 'active':
                 sel = sel.where(UserModel.is_active == True)
+            elif status == 'inactive':
+                sel = sel.where(UserModel.is_active == False)
             elif status == 'deleted':
                 sel = sel.where(UserModel.deleted_at != None)
             elif status == 'locked':
                 sel = sel.where(UserModel.locked_until != None)
+            elif status == 'all':
+                pass  # No filter - show all
+        elif not include_inactive:
+            # Default: only active users
+            sel = sel.where(UserModel.is_active == True)
+        
+        # Sort: active users first, then inactive
+        sel = sel.order_by(UserModel.is_active.desc(), UserModel.username)
 
         total = None
         offset = (page - 1) * size
@@ -170,23 +183,58 @@ def create_user():
 def patch_user(id):
     # DB-backed auth is required for admin user management
     data = request.get_json() or {}
-    # allowed: role, is_active, must_reset_password, valid_from, access_expires_at
-    # simple implementation: load, update fields
+    # allowed: role, is_active, email, must_reset_password, valid_from, access_expires_at
+    
+    # Validate email format if provided
+    if "email" in data and data["email"]:
+        import re
+        email_regex = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+        if not re.match(email_regex, data["email"]):
+            return jsonify({"error": "invalid_email", "message": "Ungültiges E-Mail-Format"}), 400
+    
+    # Validate role if provided
+    if "role" in data and data["role"] not in ("admin", "editor", "user"):
+        return jsonify({"error": "invalid_role", "message": "Rolle muss admin, editor oder user sein"}), 400
+    
     with auth_services.get_session() as session:
         stmt = select(UserModel).where(UserModel.id == id)
         user = session.execute(stmt).scalars().first()
         if not user:
             return jsonify({"error": "not_found"}), 404
+        
+        # Last-admin protection: prevent demoting or deactivating the last active admin
+        is_demoting_from_admin = "role" in data and user.role == "admin" and data["role"] != "admin"
+        is_deactivating = "is_active" in data and not bool(data["is_active"])
+        
+        if user.role == "admin" and (is_demoting_from_admin or is_deactivating):
+            # Count active admins
+            admin_count_stmt = select(UserModel).where(
+                UserModel.role == "admin",
+                UserModel.is_active == True,
+                UserModel.deleted_at == None
+            )
+            active_admins = session.execute(admin_count_stmt).scalars().all()
+            if len(active_admins) <= 1:
+                return jsonify({
+                    "error": "last_admin",
+                    "message": "Der letzte aktive Administrator kann nicht herabgestuft oder deaktiviert werden."
+                }), 400
+        
         if "role" in data:
             user.role = data["role"]
         if "is_active" in data:
             user.is_active = bool(data["is_active"])
+        if "email" in data:
+            user.email = data["email"] if data["email"] else None
         if "must_reset_password" in data:
             user.must_reset_password = bool(data["must_reset_password"])
         if "valid_from" in data:
             user.valid_from = data["valid_from"]
         if "access_expires_at" in data:
             user.access_expires_at = data["access_expires_at"]
+        
+        user.updated_at = datetime.now(timezone.utc)
+    
     return jsonify({"ok": True})
 
 

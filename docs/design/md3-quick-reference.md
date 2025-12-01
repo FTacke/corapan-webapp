@@ -149,6 +149,116 @@ function hydrateMetricCard(metric, payload) {
 
 ---
 
+## 🔘 Filter Chips for Admin Lists
+
+### Basic Filter Chip
+```html
+<div class="md3-filter-chips" role="group" aria-label="Filteroptionen">
+  <button type="button" id="filter-inactive" class="md3-chip" aria-pressed="false">
+    <span class="material-symbols-rounded md3-chip__icon" aria-hidden="true">visibility_off</span>
+    <span class="md3-chip__label">Inaktive anzeigen</span>
+  </button>
+</div>
+```
+
+### CSS Classes
+| Class | Description |
+|-------|-------------|
+| `.md3-chip` | Base chip styling |
+| `.md3-chip--selected` | Active/selected state |
+| `.md3-chip__icon` | Icon inside chip |
+| `.md3-chip__label` | Text label |
+
+### JavaScript Toggle
+```javascript
+filterBtn.addEventListener('click', () => {
+  isActive = !isActive;
+  filterBtn.classList.toggle('md3-chip--selected', isActive);
+  filterBtn.setAttribute('aria-pressed', isActive.toString());
+  
+  // Update icon
+  const icon = filterBtn.querySelector('.md3-chip__icon');
+  if (icon) {
+    icon.textContent = isActive ? 'visibility' : 'visibility_off';
+  }
+  
+  reloadList();
+});
+```
+
+---
+
+## 📝 Edit Dialog for Entities
+
+### Structure
+```html
+<dialog id="edit-dialog" class="md3-dialog md3-dialog--wide" role="dialog" aria-modal="true">
+  <div class="md3-dialog__container">
+    <div class="md3-dialog__surface">
+      <header class="md3-dialog__header">
+        <h2 class="md3-title-large md3-dialog__title">Benutzer bearbeiten</h2>
+      </header>
+
+      <div class="md3-dialog__content md3-stack--dialog">
+        <form id="edit-form" class="md3-form">
+          <!-- Error display -->
+          <div id="edit-error" class="md3-alert md3-alert--error" hidden>
+            <span class="material-symbols-rounded md3-alert__icon">error</span>
+            <span class="md3-alert__message"></span>
+          </div>
+
+          <!-- Sections with fieldsets -->
+          <fieldset class="md3-fieldset">
+            <legend class="md3-label-large">Section Name</legend>
+            <!-- Form fields -->
+          </fieldset>
+        </form>
+      </div>
+
+      <div class="md3-dialog__actions">
+        <button type="button" class="md3-button md3-button--text" id="cancel">Abbrechen</button>
+        <button type="button" class="md3-button md3-button--filled" id="save">Speichern</button>
+      </div>
+    </div>
+  </div>
+</dialog>
+```
+
+### Fieldset Pattern
+```html
+<fieldset class="md3-fieldset">
+  <legend class="md3-label-large">Status</legend>
+  
+  <div class="md3-switch-row">
+    <label for="is-active" class="md3-switch-row__label">Konto aktiv</label>
+    <input type="checkbox" id="is-active" class="md3-switch-input" checked>
+    <label for="is-active" class="md3-switch">
+      <span class="md3-switch__track">
+        <span class="md3-switch__thumb"></span>
+      </span>
+    </label>
+  </div>
+  <p class="md3-body-small md3-text-variant">Helper text here.</p>
+</fieldset>
+```
+
+### Alert Pattern
+```html
+<!-- Error Alert -->
+<div class="md3-alert md3-alert--error">
+  <span class="material-symbols-rounded md3-alert__icon">error</span>
+  <span class="md3-alert__message">Error message here.</span>
+</div>
+
+<!-- Success Alert -->
+<div class="md3-alert md3-alert--success">
+  <span class="material-symbols-rounded md3-alert__icon">check_circle</span>
+  <span class="md3-alert__message">Success message here.</span>
+</div>
+```
+
+---
+
 ## 📐 CSS-Variablen Reference
 
 ### Spacing (4dp Grid)

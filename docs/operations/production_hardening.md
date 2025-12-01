@@ -44,6 +44,10 @@
 - ✅ Invite metadata (expiry, ID)
 - ✅ Password reset returns invite link
 - ✅ Lock/unlock users
+- ✅ List users with filter (default: active only, optional: include inactive)
+- ✅ Update user email, role, is_active status
+- ✅ Last-admin protection (cannot demote/deactivate the last active admin)
+- ✅ Email format validation
 
 ### 1.3 Running Tests
 
