@@ -176,18 +176,6 @@ document.addEventListener("htmx:afterRequest", function (evt) {
   }
 });
 
-// After HTMX-auth, verify auth state so the client updates UI correctly
-document.addEventListener("htmx:afterRequest", function (evt) {
-  try {
-    const path = evt.detail.requestConfig.path || "";
-    if (path && (path.includes("/auth/login") || path.includes("/login"))) {
-      // re-check auth state (will pick up new cookies if any)
-      verifyAuth();
-    }
-  } catch (e) {
-    // ignore
-  }
-});
 window.authSetup = {
   getCSRFToken: window.getCSRFToken,
   verifyAuth: verifyAuth,

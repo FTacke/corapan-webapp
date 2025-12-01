@@ -191,7 +191,7 @@ class TestInviteFlow:
         # Redeem invite by setting password
         confirm_resp = client.post("/auth/reset-password/confirm", json={
             "resetToken": raw_token,
-            "newPassword": "mynewpassword123"
+            "newPassword": "MyNewPass123"
         })
 
         assert confirm_resp.status_code == 200
@@ -200,7 +200,7 @@ class TestInviteFlow:
         # Now login with new password
         login_resp = client.post("/auth/login", json={
             "username": "invited2",
-            "password": "mynewpassword123"
+            "password": "MyNewPass123"
         })
 
         assert login_resp.status_code in (200, 303, 204)
@@ -247,14 +247,14 @@ class TestInviteFlow:
         # First use - should succeed
         resp1 = client.post("/auth/reset-password/confirm", json={
             "resetToken": raw_token,
-            "newPassword": "password1"
+            "newPassword": "Password1X"
         })
         assert resp1.status_code == 200
 
         # Second use - should fail
         resp2 = client.post("/auth/reset-password/confirm", json={
             "resetToken": raw_token,
-            "newPassword": "password2"
+            "newPassword": "Password2X"
         })
         assert resp2.status_code == 400
 

@@ -52,19 +52,24 @@ document.addEventListener('DOMContentLoaded', function () {
       return;
     }
 
-    const r = await fetch('/auth/change-password', { 
-      method: 'POST', 
-      headers: { 'Content-Type': 'application/json' }, 
-      body: JSON.stringify({ oldPassword, newPassword }) 
-    });
-    
-    const j = await r.json();
-    
-    if (j.ok) {
-      showSuccess(status, 'Passwort erfolgreich geändert.');
-      form.reset();
-    } else {
-      showError(status, j.message || 'Fehler beim Ändern des Passworts.');
+    try {
+      const r = await fetch('/auth/change-password', { 
+        method: 'POST', 
+        headers: { 'Content-Type': 'application/json' }, 
+        body: JSON.stringify({ oldPassword, newPassword }) 
+      });
+      
+      const j = await r.json();
+      
+      if (j.ok) {
+        showSuccess(status, 'Passwort erfolgreich geändert.');
+        form.reset();
+      } else {
+        showError(status, j.message || 'Fehler beim Ändern des Passworts.');
+      }
+    } catch (error) {
+      console.error('[Password Change] Error:', error);
+      showError(status, 'Error de conexión. Por favor, inténtalo de nuevo.');
     }
   });
 });

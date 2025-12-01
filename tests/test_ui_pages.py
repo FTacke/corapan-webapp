@@ -25,6 +25,7 @@ def client():
     app.config["JWT_COOKIE_SECURE"] = False
     app.config["JWT_COOKIE_CSRF_PROTECT"] = False
     app.config["TESTING"] = True
+    app.config["SECRET_KEY"] = "test-secret-key"  # Required for flash() session
 
     from src.app.extensions.sqlalchemy_ext import init_engine as init_auth
 

@@ -104,7 +104,7 @@ def test_change_password_success_and_invalidate(client):
     extra_raw, extra_row = services.create_refresh_token_for_user(u)
 
     # call change-password with correct old password
-    r = client.post("/auth/change-password", json={"oldPassword": "password123", "newPassword": "new-strong-pass"})
+    r = client.post("/auth/change-password", json={"oldPassword": "password123", "newPassword": "NewStrong1Pass"})
     assert r.status_code == 200
 
     # all refresh tokens for user should be revoked
@@ -118,7 +118,7 @@ def test_change_password_wrong_old_password(client):
     resp = login_user(client, "wrongold")
     assert resp.status_code in (200, 303, 204)
 
-    r = client.post("/auth/change-password", json={"oldPassword": "bad", "newPassword": "newpass"})
+    r = client.post("/auth/change-password", json={"oldPassword": "bad", "newPassword": "NewPass123!"})
     assert r.status_code == 401
 
 
@@ -137,7 +137,7 @@ def test_reset_password_request_and_confirm(client):
     assert raw and row
 
     # confirm using route
-    rc = client.post("/auth/reset-password/confirm", json={"resetToken": raw, "newPassword": "brand-new-pass"})
+    rc = client.post("/auth/reset-password/confirm", json={"resetToken": raw, "newPassword": "BrandNew1Pass"})
     assert rc.status_code == 200
     assert rc.json.get("ok") is True
 

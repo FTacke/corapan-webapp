@@ -9,10 +9,10 @@ def test_corpus_guia_page_available():
     rv = client.get("/corpus/guia")
     assert rv.status_code == 200
     html = rv.get_data(as_text=True)
-    assert "Guía para consultar el corpus CO.RA.PAN" in html
-    # Check that BlackLab links are present
-    assert "https://blacklab.ivdnt.org/" in html
-    assert "https://github.com/INL/BlackLab" in html
+    assert "Guía paso a paso" in html
+    # Check key content sections are present
+    assert "Consulta Simple" in html or "Consulta simple" in html
+    assert "Modo Avanzado" in html or "Modo avanzado" in html
 
 
 def test_nav_drawer_contains_corpus_children():
@@ -23,7 +23,7 @@ def test_nav_drawer_contains_corpus_children():
     rv = client.get("/")
     assert rv.status_code == 200
     html = rv.get_data(as_text=True)
-    # Ensure nav contains 'Corpus' and both children
+    # Ensure nav contains 'Corpus' and children links
     assert "Corpus" in html
-    assert "Consultar corpus" in html
+    assert "Consultar" in html
     assert "/corpus/guia" in html
