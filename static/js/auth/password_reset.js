@@ -30,7 +30,25 @@ document.addEventListener('DOMContentLoaded', function () {
     const confirmPassword = document.getElementById('confirm').value;
 
     if (newPassword !== confirmPassword) {
-      showError(status, 'Die Passwörter stimmen nicht überein.');
+      showError(status, 'Las contraseñas no coinciden.');
+      return;
+    }
+
+    // Client-side password strength validation
+    if (newPassword.length < 8) {
+      showError(status, 'La contraseña debe tener al menos 8 caracteres.');
+      return;
+    }
+    if (!/[A-Z]/.test(newPassword)) {
+      showError(status, 'La contraseña debe contener al menos una letra mayúscula.');
+      return;
+    }
+    if (!/[a-z]/.test(newPassword)) {
+      showError(status, 'La contraseña debe contener al menos una letra minúscula.');
+      return;
+    }
+    if (!/\d/.test(newPassword)) {
+      showError(status, 'La contraseña debe contener al menos un número.');
       return;
     }
 
@@ -43,14 +61,14 @@ document.addEventListener('DOMContentLoaded', function () {
     const data = await resp.json();
     
     if (data.ok) {
-      showSuccess(status, 'Passwort erfolgreich gesetzt. Du kannst dich jetzt anmelden.');
+      showSuccess(status, 'Contraseña establecida correctamente. Ahora puedes iniciar sesión.');
       form.reset();
       // Optional: Redirect to login after a delay
       setTimeout(() => {
         window.location.href = '/';
       }, 2000);
     } else {
-      showError(status, data.message || 'Fehler beim Setzen des Passworts.');
+      showError(status, data.message || 'Error al establecer la contraseña.');
     }
   });
 });

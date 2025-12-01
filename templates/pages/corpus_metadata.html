@@ -1,0 +1,78 @@
+{% extends 'base.html' %}
+{% from 'partials/page_navigation.html' import page_navigation %}
+{% block page_title %}Metadatos · CO.RA.PAN{% endblock %}
+{% block content %}
+<div class="md3-page" role="main" aria-label="Metadatos del corpus">
+  <header class="md3-page__header">
+    <div class="md3-hero md3-hero--card md3-hero__container">
+      <div class="md3-hero__icon" aria-hidden="true"><span class="material-symbols-rounded">dataset</span></div>
+      <div class="md3-hero__content">
+        <p class="md3-body-small md3-hero__eyebrow">Corpus</p>
+        <h1 class="md3-headline-medium md3-hero__title">Metadatos</h1>
+      </div>
+    </div>
+  </header>
+
+  <main class="md3-text-page">
+    <div class="md3-text-content">
+    <section class="md3-text-section">
+      <p class="md3-body-large">
+        Esta sección presenta la estructura de metadatos del corpus CO.RA.PAN. Los metadatos permiten caracterizar cada grabación y hablante según múltiples dimensiones, facilitando así la selección y el análisis de materiales específicos.
+      </p>
+      <p class="md3-body-large">
+        A continuación se describen las principales categorías de metadatos disponibles en el corpus:
+      </p>
+    </section>
+
+    <section class="md3-text-section md3-text-section--divider">
+      <h2 class="md3-title-large md3-section-title md3-text-heading">Metadatos del documento</h2>
+      <p class="md3-body-large">
+        Cada documento del corpus está asociado a un conjunto de metadatos que describen su origen y contexto de producción:
+      </p>
+      <ul class="md3-text-list md3-body-medium">
+        <li><strong>País (country):</strong> Código ISO del país de origen de la emisora.</li>
+        <li><strong>Emisora (station):</strong> Nombre de la emisora de radio.</li>
+        <li><strong>Fecha de grabación (recording_date):</strong> Fecha aproximada de la grabación.</li>
+        <li><strong>Género comunicativo (genre):</strong> Tipo de programa (noticias, entrevista, debate, etc.).</li>
+        <li><strong>Duración (duration):</strong> Duración total del documento en segundos.</li>
+      </ul>
+    </section>
+
+    <section class="md3-text-section md3-text-section--divider">
+      <h2 class="md3-title-large md3-section-title md3-text-heading">Metadatos del hablante</h2>
+      <p class="md3-body-large">
+        Cada segmento de habla está vinculado a un hablante caracterizado por los siguientes atributos:
+      </p>
+      <ul class="md3-text-list md3-body-medium">
+        <li><strong>Rol profesional (speaker_role):</strong> Profesional (presentador, periodista, locutor) o no profesional (entrevistado, oyente).</li>
+        <li><strong>Sexo (speaker_sex):</strong> Masculino (m) o femenino (f).</li>
+        <li><strong>Modo de producción (production_mode):</strong> Habla leída, habla libre o presentación.</li>
+        <li><strong>Identificador del hablante (speaker_id):</strong> Código único que permite rastrear al mismo hablante a través del corpus.</li>
+      </ul>
+    </section>
+
+    <section class="md3-text-section md3-text-section--divider">
+      <h2 class="md3-title-large md3-section-title md3-text-heading">Metadatos lingüísticos</h2>
+      <p class="md3-body-large">
+        Cada token (palabra) del corpus está anotado con información lingüística detallada:
+      </p>
+      <ul class="md3-text-list md3-body-medium">
+        <li><strong>Forma (word):</strong> La forma ortográfica tal como aparece en la transcripción.</li>
+        <li><strong>Lema (lemma):</strong> La forma canónica o de diccionario.</li>
+        <li><strong>Categoría gramatical (pos):</strong> Etiqueta morfosintáctica según el sistema EAGLES/UPOS.</li>
+        <li><strong>Marcas temporales (start_time, end_time):</strong> Posición exacta en el audio para sincronización.</li>
+      </ul>
+    </section>
+
+    <section class="md3-text-section">
+      <h2 class="md3-title-large md3-section-title md3-text-heading">Uso de los metadatos</h2>
+      <p class="md3-body-large">
+        Los metadatos pueden utilizarse como filtros en la búsqueda avanzada del corpus. Por ejemplo, es posible restringir una consulta a un país específico, a hablantes profesionales femeninas o a segmentos de habla libre. Esta granularidad permite realizar análisis comparativos sistemáticos entre variedades, registros y tipos de hablantes.
+      </p>
+    </section>
+  </div>
+  </main>
+</div>
+
+{{ page_navigation(prev_title="Guía", prev_url=url_for('corpus.guia'), next_title="Estadísticas", next_url=url_for('corpus.estadisticas')) }}
+{% endblock %}

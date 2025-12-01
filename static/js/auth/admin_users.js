@@ -47,7 +47,12 @@ document.addEventListener('DOMContentLoaded', function () {
         </span>
       `;
     }
-    return `<span class="md3-badge md3-badge--status-inactive">Inaktiv</span>`;
+    return `
+      <span class="md3-badge md3-badge--status-inactive">
+        <span class="material-symbols-rounded md3-badge__icon" aria-hidden="true">cancel</span>
+        Inaktiv
+      </span>
+    `;
   }
 
   function renderRow(user) {

@@ -36,6 +36,24 @@ def guia() -> Response:
     return render_template("pages/corpus_guia.html")
 
 
+@blueprint.get("/metadata")
+def metadata() -> Response:
+    """Metadatos del corpus - descripción de la estructura de metadatos.
+
+    PUBLIC ROUTE: No authentication required.
+    """
+    return render_template("pages/corpus_metadata.html")
+
+
+@blueprint.get("/estadisticas")
+def estadisticas() -> Response:
+    """Estadísticas del corpus - visualizaciones y datos cuantitativos.
+
+    PUBLIC ROUTE: No authentication required.
+    """
+    return render_template("pages/corpus_estadisticas.html")
+
+
 @blueprint.route("/search", methods=["GET", "POST"])
 def search() -> Response:
     """Deprecated search endpoint - redirects to advanced search.

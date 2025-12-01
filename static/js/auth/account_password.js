@@ -34,6 +34,24 @@ document.addEventListener('DOMContentLoaded', function () {
       return;
     }
 
+    // Client-side password strength validation
+    if (newPassword.length < 8) {
+      showError(status, 'Das Passwort muss mindestens 8 Zeichen lang sein.');
+      return;
+    }
+    if (!/[A-Z]/.test(newPassword)) {
+      showError(status, 'Das Passwort muss mindestens einen Großbuchstaben enthalten.');
+      return;
+    }
+    if (!/[a-z]/.test(newPassword)) {
+      showError(status, 'Das Passwort muss mindestens einen Kleinbuchstaben enthalten.');
+      return;
+    }
+    if (!/\d/.test(newPassword)) {
+      showError(status, 'Das Passwort muss mindestens eine Ziffer enthalten.');
+      return;
+    }
+
     const r = await fetch('/auth/change-password', { 
       method: 'POST', 
       headers: { 'Content-Type': 'application/json' }, 
