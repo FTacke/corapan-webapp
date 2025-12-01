@@ -1,6 +1,7 @@
 /**
  * Statistics Page Functionality
  * Handles image zoom modal and country statistics selection.
+ * Supports deep-linking via URL query parameter (?country=XXX).
  */
 
 export function initStatsPage() {
@@ -46,11 +47,9 @@ export function initStatsPage() {
   const displayArea = document.getElementById('countryStatsDisplay');
   
   if (countrySelect && displayArea) {
-    countrySelect.addEventListener('change', function() {
-      const countryCode = this.value;
-      
+    // Handle country selection
+    function loadCountryStats(countryCode) {
       if (!countryCode) {
-        // Clear display area
         displayArea.innerHTML = '';
         return;
       }
@@ -64,7 +63,7 @@ export function initStatsPage() {
       
       const img = document.createElement('img');
       img.className = 'md3-stats-country-image';
-      img.alt = `Estadísticas de ${this.options[this.selectedIndex].text}`;
+      img.alt = `Estadísticas de ${countrySelect.options[countrySelect.selectedIndex]?.text || countryCode}`;
       img.loading = 'lazy';
       
       // Build image path
@@ -102,7 +101,34 @@ export function initStatsPage() {
       // Replace content with fade effect
       displayArea.innerHTML = '';
       displayArea.appendChild(figure);
+    }
+
+    // Listen for select changes
+    countrySelect.addEventListener('change', function() {
+      const countryCode = this.value;
+      loadCountryStats(countryCode);
+      
+      // Update URL without reload
+      const url = new URL(window.location);
+      if (countryCode) {
+        url.searchParams.set('country', countryCode);
+      } else {
+        url.searchParams.delete('country');
+      }
+      window.history.replaceState({}, '', url);
     });
+
+    // Check for deep-link on page load
+    const params = new URLSearchParams(window.location.search);
+    const urlCountry = params.get('country');
+    if (urlCountry) {
+      // Find matching option
+      const option = countrySelect.querySelector(`option[value="${urlCountry}"]`);
+      if (option) {
+        countrySelect.value = urlCountry;
+        loadCountryStats(urlCountry);
+      }
+    }
   }
 }
 

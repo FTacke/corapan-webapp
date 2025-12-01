@@ -108,7 +108,8 @@ function updateURL(countryCode) {
  * Get unique sorted country codes from file metadata
  */
 function getCountryCodes() {
-  const codes = [...new Set(fileMetadata.map((item) => extractCode(item.filename)))].filter(Boolean);
+  // Use country_code from API if available, fallback to filename extraction
+  const codes = [...new Set(fileMetadata.map((item) => item.country_code || extractCode(item.filename)))].filter(Boolean);
   return codes.sort();
 }
 
@@ -116,8 +117,23 @@ function getCountryCodes() {
  * Calculate stats for a specific country
  */
 function calculateCountryStats(countryCode) {
-  const files = fileMetadata.filter((item) => extractCode(item.filename) === countryCode);
-  const totalDuration = files.reduce((sum, f) => sum + (f.duration || 0), 0);
+  const files = fileMetadata.filter((item) => 
+    item.country_code === countryCode || extractCode(item.filename) === countryCode
+  );
+  
+  // Parse duration strings (HH:MM:SS.ms) to seconds for aggregation
+  const parseDuration = (dur) => {
+    if (typeof dur === 'number') return dur;
+    if (typeof dur !== 'string') return 0;
+    const parts = dur.split(':');
+    if (parts.length < 2) return 0;
+    const hours = parseInt(parts[0], 10) || 0;
+    const minutes = parseInt(parts[1], 10) || 0;
+    const seconds = parseFloat(parts[2]) || 0;
+    return hours * 3600 + minutes * 60 + seconds;
+  };
+  
+  const totalDuration = files.reduce((sum, f) => sum + parseDuration(f.duration), 0);
   const totalWords = files.reduce((sum, f) => sum + (f.word_count || 0), 0);
   const emisoras = [...new Set(files.map((f) => f.radio))].filter(Boolean);
 
@@ -207,7 +223,9 @@ function renderTabs(countryCodes, activeCode) {
  * Render panel for a specific country
  */
 function renderPanel(countryCode, isActive) {
-  const files = fileMetadata.filter((item) => extractCode(item.filename) === countryCode);
+  const files = fileMetadata.filter((item) => 
+    item.country_code === countryCode || extractCode(item.filename) === countryCode
+  );
   const stats = calculateCountryStats(countryCode);
   const label = COUNTRY_LABELS[countryCode] || countryCode;
 
