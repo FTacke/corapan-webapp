@@ -45,13 +45,13 @@ def metadata() -> Response:
     return render_template("pages/corpus_metadata.html")
 
 
-@blueprint.get("/estadisticas")
-def estadisticas() -> Response:
-    """Estadísticas del corpus - visualizaciones y datos cuantitativos.
+@blueprint.get("/composicion")
+def composicion() -> Response:
+    """Composición del corpus - visualizaciones y datos cuantitativos.
 
     PUBLIC ROUTE: No authentication required.
     """
-    return render_template("pages/corpus_estadisticas.html")
+    return render_template("pages/corpus_composicion.html")
 
 
 @blueprint.route("/search", methods=["GET", "POST"])

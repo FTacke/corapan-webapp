@@ -381,10 +381,6 @@ function buildTooltipContent(city) {
           <span class="material-symbols-rounded" aria-hidden="true">dataset</span>
           Metadatos
         </a>
-        <a href="/corpus/estadisticas?country=${code}" class="atlas-tooltip-link">
-          <span class="material-symbols-rounded" aria-hidden="true">bar_chart</span>
-          Estadísticas
-        </a>
       </div>
     </div>
   `;

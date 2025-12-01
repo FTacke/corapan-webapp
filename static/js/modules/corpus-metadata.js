@@ -232,19 +232,34 @@ function renderPanel(countryCode, isActive) {
   // Sort files by date descending
   files.sort((a, b) => (b.date || "").localeCompare(a.date || ""));
 
+  // Build table rows with player links
   const rows = files
-    .map(
-      (item) => `
+    .map((item) => {
+      const fileBase = item.filename?.replace(".json", "").replace(".mp3", "") || "";
+      // Player URL format: same as datatableFactory.js
+      const transcriptionPath = `/media/transcripts/${encodeURIComponent(fileBase)}.json`;
+      const audioPath = `/media/full/${encodeURIComponent(fileBase)}.mp3`;
+      const playerUrl = `/player?transcription=${encodeURIComponent(transcriptionPath)}&audio=${encodeURIComponent(audioPath)}`;
+      
+      return `
       <tr>
         <td>${item.date || "—"}</td>
         <td>${item.radio || "—"}</td>
-        <td>${item.filename?.replace(".json", "") || "—"}</td>
+        <td>
+          <a href="${playerUrl}" class="md3-metadata-player-link" title="Abrir en el reproductor (requiere login)">
+            <span class="material-symbols-rounded" aria-hidden="true">play_circle</span>
+            ${fileBase}
+          </a>
+        </td>
         <td class="right-align">${formatDuration(item.duration)}</td>
         <td class="right-align">${formatNumber(item.word_count)}</td>
       </tr>
-    `
-    )
+    `;
+    })
     .join("");
+
+  // Build statistics image path
+  const statsImagePath = `/static/img/statistics/viz_${countryCode}_resumen.png`;
 
   return `
     <div
@@ -300,6 +315,25 @@ function renderPanel(countryCode, isActive) {
         </div>
       `
       }
+
+      <!-- Country Statistics Image -->
+      <section class="md3-metadata-stats-section">
+        <h3 class="md3-title-medium md3-metadata-stats-title">Resumen estadístico de ${label}</h3>
+        <figure class="md3-metadata-stats-figure" data-country-stats="${countryCode}">
+          <div class="md3-metadata-stats-image-container">
+            <img 
+              src="${statsImagePath}" 
+              alt="Estadísticas de ${label}" 
+              class="md3-metadata-stats-image"
+              loading="lazy"
+              onerror="this.closest('.md3-metadata-stats-section').style.display='none'"
+            >
+          </div>
+          <figcaption class="md3-body-medium md3-metadata-stats-caption">
+            Distribución de hablantes profesionales por sexo y modo de producción.
+          </figcaption>
+        </figure>
+      </section>
     </div>
   `;
 }

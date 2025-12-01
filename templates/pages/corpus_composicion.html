@@ -1,14 +1,14 @@
 {% extends 'base.html' %}
 {% from 'partials/page_navigation.html' import page_navigation %}
-{% block page_title %}Estadísticas · CO.RA.PAN{% endblock %}
+{% block page_title %}Composición · CO.RA.PAN{% endblock %}
 {% block content %}
-<div class="md3-page" role="main" aria-label="Estadísticas del corpus">
+<div class="md3-page" role="main" aria-label="Composición del corpus">
   <header class="md3-page__header">
     <div class="md3-hero md3-hero--card md3-hero__container">
       <div class="md3-hero__icon" aria-hidden="true"><span class="material-symbols-rounded">bar_chart</span></div>
       <div class="md3-hero__content">
         <p class="md3-body-small md3-hero__eyebrow">Corpus</p>
-        <h1 class="md3-headline-medium md3-hero__title">Estadísticas</h1>
+        <h1 class="md3-headline-medium md3-hero__title">Composición</h1>
       </div>
     </div>
   </header>
@@ -84,62 +84,11 @@
         Las grabaciones del proyecto se realizaron sin filtros de sexo, documentando la programación tal como se emitió. Aunque en algunos países las voces femeninas tienen una presencia similar o incluso superior, en la mayoría de los casos la proporción se inclina fuertemente hacia lo masculino. Para alcanzar una proporción equilibrada de 50:50, sería necesario aplicar una selección específica del material, lo cual no reflejaría la realidad del paisaje radiofónico. Dado que el corpus tiene como objetivo documentar el uso real de la lengua estándar en su contexto de emisión, esta asimetría de sexo se mantiene como parte de la representación fiel de los medios actuales.
       </p>
     </section>
-
-    <section class="md3-text-section md3-stats-country-section">
-      <h2 class="md3-title-large md3-section-title md3-text-heading">Estadísticas por país</h2>
-      <p class="md3-body-large">
-        Las estadísticas nacionales permiten observar las particularidades de cada variedad en términos de volumen de grabaciones, distribución por sexo y proporción de modos de producción. Cada país presenta características específicas que reflejan tanto las condiciones de grabación como las prácticas comunicativas de las emisoras locales.
-      </p>
-
-      <p class="md3-body-large">
-        Las gráficas muestran la distribución de hablantes profesionales por sexo y el desglose por modo de producción (lectura, habla libre y presentaciones). Estos datos permiten comparar las variedades nacionales y observar en qué medida cada país se ajusta a las tendencias generales del corpus.
-      </p>
-
-      <p class="md3-body-large">
-        <strong>Visualice las estadísticas por país:</strong>
-      </p>
-
-      <div class="md3-stats-country-selector md3-form-field">
-        <label for="countrySelect" class="md3-label-medium md3-stats-country-label">
-          País
-        </label>
-        <select id="countrySelect" class="md3-stats-country-select" name="country" aria-controls="countryStatsDisplay">
-          <option value="" selected>-- Seleccionar país --</option>
-          <option value="ARG">ARG</option>
-          <option value="ARG-CBA">ARG-CBA</option>
-          <option value="ARG-CHU">ARG-CHU</option>
-          <option value="ARG-SDE">ARG-SDE</option>
-          <option value="BOL">BOL</option>
-          <option value="CHL">CHL</option>
-          <option value="COL">COL</option>
-          <option value="CRI">CRI</option>
-          <option value="CUB">CUB</option>
-          <option value="DOM">DOM</option>
-          <option value="ECU">ECU</option>
-          <option value="ESP">ESP</option>
-          <option value="ESP-CAN">ESP-CAN</option>
-          <option value="ESP-SEV">ESP-SEV</option>
-          <option value="GTM">GTM</option>
-          <option value="HND">HND</option>
-          <option value="MEX">MEX</option>
-          <option value="NIC">NIC</option>
-          <option value="PAN">PAN</option>
-          <option value="PER">PER</option>
-          <option value="PRY">PRY</option>
-          <option value="SLV">SLV</option>
-          <option value="URY">URY</option>
-          <option value="USA">USA</option>
-          <option value="VEN">VEN</option>
-        </select>
-      </div>
-
-      <div id="countryStatsDisplay" class="md3-stats-country-display"></div>
-    </section>
     </div>
   </main>
 </div>
 
-{{ page_navigation(prev_title="Metadatos", prev_url=url_for('corpus.metadata'), next_title=None, next_url=None) }}
+{{ page_navigation(prev_title="Guía", prev_url=url_for('corpus.guia'), next_title="Metadatos", next_url=url_for('corpus.metadata')) }}
 
 <!-- Image Zoom Modal -->
 <div id="statsZoomModal" class="md3-stats-zoom-modal">
@@ -148,7 +97,6 @@
     <img id="statsZoomImage" class="md3-stats-zoom-modal-image" alt="">
   </div>
 </div>
-
 {% endblock %}
 
 {% block extra_scripts %}

@@ -279,8 +279,8 @@ def proyecto_diseno():
 
 @blueprint.get("/proyecto/estadisticas")
 def proyecto_estadisticas():
-    # Redirect to new corpus statistics page
-    return redirect(url_for("corpus.estadisticas"), 301)
+    # Redirect to new corpus composition page
+    return redirect(url_for("corpus.composicion"), 301)
 
 
 @blueprint.get("/proyecto/quienes-somos")
