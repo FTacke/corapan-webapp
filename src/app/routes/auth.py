@@ -447,6 +447,11 @@ def change_password() -> Response:
     if not old_pass or not new_pass:
         return jsonify({"error": "missing_parameters"}), 400
 
+    # Validate password strength
+    is_valid, error = auth_services.validate_password_strength(new_pass)
+    if not is_valid:
+        return jsonify({"error": error}), 400
+
     # identify current user via JWT sub
     identity = get_jwt_identity()
     # attempt DB user lookup
@@ -496,6 +501,11 @@ def reset_password_confirm() -> Response:
     new_password = data.get("newPassword")
     if not token or not new_password:
         return jsonify({"error": "missing_parameters"}), 400
+
+    # Validate password strength
+    is_valid, error = auth_services.validate_password_strength(new_password)
+    if not is_valid:
+        return jsonify({"error": error}), 400
 
     row, status = auth_services.verify_and_use_reset_token(token)
     if status != "ok":

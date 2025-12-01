@@ -292,6 +292,11 @@ def proyecto_como_citar():
     return render_template("pages/proyecto_como_citar.html")
 
 
+@blueprint.get("/proyecto/referencias")
+def proyecto_referencias():
+    return render_template("pages/proyecto_referencias.html")
+
+
 @blueprint.get("/atlas")
 def atlas_page():
     """Atlas page - auth status affects UI (login buttons visibility)."""

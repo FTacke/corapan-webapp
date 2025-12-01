@@ -94,6 +94,36 @@ def verify_password(plain: str, hashed: str) -> bool:
         return False
 
 
+# Password strength validation
+def validate_password_strength(password: str) -> tuple[bool, str | None]:
+    """Validate password meets minimum security requirements.
+
+    Requirements:
+    - At least 8 characters
+    - At least one uppercase letter
+    - At least one lowercase letter
+    - At least one digit
+
+    Returns:
+        Tuple of (is_valid, error_message)
+    """
+    import re
+
+    if len(password) < 8:
+        return False, "password_too_short"
+
+    if not re.search(r'[A-Z]', password):
+        return False, "password_missing_uppercase"
+
+    if not re.search(r'[a-z]', password):
+        return False, "password_missing_lowercase"
+
+    if not re.search(r'\d', password):
+        return False, "password_missing_digit"
+
+    return True, None
+
+
 # Access token creation
 def create_access_token_for_user(user: User) -> str:
     expires_seconds = current_app.config.get("ACCESS_TOKEN_EXP", 900)
