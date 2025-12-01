@@ -118,9 +118,9 @@
       </ul>
     </section>
 
-    {{ page_navigation(prev_url=url_for('advanced_search.index'), prev_title='Consultar', next_url=url_for('corpus.metadata'), next_title='Metadatos') }}
-
     </div>
   </main>
 </div>
+
+{{ page_navigation(prev_url=url_for('advanced_search.index'), prev_title='Consultar', next_url=url_for('corpus.metadata'), next_title='Metadatos') }}
 {% endblock %}
