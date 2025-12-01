@@ -4,7 +4,9 @@
 {% block page_title %}Metadatos · CO.RA.PAN{% endblock %}
 
 {% block extra_head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/md3/components/tabs.css') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/md3/components/corpus-metadata.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/md3/components/menu.css') }}">
 {% endblock %}
 
 {% block content %}
@@ -16,81 +18,154 @@
         <p class="md3-body-small md3-hero__eyebrow">Corpus</p>
         <h1 class="md3-headline-medium md3-hero__title">Metadatos del corpus</h1>
         <p class="md3-body-medium md3-hero__intro">
-          Esta página presenta los metadatos del corpus CO.RA.PAN por país y emisora. Seleccione un país para ver las grabaciones disponibles.
+          Esta página presenta los metadatos del corpus CO.RA.PAN. Puede explorar el resumen global o consultar los datos por país.
         </p>
       </div>
     </div>
   </header>
 
-  <main class="md3-metadata-page">
-    <div class="md3-metadata-content">
-      <!-- Country Tabs -->
-      <nav class="md3-metadata-tabs" role="tablist" aria-label="Selección de país" data-element="metadata-tabs">
-        <!-- Tabs will be populated by JavaScript -->
-      </nav>
+  <main class="md3-metadata-page md3-stack--page">
+    {# ========================================================================
+       PRIMARY VIEW TABS
+       ======================================================================== #}
+    <nav class="md3-tabs md3-tabs--primary" role="tablist" aria-label="Vista de metadatos del corpus">
+      <button
+        type="button"
+        class="md3-tab md3-tab--active"
+        role="tab"
+        aria-selected="true"
+        aria-controls="tab-panel-resumen"
+        id="tab-resumen"
+        data-view="resumen"
+      >
+        Resumen y descargas
+      </button>
+      <button
+        type="button"
+        class="md3-tab"
+        role="tab"
+        aria-selected="false"
+        aria-controls="tab-panel-paises"
+        id="tab-paises"
+        data-view="paises"
+      >
+        Metadatos por país
+      </button>
+    </nav>
 
-      <!-- Tab Content Panels -->
-      <div class="md3-metadata-panels" data-element="metadata-panels">
-        <!-- Panels will be populated by JavaScript -->
+    {# ========================================================================
+       TAB PANEL: RESUMEN Y DESCARGAS
+       ======================================================================== #}
+    <section
+      id="tab-panel-resumen"
+      class="md3-tab-content md3-tab-content--active md3-stack--section"
+      role="tabpanel"
+      aria-labelledby="tab-resumen"
+      data-view-panel="resumen"
+    >
+      <h2 class="md3-headline-small">Resumen del corpus y descargas de metadatos</h2>
+      
+      {# Access Information Card #}
+      <article class="md3-card md3-card--outlined">
+        <div class="md3-card__content">
+          <p class="md3-body-medium">
+            Los datos de audio y las transcripciones completas están sujetos a restricciones de acceso
+            por motivos de derechos de autor y protección de datos. Sin embargo, los metadatos del corpus
+            CO.RA.PAN se ofrecen de forma abierta y se pueden descargar en formatos estandarizados para su uso en investigación.
+          </p>
+        </div>
+      </article>
+
+      {# Global Download Card #}
+      <article class="md3-card md3-card--outlined">
+        <div class="md3-card__content">
+          <h3 class="md3-title-medium">Descargas de metadatos del corpus completo</h3>
+          <p class="md3-body-medium md3-text-secondary">
+            Seleccione el formato de descarga para los metadatos de todas las grabaciones del corpus CO.RA.PAN.
+          </p>
+        </div>
+        <div class="md3-card__actions md3-card__actions--borderless">
+          <div class="md3-download-menu">
+            <button
+              type="button"
+              class="md3-button md3-button--tonal"
+              id="btn-download-global"
+              aria-haspopup="menu"
+              aria-expanded="false"
+              aria-controls="menu-download-global"
+            >
+              <span class="material-symbols-rounded" aria-hidden="true">download</span>
+              <span>Descargar metadatos</span>
+              <span class="material-symbols-rounded md3-button__trailing-icon" aria-hidden="true">arrow_drop_down</span>
+            </button>
+            <div
+              id="menu-download-global"
+              class="md3-menu md3-menu--hidden"
+              role="menu"
+              aria-labelledby="btn-download-global"
+            >
+              <button type="button" class="md3-menu-item" role="menuitem" data-download-href="{{ url_for('corpus.metadata_download_tsv') }}">
+                <span class="material-symbols-rounded" aria-hidden="true">table_view</span>
+                Formato TSV
+              </button>
+              <button type="button" class="md3-menu-item" role="menuitem" data-download-href="{{ url_for('corpus.metadata_download_json') }}">
+                <span class="material-symbols-rounded" aria-hidden="true">data_object</span>
+                Formato JSON
+              </button>
+              <button type="button" class="md3-menu-item" role="menuitem" data-download-href="{{ url_for('corpus.metadata_download_jsonld') }}">
+                <span class="material-symbols-rounded" aria-hidden="true">code</span>
+                Formato JSON-LD
+              </button>
+              <div class="md3-menu-separator"></div>
+              <button type="button" class="md3-menu-item" role="menuitem" data-download-href="{{ url_for('corpus.metadata_download_tei') }}">
+                <span class="material-symbols-rounded" aria-hidden="true">folder_zip</span>
+                Cabeceras TEI (ZIP)
+              </button>
+            </div>
+          </div>
+        </div>
+      </article>
+
+    </section>
+
+    {# ========================================================================
+       TAB PANEL: METADATOS POR PAÍS
+       ======================================================================== #}
+    <section
+      id="tab-panel-paises"
+      class="md3-tab-content md3-stack--section"
+      role="tabpanel"
+      aria-labelledby="tab-paises"
+      data-view-panel="paises"
+    >
+      <div>
+        <h2 class="md3-headline-small">Metadatos por país</h2>
+        <p class="md3-body-medium md3-text-secondary">
+          Seleccione un país para ver las grabaciones incluidas en el corpus CO.RA.PAN y las estadísticas básicas,
+          así como opciones de descarga de metadatos filtradas por país.
+        </p>
       </div>
 
-      <!-- Loading State -->
+      {# Country Filter Chips #}
+      <nav class="md3-country-filter" role="tablist" aria-label="Selección de país" data-element="metadata-tabs">
+        {# Populated by JavaScript #}
+      </nav>
+
+      {# Country Panels Container #}
+      <div class="md3-country-panels" data-element="metadata-panels">
+        {# Populated by JavaScript #}
+      </div>
+
+      {# Loading State #}
       <div class="md3-metadata-loading" data-element="metadata-loading">
         <div class="md3-metadata-loading__spinner"></div>
         <p class="md3-body-medium">Cargando metadatos...</p>
       </div>
 
-      <!-- Error State -->
+      {# Error State #}
       <div class="md3-metadata-error" data-element="metadata-error" hidden>
         <span class="material-symbols-rounded">error</span>
         <p class="md3-body-medium">Error al cargar los metadatos. Por favor, recargue la página.</p>
-      </div>
-    </div>
-
-    <!-- Metadata Schema Documentation -->
-    <section class="md3-metadata-schema">
-      <div class="md3-text-content">
-        <h2 class="md3-title-large md3-section-title md3-text-heading">Estructura de metadatos</h2>
-        
-        <section class="md3-text-section md3-text-section--divider">
-          <h3 class="md3-title-medium md3-text-heading">Metadatos del documento</h3>
-          <p class="md3-body-large">
-            Cada documento del corpus está asociado a un conjunto de metadatos que describen su origen y contexto de producción:
-          </p>
-          <ul class="md3-text-list md3-body-medium">
-            <li><strong>País (country):</strong> Código ISO del país de origen de la emisora.</li>
-            <li><strong>Emisora (station):</strong> Nombre de la emisora de radio.</li>
-            <li><strong>Fecha de grabación (recording_date):</strong> Fecha aproximada de la grabación.</li>
-            <li><strong>Género comunicativo (genre):</strong> Tipo de programa (noticias, entrevista, debate, etc.).</li>
-            <li><strong>Duración (duration):</strong> Duración total del documento en segundos.</li>
-          </ul>
-        </section>
-
-        <section class="md3-text-section md3-text-section--divider">
-          <h3 class="md3-title-medium md3-text-heading">Metadatos del hablante</h3>
-          <p class="md3-body-large">
-            Cada segmento de habla está vinculado a un hablante caracterizado por los siguientes atributos:
-          </p>
-          <ul class="md3-text-list md3-body-medium">
-            <li><strong>Rol profesional (speaker_role):</strong> Profesional (presentador, periodista, locutor) o no profesional (entrevistado, oyente).</li>
-            <li><strong>Sexo (speaker_sex):</strong> Masculino (m) o femenino (f).</li>
-            <li><strong>Modo de producción (production_mode):</strong> Habla leída, habla libre o presentación.</li>
-            <li><strong>Identificador del hablante (speaker_id):</strong> Código único que permite rastrear al mismo hablante a través del corpus.</li>
-          </ul>
-        </section>
-
-        <section class="md3-text-section">
-          <h3 class="md3-title-medium md3-text-heading">Metadatos lingüísticos</h3>
-          <p class="md3-body-large">
-            Cada token (palabra) del corpus está anotado con información lingüística detallada:
-          </p>
-          <ul class="md3-text-list md3-body-medium">
-            <li><strong>Forma (word):</strong> La forma ortográfica tal como aparece en la transcripción.</li>
-            <li><strong>Lema (lemma):</strong> La forma canónica o de diccionario.</li>
-            <li><strong>Categoría gramatical (pos):</strong> Etiqueta morfosintáctica según el sistema EAGLES/UPOS.</li>
-            <li><strong>Marcas temporales (start_time, end_time):</strong> Posición exacta en el audio para sincronización.</li>
-          </ul>
-        </section>
       </div>
     </section>
   </main>

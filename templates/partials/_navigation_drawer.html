@@ -122,6 +122,17 @@
           </a>
         {% endif %}
       {% endfor %}
+      
+      {# Player Link (only for authenticated users with roles admin, editor, user) #}
+      {% if is_authenticated and role_value in ['admin', 'editor', 'user'] %}
+        {% set player_is_active = active_endpoint == 'corpus.player_overview' %}
+        <a href="{{ url_for('corpus.player_overview') }}" 
+           class="md3-navigation-drawer__item {{ 'md3-navigation-drawer__item--active' if player_is_active else '' }}"
+           aria-current="{{ 'page' if player_is_active else 'false' }}">
+          <span class="material-symbols-rounded md3-navigation-drawer__icon">play_circle</span>
+          <span class="md3-navigation-drawer__label">Player</span>
+        </a>
+      {% endif %}
     </nav>
 
     {# Divider #}
@@ -259,6 +270,17 @@
         </a>
       {% endif %}
     {% endfor %}
+    
+    {# Player Link (only for authenticated users with roles admin, editor, user) #}
+    {% if is_authenticated and role_value in ['admin', 'editor', 'user'] %}
+      {% set player_is_active = active_endpoint == 'corpus.player_overview' %}
+      <a href="{{ url_for('corpus.player_overview') }}" 
+         class="md3-navigation-drawer__item {{ 'md3-navigation-drawer__item--active' if player_is_active else '' }}"
+         aria-current="{{ 'page' if player_is_active else 'false' }}">
+        <span class="material-symbols-rounded md3-navigation-drawer__icon">play_circle</span>
+        <span class="md3-navigation-drawer__label">Player</span>
+      </a>
+    {% endif %}
   </nav>
 
   {# Footer Navigation #}

@@ -73,15 +73,16 @@ a.md3-button.md3-button--filled,
   box-sizing: border-box;
 }
 
-/* Small button variant - reduced touch target for inline/table use */
-.md3-button--small {
+/* Small button variant - reduced touch target for inline/table use
+   Apply AFTER base button classes (--filled, --tonal, etc.) to override sizes.
+   Uses label-medium typography for compact but readable labels. */
+.md3-button--small,
+.md3-button--tonal.md3-button--small,
+.md3-button--filled.md3-button--small,
+.md3-button--outlined.md3-button--small {
   padding: var(--space-2) var(--space-4);
-  min-height: 36px;
+  min-height: 40px;
   font-size: var(--md-sys-typescale-label-medium-font-size);
-}
-
-.md3-button--small:hover {
-  min-height: 36px;
 }
 
 .md3-button--filled:focus-visible {

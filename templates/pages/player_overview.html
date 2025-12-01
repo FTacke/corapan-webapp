@@ -1,0 +1,57 @@
+{% extends 'base.html' %}
+{% set page_name = 'player_overview' %}
+{% block page_title %}Player · CO.RA.PAN{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/md3/components/tabs.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/md3/components/corpus-metadata.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="md3-page" role="main" aria-label="Player del corpus">
+  <header class="md3-page__header">
+    <div class="md3-hero md3-hero--card md3-hero__container">
+      <div class="md3-hero__icon" aria-hidden="true"><span class="material-symbols-rounded">play_circle</span></div>
+      <div class="md3-hero__content">
+        <p class="md3-body-small md3-hero__eyebrow">Corpus</p>
+        <h1 class="md3-headline-medium md3-hero__title">Player</h1>
+        <p class="md3-body-medium md3-hero__intro">
+          Seleccione un país para acceder a las grabaciones del corpus CO.RA.PAN mediante el reproductor integrado.
+        </p>
+      </div>
+    </div>
+  </header>
+
+  <main class="md3-text-page">
+    {# Country Filter Chips #}
+    <nav class="md3-country-filter" role="tablist" aria-label="Selección de país" data-element="player-tabs">
+      {# Populated by JavaScript #}
+    </nav>
+
+    {# Country Panels Container #}
+    <div class="md3-country-panels" data-element="player-panels">
+      {# Populated by JavaScript #}
+    </div>
+
+    {# Loading State #}
+    <div class="md3-metadata-loading" data-element="player-loading">
+      <div class="md3-metadata-loading__spinner"></div>
+      <p class="md3-body-medium">Cargando grabaciones...</p>
+    </div>
+
+    {# Error State #}
+    <div class="md3-metadata-error" data-element="player-error" hidden>
+      <span class="material-symbols-rounded">error</span>
+      <p class="md3-body-medium">Error al cargar las grabaciones. Por favor, recargue la página.</p>
+    </div>
+  </main>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  // Pass initial country from URL to JavaScript
+  window.PLAYER_OVERVIEW_INITIAL_COUNTRY = {{ (country | tojson) if country else 'null' }};
+</script>
+<script type="module" src="{{ url_for('static', filename='js/modules/player-overview.js') }}"></script>
+{% endblock %}

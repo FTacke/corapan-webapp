@@ -129,6 +129,14 @@ async function initializePlayer() {
         }
       }, 100);
     }
+
+    // Initialize back button (CSP-safe: uses event listener instead of javascript: URL)
+    const backButton = document.querySelector('[data-action="go-back"]');
+    if (backButton) {
+      backButton.addEventListener("click", () => {
+        window.history.back();
+      });
+    }
   } catch (error) {
     console.error("[Player Init] Error loading transcription:", error);
     showError("Fehler beim Laden der Transkription: " + error.message);

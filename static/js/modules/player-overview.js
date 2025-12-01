@@ -1,21 +1,18 @@
 /**
- * Corpus Metadata Page Module
+ * Player Overview Page Module
  *
  * Provides:
- * - Primary view tabs (Resumen vs. Por País)
- * - Country filter chips and file tables
- * - Download menus (global + country-specific)
- * - Deep-linking via URL query parameters (?view=paises&country=XXX)
+ * - Country filter chips for selecting a country
+ * - File tables with player links for each country
+ * - Deep-linking via URL query parameters (?country=XXX)
  *
- * Data source: /api/v1/atlas/files
+ * Data source: /api/v1/atlas/files (same as corpus-metadata.js)
  */
 
 // ==============================================================================
 // DOM ELEMENTS
 // ==============================================================================
 
-let primaryTabs = null;
-let viewPanels = null;
 let countryTabsContainer = null;
 let countryPanelsContainer = null;
 let loadingElement = null;
@@ -28,7 +25,7 @@ let errorElement = null;
 let fileMetadata = [];
 
 // ==============================================================================
-// COUNTRY LABELS
+// COUNTRY LABELS (shared with corpus-metadata.js)
 // ==============================================================================
 
 const COUNTRY_LABELS = {
@@ -64,34 +61,23 @@ const COUNTRY_LABELS = {
 // ==============================================================================
 
 /**
- * Get URL parameters for view and country
+ * Get country from URL parameter
  */
-function getURLParams() {
+function getCountryFromURL() {
   const params = new URLSearchParams(window.location.search);
-  return {
-    view: params.get("view") || "resumen",
-    country: params.get("country") || null,
-  };
+  return params.get("country") || null;
 }
 
 /**
- * Update URL with current state (without page reload)
+ * Update URL with current country (without page reload)
  */
-function updateURL(view, countryCode = null) {
+function updateURL(countryCode) {
   const url = new URL(window.location);
-
-  if (view === "resumen") {
-    url.searchParams.delete("view");
-    url.searchParams.delete("country");
+  if (countryCode) {
+    url.searchParams.set("country", countryCode);
   } else {
-    url.searchParams.set("view", view);
-    if (countryCode) {
-      url.searchParams.set("country", countryCode);
-    } else {
-      url.searchParams.delete("country");
-    }
+    url.searchParams.delete("country");
   }
-
   window.history.replaceState({}, "", url);
 }
 
@@ -161,167 +147,6 @@ function getCountryCodes() {
 }
 
 // ==============================================================================
-// PRIMARY VIEW TABS
-// ==============================================================================
-
-/**
- * Initialize primary view tabs (Resumen vs. Por País)
- */
-function initPrimaryTabs() {
-  primaryTabs = document.querySelectorAll(".md3-tabs--primary .md3-tab");
-  viewPanels = document.querySelectorAll(".md3-tab-content[data-view-panel]");
-
-  primaryTabs.forEach((tab) => {
-    tab.addEventListener("click", () => {
-      const view = tab.dataset.view;
-      activateView(view);
-    });
-  });
-}
-
-/**
- * Activate a specific view
- */
-function activateView(view, updateHistory = true) {
-  // Update tab states
-  primaryTabs.forEach((tab) => {
-    const isActive = tab.dataset.view === view;
-    tab.classList.toggle("md3-tab--active", isActive);
-    tab.setAttribute("aria-selected", isActive.toString());
-  });
-
-  // Update panel visibility
-  viewPanels.forEach((panel) => {
-    const isActive = panel.dataset.viewPanel === view;
-    panel.classList.toggle("md3-tab-content--active", isActive);
-  });
-
-  // Update URL
-  if (updateHistory) {
-    const currentCountry = getActiveCountry();
-    updateURL(view, view === "paises" ? currentCountry : null);
-  }
-}
-
-/**
- * Get currently active country code
- */
-function getActiveCountry() {
-  const activeTab = countryTabsContainer?.querySelector(
-    '.md3-country-chip[aria-selected="true"]'
-  );
-  return activeTab?.dataset.country || null;
-}
-
-// ==============================================================================
-// DOWNLOAD MENUS
-// ==============================================================================
-
-// Flag to prevent duplicate global click listeners
-let globalClickListenerAdded = false;
-
-/**
- * Initialize download menu for a specific container
- */
-function initDownloadMenu(container) {
-  const button = container.querySelector("[aria-haspopup]");
-  const menu = container.querySelector(".md3-menu");
-
-  if (!button || !menu) return;
-
-  // Skip if already initialized
-  if (container.dataset.menuInitialized) return;
-  container.dataset.menuInitialized = "true";
-
-  // Toggle menu on button click
-  button.addEventListener("click", (e) => {
-    e.stopPropagation();
-    toggleMenu(button, menu);
-  });
-
-  // Handle menu item clicks
-  menu.querySelectorAll(".md3-menu-item").forEach((item) => {
-    item.addEventListener("click", () => {
-      const href = item.dataset.downloadHref;
-      if (href) {
-        window.location.href = href;
-      }
-      closeMenu(button, menu);
-    });
-  });
-
-  // Keyboard navigation
-  button.addEventListener("keydown", (e) => {
-    if (e.key === "ArrowDown" || e.key === "Enter" || e.key === " ") {
-      e.preventDefault();
-      openMenu(button, menu);
-      menu.querySelector(".md3-menu-item")?.focus();
-    }
-  });
-
-  menu.addEventListener("keydown", (e) => {
-    const items = Array.from(menu.querySelectorAll(".md3-menu-item"));
-    const currentIndex = items.indexOf(document.activeElement);
-
-    switch (e.key) {
-      case "ArrowDown":
-        e.preventDefault();
-        items[(currentIndex + 1) % items.length]?.focus();
-        break;
-      case "ArrowUp":
-        e.preventDefault();
-        items[(currentIndex - 1 + items.length) % items.length]?.focus();
-        break;
-      case "Escape":
-        e.preventDefault();
-        closeMenu(button, menu);
-        button.focus();
-        break;
-      case "Tab":
-        closeMenu(button, menu);
-        break;
-    }
-  });
-}
-
-/**
- * Initialize all download menus on the page
- */
-function initDownloadMenus() {
-  document.querySelectorAll(".md3-download-menu").forEach(initDownloadMenu);
-
-  // Add global click listener only once
-  if (!globalClickListenerAdded) {
-    globalClickListenerAdded = true;
-    document.addEventListener("click", () => {
-      document.querySelectorAll(".md3-menu:not(.md3-menu--hidden)").forEach((menu) => {
-        const button = document.querySelector(`[aria-controls="${menu.id}"]`);
-        if (button) closeMenu(button, menu);
-      });
-    });
-  }
-}
-
-function toggleMenu(button, menu) {
-  const isHidden = menu.classList.contains("md3-menu--hidden");
-  if (isHidden) {
-    openMenu(button, menu);
-  } else {
-    closeMenu(button, menu);
-  }
-}
-
-function openMenu(button, menu) {
-  menu.classList.remove("md3-menu--hidden");
-  button.setAttribute("aria-expanded", "true");
-}
-
-function closeMenu(button, menu) {
-  menu.classList.add("md3-menu--hidden");
-  button.setAttribute("aria-expanded", "false");
-}
-
-// ==============================================================================
 // COUNTRY TABS (FILTER CHIPS)
 // ==============================================================================
 
@@ -340,9 +165,9 @@ function renderCountryTabs(countryCodes, activeCode) {
           class="md3-country-chip${isActive ? " md3-country-chip--selected" : ""}"
           role="tab"
           aria-selected="${isActive}"
-          aria-controls="country-panel-${code}"
+          aria-controls="player-panel-${code}"
           data-country="${code}"
-          id="country-tab-${code}"
+          id="player-tab-${code}"
           tabindex="${isActive ? "0" : "-1"}"
           title="${label}"
         >
@@ -419,7 +244,7 @@ function activateCountry(countryCode) {
   });
 
   // Update URL
-  updateURL("paises", countryCode);
+  updateURL(countryCode);
 }
 
 // ==============================================================================
@@ -466,7 +291,7 @@ function renderCountryPanel(countryCode, isActive) {
   // Sort files by date descending
   files.sort((a, b) => (b.date || "").localeCompare(a.date || ""));
 
-  // Build table rows
+  // Build table rows with player links
   const rows = files
     .map((item) => {
       const fileBase =
@@ -480,7 +305,7 @@ function renderCountryPanel(countryCode, isActive) {
           <td>${item.date || "—"}</td>
           <td>${item.radio || "—"}</td>
           <td>
-            <a href="${playerUrl}" class="md3-metadata-player-link" title="Abrir en el reproductor (requiere login)">
+            <a href="${playerUrl}" class="md3-metadata-player-link" title="Reproducir grabación">
               <span class="material-symbols-rounded" aria-hidden="true">play_circle</span>
               ${fileBase}
             </a>
@@ -492,25 +317,18 @@ function renderCountryPanel(countryCode, isActive) {
     })
     .join("");
 
-  // Stats image path
-  const statsImagePath = `/static/img/statistics/viz_${countryCode}_resumen.png`;
-
-  // Download menu HTML
-  const downloadMenuId = `menu-download-${countryCode}`;
-  const downloadButtonId = `btn-download-${countryCode}`;
-
   return `
     <div
       class="md3-country-panel md3-stack--section"
       role="tabpanel"
-      id="country-panel-${countryCode}"
-      aria-labelledby="country-tab-${countryCode}"
+      id="player-panel-${countryCode}"
+      aria-labelledby="player-tab-${countryCode}"
       data-country="${countryCode}"
       data-active="${isActive}"
     >
       <header class="md3-country-panel-header">
         <div class="md3-country-panel-header__row">
-          <h3 class="md3-title-large md3-country-panel-title">${label}</h3>
+          <h2 class="md3-title-large md3-country-panel-title">${label}</h2>
           <div class="md3-country-panel-stats">
             <div class="md3-country-stat">
               <span class="md3-country-stat-label">Grabaciones</span>
@@ -537,14 +355,17 @@ function renderCountryPanel(countryCode, isActive) {
           ? `
         <article class="md3-card md3-card--outlined">
           <div class="md3-card__content">
-            <h4 class="md3-title-medium">Grabaciones del corpus</h4>
+            <h3 class="md3-title-medium">Grabaciones disponibles</h3>
+            <p class="md3-body-medium md3-text-secondary">
+              Haga clic en una grabación para abrirla en el reproductor integrado.
+            </p>
             <div class="md3-metadata-table-wrapper">
               <table class="md3-metadata-table">
                 <thead>
                   <tr>
                     <th>Fecha</th>
                     <th>Emisora</th>
-                    <th>Archivo</th>
+                    <th>Grabación</th>
                     <th class="right-align">Duración</th>
                     <th class="right-align">Palabras</th>
                   </tr>
@@ -557,72 +378,10 @@ function renderCountryPanel(countryCode, isActive) {
       `
           : `
         <div class="md3-metadata-empty">
-          <p>No hay grabaciones disponibles para este país.</p>
+          <p class="md3-body-medium">No hay grabaciones disponibles para este país.</p>
         </div>
       `
       }
-
-      <!-- Download Card -->
-      <article class="md3-card md3-card--outlined">
-        <div class="md3-card__content">
-          <h4 class="md3-title-medium">Descargar metadatos de ${label}</h4>
-          <p class="md3-body-medium md3-text-secondary">
-            Descargue los metadatos de las grabaciones de ${label} en formato tabular o estructurado.
-          </p>
-        </div>
-        <div class="md3-card__actions md3-card__actions--borderless">
-          <div class="md3-download-menu">
-            <button
-              type="button"
-              class="md3-button md3-button--tonal"
-              id="${downloadButtonId}"
-              aria-haspopup="menu"
-              aria-expanded="false"
-              aria-controls="${downloadMenuId}"
-            >
-              <span class="material-symbols-rounded" aria-hidden="true">download</span>
-              <span>Descargar metadatos</span>
-              <span class="material-symbols-rounded md3-button__trailing-icon" aria-hidden="true">arrow_drop_down</span>
-            </button>
-            <div
-              id="${downloadMenuId}"
-              class="md3-menu md3-menu--hidden"
-              role="menu"
-              aria-labelledby="${downloadButtonId}"
-            >
-              <button type="button" class="md3-menu-item" role="menuitem" data-download-href="/corpus/metadata/download/tsv/${countryCode}">
-                <span class="material-symbols-rounded" aria-hidden="true">table_view</span>
-                Formato TSV
-              </button>
-              <button type="button" class="md3-menu-item" role="menuitem" data-download-href="/corpus/metadata/download/json/${countryCode}">
-                <span class="material-symbols-rounded" aria-hidden="true">data_object</span>
-                Formato JSON
-              </button>
-            </div>
-          </div>
-        </div>
-      </article>
-
-      <!-- Statistics Section -->
-      <article class="md3-card md3-card--outlined">
-        <div class="md3-card__content">
-          <h4 class="md3-title-medium">Estadísticas de ${label}</h4>
-          <figure class="md3-country-stats-figure" data-country-stats="${countryCode}">
-            <div class="md3-country-stats-image-container">
-              <img 
-                src="${statsImagePath}" 
-                alt="Estadísticas de ${label}" 
-                class="md3-country-stats-image"
-                loading="lazy"
-                onerror="this.closest('.md3-card').style.display='none'"
-              >
-            </div>
-            <figcaption class="md3-body-medium md3-country-stats-caption">
-              Distribución de hablantes profesionales por sexo y modo de producción.
-            </figcaption>
-          </figure>
-        </div>
-      </article>
     </div>
   `;
 }
@@ -638,9 +397,6 @@ function renderCountryPanels(countryCodes, activeCode) {
     .join("");
 
   countryPanelsContainer.innerHTML = panels;
-
-  // Re-initialize download menus for dynamically added content
-  initDownloadMenus();
 }
 
 // ==============================================================================
@@ -657,6 +413,8 @@ async function loadFileMetadata() {
     });
     if (!response.ok) {
       if (response.status === 401) {
+        // Redirect to login if not authenticated
+        window.location.href = "/login?next=" + encodeURIComponent(window.location.pathname + window.location.search);
         return [];
       }
       throw new Error(`HTTP ${response.status}`);
@@ -664,7 +422,7 @@ async function loadFileMetadata() {
     const data = await response.json();
     return Array.isArray(data.files) ? data.files : [];
   } catch (error) {
-    console.error("[Corpus Metadata] Error loading files:", error);
+    console.error("[Player Overview] Error loading files:", error);
     throw error;
   }
 }
@@ -694,69 +452,61 @@ function showError() {
 // ==============================================================================
 
 /**
- * Initialize the corpus metadata page
+ * Initialize the player overview page
  */
 async function init() {
-  console.log("[Corpus Metadata] Initializing...");
+  console.log("[Player Overview] Initializing...");
 
   // Get DOM elements
-  countryTabsContainer = document.querySelector('[data-element="metadata-tabs"]');
-  countryPanelsContainer = document.querySelector('[data-element="metadata-panels"]');
-  loadingElement = document.querySelector('[data-element="metadata-loading"]');
-  errorElement = document.querySelector('[data-element="metadata-error"]');
+  countryTabsContainer = document.querySelector('[data-element="player-tabs"]');
+  countryPanelsContainer = document.querySelector('[data-element="player-panels"]');
+  loadingElement = document.querySelector('[data-element="player-loading"]');
+  errorElement = document.querySelector('[data-element="player-error"]');
 
-  // Initialize primary tabs
-  initPrimaryTabs();
+  // Get initial country from URL or server-rendered value
+  const urlCountry = getCountryFromURL();
+  const initialCountry = urlCountry || window.PLAYER_OVERVIEW_INITIAL_COUNTRY;
 
-  // Initialize global download menu
-  initDownloadMenus();
+  showLoading();
 
-  // Parse URL parameters
-  const { view, country } = getURLParams();
+  try {
+    fileMetadata = await loadFileMetadata();
+    hideLoading();
 
-  // If view is 'paises', we need to load country data
-  if (view === "paises" || countryTabsContainer) {
-    showLoading();
+    const countryCodes = getCountryCodes();
 
-    try {
-      fileMetadata = await loadFileMetadata();
-      hideLoading();
-
-      const countryCodes = getCountryCodes();
-
-      if (countryCodes.length === 0) {
-        if (countryPanelsContainer) {
-          countryPanelsContainer.innerHTML = `
-            <div class="md3-metadata-empty">
-              <p>No hay metadatos disponibles. Inicie sesión para ver las grabaciones del corpus.</p>
-            </div>
-          `;
-        }
-      } else {
-        // Determine active country
-        const activeCode = countryCodes.includes(country)
-          ? country
-          : countryCodes[0];
-
-        // Render country UI
-        renderCountryTabs(countryCodes, activeCode);
-        renderCountryPanels(countryCodes, activeCode);
-
-        console.log(
-          "[Corpus Metadata] Initialized with",
-          countryCodes.length,
-          "countries"
-        );
+    if (countryCodes.length === 0) {
+      if (countryPanelsContainer) {
+        countryPanelsContainer.innerHTML = `
+          <div class="md3-metadata-empty">
+            <p class="md3-body-medium">No hay grabaciones disponibles.</p>
+          </div>
+        `;
       }
-    } catch (error) {
-      console.error("[Corpus Metadata] Initialization failed:", error);
-      showError();
-    }
-  }
+    } else {
+      // Determine active country
+      const activeCode = countryCodes.includes(initialCountry)
+        ? initialCountry
+        : countryCodes[0];
 
-  // Apply initial view from URL
-  if (view === "paises") {
-    activateView("paises", false);
+      // Render country UI
+      renderCountryTabs(countryCodes, activeCode);
+      renderCountryPanels(countryCodes, activeCode);
+
+      // Update URL if no country was specified
+      if (!urlCountry) {
+        updateURL(activeCode);
+      }
+
+      console.log(
+        "[Player Overview] Initialized with",
+        countryCodes.length,
+        "countries"
+      );
+    }
+  } catch (error) {
+    console.error("[Player Overview] Initialization failed:", error);
+    showError();
   }
 }
 

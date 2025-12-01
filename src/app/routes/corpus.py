@@ -1,94 +1,398 @@
-"""Corpus routes and search endpoints.
+"""
+CO.RA.PAN – FAIR Metadata Endpoints
+====================================
 
-NOTE: This module contains legacy routes that redirect to the new BlackLab-based
-advanced search. The routes are kept for backward compatibility only.
+Dieses Modul stellt ausschließlich die offiziellen, FAIR-konformen
+Metadaten-Download-Endpunkte des CO.RA.PAN-Korpus bereit.
+
+Alle Dateien stammen aus data/metadata/latest/, das per Export-Skript
+automatisch erzeugt und versioniert wird (vYYYY-MM-DD + Symlink latest).
+
+Endpunkte:
+----------
+Statische Seiten:
+    GET /corpus/guia          → Guía para consultar el corpus
+    GET /corpus/metadata      → Metadatos (Download-Seite)
+    GET /corpus/composicion   → Composición del corpus
+
+Globale Metadaten-Downloads:
+    GET /corpus/metadata/download/tsv     → corapan_recordings.tsv
+    GET /corpus/metadata/download/json    → corapan_recordings.json
+    GET /corpus/metadata/download/jsonld  → corapan_recordings.jsonld
+    GET /corpus/metadata/download/tei     → tei_headers.zip
+
+Länderspezifische Downloads:
+    GET /corpus/metadata/download/tsv/<country_code>
+    GET /corpus/metadata/download/json/<country_code>
 """
 
 from __future__ import annotations
 
+import csv
+import io
+import json
+from pathlib import Path
+
 from flask import (
     Blueprint,
     Response,
+    abort,
+    current_app,
+    jsonify,
+    make_response,
+    redirect,
     render_template,
     request,
-    redirect,
+    send_file,
     url_for,
 )
+from flask_jwt_extended import verify_jwt_in_request
+
+# ==============================================================================
+# BLUEPRINT SETUP
+# ==============================================================================
 
 blueprint = Blueprint("corpus", __name__, url_prefix="/corpus")
 
+# ==============================================================================
+# CONFIGURATION
+# ==============================================================================
 
-@blueprint.get("/")
-def corpus_home() -> Response:
-    """Corpus-Startseite - redirects to advanced search.
+# Relative path from project root to metadata directory
+_METADATA_RELATIVE = Path("data") / "metadata" / "latest"
 
-    PUBLIC ROUTE: No authentication required.
+# TSV field order matching export schema
+_TSV_FIELDS = [
+    "corapan_id",
+    "file_id",
+    "filename",
+    "date",
+    "country_code_alpha3",
+    "country_code_alpha2",
+    "country_name",
+    "city",
+    "radio",
+    "radio_id",
+    "duration_seconds",
+    "duration_hms",
+    "words_transcribed",
+    "language",
+    "modality",
+    "revision",
+    "annotation_method",
+    "annotation_schema",
+    "annotation_tool",
+    "annotation_access",
+    "access_rights_data",
+    "access_rights_metadata",
+    "rights_statement_data",
+    "rights_statement_metadata",
+    "source_stream_type",
+    "institution",
+    "corpus_version",
+    "created_at",
+]
+
+
+# ==============================================================================
+# HELPER FUNCTIONS
+# ==============================================================================
+
+
+def _is_authenticated() -> bool:
+    """Check if user has valid JWT token (without raising exceptions)."""
+    try:
+        verify_jwt_in_request(optional=True)
+        from flask_jwt_extended import get_jwt_identity
+
+        return get_jwt_identity() is not None
+    except Exception:
+        return False
+
+
+def _get_metadata_path() -> Path:
+    """Get absolute path to metadata/latest directory.
+
+    Uses current_app.root_path (src/app) and navigates to project root.
     """
-    return redirect(url_for("advanced_search.index"))
+    project_root = Path(current_app.root_path).parent.parent
+    return project_root / _METADATA_RELATIVE
+
+
+def _load_recordings_json() -> list[dict] | None:
+    """Load recordings metadata from JSON file.
+
+    Returns:
+        List of recording dictionaries, or None if file not found/invalid.
+    """
+    json_path = _get_metadata_path() / "corapan_recordings.json"
+
+    if not json_path.exists():
+        return None
+
+    try:
+        with open(json_path, "r", encoding="utf-8") as f:
+            return json.load(f)
+    except (json.JSONDecodeError, IOError):
+        return None
+
+
+def _filter_by_country(records: list[dict], country_code: str) -> list[dict]:
+    """Filter records by country code (supports alpha-3 and alpha-2).
+
+    Args:
+        records: List of recording metadata dictionaries
+        country_code: ISO 3166-1 alpha-3 or alpha-2 country code
+
+    Returns:
+        Filtered list of records matching the country code
+    """
+    code_upper = country_code.upper()
+    return [
+        r
+        for r in records
+        if r.get("country_code_alpha3", "").upper() == code_upper
+        or r.get("country_code_alpha2", "").upper() == code_upper
+    ]
+
+
+def _serve_metadata_file(
+    filename: str, mimetype: str, download_name: str | None = None
+) -> Response:
+    """Serve a metadata file from the latest directory.
+
+    Args:
+        filename: Name of the file in metadata/latest/
+        mimetype: MIME type for the response
+        download_name: Filename for Content-Disposition header (defaults to filename)
+
+    Returns:
+        Flask Response with file as attachment
+
+    Raises:
+        404: If the metadata file is not found
+        500: If there's an error serving the file
+    """
+    metadata_path = _get_metadata_path() / filename
+
+    if not metadata_path.exists():
+        abort(
+            404,
+            description=(
+                f"Metadata file not found: {filename}. "
+                "Run the metadata export script first: "
+                "python LOKAL/metadata/export_metadata.py --corpus-version v1.0 --release-date YYYY-MM-DD"
+            ),
+        )
+
+    try:
+        return send_file(
+            metadata_path,
+            mimetype=mimetype,
+            as_attachment=True,
+            download_name=download_name or filename,
+        )
+    except Exception as e:
+        abort(500, description=f"Error serving metadata file {filename}: {e}")
+
+
+# ==============================================================================
+# STATIC PAGE ROUTES
+# ==============================================================================
 
 
 @blueprint.get("/guia")
 def guia() -> Response:
-    """Guía para consultar el corpus (página estática, en español).
-
-    Sólo renderiza el template y permite marcar el endpoint activo para el menú.
-    """
+    """Guía para consultar el corpus (página estática, en español)."""
     return render_template("pages/corpus_guia.html")
 
 
 @blueprint.get("/metadata")
 def metadata() -> Response:
-    """Metadatos del corpus - descripción de la estructura de metadatos.
-
-    PUBLIC ROUTE: No authentication required.
-    """
+    """Metadatos del corpus – página con descargas FAIR."""
     return render_template("pages/corpus_metadata.html")
 
 
 @blueprint.get("/composicion")
 def composicion() -> Response:
-    """Composición del corpus - visualizaciones y datos cuantitativos.
-
-    PUBLIC ROUTE: No authentication required.
-    """
+    """Composición del corpus – visualizaciones y datos cuantitativos."""
     return render_template("pages/corpus_composicion.html")
 
 
-@blueprint.route("/search", methods=["GET", "POST"])
-def search() -> Response:
-    """Deprecated search endpoint - redirects to advanced search.
+@blueprint.get("/player")
+def player_overview() -> Response:
+    """Player overview page - requires authentication.
 
-    NOTE: Simple search (SQL-based) has been removed.
-    Token search now uses BlackLab via /search/advanced/token/search API endpoint.
-    Advanced search uses /search/advanced UI with BlackLab.
+    Shows a country-filtered view of recordings with player links.
+    Similar to corpus_metadata but focused on audio playback access.
 
-    This route is kept only for backward compatibility and redirects to advanced search.
+    Query Parameters:
+        country: ISO 3166-1 alpha-3 country code (e.g., ARG, BOL)
+
+    Gate: Check auth before rendering. If not authenticated:
+    - HTMX request: 204 No Content + HX-Redirect to login
+    - Full-page: 303 Redirect to login
     """
-    params = request.args.to_dict(flat=False)
-    query_str = (
-        ""
-        if not params
-        else ("?" + "&".join([f"{k}={v[0]}" for k, v in params.items()]))
+    # Gate: Require authentication
+    if not _is_authenticated():
+        next_url = request.full_path.rstrip("?")
+
+        # HTMX request: Client-side redirect via header
+        if request.headers.get("HX-Request"):
+            from urllib.parse import quote
+
+            response = make_response("", 204)
+            double_encoded_next = quote(quote(next_url, safe=""), safe="")
+            redirect_url = f"/login?next={double_encoded_next}"
+            response.headers["HX-Redirect"] = redirect_url
+            return response
+
+        # Full-page request: Server-side redirect to canonical login page
+        return redirect(url_for("public.login", next=next_url), 303)
+
+    # Get country from query parameter (optional)
+    country = request.args.get("country", None)
+
+    # Render template
+    html = render_template(
+        "pages/player_overview.html",
+        country=country,
+        page_name="player_overview",
     )
-    return redirect(url_for("advanced_search.index") + query_str)
+
+    # Add cache control headers
+    response = make_response(html)
+    response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, private"
+    response.headers["Pragma"] = "no-cache"
+    response.headers["Vary"] = "Cookie"
+
+    return response
 
 
-@blueprint.get("/search/datatables")
-def search_datatables() -> Response:
-    """Deprecated DataTables endpoint - redirects to advanced API.
+# ==============================================================================
+# GLOBAL METADATA DOWNLOAD ENDPOINTS
+# ==============================================================================
 
-    NOTE: This endpoint is deprecated.
-    - Advanced search uses /search/advanced/data API endpoint (BlackLab)
-    - Token search uses /search/advanced/token/search API endpoint (BlackLab)
+
+@blueprint.get("/metadata/download/tsv")
+def metadata_download_tsv() -> Response:
+    """Download full corpus recordings metadata as TSV."""
+    return _serve_metadata_file(
+        filename="corapan_recordings.tsv",
+        mimetype="text/tab-separated-values",
+        download_name="corapan_recordings.tsv",
+    )
+
+
+@blueprint.get("/metadata/download/json")
+def metadata_download_json() -> Response:
+    """Download full corpus recordings metadata as JSON."""
+    return _serve_metadata_file(
+        filename="corapan_recordings.json",
+        mimetype="application/json",
+        download_name="corapan_recordings.json",
+    )
+
+
+@blueprint.get("/metadata/download/jsonld")
+def metadata_download_jsonld() -> Response:
+    """Download full corpus recordings metadata as JSON-LD."""
+    return _serve_metadata_file(
+        filename="corapan_recordings.jsonld",
+        mimetype="application/ld+json",
+        download_name="corapan_recordings.jsonld",
+    )
+
+
+@blueprint.get("/metadata/download/tei")
+def metadata_download_tei() -> Response:
+    """Download TEI headers as ZIP archive."""
+    return _serve_metadata_file(
+        filename="tei_headers.zip",
+        mimetype="application/zip",
+        download_name="corapan_tei_headers.zip",
+    )
+
+
+# ==============================================================================
+# COUNTRY-SPECIFIC METADATA DOWNLOAD ENDPOINTS
+# ==============================================================================
+
+
+@blueprint.get("/metadata/download/tsv/<country_code>")
+def metadata_country_tsv(country_code: str) -> Response:
+    """Download metadata for a specific country as TSV.
+
+    Args:
+        country_code: ISO 3166-1 alpha-3 or alpha-2 country code
+
+    Returns:
+        TSV file with metadata for recordings from the specified country.
     """
-    return redirect(url_for("advanced_api.data"))
+    records = _load_recordings_json()
+
+    if records is None:
+        return Response(
+            "Metadata not available. Please run the metadata export script.",
+            status=404,
+            mimetype="text/plain",
+        )
+
+    filtered = _filter_by_country(records, country_code)
+
+    if not filtered:
+        return Response(
+            f"No recordings found for country code: {country_code}",
+            status=404,
+            mimetype="text/plain",
+        )
+
+    # Generate TSV content
+    output = io.StringIO()
+    writer = csv.DictWriter(
+        output, fieldnames=_TSV_FIELDS, delimiter="\t", extrasaction="ignore"
+    )
+    writer.writeheader()
+    writer.writerows(filtered)
+
+    filename = f"corapan_{country_code.upper()}_metadata.tsv"
+
+    return Response(
+        output.getvalue(),
+        mimetype="text/tab-separated-values",
+        headers={
+            "Content-Disposition": f"attachment; filename={filename}",
+            "Content-Type": "text/tab-separated-values; charset=utf-8",
+        },
+    )
 
 
-@blueprint.get("/tokens")
-def token_lookup() -> Response:
-    """Lookup Tokens by IDs - redirects to advanced token search endpoint.
+@blueprint.get("/metadata/download/json/<country_code>")
+def metadata_country_json(country_code: str) -> Response:
+    """Download metadata for a specific country as JSON.
 
-    PUBLIC ROUTE: No authentication required.
-    NOTE: Legacy route - token lookup now uses BlackLab via advanced API.
+    Args:
+        country_code: ISO 3166-1 alpha-3 or alpha-2 country code
+
+    Returns:
+        JSON array with metadata for recordings from the specified country.
     """
-    return redirect(url_for("advanced_api.token_search"))
+    records = _load_recordings_json()
+
+    if records is None:
+        return jsonify(
+            {"error": "Metadata not available. Please run the metadata export script."}
+        ), 404
+
+    filtered = _filter_by_country(records, country_code)
+
+    if not filtered:
+        return jsonify(
+            {"error": f"No recordings found for country code: {country_code}"}
+        ), 404
+
+    filename = f"corapan_{country_code.upper()}_metadata.json"
+    response = jsonify(filtered)
+    response.headers["Content-Disposition"] = f"attachment; filename={filename}"
+
+    return response

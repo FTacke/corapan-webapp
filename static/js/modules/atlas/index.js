@@ -361,6 +361,27 @@ function buildTooltipContent(city) {
     ? formatNumber(stats.total_word_count || 0)
     : '<span class="atlas-tooltip-empty">—</span>';
 
+  // Check if user is authenticated for showing player link
+  const isAuthenticated = window.IS_AUTHENTICATED === "true" || window.IS_AUTHENTICATED === true;
+
+  // Build links section
+  let linksHtml = `
+    <a href="/corpus/metadata?view=paises&country=${code}" class="atlas-tooltip-link">
+      <span class="material-symbols-rounded" aria-hidden="true">dataset</span>
+      Metadatos
+    </a>
+  `;
+
+  // Add player link only for authenticated users
+  if (isAuthenticated) {
+    linksHtml += `
+      <a href="/corpus/player?country=${code}" class="atlas-tooltip-link">
+        <span class="material-symbols-rounded" aria-hidden="true">play_circle</span>
+        Player
+      </a>
+    `;
+  }
+
   return `
     <div class="atlas-tooltip">
       <div class="atlas-tooltip-title">${city.label}</div>
@@ -377,10 +398,7 @@ function buildTooltipContent(city) {
         <span class="atlas-tooltip-value">${wordsHtml}</span>
       </div>
       <div class="atlas-tooltip-links">
-        <a href="/corpus/metadata?country=${code}" class="atlas-tooltip-link">
-          <span class="material-symbols-rounded" aria-hidden="true">dataset</span>
-          Metadatos
-        </a>
+        ${linksHtml}
       </div>
     </div>
   `;

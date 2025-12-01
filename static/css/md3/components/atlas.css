@@ -85,9 +85,14 @@
   z-index: 400 !important;
 }
 
-/* Popup Pane muss über den Controls sein */
+/* Popup Pane muss über den Controls sein - erhöht für Mobile */
 .md3-atlas-map .leaflet-popup-pane {
-  z-index: 700 !important;
+  z-index: 800 !important;
+}
+
+/* Popups selbst noch höher für Mobile-Sicherheit */
+.md3-atlas-map .leaflet-popup {
+  z-index: 850 !important;
 }
 
 /* Marker Pane */
@@ -98,6 +103,28 @@
 /* Tile Pane niedrig halten */
 .md3-atlas-map .leaflet-tile-pane {
   z-index: 200 !important;
+}
+
+/* Mobile: Popup besser positionieren */
+@media (max-width: 599px) {
+  .atlas-popup .leaflet-popup-content-wrapper {
+    max-width: calc(100vw - 48px);
+  }
+  
+  .atlas-tooltip {
+    min-width: 180px;
+    max-width: 280px;
+  }
+  
+  .atlas-tooltip-links {
+    flex-direction: column;
+    gap: var(--space-2);
+  }
+  
+  .atlas-tooltip-link {
+    justify-content: center;
+    width: 100%;
+  }
 }
 
 /* ============================================================================
@@ -179,7 +206,8 @@
 /* Tooltip Links */
 .atlas-tooltip-links {
   display: flex;
-  gap: var(--space-3);
+  flex-wrap: wrap;
+  gap: var(--space-2);
   margin-top: var(--space-4);
   padding-top: var(--space-3);
   border-top: 1px solid var(--md-sys-color-outline-variant);
@@ -200,9 +228,10 @@
 }
 
 .atlas-tooltip-link:hover {
-  background: var(--md-sys-color-primary);
-  color: var(--md-sys-color-on-primary);
+  background: color-mix(in oklab, var(--md-sys-color-primary-container) 85%, var(--md-sys-color-on-primary-container) 15%);
+  color: var(--md-sys-color-on-primary-container);
   text-decoration: none;
+  box-shadow: var(--elev-1);
 }
 
 .atlas-tooltip-link:focus {
