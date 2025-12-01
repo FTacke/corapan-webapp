@@ -232,3 +232,58 @@ corapan-webapp/
 ---
 
 **Abschluss:** Audit erfolgreich abgeschlossen. Die Anwendung ist für den produktiven Einsatz bereit.
+
+---
+
+## 7. Post-Audit UI-Änderungen (Branch: `ui/corpus-navigation-password-ui`)
+
+### 7.1 Corpus-Navigation Restrukturierung
+
+Die Corpus-Sektion wurde erweitert mit einer vollständigen Navigationsstruktur:
+
+| Route | Template | Beschreibung |
+|-------|----------|--------------|
+| `/corpus` | `corpus.html` | Suchinterface (Consultar) |
+| `/corpus/guia` | `corpus_guia.html` | Suchguide mit Page-Navigation |
+| `/corpus/metadata` | `corpus_metadata.html` | **NEU** - Metadaten-Dokumentation |
+| `/corpus/estadisticas` | `corpus_estadisticas.html` | **NEU** - Statistiken (von Proyecto verschoben) |
+
+**Navigation-Drawer:**
+- Corpus → Consultar, Guía, Metadatos, Estadísticas
+- Proyecto → Presentación, Descripción, Referencias, Quiénes somos, Coautores
+
+**Redirects:**
+- `GET /proyecto/estadisticas` → 301 Redirect nach `/corpus/estadisticas`
+
+### 7.2 Password UI Verbesserungen
+
+| Datei | Änderung |
+|-------|----------|
+| `password_reset.html` | Helper-Text für Passwortanforderungen (Spanisch) |
+| `account_password.html` | Helper-Text für Passwortanforderungen (Deutsch) |
+| `password_reset.js` | Client-seitige Passwort-Validierung + Spanische Fehlermeldungen |
+| `account_password.js` | Client-seitige Passwort-Validierung + Deutsche Fehlermeldungen |
+
+**Passwort-Anforderungen:**
+- Mindestens 8 Zeichen
+- Mindestens ein Großbuchstabe
+- Mindestens ein Kleinbuchstabe
+- Mindestens eine Ziffer
+
+### 7.3 Badge-Vereinheitlichung
+
+**Datei:** `admin_users.js`
+
+Inaktiver Status-Badge erhält jetzt das gleiche Icon-Pattern wie aktive Badges:
+```javascript
+<span class="md3-badge md3-badge--status-inactive">
+  <span class="material-symbols-rounded md3-badge__icon">cancel</span>
+  Inaktiv
+</span>
+```
+
+### 7.4 Sonstige Änderungen
+
+- `proyecto_referencias.html`: Intro-Text hinzugefügt
+- `corpus_guia.html`: Eyebrow auf "Corpus" geändert, Page-Navigation hinzugefügt
+
