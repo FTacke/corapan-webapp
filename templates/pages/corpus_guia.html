@@ -3,6 +3,11 @@
 
 {% block page_title %}Guía de Búsqueda · CO.RA.PAN{% endblock %}
 
+{% block extra_head %}
+<!-- CSS for CQL Guide Dialog prompt styling -->
+<link rel="stylesheet" href="{{ url_for('static', filename='css/md3/components/advanced-search.css') }}">
+{% endblock %}
+
 {% block content %}
 <div class="md3-page" role="main" aria-label="Guía de Búsqueda">
   <header class="md3-page__header">
@@ -71,7 +76,7 @@
 
       <h3 class="md3-title-medium md3-subsection-title">Uso del editor CQL</h3>
       <p class="md3-body-large">
-        El apartado <strong>Editor CQL (modo experto)</strong> (primera mención) permite introducir consultas CQL manualmente en el campo «Consulta CQL». El modo experto se activa mediante la casilla «Activar modo experto (editar CQL manualmente)». También se proporciona un enlace a una guía rápida para asistir en la redacción de consultas complejas. Se puede consultar también aquí: <a href="{{ url_for('advanced_search.index') }}" class="md3-link md3-link--inline">Modo avanzado</a></span>
+        El apartado <strong>Editor CQL (modo experto)</strong> (primera mención) permite introducir consultas CQL manualmente en el campo «Consulta CQL». El modo experto se activa mediante la casilla «Activar modo experto (editar CQL manualmente)». También se proporciona un enlace a una guía rápida para asistir en la redacción de consultas complejas. Se puede consultar también aquí: <button type="button" id="cql-guide-link" class="md3-link md3-link--inline" style="background: none; border: none; cursor: pointer; padding: 0; font: inherit;">Guía rápida: usar un prompt para la IA</button>
       </p>
     </section>
 
@@ -100,7 +105,114 @@
 
     </div>
   </main>
+
+  <!-- CQL Guide Dialog (shared partial) -->
+  {% include 'search/partials/cql_guide_dialog.html' %}
 </div>
 
 {{ page_navigation(prev_url=url_for('advanced_search.index'), prev_title='Consultar', next_url=url_for('corpus.composicion'), next_title='Composición') }}
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  // Bind CQL Guide Dialog
+  (function() {
+    function initCqlGuideDialog() {
+      const link = document.getElementById('cql-guide-link');
+      const overlay = document.getElementById('cql-guide-overlay');
+      const dialog = document.getElementById('cql-guide-dialog');
+      const closeBtn = document.getElementById('cql-guide-close');
+      const copyBtn = document.getElementById('cql-guide-copy');
+      const promptText = document.getElementById('cql-guide-prompt');
+
+      if (!link || !overlay || !dialog) {
+        setTimeout(initCqlGuideDialog, 100);
+        return;
+      }
+
+      link.onclick = function(e) {
+        e.preventDefault();
+        overlay.classList.add('active');
+        overlay.removeAttribute('aria-hidden');
+        document.body.style.overflow = 'hidden';
+        dialog.focus();
+        return false;
+      };
+
+    if (closeBtn) {
+      closeBtn.addEventListener('click', function() {
+        overlay.classList.remove('active');
+        overlay.setAttribute('aria-hidden', 'true');
+        document.body.style.overflow = '';
+      });
+    }
+
+    // Close on overlay click
+    overlay.addEventListener('click', function(e) {
+      if (e.target === overlay) {
+        overlay.classList.remove('active');
+        overlay.setAttribute('aria-hidden', 'true');
+        document.body.style.overflow = '';
+      }
+    });
+
+    // Close on Escape key
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape' && overlay.classList.contains('active')) {
+        overlay.classList.remove('active');
+        overlay.setAttribute('aria-hidden', 'true');
+        document.body.style.overflow = '';
+      }
+    });
+
+    if (copyBtn && promptText) {
+      copyBtn.addEventListener('click', function() {
+        const textToCopy = (promptText.innerText || promptText.textContent || '').trim();
+        if (!textToCopy) return;
+
+        // Try modern clipboard API first
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(textToCopy).then(function() {
+            copyBtn.innerHTML = '<span class="material-symbols-rounded md3-button__icon" aria-hidden="true">check</span> Copiado';
+            setTimeout(function() {
+              copyBtn.innerHTML = '<span class="material-symbols-rounded md3-button__icon" aria-hidden="true">content_copy</span> Copiar prompt';
+            }, 2000);
+          }).catch(function() {
+            fallbackCopy(textToCopy);
+          });
+        } else {
+          fallbackCopy(textToCopy);
+        }
+      });
+    }
+
+    function fallbackCopy(text) {
+      const textarea = document.createElement('textarea');
+      textarea.value = text;
+      textarea.style.position = 'fixed';
+      textarea.style.opacity = '0';
+      document.body.appendChild(textarea);
+      textarea.select();
+      try {
+        document.execCommand('copy');
+        copyBtn.innerHTML = '<span class="material-symbols-rounded md3-button__icon" aria-hidden="true">check</span> Copiado';
+        setTimeout(function() {
+          copyBtn.innerHTML = '<span class="material-symbols-rounded md3-button__icon" aria-hidden="true">content_copy</span> Copiar prompt';
+        }, 2000);
+      } catch (err) {
+        console.error('Copy failed:', err);
+      }
+      document.body.removeChild(textarea);
+    }
+    }
+    
+    // Initialize when DOM is ready
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', initCqlGuideDialog);
+    } else {
+      // DOM already loaded, init immediately
+      initCqlGuideDialog();
+    }
+  })();
+</script>
 {% endblock %}
