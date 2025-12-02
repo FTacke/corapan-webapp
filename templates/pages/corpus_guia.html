@@ -11,7 +11,7 @@
       <div class="md3-hero__content">
         <p class="md3-body-small md3-hero__eyebrow">Corpus</p>
         <h1 class="md3-headline-medium md3-hero__title">Guía paso a paso</h1>
-        <p class="md3-body-medium md3-hero__intro">Cómo utilizar todas las herramientas de búsqueda.</p>
+        <p class="md3-body-medium md3-hero__intro">Uso general de las herramientas de búsqueda.</p>
       </div>
     </div>
   </header>
@@ -22,99 +22,79 @@
     <!-- INTRODUCCIÓN -->
     <section class="md3-text-section">
       <p class="md3-body-large">
-        Bienvenido a la herramienta de búsqueda del corpus CO.RA.PAN. No necesitas ser un experto en informática ni en lingüística computacional para encontrar lo que buscas. Esta guía te explicará cómo funciona cada pestaña de la página de búsqueda.
+        Bienvenido a la herramienta de búsqueda del corpus CO.RA.PAN. La interfaz está diseñada para utilizarse sin conocimientos técnicos previos. En esta guía se describen las funciones disponibles en cada pestaña de búsqueda.
       </p>
     </section>
 
-    <!-- divider removed — replaced by canonical section spacing -->
-
     <!-- 1. BÚSQUEDA SIMPLE -->
     <section class="md3-text-section">
-      <h2 class="md3-title-large md3-section-title md3-text-heading">1. Consulta Simple: Para empezar</h2>
+      <h2 class="md3-title-large md3-section-title md3-text-heading">Consulta simple</h2>
       <p class="md3-body-large">
-        La pestaña <strong>"Consulta simple"</strong> es ideal si buscas una palabra concreta o una frase exacta. Es como usar Google, pero aplicado a nuestro corpus.
+        La pestaña <strong>Consulta simple</strong> permite realizar búsquedas directas de palabras o secuencias. La consulta se introduce en el campo <strong>Consulta</strong> y puede combinarse con opciones adicionales de filtrado.
       </p>
 
       <h3 class="md3-title-medium md3-subsection-title">¿Cómo funciona?</h3>
       <ol class="md3-body-large md3-text-list">
-        <li>Escribe la palabra en el cuadro de texto (por ejemplo: <code>casa</code>).</li>
-        <li>Elige el <strong>Tipo</strong> de búsqueda:
+        <li>Introducir la forma o secuencia en el cuadro de texto (por ejemplo: <code>casa</code>).</li>
+        <li>Seleccionar la opción correspondiente en el campo <strong>Forma/Lema</strong>:
           <ul>
-            <li><strong>Forma:</strong> Busca la palabra tal cual la escribiste, pero puede ignorar mayúsculas/minúsculas si marcas la opción correspondiente. (Ej: busca "Casa" y encuentra "casa").</li>
-            <li><strong>Forma exacta:</strong> Busca exactamente lo que escribiste, respetando mayúsculas y acentos. (Ej: "está" no encontrará "esta").</li>
-            <li><strong>Lema:</strong> ¡Esta es la opción más potente! Busca todas las variantes de una palabra. Si buscas el lema <code>cantar</code>, el sistema encontrará "canto", "cantas", "cantaron", "cantaría", etc.</li>
+            <li><strong>Forma</strong> (primera mención): busca la forma escrita tal como se introduce.</li>
+            <li>Lema: recupera todas las variantes flexionadas asociadas al lema indicado.</li>
           </ul>
         </li>
-        <li>(Opcional) Usa los <strong>Filtros</strong> para limitar la búsqueda a un país (ej. Argentina), un tipo de hablante o un género específico.</li>
-        <li>Haz clic en <strong>Buscar</strong>.</li>
+        <li>Aplicar filtros si es necesario. En la sección <strong>Filtros</strong> (primera mención) pueden seleccionarse <strong>País</strong>, <strong>Hablante</strong>, <strong>Sexo</strong>, <strong>Modo/registro</strong> y <strong>Discurso</strong>.</li>
+        <li>En la sección <strong>Opciones</strong> (primera mención) pueden activarse las casillas «Incluir regiones» o «Ignorar acentos/mayúsculas».</li>
+        <li>Para ejecutar la consulta, pulsar <strong>Buscar</strong> (primera mención). Para restablecer la configuración, utilizar el botón «Restablecer».</li>
       </ol>
     </section>
 
-    <!-- divider removed — replaced by canonical section spacing -->
-
     <!-- 2. MODO AVANZADO -->
     <section class="md3-text-section">
-      <h2 class="md3-title-large md3-section-title md3-text-heading">2. Modo Avanzado: Para profundizar</h2>
+      <h2 class="md3-title-large md3-section-title md3-text-heading">Modo avanzado (CQL)</h2>
       <p class="md3-body-large">
-        La pestaña <strong>"Modo avanzado (CQL)"</strong> te permite buscar patrones gramaticales o secuencias de palabras. ¿Quieres buscar un verbo seguido de un sustantivo? ¿O todas las formas de futuro? Aquí es donde ocurre la magia.
+        La pestaña <strong>Modo avanzado (CQL)</strong> permite formular consultas estructuradas mediante el constructor de patrones o directamente con el lenguaje CQL. Este modo está orientado a la búsqueda de relaciones gramaticales y combinatorias.
       </p>
 
-      <h3 class="md3-title-medium md3-subsection-title">El Constructor de Patrones</h3>
+      <h3 class="md3-title-medium md3-subsection-title">El constructor de patrones</h3>
       <p class="md3-body-large">
-        No necesitas saber programar. Usa el botón <strong>"Añadir palabra"</strong> para agregar "bloques" a tu búsqueda. Cada bloque representa una palabra en la secuencia.
+        El apartado <strong>Búsquedas mediante el constructor CQL</strong> (primera mención) permite añadir bloques sucesivos mediante el botón <strong>Añadir token</strong> (primera mención). Cada bloque corresponde a una palabra de la secuencia y contiene los campos <strong>Campo</strong>, <strong>Tipo</strong> y <strong>Valor</strong>.
       </p>
       <ul class="md3-body-large md3-text-list">
-        <li><strong>Ejemplo:</strong> Quieres buscar un artículo seguido de un sustantivo (ej. "la casa", "un perro").
+        <li>Por ejemplo, para buscar un artículo seguido de un sustantivo:
           <ol>
-            <li>Añade un primer bloque y selecciona en "Categoría (POS)" la opción <code>DET</code> (Determinante/Artículo).</li>
-            <li>Añade un segundo bloque y selecciona en "Categoría (POS)" la opción <code>NOUN</code> (Sustantivo).</li>
-            <li>¡Listo! Dale a buscar.</li>
+            <li>Añadir un primer bloque y seleccionar en «Campo» la categoría correspondiente.</li>
+            <li>Añadir un segundo bloque y seleccionar la categoría deseada.</li>
+            <li>Ejecutar la consulta mediante el botón «Buscar».</li>
           </ol>
         </li>
       </ul>
 
-      <h3 class="md3-title-medium md3-subsection-title">Ayuda con Inteligencia Artificial</h3>
+      <h3 class="md3-title-medium md3-subsection-title">Uso del editor CQL</h3>
       <p class="md3-body-large">
-        Si te sientes perdido o quieres hacer algo muy complejo (como buscar "futuros perifrásticos"), hemos incluido una ayuda especial. Busca el enlace <strong>"(Cómo hacerlo)"</strong> o el botón de ayuda. Allí encontrarás un "prompt" (instrucción) que puedes copiar y pegar en ChatGPT o tu IA favorita para que ella escriba el código de búsqueda (CQL) por ti.
+        El apartado <strong>Editor CQL (modo experto)</strong> (primera mención) permite introducir consultas CQL manualmente en el campo «Consulta CQL». El modo experto se activa mediante la casilla «Activar modo experto (editar CQL manualmente)». También se proporciona un enlace a una guía rápida para asistir en la redacción de consultas complejas. Se puede consultar también aquí: <a href="{{ url_for('advanced_search.index') }}" class="md3-link md3-link--inline">Modo avanzado</a></span>
       </p>
     </section>
-
-    <!-- divider removed — replaced by canonical section spacing -->
 
     <!-- 3. BÚSQUEDA POR TOKEN -->
     <section class="md3-text-section">
-      <h2 class="md3-title-large md3-section-title md3-text-heading">3. Búsqueda por Token: Precisión quirúrgica</h2>
+      <h2 class="md3-title-large md3-section-title md3-text-heading">Búsqueda por Token</h2>
       <p class="md3-body-large">
-        Esta es una función para usuarios muy específicos. En nuestro corpus, cada palabra pronunciada tiene un número de identificación único (Token-ID).
+        La pestaña <strong>Token</strong> permite recuperar instancias específicas del corpus empleando un identificador único (Token-ID). Esta función es útil cuando se desea volver a consultar ejemplos concretos encontrados en búsquedas previas.
       </p>
       <p class="md3-body-large">
-        Si anotaste un ID de una búsqueda anterior (por ejemplo, <code>doc_123_token_45</code>) y quieres volver a ver exactamente ese ejemplo, ve a la pestaña <strong>"Token"</strong>, pega el ID y pulsa "Añadir". Puedes añadir varios y luego pulsar "Visualizar" para verlos todos juntos.
+        Para ello, basta con introducir uno o varios identificadores en el campo correspondiente, añadirlos mediante el botón «Añadir» y posteriormente seleccionar «Visualizar».
       </p>
     </section>
 
-    <!-- divider removed — replaced by canonical section spacing -->
-
     <!-- 4. RESULTADOS Y ESTADÍSTICAS -->
     <section class="md3-text-section">
-      <h2 class="md3-title-large md3-section-title md3-text-heading">4. Resultados y Estadísticas</h2>
+      <h2 class="md3-title-large md3-section-title md3-text-heading">Resultados y estadísticas</h2>
       <p class="md3-body-large">
-        Una vez que haces una búsqueda, verás dos pestañas nuevas abajo:
+        Tras ejecutar una consulta, se muestran las pestañas <strong>Resultados</strong> (primera mención) y <strong>Estadísticas</strong> (primera mención).
       </p>
       <ul class="md3-body-large md3-text-list">
-        <li><strong>Resultados:</strong> Una lista de frases donde aparece tu búsqueda.
-          <ul>
-            <li>Puedes leer el contexto (lo que se dijo antes y después).</li>
-            <li>Puedes escuchar el audio original haciendo clic en el icono de reproducción.</li>
-            <li>Puedes ver quién lo dijo y de dónde es.</li>
-          </ul>
-        </li>
-        <li><strong>Estadísticas:</strong> Gráficos coloridos que te muestran la distribución de tus resultados.
-          <ul>
-            <li>¿Se usa más esta palabra en España o en América?</li>
-            <li>¿Lo dicen más los hombres o las mujeres?</li>
-            <li>Puedes descargar estos datos en CSV para tus propias investigaciones.</li>
-          </ul>
-        </li>
+        <li><strong>Resultados</strong>: presenta una lista de fragmentos donde aparece la coincidencia buscada. Puede consultarse el contexto, reproducir el audio original y visualizar la información sociolingüística correspondiente.</li>
+        <li><strong>Estadísticas</strong>: ofrece gráficos que muestran la distribución de los resultados según los metadatos disponibles. Los datos pueden descargarse en formato CSV.</li>
       </ul>
     </section>
 

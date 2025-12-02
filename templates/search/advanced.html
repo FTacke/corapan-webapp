@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 
-{% block page_title %}Consultar corpus · CO.RA.PAN{% endblock %}
+{% block page_title %}Búsquedas{% endblock %}
 
 {% block extra_head %}
 <!-- MD3 Core Styles -->
@@ -38,9 +38,9 @@
       <div class="md3-hero__icon" aria-hidden="true"><span class="material-symbols-rounded">manage_search</span></div>
       <div class="md3-hero__content">
         <p class="md3-body-small md3-hero__eyebrow">Corpus</p>
-        <h1 class="md3-headline-medium md3-hero__title">Consultar corpus</h1>
+        <h1 class="md3-headline-medium md3-hero__title">Búsquedas simples y avanzadas</h1>
         <p class="md3-hero__intro">
-          Búsqueda con CQL (Corpus Query Language) vía BlackLab. Secuencias, POS, lemas, filtros por metadatos.
+          Búsqueda CQL (Corpus Query Language) con BlackLab: simple o avanzada, sobre datos lingüísticos anotados (tokens, lemas, secuencias, POS) y filtrada por metadatos (países/regiones, hablantes, sexo, registro).
         </p>
       </div>
     </div>
@@ -62,7 +62,7 @@
           
           <!-- A: QUERY -->
           <div class="md3-search-card__section">
-            <h2 class="md3-title-medium md3-search-card__heading">Consulta simple</h2>
+            <h2 class="md3-title-medium md3-search-card__heading">Buscar formas simples y secuencias</h2>
             <div class="md3-search-card__query-row">
               <div class="md3-outlined-textfield md3-outlined-textfield--flex">
                 <input type="text" id="q" name="q" class="md3-outlined-textfield__input" placeholder=" Consulta" value="{{ request.args.get('q', '') }}">
@@ -79,7 +79,7 @@
                   <option value="forma_exacta">Forma exacta</option>
                   <option value="lema">Lema</option>
                 </select>
-                <label for="search_type_simple" class="md3-outlined-textfield__label md3-outlined-textfield__label--select">Tipo</label>
+                <label for="search_type_simple" class="md3-outlined-textfield__label md3-outlined-textfield__label--select">Forma/Lema</label>
                 <div class="md3-outlined-textfield__outline">
                   <div class="md3-outlined-textfield__outline-start"></div>
                   <div class="md3-outlined-textfield__outline-notch"></div>
@@ -107,7 +107,7 @@
               <label class="md3-checkbox-container">
                 <input type="checkbox" id="include-regional-simple" name="include_regional" value="1">
                 <span class="md3-checkbox"><svg class="md3-checkbox__checkmark" viewBox="0 0 18 18"><path class="md3-checkbox__checkmark-path" fill="none" stroke="white" d="M1.73,9.29 l4.75,4.75 l10.04,-10.04"></path></svg></span>
-                <span class="md3-checkbox__label">Incluir emisoras regionales</span>
+                <span class="md3-checkbox__label">Incluir regiones</span>
               </label>
               <label class="md3-checkbox-container">
                 <input type="checkbox" id="ignore-accents-simple" name="ignore_accents" value="1">
@@ -139,7 +139,7 @@
           <!-- E1: PATTERN BUILDER -->
           <div class="md3-expert-section overflow-visible">
               <div class="md3-expert-header">
-                <h2 class="md3-title-medium md3-expert-section__title">Modo avanzado (CQL)</h2>
+                <h2 class="md3-title-medium md3-expert-section__title">Búsquedas mediante el constructor CQL</h2>
               </div>
               
               <!-- Pattern Builder Container -->
@@ -150,7 +150,7 @@
               <div class="md3-pattern-actions md3-mt-4">
                     <button type="button" id="add-token-btn" class="md3-button md3-button--outlined">
                       <span class="material-symbols-rounded md3-button__icon" aria-hidden="true">add</span>
-                      <span>Añadir palabra</span>
+                      <span>Añadir token</span>
                   </button>
               </div>
           </div>
@@ -158,7 +158,7 @@
           <!-- E2: CQL PREVIEW -->
             <div class="md3-expert-section">
               <hr class="md3-divider" />
-              <h3 class="md3-title-small md3-expert-section__title">Consulta CQL</h3>
+              <h3 class="md3-title-small md3-expert-section__title">Editor CQL (modo experto)</h3>
               <div class="md3-cql-preview">
                   <div class="md3-outlined-textfield md3-outlined-textfield--textarea">
                     <textarea id="cql_query" name="cql_query" class="md3-outlined-textfield__input" rows="4" readonly>{{ request.args.get('cql_query', '') }}</textarea>
@@ -173,12 +173,12 @@
                       <label class="md3-checkbox-container md3-mt-2">
                         <input type="checkbox" id="cql_manual_edit" name="cql_manual_edit">
                         <span class="md3-checkbox"><svg class="md3-checkbox__checkmark" viewBox="0 0 18 18"><path class="md3-checkbox__checkmark-path" fill="none" stroke="white" d="M1.73,9.29 l4.75,4.75 l10.04,-10.04"></path></svg></span>
-                        <span class="md3-checkbox__label">Permitir editar manualmente <a href="#" id="cql-guide-link" class="md3-link md3-link--inline">(Cómo hacerlo)</a></span>
+                        <span class="md3-checkbox__label">Activar modo experto (editar CQL manualmente) <a href="#" id="cql-guide-link" class="md3-link md3-link--inline">(Guía rápida: usar un prompt para la IA)</a></span>
                       </label>
 
                       <div id="cql-warning" class="md3-cql-warning" hidden>
                       <span class="material-symbols-rounded">warning</span>
-                      <span>La consulta CQL ha sido editada manualmente. El constructor no la sobrescribirá.</span>
+                      <span>Has modificado la consulta CQL manualmente. La configuración del constructor ya no se aplicará.</span>
                     </div>
 
                     <!-- guide link restored into checkbox label -->
@@ -204,7 +204,7 @@
               <label class="md3-checkbox-container">
                 <input type="checkbox" id="include-regional-advanced" name="include_regional" value="1">
                 <span class="md3-checkbox"><svg class="md3-checkbox__checkmark" viewBox="0 0 18 18"><path class="md3-checkbox__checkmark-path" fill="none" stroke="white" d="M1.73,9.29 l4.75,4.75 l10.04,-10.04"></path></svg></span>
-                <span class="md3-checkbox__label">Incluir emisoras regionales</span>
+                <span class="md3-checkbox__label">Incluir regiones</span>
               </label>
               <label class="md3-checkbox-container">
                 <input type="checkbox" id="ignore-accents-advanced" name="ignore_accents" value="1">
@@ -234,7 +234,7 @@
             <div class="md3-dialog__container">
               <div class="md3-dialog__header">
                 <span class="material-symbols-rounded md3-dialog__icon">info</span>
-                <h2 class="md3-dialog__title" id="cql-guide-title">Ayuda CQL</h2>
+                <h2 class="md3-dialog__title" id="cql-guide-title">Guía de construcción de consultas CQL mediante un prompt</h2>
               </div>
               <div class="md3-dialog__content">
                 <p class="md3-body-medium md3-text-variant">
@@ -443,7 +443,7 @@ Ahora convierte la siguiente descripción en una consulta CQL precisa para CORAP
                 
                 <button type="button" id="btn-download-stats-csv" class="md3-button md3-button--outlined md3-stats-action-end">
                     <span class="material-symbols-rounded md3-button__icon" aria-hidden="true">download</span>
-                    <span class="md3-button__label">Descargar CSV</span>
+                    <span class="md3-button__label">CSV</span>
                 </button>
             </div>
           </header>
@@ -567,7 +567,7 @@ Ahora convierte la siguiente descripción en una consulta CQL precisa para CORAP
         
         <!-- Token Input Section -->
         <div class="md3-search-card__section">
-          <h2 class="md3-title-medium md3-search-card__heading">Buscar por Token-IDs</h2>
+          <h2 class="md3-title-medium md3-search-card__heading">Búsqueda por Token-IDs</h2>
           
           <!-- Input Row -->
           <div class="md3-search-card__query-row">

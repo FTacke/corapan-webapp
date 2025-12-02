@@ -61,7 +61,14 @@ export function renderAudioButtons(row) {
 export function renderFileLink(filename, type, row) {
   if (!filename) return "";
   if (type === "sort" || type === "type") return filename;
-  const base = filename.trim().replace(/\.mp3$/i, "");
+  // Extract just the base filename without path or extension
+  let base = filename.trim();
+  // If filename contains path separators, extract just the basename
+  if (base.includes('/') || base.includes('\\')) {
+    base = base.split(/[\/\\]/).pop();
+  }
+  // Remove .mp3 or .tsv extensions
+  base = base.replace(/\.(mp3|tsv)$/i, "");
   const transcriptionPath = `${MEDIA_ENDPOINT}/transcripts/${encodeURIComponent(base)}.json`;
   const audioPath = `${MEDIA_ENDPOINT}/full/${encodeURIComponent(base)}.mp3`;
   let playerUrl = `/player?transcription=${encodeURIComponent(transcriptionPath)}&audio=${encodeURIComponent(audioPath)}`;

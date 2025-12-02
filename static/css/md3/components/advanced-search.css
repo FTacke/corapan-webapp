@@ -276,8 +276,7 @@ body.token-active #adv-summary {
 .cql-token-row {
   display: block;
   /* Use surface-container-lowest for clean white background */
-  background: var(--md-sys-color-surface-container-lowest, #ffffff);
-  border: 1px solid var(--md-sys-color-outline-variant, #e6e0e6);
+  border: 1px solid var(--md-sys-color-outline-variant);
   border-radius: var(--radius-sm, 8px);
   padding: var(--space-4, 1rem);
   margin-bottom: var(--space-4, 1rem);
@@ -313,6 +312,7 @@ body.token-active #adv-summary {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: var(--space-3, 0.75rem);
+  margin-top: var(--space-6);
 }
 
 .cql-distance-row {

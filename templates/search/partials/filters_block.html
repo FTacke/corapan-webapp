@@ -158,14 +158,14 @@
                       <span>Profesional</span>
                     </label>
                     <label class="md3-filter-option">
-                      <input type="checkbox" name="hablante_ui" value="otro" data-label="Otro">
-                      <span>Otro</span>
+                      <input type="checkbox" name="hablante_ui" value="otro" data-label="Otro (no profesional)">
+                      <span>Otro (no profesional)</span>
                     </label>
                   </div>
                 </div>
                 <select name="speaker_type" multiple hidden>
                   <option value="pro" {% if 'pro' in request.args.getlist('speaker_type') %}selected{% endif %}>Profesional</option>
-                  <option value="otro" {% if 'otro' in request.args.getlist('speaker_type') %}selected{% endif %}>Otro</option>
+                  <option value="otro" {% if 'otro' in request.args.getlist('speaker_type') %}selected{% endif %}>Otro (no profesional)</option>
                 </select>
               </div>
 
@@ -197,15 +197,15 @@
               <!-- Modo -->
               <div class="md3-filter-field" data-facet="modo">
                 <div class="md3-filter-field__trigger" tabindex="0" role="button" aria-haspopup="menu" aria-expanded="false">
-                  <label class="md3-filter-field__label">Modo</label>
+                  <label class="md3-filter-field__label">Modo/registro</label>
                   <div class="md3-filter-field__value" data-placeholder="Todos">Todos</div>
                   <span class="material-symbols-rounded md3-filter-field__icon">expand_more</span>
                 </div>
                 <div class="md3-filter-field__menu" role="menu" hidden>
                   <div class="md3-filter-field__menu-content">
                     <label class="md3-filter-option">
-                      <input type="checkbox" name="modo_ui" value="pre" data-label="Anuncio">
-                      <span>Anuncio</span>
+                      <input type="checkbox" name="modo_ui" value="pre" data-label="Habla pregrabada (anuncio)">
+                      <span>Habla pregrabada (anuncio)</span>
                     </label>
                     <label class="md3-filter-option">
                       <input type="checkbox" name="modo_ui" value="lectura" data-label="Lectura">
@@ -218,7 +218,7 @@
                   </div>
                 </div>
                 <select name="speech_mode" multiple hidden>
-                  <option value="pre" {% if 'pre' in request.args.getlist('speech_mode') %}selected{% endif %}>Anuncio</option>
+                  <option value="pre" {% if 'pre' in request.args.getlist('speech_mode') %}selected{% endif %}>Habla pregrabada (anuncio)</option>
                   <option value="lectura" {% if 'lectura' in request.args.getlist('speech_mode') %}selected{% endif %}>Lectura</option>
                   <option value="libre" {% if 'libre' in request.args.getlist('speech_mode') %}selected{% endif %}>Habla libre</option>
                 </select>

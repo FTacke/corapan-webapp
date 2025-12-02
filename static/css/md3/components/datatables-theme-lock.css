@@ -218,8 +218,8 @@
 
 .md3-datatable__cell--match mark {
   /* NEEDS_IMPORTANT: third-party DataTables override */
-  background-color: var(--md-sys-color-primary-container) !important;
-  color: var(--md-sys-color-on-primary-container) !important;
+  background-color: var(--md-sys-color-info-container) !important;
+  color: var(--md-sys-color-on-info-container) !important;
   padding: 0.125rem 0.25rem;
   border-radius: var(--radius-xs, 4px);
 }
