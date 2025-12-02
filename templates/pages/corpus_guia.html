@@ -4,7 +4,7 @@
 {% block page_title %}Guía de Búsqueda · CO.RA.PAN{% endblock %}
 
 {% block extra_head %}
-<!-- CSS for CQL Guide Dialog prompt styling -->
+<!-- CSS for code block styling -->
 <link rel="stylesheet" href="{{ url_for('static', filename='css/md3/components/advanced-search.css') }}">
 {% endblock %}
 
@@ -76,8 +76,105 @@
 
       <h3 class="md3-title-medium md3-subsection-title">Uso del editor CQL</h3>
       <p class="md3-body-large">
-        El apartado <strong>Editor CQL (modo experto)</strong> (primera mención) permite introducir consultas CQL manualmente en el campo «Consulta CQL». El modo experto se activa mediante la casilla «Activar modo experto (editar CQL manualmente)». También se proporciona un enlace a una guía rápida para asistir en la redacción de consultas complejas. Se puede consultar también aquí: <button type="button" id="cql-guide-link" class="md3-link md3-link--inline" style="background: none; border: none; cursor: pointer; padding: 0; font: inherit;">Guía rápida: usar un prompt para la IA</button>
+        El apartado <strong>Editor CQL (modo experto)</strong> (primera mención) permite introducir consultas CQL manualmente en el campo «Consulta CQL». El modo experto se activa mediante la casilla «Activar modo experto (editar CQL manualmente)». También se proporciona un enlace a una guía rápida para asistir en la redacción de consultas complejas.
       </p>
+
+      <h3 class="md3-title-medium md3-subsection-title">Prompt sugerido para generar consultas CQL en CORAPAN (BlackLab)</h3>
+      <p class="md3-body-large">
+        Copia y pega este prompt en el modelo de IA generativa y luego añade tu descripción al final:
+      </p>
+      <div class="md3-code-block md3-full-width">
+        <pre class="highlight"><code class="language-plaintext">Actúa como generador de consultas CQL para un corpus de español hablado llamado CORAPAN, indexado en BlackLab.
+
+El corpus está anotado con los siguientes atributos a nivel de token (dentro de corchetes `[...]` en CQL):
+
+* `word`   → forma tal como aparece en la transcripción
+* `norm`   → forma normalizada (por ejemplo, en minúsculas)
+* `lemma`  → lema
+* `pos`    → categoría gramatical (UD POS: `NOUN`, `VERB`, `ADJ`, `ADV`, `PRON`, `DET`, `ADP`, `SCONJ`, `CCONJ`, `PART`, `AUX`, etc.)
+* `tense`  → tiempo verbal morfológico (por ejemplo: `"Pres"`, `"Past"`, `"Fut"`)
+* `mood`   → modo verbal (por ejemplo: `"Ind"`, `"Subj"`, `"Imp"`)
+* `person` → persona gramatical (`"1"`, `"2"`, `"3"`)
+* `number` → número gramatical (`"Sing"`, `"Plur"`)
+* `aspect` → aspecto verbal (si está presente)
+* `PastType`   → subtipo de pasado, ya en inglés, derivado de reglas específicas del corpus. Valores posibles, si existen en el token:
+
+  * `"simplePast"`
+  * `"presentPerfect"`
+  * `"pastPerfect"`
+  * `"futurePerfect"`
+  * `"conditionalPerfect"`
+  * `"otherCompoundPast"`
+  * `"otherPast"`
+* `FutureType` → subtipo de futuro analítico (construcciones tipo *ir a + infinitivo*), también en inglés. Valores posibles, si existen en el token:
+
+  * `"periphrasticFuture"` (ir a + INF con auxiliar en presente)
+  * `"periphrasticFuturePast"` (ir a + INF con auxiliar en pasado, futuro en el pasado)
+* `tokid`  → identificador único de cada token
+
+Los campos `PastType` y `FutureType` **no** proceden directamente del etiquetador morfológico, sino que son clasificaciones derivadas a partir de la combinación de `tense`, `morph`, auxiliares y participios. Se consultan como cualquier otro atributo de token y se pueden combinar con `lemma`, `pos`, `tense`, etc.
+
+Algunos ejemplos de uso:
+
+* `[pos="VERB" & PastType="simplePast"]`
+  → verbos en pretérito perfecto simple (pretérito indefinido).
+
+* `[pos="VERB" & PastType="presentPerfect"]`
+  → verbos en pretérito perfecto compuesto (*haber* + participio).
+
+* `[pos="VERB" & PastType="pastPerfect"]`
+  → verbos en pluscuamperfecto.
+
+* `[pos="VERB" & FutureType="periphrasticFuture"]`
+  → futuros perifrásticos del tipo *ir a + infinitivo* con auxiliar en presente.
+
+* `[pos="VERB" & FutureType="periphrasticFuturePast"]`
+  → futuros perifrásticos en el pasado (*iba a + infinitivo*, etc.).
+
+* `[lemma="ir" & pos="VERB" & FutureType="periphrasticFuture"]`
+  → formas de *ir* que participan en futuros perifrásticos.
+
+Además, puedes usar metadatos de documento/segmento con BlackLab (por ejemplo mediante `within`), como:
+
+* `country_code` → código de país/variedad (por ejemplo `ARG`, `ESP`, `ARG-CBA`, `ESP-SEV`, etc.)
+* `file_id`      → identificador de archivo
+* `date`         → fecha de la grabación/transcripción
+* `radio`        → indica si el texto procede o no de radio (según cómo esté codificado)
+* `city`         → ciudad (si está disponible)
+* `sentence_id`, `utterance_id` → identificadores de oración y enunciado
+
+Tu tarea:
+
+1. Léeme la descripción en lenguaje natural que te daré.
+
+2. Genera **solo** una consulta CQL válida para BlackLab, sin explicaciones ni comentarios.
+
+3. Usa exclusivamente los atributos y metadatos listados arriba.
+
+4. Representa las palabras y rasgos morfológicos con patrones como:
+
+   * `[lemma="hablar"]`
+   * `[pos="VERB" & tense="Pres" & person="1" & number="Sing"]`
+   * `[pos="VERB" & PastType="simplePast"]` para un verbo en pretérito perfecto simple
+   * `[pos="VERB" & PastType="presentPerfect"]` para un verbo en pretérito perfecto compuesto
+   * `[pos="VERB" & FutureType="periphrasticFuture"]` para un futuro perifrástico del tipo *ir a + INF*
+   * `[pos="ADJ"][pos="NOUN"]` para un adjetivo seguido de un sustantivo
+
+5. Si menciono restricciones de variedad, origen o tipo de texto, exprésalas con metadatos, por ejemplo:
+
+   * `within &lt;country_code="ARG"&gt; [...]`
+   * `within &lt;radio="yes"&gt; [...]`
+
+   (ajusta el valor según la codificación real).
+
+6. Usa siempre comillas dobles `"..."` y la sintaxis CQL estándar de BlackLab.
+
+7. Si la descripción es ambigua, elige la interpretación más común en lingüística hispánica, pero **no inventes** atributos que no existan en la lista ni valores de `PastType` o `FutureType` que no hayan sido definidos.
+
+Ahora convierte la siguiente descripción en una consulta CQL precisa para CORAPAN:
+
+«[ESCRIBE AQUÍ TU DESCRIPCIÓN EN ESPAÑOL]»</code></pre>
+      </div>
     </section>
 
     <!-- 3. BÚSQUEDA POR TOKEN -->
@@ -105,114 +202,7 @@
 
     </div>
   </main>
-
-  <!-- CQL Guide Dialog (shared partial) -->
-  {% include 'search/partials/cql_guide_dialog.html' %}
 </div>
 
 {{ page_navigation(prev_url=url_for('advanced_search.index'), prev_title='Consultar', next_url=url_for('corpus.composicion'), next_title='Composición') }}
-{% endblock %}
-
-{% block extra_scripts %}
-<script>
-  // Bind CQL Guide Dialog
-  (function() {
-    function initCqlGuideDialog() {
-      const link = document.getElementById('cql-guide-link');
-      const overlay = document.getElementById('cql-guide-overlay');
-      const dialog = document.getElementById('cql-guide-dialog');
-      const closeBtn = document.getElementById('cql-guide-close');
-      const copyBtn = document.getElementById('cql-guide-copy');
-      const promptText = document.getElementById('cql-guide-prompt');
-
-      if (!link || !overlay || !dialog) {
-        setTimeout(initCqlGuideDialog, 100);
-        return;
-      }
-
-      link.onclick = function(e) {
-        e.preventDefault();
-        overlay.classList.add('active');
-        overlay.removeAttribute('aria-hidden');
-        document.body.style.overflow = 'hidden';
-        dialog.focus();
-        return false;
-      };
-
-    if (closeBtn) {
-      closeBtn.addEventListener('click', function() {
-        overlay.classList.remove('active');
-        overlay.setAttribute('aria-hidden', 'true');
-        document.body.style.overflow = '';
-      });
-    }
-
-    // Close on overlay click
-    overlay.addEventListener('click', function(e) {
-      if (e.target === overlay) {
-        overlay.classList.remove('active');
-        overlay.setAttribute('aria-hidden', 'true');
-        document.body.style.overflow = '';
-      }
-    });
-
-    // Close on Escape key
-    document.addEventListener('keydown', function(e) {
-      if (e.key === 'Escape' && overlay.classList.contains('active')) {
-        overlay.classList.remove('active');
-        overlay.setAttribute('aria-hidden', 'true');
-        document.body.style.overflow = '';
-      }
-    });
-
-    if (copyBtn && promptText) {
-      copyBtn.addEventListener('click', function() {
-        const textToCopy = (promptText.innerText || promptText.textContent || '').trim();
-        if (!textToCopy) return;
-
-        // Try modern clipboard API first
-        if (navigator.clipboard && navigator.clipboard.writeText) {
-          navigator.clipboard.writeText(textToCopy).then(function() {
-            copyBtn.innerHTML = '<span class="material-symbols-rounded md3-button__icon" aria-hidden="true">check</span> Copiado';
-            setTimeout(function() {
-              copyBtn.innerHTML = '<span class="material-symbols-rounded md3-button__icon" aria-hidden="true">content_copy</span> Copiar prompt';
-            }, 2000);
-          }).catch(function() {
-            fallbackCopy(textToCopy);
-          });
-        } else {
-          fallbackCopy(textToCopy);
-        }
-      });
-    }
-
-    function fallbackCopy(text) {
-      const textarea = document.createElement('textarea');
-      textarea.value = text;
-      textarea.style.position = 'fixed';
-      textarea.style.opacity = '0';
-      document.body.appendChild(textarea);
-      textarea.select();
-      try {
-        document.execCommand('copy');
-        copyBtn.innerHTML = '<span class="material-symbols-rounded md3-button__icon" aria-hidden="true">check</span> Copiado';
-        setTimeout(function() {
-          copyBtn.innerHTML = '<span class="material-symbols-rounded md3-button__icon" aria-hidden="true">content_copy</span> Copiar prompt';
-        }, 2000);
-      } catch (err) {
-        console.error('Copy failed:', err);
-      }
-      document.body.removeChild(textarea);
-    }
-    }
-    
-    // Initialize when DOM is ready
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', initCqlGuideDialog);
-    } else {
-      // DOM already loaded, init immediately
-      initCqlGuideDialog();
-    }
-  })();
-</script>
 {% endblock %}
