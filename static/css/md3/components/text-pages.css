@@ -255,6 +255,12 @@
 /* Code Block - Similar to citation block */
 .md3-code-block {
   margin: var(--space-6) 0 var(--space-8) 0;
+  position: relative;
+}
+
+/* Copyable code block variant */
+.md3-code-block--copyable {
+  position: relative;
 }
 
 .md3-code-block h3 {
@@ -272,6 +278,44 @@
   margin: 0;
   line-height: 1.5;
   font-size: 0.875rem;
+}
+
+/* Copy button for code blocks */
+.md3-code-block__copy {
+  position: absolute;
+  bottom: var(--space-3);
+  right: var(--space-3);
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: none;
+  background: var(--md-sys-color-surface-container-high);
+  color: var(--md-sys-color-on-surface-variant);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 200ms ease, color 200ms ease;
+  box-shadow: var(--elev-1);
+}
+
+.md3-code-block__copy:hover {
+  background: var(--md-sys-color-primary-container);
+  color: var(--md-sys-color-on-primary-container);
+}
+
+.md3-code-block__copy:focus-visible {
+  outline: 2px solid var(--md-sys-color-primary);
+  outline-offset: 2px;
+}
+
+.md3-code-block__copy--success {
+  background: var(--md-sys-color-tertiary-container);
+  color: var(--md-sys-color-on-tertiary-container);
+}
+
+.md3-code-block__copy .material-symbols-rounded {
+  font-size: 20px;
 }
 
 /* ============================================================================
