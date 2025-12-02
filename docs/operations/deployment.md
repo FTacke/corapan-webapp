@@ -225,6 +225,59 @@ docker compose restart
 
 ---
 
+## 📊 Data-Sync: Dev → Prod
+
+Für die Synchronisation von Daten-Verzeichnissen und Statistik-Datenbanken existieren PowerShell-Skripte unter `scripts/deploy_sync/`.
+
+### Synchronisierte Daten
+
+| Pfad | Inhalt | Skript |
+|------|--------|--------|
+| `data/counters/` | Zähler-Daten | `sync_data.ps1` |
+| `data/db_public/` | Öffentliche Stats-DBs (`stats_all.db`) | `sync_data.ps1` |
+| `data/metadata/` | Metadaten-Dateien | `sync_data.ps1` |
+| `data/exports/` | Export-Dateien | `sync_data.ps1` |
+| `data/blacklab_export/` | BlackLab-Exportdaten | `sync_data.ps1` |
+| `data/db/stats_files.db` | Atlas-Statistiken pro Datei | `sync_data.ps1` |
+| `data/db/stats_country.db` | Atlas-Statistiken pro Land | `sync_data.ps1` |
+| `media/mp3-full/` | Vollständige Audio-Dateien | `sync_media.ps1` |
+| `media/mp3-split/` | Segmentierte Audio-Dateien | `sync_media.ps1` |
+| `media/transcripts/` | Transkript-Dateien | `sync_media.ps1` |
+
+### NICHT synchronisiert (bewusst ausgeschlossen)
+
+| Pfad | Grund |
+|------|-------|
+| `data/blacklab_index/` | Wird auf Server neu gebaut |
+| `data/blacklab_index.backup/` | Nur lokales Backup |
+| `data/stats_temp/` | Temporäre Dateien |
+| `data/db/auth.db` | Prod-Auth-DB ist unabhängig |
+| `data/db/transcription.db` | Prod-Transkriptions-DB ist unabhängig |
+
+### Verwendung
+
+```powershell
+# Vom lokalen Dev-Rechner (PowerShell)
+cd C:\dev\corapan-webapp
+
+# Daten synchronisieren (inkl. Stats-DBs)
+.\scripts\deploy_sync\sync_data.ps1
+
+# Media synchronisieren
+.\scripts\deploy_sync\sync_media.ps1
+```
+
+### Stats-DBs für Atlas-Funktionen
+
+Die Dateien `stats_files.db` und `stats_country.db` werden lokal generiert und sind für die Atlas-/Stats-Funktionen erforderlich:
+- `/api/v1/atlas/files` - Dateien mit Metadaten
+- `/api/v1/atlas/countries` - Länder-Statistiken
+- `/corpus_metadata` - Metadaten-Übersicht im UI
+
+Bei fehlendem Sync dieser Dateien liefern die Endpunkte 500-Fehler.
+
+---
+
 ## 🛠️ Nützliche Befehle
 
 ### Container Management
