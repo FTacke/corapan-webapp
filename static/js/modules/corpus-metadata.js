@@ -581,7 +581,7 @@ function renderCountryPanel(countryCode, isActive) {
               aria-controls="${downloadMenuId}"
             >
               <span class="material-symbols-rounded" aria-hidden="true">download</span>
-              <span>Descargar metadatos</span>
+              <span>Descargar</span>
               <span class="material-symbols-rounded md3-button__trailing-icon" aria-hidden="true">arrow_drop_down</span>
             </button>
             <div

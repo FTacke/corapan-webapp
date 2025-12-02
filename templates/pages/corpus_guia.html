@@ -173,10 +173,11 @@ Tu tarea:
 
 Ahora convierte la siguiente descripción en una consulta CQL precisa para CORAPAN:
 
-«[ESCRIBE AQUÍ TU DESCRIPCIÓN EN ESPAÑOL]»</code></pre>
+«[ESCRIBE AQUÍ TU DESCRIPCIÓN EN ESPAÑOL]»</code>
         <button type="button" id="copy-cql-prompt" class="md3-button md3-button--icon md3-code-block__copy" title="Copiar prompt" aria-label="Prompt kopieren">
           <span class="material-symbols-rounded" aria-hidden="true">content_copy</span>
         </button>
+        </pre>
       </div>
     </section>
 
@@ -211,29 +212,5 @@ Ahora convierte la siguiente descripción en una consulta CQL precisa para CORAP
 {% endblock %}
 
 {% block extra_scripts %}
-<script>
-(function() {
-  const copyBtn = document.getElementById('copy-cql-prompt');
-  const promptText = document.getElementById('cql-prompt-text');
-  
-  if (copyBtn && promptText) {
-    copyBtn.addEventListener('click', function() {
-      const textToCopy = (promptText.innerText || promptText.textContent || '').trim();
-      if (!textToCopy) return;
-      
-      navigator.clipboard.writeText(textToCopy).then(function() {
-        // Show success feedback
-        copyBtn.innerHTML = '<span class="material-symbols-rounded" aria-hidden="true">check</span>';
-        copyBtn.classList.add('md3-code-block__copy--success');
-        setTimeout(function() {
-          copyBtn.innerHTML = '<span class="material-symbols-rounded" aria-hidden="true">content_copy</span>';
-          copyBtn.classList.remove('md3-code-block__copy--success');
-        }, 2000);
-      }).catch(function(err) {
-        console.error('Copy failed:', err);
-      });
-    });
-  }
-})();
-</script>
+<script src="{{ url_for('static', filename='js/pages/corpus-guia.js') }}" defer></script>
 {% endblock %}

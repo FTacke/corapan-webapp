@@ -255,12 +255,17 @@
 /* Code Block - Similar to citation block */
 .md3-code-block {
   margin: var(--space-6) 0 var(--space-8) 0;
-  position: relative;
 }
 
 /* Copyable code block variant */
 .md3-code-block--copyable {
   position: relative;
+}
+
+/* Make pre the positioning context for the copy button */
+.md3-code-block--copyable pre {
+  position: relative;
+  padding-bottom: calc(var(--space-5) + 48px); /* Extra space for button */
 }
 
 .md3-code-block h3 {
@@ -280,13 +285,16 @@
   font-size: 0.875rem;
 }
 
-/* Copy button for code blocks */
+/* Copy button for code blocks - positioned inside pre */
 .md3-code-block__copy {
   position: absolute;
   bottom: var(--space-3);
   right: var(--space-3);
   width: 40px;
   height: 40px;
+  min-width: 40px;
+  min-height: 40px;
+  padding: 0;
   border-radius: 50%;
   border: none;
   background: var(--md-sys-color-surface-container-high);
@@ -297,6 +305,7 @@
   justify-content: center;
   transition: background-color 200ms ease, color 200ms ease;
   box-shadow: var(--elev-1);
+  z-index: 1;
 }
 
 .md3-code-block__copy:hover {
