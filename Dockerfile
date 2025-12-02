@@ -53,14 +53,14 @@ RUN pip install --user --no-cache-dir -e .
 
 # Healthcheck endpoint (requires /health route in app)
 HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
-  CMD curl -f http://localhost:8000/health || exit 1
+  CMD curl -f http://localhost:5000/health || exit 1
 
-EXPOSE 8000
+EXPOSE 5000
 
-# Production server: Gunicorn with 4 workers
+# Production server: Gunicorn with 2 workers (for 1 vCPU server)
 CMD ["gunicorn", \
-     "--bind", "0.0.0.0:8000", \
-     "--workers", "4", \
+     "--bind", "0.0.0.0:5000", \
+     "--workers", "2", \
      "--worker-class", "sync", \
      "--timeout", "120", \
      "--access-logfile", "-", \

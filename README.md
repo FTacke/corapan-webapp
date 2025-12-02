@@ -147,6 +147,12 @@ Für den produktiven Betrieb wird empfohlen:
 - Setzen der Environment-Variable `FLASK_ENV=production`.
 - Siehe `docs/operations/deployment.md` für Details.
 
+### Deployment (Production)
+
+Die Produktion läuft auf `marele.online.uni-marburg.de` und wird über einen **self-hosted GitHub Runner** automatisiert. Ein `push` auf den `main`-Branch führt automatisch `scripts/deploy_prod.sh` aus, welches das Docker-Image baut und den Container aktualisiert. Große Daten- und Medienbestände kommen **nicht** über Git, sondern werden in `/srv/webapps/corapan/data` und `/srv/webapps/corapan/media` per rsync bereitgestellt.
+
+→ Vollständige Dokumentation: [`docs/deploy_plan.md`](docs/deploy_plan.md)
+
 ## 10. Lizenz
 
 (Hier Lizenzinformationen einfügen, z.B. MIT oder Proprietär)
