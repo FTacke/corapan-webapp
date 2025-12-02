@@ -90,8 +90,8 @@ docker run -d \
     -p "${HOST_PORT}:${CONTAINER_PORT}" \
     -v "${DATA_DIR}:/app/data" \
     -v "${MEDIA_DIR}:/app/media" \
-    -v "${CONFIG_DIR}/passwords.env:/app/passwords.env:ro" \
     -v "${LOGS_DIR}:/app/logs" \
+    --env-file "${CONFIG_DIR}/passwords.env" \
     -e "FLASK_ENV=production" \
     "${IMAGE_NAME}"
 

@@ -151,6 +151,8 @@ Für den produktiven Betrieb wird empfohlen:
 
 Die Produktion läuft auf `marele.online.uni-marburg.de` und wird über einen **self-hosted GitHub Runner** automatisiert. Ein `push` auf den `main`-Branch führt automatisch `scripts/deploy_prod.sh` aus, welches das Docker-Image baut und den Container aktualisiert. Große Daten- und Medienbestände kommen **nicht** über Git, sondern werden in `/srv/webapps/corapan/data` und `/srv/webapps/corapan/media` per rsync bereitgestellt.
 
+> **Secrets:** Die Datei `passwords.env` liegt auf dem Server unter `/srv/webapps/corapan/config/` und wird per `--env-file` in den Container geladen. Die App erwartet die Secrets (z. B. `DATABASE_URL`, `FLASK_SECRET_KEY`) als Umgebungsvariablen.
+
 → Vollständige Dokumentation: [`docs/deploy_plan.md`](docs/deploy_plan.md)
 
 ## 10. Lizenz

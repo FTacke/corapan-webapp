@@ -50,8 +50,9 @@ Root für Webapps: `/srv/webapps/corapan/`
 |-----------|----------------|------|
 | `/srv/webapps/corapan/data` | `/app/data` | rw |
 | `/srv/webapps/corapan/media` | `/app/media` | rw |
-| `/srv/webapps/corapan/config/passwords.env` | `/app/passwords.env` | ro |
 | `/srv/webapps/corapan/logs` | `/app/logs` | rw |
+
+> **Secrets:** Die Datei `/srv/webapps/corapan/config/passwords.env` wird per `--env-file` geladen (nicht als Volume gemountet). Die App erwartet die Secrets als Umgebungsvariablen.
 
 ### Container-Start (Referenz)
 
@@ -61,8 +62,8 @@ docker run -d --name corapan-webapp \
   -p 6000:5000 \
   -v /srv/webapps/corapan/data:/app/data \
   -v /srv/webapps/corapan/media:/app/media \
-  -v /srv/webapps/corapan/config/passwords.env:/app/passwords.env:ro \
   -v /srv/webapps/corapan/logs:/app/logs \
+  --env-file /srv/webapps/corapan/config/passwords.env \
   corapan-webapp:latest
 ```
 
@@ -156,6 +157,10 @@ bash scripts/deploy_prod.sh
 ## 9. Checkliste Erstinstallation
 
 - [ ] Server-Verzeichnisse anlegen: `/srv/webapps/corapan/{app,data,media,config,logs}`
+- [ ] Host-Verzeichnisse für Container-User beschreibbar machen:
+  ```bash
+  chown -R 1000:1000 /srv/webapps/corapan/{data,media,logs}
+  ```
 - [ ] Git-Repo klonen nach `/srv/webapps/corapan/app`
 - [ ] `passwords.env` in `/srv/webapps/corapan/config/` anlegen
 - [ ] PostgreSQL-Datenbank und User einrichten
