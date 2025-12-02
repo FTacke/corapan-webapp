@@ -19,7 +19,7 @@
 /* Ab 600px: Logo kann auf bis zu 700px wachsen */
 @media (min-width: 600px) {
   .md3-index-logo__img {
-    max-width: 700px;
+    max-width: 740px;
   }
 }
 
