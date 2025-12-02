@@ -1,5 +1,11 @@
 import { showError, showSuccess, clearAlert } from '/static/js/md3/alert-utils.js';
 
+// Helper function to get CSRF token from cookie
+function getCsrfToken() {
+  const match = document.cookie.match(/csrf_access_token=([^;]+)/);
+  return match ? match[1] : '';
+}
+
 document.addEventListener('DOMContentLoaded', function () {
   const form = document.getElementById('chg');
   if (!form) return;
@@ -55,7 +61,12 @@ document.addEventListener('DOMContentLoaded', function () {
     try {
       const r = await fetch('/auth/change-password', { 
         method: 'POST', 
-        headers: { 'Content-Type': 'application/json' }, 
+        headers: { 
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'X-CSRF-TOKEN': getCsrfToken()
+        },
+        credentials: 'same-origin',
         body: JSON.stringify({ oldPassword, newPassword }) 
       });
       

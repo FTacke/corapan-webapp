@@ -8,6 +8,7 @@ from logging.handlers import RotatingFileHandler
 from pathlib import Path
 
 from flask import Flask, flash, jsonify, redirect, render_template, request, url_for
+from werkzeug.middleware.proxy_fix import ProxyFix
 
 from .extensions import register_extensions
 from .routes import register_blueprints
@@ -29,6 +30,10 @@ def create_app(env_name: str | None = None) -> Flask:
         static_folder=str(static_dir),
     )
     load_config(app, env_name)
+    
+    # Apply ProxyFix to correctly handle X-Forwarded-* headers from Nginx
+    # This ensures url_for(_external=True) generates https:// URLs when behind HTTPS proxy
+    app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_prefix=1)
     # Legacy passwords.env files on disk are ignored by default; they were used
     # for env-based auth and are deprecated. Keep the file on disk only for
     # manual recovery/rollback scenarios; the app defaults to DB-backed auth.

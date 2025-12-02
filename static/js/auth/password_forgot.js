@@ -10,7 +10,12 @@ document.addEventListener('DOMContentLoaded', function () {
     
     try {
       const email = document.getElementById('email').value;
-      const resp = await fetch('/auth/reset-password/request', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email }) });
+      const resp = await fetch('/auth/reset-password/request', { 
+        method: 'POST', 
+        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+        credentials: 'same-origin',
+        body: JSON.stringify({ email }) 
+      });
       const data = await resp.json();
       
       if (data.ok) {

@@ -5,6 +5,12 @@
  * MD3-conform implementation with filter chips and edit dialog.
  */
 document.addEventListener('DOMContentLoaded', function () {
+  // Helper function to get CSRF token from cookie
+  function getCsrfToken() {
+    const match = document.cookie.match(/csrf_access_token=([^;]+)/);
+    return match ? match[1] : '';
+  }
+
   // DOM Elements - List
   const listBody = document.getElementById('list-body');
   const refreshBtn = document.getElementById('refresh');
@@ -241,7 +247,11 @@ document.addEventListener('DOMContentLoaded', function () {
     
     fetch(`/admin/users/${encodeURIComponent(userId)}`, {
       method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 
+        'Content-Type': 'application/json', 
+        'Accept': 'application/json',
+        'X-CSRF-TOKEN': getCsrfToken()
+      },
       credentials: 'same-origin',
       body: JSON.stringify({
         email: email || null,
@@ -298,7 +308,11 @@ document.addEventListener('DOMContentLoaded', function () {
     
     fetch(`/admin/users/${encodeURIComponent(userId)}/reset-password`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 
+        'Content-Type': 'application/json', 
+        'Accept': 'application/json',
+        'X-CSRF-TOKEN': getCsrfToken()
+      },
       credentials: 'same-origin'
     })
     .then(r => r.json())
@@ -448,7 +462,11 @@ document.addEventListener('DOMContentLoaded', function () {
 
       fetch('/admin/users', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json', 
+          'Accept': 'application/json',
+          'X-CSRF-TOKEN': getCsrfToken()
+        },
         credentials: 'same-origin',
         body: JSON.stringify(data),
       })

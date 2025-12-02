@@ -35,9 +35,23 @@ class CounterStore:
         return self._cache
 
     def persist(self) -> None:
+        """Persist counter data atomically to prevent corruption."""
+        import tempfile
+        import os
         self.path().parent.mkdir(parents=True, exist_ok=True)
-        with self.path().open("w", encoding="utf-8") as handle:
-            json.dump(self._cache or self.default, handle, indent=2)
+        # Write to temp file first, then atomically rename
+        fd, tmp_path = tempfile.mkstemp(dir=self.path().parent, suffix='.tmp')
+        try:
+            with os.fdopen(fd, 'w', encoding='utf-8') as handle:
+                json.dump(self._cache or self.default, handle, indent=2)
+            os.replace(tmp_path, self.path())  # Atomic on POSIX
+        except Exception:
+            # Clean up temp file on error
+            try:
+                os.unlink(tmp_path)
+            except OSError:
+                pass
+            raise
 
 
 class AccessCounter(CounterStore):
