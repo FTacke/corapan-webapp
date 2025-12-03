@@ -1,102 +1,196 @@
 # CO.RA.PAN Deployment Guide
 
-**Letzte Aktualisierung:** 2025-11-28
+**Letzte Aktualisierung:** 2025-12-03
 
 ---
 
 ## 📋 Übersicht
 
-Dieser Guide beschreibt das Deployment der CO.RA.PAN-Webapp auf dem Production-Server.
+Dieser Guide beschreibt das Deployment der CO.RA.PAN-Webapp.
 
-**Server-Setup:**
-- Ubuntu Server mit Docker
-- **PostgreSQL** für Auth-Datenbank (empfohlen)
-- **BlackLab Server** für Corpus-Suche
+**Architektur:**
+- Python/Flask Web-App in Docker-Container
+- PostgreSQL für Auth-Datenbank (integriert in Docker Compose)
+- BlackLab Server für Corpus-Suche
 - nginx als Reverse Proxy (Port 80/443 → 6000)
-- VPN-Zugang erforderlich
 - Media-Dateien werden extern verwaltet (nicht im Docker-Image)
+
+**Neue Deployment-Pipeline (seit 2025-12):**
+- Alle Dependencies sind im Docker-Image eingebaut (kein `pip install` im Container)
+- Initial-Admin wird automatisch beim Container-Start erstellt
+- Health-Endpoint prüft Flask, Auth-DB und BlackLab
+- Pre-Deploy-Check validiert Setup lokal vor Production-Deployment
 
 ---
 
-## 🗄️ Datenbank-Konfiguration
+## 🚀 Quick Start
 
-### Production (Empfohlen): PostgreSQL
-
-```bash
-# Environment-Variable setzen
-AUTH_DATABASE_URL=postgresql+psycopg://corapan_auth:<PASSWORD>@<HOST>:5432/corapan_auth
-```
-
-PostgreSQL bietet:
-- Bessere Concurrency als SQLite
-- Robuste ACID-Garantien
-- Einfache Skalierung und Backups
-
-### Fallback: SQLite (nur für einfache Setups)
+### Lokale Entwicklung
 
 ```bash
-AUTH_DATABASE_URL=sqlite:///data/db/auth.db
+# 1. Environment-Variablen setzen (optional, defaults vorhanden)
+export START_ADMIN_PASSWORD=my-secure-password
+
+# 2. Stack starten
+docker compose -f docker-compose.dev.yml up -d
+
+# 3. App öffnen
+# http://localhost:8000
+# Login: admin / admin (oder START_ADMIN_PASSWORD)
 ```
 
-> ⚠️ SQLite ist nicht für Produktionsumgebungen mit hoher Last empfohlen.
+### Production Deployment
+
+```bash
+# 1. Environment-Variablen setzen (REQUIRED)
+export FLASK_SECRET_KEY=$(python -c "import secrets; print(secrets.token_hex(32))")
+export JWT_SECRET_KEY=$(python -c "import secrets; print(secrets.token_hex(32))")
+export POSTGRES_PASSWORD=<secure-db-password>
+export START_ADMIN_PASSWORD=<secure-admin-password>
+
+# 2. Git Pull + Build + Start
+git pull origin main
+docker compose -f docker-compose.prod.yml up -d --build
+
+# 3. Health Check
+curl http://localhost:6000/health
+```
+
+---
+
+## 📁 Compose-Dateien
+
+| Datei | Verwendung |
+|-------|------------|
+| `docker-compose.dev.yml` | Lokale Entwicklung mit Hot-Reload |
+| `docker-compose.prod.yml` | Production mit Security-Defaults |
+| `docker-compose.dev-postgres.yml` | Nur PostgreSQL (Legacy) |
 
 ---
 
 ## 🔑 Environment-Variablen
 
+### Required (Production)
+
 | Variable | Beschreibung | Beispiel |
 |----------|-------------|----------|
-| `FLASK_SECRET_KEY` | Flask Session Secret | `<random-secret>` |
-| `JWT_SECRET_KEY` | JWT Signing Key | `<random-secret>` |
-| `AUTH_DATABASE_URL` | Auth-DB Connection URL | `postgresql+psycopg://...` |
-| `BLACKLAB_BASE_URL` | BlackLab Server URL | `http://localhost:8081/blacklab-server` |
+| `FLASK_SECRET_KEY` | Flask Session Secret | `<64-char-random>` |
+| `JWT_SECRET_KEY` | JWT Signing Key | `<64-char-random>` |
+| `POSTGRES_PASSWORD` | PostgreSQL Passwort | `<secure-password>` |
+
+### Optional
+
+| Variable | Default | Beschreibung |
+|----------|---------|--------------|
+| `START_ADMIN_USERNAME` | `admin` | Initial Admin Username |
+| `START_ADMIN_PASSWORD` | `admin` | Initial Admin Passwort |
+| `AUTH_HASH_ALGO` | `argon2` | Hash-Algorithmus (`argon2` oder `bcrypt`) |
 
 ---
 
-## 🚀 Quick Start: Deployment
+## 🗄️ Datenbank-Konfiguration
 
-### Option 1: Automatisches Update (empfohlen)
+### Docker Compose (Standard)
 
-```bash
-# Auf dem Server via SSH
-cd /root/corapan
-./update.sh
+Die Compose-Dateien enthalten einen PostgreSQL-Service (`db`). Die App verbindet sich automatisch über den internen Hostnamen `db`:
+
+```
+AUTH_DATABASE_URL=postgresql+psycopg2://corapan_app:PASSWORD@db:5432/corapan_auth
 ```
 
-Das war's! Das Script macht automatisch:
-- ✅ Backup der Counter-Daten
-- ✅ Git Pull der neuesten Änderungen
-- ✅ Docker Image neu bauen
-- ✅ Container neu starten
-- ✅ Health Check
+### Externe PostgreSQL (Optional)
 
-### Option 2: Manuelles Update (alter Workflow)
+Falls eine externe DB verwendet wird:
 
-Siehe Abschnitt "Manuelles Deployment" weiter unten.
+```bash
+AUTH_DATABASE_URL=postgresql+psycopg2://user:pass@external-host:5432/corapan_auth
+```
 
 ---
 
-## 📦 Erstmaliges Server-Setup
+## 🔧 Pre-Deploy Check
 
-### 1. Git Repository clonen
-
-```bash
-cd /root
-git clone <your-git-repo-url> corapan
-cd corapan
-```
-
-### 2. Verzeichnisstruktur auf Server erstellen
+**Vor jedem Production-Deployment:**
 
 ```bash
-# Basis-Struktur
-mkdir -p /root/corapan/{media,data,config,logs,backups}
-mkdir -p /root/corapan/media/{mp3-full,mp3-split,mp3-temp,transcripts}
-mkdir -p /root/corapan/data/{db,db_public,counters}
-mkdir -p /root/corapan/config/keys
+# Bash (Linux/Mac/WSL)
+./scripts/pre_deploy_check.sh
+
+# PowerShell (Windows)
+.\scripts\pre_deploy_check.ps1
 ```
 
-### 3. Dateien auf Server kopieren
+Der Check validiert:
+- ✅ Docker-Image baut erfolgreich
+- ✅ PostgreSQL startet und ist healthy
+- ✅ Web-App startet und ist healthy
+- ✅ Auth-DB verbunden (Health-Endpoint)
+- ✅ Login funktioniert
+
+---
+
+## 👤 Admin-User verwalten
+
+### Initial-Admin beim Start
+
+Der Container erstellt automatisch einen Admin-User wenn `START_ADMIN_PASSWORD` gesetzt ist.
+
+### Passwort zurücksetzen
+
+```bash
+# Im Container
+docker exec -it corapan-web-prod python scripts/reset_user_password.py admin --unlock
+
+# Lokal (mit AUTH_DATABASE_URL)
+python scripts/reset_user_password.py admin --password new-password --unlock
+```
+
+### Neuen Admin erstellen
+
+```bash
+docker exec -it corapan-web-prod python scripts/create_initial_admin.py \
+    --username newadmin \
+    --password secure-pass \
+    --email admin@example.org \
+    --allow-production
+```
+
+---
+
+## 🩺 Health Monitoring
+
+### Endpoints
+
+| Endpoint | Beschreibung |
+|----------|-------------|
+| `/health` | Gesamtstatus (Flask + Auth-DB + BlackLab) |
+| `/health/auth` | Auth-DB Status |
+| `/health/bls` | BlackLab Status |
+
+### Response Format
+
+```json
+{
+  "status": "healthy",
+  "service": "corapan-web",
+  "checks": {
+    "flask": {"ok": true},
+    "auth_db": {"ok": true, "backend": "postgresql"},
+    "blacklab": {"ok": true, "url": "http://..."}
+  }
+}
+```
+
+### Docker Healthcheck
+
+Die Container haben eingebaute Healthchecks:
+
+```bash
+docker ps  # STATUS zeigt "(healthy)" wenn OK
+docker inspect --format='{{json .State.Health}}' corapan-web-prod
+```
+
+---
 
 **Von lokalem Rechner:**
 

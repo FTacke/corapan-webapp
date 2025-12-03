@@ -9,10 +9,11 @@ FROM python:3.12-slim AS builder
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1
 
-# Install build dependencies
+# Install build dependencies (including libpq-dev for psycopg2)
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     git \
+    libpq-dev \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
@@ -20,6 +21,11 @@ WORKDIR /app
 # Install Python dependencies to user site-packages
 COPY requirements.txt ./
 RUN pip install --user --no-cache-dir -r requirements.txt gunicorn>=21.2.0
+
+# Verify critical dependencies are installed correctly
+RUN python -c "import psycopg2; print(f'✓ psycopg2 {psycopg2.__version__}')" && \
+    python -c "import argon2; print(f'✓ argon2-cffi {argon2.__version__}')" && \
+    python -c "from passlib.hash import argon2; print('✓ passlib argon2 backend available')"
 
 
 # Stage 2: Runtime - Minimal production image
@@ -29,11 +35,13 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     PATH=/home/corapan/.local/bin:$PATH
 
-# Install runtime dependencies only
+# Install runtime dependencies only (including libpq for psycopg2 runtime)
 RUN apt-get update && apt-get install -y --no-install-recommends \
     ffmpeg \
     libsndfile1 \
     curl \
+    libpq5 \
+    postgresql-client \
     && rm -rf /var/lib/apt/lists/*
 
 # Create non-root user for security
@@ -51,11 +59,33 @@ COPY --chown=corapan:corapan . .
 USER corapan
 RUN pip install --user --no-cache-dir -e .
 
+# Final dependency check at build time
+RUN python -c "\
+import sys; \
+errors = []; \
+try: import psycopg2; print(f'✓ psycopg2 {psycopg2.__version__}') \
+except ImportError as e: errors.append(f'psycopg2: {e}'); \
+try: import argon2; print(f'✓ argon2-cffi {argon2.__version__}') \
+except ImportError as e: errors.append(f'argon2-cffi: {e}'); \
+try: from passlib.hash import argon2 as pa; print('✓ passlib argon2 backend') \
+except Exception as e: errors.append(f'passlib argon2: {e}'); \
+if errors: print('ERRORS:', errors); sys.exit(1); \
+print('All critical dependencies verified.')"
+
+# Copy entrypoint script and make it executable
+# Note: We copy as root first, then chown since USER is corapan
+USER root
+COPY --chmod=755 scripts/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+USER corapan
+
 # Healthcheck endpoint (requires /health route in app)
 HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
   CMD curl -f http://localhost:5000/health || exit 1
 
 EXPOSE 5000
+
+# Use entrypoint for DB initialization, CMD for the actual server
+ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
 
 # Production server: Gunicorn with 2 workers (for 1 vCPU server)
 CMD ["gunicorn", \

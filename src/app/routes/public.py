@@ -69,6 +69,7 @@ def health_check():
 
     Checks:
     - Flask app is running (HTTP 200)
+    - Auth database is reachable (SELECT 1)
     - BlackLab server is reachable (if BLS_BASE_URL is configured)
 
     Response:
@@ -77,15 +78,46 @@ def health_check():
         "service": "corapan-web",
         "checks": {
             "flask": {"ok": true},
+            "auth_db": {"ok": true|false, "backend": "postgresql|sqlite", "error": "..."},
             "blacklab": {"ok": true|false, "url": "...", "error": "..."}
         }
     }
+    
+    HTTP Status:
+    - 200: All critical checks pass (auth_db OK)
+    - 503: Critical checks fail (auth_db down)
     """
     from ..extensions.http_client import BLS_BASE_URL, get_http_client
+    from ..extensions.sqlalchemy_ext import get_engine
+    from sqlalchemy import text
 
     checks = {
         "flask": {"ok": True}  # If we got here, Flask is healthy
     }
+    
+    # Check Auth DB availability (critical for production)
+    auth_db_check = {"ok": False, "backend": None, "error": None}
+    try:
+        engine = get_engine()
+        if engine is None:
+            auth_db_check["error"] = "Auth engine not initialized"
+        else:
+            with engine.connect() as conn:
+                conn.execute(text("SELECT 1"))
+            auth_db_check["ok"] = True
+            # Determine backend type
+            url = str(engine.url)
+            if "sqlite" in url:
+                auth_db_check["backend"] = "sqlite"
+            elif "postgresql" in url or "postgres" in url:
+                auth_db_check["backend"] = "postgresql"
+            else:
+                auth_db_check["backend"] = "unknown"
+    except Exception as e:
+        auth_db_check["error"] = f"{type(e).__name__}: {str(e)}"
+        logger.warning(f"Auth DB health check failed: {e}")
+    
+    checks["auth_db"] = auth_db_check
 
     # Check BlackLab availability (quick preflight)
     blacklab_check = {"url": BLS_BASE_URL, "ok": False, "error": None}
@@ -120,13 +152,18 @@ def health_check():
     checks["blacklab"] = blacklab_check
 
     # Determine overall status
-    if checks["flask"]["ok"] and checks["blacklab"]["ok"]:
+    # Auth DB is critical, BlackLab is not (degraded mode still works)
+    if checks["flask"]["ok"] and checks["auth_db"]["ok"] and checks["blacklab"]["ok"]:
         overall_status = "healthy"
         http_code = 200
-    elif checks["flask"]["ok"]:
-        # Flask OK but BlackLab not available
+    elif checks["flask"]["ok"] and checks["auth_db"]["ok"]:
+        # Flask + Auth OK but BlackLab not available - degraded but functional
         overall_status = "degraded"
-        http_code = 200  # Still return 200 so Docker healthcheck passes for Flask
+        http_code = 200
+    elif checks["flask"]["ok"] and not checks["auth_db"]["ok"]:
+        # Auth DB down - critical failure
+        overall_status = "unhealthy"
+        http_code = 503
     else:
         overall_status = "unhealthy"
         http_code = 503

@@ -337,3 +337,128 @@ Set-Cookie: refresh_token_cookie=...
 
 - [Authentication Flow Overview](../concepts/authentication-flow.md) - Konzeptuelle Übersicht
 - [API Auth Endpoints](../reference/api-auth-endpoints.md) - API-Dokumentation
+- [Deployment Guide](../operations/deployment.md) - Deployment-Anleitung
+
+---
+
+## Deployment-bezogene Auth-Probleme (neu seit 2025-12)
+
+### Problem D1: "psycopg2 not found" beim Container-Start
+
+**Symptome:**
+- Container startet nicht
+- Log: `ModuleNotFoundError: No module named 'psycopg2'`
+
+**Ursache:**
+Alte Docker-Images ohne psycopg2-binary.
+
+**Lösung:**
+```bash
+# Image komplett neu bauen
+docker compose -f docker-compose.prod.yml build --no-cache web
+```
+
+**Status:** ✅ Behoben durch Dockerfile-Update
+
+---
+
+### Problem D2: Auth-DB nicht erreichbar in Production
+
+**Symptome:**
+- `/health` zeigt `"auth_db": {"ok": false}`
+- App startet, aber Login schlägt fehl
+
+**Diagnose:**
+```bash
+# Health-Endpoint prüfen
+curl http://localhost:6000/health | jq
+
+# Container-Logs
+docker compose logs web --tail=50
+```
+
+**Ursachen & Lösungen:**
+
+1. **DB noch nicht gestartet:**
+   ```bash
+   docker compose up -d db
+   # Warten auf healthy
+   docker compose ps
+   ```
+
+2. **Falsche AUTH_DATABASE_URL:**
+   - In Docker Compose: Host muss `db` sein (nicht `localhost`)
+   - Korrekt: `postgresql+psycopg2://user:pass@db:5432/corapan_auth`
+
+3. **Postgres-Container crasht:**
+   ```bash
+   docker compose logs db
+   # Bei Volume-Problemen:
+   docker compose down -v  # ACHTUNG: Löscht Daten!
+   docker compose up -d
+   ```
+
+**Status:** ✅ Container-Start prüft jetzt DB-Verbindung
+
+---
+
+### Problem D3: Initial-Admin existiert nicht
+
+**Symptome:**
+- Login mit `admin/admin` schlägt fehl
+- DB existiert, aber ist leer
+
+**Lösung:**
+```bash
+# Admin manuell erstellen
+docker exec -it corapan-web-prod python scripts/create_initial_admin.py \
+    --username admin \
+    --password secure-password \
+    --allow-production
+
+# Oder Container mit Env-Variable neu starten
+export START_ADMIN_PASSWORD=secure-password
+docker compose up -d web
+```
+
+**Status:** ✅ Entrypoint erstellt Admin automatisch
+
+---
+
+### Problem D4: CSRF-Token fehlt bei POST-Requests
+
+**Symptome:**
+- Login-Form macht keinen POST
+- Browser-Console: "CSRF token missing"
+
+**Diagnose:**
+```javascript
+// Browser-Console
+getCsrfToken()  // Sollte Token oder null zurückgeben
+document.cookie  // csrf_access_token prüfen
+```
+
+**Lösung:**
+- Sicherstellen, dass `/static/js/api.js` geladen wird
+- Bei HTML-Forms: Standard-POST ohne JS verwenden (CSRF nur für AJAX nötig)
+
+**Status:** ✅ Login-Form nutzt Standard-HTML-POST
+
+---
+
+### Problem D5: Pre-Deploy-Check schlägt fehl
+
+**Symptome:**
+- `pre_deploy_check.sh` gibt Exit-Code != 0
+
+**Diagnose nach Exit-Code:**
+
+| Code | Problem | Lösung |
+|------|---------|--------|
+| 1 | Build failed | `docker compose build --no-cache` |
+| 2 | DB start failed | Docker-Daemon läuft? Port 54320 frei? |
+| 3 | Web start failed | Logs prüfen: `docker compose logs web` |
+| 4 | Health failed | AUTH_DATABASE_URL korrekt? |
+| 5 | Login failed | Admin-Password korrekt? |
+
+**Status:** ✅ Pre-Deploy-Check gibt klare Fehlermeldungen

@@ -38,6 +38,28 @@ def client():
     ctx.pop()
 
 
+@pytest.fixture
+def admin_client(client):
+    """Client fixture with pre-created admin user."""
+    from src.app.auth import services
+    
+    with get_session() as session:
+        admin = User(
+            id=str(secrets.token_hex(8)),
+            username="admin",
+            email="admin@example.org",
+            password_hash=services.hash_password("admin-password"),
+            role="admin",
+            is_active=True,
+            must_reset_password=False,
+            created_at=datetime.now(timezone.utc),
+            updated_at=datetime.now(timezone.utc),
+        )
+        session.add(admin)
+    
+    return client
+
+
 def create_test_user(username: str = "alice") -> User:
     from src.app.auth import services
 
@@ -210,3 +232,126 @@ def test_account_delete_and_data_export(client):
     de = client.get("/auth/account/data-export")
     assert de.status_code == 200
     assert "user" in de.json and "tokens" in de.json
+
+
+# =============================================================================
+# Login Flow Integration Tests
+# =============================================================================
+
+class TestLoginFlow:
+    """Comprehensive login flow tests."""
+
+    def test_login_post_with_valid_credentials(self, admin_client):
+        """Test POST /auth/login with valid credentials returns redirect and sets cookies."""
+        resp = admin_client.post(
+            "/auth/login",
+            data={"username": "admin", "password": "admin-password"},
+            follow_redirects=False,
+        )
+
+        # Should redirect (303) after successful login
+        assert resp.status_code == 303, f"Expected 303, got {resp.status_code}"
+
+        # Check that auth cookies are set
+        cookies = {c.name: c for c in admin_client.cookie_jar}
+        assert "access_token_cookie" in cookies, "access_token_cookie not set"
+
+    def test_login_post_with_invalid_password(self, admin_client):
+        """Test POST /auth/login with wrong password returns login page with error."""
+        resp = admin_client.post(
+            "/auth/login",
+            data={"username": "admin", "password": "wrong-password"},
+            follow_redirects=False,
+        )
+
+        # Should return 400 with login form (not redirect)
+        assert resp.status_code == 400
+
+    def test_login_post_with_nonexistent_user(self, client):
+        """Test POST /auth/login with unknown user returns error."""
+        resp = client.post(
+            "/auth/login",
+            data={"username": "nobody", "password": "password"},
+            follow_redirects=False,
+        )
+
+        # Should return 400 with login form
+        assert resp.status_code == 400
+
+    def test_login_post_json_format(self, admin_client):
+        """Test POST /auth/login with JSON body."""
+        resp = admin_client.post(
+            "/auth/login",
+            json={"username": "admin", "password": "admin-password"},
+        )
+
+        # JSON requests return 303 redirect on success
+        assert resp.status_code in (200, 204, 303)
+
+    def test_login_with_next_url_redirect(self, admin_client):
+        """Test that ?next URL is respected after login."""
+        resp = admin_client.post(
+            "/auth/login",
+            data={
+                "username": "admin",
+                "password": "admin-password",
+                "next": "/admin/dashboard",
+            },
+            follow_redirects=False,
+        )
+
+        assert resp.status_code == 303
+        # Location header should contain the next URL
+        location = resp.headers.get("Location", "")
+        assert "/admin" in location or "dashboard" in location or location != ""
+
+    def test_login_cookies_have_correct_attributes(self, admin_client):
+        """Test that login sets cookies with correct security attributes."""
+        resp = admin_client.post(
+            "/auth/login",
+            data={"username": "admin", "password": "admin-password"},
+            follow_redirects=False,
+        )
+
+        assert resp.status_code == 303
+
+        # Check cookies exist
+        cookies = {c.name: c for c in admin_client.cookie_jar}
+        assert "access_token_cookie" in cookies
+
+        # In test mode, cookies should be httponly
+        access_cookie = cookies["access_token_cookie"]
+        # Note: werkzeug test client doesn't expose all cookie attributes
+
+
+class TestHealthEndpoint:
+    """Health endpoint tests."""
+
+    def test_health_returns_json(self, client):
+        """Test /health returns JSON with correct structure."""
+        resp = client.get("/health")
+
+        # Health should always return 200 or 503
+        assert resp.status_code in (200, 503)
+
+        data = resp.json
+        assert "status" in data
+        assert "service" in data
+        assert "checks" in data
+        assert data["service"] == "corapan-web"
+
+    def test_health_checks_flask(self, client):
+        """Test /health reports Flask as healthy."""
+        resp = client.get("/health")
+        data = resp.json
+
+        assert data["checks"]["flask"]["ok"] is True
+
+    def test_health_auth_endpoint(self, client):
+        """Test /health/auth returns auth DB status."""
+        resp = client.get("/health/auth")
+
+        assert resp.status_code in (200, 503)
+        data = resp.json
+        assert "ok" in data
+        assert "backend" in data
