@@ -59,39 +59,8 @@ COPY --chown=corapan:corapan . .
 USER corapan
 RUN pip install --user --no-cache-dir -e .
 
-# Final dependency check at build time using heredoc for readability
-RUN <<EOF
-python -c '
-import sys
-errors = []
-
-try:
-    import psycopg2
-    print(f"✓ psycopg2 {psycopg2.__version__}")
-except ImportError as e:
-    errors.append(f"psycopg2: {e}")
-
-try:
-    import argon2
-    print(f"✓ argon2-cffi {argon2.__version__}")
-except ImportError as e:
-    errors.append(f"argon2-cffi: {e}")
-
-try:
-    from passlib.hash import argon2 as pa
-    print("✓ passlib argon2 backend")
-except Exception as e:
-    errors.append(f"passlib argon2: {e}")
-
-if errors:
-    print("✗ Missing dependencies:")
-    for err in errors:
-        print("  -", err)
-    sys.exit(1)
-
-print("All required Python dependencies are available.")
-'
-EOF
+# Final dependency check at build time
+RUN python scripts/check_deps.py
 
 # Copy entrypoint script and make it executable
 # Note: We copy as root first, then set permissions, then switch back to corapan user
