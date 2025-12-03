@@ -189,13 +189,6 @@ def register_jwt_handlers() -> None:
             # Fallback: return 200 for public routes (should not happen)
             return jsonify({"authenticated": False}), 200
 
-        # For certain auth-related HTML pages we want to redirect the browser
-        # to the login UI (not return JSON). These are server-rendered pages
-        # under /auth/account and /auth/password.
-        if request.path.startswith("/auth/account") or request.path.startswith("/auth/password"):
-            # fall through to HTML redirect behavior below
-            pass
-
         # API endpoints: Return JSON error with code
         if request.path.startswith("/api/") or request.path.startswith("/atlas/"):
             return jsonify(
@@ -206,7 +199,10 @@ def register_jwt_handlers() -> None:
                 }
             ), 401
 
-        # AJAX/fetch requests: Return JSON error with code
+        # AJAX/fetch requests expecting JSON: Return JSON error
+        # IMPORTANT: Check Accept header BEFORE falling through to HTML redirect
+        # This ensures /auth/account/profile API calls (with Accept: application/json)
+        # get proper JSON errors, while /auth/account/profile/page gets HTML redirect
         if request.accept_mimetypes.best == "application/json":
             return jsonify(
                 {
@@ -215,6 +211,14 @@ def register_jwt_handlers() -> None:
                     "message": error_string,
                 }
             ), 401
+
+        # For certain auth-related HTML pages we want to redirect the browser
+        # to the login UI (not return JSON). These are server-rendered pages
+        # under /auth/account/**/page and /auth/password/**/page.
+        # Note: API routes like /auth/account/profile are handled above via Accept header
+        if request.path.startswith("/auth/account") or request.path.startswith("/auth/password"):
+            # fall through to HTML redirect behavior below
+            pass
 
         # HTML pages: Save return URL and redirect to login
         from flask import current_app, flash, redirect, url_for

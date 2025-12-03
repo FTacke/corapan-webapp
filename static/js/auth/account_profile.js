@@ -1,6 +1,41 @@
 import { showError, showSuccess, clearAlert } from '/static/js/md3/alert-utils.js';
 
 /**
+ * Account Profile API Client
+ * 
+ * This module handles profile data loading and updates via the JSON API:
+ * - GET  /auth/account/profile  → Returns JSON with user profile data
+ * - PATCH /auth/account/profile → Updates profile, returns JSON { ok: true } or error
+ * 
+ * The page route /auth/account/profile/page is for HTML rendering only (GET).
+ * All data operations use the API route above.
+ * 
+ * IMPORTANT: Always send Accept: application/json header to ensure the server
+ * returns JSON errors (not HTML redirects) when authentication fails.
+ */
+
+/**
+ * Safely parse JSON response, handling non-JSON error pages gracefully.
+ * @param {Response} response - Fetch response object
+ * @returns {Promise<Object|null>} Parsed JSON or null if not JSON
+ */
+async function safeParseJson(response) {
+  const contentType = response.headers.get('content-type') || '';
+  if (!contentType.includes('application/json')) {
+    // Not JSON - likely an HTML error page
+    const text = await response.text();
+    console.warn('Expected JSON response, got:', contentType, text.substring(0, 200));
+    return null;
+  }
+  try {
+    return await response.json();
+  } catch (e) {
+    console.error('Failed to parse JSON response:', e);
+    return null;
+  }
+}
+
+/**
  * Load current profile data from API and display in the UI
  */
 async function loadProfileData() {
@@ -10,15 +45,27 @@ async function loadProfileData() {
   try {
     const response = await fetch('/auth/account/profile', {
       method: 'GET',
+      headers: {
+        'Accept': 'application/json'
+      },
       credentials: 'same-origin'
     });
     
-    if (response.ok) {
-      const data = await response.json();
+    if (!response.ok) {
+      // Handle authentication errors
+      if (response.status === 401) {
+        console.warn('Not authenticated - redirecting to login');
+        window.location.href = '/login?next=' + encodeURIComponent(window.location.pathname);
+        return;
+      }
+      console.warn('Failed to load profile data:', response.status);
+      return;
+    }
+    
+    const data = await safeParseJson(response);
+    if (data) {
       if (usernameEl) usernameEl.textContent = data.username || '–';
       if (emailEl) emailEl.textContent = data.email || '–';
-    } else {
-      console.warn('Failed to load profile data:', response.status);
     }
   } catch (e) {
     console.error('Error loading profile data:', e);
@@ -72,26 +119,56 @@ document.addEventListener('DOMContentLoaded', async () => {
         return;
       }
 
-      const r = await fetch('/auth/account/profile', { 
-        method: 'PATCH', 
-        headers: { 'Content-Type': 'application/json' }, 
-        credentials: 'same-origin',
-        body: JSON.stringify(body) 
-      });
-      const j = await r.json();
-      
-      if (r.status === 200 && j.ok) {
-        showSuccess(status, 'Profil erfolgreich gespeichert.');
-        // Refresh display and clear inputs
-        await loadProfileData();
-        if (usernameInput) usernameInput.value = '';
-        if (emailInput) emailInput.value = '';
-      } else {
-        if (r.status === 409 && j.error === 'username_exists') {
-          showError(status, 'Benutzername bereits vergeben.');
-        } else {
-          showError(status, j.message || 'Fehler beim Speichern.');
+      try {
+        // PATCH /auth/account/profile - JSON API for profile updates
+        // Accept: application/json ensures we get JSON errors, not HTML redirects
+        const r = await fetch('/auth/account/profile', { 
+          method: 'PATCH', 
+          headers: { 
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          }, 
+          credentials: 'same-origin',
+          body: JSON.stringify(body) 
+        });
+
+        // Handle authentication errors first
+        if (r.status === 401) {
+          showError(status, 'Sitzung abgelaufen. Bitte neu anmelden.');
+          // Optionally redirect to login
+          setTimeout(() => {
+            window.location.href = '/login?next=' + encodeURIComponent(window.location.pathname);
+          }, 1500);
+          return;
         }
+
+        // Parse JSON response safely
+        const j = await safeParseJson(r);
+        if (!j) {
+          // Non-JSON response (likely HTML error page)
+          console.error('Profile update returned non-JSON response:', r.status);
+          showError(status, `Serverfehler (${r.status}). Bitte später erneut versuchen.`);
+          return;
+        }
+        
+        if (r.status === 200 && j.ok) {
+          showSuccess(status, 'Profil erfolgreich gespeichert.');
+          // Refresh display and clear inputs
+          await loadProfileData();
+          if (usernameInput) usernameInput.value = '';
+          if (emailInput) emailInput.value = '';
+        } else {
+          if (r.status === 409 && j.error === 'username_exists') {
+            showError(status, 'Benutzername bereits vergeben.');
+          } else if (r.status === 409 && j.error === 'email_exists') {
+            showError(status, 'E-Mail-Adresse bereits vergeben.');
+          } else {
+            showError(status, j.message || 'Fehler beim Speichern.');
+          }
+        }
+      } catch (e) {
+        console.error('Profile update error:', e);
+        showError(status, 'Ein Netzwerkfehler ist aufgetreten.');
       }
     });
   }
