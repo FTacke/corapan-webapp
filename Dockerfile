@@ -60,9 +60,9 @@ USER corapan
 RUN pip install --user --no-cache-dir -e .
 
 # Final dependency check at build time using heredoc for readability
-RUN python - << 'PY'
+RUN <<EOF
+python -c '
 import sys
-
 errors = []
 
 try:
@@ -90,7 +90,8 @@ if errors:
     sys.exit(1)
 
 print("All required Python dependencies are available.")
-PY
+'
+EOF
 
 # Copy entrypoint script and make it executable
 # Note: We copy as root first, then chown since USER is corapan
