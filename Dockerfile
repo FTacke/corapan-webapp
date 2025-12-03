@@ -1,7 +1,8 @@
-# syntax=docker/dockerfile:1.7
 # ============================================
 # Multi-Stage Build for optimized image size
 # ============================================
+# NOTE: This Dockerfile is BuildKit-independent.
+# It works with both legacy Docker build and BuildKit.
 
 # Stage 1: Builder - Install dependencies
 FROM python:3.12-slim AS builder
@@ -22,10 +23,9 @@ WORKDIR /app
 COPY requirements.txt ./
 RUN pip install --user --no-cache-dir -r requirements.txt gunicorn>=21.2.0
 
-# Verify critical dependencies are installed correctly
-RUN python -c "import psycopg2; print(f'✓ psycopg2 {psycopg2.__version__}')" && \
-    python -c "import argon2; print(f'✓ argon2-cffi {argon2.__version__}')" && \
-    python -c "from passlib.hash import argon2; print('✓ passlib argon2 backend available')"
+# Copy and run dependency check script
+COPY scripts/check_python_deps.py ./scripts/check_python_deps.py
+RUN python scripts/check_python_deps.py
 
 
 # Stage 2: Runtime - Minimal production image
@@ -49,18 +49,20 @@ RUN useradd -m -u 1000 -s /bin/bash corapan
 
 WORKDIR /app
 
-# Copy Python dependencies from builder
-COPY --from=builder --chown=corapan:corapan /root/.local /home/corapan/.local
+# Copy Python dependencies from builder (then fix ownership)
+COPY --from=builder /root/.local /home/corapan/.local
+RUN chown -R corapan:corapan /home/corapan/.local
 
-# Copy application code
-COPY --chown=corapan:corapan . .
+# Copy application code (then fix ownership)
+COPY . .
+RUN chown -R corapan:corapan /app
 
 # Install app as package
 USER corapan
 RUN pip install --user --no-cache-dir -e .
 
-# Final dependency check at build time
-RUN python scripts/check_deps.py
+# Final dependency check in runtime stage
+RUN python scripts/check_python_deps.py
 
 # Copy entrypoint script and make it executable
 # Note: We copy as root first, then set permissions, then switch back to corapan user
