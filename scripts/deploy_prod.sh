@@ -83,11 +83,19 @@ docker rm "${CONTAINER_NAME}" 2>/dev/null || true
 log_info "Old container removed"
 echo ""
 
-# Step 4: Start new container
+# Step 4: Ensure corapan-network exists
+log_info "Ensuring Docker network corapan-network exists..."
+docker network inspect corapan-network >/dev/null 2>&1 || {
+    log_info "Creating Docker network: corapan-network (172.18.0.0/16)"
+    docker network create --subnet=172.18.0.0/16 corapan-network
+}
+
+# Step 5: Start new container
 log_info "Starting new container: ${CONTAINER_NAME}..."
 docker run -d \
     --name "${CONTAINER_NAME}" \
     --restart unless-stopped \
+    --network corapan-network \
     -p "${HOST_PORT}:${CONTAINER_PORT}" \
     -v "${DATA_DIR}:/app/data" \
     -v "${MEDIA_DIR}:/app/media" \
@@ -99,7 +107,7 @@ docker run -d \
 log_info "Container started successfully"
 echo ""
 
-# Step 5: Wait for container to be healthy
+# Step 6: Wait for container to be healthy
 log_info "Waiting for container to be ready..."
 sleep 5
 
@@ -113,7 +121,7 @@ else
 fi
 echo ""
 
-# Step 6: Run database setup (optional - uncomment if needed)
+# Step 7: Run database setup (optional - uncomment if needed)
 # This creates tables and ensures admin user exists
 log_info "Running database setup..."
 docker exec "${CONTAINER_NAME}" python scripts/setup_prod_db.py || {
