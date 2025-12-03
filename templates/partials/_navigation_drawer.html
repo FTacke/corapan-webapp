@@ -51,12 +51,15 @@
         class="drawer" 
         aria-label="Hauptnavigation">
   <div class="drawer__panel">
-    {# Header with Logo #}
+    {# Header with Logo - nicht fokussierbar #}
     <div class="md3-navigation-drawer__header">
-      <a href="{{ url_for('public.landing_page') }}" class="md3-navigation-drawer__logo-link">
+      <a href="{{ url_for('public.landing_page') }}" 
+         class="md3-navigation-drawer__logo-link"
+         tabindex="-1"
+         aria-hidden="true">
         <img id="drawerLogoModal" 
              src="{{ url_for('static', filename='img/corapan_lightmode.png') }}" 
-             alt="CO.RA.PAN" 
+             alt="" 
              class="md3-navigation-drawer__logo"
              data-logo-light="{{ url_for('static', filename='img/corapan_lightmode.png') }}"
              data-logo-dark="{{ url_for('static', filename='img/corapan_darkmode.png') }}">
@@ -199,12 +202,15 @@
        role="navigation" 
        aria-label="Hauptnavigation"
        data-element="nav-drawer-standard">
-  {# Header with Logo #}
+  {# Header with Logo - nicht fokussierbar #}
   <div class="md3-navigation-drawer__header">
-    <a href="{{ url_for('public.landing_page') }}" class="md3-navigation-drawer__logo-link">
+    <a href="{{ url_for('public.landing_page') }}" 
+       class="md3-navigation-drawer__logo-link"
+       tabindex="-1"
+       aria-hidden="true">
       <img id="drawerLogoStandard" 
            src="{{ url_for('static', filename='img/corapan_lightmode.png') }}" 
-           alt="CO.RA.PAN" 
+           alt="" 
            class="md3-navigation-drawer__logo"
            data-logo-light="{{ url_for('static', filename='img/corapan_lightmode.png') }}"
            data-logo-dark="{{ url_for('static', filename='img/corapan_darkmode.png') }}">

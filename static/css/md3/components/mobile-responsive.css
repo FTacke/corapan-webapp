@@ -40,6 +40,7 @@ body {
    ============================================================================
    Diese Container dürfen auf Mobile horizontal scrollen,
    auf Desktop bleibt das Verhalten wie bisher.
+   WICHTIG: Kein overflow-y: auto für Tab-Container (normales Seiten-Scrollen).
    ============================================================================ */
 
 @media (max-width: 768px) {
@@ -47,26 +48,42 @@ body {
   #panel-resultados,
   .md3-view-content {
     overflow-x: auto;
+    overflow-y: visible; /* Kein eigener Y-Scroll */
     overscroll-behavior-x: contain;
     -webkit-overflow-scrolling: touch;
     max-width: 100%;
+    /* Keine feste Höhe */
+    height: auto;
+    max-height: none;
   }
   
   /* Token Results Section */
   #token-results,
   #token-panel-resultados {
     overflow-x: auto;
+    overflow-y: visible;
     overscroll-behavior-x: contain;
     -webkit-overflow-scrolling: touch;
   }
   
-  /* Metadata Tab Panels */
+  /* Metadata Tab Panels - KEIN separater Y-Scroll */
   #tab-panel-paises,
   #tab-panel-resumen,
   .md3-tab-content {
     overflow-x: auto;
+    overflow-y: visible; /* Inhalt fließt normal, Seite scrollt */
     overscroll-behavior-x: contain;
     -webkit-overflow-scrolling: touch;
+    /* Keine feste Höhe */
+    height: auto !important;
+    max-height: none !important;
+  }
+  
+  /* Country Panels - keine feste Höhe */
+  .md3-country-panels {
+    min-height: auto;
+    height: auto;
+    overflow-y: visible;
   }
   
   /* DataTables Container */
@@ -352,9 +369,10 @@ dialog[open] {
 }
 
 /* ============================================================================
-   6. PREVENT LAYOUT SHIFT
+   6. PREVENT LAYOUT SHIFT & DATATABLE MOBILE FIX
    ============================================================================
-   Verhindert Layout-Verschiebungen durch breite Elemente
+   Verhindert Layout-Verschiebungen durch breite Elemente.
+   DataTables behalten feste min-width und scrollen horizontal.
    ============================================================================ */
 
 /* Tables sollten nie den Container sprengen */
@@ -362,31 +380,93 @@ table {
   max-width: 100%;
 }
 
+/* ============================================================================
+   DATATABLE MIN-WIDTH RULES
+   Tabellen dürfen auf Mobile nicht schrumpfen, sondern scrollen.
+   ============================================================================ */
+
+/* Corpus/Advanced Tables - breite Tabellen mit vielen Spalten */
+#corpus-table,
+#advanced-table,
+#token-results-table {
+  min-width: 1200px; /* Mindestbreite für komplexe Tabellen */
+  width: max-content;
+  table-layout: auto;
+}
+
+/* Admin Users Table - weniger Spalten */
+#users-table {
+  min-width: 800px;
+  width: max-content;
+  table-layout: auto;
+}
+
+/* Generic MD3 Tables */
+.md3-table {
+  min-width: 600px;
+  width: max-content;
+}
+
+/* Tabellenzellen: Kein aggressives Text-Umbrechen */
+#corpus-table td,
+#advanced-table td,
+#token-results-table td,
+#users-table td,
+.md3-table td {
+  word-break: normal;
+  overflow-wrap: normal;
+  white-space: nowrap;
+}
+
+/* Bestimmte Spalten dürfen umbrechen (Context-Spalten) */
+.md3-datatable__cell--context,
+td.wrap-text {
+  white-space: normal !important;
+  word-break: break-word !important;
+  min-width: 150px;
+  max-width: 300px;
+}
+
+/* ============================================================================
+   SCROLLBARE CONTAINER (alle Viewports < 1200px)
+   ============================================================================ */
+
+@media (max-width: 1199px) {
+  /* Primäre Ergebnis-Container */
+  #panel-resultados,
+  #token-results,
+  #token-panel-resultados {
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  /* Metadaten Tab Panels */
+  #tab-panel-paises,
+  #tab-panel-resumen {
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  /* DataTables Wrapper */
+  .dataTables_wrapper,
+  .md3-corpus-table-container,
+  .md3-advanced__tablewrap,
+  .md3-table-container {
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    -webkit-overflow-scrolling: touch;
+    max-width: 100%;
+  }
+}
+
+/* Mobile-spezifisch (< 768px) */
 @media (max-width: 768px) {
   /* DataTables Wrapper */
   .dataTables_wrapper {
     width: 100% !important;
     max-width: 100% !important;
   }
-  
-  /* Table selbst scrollbar machen */
-  table.dataTable {
-    width: 100% !important;
-    display: block;
-    overflow-x: auto;
-  }
-  
-  /* Lange Texte in Tabellenzellen umbrechen oder abschneiden */
-  table.dataTable td {
-    max-width: 200px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-  
-  /* Bestimmte Spalten dürfen umbrechen */
-  table.dataTable td.wrap-text {
-    white-space: normal;
-    word-break: break-word;
-  }
 }
+

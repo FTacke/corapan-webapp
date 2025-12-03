@@ -9,6 +9,9 @@
 
 {% block content %}
 <article class="md3-index-page">
+  <!-- Seitentitel für App-Bar (sr-only für Accessibility) -->
+  <h1 class="sr-only">Inicio</h1>
+  
   <section class="md3-index-logo">
     <img id="indexLogo"
          src="{{ url_for('static', filename='img/corapan_logo_lightmode.png') }}" 

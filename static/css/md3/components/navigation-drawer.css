@@ -54,30 +54,57 @@
   border-bottom: 1px solid var(--md-sys-color-outline-variant);
 }
 
+/* Logo Container - Neutraler, nicht-fokussierbarer Container */
+.md3-navigation-drawer__logo-container {
+  display: block;
+  /* Keine Fokus-, Hover- oder Border-Styles */
+  outline: none !important;
+  border: none !important;
+  box-shadow: none !important;
+  background: transparent !important;
+  padding: 0;
+  margin: 0;
+  cursor: default;
+}
+
+/* Legacy Link Support - komplett unsichtbar machen */
 .md3-navigation-drawer__logo-link {
   display: block;
   text-decoration: none;
-  border-radius: var(--radius-sm);
-  /* Dezenter Fokus-Stil statt blauem Browser-Default */
-  outline: none;
-  transition: box-shadow 0.2s ease;
+  /* Alle visuellen Effekte entfernen */
+  outline: none !important;
+  border: none !important;
+  box-shadow: none !important;
+  background: transparent !important;
+  -webkit-tap-highlight-color: transparent;
+  cursor: pointer;
 }
 
-/* Dezenter Focus-Indikator für Accessibility - kein blauer Rahmen */
-.md3-navigation-drawer__logo-link:focus-visible {
-  box-shadow: 0 0 0 2px var(--md-sys-color-surface),
-              0 0 0 4px var(--md-sys-color-outline-variant);
+/* KEIN Focus-Indikator auf dem Logo */
+.md3-navigation-drawer__logo-link:focus,
+.md3-navigation-drawer__logo-link:focus-visible,
+.md3-navigation-drawer__logo-container:focus,
+.md3-navigation-drawer__logo-container:focus-visible {
+  outline: none !important;
+  box-shadow: none !important;
+  border: none !important;
 }
 
-/* Kein sichtbarer Hover-Effekt auf dem Logo */
-.md3-navigation-drawer__logo-link:hover {
-  background: transparent;
+/* KEIN Hover-Effekt auf dem Logo */
+.md3-navigation-drawer__logo-link:hover,
+.md3-navigation-drawer__logo-container:hover {
+  background: transparent !important;
+  outline: none !important;
+  box-shadow: none !important;
 }
 
 .md3-navigation-drawer__logo {
   height: 48px;
   width: auto;
   display: block;
+  /* Keine Border/Outline auf dem Bild selbst */
+  border: none;
+  outline: none;
 }
 
 /* ============================================
