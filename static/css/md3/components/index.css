@@ -100,21 +100,20 @@
    These !important rules are necessary to override
    the app-shell layout specifically for the index page.
    NEEDS_IMPORTANT: app-shell layout override
+   
+   MOBILE: Burger-Icon und Modal Drawer werden angezeigt (konsistent mit anderen Seiten)
+   DESKTOP: Permanenter Drawer wird ausgeblendet für volle Breite
    ============================================ */
 
-/* Hide Hamburger Menu on Index Page */
-body[data-page="index"] .md3-top-app-bar__navigation-icon {
-  /* NEEDS_IMPORTANT: app-shell layout override */
-  display: none !important;
+/* Hide Standard (permanent) Drawer on Index Page (Desktop only) */
+@media (min-width: 840px) {
+  body[data-page="index"] #navigation-drawer .md3-navigation-drawer--standard {
+    /* NEEDS_IMPORTANT: app-shell layout override */
+    display: none !important;
+  }
 }
 
-/* Hide Standard Drawer on Index Page (Desktop) */
-body[data-page="index"] #navigation-drawer {
-  /* NEEDS_IMPORTANT: app-shell layout override */
-  display: none !important;
-}
-
-/* Adjust Grid Layout on Index Page (Desktop) */
+/* Adjust Grid Layout on Index Page (Desktop) - Full width without drawer */
 @media (min-width: 840px) {
   body[data-page="index"].app-shell {
     /* NEEDS_IMPORTANT: app-shell layout override */
@@ -122,5 +121,19 @@ body[data-page="index"] #navigation-drawer {
       "main"
       "footer" !important;
     grid-template-columns: 1fr !important;
+  }
+  
+  /* Hide burger icon only on desktop (where we hide the drawer) */
+  body[data-page="index"] .md3-top-app-bar__navigation-icon {
+    /* Burger stays hidden on desktop since there's no drawer to open */
+    display: none !important;
+  }
+}
+
+/* MOBILE (<840px): Burger icon remains visible for modal drawer access */
+@media (max-width: 839px) {
+  body[data-page="index"] .md3-top-app-bar__navigation-icon {
+    /* Explicitly show burger on mobile for index page */
+    display: flex !important;
   }
 }

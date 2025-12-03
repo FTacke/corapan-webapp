@@ -425,13 +425,20 @@ function addCityMarkers() {
 
     // Build and bind popup with tooltip content
     const tooltipContent = buildTooltipContent(city);
+    
+    // Responsive autoPan padding: mehr Platz auf Mobile für Top App Bar
+    const isMobile = window.innerWidth < 600;
+    const autoPanPaddingTop = isMobile ? [20, 80] : [50, 100]; // [left, top]
+    const autoPanPaddingBottom = isMobile ? [20, 20] : [50, 50]; // [right, bottom]
+    
     marker.bindPopup(tooltipContent, {
       className: "atlas-popup",
-      maxWidth: 320,
-      minWidth: 200,
+      maxWidth: isMobile ? 280 : 320,
+      minWidth: isMobile ? 180 : 200,
       autoPan: true,
-      autoPanPaddingTopLeft: [50, 100],
-      autoPanPaddingBottomRight: [50, 50],
+      autoPanPaddingTopLeft: autoPanPaddingTop,
+      autoPanPaddingBottomRight: autoPanPaddingBottom,
+      keepInView: true, // Popup bleibt im sichtbaren Bereich
     });
 
     // Click handler: center map on marker (popup opens automatically via bindPopup)

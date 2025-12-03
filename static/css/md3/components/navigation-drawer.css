@@ -57,6 +57,21 @@
 .md3-navigation-drawer__logo-link {
   display: block;
   text-decoration: none;
+  border-radius: var(--radius-sm);
+  /* Dezenter Fokus-Stil statt blauem Browser-Default */
+  outline: none;
+  transition: box-shadow 0.2s ease;
+}
+
+/* Dezenter Focus-Indikator für Accessibility - kein blauer Rahmen */
+.md3-navigation-drawer__logo-link:focus-visible {
+  box-shadow: 0 0 0 2px var(--md-sys-color-surface),
+              0 0 0 4px var(--md-sys-color-outline-variant);
+}
+
+/* Kein sichtbarer Hover-Effekt auf dem Logo */
+.md3-navigation-drawer__logo-link:hover {
+  background: transparent;
 }
 
 .md3-navigation-drawer__logo {
