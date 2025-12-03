@@ -69,9 +69,9 @@ git reset --hard origin/main
 log_info "Code updated to: $(git rev-parse --short HEAD)"
 echo ""
 
-# Step 2: Build Docker image
+# Step 2: Build Docker image (with BuildKit for improved caching and features)
 log_info "Building Docker image: ${IMAGE_NAME}..."
-docker build -t "${IMAGE_NAME}" .
+DOCKER_BUILDKIT=1 docker build -t "${IMAGE_NAME}" .
 log_info "Docker image built successfully"
 echo ""
 

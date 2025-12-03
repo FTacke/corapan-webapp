@@ -94,9 +94,10 @@ print("All required Python dependencies are available.")
 EOF
 
 # Copy entrypoint script and make it executable
-# Note: We copy as root first, then chown since USER is corapan
+# Note: We copy as root first, then set permissions, then switch back to corapan user
 USER root
-COPY --chmod=755 scripts/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+COPY scripts/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+RUN chmod 755 /usr/local/bin/docker-entrypoint.sh
 USER corapan
 
 # Healthcheck endpoint (requires /health route in app)
