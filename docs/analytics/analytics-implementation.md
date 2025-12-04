@@ -45,10 +45,11 @@ Die folgenden Werte sind **anonym** und werden **nur aggregiert** gespeichert:
 |--------|--------------|---------------|
 | `visitors` | Eindeutige Besuche pro Session | Nein (sessionStorage, nicht übertragen) |
 | `mobile` / `desktop` | Gerätetyp-Verteilung | Nein (aggregiert) |
-| `searches` | Anzahl Suchanfragen | Nein |
-| `queries` | Distinct Suchbegriffe pro Tag | Nein (keine Verknüpfung zu Personen) |
+| `searches` | Anzahl Suchanfragen (nur Zähler, keine Inhalte!) | Nein |
 | `audio_plays` | Audio-Wiedergabe-Events | Nein |
 | `errors` | HTTP 4xx/5xx Fehler | Nein |
+
+> **Wichtig (Variante 3a):** Es werden **keine Suchinhalte/Query-Texte** gespeichert – nur die Anzahl der Suchvorgänge. Dies ist die datenschutz-maximale Variante.
 
 ### **Rechtliche Begründung**
 
@@ -164,8 +165,9 @@ from ..services.counters import auth_refresh_reuse, auth_login_success, auth_log
                                     ▼
 ┌─────────────────────────────────────────────────────────────────────────┐
 │                    POSTGRES (corapan_auth DB)                           │
-│  Tabellen: analytics_daily, analytics_queries                           │
+│  Tabelle: analytics_daily (nur aggregierte Zähler!)                     │
 │  Keine Foreign Keys zu users (Datenschutz!)                             │
+│  Keine Suchinhalte/Query-Texte (Variante 3a)                            │
 └─────────────────────────────────────────────────────────────────────────┘
                                     │
                                     ▼
@@ -195,12 +197,13 @@ from ..services.counters import auth_refresh_reuse, auth_login_success, auth_log
 
 ```sql
 -- 0002_create_analytics_tables.sql
--- Analytics tables for anonymous usage statistics
+-- Analytics table for anonymous usage statistics
+-- VARIANTE 3a: Nur aggregierte Zähler, KEINE Suchinhalte!
 -- IMPORTANT: No foreign keys to users table (privacy by design)
 
 BEGIN;
 
--- Daily aggregated metrics
+-- Daily aggregated metrics (nur Zähler, keine Inhalte)
 CREATE TABLE IF NOT EXISTS analytics_daily (
   date DATE PRIMARY KEY,
   visitors INTEGER NOT NULL DEFAULT 0,
@@ -216,20 +219,8 @@ CREATE TABLE IF NOT EXISTS analytics_daily (
 -- Index for time-range queries (last 30 days etc.)
 CREATE INDEX IF NOT EXISTS idx_analytics_daily_date ON analytics_daily (date DESC);
 
--- Distinct search queries per day (for top queries analysis)
-CREATE TABLE IF NOT EXISTS analytics_queries (
-  date DATE NOT NULL,
-  query TEXT NOT NULL,
-  count INTEGER NOT NULL DEFAULT 1,
-  created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
-  PRIMARY KEY (date, query)
-);
-
--- Index for top queries (sorted by count)
-CREATE INDEX IF NOT EXISTS idx_analytics_queries_count ON analytics_queries (date, count DESC);
-
--- Truncate query text to prevent abuse (max 500 chars)
--- This is enforced in application code, not DB constraint
+-- HINWEIS: Keine analytics_queries Tabelle!
+-- Variante 3a speichert keine Suchinhalte/Query-Texte.
 
 COMMIT;
 ```
@@ -237,19 +228,24 @@ COMMIT;
 ## **4.2 SQLAlchemy Models: `src/app/analytics/models.py`**
 
 ```python
-"""Analytics database models."""
+"""Analytics database models.
+
+VARIANTE 3a: Nur aggregierte Zähler, KEINE Suchinhalte!
+"""
 from __future__ import annotations
 
 from datetime import date, datetime, timezone
-from sqlalchemy import Column, Date, Integer, String, DateTime, Index
-from sqlalchemy.orm import declarative_base
+from sqlalchemy import Column, Date, Integer, DateTime
 
 # Use same Base as auth models for shared engine
 from ..auth.models import Base
 
 
 class AnalyticsDaily(Base):
-    """Daily aggregated analytics metrics."""
+    """Daily aggregated analytics metrics.
+    
+    Speichert NUR Zähler, keine Inhalte (Variante 3a).
+    """
     __tablename__ = "analytics_daily"
     
     date = Column(Date, primary_key=True)
@@ -263,14 +259,8 @@ class AnalyticsDaily(Base):
     updated_at = Column(DateTime(timezone=True), nullable=False, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
 
 
-class AnalyticsQuery(Base):
-    """Distinct search queries per day."""
-    __tablename__ = "analytics_queries"
-    
-    date = Column(Date, primary_key=True)
-    query = Column(String(500), primary_key=True)  # Max 500 chars
-    count = Column(Integer, nullable=False, default=1)
-    created_at = Column(DateTime(timezone=True), nullable=False, default=lambda: datetime.now(timezone.utc))
+# HINWEIS: Keine AnalyticsQuery Klasse!
+# Variante 3a speichert keine Suchinhalte/Query-Texte.
 ```
 
 ---
@@ -282,24 +272,25 @@ class AnalyticsQuery(Base):
 ```python
 """Analytics API endpoints for anonymous usage tracking.
 
+VARIANTE 3a: Nur aggregierte Zähler, KEINE Suchinhalte!
+
 PRIVACY: No personal data is collected or stored.
 - No IP addresses
 - No user IDs  
 - No cookies
 - No fingerprints
+- No search query contents (nur Zähler!)
 
 All data is aggregated and anonymous.
 """
 from __future__ import annotations
 
 import logging
-from datetime import date, datetime, timezone
-from typing import Any
+from datetime import date
 
-from flask import Blueprint, jsonify, request, current_app
+from flask import Blueprint, jsonify, request
 from flask_jwt_extended import jwt_required
 from sqlalchemy import text
-from sqlalchemy.dialects.postgresql import insert
 
 from ..auth import Role
 from ..auth.decorators import require_role
@@ -312,9 +303,6 @@ bp = Blueprint("analytics", __name__, url_prefix="/api/analytics")
 # Valid event types
 VALID_EVENT_TYPES = {"visit", "search", "audio_play", "error"}
 
-# Max query length to prevent abuse
-MAX_QUERY_LENGTH = 500
-
 
 @bp.post("/event")
 def track_event():
@@ -326,12 +314,13 @@ def track_event():
     {
         "type": "visit" | "search" | "audio_play" | "error",
         "payload": {
-            "device": "mobile" | "desktop",  // for visit
-            "query": "search term",          // for search
-            "status": 404,                   // for error
-            "url": "/some/path"              // for error
+            "device": "mobile" | "desktop"  // for visit
         }
     }
+    
+    HINWEIS (Variante 3a): 
+    - payload.query wird IGNORIERT (keine Suchinhalte speichern!)
+    - Nur der Zähler searches wird erhöht
     
     Returns:
         204 No Content on success
@@ -353,7 +342,7 @@ def track_event():
             if event_type == "visit":
                 _track_visit(session, today, payload)
             elif event_type == "search":
-                _track_search(session, today, payload)
+                _track_search(session, today)  # payload ignoriert (Variante 3a)
             elif event_type == "audio_play":
                 _track_audio_play(session, today)
             elif event_type == "error":
@@ -367,7 +356,7 @@ def track_event():
         return "", 204
 
 
-def _track_visit(session, today: date, payload: dict[str, Any]) -> None:
+def _track_visit(session, today: date, payload: dict) -> None:
     """Increment visitor counter and device type."""
     device = payload.get("device", "desktop")
     is_mobile = device == "mobile"
@@ -390,9 +379,12 @@ def _track_visit(session, today: date, payload: dict[str, Any]) -> None:
     session.commit()
 
 
-def _track_search(session, today: date, payload: dict[str, Any]) -> None:
-    """Increment search counter and track query."""
-    # Increment daily search count
+def _track_search(session, today: date) -> None:
+    """Increment search counter.
+    
+    VARIANTE 3a: Nur Zähler erhöhen, KEINE Query-Inhalte speichern!
+    payload wird ignoriert.
+    """
     stmt = text("""
         INSERT INTO analytics_daily (date, searches)
         VALUES (:date, 1)
@@ -401,20 +393,6 @@ def _track_search(session, today: date, payload: dict[str, Any]) -> None:
             updated_at = now()
     """)
     session.execute(stmt, {"date": today})
-    
-    # Track distinct query (truncated for safety)
-    query = payload.get("query", "")
-    if query:
-        query = query[:MAX_QUERY_LENGTH].strip().lower()
-        if query:
-            stmt = text("""
-                INSERT INTO analytics_queries (date, query, count)
-                VALUES (:date, :query, 1)
-                ON CONFLICT (date, query) DO UPDATE SET
-                    count = analytics_queries.count + 1
-            """)
-            session.execute(stmt, {"date": today, "query": query})
-    
     session.commit()
 
 
@@ -459,8 +437,11 @@ def get_stats():
         {
             "daily": [...],      // Last N days of metrics
             "totals": {...},     // Aggregated totals
-            "top_queries": [...] // Top 25 search queries
+            "totals_window": {...},  // Aggregierte Summen (Zeitfenster)
+            "totals_overall": {...}  // Aggregierte Summen (gesamt)
         }
+    
+    HINWEIS (Variante 3a): Kein top_queries Feld! Keine Suchinhalte.
     """
     days = request.args.get("days", 30, type=int)
     days = min(max(days, 1), 365)  # Clamp to 1-365
@@ -487,7 +468,7 @@ def get_stats():
             for row in daily_result
         ]
         
-        # Get totals
+        # Get totals for window (last N days)
         totals_stmt = text("""
             SELECT 
                 COALESCE(SUM(visitors), 0) as visitors,
@@ -500,7 +481,7 @@ def get_stats():
             WHERE date >= CURRENT_DATE - :days
         """)
         totals_row = session.execute(totals_stmt, {"days": days}).fetchone()
-        totals = {
+        totals_window = {
             "visitors": totals_row.visitors,
             "mobile": totals_row.mobile,
             "desktop": totals_row.desktop,
@@ -509,27 +490,36 @@ def get_stats():
             "errors": totals_row.errors,
         }
         
-        # Get top queries
-        queries_stmt = text("""
-            SELECT query, SUM(count) as total_count
-            FROM analytics_queries
-            WHERE date >= CURRENT_DATE - :days
-            GROUP BY query
-            ORDER BY total_count DESC
-            LIMIT 25
+        # Get overall totals (all time)
+        overall_stmt = text("""
+            SELECT 
+                COALESCE(SUM(visitors), 0) as visitors,
+                COALESCE(SUM(mobile), 0) as mobile,
+                COALESCE(SUM(desktop), 0) as desktop,
+                COALESCE(SUM(searches), 0) as searches,
+                COALESCE(SUM(audio_plays), 0) as audio_plays,
+                COALESCE(SUM(errors), 0) as errors
+            FROM analytics_daily
         """)
-        queries_result = session.execute(queries_stmt, {"days": days})
-        top_queries = [
-            {"query": row.query, "count": row.total_count}
-            for row in queries_result
-        ]
+        overall_row = session.execute(overall_stmt).fetchone()
+        totals_overall = {
+            "visitors": overall_row.visitors,
+            "mobile": overall_row.mobile,
+            "desktop": overall_row.desktop,
+            "searches": overall_row.searches,
+            "audio_plays": overall_row.audio_plays,
+            "errors": overall_row.errors,
+        }
+        
+        # HINWEIS: Keine top_queries Abfrage (Variante 3a)
     
     return jsonify({
         "daily": daily,
-        "totals": totals,
-        "top_queries": top_queries,
+        "totals_window": totals_window,
+        "totals_overall": totals_overall,
         "period_days": days,
     })
+    # KEIN top_queries Feld!
 ```
 
 ## **5.2 Blueprint registrieren: `src/app/routes/__init__.py`**
@@ -610,12 +600,13 @@ function trackVisit() {
 }
 
 /**
- * Track search event
- * @param {string} query - The search query (will be truncated server-side)
+ * Track search event (nur Zähler, keine Inhalte!)
+ * 
+ * VARIANTE 3a: Der query-Parameter wird NICHT an den Server gesendet.
+ * Es wird nur der Zähler erhöht.
  */
-function trackSearch(query) {
-  if (!query || typeof query !== 'string') return;
-  sendAnalyticsEvent('search', { query: query.trim() });
+function trackSearch() {
+  sendAnalyticsEvent('search', {});  // Leeres payload - keine Query-Inhalte!
 }
 
 /**
@@ -673,7 +664,7 @@ import { trackSearch } from '../analytics.js';
 
 In der `performSearch()` Funktion oder ähnlich, nach erfolgreichem Absenden:
 ```javascript
-trackSearch(queryString);
+trackSearch();  // Keine Parameter! Query-Inhalt wird NICHT gesendet (Variante 3a)
 ```
 
 ## **6.4 Audio-Tracking integrieren**
@@ -726,6 +717,8 @@ def dashboard():
 /**
  * Admin Dashboard Module
  * Fetches data from new /api/analytics/stats endpoint
+ * 
+ * VARIANTE 3a: Keine Top-Queries Anzeige (keine Suchinhalte gespeichert)
  */
 
 export function initAdminDashboard() {
@@ -748,15 +741,15 @@ async function fetchAnalytics() {
 }
 
 function renderDashboard(data) {
-  // Render totals
-  renderTotal('visitors-total', data.totals.visitors);
-  renderTotal('searches-total', data.totals.searches);
-  renderTotal('audio-total', data.totals.audio_plays);
-  renderTotal('errors-total', data.totals.errors);
+  // Render totals (use totals_window for period, totals_overall for all-time)
+  renderTotal('visitors-total', data.totals_window.visitors);
+  renderTotal('searches-total', data.totals_window.searches);
+  renderTotal('audio-total', data.totals_window.audio_plays);
+  renderTotal('errors-total', data.totals_window.errors);
   
   // Render device breakdown
-  const mobilePercent = data.totals.visitors > 0 
-    ? Math.round((data.totals.mobile / data.totals.visitors) * 100) 
+  const mobilePercent = data.totals_window.visitors > 0 
+    ? Math.round((data.totals_window.mobile / data.totals_window.visitors) * 100) 
     : 0;
   const desktopPercent = 100 - mobilePercent;
   renderDeviceBreakdown(mobilePercent, desktopPercent);
@@ -764,8 +757,7 @@ function renderDashboard(data) {
   // Render daily chart
   renderDailyChart(data.daily);
   
-  // Render top queries
-  renderTopQueries(data.top_queries);
+  // VARIANTE 3a: Keine renderTopQueries() - keine Suchinhalte!
 }
 
 function renderTotal(elementId, value) {
@@ -800,31 +792,7 @@ function renderDailyChart(dailyData) {
   container.innerHTML = html;
 }
 
-function renderTopQueries(queries) {
-  const container = document.getElementById('top-queries-list');
-  if (!container) return;
-  
-  if (!queries.length) {
-    container.innerHTML = '<li class="md3-list-item">Keine Suchanfragen</li>';
-    return;
-  }
-  
-  const html = queries.map((q, i) => `
-    <li class="md3-list-item">
-      <span class="md3-list-item__rank">${i + 1}.</span>
-      <span class="md3-list-item__text">${escapeHtml(q.query)}</span>
-      <span class="md3-list-item__meta">${q.count}×</span>
-    </li>
-  `).join('');
-  
-  container.innerHTML = html;
-}
-
-function escapeHtml(text) {
-  const div = document.createElement('div');
-  div.textContent = text;
-  return div.innerHTML;
-}
+// VARIANTE 3a: renderTopQueries() Funktion ENTFERNT - keine Suchinhalte!
 
 function showErrorState() {
   const container = document.querySelector('[data-element="metrics-grid"]');
@@ -942,13 +910,7 @@ Das bestehende Template muss angepasst werden für die neue Datenstruktur:
       </div>
     </div>
 
-    <!-- Top Queries -->
-    <div class="md3-card md3-card--outlined md3-space-6">
-      <h2 class="md3-title-large">Top Suchanfragen</h2>
-      <ul id="top-queries-list" class="md3-list">
-        <!-- Populated by JS -->
-      </ul>
-    </div>
+    <!-- VARIANTE 3a: Keine Top-Queries Sektion! Keine Suchinhalte gespeichert. -->
 
   </main>
 </div>
@@ -968,32 +930,31 @@ Einbettbar in `/privacy` oder Impressum:
 ```markdown
 ## Nutzungsstatistiken
 
-Diese Anwendung verarbeitet ausschließlich **anonymisierte Nutzungsstatistiken**, 
-die keinen Rückschluss auf einzelne Personen zulassen.
+Unsere Anwendung verarbeitet ausschließlich anonymisierte Nutzungsstatistiken, 
+die keinen Rückschluss auf einzelne Personen zulassen. Es werden keinerlei 
+personenbezogene oder pseudonyme Daten erhoben oder gespeichert. Insbesondere 
+werden keine IP-Adressen, keine Cookies, keine User-IDs, keine Gerätekennungen 
+und keine Browser-Fingerabdrücke gespeichert oder für statistische Zwecke 
+verwendet.
 
-**Es werden KEINE personenbezogenen Daten erhoben:**
-- Keine IP-Adressen
-- Keine Cookies
-- Keine User-IDs
-- Keine Gerätekennungen
-- Keine Browser-Fingerabdrücke
+Erfasst und gespeichert werden ausschließlich aggregierte Tageswerte, z. B.:
 
-**Erfasst werden ausschließlich aggregierte Werte:**
-- Anzahl der Besuche pro Sitzung (anonym)
-- Anzahl von Suchanfragen
-- Anzahl verschiedener Suchbegriffe pro Tag
+- Anzahl der Besuche pro Sitzung
+- Anzahl der Suchvorgänge insgesamt
 - Anzahl abgespielter Audiosegmente
-- Anzahl technischer Fehler
-- Verhältnis Mobile-/Desktop-Zugriffe
+- Anzahl technischer Fehler (HTTP-Statuscodes)
+- Verhältnis von mobilen zu Desktop-Zugriffen
 
-Alle Daten dienen ausschließlich der technischen Verbesserung und dem 
-sicheren Betrieb des Angebots. Eine Profilbildung oder Wiedererkennung 
-ist technisch ausgeschlossen.
+Eine Zuordnung dieser aggregierten Daten zu einzelnen Nutzerkonten oder 
+Endgeräten ist nicht möglich.
 
 **Rechtsgrundlage:** Berechtigtes Interesse (Art. 6 Abs. 1 lit. f DSGVO) 
 an der technischen Optimierung. Keine Einwilligung erforderlich, da 
 keine personenbezogenen Daten verarbeitet werden.
 ```
+
+> **Wichtig (Variante 3a):** Keine Erwähnung von Suchinhalten/Suchbegriffen, 
+> da diese tatsächlich NICHT gespeichert werden.
 
 ---
 
@@ -1074,13 +1035,66 @@ Falls kritische Probleme auftreten:
 
 ---
 
-# **12. Dateien-Übersicht (Neu/Geändert/Gelöscht)**
+# **12. Sanity-Check nach Implementierung**
+
+Nach den Änderungen folgende Punkte prüfen:
+
+## **12.1 DB-Schema**
+
+```sql
+-- Muss existieren:
+SELECT * FROM analytics_daily LIMIT 1;
+
+-- Darf NICHT existieren (Variante 3a):
+SELECT * FROM analytics_queries;  -- Sollte Fehler werfen: "relation does not exist"
+```
+
+## **12.2 Event-Endpoint**
+
+```bash
+# Test: Search-Event mit Query (Query wird ignoriert)
+curl -X POST http://localhost:5000/api/analytics/event \
+  -H "Content-Type: application/json" \
+  -d '{"type": "search", "payload": {"query": "test"}}'
+
+# Erwartung: 
+# - HTTP 204 No Content
+# - analytics_daily.searches steigt um 1
+# - KEINE analytics_queries Tabelle/Einträge
+```
+
+## **12.3 Stats-Endpoint**
+
+```bash
+# Als Admin eingeloggt:
+curl http://localhost:5000/api/analytics/stats?days=30
+
+# Erwartete Antwort-Struktur:
+{
+  "daily": [...],
+  "totals_window": {...},
+  "totals_overall": {...},
+  "period_days": 30
+}
+# KEIN "top_queries" Feld!
+```
+
+## **12.4 Dashboard**
+
+- [ ] Lädt ohne JavaScript-Fehler in der Browser-Konsole
+- [ ] Zeigt KPI-Cards: Besuche, Suchanfragen, Audio-Plays, Fehler
+- [ ] Zeigt Tages-Chart
+- [ ] **Keine** leere Top-Queries Tabelle/Sektion
+
+---
+
+# **13. Dateien-Übersicht (Neu/Geändert/Gelöscht)**
 
 ## **Neue Dateien:**
 ```
-migrations/0002_create_analytics_tables.sql
+migrations/0002_create_analytics_tables.sql   # NUR analytics_daily Tabelle!
 src/app/analytics/__init__.py
-src/app/analytics/models.py
+src/app/analytics/models.py                   # NUR AnalyticsDaily Model!
 src/app/routes/analytics.py
 static/js/modules/analytics.js
 ```
@@ -1093,9 +1107,9 @@ src/app/routes/public.py            # track_visits() entfernen, Import entfernen
 src/app/routes/auth.py              # Counter-Aufrufe entfernen, Import entfernen
 src/app/auth/services.py            # Counter-Aufrufe entfernen, Import entfernen
 static/js/main.js                   # initAnalytics() hinzufügen
-static/js/modules/search/searchUI.js # trackSearch() hinzufügen
-static/js/modules/admin/dashboard.js # Neue API verwenden
-templates/pages/admin_dashboard.html # Neues Layout
+static/js/modules/search/searchUI.js # trackSearch() hinzufügen (OHNE Query-Parameter!)
+static/js/modules/admin/dashboard.js # Neue API, KEINE Top-Queries
+templates/pages/admin_dashboard.html # Neues Layout, KEINE Top-Queries Sektion
 ```
 
 ## **Gelöschte Dateien:**
@@ -1106,17 +1120,20 @@ data/counters/*.json (archivieren)
 
 ---
 
-# **13. Abschluss**
+# **14. Abschluss**
 
-Dieses Dokument definiert die **vollständige, saubere Ablösung** des alten Counter-Systems:
+Dieses Dokument definiert die **vollständige, saubere Ablösung** des alten Counter-Systems nach **Variante 3a** (maximal datenschutz-clean):
 
 ✅ DSGVO-konformes anonymes Tracking  
+✅ **Keine Suchinhalte/Query-Texte gespeichert**  
+✅ Nur eine Tabelle: `analytics_daily`  
 ✅ Postgres-basierte Datenhaltung (robust, skalierbar)  
-✅ MD3-konformes Dashboard  
+✅ MD3-konformes Dashboard (ohne Top-Queries)  
 ✅ Vollständige Code-Spezifikation für Backend & Frontend  
 ✅ Klare Implementierungsreihenfolge  
+✅ Sanity-Check Kriterien  
 ✅ Rollback-Strategie  
 ✅ Keine Altlasten  
 
-**Nach Implementierung:** Dashboard zeigt zuverlässige, anonyme Nutzungsstatistiken ohne dateibasierte Counter-Probleme.
+**Nach Implementierung:** Dashboard zeigt zuverlässige, anonyme Nutzungsstatistiken – ausschließlich aggregierte Zähler, keine inhaltlichen Daten.
 
