@@ -209,6 +209,78 @@ Diese Änderungen verbessern systematisch die mobile Responsivität der CO.RA.PA
 
 ---
 
+## 8. Drawer Swipe-Geste & Einheitliche Elevation
+
+**Datum:** 2025-12-04
+
+### Geänderte Dateien
+- `static/js/modules/navigation/swipe-gestures.js`
+- `static/css/md3/components/navigation-drawer.css`
+
+### 8.1 Mobile Drawer-Geste (Swipe vom linken Rand)
+
+**Ziel:** Der modale Drawer kann auf kleinen Viewports (<840px) durch eine Wischgeste vom linken Bildschirmrand geöffnet werden.
+
+**Implementierung:**
+- **Edge-Zone:** Touch-Start wird erkannt wenn `2px < startX ≤ 24px`
+  - Der äußerste Rand (0–2px) bleibt für System-Gesten frei (iOS Safari Back-Geste)
+  - 24px bietet genug Fläche für intuitive Erkennung
+- **Swipe-Schwelle:** `deltaX > 40px` nach rechts
+- **Vertikale Toleranz:** Geste wird abgebrochen wenn `deltaY > deltaX` (vertikales Scrollen hat Vorrang)
+- **Drawer-State Check:** Swipe-Open nur wenn Drawer geschlossen ist
+- **Direkte API-Nutzung:** `window.__drawerInstance.open()` statt Button-Click-Simulation
+
+**Relevante Code-Stellen in `swipe-gestures.js`:**
+```javascript
+// Edge-Zone Konfiguration
+this.edgeZoneMin = 2;   // System-Gesten frei lassen
+this.edgeZoneMax = 24;  // Swipe-Erkennungsbereich
+this.threshold = 40;    // Mindest-Swipe-Distanz
+
+// Open nur wenn: Drawer zu + Touch im Edge-Bereich
+if (!this.drawer.open && startX > this.edgeZoneMin && startX <= this.edgeZoneMax) {
+  this.swipeDirection = 'open';
+}
+```
+
+### 8.2 Drawer-Elevation / Schatten vereinheitlicht
+
+**Ziel:** Der Drawer hat in allen Zuständen (während Animation und final) denselben Schatten.
+
+**Implementierung:**
+- **Neues Token:** `--drawer-elevation-open: var(--elev-3)` in `:root`
+- **Konsistente Anwendung:**
+  - `.md3-navigation-drawer` → `box-shadow: var(--drawer-elevation-open)`
+  - `.drawer__panel` → `box-shadow: var(--drawer-elevation-open)`
+  - `.md3-navigation-drawer--standard` → `box-shadow: var(--drawer-elevation-open)`
+- **Kein box-shadow Transition:** Der Schatten bleibt konstant, nur `translate` animiert
+
+**CSS-Token Definition:**
+```css
+:root {
+  --drawer-elevation-open: var(--elev-3);
+  --drawer-elevation-closed: none;
+}
+```
+
+**Elevation Level 3 entspricht:**
+```css
+--elev-3: 0 4px 8px rgb(0 0 0 / 12%), 0 2px 4px rgb(0 0 0 / 8%);
+```
+
+### Testergebnisse
+
+| Test | Status |
+|------|--------|
+| iOS Safari: System-Back-Geste vom Rand | ✅ Funktioniert (0-2px frei) |
+| iOS Safari: Drawer-Swipe öffnen | ✅ Funktioniert (2-24px Zone) |
+| Android Chrome: Horizontales Tabellen-Scrollen | ✅ Nicht beeinträchtigt |
+| Desktop (≥840px): Keine Swipe-Reaktion | ✅ Deaktiviert |
+| Modal Drawer: Schatten während Animation | ✅ Konstant Level 3 |
+| Standard Drawer: Schatten | ✅ Konstant Level 3 |
+
+---
+
 ## Rückwärtskompatibilität
 
 Alle Änderungen sind rückwärtskompatibel:

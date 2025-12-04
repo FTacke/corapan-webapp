@@ -6,6 +6,18 @@
    ============================================ */
 
 /* ============================================
+   Drawer Elevation Tokens (App-spezifisch)
+   ============================================
+   Einheitliche Elevation für geöffneten Drawer:
+   - Level 3 während UND nach Animation
+   - Kein Schatten-Wechsel zwischen Zuständen
+   ============================================ */
+:root {
+  --drawer-elevation-open: var(--elev-3);
+  --drawer-elevation-closed: none;
+}
+
+/* ============================================
    Common Drawer Styles
    ============================================ */
 
@@ -20,7 +32,8 @@
   overflow-y: auto;
   overflow-x: hidden;
   position: relative; /* For proper stacking */
-  box-shadow: var(--elev-2);
+  /* Einheitliche Elevation für geöffneten Drawer */
+  box-shadow: var(--drawer-elevation-open);
 }
 
 .md3-navigation-drawer__container {
@@ -490,7 +503,8 @@ html:not([data-anim-ready="1"]) .md3-navigation-drawer__chevron {
   transition: translate var(--dur) var(--md-ease);
   will-change: translate;
   contain: paint;
-  box-shadow: var(--elev-2, 0 8px 24px rgb(0 0 0 / 20%));
+  /* Einheitliche Elevation: Level 3 - gleich während UND nach Animation */
+  box-shadow: var(--drawer-elevation-open, var(--elev-3));
   overflow-y: auto; /* eigener Scroll, kein Body-Lock nötig */
   overflow-x: hidden;
   display: flex;
@@ -515,6 +529,21 @@ html:not([data-anim-ready="1"]) .md3-navigation-drawer__chevron {
 
 .drawer.closing .drawer__panel {
   translate: -100% 0;
+}
+
+/* ============================================
+   Einheitliche Elevation während Animation
+   ============================================
+   Der Schatten bleibt Level 3 in ALLEN Zuständen:
+   - Öffnen (slide-in)
+   - Offen (final)
+   - Schließen (slide-out)
+   Kein Schatten-Wechsel, keine Animation auf box-shadow.
+   ============================================ */
+.drawer[open] .drawer__panel,
+.drawer.closing .drawer__panel {
+  /* Schatten bleibt konstant - keine Transition auf box-shadow */
+  box-shadow: var(--drawer-elevation-open, var(--elev-3));
 }
 
 /* Erster Frame ohne JS-Timer */
@@ -571,7 +600,8 @@ html:not([data-anim-ready="1"]) .md3-navigation-drawer__chevron {
   height: 100vh; /* Full viewport height */
   max-height: 100vh;
   border-right: 1px solid var(--md-sys-color-outline-variant);
-  box-shadow: var(--elev-3);
+  /* Einheitliche Elevation: Level 3 - identisch mit Modal Drawer */
+  box-shadow: var(--drawer-elevation-open, var(--elev-3));
   /* WICHTIG: Keine Transitions - Standard Drawer animiert NICHT */
   transition: none !important;
 }
