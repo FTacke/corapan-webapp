@@ -36,14 +36,59 @@ body {
 }
 
 /* ============================================================================
-   2. HORIZONTALES SCROLLEN FÜR BREITE INHALTE (nur Mobile)
+   2. HORIZONTALES SCROLLEN FÜR BREITE INHALTE
    ============================================================================
-   Diese Container dürfen auf Mobile horizontal scrollen,
-   auf Desktop bleibt das Verhalten wie bisher.
+   Mobile: Container scrollen horizontal bei breitem Inhalt.
+   Desktop: Overflow-Regeln werden zurückgesetzt (normales Verhalten).
    WICHTIG: Kein overflow-y: auto für Tab-Container (normales Seiten-Scrollen).
    ============================================================================ */
 
-@media (max-width: 768px) {
+/* ----------------------------------------------------------------------------
+   2a. DESKTOP DEFAULTS (≥840px) - Reset Mobile Overflows
+   ---------------------------------------------------------------------------- */
+@media (min-width: 840px) {
+  /* Search Results: Desktop-Defaults */
+  #panel-resultados,
+  #token-results,
+  #token-panel-resultados,
+  .md3-view-content {
+    overflow-x: visible;
+    overflow-y: visible;
+    height: auto;
+    max-height: none;
+  }
+  
+  /* Metadata Tab Panels: Desktop-Defaults */
+  #tab-panel-paises,
+  #tab-panel-resumen,
+  .md3-tab-content {
+    overflow-x: visible;
+    overflow-y: visible;
+    height: auto;
+    max-height: none;
+  }
+  
+  /* Country Panels: Desktop-Defaults */
+  .md3-country-panels {
+    overflow-y: visible;
+    height: auto;
+    min-height: auto;
+  }
+  
+  /* DataTables Container: Desktop - nur X-Scroll wenn nötig */
+  .dataTables_wrapper,
+  .md3-corpus-table-container,
+  .md3-advanced__tablewrap,
+  .md3-table-container {
+    overflow-x: auto; /* Bleibt für sehr breite Tabellen */
+    overflow-y: visible;
+  }
+}
+
+/* ----------------------------------------------------------------------------
+   2b. MOBILE OVERFLOWS (≤839px) - Horizontal Scroll für breite Inhalte
+   ---------------------------------------------------------------------------- */
+@media (max-width: 839px) {
   /* Search Results Panel */
   #panel-resultados,
   .md3-view-content {

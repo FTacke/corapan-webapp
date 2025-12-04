@@ -34,6 +34,29 @@ body.app-shell {
       "drawer main"
       "drawer footer";
     grid-template-columns: 280px 1fr; /* Fixed drawer width */
+    /* Desktop: Drawer bleibt fix, Content scrollt */
+    height: 100vh;
+    overflow: hidden; /* Body selbst scrollt nicht */
+  }
+  
+  /* Navigation Drawer: Sticky in Grid */
+  #navigation-drawer {
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    max-height: 100vh;
+    overflow-y: auto;
+    overflow-x: hidden;
+    align-self: flex-start;
+  }
+  
+  /* Main Content: Scrollt eigenständig */
+  #main-content,
+  main.site-main,
+  .site-main {
+    height: 100vh;
+    overflow-y: auto;
+    overflow-x: hidden;
   }
 }
 
