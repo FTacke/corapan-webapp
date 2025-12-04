@@ -62,7 +62,7 @@ export async function submitLogin(username, password, nextUrl = null) {
     }
 
     // For HTML responses (re-rendered login form with error)
-    return { success: false, error: "Benutzername oder Passwort ist falsch." };
+    return { success: false, error: "Nombre de usuario o contraseña incorrectos." };
   } catch (err) {
     console.error("[Login] Error:", err);
     return { success: false, error: err.message || "Network error" };

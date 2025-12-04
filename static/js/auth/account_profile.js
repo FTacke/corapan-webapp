@@ -1,5 +1,11 @@
 import { showError, showSuccess, clearAlert } from '/static/js/md3/alert-utils.js';
 
+// Helper function to get CSRF token from cookie
+function getCsrfToken() {
+  const match = document.cookie.match(/csrf_access_token=([^;]+)/);
+  return match ? match[1] : '';
+}
+
 /**
  * Account Profile API Client
  * 
@@ -122,11 +128,13 @@ document.addEventListener('DOMContentLoaded', async () => {
       try {
         // PATCH /auth/account/profile - JSON API for profile updates
         // Accept: application/json ensures we get JSON errors, not HTML redirects
+        // X-CSRF-TOKEN required for production (JWT_COOKIE_CSRF_PROTECT=True)
         const r = await fetch('/auth/account/profile', { 
           method: 'PATCH', 
           headers: { 
             'Content-Type': 'application/json',
-            'Accept': 'application/json'
+            'Accept': 'application/json',
+            'X-CSRF-TOKEN': getCsrfToken()
           }, 
           credentials: 'same-origin',
           body: JSON.stringify(body) 

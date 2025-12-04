@@ -358,8 +358,8 @@ def login_post() -> Response:
     user = auth_services.find_user_by_username_or_email(identifier)
     if not user:
         current_app.logger.warning(f"Failed login attempt - unknown user: {identifier} from {request.remote_addr}")
-        # Generic German error message (avoid account enumeration)
-        flash("Benutzername oder Passwort ist falsch.", "error")
+        # Generic Spanish error message (avoid account enumeration)
+        flash("Nombre de usuario o contraseña incorrectos.", "error")
         return _render_login_error(400)
 
     # check account status and password
@@ -384,8 +384,8 @@ def login_post() -> Response:
         except Exception:
             current_app.logger.debug("Failed to increment auth_login_failure metric")
         current_app.logger.warning(f"Failed login attempt - wrong password: {identifier} from {request.remote_addr}")
-        # Generic German error message for invalid credentials
-        flash("Benutzername oder Passwort ist falsch.", "error")
+        # Generic Spanish error message for invalid credentials
+        flash("Nombre de usuario o contraseña incorrectos.", "error")
         return _render_login_error(400)
 
     # Success: create tokens and set cookies
