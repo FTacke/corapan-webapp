@@ -6,7 +6,7 @@ import pytest
 from flask import Flask
 
 from src.app.extensions.sqlalchemy_ext import init_engine, get_engine, get_session
-from src.app.auth.models import Base, User, RefreshToken
+from src.app.auth.models import Base, User
 
 
 @pytest.fixture
@@ -75,11 +75,11 @@ def test_login_failed_attempts_lockout(client):
 
 
 def test_cookie_security_headers_on_login_and_refresh(client):
-    from src.app.auth import services
+    create_user("cookietest")
 
-    u = create_user("cookietest")
-
-    resp = client.post("/auth/login", json={"username": "cookietest", "password": "password123"})
+    resp = client.post(
+        "/auth/login", json={"username": "cookietest", "password": "password123"}
+    )
     assert resp.status_code in (200, 303, 204)
 
     sc = resp.headers.getlist("Set-Cookie")

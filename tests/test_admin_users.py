@@ -1,13 +1,12 @@
 import secrets
 from datetime import datetime, timedelta, timezone
-from datetime import timezone
 
 import pytest
 
 from flask import Flask
 
 from src.app.extensions.sqlalchemy_ext import init_engine, get_engine, get_session
-from src.app.auth.models import Base, User, ResetToken, RefreshToken
+from src.app.auth.models import Base, User, ResetToken
 
 
 @pytest.fixture
@@ -68,6 +67,7 @@ def login_user(client, username="alice", password="password123"):
             continue
     try:
         from src.app.auth import services
+
         uobj = services.find_user_by_username_or_email(username)
         if uobj:
             tok = services.create_access_token_for_user(uobj)
@@ -85,10 +85,10 @@ def make_admin_and_login(client, username="admin"):
 
 
 def test_admin_list_and_get_detail(client):
-    admin = make_admin_and_login(client)
+    make_admin_and_login(client)
     # create some users
     u1 = create_user("u1")
-    u2 = create_user("u2")
+    create_user("u2")
 
     r = client.get("/admin/users")
     assert r.status_code == 200
@@ -100,9 +100,11 @@ def test_admin_list_and_get_detail(client):
 
 
 def test_admin_create_invite_and_no_plaintext(client):
-    admin = make_admin_and_login(client)
+    make_admin_and_login(client)
 
-    r = client.post("/admin/users", json={"username": "invited", "email": "invite@example.org"})
+    r = client.post(
+        "/admin/users", json={"username": "invited", "email": "invite@example.org"}
+    )
     assert r.status_code == 201
     assert r.json.get("inviteSent") is True
 
@@ -117,8 +119,10 @@ def test_admin_create_invite_and_no_plaintext(client):
 
 
 def test_admin_create_invite_has_metadata(client):
-    admin = make_admin_and_login(client)
-    r = client.post("/admin/users", json={"username": "invited2", "email": "invite2@example.org"})
+    make_admin_and_login(client)
+    r = client.post(
+        "/admin/users", json={"username": "invited2", "email": "invite2@example.org"}
+    )
     assert r.status_code == 201
     assert r.json.get("inviteSent") is True
     # response should include token id and expiry
@@ -133,7 +137,7 @@ def test_admin_create_invite_has_metadata(client):
 
 
 def test_admin_reset_returns_invite_link(client):
-    admin = make_admin_and_login(client)
+    make_admin_and_login(client)
     target = create_user("targ2")
     r = client.post(f"/admin/users/{target.id}/reset-password")
     assert r.status_code == 200
@@ -144,11 +148,14 @@ def test_admin_reset_returns_invite_link(client):
 
 
 def test_admin_patch_lock_unlock_invalidate_delete(client):
-    admin = make_admin_and_login(client)
+    make_admin_and_login(client)
     target = create_user("targ")
 
     # patch role and must_reset
-    p = client.patch(f"/admin/users/{target.id}", json={"role": "editor", "must_reset_password": True})
+    p = client.patch(
+        f"/admin/users/{target.id}",
+        json={"role": "editor", "must_reset_password": True},
+    )
     assert p.status_code == 200
 
     # admin reset password (should create reset token)
@@ -156,8 +163,11 @@ def test_admin_patch_lock_unlock_invalidate_delete(client):
     assert r.status_code == 200
 
     # lock user
-    l = client.post(f"/admin/users/{target.id}/lock", json={"until": (datetime.now(timezone.utc) + timedelta(minutes=5)).isoformat()})
-    assert l.status_code == 200
+    lock_resp = client.post(
+        f"/admin/users/{target.id}/lock",
+        json={"until": (datetime.now(timezone.utc) + timedelta(minutes=5)).isoformat()},
+    )
+    assert lock_resp.status_code == 200
 
     # unlock
     u = client.post(f"/admin/users/{target.id}/unlock")
@@ -182,7 +192,7 @@ def test_admin_patch_lock_unlock_invalidate_delete(client):
 
 def test_rbac_enforced_for_non_admin(client):
     # create non-admin and login
-    user = create_user("normal", role="user")
+    create_user("normal", role="user")
     r = login_user(client, "normal")
     assert r.status_code in (200, 303, 204)
 
@@ -193,17 +203,17 @@ def test_rbac_enforced_for_non_admin(client):
 
 def test_list_users_default_active_only(client):
     """Test that by default only active users are listed."""
-    admin = make_admin_and_login(client)
-    
+    make_admin_and_login(client)
+
     # Create active and inactive users
-    active_user = create_user("active_user", role="user")
-    inactive_user = create_user("inactive_user", role="user")
-    
+    create_user("active_user", role="user")
+    create_user("inactive_user", role="user")
+
     # Deactivate the inactive user
     with get_session() as session:
         u = session.query(User).filter(User.username == "inactive_user").first()
         u.is_active = False
-    
+
     # Default list should only show active users
     r = client.get("/admin/users")
     assert r.status_code == 200
@@ -214,17 +224,17 @@ def test_list_users_default_active_only(client):
 
 def test_list_users_with_include_inactive(client):
     """Test that include_inactive=1 shows all users."""
-    admin = make_admin_and_login(client)
-    
+    make_admin_and_login(client)
+
     # Create active and inactive users
-    active_user = create_user("active2", role="user")
-    inactive_user = create_user("inactive2", role="user")
-    
+    create_user("active2", role="user")
+    create_user("inactive2", role="user")
+
     # Deactivate the inactive user
     with get_session() as session:
         u = session.query(User).filter(User.username == "inactive2").first()
         u.is_active = False
-    
+
     # With include_inactive, both should be visible
     r = client.get("/admin/users?include_inactive=1")
     assert r.status_code == 200
@@ -235,14 +245,14 @@ def test_list_users_with_include_inactive(client):
 
 def test_patch_user_email(client):
     """Test updating a user's email."""
-    admin = make_admin_and_login(client)
+    make_admin_and_login(client)
     target = create_user("target_email", role="user")
-    
+
     # Update email
     r = client.patch(f"/admin/users/{target.id}", json={"email": "new@example.org"})
     assert r.status_code == 200
     assert r.json.get("ok") is True
-    
+
     # Verify the update
     with get_session() as session:
         u = session.query(User).filter(User.id == target.id).first()
@@ -251,9 +261,9 @@ def test_patch_user_email(client):
 
 def test_patch_user_invalid_email(client):
     """Test that invalid email format is rejected."""
-    admin = make_admin_and_login(client)
+    make_admin_and_login(client)
     target = create_user("target_email_invalid", role="user")
-    
+
     # Try to set invalid email
     r = client.patch(f"/admin/users/{target.id}", json={"email": "not-an-email"})
     assert r.status_code == 400
@@ -262,9 +272,9 @@ def test_patch_user_invalid_email(client):
 
 def test_patch_user_invalid_role(client):
     """Test that invalid role is rejected."""
-    admin = make_admin_and_login(client)
+    make_admin_and_login(client)
     target = create_user("target_role_invalid", role="user")
-    
+
     # Try to set invalid role
     r = client.patch(f"/admin/users/{target.id}", json={"role": "superadmin"})
     assert r.status_code == 400
@@ -274,10 +284,10 @@ def test_patch_user_invalid_role(client):
 def test_last_admin_protection_role_change(client):
     """Test that the last active admin cannot be demoted."""
     admin = make_admin_and_login(client)
-    
+
     # Ensure admin is the only active admin
     # (the fixture creates only one admin)
-    
+
     # Try to demote the last admin
     r = client.patch(f"/admin/users/{admin.id}", json={"role": "user"})
     assert r.status_code == 400
@@ -287,7 +297,7 @@ def test_last_admin_protection_role_change(client):
 def test_last_admin_protection_deactivate(client):
     """Test that the last active admin cannot be deactivated."""
     admin = make_admin_and_login(client)
-    
+
     # Try to deactivate the last admin
     r = client.patch(f"/admin/users/{admin.id}", json={"is_active": False})
     assert r.status_code == 400
@@ -297,15 +307,15 @@ def test_last_admin_protection_deactivate(client):
 def test_admin_can_be_demoted_if_others_exist(client):
     """Test that an admin can be demoted if other active admins exist."""
     admin = make_admin_and_login(client)
-    
+
     # Create a second admin
-    admin2 = create_user("admin2", role="admin")
-    
+    create_user("admin2", role="admin")
+
     # Now the first admin can be demoted
     r = client.patch(f"/admin/users/{admin.id}", json={"role": "editor"})
     assert r.status_code == 200
     assert r.json.get("ok") is True
-    
+
     # Verify the change
     with get_session() as session:
         u = session.query(User).filter(User.id == admin.id).first()

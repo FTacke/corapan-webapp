@@ -1,9 +1,9 @@
-import pytest
 from flask import Flask, g, render_template
 
 
 def make_app():
     import os
+
     here = os.path.dirname(__file__)
     templates_dir = os.path.abspath(os.path.join(here, "..", "templates"))
     app = Flask(__name__, template_folder=templates_dir)
@@ -27,9 +27,9 @@ def test_account_button_admin_renders():
         g.role = Role.ADMIN
 
         html = render_template("partials/_top_app_bar.html")
-        assert 'md3-top-app-bar__account-chip' in html
-        assert 'alice' in html
-        assert 'admin_panel_settings' in html
+        assert "md3-top-app-bar__account-chip" in html
+        assert "alice" in html
+        assert "admin_panel_settings" in html
 
 
 def test_account_button_editor_renders():
@@ -41,9 +41,9 @@ def test_account_button_editor_renders():
         g.role = Role.EDITOR
 
         html = render_template("partials/_top_app_bar.html")
-        assert 'md3-top-app-bar__account-chip' in html
-        assert 'bob' in html
-        assert 'person_edit' in html
+        assert "md3-top-app-bar__account-chip" in html
+        assert "bob" in html
+        assert "person_edit" in html
 
 
 def test_account_button_user_renders():
@@ -55,9 +55,9 @@ def test_account_button_user_renders():
         g.role = Role.USER
 
         html = render_template("partials/_top_app_bar.html")
-        assert 'md3-top-app-bar__account-chip' in html
-        assert 'carla' in html
-        assert 'person_check' in html
+        assert "md3-top-app-bar__account-chip" in html
+        assert "carla" in html
+        assert "person_check" in html
 
 
 def test_guest_shows_login_button():
@@ -67,4 +67,4 @@ def test_guest_shows_login_button():
         # No g.user -> unauthenticated state
         html = render_template("partials/_top_app_bar.html")
         # The top app bar should include the login affordance; check for the icon
-        assert 'account_circle' in html or 'Iniciar' in html
+        assert "account_circle" in html or "Iniciar" in html

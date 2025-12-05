@@ -4,7 +4,20 @@ from __future__ import annotations
 
 from flask import Flask
 
-from . import admin, auth, media, public, atlas, player, editor, stats, bls_proxy, corpus, admin_users, analytics
+from . import (
+    admin,
+    auth,
+    media,
+    public,
+    atlas,
+    player,
+    editor,
+    stats,
+    bls_proxy,
+    corpus,
+    admin_users,
+    analytics,
+)
 from ..search import advanced, advanced_api
 
 

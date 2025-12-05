@@ -2,10 +2,8 @@
 
 from __future__ import annotations
 
-import os
 
 from . import Role
-from ..routes import auth
 
 
 def _parse_role_account(env_key: str) -> tuple[Role, str]:

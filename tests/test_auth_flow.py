@@ -42,7 +42,7 @@ def client():
 def admin_client(client):
     """Client fixture with pre-created admin user."""
     from src.app.auth import services
-    
+
     with get_session() as session:
         admin = User(
             id=str(secrets.token_hex(8)),
@@ -56,7 +56,7 @@ def admin_client(client):
             updated_at=datetime.now(timezone.utc),
         )
         session.add(admin)
-    
+
     return client
 
 
@@ -126,12 +126,17 @@ def test_change_password_success_and_invalidate(client):
     extra_raw, extra_row = services.create_refresh_token_for_user(u)
 
     # call change-password with correct old password
-    r = client.post("/auth/change-password", json={"oldPassword": "password123", "newPassword": "NewStrong1Pass"})
+    r = client.post(
+        "/auth/change-password",
+        json={"oldPassword": "password123", "newPassword": "NewStrong1Pass"},
+    )
     assert r.status_code == 200
 
     # all refresh tokens for user should be revoked
     with get_session() as session:
-        rows = session.query(RefreshToken).filter(RefreshToken.user_id == str(u.id)).all()
+        rows = (
+            session.query(RefreshToken).filter(RefreshToken.user_id == str(u.id)).all()
+        )
         assert all(r.revoked_at is not None for r in rows)
 
 
@@ -140,7 +145,10 @@ def test_change_password_wrong_old_password(client):
     resp = login_user(client, "wrongold")
     assert resp.status_code in (200, 303, 204)
 
-    r = client.post("/auth/change-password", json={"oldPassword": "bad", "newPassword": "NewPass123!"})
+    r = client.post(
+        "/auth/change-password",
+        json={"oldPassword": "bad", "newPassword": "NewPass123!"},
+    )
     assert r.status_code == 401
 
 
@@ -159,13 +167,20 @@ def test_reset_password_request_and_confirm(client):
     assert raw and row
 
     # confirm using route
-    rc = client.post("/auth/reset-password/confirm", json={"resetToken": raw, "newPassword": "BrandNew1Pass"})
+    rc = client.post(
+        "/auth/reset-password/confirm",
+        json={"resetToken": raw, "newPassword": "BrandNew1Pass"},
+    )
     assert rc.status_code == 200
     assert rc.json.get("ok") is True
 
     # token should be marked used
     with get_session() as session:
-        rt = session.query(ResetToken).filter(ResetToken.token_hash == services._hash_refresh_token(raw)).first()
+        rt = (
+            session.query(ResetToken)
+            .filter(ResetToken.token_hash == services._hash_refresh_token(raw))
+            .first()
+        )
         assert rt is not None and rt.used_at is not None
 
 
@@ -173,14 +188,14 @@ def test_reset_password_confirm_errors(client):
     create_test_user("reseterr")
 
     # invalid token
-    r = client.post("/auth/reset-password/confirm", json={"resetToken": "nope", "newPassword": "x"})
+    r = client.post(
+        "/auth/reset-password/confirm", json={"resetToken": "nope", "newPassword": "x"}
+    )
     assert r.status_code == 400
 
 
 def test_profile_get_and_patch(client):
-    from src.app.auth import services
-
-    u = create_test_user("profuser")
+    create_test_user("profuser")
 
     resp = login_user(client, "profuser")
     assert resp.status_code in (200, 303, 204)
@@ -192,7 +207,10 @@ def test_profile_get_and_patch(client):
     assert "password_hash" not in g.json
 
     # PATCH profile (update display_name and email)
-    p = client.patch("/auth/account/profile", json={"display_name": "Prof", "email": "prof@example.org"})
+    p = client.patch(
+        "/auth/account/profile",
+        json={"display_name": "Prof", "email": "prof@example.org"},
+    )
     assert p.status_code == 200
 
     # verify DB updated
@@ -223,11 +241,15 @@ def test_account_delete_and_data_export(client):
     # user should be soft-deleted and inactive
     with get_session() as session:
         row = session.query(User).filter(User.username == "deleteme").first()
-        assert row.deleted_at is not None and row.deletion_requested_at is not None and not row.is_active
+        assert (
+            row.deleted_at is not None
+            and row.deletion_requested_at is not None
+            and not row.is_active
+        )
 
     # data-export should return user info when logged in (we need a fresh login for token)
     # create a new user/login - use different user
-    uu = create_test_user("exporter")
+    create_test_user("exporter")
     login_user(client, "exporter")
     de = client.get("/auth/account/data-export")
     assert de.status_code == 200
@@ -237,6 +259,7 @@ def test_account_delete_and_data_export(client):
 # =============================================================================
 # Login Flow Integration Tests
 # =============================================================================
+
 
 class TestLoginFlow:
     """Comprehensive login flow tests."""
@@ -257,7 +280,9 @@ class TestLoginFlow:
         cookie_names = [c.split("=")[0] for c in set_cookies]
         assert "access_token_cookie" in cookie_names, "access_token_cookie not set"
 
-    @pytest.mark.skip(reason="Auth route currently renders template even for JSON error responses without error_code")
+    @pytest.mark.skip(
+        reason="Auth route currently renders template even for JSON error responses without error_code"
+    )
     def test_login_post_with_invalid_password(self, admin_client):
         """Test POST /auth/login with wrong password returns error."""
         resp = admin_client.post(
@@ -269,7 +294,9 @@ class TestLoginFlow:
         assert resp.status_code == 400
         assert resp.json.get("error") or resp.status_code == 400
 
-    @pytest.mark.skip(reason="Auth route currently renders template even for JSON error responses without error_code")
+    @pytest.mark.skip(
+        reason="Auth route currently renders template even for JSON error responses without error_code"
+    )
     def test_login_post_with_nonexistent_user(self, admin_client):
         """Test POST /auth/login with unknown user returns error."""
         resp = admin_client.post(

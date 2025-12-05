@@ -7,8 +7,6 @@ from flask import Flask
 
 from src.app.extensions.sqlalchemy_ext import init_engine, get_engine, get_session
 from src.app.auth.models import Base, User
-from src.app import create_app
-from src.app import auth as auth_module
 
 
 @pytest.fixture
@@ -75,14 +73,19 @@ def test_login_sets_access_and_refresh_cookies(client):
     # response should set refreshToken and access cookie headers
     sc = resp.headers.getlist("Set-Cookie")
     assert any("refreshToken=" in s for s in sc)
-    assert any("access_token" in s or "access-token" in s or "access_token_cookie" in s for s in sc)
+    assert any(
+        "access_token" in s or "access-token" in s or "access_token_cookie" in s
+        for s in sc
+    )
 
 
 def test_refresh_rotates_and_detects_reuse(client):
-    u = create_test_user("carla")
+    create_test_user("carla")
 
     # login
-    resp = client.post("/auth/login", json={"username": "carla", "password": "password123"})
+    resp = client.post(
+        "/auth/login", json={"username": "carla", "password": "password123"}
+    )
     # extract the raw token set by the login response
     set_cookies = resp.headers.getlist("Set-Cookie")
     raw = None
@@ -135,7 +138,9 @@ def test_logout_revokes_refresh_and_clears_cookie(client):
         # inspect last response headers
         # NOTE: our login call above may have returned redirect; fetch Set-Cookie from that response
         # Re-run a login and capture the response headers
-        resp = client.post("/auth/login", json={"username": "dave", "password": "password123"})
+        resp = client.post(
+            "/auth/login", json={"username": "dave", "password": "password123"}
+        )
         sc = resp.headers.getlist("Set-Cookie")
         for s in sc:
             if "refreshToken=" in s:
@@ -151,7 +156,11 @@ def test_logout_revokes_refresh_and_clears_cookie(client):
     # login->logout response should clear the cookie via Set-Cookie header
     sc = r.headers.getlist("Set-Cookie")
     # Expect a deletion/empty value for refreshToken
-    assert any(s.startswith("refreshToken=") and ("Expires=" in s or "Max-Age=0" in s or "refreshToken=;" in s) for s in sc)
+    assert any(
+        s.startswith("refreshToken=")
+        and ("Expires=" in s or "Max-Age=0" in s or "refreshToken=;" in s)
+        for s in sc
+    )
 
     # DB entry still exists; we can revoke it explicitly and ensure revoked_at is set
     from src.app.auth import services

@@ -6,6 +6,7 @@ Usage:
 This is intentionally simple: it configures the auth engine and creates the tables
 and a single user for browser E2E smoke tests.
 """
+
 from pathlib import Path
 import argparse
 from datetime import datetime, timezone
@@ -30,9 +31,7 @@ def main():
         sys.path.insert(0, str(ROOT))
 
     # minimal Flask-like config object for init_engine (mapping-like)
-    cfg = {
-        "AUTH_DATABASE_URL": f"sqlite:///{p.as_posix()}"
-    }
+    cfg = {"AUTH_DATABASE_URL": f"sqlite:///{p.as_posix()}"}
     cfg["AUTH_HASH_ALGO"] = "bcrypt"
 
     # initialize auth engine and create tables
@@ -53,6 +52,7 @@ def main():
 
     # seed user (id, username, email, hash, role) — we need an app context for hashing
     from flask import Flask
+
     tmp_app = Flask("seed_e2e_db")
     tmp_app.config.update(cfg)
 
@@ -73,16 +73,16 @@ def main():
                 return
 
             u = User(
-            id=str(secrets.token_hex(8)),
-            username=args.user,
-            email=f"{args.user}@example.org",
-            password_hash=_safe_hash(args.password),
-            role="user",
-            is_active=True,
-            must_reset_password=False,
-            created_at=datetime.now(timezone.utc),
-            updated_at=datetime.now(timezone.utc),
-        )
+                id=str(secrets.token_hex(8)),
+                username=args.user,
+                email=f"{args.user}@example.org",
+                password_hash=_safe_hash(args.password),
+                role="user",
+                is_active=True,
+                must_reset_password=False,
+                created_at=datetime.now(timezone.utc),
+                updated_at=datetime.now(timezone.utc),
+            )
             session.add(u)
 
     print(f"Seeded {args.user} in {p}")

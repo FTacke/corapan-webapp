@@ -1,11 +1,9 @@
-import os
 import secrets
-from datetime import datetime, timedelta
+from datetime import datetime
 from datetime import timezone
 
 import pytest
 
-from src.app import create_app
 from src.app.extensions.sqlalchemy_ext import init_engine, get_engine, get_session
 from src.app.auth import services
 from src.app.auth.models import Base, User
@@ -53,7 +51,9 @@ def test_refresh_token_rotation_and_reuse(app):
         session.add(u)
 
     # create refresh token
-    raw, row = services.create_refresh_token_for_user(u, user_agent="pytest", ip_address="127.0.0.1")
+    raw, row = services.create_refresh_token_for_user(
+        u, user_agent="pytest", ip_address="127.0.0.1"
+    )
     assert raw and row
 
     # rotate

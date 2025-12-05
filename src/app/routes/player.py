@@ -45,6 +45,7 @@ def player_page():
         # HTMX request: Client-side redirect via header
         if request.headers.get("HX-Request"):
             from urllib.parse import quote
+
             response = make_response("", 204)
             # Double-encode next parameter to preserve query string through HTMX redirect
             # (HTMX decodes once when following HX-Redirect header)

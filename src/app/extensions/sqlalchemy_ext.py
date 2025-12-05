@@ -4,6 +4,7 @@ Provides a create_engine+sessionmaker and helper contextmanager `get_session()`.
 The auth migration uses a separate AUTH database by default (data/db/auth.db), but
 this extension can accept any SQLAlchemy URL via config (AUTH_DATABASE_URL).
 """
+
 from __future__ import annotations
 
 from contextlib import contextmanager
@@ -23,7 +24,9 @@ def init_engine(app) -> None:
         raise RuntimeError("AUTH_DATABASE_URL is not configured")
 
     _engine = create_engine(db_url, future=True)
-    _SessionLocal = sessionmaker(bind=_engine, autoflush=False, autocommit=False, expire_on_commit=False)
+    _SessionLocal = sessionmaker(
+        bind=_engine, autoflush=False, autocommit=False, expire_on_commit=False
+    )
 
 
 def get_engine():

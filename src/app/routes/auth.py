@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
 
 from flask import (
     Blueprint,
@@ -23,16 +22,12 @@ from flask_jwt_extended import (
     get_jwt_identity,
     jwt_required,
     set_access_cookies,
-    create_refresh_token,
-    set_refresh_cookies,
     unset_jwt_cookies,
     verify_jwt_in_request,
 )
-from werkzeug.security import check_password_hash
 
 from ..auth import Role
 from ..auth.decorators import require_role
-from ..auth.jwt import issue_token
 from ..auth import services as auth_services
 from ..extensions import limiter
 
@@ -250,7 +245,7 @@ def account_profile_page() -> Response:
     elif g.user:
         # Fallback to g.user if set by other means (e.g. session)
         user = auth_services.find_user_by_username_or_email(g.user)
-        
+
     return render_template("auth/account_profile.html", user=user), 200
 
 
@@ -289,9 +284,7 @@ def login_form() -> Response:
     # We prefer the root /login page as the canonical destination for user
     # driven login flows. The POST handler remains at /auth/login.
     target = (
-        url_for("public.login", next=next_url)
-        if next_url
-        else url_for("public.login")
+        url_for("public.login", next=next_url) if next_url else url_for("public.login")
     )
 
     # Keep HTMX-friendly response (client will follow HX-Redirect)
@@ -340,7 +333,9 @@ def login_post() -> Response:
     is_json_request = request.is_json
     if is_json_request:
         payload = request.get_json()
-        identifier = (payload.get("username") or payload.get("email") or "").strip().lower()
+        identifier = (
+            (payload.get("username") or payload.get("email") or "").strip().lower()
+        )
         password = payload.get("password", "")
 
     # Helper to render full-page login with error (replaces old sheet rendering)
@@ -352,14 +347,18 @@ def login_post() -> Response:
         return render_template("auth/login.html", next=next_url or ""), status_code
 
     if not identifier:
-        current_app.logger.warning(f"Failed login attempt - missing identifier from {request.remote_addr}")
+        current_app.logger.warning(
+            f"Failed login attempt - missing identifier from {request.remote_addr}"
+        )
         # Friendly German message for missing identifier
         flash("Bitte geben Sie Benutzername oder E-Mail an.", "error")
         return _render_login_error(400)
 
     user = auth_services.find_user_by_username_or_email(identifier)
     if not user:
-        current_app.logger.warning(f"Failed login attempt - unknown user: {identifier} from {request.remote_addr}")
+        current_app.logger.warning(
+            f"Failed login attempt - unknown user: {identifier} from {request.remote_addr}"
+        )
         # Generic Spanish error message (avoid account enumeration)
         flash("Nombre de usuario o contraseña incorrectos.", "error")
         return _render_login_error(400)
@@ -376,12 +375,17 @@ def login_post() -> Response:
             "account_expired": "Tu acceso ha expirado. Contacta al administrador.",
             "account_locked": "Tu cuenta está temporalmente bloqueada. Inténtalo más tarde.",
         }
-        flash(error_messages.get(status.code, "No se puede acceder a esta cuenta."), "error")
+        flash(
+            error_messages.get(status.code, "No se puede acceder a esta cuenta."),
+            "error",
+        )
         return _render_login_error(403, error_code=status.code)
 
     if not auth_services.verify_password(password, user.password_hash):
         auth_services.on_failed_login(user)
-        current_app.logger.warning(f"Failed login attempt - wrong password: {identifier} from {request.remote_addr}")
+        current_app.logger.warning(
+            f"Failed login attempt - wrong password: {identifier} from {request.remote_addr}"
+        )
         # Generic Spanish error message for invalid credentials
         flash("Nombre de usuario o contraseña incorrectos.", "error")
         return _render_login_error(400)
@@ -389,7 +393,11 @@ def login_post() -> Response:
     # Success: create tokens and set cookies
     auth_services.on_successful_login(user)
     access_token = auth_services.create_access_token_for_user(user)
-    raw_refresh, _ = auth_services.create_refresh_token_for_user(user, user_agent=request.headers.get("User-Agent"), ip_address=request.remote_addr)
+    raw_refresh, _ = auth_services.create_refresh_token_for_user(
+        user,
+        user_agent=request.headers.get("User-Agent"),
+        ip_address=request.remote_addr,
+    )
 
     # If the account requires a forced password reset, redirect the client
     # to the account password page and keep mustReset indicator. The token
@@ -419,7 +427,9 @@ def login_post() -> Response:
         )
         response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate"
         response.headers["Pragma"] = "no-cache"
-        current_app.logger.info(f"Successful login (DB, HTMX): {identifier} from {request.remote_addr} -> {target}")
+        current_app.logger.info(
+            f"Successful login (DB, HTMX): {identifier} from {request.remote_addr} -> {target}"
+        )
         return response
 
     response = make_response(redirect(target, 303))
@@ -435,7 +445,9 @@ def login_post() -> Response:
     )
     response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate"
     response.headers["Pragma"] = "no-cache"
-    current_app.logger.info(f"Successful login (DB): {identifier} from {request.remote_addr} -> {target}")
+    current_app.logger.info(
+        f"Successful login (DB): {identifier} from {request.remote_addr} -> {target}"
+    )
     return response
 
     # Legacy env-based login support was removed. The route above already
@@ -491,7 +503,9 @@ def reset_password_request() -> Response:
     user = auth_services.find_user_by_username_or_email(identifier)
     if not user:
         # don't reveal
-        current_app.logger.info("Password reset requested for unknown account %s", identifier)
+        current_app.logger.info(
+            "Password reset requested for unknown account %s", identifier
+        )
         return jsonify({"ok": True}), 200
 
     raw, row = auth_services.create_reset_token_for_user(user)
@@ -534,7 +548,9 @@ def account_profile_get() -> Response:
     # DB-backed flow only
 
     identity = get_jwt_identity()
-    user = auth_services.get_user_by_id(identity) or auth_services.find_user_by_username_or_email(identity)
+    user = auth_services.get_user_by_id(
+        identity
+    ) or auth_services.find_user_by_username_or_email(identity)
     if not user:
         return jsonify({"error": "user_not_found"}), 404
 
@@ -545,7 +561,9 @@ def account_profile_get() -> Response:
         "created_at": user.created_at.isoformat() if user.created_at else None,
         "last_login_at": user.last_login_at.isoformat() if user.last_login_at else None,
         "is_active": bool(user.is_active),
-        "access_expires_at": user.access_expires_at.isoformat() if user.access_expires_at else None,
+        "access_expires_at": user.access_expires_at.isoformat()
+        if user.access_expires_at
+        else None,
         "valid_from": user.valid_from.isoformat() if user.valid_from else None,
     }
     return jsonify(payload), 200
@@ -557,7 +575,9 @@ def account_profile_patch() -> Response:
     # DB-backed flow only
 
     identity = get_jwt_identity()
-    user = auth_services.get_user_by_id(identity) or auth_services.find_user_by_username_or_email(identity)
+    user = auth_services.get_user_by_id(
+        identity
+    ) or auth_services.find_user_by_username_or_email(identity)
     if not user:
         return jsonify({"error": "user_not_found"}), 404
 
@@ -568,10 +588,17 @@ def account_profile_patch() -> Response:
     email = data.get("email")
     # update using service helper, handle uniqueness / validation
     try:
-        auth_services.update_user_profile(str(user.id), username=username, display_name=display, email=email)
+        auth_services.update_user_profile(
+            str(user.id), username=username, display_name=display, email=email
+        )
     except ValueError as e:
-        if str(e) == 'username_exists':
-            return jsonify({"error": "username_exists", "message": "Benutzername bereits vergeben."}), 409
+        if str(e) == "username_exists":
+            return jsonify(
+                {
+                    "error": "username_exists",
+                    "message": "Benutzername bereits vergeben.",
+                }
+            ), 409
         raise
     return jsonify({"ok": True}), 200
 
@@ -584,7 +611,9 @@ def account_delete() -> Response:
     data = request.get_json() or {}
     password = data.get("password")
     identity = get_jwt_identity()
-    user = auth_services.get_user_by_id(identity) or auth_services.find_user_by_username_or_email(identity)
+    user = auth_services.get_user_by_id(
+        identity
+    ) or auth_services.find_user_by_username_or_email(identity)
     if not user:
         return jsonify({"error": "user_not_found"}), 404
 
@@ -606,7 +635,9 @@ def account_data_export() -> Response:
     # DB-backed flow only
 
     identity = get_jwt_identity()
-    user = auth_services.get_user_by_id(identity) or auth_services.find_user_by_username_or_email(identity)
+    user = auth_services.get_user_by_id(
+        identity
+    ) or auth_services.find_user_by_username_or_email(identity)
     if not user:
         return jsonify({"error": "user_not_found"}), 404
 
@@ -616,7 +647,11 @@ def account_data_export() -> Response:
 
     refresh_count = None
     with auth_services.get_session() as session:
-        refresh_count = session.query(RefreshToken).filter(RefreshToken.user_id == str(user.id)).count()
+        refresh_count = (
+            session.query(RefreshToken)
+            .filter(RefreshToken.user_id == str(user.id))
+            .count()
+        )
 
     payload = {
         "user": {
@@ -626,7 +661,9 @@ def account_data_export() -> Response:
             "role": user.role,
             "is_active": bool(user.is_active),
             "created_at": user.created_at.isoformat() if user.created_at else None,
-            "last_login_at": user.last_login_at.isoformat() if user.last_login_at else None,
+            "last_login_at": user.last_login_at.isoformat()
+            if user.last_login_at
+            else None,
         },
         "tokens": {
             # only show metadata (no token values)
@@ -719,7 +756,7 @@ def logout_any() -> Response:
         # For browser navigation (GET), redirect
         redirect_to = _next_url_after_logout()
         response = make_response(redirect(redirect_to, 303))
-    
+
     # Clear access token cookie (flask-jwt-extended)
     unset_jwt_cookies(response)
 
@@ -768,13 +805,17 @@ def refresh() -> Response:
     if not raw:
         return jsonify({"error": "missing_refresh_token"}), 401
 
-    new_raw, new_row, status = auth_services.rotate_refresh_token(raw, request.headers.get("User-Agent"), request.remote_addr)
+    new_raw, new_row, status = auth_services.rotate_refresh_token(
+        raw, request.headers.get("User-Agent"), request.remote_addr
+    )
     if status == "invalid":
         return jsonify({"error": "invalid_refresh_token"}), 401
     if status == "expired":
         return jsonify({"error": "refresh_token_expired"}), 401
     if status == "reused":
-        current_app.logger.warning("Refresh token reuse detected: revoking all tokens for user")
+        current_app.logger.warning(
+            "Refresh token reuse detected: revoking all tokens for user"
+        )
         return jsonify({"error": "refresh_token_reused"}), 403
 
     # success: load user & create access token

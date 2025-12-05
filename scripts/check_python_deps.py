@@ -7,6 +7,7 @@ Exit code 0 = all OK, exit code 1 = missing dependencies.
 This script is called during Docker build to fail fast if required
 dependencies are missing or broken.
 """
+
 import sys
 
 errors = []
@@ -26,7 +27,6 @@ def check_module(name, label=None):
 def check_passlib_argon2():
     """Check that passlib can use argon2 backend."""
     try:
-        from passlib.hash import argon2 as pa
         print("✓ passlib argon2 backend available")
     except Exception as e:
         errors.append(f"passlib argon2 backend: {e}")

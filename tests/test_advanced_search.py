@@ -28,7 +28,9 @@ def test_basic_lemma_search():
     filters = build_filters(params)
     cql = build_cql_with_speaker_filter(params, filters)
     print(f"CQL: {cql}")
-    assert '[lemma="casa" & country_scope="national"]' in cql, "Basic lemma search failed"
+    assert '[lemma="casa" & country_scope="national"]' in cql, (
+        "Basic lemma search failed"
+    )
     print("✓ PASS")
 
 

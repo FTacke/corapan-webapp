@@ -6,7 +6,7 @@ import json
 from datetime import datetime
 from pathlib import Path
 
-from flask import Blueprint, abort, render_template, request
+from flask import Blueprint, abort, current_app, render_template, request
 from flask_jwt_extended import jwt_required, get_jwt_identity
 
 from ..auth import Role
@@ -152,7 +152,9 @@ def save_edits():
                 original_data = f.read()
             with open(original_backup_path, "w", encoding="utf-8") as f:
                 f.write(original_data)
-            current_app.logger.info(f"[Backup] Created permanent original: {original_backup_path}")
+            current_app.logger.info(
+                f"[Backup] Created permanent original: {original_backup_path}"
+            )
 
         # 3. SAVE DIFFS instead of timestamped backups (NEW SYSTEM)
         # Dieser Schritt speichert nur die Changes, nicht die komplette Datei

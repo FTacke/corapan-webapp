@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import logging
-import sys
 from datetime import datetime
 from logging.handlers import RotatingFileHandler
 from pathlib import Path
@@ -21,30 +20,37 @@ from .config import load_config
 def _verify_critical_dependencies() -> list[str]:
     """Verify critical dependencies are available. Returns list of errors."""
     errors = []
-    
+
     # Check psycopg2 for PostgreSQL support
     try:
         import psycopg2
+
         logging.getLogger(__name__).debug(f"psycopg2 version: {psycopg2.__version__}")
     except ImportError as e:
         errors.append(f"psycopg2 not available: {e}. PostgreSQL support disabled.")
-    
+
     # Check argon2-cffi for secure password hashing
     try:
         import argon2
+
         logging.getLogger(__name__).debug(f"argon2-cffi version: {argon2.__version__}")
     except ImportError as e:
-        errors.append(f"argon2-cffi not available: {e}. Secure password hashing may be degraded.")
-    
+        errors.append(
+            f"argon2-cffi not available: {e}. Secure password hashing may be degraded."
+        )
+
     # Check passlib argon2 backend
     try:
         from passlib.hash import argon2 as passlib_argon2
+
         # Verify it can actually hash (not just import)
         _ = passlib_argon2.hash("test")
         logging.getLogger(__name__).debug("passlib argon2 backend: OK")
     except Exception as e:
-        errors.append(f"passlib argon2 backend unavailable: {e}. Will fall back to bcrypt.")
-    
+        errors.append(
+            f"passlib argon2 backend unavailable: {e}. Will fall back to bcrypt."
+        )
+
     return errors
 
 
@@ -52,28 +58,28 @@ def _verify_auth_db_connection(app: Flask) -> None:
     """Verify auth database connection works. Raises exception on failure."""
     from sqlalchemy import text
     from .extensions.sqlalchemy_ext import get_engine
-    
+
     engine = get_engine()
     if engine is None:
         raise RuntimeError("Auth engine not initialized")
-    
+
     # Try a simple query
     with engine.connect() as conn:
         conn.execute(text("SELECT 1"))
-    
+
     app.logger.info(f"Auth DB connection verified: {engine.url}")
 
 
 def create_app(env_name: str | None = None) -> Flask:
     """Create and configure the Flask application instance."""
-    
+
     # Verify critical dependencies at startup
     dep_errors = _verify_critical_dependencies()
     if dep_errors:
         logger = logging.getLogger(__name__)
         for err in dep_errors:
             logger.warning(f"Dependency warning: {err}")
-    
+
     project_root = Path(__file__).resolve().parents[2]
     template_dir = project_root / "templates"
     static_dir = project_root / "static"
@@ -85,33 +91,40 @@ def create_app(env_name: str | None = None) -> Flask:
         static_folder=str(static_dir),
     )
     load_config(app, env_name)
-    
+
     # Apply ProxyFix to correctly handle X-Forwarded-* headers from Nginx
     # This ensures url_for(_external=True) generates https:// URLs when behind HTTPS proxy
     app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_prefix=1)
-    
+
     # Initialize auth DB engine with fail-fast behavior in production
     from .extensions.sqlalchemy_ext import init_engine as init_auth_db
+
     try:
         init_auth_db(app)
         # Verify DB connection works (fail fast if misconfigured)
         _verify_auth_db_connection(app)
     except Exception as e:
-        is_production = env_name == "production" or app.config.get("FLASK_ENV") == "production"
+        is_production = (
+            env_name == "production" or app.config.get("FLASK_ENV") == "production"
+        )
         if is_production:
             # In production, fail fast if auth DB is not available
             app.logger.error(f"FATAL: Auth DB initialization failed: {e}")
-            app.logger.error("Production requires a working auth database. Check AUTH_DATABASE_URL.")
+            app.logger.error(
+                "Production requires a working auth database. Check AUTH_DATABASE_URL."
+            )
             raise RuntimeError(f"Auth DB initialization failed: {e}") from e
         else:
             # In development, warn but continue (allows testing without DB)
-            app.logger.warning(f"Auth DB not initialized: {e}. Some features may be unavailable.")
+            app.logger.warning(
+                f"Auth DB not initialized: {e}. Some features may be unavailable."
+            )
 
     # Add build ID for cache busting and deployment verification
     import time
 
     app.config["APP_BUILD_ID"] = time.strftime("%Y%m%d%H%M%S")
-    
+
     # Store dependency check results for health endpoint
     app.config["_STARTUP_DEP_WARNINGS"] = dep_errors
 
@@ -200,7 +213,7 @@ def register_auth_context(app: Flask) -> None:
             # The JWT identity is a stable user_id; additional claims include
             # the username. Use the username claim when present so templates
             # (e.g. top-app-bar) show readable names instead of internal IDs.
-            g.user = token.get('username') or identity
+            g.user = token.get("username") or identity
             role_value = token.get("role")
             try:
                 g.role = Role(role_value) if role_value else None
@@ -240,7 +253,9 @@ def register_auth_context(app: Flask) -> None:
                 if request.headers.get("HX-Request") or request.is_json:
                     return jsonify({"error": "password_reset_required"}), 403
                 # For standard HTML, redirect to the account password page
-                return redirect(url_for("auth.account_password_page") + "?mustReset=1", 303)
+                return redirect(
+                    url_for("auth.account_password_page") + "?mustReset=1", 303
+                )
 
     @app.context_processor
     def _inject_auth_context():

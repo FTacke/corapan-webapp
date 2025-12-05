@@ -27,7 +27,9 @@ def app():
     template_dir = project_root / "templates"
     static_dir = project_root / "static"
 
-    app = Flask(__name__, template_folder=str(template_dir), static_folder=str(static_dir))
+    app = Flask(
+        __name__, template_folder=str(template_dir), static_folder=str(static_dir)
+    )
     app.config["AUTH_DATABASE_URL"] = "sqlite:///:memory:"
     app.config["AUTH_HASH_ALGO"] = "bcrypt"
     app.config["JWT_SECRET_KEY"] = "test-secret"
@@ -94,6 +96,7 @@ def login_and_get_token(client, username: str, password: str = "password123"):
     # Ensure access token cookie
     try:
         from src.app.auth import services
+
         uobj = services.find_user_by_username_or_email(username)
         if uobj:
             tok = services.create_access_token_for_user(uobj)
@@ -115,7 +118,7 @@ class TestAdminRouteProtection:
         """Regular user cannot access admin dashboard."""
         create_user("regularuser", role="user")
         login_and_get_token(client, "regularuser")
-        
+
         resp = client.get("/admin/dashboard")
         assert resp.status_code == 403, "Regular user should get 403"
 
@@ -123,7 +126,7 @@ class TestAdminRouteProtection:
         """Admin user can access admin dashboard."""
         create_user("adminuser", role="admin")
         login_and_get_token(client, "adminuser")
-        
+
         resp = client.get("/admin/dashboard")
         assert resp.status_code == 200, "Admin should access dashboard"
 
@@ -131,7 +134,7 @@ class TestAdminRouteProtection:
         """Analytics stats endpoint requires admin role."""
         create_user("user1", role="user")
         login_and_get_token(client, "user1")
-        
+
         resp = client.get("/api/analytics/stats")
         assert resp.status_code == 403
 
@@ -139,7 +142,7 @@ class TestAdminRouteProtection:
         """User list endpoint requires admin role."""
         create_user("user2", role="user")
         login_and_get_token(client, "user2")
-        
+
         resp = client.get("/admin/users")
         assert resp.status_code == 403
 
@@ -147,7 +150,7 @@ class TestAdminRouteProtection:
         """Admin can list users."""
         create_user("admin2", role="admin")
         login_and_get_token(client, "admin2")
-        
+
         resp = client.get("/admin/users")
         assert resp.status_code == 200
         assert "items" in resp.json
@@ -165,17 +168,16 @@ class TestUserRouteProtection:
         """Any authenticated user can access their profile."""
         create_user("anyuser", role="user")
         login_and_get_token(client, "anyuser")
-        
+
         resp = client.get("/auth/account/profile")
         assert resp.status_code == 200
         assert resp.json.get("username") == "anyuser"
 
     def test_change_password_requires_auth(self, client):
         """Password change requires authentication."""
-        resp = client.post("/auth/change-password", json={
-            "oldPassword": "x",
-            "newPassword": "y"
-        })
+        resp = client.post(
+            "/auth/change-password", json={"oldPassword": "x", "newPassword": "y"}
+        )
         assert resp.status_code in (401, 302, 303)
 
 
@@ -187,7 +189,7 @@ class TestEditorRouteProtection:
         Editor routes should follow the pattern:
         @jwt_required()
         @require_role(Role.EDITOR)
-        
+
         This test documents the expected behavior.
         """
         # Editor role sits between user and admin
@@ -228,12 +230,10 @@ class TestRoleEscalation:
         """Regular user cannot change their role via profile update."""
         create_user("normaluser", role="user")
         login_and_get_token(client, "normaluser")
-        
+
         # Attempt to change role via profile patch
-        resp = client.patch("/auth/account/profile", json={
-            "role": "admin"
-        })
-        
+        resp = client.patch("/auth/account/profile", json={"role": "admin"})
+
         # Should either reject or ignore the role field
         if resp.status_code == 200:
             # Verify role wasn't actually changed
@@ -243,17 +243,15 @@ class TestRoleEscalation:
 
     def test_admin_can_change_user_role(self, client):
         """Admin can change another user's role."""
-        admin = create_user("superadmin", role="admin")
+        create_user("superadmin", role="admin")
         target = create_user("targetuser", role="user")
-        
+
         login_and_get_token(client, "superadmin")
-        
-        resp = client.patch(f"/admin/users/{target.id}", json={
-            "role": "editor"
-        })
-        
+
+        resp = client.patch(f"/admin/users/{target.id}", json={"role": "editor"})
+
         assert resp.status_code == 200
-        
+
         # Verify role was changed
         detail = client.get(f"/admin/users/{target.id}")
         assert detail.json.get("role") == "editor"

@@ -3,10 +3,7 @@
 from __future__ import annotations
 
 import os
-import secrets
 from pathlib import Path
-
-from dotenv import load_dotenv
 
 # Re-export from countries module
 from .countries import (
@@ -49,15 +46,20 @@ class BaseConfig:
     # JWT
     # Prefer JWT_SECRET_KEY; fallback to legacy JWT_SECRET for backwards compatibility
     JWT_SECRET_KEY = os.getenv(
-        "JWT_SECRET_KEY", os.getenv("JWT_SECRET", os.getenv("FLASK_SECRET_KEY", DEFAULT_SECRET_SENTINEL))
+        "JWT_SECRET_KEY",
+        os.getenv("JWT_SECRET", os.getenv("FLASK_SECRET_KEY", DEFAULT_SECRET_SENTINEL)),
     )
     JWT_TOKEN_LOCATION = ["headers", "cookies"]
     JWT_COOKIE_SECURE = SESSION_COOKIE_SECURE
     JWT_COOKIE_CSRF_PROTECT = True
     JWT_COOKIE_SAMESITE = "Lax"  # Allows cookies in redirects
     # Token lifetimes (seconds)
-    ACCESS_TOKEN_EXP = int(os.getenv("ACCESS_TOKEN_EXP", os.getenv("JWT_ACCESS_TOKEN_EXPIRES", "3600")))
-    REFRESH_TOKEN_EXP = int(os.getenv("REFRESH_TOKEN_EXP", os.getenv("JWT_REFRESH_TOKEN_EXPIRES", "604800")))
+    ACCESS_TOKEN_EXP = int(
+        os.getenv("ACCESS_TOKEN_EXP", os.getenv("JWT_ACCESS_TOKEN_EXPIRES", "3600"))
+    )
+    REFRESH_TOKEN_EXP = int(
+        os.getenv("REFRESH_TOKEN_EXP", os.getenv("JWT_REFRESH_TOKEN_EXPIRES", "604800"))
+    )
     # Ensure cookies are sent with all requests (not just /auth)
     JWT_ACCESS_COOKIE_PATH = "/"
     JWT_REFRESH_COOKIE_PATH = "/"
@@ -84,7 +86,8 @@ class BaseConfig:
 
     # Auth DB (used only when AUTH_BACKEND=db) - DSN or fallback to sqlite file
     AUTH_DATABASE_URL = os.getenv(
-        "AUTH_DATABASE_URL", f"sqlite:///{(Path(PROJECT_ROOT) / 'data' / 'db' / 'auth.db').as_posix()}"
+        "AUTH_DATABASE_URL",
+        f"sqlite:///{(Path(PROJECT_ROOT) / 'data' / 'db' / 'auth.db').as_posix()}",
     )
 
     # Hashing (argon2 or bcrypt)
@@ -96,7 +99,9 @@ class BaseConfig:
 
     # Account deletion/anonymization retention (days)
     # Users marked as deleted will be anonymized after this many days.
-    AUTH_ACCOUNT_ANONYMIZE_AFTER_DAYS = int(os.getenv("AUTH_ACCOUNT_ANONYMIZE_AFTER_DAYS", "30"))
+    AUTH_ACCOUNT_ANONYMIZE_AFTER_DAYS = int(
+        os.getenv("AUTH_ACCOUNT_ANONYMIZE_AFTER_DAYS", "30")
+    )
 
     # Debug
     DEBUG = False

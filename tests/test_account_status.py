@@ -57,45 +57,53 @@ def create_user(username: str = "statuser") -> User:
 
 
 def test_inactive_account_blocked(client):
-    u = create_user("inactive")
+    create_user("inactive")
     with get_session() as session:
         row = session.query(User).filter(User.username == "inactive").first()
         row.is_active = False
 
-    r = client.post("/auth/login", json={"username": "inactive", "password": "password123"})
+    r = client.post(
+        "/auth/login", json={"username": "inactive", "password": "password123"}
+    )
     assert r.status_code == 403
     assert r.json.get("error") == "account_inactive"
 
 
 def test_valid_from_future_blocked(client):
-    u = create_user("future")
+    create_user("future")
     with get_session() as session:
         row = session.query(User).filter(User.username == "future").first()
         row.valid_from = datetime.now(timezone.utc) + timedelta(days=1)
 
-    r = client.post("/auth/login", json={"username": "future", "password": "password123"})
+    r = client.post(
+        "/auth/login", json={"username": "future", "password": "password123"}
+    )
     assert r.status_code == 403
     assert r.json.get("error") == "account_not_yet_valid"
 
 
 def test_access_expired_blocked(client):
-    u = create_user("expired")
+    create_user("expired")
     with get_session() as session:
         row = session.query(User).filter(User.username == "expired").first()
         row.access_expires_at = datetime.now(timezone.utc) - timedelta(days=1)
 
-    r = client.post("/auth/login", json={"username": "expired", "password": "password123"})
+    r = client.post(
+        "/auth/login", json={"username": "expired", "password": "password123"}
+    )
     assert r.status_code == 403
     assert r.json.get("error") == "account_expired"
 
 
 def test_locked_until_blocked(client):
-    u = create_user("locked")
+    create_user("locked")
     with get_session() as session:
         row = session.query(User).filter(User.username == "locked").first()
         row.locked_until = datetime.now(timezone.utc) + timedelta(minutes=5)
 
-    r = client.post("/auth/login", json={"username": "locked", "password": "password123"})
+    r = client.post(
+        "/auth/login", json={"username": "locked", "password": "password123"}
+    )
     assert r.status_code == 403
     assert r.json.get("error") == "account_locked"
 
@@ -106,7 +114,9 @@ def test_deleted_account_blocked(client):
     u = create_user("deleted")
     services.mark_user_deleted(str(u.id))
 
-    r = client.post("/auth/login", json={"username": "deleted", "password": "password123"})
+    r = client.post(
+        "/auth/login", json={"username": "deleted", "password": "password123"}
+    )
     assert r.status_code == 403
     # currently check_account_status returns account_inactive when is_active==False
     assert r.json.get("error") in ("account_inactive", "account_deleted")

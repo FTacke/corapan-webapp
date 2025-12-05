@@ -1098,7 +1098,10 @@ def stats_csv():
         # Define dimensions to group by
         dimensions = {
             "by_country": {"field": BLS_FIELDS["country"], "label": "Por país"},
-            "by_speaker_type": {"field": BLS_FIELDS["speaker_type"], "label": "Por tipo de hablante"},
+            "by_speaker_type": {
+                "field": BLS_FIELDS["speaker_type"],
+                "label": "Por tipo de hablante",
+            },
             "by_sex": {"field": BLS_FIELDS["sex"], "label": "Por sexo"},
             "by_modo": {"field": BLS_FIELDS["mode"], "label": "Por modo"},
             "by_discourse": {"field": BLS_FIELDS["discourse"], "label": "Por discurso"},
@@ -1130,22 +1133,28 @@ def stats_csv():
 
         def generate():
             # Metadata header
-            yield f"# corpus=CO.RA.PAN\n"
+            yield "# corpus=CO.RA.PAN\n"
             yield f"# date_generated={datetime.now(timezone.utc).isoformat()}\n"
-            yield f"# query_type=CQL\n"
+            yield "# query_type=CQL\n"
             yield f"# query={patt or '*'}\n"
-            
+
             # Filters as JSON string
-            filters_dict = {k: v for k, v in req_args.items() if k not in ['q', 'mode', 'patt', 'cql']}
+            filters_dict = {
+                k: v
+                for k, v in req_args.items()
+                if k not in ["q", "mode", "patt", "cql"]
+            }
             yield f"# filters={json.dumps(filters_dict, ensure_ascii=False)}\n"
-            
+
             yield f"# total_hits={total_hits}\n"
-            yield f"# stats_type=all_charts\n"
-            
+            yield "# stats_type=all_charts\n"
+
             # CSV Header
             output = io.StringIO()
             writer = csv.writer(output)
-            writer.writerow(["chart_id", "chart_label", "dimension", "count", "relative_frequency"])
+            writer.writerow(
+                ["chart_id", "chart_label", "dimension", "count", "relative_frequency"]
+            )
             yield output.getvalue()
             output.seek(0)
             output.truncate(0)
@@ -1156,13 +1165,9 @@ def stats_csv():
                 for row in results:
                     count = row["n"]
                     rel_freq = count / total_hits if total_hits > 0 else 0
-                    writer.writerow([
-                        dim_key,
-                        chart_label,
-                        row["key"],
-                        count,
-                        f"{rel_freq:.6f}"
-                    ])
+                    writer.writerow(
+                        [dim_key, chart_label, row["key"], count, f"{rel_freq:.6f}"]
+                    )
                     yield output.getvalue()
                     output.seek(0)
                     output.truncate(0)
@@ -1170,7 +1175,9 @@ def stats_csv():
         return Response(
             generate(),
             mimetype="text/csv",
-            headers={"Content-Disposition": "attachment; filename=estadisticas_busqueda.csv"}
+            headers={
+                "Content-Disposition": "attachment; filename=estadisticas_busqueda.csv"
+            },
         )
 
     except Exception as e:
@@ -1286,7 +1293,13 @@ def build_blacklab_query_from_request(req_args) -> dict:
         if not include_regional:
             filters["country_scope"] = "national"
             # Explicitly exclude known regional codes to be safe against missing scope tags
-            filters["exclude_country_code"] = ["ARG-CHU", "ARG-CBA", "ARG-SDE", "ESP-CAN", "ESP-SEV"]
+            filters["exclude_country_code"] = [
+                "ARG-CHU",
+                "ARG-CBA",
+                "ARG-SDE",
+                "ESP-CAN",
+                "ESP-SEV",
+            ]
 
     # Build document filter (likely empty now, but kept for structure)
     filter_query = filters_to_blacklab_query(filters)

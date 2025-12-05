@@ -5,7 +5,7 @@ import pytest
 from flask import Flask
 
 from src.app.extensions.sqlalchemy_ext import init_engine, get_engine, get_session
-from src.app.auth.models import Base, User, RefreshToken
+from src.app.auth.models import Base, User
 
 
 @pytest.fixture
@@ -79,6 +79,7 @@ def test_anonymize_job_respects_retention(client):
     """Ensure anonymization job only anonymizes users deleted older than retention."""
     from src.app.auth import services
     from datetime import timedelta
+
     # Create two users
     u_old = create_test_user("olduser")
     u_recent = create_test_user("recentuser")

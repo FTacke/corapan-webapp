@@ -1,11 +1,11 @@
-import json
 from pathlib import Path
-import tempfile
 
 from src.scripts.blacklab_index_creation import export_to_tsv
 
 
-def make_doc_with_token(past=None, future=None, past_in_morph=True, future_in_morph=True):
+def make_doc_with_token(
+    past=None, future=None, past_in_morph=True, future_in_morph=True
+):
     # Create minimal corpus doc with one segment and one token
     token = {
         "token_id": "t1",
@@ -55,7 +55,12 @@ def test_exporter_accepts_mixed_cases(tmp_path: Path):
     assert "periphrasticFuture" in contentA
 
     # Case B: values at top-level legacy fields
-    docB = make_doc_with_token(past="legacyPast", future="legacyFuture", past_in_morph=False, future_in_morph=False)
+    docB = make_doc_with_token(
+        past="legacyPast",
+        future="legacyFuture",
+        past_in_morph=False,
+        future_in_morph=False,
+    )
     ok, msg = export_to_tsv(docB, Path("fileB.json"), out_dir, skip_cache)
     assert ok, msg
     contentB = (out_dir / "fileB.tsv").read_text(encoding="utf-8")
@@ -63,7 +68,9 @@ def test_exporter_accepts_mixed_cases(tmp_path: Path):
     assert "legacyFuture" in contentB
 
     # Case C: mixed variants (top-level past, morph future)
-    docC = make_doc_with_token(past="pTop", future="fMorph", past_in_morph=False, future_in_morph=True)
+    docC = make_doc_with_token(
+        past="pTop", future="fMorph", past_in_morph=False, future_in_morph=True
+    )
     ok, msg = export_to_tsv(docC, Path("fileC.json"), out_dir, skip_cache)
     assert ok, msg
     contentC = (out_dir / "fileC.tsv").read_text(encoding="utf-8")

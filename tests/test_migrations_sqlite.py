@@ -1,7 +1,11 @@
 import sqlite3
 from pathlib import Path
 
-SQL_FILE = Path(__file__).resolve().parents[1] / "migrations" / "0001_create_auth_schema_sqlite.sql"
+SQL_FILE = (
+    Path(__file__).resolve().parents[1]
+    / "migrations"
+    / "0001_create_auth_schema_sqlite.sql"
+)
 
 
 def test_sqlite_migration_executes():

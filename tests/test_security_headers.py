@@ -10,7 +10,9 @@ def client():
     template_dir = project_root / "templates"
     static_dir = project_root / "static"
 
-    app = Flask(__name__, template_folder=str(template_dir), static_folder=str(static_dir))
+    app = Flask(
+        __name__, template_folder=str(template_dir), static_folder=str(static_dir)
+    )
     app.config["AUTH_DATABASE_URL"] = "sqlite:///:memory:"
     app.config["AUTH_HASH_ALGO"] = "bcrypt"
     app.config["JWT_SECRET_KEY"] = "test-secret"
@@ -31,6 +33,7 @@ def client():
 
     # register global context processors and security headers used by create_app
     from src.app import register_context_processors, register_security_headers
+
     register_context_processors(app)
     register_security_headers(app)
 
@@ -44,12 +47,12 @@ def client():
 
 
 def test_csp_script_src_no_unsafe_inline(client):
-    r = client.get('/')
-    assert 'Content-Security-Policy' in r.headers
-    csp = r.headers['Content-Security-Policy']
+    r = client.get("/")
+    assert "Content-Security-Policy" in r.headers
+    csp = r.headers["Content-Security-Policy"]
     # Ensure 'unsafe-inline' was removed for scripts (styles still need it until jQuery migration)
     assert "script-src" in csp
-    assert "'unsafe-inline'" not in csp.split('script-src', 1)[1].split(';', 1)[0]
+    assert "'unsafe-inline'" not in csp.split("script-src", 1)[1].split(";", 1)[0]
     assert "style-src" in csp
     # NOTE: style-src still contains 'unsafe-inline' due to jQuery/DataTables dependency
     # This will be removed after jQuery migration (see TODO in src/app/__init__.py:213)

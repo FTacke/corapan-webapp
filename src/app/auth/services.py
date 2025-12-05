@@ -3,6 +3,7 @@
 Intended to be used by the DB-backed auth routes. Uses SQLAlchemy sessions
 from extensions.sqlalchemy_ext.get_session.
 """
+
 from __future__ import annotations
 
 import hashlib
@@ -17,7 +18,9 @@ from flask_jwt_extended import create_access_token
 from passlib.hash import argon2, bcrypt
 import bcrypt as _bcrypt_module  # fallback direct bcrypt usage when passlib backend behaves oddly
 from sqlalchemy import select
-from werkzeug.security import check_password_hash  # supports scrypt, pbkdf2_sha256, etc.
+from werkzeug.security import (
+    check_password_hash,
+)  # supports scrypt, pbkdf2_sha256, etc.
 
 from ..extensions.sqlalchemy_ext import get_session
 from .models import User, RefreshToken, ResetToken
@@ -122,13 +125,13 @@ def validate_password_strength(password: str) -> tuple[bool, str | None]:
     if len(password) < 8:
         return False, "password_too_short"
 
-    if not re.search(r'[A-Z]', password):
+    if not re.search(r"[A-Z]", password):
         return False, "password_missing_uppercase"
 
-    if not re.search(r'[a-z]', password):
+    if not re.search(r"[a-z]", password):
         return False, "password_missing_lowercase"
 
-    if not re.search(r'\d', password):
+    if not re.search(r"\d", password):
         return False, "password_missing_digit"
 
     return True, None
@@ -145,7 +148,9 @@ def create_access_token_for_user(user: User) -> str:
         "is_active": bool(user.is_active),
         "must_reset_password": bool(user.must_reset_password),
     }
-    token = create_access_token(identity=str(user.id), additional_claims=claims, expires_delta=expires_delta)
+    token = create_access_token(
+        identity=str(user.id), additional_claims=claims, expires_delta=expires_delta
+    )
     return token
 
 
@@ -161,10 +166,14 @@ def _ensure_utc(dt: Optional[datetime]) -> Optional[datetime]:
     return dt if dt.tzinfo is not None else dt.replace(tzinfo=timezone.utc)
 
 
-def create_refresh_token_for_user(user: User, user_agent: Optional[str] = None, ip_address: Optional[str] = None) -> Tuple[str, RefreshToken]:
+def create_refresh_token_for_user(
+    user: User, user_agent: Optional[str] = None, ip_address: Optional[str] = None
+) -> Tuple[str, RefreshToken]:
     raw = secrets.token_urlsafe(64)
     token_hash = _hash_refresh_token(raw)
-    expires_at = datetime.now(timezone.utc) + timedelta(seconds=int(current_app.config.get("REFRESH_TOKEN_EXP", 2592000)))
+    expires_at = datetime.now(timezone.utc) + timedelta(
+        seconds=int(current_app.config.get("REFRESH_TOKEN_EXP", 2592000))
+    )
 
     token_id = str(uuid.uuid4())
     rt = RefreshToken(
@@ -183,7 +192,9 @@ def create_refresh_token_for_user(user: User, user_agent: Optional[str] = None, 
     return raw, rt
 
 
-def rotate_refresh_token(old_raw_token: str, user_agent: Optional[str], ip_address: Optional[str]) -> Tuple[Optional[str], Optional[RefreshToken], str]:
+def rotate_refresh_token(
+    old_raw_token: str, user_agent: Optional[str], ip_address: Optional[str]
+) -> Tuple[Optional[str], Optional[RefreshToken], str]:
     """Rotate an existing raw refresh token.
 
     Returns tuple (new_raw, new_model, status) where status is one of:
@@ -204,8 +215,8 @@ def rotate_refresh_token(old_raw_token: str, user_agent: Optional[str], ip_addre
             session.query(RefreshToken)
             .filter(
                 RefreshToken.token_hash == old_hash,
-                RefreshToken.replaced_by == None,
-                RefreshToken.revoked_at == None,
+                RefreshToken.replaced_by is None,
+                RefreshToken.revoked_at is None,
                 RefreshToken.expires_at >= now,
             )
             .update({RefreshToken.replaced_by: marker}, synchronize_session=False)
@@ -219,13 +230,18 @@ def rotate_refresh_token(old_raw_token: str, user_agent: Optional[str], ip_addre
                 return None, None, "invalid"
             token_row: RefreshToken = result
 
-            if _ensure_utc(token_row.expires_at) < datetime.now(timezone.utc) or token_row.revoked_at is not None:
+            if (
+                _ensure_utc(token_row.expires_at) < datetime.now(timezone.utc)
+                or token_row.revoked_at is not None
+            ):
                 return None, None, "expired"
 
             # If the token already had a replacement, treat as reuse
             if token_row.replaced_by is not None and token_row.replaced_by != marker:
                 # detected reuse -> revoke all tokens for this user
-                session.query(RefreshToken).filter(RefreshToken.user_id == token_row.user_id).update({RefreshToken.revoked_at: datetime.now(timezone.utc)})
+                session.query(RefreshToken).filter(
+                    RefreshToken.user_id == token_row.user_id
+                ).update({RefreshToken.revoked_at: datetime.now(timezone.utc)})
                 return None, None, "reused"
 
             # Fallback - unknown state
@@ -239,7 +255,9 @@ def rotate_refresh_token(old_raw_token: str, user_agent: Optional[str], ip_addre
         new_raw = secrets.token_urlsafe(64)
         new_hash = _hash_refresh_token(new_raw)
         new_id = str(uuid.uuid4())
-        new_expires = datetime.now(timezone.utc) + timedelta(seconds=int(current_app.config.get("REFRESH_TOKEN_EXP", 2592000)))
+        new_expires = datetime.now(timezone.utc) + timedelta(
+            seconds=int(current_app.config.get("REFRESH_TOKEN_EXP", 2592000))
+        )
 
         new_row = RefreshToken(
             token_id=new_id,
@@ -263,7 +281,9 @@ def rotate_refresh_token(old_raw_token: str, user_agent: Optional[str], ip_addre
 
 def revoke_all_refresh_tokens_for_user(user_id: str) -> None:
     with get_session() as session:
-        session.query(RefreshToken).filter(RefreshToken.user_id == user_id, RefreshToken.revoked_at == None).update({RefreshToken.revoked_at: datetime.now(timezone.utc)})
+        session.query(RefreshToken).filter(
+            RefreshToken.user_id == user_id, RefreshToken.revoked_at is None
+        ).update({RefreshToken.revoked_at: datetime.now(timezone.utc)})
 
 
 def revoke_refresh_token_by_raw(raw: str) -> bool:
@@ -306,8 +326,12 @@ def anonymize_user(user_id: str) -> None:
         user.last_login_at = None
 
         # revoke refresh/reset tokens for user
-        session.query(RefreshToken).filter(RefreshToken.user_id == user_id).update({RefreshToken.revoked_at: datetime.now(timezone.utc)})
-        session.query(ResetToken).filter(ResetToken.user_id == user_id).update({ResetToken.used_at: datetime.now(timezone.utc)})
+        session.query(RefreshToken).filter(RefreshToken.user_id == user_id).update(
+            {RefreshToken.revoked_at: datetime.now(timezone.utc)}
+        )
+        session.query(ResetToken).filter(ResetToken.user_id == user_id).update(
+            {ResetToken.used_at: datetime.now(timezone.utc)}
+        )
 
 
 def anonymize_soft_deleted_users_older_than(days: int) -> int:
@@ -318,7 +342,9 @@ def anonymize_soft_deleted_users_older_than(days: int) -> int:
     cutoff = datetime.now(timezone.utc) - timedelta(days=int(days))
     anonymized = 0
     with get_session() as session:
-        stmt = select(User).where(User.deleted_at != None, User.deleted_at <= cutoff)
+        stmt = select(User).where(
+            User.deleted_at is not None, User.deleted_at <= cutoff
+        )
         rows = session.execute(stmt).scalars().all()
         for u in rows:
             anonymize_user(str(u.id))
@@ -369,7 +395,12 @@ def update_user_password(user_id: str, new_hashed: str) -> None:
         user.must_reset_password = False
 
 
-def update_user_profile(user_id: str, username: Optional[str] = None, display_name: Optional[str] = None, email: Optional[str] = None) -> None:
+def update_user_profile(
+    user_id: str,
+    username: Optional[str] = None,
+    display_name: Optional[str] = None,
+    email: Optional[str] = None,
+) -> None:
     with get_session() as session:
         stmt = select(User).where(User.id == user_id)
         user = session.execute(stmt).scalars().first()
@@ -465,15 +496,3 @@ def on_failed_login(user: Optional[User]) -> None:
             # Lockout policy: 5 failed attempts -> lock for 10 minutes
             if dbu.login_failed_count >= 5:
                 dbu.locked_until = datetime.now(timezone.utc) + timedelta(minutes=10)
-
-
-def revoke_refresh_token_by_raw(raw: str) -> bool:
-    """Mark a single refresh token (by raw value) as revoked. Returns True if found."""
-    h = _hash_refresh_token(raw)
-    with get_session() as session:
-        stmt = select(RefreshToken).where(RefreshToken.token_hash == h)
-        r = session.execute(stmt).scalars().first()
-        if not r:
-            return False
-        r.revoked_at = datetime.now(timezone.utc)
-        return True

@@ -18,6 +18,7 @@ or update an existing user with the same username. When updating it will
 unlock the account, reset the password, clear failed/locked flags and mark the
 user active.
 """
+
 from __future__ import annotations
 
 import os
@@ -28,14 +29,24 @@ from datetime import datetime, timezone
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--db", help="Path to sqlite DB file (defaults data/db/auth.db)", default="data/db/auth.db")
-    parser.add_argument("--username", default=os.environ.get("START_ADMIN_USERNAME", "admin"))
+    parser.add_argument(
+        "--db",
+        help="Path to sqlite DB file (defaults data/db/auth.db)",
+        default="data/db/auth.db",
+    )
+    parser.add_argument(
+        "--username", default=os.environ.get("START_ADMIN_USERNAME", "admin")
+    )
     parser.add_argument(
         "--password",
         default=os.environ.get("START_ADMIN_PASSWORD"),
         help="Password for the admin user (required unless START_ADMIN_PASSWORD env is set).",
     )
-    parser.add_argument("--email", default=None, help="Optional email for the admin (defaults to <username>@example.org)")
+    parser.add_argument(
+        "--email",
+        default=None,
+        help="Optional email for the admin (defaults to <username>@example.org)",
+    )
     parser.add_argument(
         "--display-name",
         dest="display_name",
@@ -53,7 +64,9 @@ def main():
     # Setup a minimal app-like config for the SQLAlchemy helpers
     # config must behave like a mapping with .get() for the SQLAlchemy helper
     cfg = {
-        "AUTH_DATABASE_URL": os.environ.get("AUTH_DATABASE_URL", f"sqlite:///{Path(args.db).as_posix()}")
+        "AUTH_DATABASE_URL": os.environ.get(
+            "AUTH_DATABASE_URL", f"sqlite:///{Path(args.db).as_posix()}"
+        )
     }
     # allow optional override for the hashing algorithm used by services
     cfg["AUTH_HASH_ALGO"] = os.environ.get("AUTH_HASH_ALGO", "argon2")
@@ -61,7 +74,9 @@ def main():
     # Prevent accidental execution in production-like envs
     flask_env = os.environ.get("FLASK_ENV", "").lower()
     auth_env = os.environ.get("AUTH_ENV", "").lower()
-    if not args.allow_production and (flask_env == "production" or auth_env == "production"):
+    if not args.allow_production and (
+        flask_env == "production" or auth_env == "production"
+    ):
         raise RuntimeError(
             "Refusing to run create_initial_admin in production environment. Use --allow-production to override."
         )
@@ -89,7 +104,7 @@ def main():
             self.config = cfg
 
     app = AppLike(cfg)
-    
+
     # Fail-fast: attempt to init engine and create tables with error handling
     try:
         init_engine(app)
@@ -97,7 +112,10 @@ def main():
         Base.metadata.create_all(bind=engine)
     except OperationalError as e:
         print(f"ERROR: Failed to connect to auth database: {e}", file=sys.stderr)
-        print("  Check that the database is running and AUTH_DATABASE_URL is correct.", file=sys.stderr)
+        print(
+            "  Check that the database is running and AUTH_DATABASE_URL is correct.",
+            file=sys.stderr,
+        )
         sys.exit(1)
     except SQLAlchemyError as e:
         print(f"ERROR: Database initialization failed: {e}", file=sys.stderr)
@@ -115,8 +133,11 @@ def main():
     with tmp_app.app_context():
         with get_session() as session:
             # Check if username exists
-            existing = session.query(User).filter(User.username == args.username).first()
+            existing = (
+                session.query(User).filter(User.username == args.username).first()
+            )
             now = datetime.now(timezone.utc)
+
             def _safe_hash(pw: str) -> str:
                 # try configured hashing algorithm first, fall back to bcrypt if unavailable
                 try:

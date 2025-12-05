@@ -3,7 +3,15 @@
 from __future__ import annotations
 
 import logging
-from flask import Blueprint, make_response, render_template, request, jsonify, redirect, url_for
+from flask import (
+    Blueprint,
+    make_response,
+    render_template,
+    request,
+    jsonify,
+    redirect,
+    url_for,
+)
 from flask_jwt_extended import jwt_required
 import httpx
 
@@ -41,6 +49,7 @@ def login_page():
     # and drawer_animate is not already set
     if not drawer_animate and not login_success and referrer:
         from urllib.parse import urlparse
+
         parsed = urlparse(referrer)
         # Check if path is root (/) or empty - user came from landing page
         if parsed.path in ("/", ""):
@@ -78,7 +87,7 @@ def health_check():
             "blacklab": {"ok": true|false, "url": "...", "error": "..."}
         }
     }
-    
+
     HTTP Status:
     - 200: All critical checks pass (auth_db OK)
     - 503: Critical checks fail (auth_db down)
@@ -90,7 +99,7 @@ def health_check():
     checks = {
         "flask": {"ok": True}  # If we got here, Flask is healthy
     }
-    
+
     # Check Auth DB availability (critical for production)
     auth_db_check = {"ok": False, "backend": None, "error": None}
     try:
@@ -112,7 +121,7 @@ def health_check():
     except Exception as e:
         auth_db_check["error"] = f"{type(e).__name__}: {str(e)}"
         logger.warning(f"Auth DB health check failed: {e}")
-    
+
     checks["auth_db"] = auth_db_check
 
     # Check BlackLab availability (quick preflight)
@@ -259,11 +268,13 @@ def health_check_auth():
     try:
         engine = get_engine()
         if engine is None:
-            return jsonify({
-                "ok": False,
-                "backend": None,
-                "error": "Auth engine not initialized (AUTH_DATABASE_URL may be unset)"
-            }), 503
+            return jsonify(
+                {
+                    "ok": False,
+                    "backend": None,
+                    "error": "Auth engine not initialized (AUTH_DATABASE_URL may be unset)",
+                }
+            ), 503
 
         # Try a simple query to verify connection
         with engine.connect() as conn:
@@ -278,19 +289,13 @@ def health_check_auth():
         else:
             backend = "unknown"
 
-        return jsonify({
-            "ok": True,
-            "backend": backend,
-            "error": None
-        }), 200
+        return jsonify({"ok": True, "backend": backend, "error": None}), 200
 
     except Exception as e:
         logger.error(f"Auth DB health check error: {e}")
-        return jsonify({
-            "ok": False,
-            "backend": None,
-            "error": f"{type(e).__name__}: {str(e)}"
-        }), 503
+        return jsonify(
+            {"ok": False, "backend": None, "error": f"{type(e).__name__}: {str(e)}"}
+        ), 503
 
 
 @blueprint.get("/proyecto")

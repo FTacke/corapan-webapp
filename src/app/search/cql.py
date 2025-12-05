@@ -343,7 +343,9 @@ def build_filters(params: Dict) -> Dict[str, any]:
             raw_parents = val
         elif isinstance(val, str):
             raw_parents = [val]
-    filters["country_parent_code"] = [c.strip().upper() for c in raw_parents if c and c.strip()]
+    filters["country_parent_code"] = [
+        c.strip().upper() for c in raw_parents if c and c.strip()
+    ]
 
     # Country region codes
     raw_regions = []
@@ -355,7 +357,9 @@ def build_filters(params: Dict) -> Dict[str, any]:
             raw_regions = val
         elif isinstance(val, str):
             raw_regions = [val]
-    filters["country_region_code"] = [c.strip().upper() for c in raw_regions if c and c.strip()]
+    filters["country_region_code"] = [
+        c.strip().upper() for c in raw_regions if c and c.strip()
+    ]
 
     # Country codes: exact whitelist (can be national like ARG or regional like ARG-CBA)
     raw_codes = []

@@ -25,8 +25,8 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from src.app.services.audio_snippets import SPLIT_TIMES, build_snippet, find_split_file
-from src.app.services.blacklab_search import _hit_to_canonical
+from src.app.services.audio_snippets import SPLIT_TIMES, build_snippet, find_split_file  # noqa: E402
+from src.app.services.blacklab_search import _hit_to_canonical  # noqa: E402
 
 BL_PROXY_BASE = "http://127.0.0.1:8000/bls"
 

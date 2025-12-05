@@ -9,11 +9,14 @@ def load_json_fixture(path: str) -> dict:
         return json.load(f)
 
 
-    def test_enrich_hits_with_docmeta_test_full_hit():
-        # Load a sample full hit file (has docInfos and hits)
-        import os
-        resource_path = os.path.join(os.path.dirname(__file__), "resources", "test_full_hit.json")
-        data = load_json_fixture(resource_path)
+def test_enrich_hits_with_docmeta_test_full_hit():
+    # Load a sample full hit file (has docInfos and hits)
+    import os
+
+    resource_path = os.path.join(
+        os.path.dirname(__file__), "resources", "test_full_hit.json"
+    )
+    data = load_json_fixture(resource_path)
     hits = data.get("hits", [])
     docinfos = data.get("docInfos", {})
 

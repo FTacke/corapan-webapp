@@ -2,7 +2,6 @@ import json
 from pathlib import Path
 
 import importlib.util
-from pathlib import Path
 
 _mod_path = Path(__file__).resolve().parents[1] / "scripts" / "migrate_json_v3.py"
 spec = importlib.util.spec_from_file_location("migrate_json_v3", str(_mod_path))

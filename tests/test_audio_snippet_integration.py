@@ -1,4 +1,3 @@
-
 from pydub.generators import Sine
 
 from src.app import create_app

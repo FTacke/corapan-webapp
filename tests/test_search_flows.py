@@ -12,12 +12,14 @@ from flask import Flask
 def app():
     """Create test Flask app."""
     from pathlib import Path
-    
+
     project_root = Path(__file__).resolve().parents[1]
     template_dir = project_root / "templates"
     static_dir = project_root / "static"
 
-    app = Flask(__name__, template_folder=str(template_dir), static_folder=str(static_dir))
+    app = Flask(
+        __name__, template_folder=str(template_dir), static_folder=str(static_dir)
+    )
     app.config["AUTH_DATABASE_URL"] = "sqlite:///:memory:"
     app.config["AUTH_HASH_ALGO"] = "bcrypt"
     app.config["JWT_SECRET_KEY"] = "test-secret"
@@ -101,11 +103,7 @@ class TestCQLGeneration:
                     return val
                 return [val] if val is not None else []
 
-        params = MockParams({
-            "q": "casa",
-            "mode": "lemma",
-            "country_code": ["ARG"]
-        })
+        params = MockParams({"q": "casa", "mode": "lemma", "country_code": ["ARG"]})
         filters = build_filters(params)
         cql = build_cql_with_speaker_filter(params, filters)
 
@@ -122,13 +120,15 @@ class TestCQLGeneration:
                     return val
                 return [val] if val is not None else []
 
-        params = MockParams({
-            "q": "casa",
-            "mode": "lemma",
-            "country_scope": "regional",
-            "country_parent_code": ["ARG"],
-            "country_region_code": ["CBA"]
-        })
+        params = MockParams(
+            {
+                "q": "casa",
+                "mode": "lemma",
+                "country_scope": "regional",
+                "country_parent_code": ["ARG"],
+                "country_region_code": ["CBA"],
+            }
+        )
         filters = build_filters(params)
         cql = build_cql_with_speaker_filter(params, filters)
 
@@ -149,7 +149,7 @@ class TestSearchPageRendering:
             if resp.status_code == 200:
                 assert b"search" in resp.data.lower() or b"buscar" in resp.data.lower()
                 return
-        
+
         # If no search page found, skip (might require auth or different path)
         pytest.skip("Search page path not found or requires auth")
 
@@ -162,15 +162,18 @@ class TestSearchAPI:
         # This test checks the API behavior without BlackLab
         # The actual search would fail without BlackLab, but validation should work
         resp = client.get("/api/search")
-        
+
         # Should either 400 (missing params) or 404 (route not found)
         # or redirect to login if auth required
         assert resp.status_code in (400, 404, 401, 302, 303)
 
     def test_cql_validation(self):
         """Test CQL validator catches invalid queries."""
-        from src.app.search.cql_validator import validate_cql_pattern, CQLValidationError
-        
+        from src.app.search.cql_validator import (
+            validate_cql_pattern,
+            CQLValidationError,
+        )
+
         # Valid CQL - should not raise
         result = validate_cql_pattern('[lemma="casa"]')
         assert result == '[lemma="casa"]'
@@ -208,16 +211,14 @@ class TestSearchFilters:
                     return val
                 return [val] if val is not None else []
 
-        params = MockParams({
-            "speaker_type": ["pro"]
-        })
+        params = MockParams({"speaker_type": ["pro"]})
         filters = build_filters(params)
         assert "speaker_type" in filters or "speaker_types" in filters
 
 
 class TestSearchIntegration:
     """Integration tests that would require BlackLab.
-    
+
     These tests document the expected behavior but may be skipped
     if BlackLab is not running.
     """

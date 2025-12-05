@@ -155,7 +155,7 @@ def register_jwt_handlers() -> None:
             ), 401
 
         # HTML pages: Redirect to login with message
-        from flask import current_app, flash, redirect, url_for
+        from flask import flash, redirect, url_for
         from ..routes.auth import save_return_url
 
         save_return_url()
@@ -216,12 +216,14 @@ def register_jwt_handlers() -> None:
         # to the login UI (not return JSON). These are server-rendered pages
         # under /auth/account/**/page and /auth/password/**/page.
         # Note: API routes like /auth/account/profile are handled above via Accept header
-        if request.path.startswith("/auth/account") or request.path.startswith("/auth/password"):
+        if request.path.startswith("/auth/account") or request.path.startswith(
+            "/auth/password"
+        ):
             # fall through to HTML redirect behavior below
             pass
 
         # HTML pages: Save return URL and redirect to login
-        from flask import current_app, flash, redirect, url_for
+        from flask import flash, redirect, url_for
         from ..routes.auth import save_return_url
 
         save_return_url()

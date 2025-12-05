@@ -27,7 +27,9 @@ def app():
     template_dir = project_root / "templates"
     static_dir = project_root / "static"
 
-    app = Flask(__name__, template_folder=str(template_dir), static_folder=str(static_dir))
+    app = Flask(
+        __name__, template_folder=str(template_dir), static_folder=str(static_dir)
+    )
     app.config["AUTH_DATABASE_URL"] = "sqlite:///:memory:"
     app.config["AUTH_HASH_ALGO"] = "bcrypt"
     app.config["JWT_SECRET_KEY"] = "test-secret"
@@ -83,7 +85,9 @@ def create_admin() -> User:
 
 def login_admin(client):
     """Login as admin and set cookies."""
-    resp = client.post("/auth/login", json={"username": "admin", "password": "adminpass"})
+    resp = client.post(
+        "/auth/login", json={"username": "admin", "password": "adminpass"}
+    )
     for s in resp.headers.getlist("Set-Cookie"):
         try:
             name = s.split("=", 1)[0]
@@ -92,6 +96,7 @@ def login_admin(client):
         except Exception:
             continue
     from src.app.auth import services
+
     uobj = services.find_user_by_username_or_email("admin")
     if uobj:
         tok = services.create_access_token_for_user(uobj)
@@ -108,10 +113,9 @@ class TestInviteFlow:
         login_admin(client)
 
         # Create new user via admin endpoint
-        resp = client.post("/admin/users", json={
-            "username": "newuser",
-            "email": "newuser@example.org"
-        })
+        resp = client.post(
+            "/admin/users", json={"username": "newuser", "email": "newuser@example.org"}
+        )
 
         assert resp.status_code == 201
         assert resp.json.get("inviteSent") is True
@@ -131,7 +135,9 @@ class TestInviteFlow:
             assert user.must_reset_password is True
 
             # Reset token should exist
-            token = session.query(ResetToken).filter(ResetToken.user_id == user_id).first()
+            token = (
+                session.query(ResetToken).filter(ResetToken.user_id == user_id).first()
+            )
             assert token is not None
             assert token.used_at is None  # Not yet used
 
@@ -141,19 +147,16 @@ class TestInviteFlow:
         login_admin(client)
 
         # Create invited user
-        client.post("/admin/users", json={
-            "username": "invited1",
-            "email": "invited1@example.org"
-        })
+        client.post(
+            "/admin/users",
+            json={"username": "invited1", "email": "invited1@example.org"},
+        )
 
         # Logout admin (clear session by calling logout)
         client.get("/auth/logout")
 
         # Try to login as invited user (no password set yet)
-        resp = client.post("/auth/login", json={
-            "username": "invited1",
-            "password": ""
-        })
+        resp = client.post("/auth/login", json={"username": "invited1", "password": ""})
 
         # Should fail
         assert resp.status_code in (400, 401)
@@ -166,20 +169,20 @@ class TestInviteFlow:
         login_admin(client)
 
         # Create invited user
-        create_resp = client.post("/admin/users", json={
-            "username": "invited2",
-            "email": "invited2@example.org"
-        })
+        create_resp = client.post(
+            "/admin/users",
+            json={"username": "invited2", "email": "invited2@example.org"},
+        )
 
         user_id = create_resp.json.get("userId")
 
         # Get the reset token from DB (in real flow this comes via email link)
         with get_session() as session:
-            token_row = session.query(ResetToken).filter(ResetToken.user_id == user_id).first()
+            session.query(ResetToken).filter(ResetToken.user_id == user_id).first()
             # We need the raw token, which isn't stored directly
             # In the real flow, the admin endpoint returns an invite link
             # Let's create a fresh token for testing
-            user = session.query(User).filter(User.id == user_id).first()
+            session.query(User).filter(User.id == user_id).first()
 
         raw_token, _ = services.create_reset_token_for_user(
             services.find_user_by_username_or_email("invited2")
@@ -189,19 +192,18 @@ class TestInviteFlow:
         client.get("/auth/logout")
 
         # Redeem invite by setting password
-        confirm_resp = client.post("/auth/reset-password/confirm", json={
-            "resetToken": raw_token,
-            "newPassword": "MyNewPass123"
-        })
+        confirm_resp = client.post(
+            "/auth/reset-password/confirm",
+            json={"resetToken": raw_token, "newPassword": "MyNewPass123"},
+        )
 
         assert confirm_resp.status_code == 200
         assert confirm_resp.json.get("ok") is True
 
         # Now login with new password
-        login_resp = client.post("/auth/login", json={
-            "username": "invited2",
-            "password": "MyNewPass123"
-        })
+        login_resp = client.post(
+            "/auth/login", json={"username": "invited2", "password": "MyNewPass123"}
+        )
 
         assert login_resp.status_code in (200, 303, 204)
 
@@ -232,10 +234,10 @@ class TestInviteFlow:
         login_admin(client)
 
         # Create invited user
-        client.post("/admin/users", json={
-            "username": "invited3",
-            "email": "invited3@example.org"
-        })
+        client.post(
+            "/admin/users",
+            json={"username": "invited3", "email": "invited3@example.org"},
+        )
 
         # Logout admin (clear session)
         client.get("/auth/logout")
@@ -245,25 +247,25 @@ class TestInviteFlow:
         raw_token, _ = services.create_reset_token_for_user(user)
 
         # First use - should succeed
-        resp1 = client.post("/auth/reset-password/confirm", json={
-            "resetToken": raw_token,
-            "newPassword": "Password1X"
-        })
+        resp1 = client.post(
+            "/auth/reset-password/confirm",
+            json={"resetToken": raw_token, "newPassword": "Password1X"},
+        )
         assert resp1.status_code == 200
 
         # Second use - should fail
-        resp2 = client.post("/auth/reset-password/confirm", json={
-            "resetToken": raw_token,
-            "newPassword": "Password2X"
-        })
+        resp2 = client.post(
+            "/auth/reset-password/confirm",
+            json={"resetToken": raw_token, "newPassword": "Password2X"},
+        )
         assert resp2.status_code == 400
 
     def test_admin_can_reset_existing_user_password(self, client):
         """Admin can trigger password reset for existing user."""
         from src.app.auth import services
 
-        admin = create_admin()
-        
+        create_admin()
+
         # Create a regular user with password
         with get_session() as session:
             target = User(
@@ -291,5 +293,9 @@ class TestInviteFlow:
 
         # Verify a reset token was created for this user
         with get_session() as session:
-            token = session.query(ResetToken).filter(ResetToken.user_id == target_id).first()
+            token = (
+                session.query(ResetToken)
+                .filter(ResetToken.user_id == target_id)
+                .first()
+            )
             assert token is not None

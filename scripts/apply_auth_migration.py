@@ -10,6 +10,7 @@ Usage:
   # Reset and recreate
   python scripts/apply_auth_migration.py --engine postgres --reset
 """
+
 from __future__ import annotations
 
 import os
@@ -52,11 +53,14 @@ def apply_sqlite_migration(db_file: Path, reset: bool = False) -> None:
 def apply_postgres_migration(reset: bool = False) -> None:
     """Apply PostgreSQL migration using AUTH_DATABASE_URL."""
     import sys
-    
+
     try:
         import psycopg
     except ImportError:
-        print("ERROR: psycopg not installed. Run: pip install psycopg[binary]", file=sys.stderr)
+        print(
+            "ERROR: psycopg not installed. Run: pip install psycopg[binary]",
+            file=sys.stderr,
+        )
         sys.exit(1)
 
     if not POSTGRES_SQL_FILE.exists():
@@ -91,7 +95,7 @@ def apply_postgres_migration(reset: bool = False) -> None:
         print("Connecting to PostgreSQL...")
         conn = psycopg.connect(db_url)
         print("Connected successfully.")
-        
+
         with conn.cursor() as cur:
             if reset:
                 # Drop existing tables (in reverse order of dependencies)
@@ -109,19 +113,21 @@ def apply_postgres_migration(reset: bool = False) -> None:
             cur.execute(sql)
             conn.commit()
             print("PostgreSQL auth migration applied successfully.")
-            
+
             # Apply analytics migration (0002)
             if ANALYTICS_SQL_FILE.exists():
                 print("Executing analytics migration SQL...")
                 with open(ANALYTICS_SQL_FILE, "r", encoding="utf-8") as f:
                     analytics_sql = f.read()
-                analytics_sql = analytics_sql.replace("BEGIN;", "").replace("COMMIT;", "")
+                analytics_sql = analytics_sql.replace("BEGIN;", "").replace(
+                    "COMMIT;", ""
+                )
                 cur.execute(analytics_sql)
                 conn.commit()
                 print("PostgreSQL analytics migration applied successfully.")
             else:
                 print(f"Warning: Analytics migration not found: {ANALYTICS_SQL_FILE}")
-            
+
     except psycopg.OperationalError as e:
         print(f"ERROR: Database connection failed: {e}", file=sys.stderr)
         sys.exit(1)
