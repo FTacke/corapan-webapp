@@ -32,8 +32,8 @@
   overflow-y: auto;
   overflow-x: hidden;
   position: relative; /* For proper stacking */
-  /* Einheitliche Elevation für geöffneten Drawer */
-  box-shadow: var(--drawer-elevation-open);
+  /* Einheitliche Elevation für geöffneten Drawer - mit Fallback */
+  box-shadow: var(--drawer-elevation-open, var(--elev-3));
 }
 
 .md3-navigation-drawer__container {
@@ -591,17 +591,26 @@ html:not([data-anim-ready="1"]) .md3-navigation-drawer__chevron {
 
 /* ============================================
    Standard Drawer (Expanded - Desktop ≥840px)
+   ============================================
+   
+   Der Desktop-Drawer hat eine permanente Elevation (Level 1).
+   Schatten ist NACH RECHTS orientiert, sichtbar auf dem Main-Content.
+   Kein border-right mehr nötig - Shadow übernimmt die visuelle Trennung.
+   
+   Voraussetzung: body.app-shell verwendet overflow:clip statt overflow:hidden,
+   damit der Schatten außerhalb der Grid-Zelle sichtbar ist.
    ============================================ */
 
-.md3-navigation-drawer--standard {
+.md3-navigation-drawer.md3-navigation-drawer--standard {
   position: sticky;
   top: 0; /* Sticky kleben bei top:0 */
   align-self: flex-start; /* Prevent stretching in grid */
   height: 100vh; /* Full viewport height */
   max-height: 100vh;
-  border-right: 1px solid var(--md-sys-color-outline-variant);
-  /* Einheitliche Elevation: Level 3 - identisch mit Modal Drawer */
-  box-shadow: var(--drawer-elevation-open, var(--elev-3));
+  /* Desktop Drawer Elevation: Level 1 - nach rechts orientierter Schatten */
+  box-shadow:
+    1px 0 3px rgba(0, 0, 0, 0.08),
+    4px 0 8px rgba(0, 0, 0, 0.06);
   /* WICHTIG: Keine Transitions - Standard Drawer animiert NICHT */
   transition: none !important;
 }

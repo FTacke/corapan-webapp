@@ -614,7 +614,6 @@ function renderCountryPanel(countryCode, isActive) {
                 alt="Estadísticas de ${label}" 
                 class="md3-country-stats-image"
                 loading="lazy"
-                onerror="this.closest('.md3-card').style.display='none'"
               >
             </div>
             <figcaption class="md3-body-medium md3-country-stats-caption">
@@ -625,6 +624,22 @@ function renderCountryPanel(countryCode, isActive) {
       </article>
     </div>
   `;
+}
+
+/**
+ * Initialize error handlers for statistics images
+ * Hides the card if the image fails to load (CSP-compliant alternative to inline onerror)
+ */
+function initStatsImageErrorHandlers() {
+  const statsImages = document.querySelectorAll('.md3-country-stats-image');
+  statsImages.forEach((img) => {
+    img.addEventListener('error', function() {
+      const card = this.closest('.md3-card');
+      if (card) {
+        card.style.display = 'none';
+      }
+    });
+  });
 }
 
 /**
@@ -641,6 +656,9 @@ function renderCountryPanels(countryCodes, activeCode) {
 
   // Re-initialize download menus for dynamically added content
   initDownloadMenus();
+  
+  // Initialize error handlers for statistics images (CSP-compliant)
+  initStatsImageErrorHandlers();
 }
 
 // ==============================================================================

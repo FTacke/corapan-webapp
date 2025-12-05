@@ -1,12 +1,13 @@
 <!-- CQL Guide Modal (MD3 overlay) -->
 <div id="cql-guide-overlay" class="md3-dialog-overlay" aria-hidden="true">
-  <div id="cql-guide-dialog" class="md3-dialog md3-dialog--large md3-dialog--advanced" role="dialog" aria-modal="true" aria-labelledby="cql-guide-title" tabindex="-1">
+  <dialog id="cql-guide-dialog" class="md3-dialog md3-dialog--large md3-dialog--advanced" aria-modal="true" aria-labelledby="cql-guide-title">
     <div class="md3-dialog__container">
-      <div class="md3-dialog__header">
-        <span class="material-symbols-rounded md3-dialog__icon">info</span>
-        <h2 class="md3-dialog__title" id="cql-guide-title">Guía de construcción de consultas CQL mediante un prompt</h2>
-      </div>
-      <div class="md3-dialog__content">
+      <div class="md3-dialog__surface">
+        <div class="md3-dialog__header">
+          <span class="material-symbols-rounded md3-dialog__icon">info</span>
+          <h2 class="md3-dialog__title" id="cql-guide-title">Guía de construcción de consultas CQL mediante un prompt</h2>
+        </div>
+        <div class="md3-dialog__content">
         <p class="md3-body-medium md3-text-variant">
           Sobre la sintaxis de Blacklab-CQL véase <a href="https://inl.github.io/BlackLab/corpus-query-language.html" target="_blank" rel="noopener noreferrer" class="md3-link">aquí</a>.
         </p>
@@ -110,7 +111,7 @@ Ahora convierte la siguiente descripción en una consulta CQL precisa para CORAP
             </pre>
           </div>
         </div>
-      </div>
+      </div><!-- /.md3-dialog__content -->
       <div class="md3-dialog__actions">
         <button type="button" class="md3-button md3-button--text md3-dialog__close" id="cql-guide-close">Cerrar</button>
         <button type="button" class="md3-button md3-button--filled" id="cql-guide-copy">
@@ -118,6 +119,7 @@ Ahora convierte la siguiente descripción en una consulta CQL precisa para CORAP
           Copiar prompt
         </button>
       </div>
-    </div>
-  </div>
+    </div><!-- /.md3-dialog__surface -->
+    </div><!-- /.md3-dialog__container -->
+  </dialog>
 </div>

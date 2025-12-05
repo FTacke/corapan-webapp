@@ -405,6 +405,23 @@ Every page follows this canonical structure:
 </nav>
 ```
 
+#### Desktop Drawer Elevation (≥840px)
+
+The standard/desktop drawer has a permanent right-oriented shadow (Level 1).
+
+**Selector:** `aside#navigation-drawer-standard.md3-navigation-drawer--standard`  
+**CSS Location:** `static/css/md3/components/navigation-drawer.css`
+
+```css
+.md3-navigation-drawer.md3-navigation-drawer--standard {
+  box-shadow:
+    1px 0 3px rgba(0, 0, 0, 0.08),
+    4px 0 8px rgba(0, 0, 0, 0.06);
+}
+```
+
+**Important:** The layout (`layout.css`) uses `overflow: clip` on `body.app-shell` at desktop breakpoints. This allows the shadow to paint outside the drawer's grid cell while still clipping actual content overflow.
+
 ---
 
 ## 5. Motion

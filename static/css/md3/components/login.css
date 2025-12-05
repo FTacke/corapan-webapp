@@ -130,7 +130,7 @@
 .md3-button--contained:hover {
   background: var(--md-sys-color-primary-container); /* Or darken? MD3 uses state layer */
   color: var(--md-sys-color-on-primary-container);
-  box-shadow: var(--md-sys-elevation-1, 0 2px 8px rgba(0,0,0,0.3));
+  box-shadow: var(--elev-1);
 }
 
 .md3-button--contained:active {
@@ -231,7 +231,7 @@
   /* Dialog-like surface: visually distinct from full page cards */
   border-radius: 28px;
   padding: 24px; /* compact and consistent padding inside dialogs/sheets */
-  box-shadow: var(--md-sys-elevation-3, 0 8px 12px rgba(0,0,0,0.2));
+  box-shadow: var(--elev-3);
   z-index: 1001;
   margin: 1rem; /* Add margin to prevent touching edges on small screens */
 }

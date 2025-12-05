@@ -36,7 +36,7 @@ body.app-shell {
     grid-template-columns: 280px 1fr; /* Fixed drawer width */
     /* Desktop: Drawer bleibt fix, Content scrollt */
     height: 100vh;
-    overflow: hidden; /* Body selbst scrollt nicht */
+    overflow: clip; /* Clips content but allows shadows to paint outside */
   }
   
   /* Navigation Drawer: Sticky in Grid */
@@ -46,7 +46,7 @@ body.app-shell {
     height: 100vh;
     max-height: 100vh;
     overflow-y: auto;
-    overflow-x: hidden;
+    overflow-x: clip; /* Clips content overflow, allows shadows */
     align-self: flex-start;
   }
   

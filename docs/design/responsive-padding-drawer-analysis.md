@@ -122,6 +122,23 @@ links:
 
 ---
 
+## Drawer Elevation (Desktop)
+
+**Selector:** `.md3-navigation-drawer.md3-navigation-drawer--standard`  
+**CSS File:** `static/css/md3/components/navigation-drawer.css`
+
+Der Desktop-Drawer hat einen permanenten, nach rechts orientierten Schatten (Level 1):
+
+```css
+box-shadow:
+  1px 0 3px rgba(0, 0, 0, 0.08),
+  4px 0 8px rgba(0, 0, 0, 0.06);
+```
+
+**Layout-Voraussetzung:** `body.app-shell` verwendet `overflow: clip` (nicht `overflow: hidden`), damit der Schatten außerhalb der Drawer-Grid-Zelle sichtbar ist.
+
+---
+
 ## Siehe auch
 
 - [Design System Übersicht](design-system-overview.md) - Container und Layout-Patterns

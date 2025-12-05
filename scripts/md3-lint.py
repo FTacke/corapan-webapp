@@ -193,8 +193,9 @@ def lint_dialog_structure(content: str, rel_path: str) -> List[LintIssue]:
     """Validate MD3 dialog structure."""
     issues = []
     
-    # Find all md3-dialog elements
-    dialog_pattern = re.compile(r'<(?:dialog|div)[^>]*class\s*=\s*"[^"]*\bmd3-dialog\b[^"]*"[^>]*>', re.I)
+    # Find all md3-dialog elements (only exact md3-dialog class, not md3-dialog__* or md3-dialog-*)
+    # Match md3-dialog followed by space, quote, or at end of class list
+    dialog_pattern = re.compile(r'<(?:dialog|div)[^>]*class\s*=\s*"[^"]*\bmd3-dialog(?:\s|"|$)[^"]*"[^>]*>', re.I)
     
     for match in dialog_pattern.finditer(content):
         line = get_line_number(content, match.start())
@@ -207,8 +208,8 @@ def lint_dialog_structure(content: str, rel_path: str) -> List[LintIssue]:
         closing_tag = '</dialog>' if is_dialog_tag else '</div>'
         
         # Find the next closing tag (simplified - may not be perfect for nested divs)
-        # Use a larger search window for complex dialogs with forms
-        search_end = min(start_pos + 5000, len(content))
+        # Use a larger search window for complex dialogs with forms (8000 chars to handle large dialogs)
+        search_end = min(start_pos + 8000, len(content))
         dialog_block = content[start_pos:search_end]
         
         # Try to find the actual closing tag for more accuracy

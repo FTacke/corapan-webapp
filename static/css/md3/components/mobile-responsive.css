@@ -506,8 +506,8 @@ td.wrap-text {
   }
 }
 
-/* Mobile-spezifisch (< 768px) */
-@media (max-width: 768px) {
+/* Mobile-spezifisch (< 840px) */
+@media (max-width: 839px) {
   /* DataTables Wrapper */
   .dataTables_wrapper {
     width: 100% !important;

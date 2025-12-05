@@ -190,14 +190,14 @@
 }
 
 /* Medium/Tablet - Content width adjustments */
-@media (min-width: 600px) and (max-width: 1024px) {
+@media (min-width: 600px) and (max-width: 839px) {
   .md3-hero__title {
     max-width: 90%;
   }
 }
 
 /* Expanded (Desktop) - Wider content */
-@media (min-width: 1025px) {
+@media (min-width: 840px) {
   .md3-hero__container {
     padding-top: var(--space-6); /* Consistent top padding on desktop (24px) */
   }

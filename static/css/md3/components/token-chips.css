@@ -178,7 +178,7 @@
    Responsive Anpassungen
    =========================== */
 
-@media (max-width: 768px) {
+@media (max-width: 839px) {
   .tokid-input-row {
     flex-direction: column;
   }

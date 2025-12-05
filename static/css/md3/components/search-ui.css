@@ -94,7 +94,7 @@
   }
 }
 
-@media (max-width: 768px) {
+@media (max-width: 839px) {
   .md3-filters-grid {
     grid-template-columns: repeat(2, 1fr);
   }
@@ -844,7 +844,7 @@ textarea#cql_query.md3-outlined-textfield__input[readonly] {
    RESPONSIVE ADJUSTMENTS
    ======================================== */
 
-@media (max-width: 768px) {
+@media (max-width: 839px) {
   .md3-search-card__query-row {
     grid-template-columns: 1fr;
   }

@@ -376,7 +376,7 @@
 }
 
 /* Mobile: Admin Toolbar */
-@media (max-width: 768px) {
+@media (max-width: 839px) {
   .md3-toolbar {
     flex-direction: column;
     width: 100%;

@@ -29,7 +29,7 @@
   padding: var(--space-2) 0;
   background: var(--md-sys-color-surface-container);
   border-radius: var(--radius-sm);
-  box-shadow: var(--md-sys-elevation-2);
+  box-shadow: var(--elev-2);
   opacity: 1;
   transform: scaleY(1);
   transform-origin: top left;
@@ -117,7 +117,7 @@
 
 .md3-button--tonal:hover {
   background: var(--md-sys-color-secondary-container);
-  box-shadow: var(--md-sys-elevation-1);
+  box-shadow: var(--elev-1);
 }
 
 .md3-button--tonal:focus-visible {

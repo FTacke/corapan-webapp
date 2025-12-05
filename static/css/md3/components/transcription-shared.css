@@ -404,7 +404,7 @@
    MOBILE RESPONSIVE - Shared
    ============================================ */
 
-@media (max-width: 768px) {
+@media (max-width: 839px) {
   .md3-speaker-turn {
     padding: var(--space-2);
   }
