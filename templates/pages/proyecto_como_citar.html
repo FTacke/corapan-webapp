@@ -15,47 +15,200 @@
 
   <main class="md3-text-page">
     <div class="md3-text-content">
-    <!-- Referencia general del corpus -->
-      <section class="md3-text-section">
-      <h2 class="md3-title-large md3-section-title md3-text-heading">Referencia general del corpus</h2>
+    
+    <!-- 1. Referencia general del corpus -->
+    <section class="md3-text-section">
+      <h2 class="md3-title-large md3-section-title md3-text-heading">1. Referencia general del corpus</h2>
       <div class="md3-text-citation md3-body-medium">
         <p class="md3-body-large">
-          Tacke, F. (2025). <em>CO.RA.PAN — Corpus Radiofónico Panhispánico</em> (versión 1.0) [Corpus]. Philipps-Universität Marburg; Zenodo. 
-          <a href="https://doi.org/10.5281/zenodo.15360942" target="_blank" rel="noopener noreferrer" class="doi-link">
-            <img src="https://img.shields.io/badge/DOI-10.5281%2Fzenodo.15360942-4287f5?style=flat-square&labelColor=f5f5f5" alt="DOI: 10.5281/zenodo.15360942" class="doi-badge">
-          </a>
+          Tacke, F. (2025). <em>CO.RA.PAN — Corpus Radiofónico Panhispánico</em>.<br>
+          Marburg: Philipps-Universität Marburg.<br>
+          Online: <a href="https://corapan.online.uni-marburg.de" target="_blank" rel="noopener noreferrer">https://corapan.online.uni-marburg.de</a><br>
+          DOI: <a href="https://doi.org/10.5281/zenodo.15360942" target="_blank" rel="noopener noreferrer">10.5281/zenodo.15360942</a>
         </p>
-      </div>
-
-      <div class="md3-code-block">
-        <h2 class="md3-title-large md3-section-title md3-text-heading">Citas en bibtex</h2>
-        <pre class="highlight"><code id="bibtex-code" class="language-bibtex">@dataset{CO.RA.PAN,
-  author = {Tacke, Felix},
-  title = {CO.RA.PAN: Corpus Radiofónico Panhispánico},
-  year = {2025},
-  doi = {10.5281/zenodo.15360942},
-  url = {https://doi.org/10.5281/zenodo.15360942},
-}</code></pre>
       </div>
     </section>
 
-    <!-- Acceso a los datos -->
-      <section class="md3-text-section">
-      <h2 class="md3-title-large md3-section-title md3-text-heading">Acceso a los datos</h2>
+    <!-- 2. Formatos de cita -->
+    <section class="md3-text-section">
+      <h2 class="md3-title-large md3-section-title md3-text-heading">2. Formatos de cita</h2>
+      <p class="md3-body-medium">Seleccione el formato de cita y copie el texto generado.</p>
+      
+      <div class="md3-citation-selector">
+        <!-- Format dropdown -->
+        <div class="md3-outlined-textfield md3-outlined-textfield--block">
+          <select id="citation-format" class="md3-outlined-textfield__input md3-outlined-textfield__input--select" aria-label="Formato de cita">
+            <option value="apa" selected>APA</option>
+            <option value="chicago">Chicago</option>
+            <option value="harvard">Harvard</option>
+            <option value="mla">MLA</option>
+            <option value="bibtex">BibTeX</option>
+            <option value="ris">RIS</option>
+          </select>
+          <label class="md3-outlined-textfield__label md3-outlined-textfield__label--select" for="citation-format">Formato</label>
+          <div class="md3-outlined-textfield__outline">
+            <div class="md3-outlined-textfield__outline-start"></div>
+            <div class="md3-outlined-textfield__outline-notch"></div>
+            <div class="md3-outlined-textfield__outline-end"></div>
+          </div>
+        </div>
+
+        <!-- Code snippet with copy button -->
+        <div class="md3-snippet md3-snippet--code" aria-label="Cita formateada">
+          <code id="citation-code" class="md3-snippet__code" aria-live="polite" aria-atomic="true">Tacke, F. (2025). CO.RA.PAN — Corpus Radiofónico Panhispánico.
+Philipps-Universität Marburg, Marburg. https://corapan.online.uni-marburg.de
+DOI: https://doi.org/10.5281/zenodo.15360942</code>
+          <button id="copy-citation" class="md3-button md3-button--icon md3-snippet__copy" title="Copiar" aria-label="Copiar cita al portapapeles">
+            <span class="material-symbols-rounded" aria-hidden="true">content_copy</span>
+          </button>
+        </div>
+        
+        <!-- Live region for copy feedback (screen reader) -->
+        <div id="citation-copy-status"
+             class="sr-only md3-status-live"
+             role="status"
+             aria-live="polite"></div>
+      </div>
+    </section>
+
+    <!-- 3. Citas dentro del texto -->
+    <section class="md3-text-section">
+      <h2 class="md3-title-large md3-section-title md3-text-heading">3. Citas dentro del texto (abreviatura)</h2>
+
       <p class="md3-body-large">
-        El acceso a los datos se organiza en tres niveles:
+        Como es habitual al citar corpus lingüísticos, puede emplearse una abreviatura estandarizada.
+        La forma recomendada es <strong class="md3-smallcaps">CORAPAN</strong> (versalitas cuando sea posible).
       </p>
 
-      <!-- DOI Resources Grid -->
+      <p class="md3-body-large">
+        En las citas dentro del texto se recomienda indicar, entre paréntesis, los metadatos mínimos del ejemplo y la
+        <em>token_id</em>, que permite recuperar exactamente el fragmento en la plataforma.
+        Los formatos sugeridos son:
+      </p>
+
+      <p class="md3-body-medium"><strong>Ejemplo 1 (forma completa):</strong></p>
+      <div class="md3-text-citation md3-body-medium">
+        <p class="md3-body-large">
+          "Los hablantes emplean variantes diferentes según el contexto…"<br>
+          (México, Radio Fórmula, 2024, <strong class="md3-smallcaps">CORAPAN</strong>: MEX376c9141b)
+        </p>
+      </div>
+
+      <p class="md3-body-large">
+        Cuando el lugar, la emisora o el año ya han sido mencionados en el texto y el contexto es claro,
+        basta una forma abreviada:
+      </p>
+
+      <p class="md3-body-medium"><strong>Ejemplo 2 (forma abreviada):</strong></p>
+      <div class="md3-text-citation md3-body-medium">
+        <p class="md3-body-large">
+          "Los hablantes emplean variantes diferentes según el contexto…"<br>
+          (<strong class="md3-smallcaps">CORAPAN</strong>: MEX376c9141b)
+        </p>
+      </div>
+    </section>
+
+
+    <!-- 4. Recomendación de cita -->
+    <section class="md3-text-section">
+      <h2 class="md3-title-large md3-section-title md3-text-heading">4. Recomendación de cita</h2>
+
+      <p class="md3-body-large">
+        Para cualquier uso académico del corpus, cite la referencia bibliográfica general de CO.RA.PAN
+        (incluyendo el DOI y el enlace a la plataforma).
+        Cuando se mencionen resultados de búsquedas o fragmentos concretos, debe añadirse información suficiente
+        para garantizar la reproducibilidad:
+      </p>
+
+      <ul class="md3-text-list md3-body-large">
+        <li>la <strong>fecha de consulta</strong> del corpus, y</li>
+        <li>la <strong>token_id</strong> del fragmento citado, que permite reproducir exactamente el contexto en la webapp.</li>
+      </ul>
+
+      <p class="md3-body-large">
+        Las <em>token_id</em> son identificadores permanentes que garantizan la trazabilidad y reproducibilidad de todos los datos
+        y metadatos asociados (p. ej. <span class="tooltip-token">BOL9dea705cd</span>,
+        <span class="tooltip-token">PERf4e17c9d8</span>,
+        <span class="tooltip-token">ESPa3b55c370</span>,
+        <span class="tooltip-token">MEX376c9141b</span>).
+      </p>
+
+      <h3 class="md3-title-medium md3-subsection-title">Ejemplo de cita detallada de un fragmento</h3>
+      <div class="md3-text-citation md3-body-medium">
+        <p class="md3-body-large">
+          <strong class="md3-smallcaps">CORAPAN</strong>, token <span class="tooltip-token">MEX376c9141b</span> (consulta 26 oct 2025).
+        </p>
+      </div>
+    </section>
+
+    <!-- 5. Reproducibilidad y fecha de consulta -->
+    <section class="md3-text-section">
+      <h2 class="md3-title-large md3-section-title md3-text-heading">5. Reproducibilidad y fecha de consulta</h2>
+      <p class="md3-body-large">
+        El corpus se encuentra en un repositorio <strong>restringido</strong> en Zenodo debido a derechos de autor.
+        El DOI identifica el corpus en su conjunto y permite acceder a todas las versiones archivadas.
+      </p>
+      <p class="md3-body-large">
+        Para asegurar la reproducibilidad en trabajos de investigación se recomienda añadir:
+      </p>
+      <div class="md3-snippet md3-snippet--code">
+        <code class="md3-snippet__code">Consultado: DD.MM.AAAA</code>
+      </div>
+      <p class="md3-body-large">
+        A través de esta fecha puede identificarse la versión exacta del corpus disponible en el momento de la consulta, incluso si posteriormente se han publicado versiones nuevas.
+      </p>
+    </section>
+
+    <!-- 6. Nota sobre el acceso -->
+    <section class="md3-text-section">
+      <h2 class="md3-title-large md3-section-title md3-text-heading">6. Nota sobre el acceso</h2>
+      <p class="md3-body-large">
+        CO.RA.PAN se organiza en varios componentes complementarios que garantizan accesibilidad,
+        transparencia y reproducibilidad conforme a las buenas prácticas de gestión de datos.
+        Cada elemento cumple una función distinta dentro del ecosistema del proyecto.
+      </p>
+      <p class="md3-body-large">
+        El acceso al corpus completo es <strong>restringido</strong> por razones de derechos de autor
+        y su uso está limitado a fines de investigación. La webapp, el corpus de muestra y los
+        metadatos públicos permiten explorar la estructura del corpus y verificar resultados sin
+        acceder al material protegido.
+      </p>
+    </section>
+
+    <!-- 7. Acceso a los datos y recursos -->
+    <section class="md3-text-section">
+      <h2 class="md3-title-large md3-section-title md3-text-heading">7. Acceso a los datos y recursos</h2>
+
+      <p class="md3-body-large">
+        CO.RA.PAN se organiza en varios componentes interrelacionados que garantizan un acceso transparente,
+        una documentación completa y una reproducción verificable de los datos. Cada parte cumple una función
+        distinta dentro del ecosistema del proyecto: la consulta pública, los datos completos, las muestras
+        abiertas y los metadatos estructurados.
+      </p>
+
+      <p class="md3-body-large">
+        El corpus completo es de acceso <strong>restringido</strong> debido a derechos de autor, mientras que la webapp,
+        el corpus de muestra y los metadatos públicos permiten explorar la estructura del corpus y verificar resultados
+        sin exponer material protegido. Esto asegura un equilibrio entre protección legal, transparencia y reproducibilidad.
+      </p>
+
       <div class="doi-resource-grid">
+
         <!-- Webapp -->
         <div class="md3-card md3-card--elevated doi-resource-card">
           <div class="md3-card__content">
-            <h3 class="md3-title-medium md3-subsection-title">Webapp</h3>
-            <p class="md3-body-large">Interfaz de consulta del corpus con búsqueda simple y avanzada, transcripciones anotadas y posibilidad de reproducir audio.</p>
+            <h3 class="md3-title-medium doi-resource-card__title">
+              <span class="material-symbols-rounded" aria-hidden="true">language</span>
+              <span>Webapp</span>
+            </h3>
+            <p class="md3-body-large">
+              Interfaz pública de consulta con búsqueda avanzada, transcripciones anotadas
+              y reproducción de audio.
+            </p>
             <p>
               <a href="https://doi.org/10.5281/zenodo.15359652" target="_blank" rel="noopener noreferrer" class="doi-link">
-                <img src="https://img.shields.io/badge/DOI-10.5281%2Fzenodo.15359652-4287f5?style=flat-square&labelColor=f5f5f5" alt="DOI: 10.5281/zenodo.15359652" class="doi-badge">
+                <img src="https://img.shields.io/badge/DOI-10.5281%2Fzenodo.15359652-4287f5?style=flat-square&labelColor=f5f5f5"
+                    alt="DOI: 10.5281/zenodo.15359652" class="doi-badge">
               </a>
             </p>
           </div>
@@ -64,11 +217,18 @@
         <!-- Full Corpus -->
         <div class="md3-card md3-card--elevated doi-resource-card">
           <div class="md3-card__content">
-            <h3 class="md3-title-medium md3-subsection-title">Full Corpus</h3>
-            <p class="md3-body-large">Corpus completo en acceso restringido, con grabaciones, transcripciones anotadas y metadatos íntegros.</p>
+            <h3 class="md3-title-medium doi-resource-card__title">
+              <span class="material-symbols-rounded" aria-hidden="true">lock</span>
+              <span>Full Corpus</span>
+            </h3>
+            <p class="md3-body-large">
+              Corpus completo con audios, transcripciones anotadas y metadatos íntegros.
+              Acceso restringido para fines de investigación.
+            </p>
             <p>
               <a href="https://doi.org/10.5281/zenodo.15360942" target="_blank" rel="noopener noreferrer" class="doi-link">
-                <img src="https://img.shields.io/badge/DOI-10.5281%2Fzenodo.15360942-4287f5?style=flat-square&labelColor=f5f5f5" alt="DOI: 10.5281/zenodo.15360942" class="doi-badge">
+                <img src="https://img.shields.io/badge/DOI-10.5281%2Fzenodo.15360942-4287f5?style=flat-square&labelColor=f5f5f5"
+                    alt="DOI: 10.5281/zenodo.15360942" class="doi-badge">
               </a>
             </p>
           </div>
@@ -77,58 +237,54 @@
         <!-- Sample Corpus -->
         <div class="md3-card md3-card--elevated doi-resource-card">
           <div class="md3-card__content">
-            <h3 class="md3-title-medium md3-subsection-title">Sample Corpus</h3>
-            <p class="md3-body-large">Muestra pública destinada a ilustrar la estructura de datos del corpus, sin acceso al material restringido.</p>
+            <h3 class="md3-title-medium doi-resource-card__title">
+              <span class="material-symbols-rounded" aria-hidden="true">public</span>
+              <span>Sample Corpus</span>
+            </h3>
+            <p class="md3-body-large">
+              Muestra pública que ilustra la estructura del corpus sin incluir material protegido
+              por derechos de autor.
+            </p>
             <p>
               <a href="https://doi.org/10.5281/zenodo.15378479" target="_blank" rel="noopener noreferrer" class="doi-link">
-                <img src="https://img.shields.io/badge/DOI-10.5281%2Fzenodo.15378479-4287f5?style=flat-square&labelColor=f5f5f5" alt="DOI: 10.5281/zenodo.15378479" class="doi-badge">
+                <img src="https://img.shields.io/badge/DOI-10.5281%2Fzenodo.15378479-4287f5?style=flat-square&labelColor=f5f5f5"
+                    alt="DOI: 10.5281/zenodo.15378479" class="doi-badge">
               </a>
             </p>
           </div>
         </div>
-      </div>
-    </section>
 
-    <!-- Recomendación de cita -->
-      <section class="md3-text-section">
-      <h2 class="md3-title-large md3-section-title md3-text-heading">Recomendación de cita</h2>
-        <p class="md3-body-large">
-          Para cualquier uso académico del corpus, cite la referencia anterior.
-          Cuando se mencionen resultados de búsquedas o ejemplos concretos, indique además:
-        </p>
-        <ul class="md3-text-list md3-body-large">
-          <li>la <strong>versión</strong> del corpus (p. ej. v 1.0)</li>
-          <li>la <strong>fecha de consulta</strong></li>
-          <li>y la <strong>token_id</strong> del fragmento citado, que permite reproducir exactamente el contexto</li>
-        </ul>
-        <p class="md3-body-large">
-        Las <em>token_id</em> son identificadores permanentes que garantizan la trazabilidad y reproducibilidad de todos los datos y metadatos asociados (p. ej. <span class="tooltip-token">COL06f13</span>, <span class="tooltip-token">CHLd7aaa</span>, <span class="tooltip-token">BOL286ef</span>).
-        </p>
-        
-        <h2 class="md3-title-large md3-section-title md3-text-heading">Ejemplo de cita</h2>
-        <div class="md3-text-citation md3-body-medium">
-          <p class="md3-body-large">
-            CO.RA.PAN v 1.0, token <span class="tooltip-token">CHLd7aaa</span> (consulta 26 oct 2025).
-          </p>
+        <!-- Metadatos -->
+        <div class="md3-card md3-card--elevated doi-resource-card">
+          <div class="md3-card__content">
+            <h3 class="md3-title-medium doi-resource-card__title">
+              <span class="material-symbols-rounded" aria-hidden="true">dataset</span>
+              <span>Metadatos</span>
+            </h3>
+            <p class="md3-body-large">
+              Conjunto público de metadatos, descripciones y esquemas que documentan la estructura
+              del corpus y apoyan su reproducibilidad.
+            </p>
+            <p>
+              <a href="https://doi.org/10.5281/zenodo.METADATA_DOI_AQUI" target="_blank" rel="noopener noreferrer" class="doi-link">
+                <img src="https://img.shields.io/badge/DOI-METADATA_DOI_AQUI-4287f5?style=flat-square&labelColor=f5f5f5"
+                    alt="DOI de los metadatos" class="doi-badge">
+              </a>
+            </p>
+          </div>
         </div>
+
+      </div>
+
     </section>
 
-    <!-- Licencia y uso -->
-    <section class="md3-text-section">
-      <h2 class="md3-title-large md3-section-title md3-text-heading">Licencia y uso</h2>
-
-      <p class="md3-body-large">
-        El corpus CO.RA.PAN está disponible bajo licencia <strong>CC BY-NC-SA 4.0</strong> (Creative Commons Atribución-NoComercial-CompartirIgual 4.0 Internacional) con las siguientes restricciones:.
-      </p>
-      <ul class="md3-text-list md3-body-large">
-        <li><strong>Atribución:</strong> Debes citar apropiadamente al creador del corpus y a los hablantes.</li>
-        <li><strong>No comercial:</strong> No puedes utilizar este corpus para fines comerciales.</li>
-        <li><strong>CompartirIgual:</strong> Si transformas o adaptas el corpus, debes compartir tu contribución con la misma licencia.</li>
-      </ul>
-    </section>
-  </div>
+    </div>
   </main>
 </div>
 
 {{ page_navigation(prev_title="Quiénes somos", prev_url=url_for('public.proyecto_quienes_somos'), next_title="Referencias", next_url=url_for('public.proyecto_referencias')) }}
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="{{ url_for('static', filename='js/pages/como-citar.js') }}" defer></script>
 {% endblock %}

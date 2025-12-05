@@ -436,3 +436,77 @@
 .files-table-container.active {
   display: block;
 }
+
+/* ============================================================================
+   Citation Format Selector Component
+   ============================================================================ */
+
+.md3-citation-selector {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  margin-top: var(--space-4);
+}
+
+/* Limit the dropdown width */
+.md3-citation-selector .md3-outlined-textfield {
+  max-width: 240px;
+}
+
+/* Code snippet container for citations (reuse dialog.css snippet styles) */
+.md3-citation-selector .md3-snippet {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border-radius: var(--radius-md);
+  background: var(--md-sys-color-surface-container-high);
+  font-family: var(--md-sys-typescale-body-small-font, ui-monospace, SFMono-Regular, Consolas, monospace);
+  font-size: var(--md-sys-typescale-body-small-size, 12px);
+  line-height: 1.5;
+}
+
+.md3-citation-selector .md3-snippet__code {
+  display: block;
+  white-space: pre-wrap;
+  word-break: break-word;
+  margin: 0;
+  flex: 1 1 auto;
+  color: var(--md-sys-color-on-surface);
+}
+
+.md3-citation-selector .md3-snippet__copy {
+  flex-shrink: 0;
+  align-self: flex-start;
+}
+
+/* Copy button feedback states */
+.md3-button--success .material-symbols-rounded {
+  color: var(--md-sys-color-primary);
+}
+
+.md3-button--error .material-symbols-rounded {
+  color: var(--md-sys-color-error);
+}
+
+/* Blockquote for citations */
+.md3-blockquote {
+  margin: var(--space-4) 0;
+  padding: var(--space-4) var(--space-6);
+  border-left: 4px solid var(--md-sys-color-primary);
+  background: var(--md-sys-color-surface-container-low);
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+}
+
+.md3-blockquote p {
+  margin: 0;
+  font-style: italic;
+  color: var(--md-sys-color-on-surface-variant);
+}
+
+/* Small caps for corpus abbreviation */
+.md3-smallcaps {
+  font-variant: small-caps;
+  letter-spacing: 0.05em;
+}
