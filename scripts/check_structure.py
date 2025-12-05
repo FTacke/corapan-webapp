@@ -24,6 +24,7 @@ ALLOWED_ROOT_FILES = {
     "CHANGELOG.md",
     "startme.md",
     "CONTRIBUTING.md",
+    "CITATION.cff",  # GitHub/Zenodo citation metadata (must be in root)
     # Build/Config
     "pyproject.toml",
     "setup.cfg",
@@ -32,8 +33,8 @@ ALLOWED_ROOT_FILES = {
     "package-lock.json",
     "Makefile",
     "Dockerfile",
-    "docker-compose.yml",
-    "docker-compose.dev-postgres.yml",
+    "docker-compose.yml",  # Main compose file stays in root
+    "docker-compose.dev-postgres.yml",  # PostgreSQL dev variant
     ".dockerignore",
     ".gitignore",
     ".gitattributes",
@@ -69,12 +70,15 @@ ALLOWED_ROOT_DIRS = {
     "tests",
     "config",
     "migrations",
+    "infra",  # DevOps: docker-compose.dev.yml, docker-compose.prod.yml
     # Data directories (gitignored, structure preserved via .gitkeep)
     "data",
     "media",
     "logs",
+    "reports",      # Generated lint reports (gitignored, created by md3-lint.py)
     # Local-only directories (gitignored - for user's local binaries/tools)
     "opt",          # External tools/binaries (e.g., blacklab-server.war)
+    "tools",        # cwRsync and other Windows utilities for rsync-based sync
     "LOKAL",        # Local workflow scripts (separate git repo)
 }
 

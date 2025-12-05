@@ -355,7 +355,7 @@ Alte Docker-Images ohne psycopg2-binary.
 **Lösung:**
 ```bash
 # Image komplett neu bauen
-docker compose -f docker-compose.prod.yml build --no-cache web
+docker compose -f infra/docker-compose.prod.yml build --no-cache web
 ```
 
 **Status:** ✅ Behoben durch Dockerfile-Update

@@ -963,7 +963,7 @@ keine personenbezogenen Daten verarbeitet werden.
 ## **Phase 1: Vorbereitung**
 
 - [ ] **10.1** Backup der Produktions-DB erstellen
-- [ ] **10.2** Lokale Dev-Umgebung mit Docker Postgres starten (`docker compose -f docker-compose.dev.yml up -d db`)
+- [ ] **10.2** Lokale Dev-Umgebung mit Docker Postgres starten (`docker compose -f infra/docker-compose.dev.yml up -d db`)
 
 ## **Phase 2: Datenbank-Migration**
 

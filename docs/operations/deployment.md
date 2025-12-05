@@ -32,7 +32,7 @@ Dieser Guide beschreibt das Deployment der CO.RA.PAN-Webapp.
 export START_ADMIN_PASSWORD=my-secure-password
 
 # 2. Stack starten
-docker compose -f docker-compose.dev.yml up -d
+docker compose -f infra/docker-compose.dev.yml up -d
 
 # 3. App öffnen
 # http://localhost:8000
@@ -50,7 +50,7 @@ export START_ADMIN_PASSWORD=<secure-admin-password>
 
 # 2. Git Pull + Build + Start
 git pull origin main
-docker compose -f docker-compose.prod.yml up -d --build
+docker compose -f infra/docker-compose.prod.yml up -d --build
 
 # 3. Health Check
 curl http://localhost:6000/health
@@ -61,9 +61,9 @@ curl http://localhost:6000/health
 ## 📁 Compose-Dateien
 
 | Datei | Verwendung |
-|-------|------------|
-| `docker-compose.dev.yml` | Lokale Entwicklung mit Hot-Reload |
-| `docker-compose.prod.yml` | Production mit Security-Defaults |
+|-------|-----------|
+| `infra/docker-compose.dev.yml` | Lokale Entwicklung mit Hot-Reload |
+| `infra/docker-compose.prod.yml` | Production mit Security-Defaults |
 | `docker-compose.dev-postgres.yml` | Nur PostgreSQL (Legacy) |
 
 ---

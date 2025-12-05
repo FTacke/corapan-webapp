@@ -29,7 +29,7 @@
 set -e
 
 # Configuration
-COMPOSE_FILE="docker-compose.dev.yml"
+COMPOSE_FILE="infra/docker-compose.dev.yml"
 ADMIN_USER="${START_ADMIN_USERNAME:-admin}"
 ADMIN_PASS="${START_ADMIN_PASSWORD:-admin}"
 WEB_PORT="${WEB_PORT:-8000}"
@@ -264,7 +264,7 @@ echo "  - Health endpoint working (auth_db connected)"
 echo "  - Login flow working with admin credentials"
 echo ""
 echo "Ready for deployment:"
-echo "  Production: docker compose -f docker-compose.prod.yml up -d --build"
+echo "  Production: docker compose -f infra/docker-compose.prod.yml up -d --build"
 echo ""
 
 exit 0

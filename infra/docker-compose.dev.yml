@@ -1,10 +1,10 @@
 # CO.RA.PAN Development Stack: App + PostgreSQL Auth DB + BlackLab
 # 
 # Usage:
-#   docker compose -f docker-compose.dev.yml up -d          # Start all services
-#   docker compose -f docker-compose.dev.yml up -d db       # Start only DB
-#   docker compose -f docker-compose.dev.yml down           # Stop all
-#   docker compose -f docker-compose.dev.yml logs -f web    # Follow app logs
+#   docker compose -f infra/docker-compose.dev.yml up -d          # Start all services
+#   docker compose -f infra/docker-compose.dev.yml up -d db       # Start only DB
+#   docker compose -f infra/docker-compose.dev.yml down           # Stop all
+#   docker compose -f infra/docker-compose.dev.yml logs -f web    # Follow app logs
 #
 # Environment variables can be set in .env file or shell
 # Default admin: admin / admin (set START_ADMIN_PASSWORD env to override)

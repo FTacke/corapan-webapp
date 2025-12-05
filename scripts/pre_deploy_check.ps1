@@ -27,7 +27,7 @@
 
 param(
     [switch]$Quick,
-    [string]$ComposeFile = "docker-compose.dev.yml",
+    [string]$ComposeFile = "infra/docker-compose.dev.yml",
     [string]$AdminUser = "admin",
     [string]$AdminPassword = "admin",
     [int]$WebPort = 8000,
@@ -235,7 +235,7 @@ try {
     Write-Host "  - Login flow working with admin credentials"
     Write-Host ""
     Write-Host "Ready for deployment:"
-    Write-Host "  Production: docker compose -f docker-compose.prod.yml up -d --build"
+    Write-Host "  Production: docker compose -f infra/docker-compose.prod.yml up -d --build"
     Write-Host ""
 
     exit 0
