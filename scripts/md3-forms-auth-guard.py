@@ -23,14 +23,17 @@ IGNORED_DIRS = {'.venv', 'node_modules', '.git', 'build', '__pycache__'}
 
 INLINE_STYLE_RE = re.compile(r'style\s*=\s*("[^"]*"|\'[^\']*\')', re.I)
 CHECKBOX_RE = re.compile(r'<input[^>]+type\s*=\s*"checkbox"', re.I)
-MD3_CHECKBOX_PRESENT_RE = re.compile(r'md3-checkbox')
+# Accept both md3-checkbox and md3-switch as valid MD3 patterns
+MD3_CHECKBOX_PRESENT_RE = re.compile(r'md3-checkbox|md3-switch')
 OUTLINED_FIELD_RE = re.compile(r'<(?P<tag>\w+)[^>]*class\s*=\s*"[^"]*md3-outlined-textfield[^"]*"[^>]*>(?P<body>.*?)</(?P=tag)>', re.I | re.S)
 OUTLINED_INPUT_RE = re.compile(r'md3-outlined-textfield__input')
 OUTLINED_LABEL_RE = re.compile(r'md3-outlined-textfield__label')
 OUTLINED_OUTLINE_RE = re.compile(r'md3-outlined-textfield__outline')
 DIALOG_RE = re.compile(r'class\s*=\s*"[^"]*md3-dialog[^"]*"', re.I)
 DIALOG_SURFACE_RE = re.compile(r'md3-dialog__surface|md3-dialog__title', re.I)
-LEGACY_BUTTON_RE = re.compile(r'\b(btn-|legacy-button|btn_|btn\.)', re.I)
+# Only match legacy button CSS classes in class attributes, not JS variable names
+# Match patterns like class="btn-primary" or class="btn_submit" but NOT JS vars like 'btn'
+LEGACY_BUTTON_RE = re.compile(r'class\s*=\s*["\'][^"\']*\b(btn-|legacy-button|btn_)[^"\']*["\']', re.I)
 
 
 def find_files():
