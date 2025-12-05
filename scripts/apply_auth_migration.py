@@ -20,6 +20,7 @@ import argparse
 ROOT = Path(__file__).resolve().parents[1]
 SQLITE_SQL_FILE = ROOT / "migrations" / "0001_create_auth_schema_sqlite.sql"
 POSTGRES_SQL_FILE = ROOT / "migrations" / "0001_create_auth_schema_postgres.sql"
+ANALYTICS_SQL_FILE = ROOT / "migrations" / "0002_create_analytics_tables.sql"
 DEFAULT_DB = ROOT / "data" / "db" / "auth.db"
 
 
@@ -95,6 +96,7 @@ def apply_postgres_migration(reset: bool = False) -> None:
             if reset:
                 # Drop existing tables (in reverse order of dependencies)
                 print("Dropping existing auth tables...")
+                cur.execute("DROP TABLE IF EXISTS analytics_daily CASCADE")
                 cur.execute("DROP TABLE IF EXISTS reset_tokens CASCADE")
                 cur.execute("DROP TABLE IF EXISTS refresh_tokens CASCADE")
                 cur.execute("DROP TABLE IF EXISTS users CASCADE")
@@ -103,10 +105,22 @@ def apply_postgres_migration(reset: bool = False) -> None:
                 print("Existing tables dropped.")
 
             # Apply migration
-            print("Executing migration SQL...")
+            print("Executing auth migration SQL...")
             cur.execute(sql)
             conn.commit()
-            print("PostgreSQL migration applied successfully.")
+            print("PostgreSQL auth migration applied successfully.")
+            
+            # Apply analytics migration (0002)
+            if ANALYTICS_SQL_FILE.exists():
+                print("Executing analytics migration SQL...")
+                with open(ANALYTICS_SQL_FILE, "r", encoding="utf-8") as f:
+                    analytics_sql = f.read()
+                analytics_sql = analytics_sql.replace("BEGIN;", "").replace("COMMIT;", "")
+                cur.execute(analytics_sql)
+                conn.commit()
+                print("PostgreSQL analytics migration applied successfully.")
+            else:
+                print(f"Warning: Analytics migration not found: {ANALYTICS_SQL_FILE}")
             
     except psycopg.OperationalError as e:
         print(f"ERROR: Database connection failed: {e}", file=sys.stderr)
