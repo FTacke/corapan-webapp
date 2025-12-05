@@ -1,14 +1,47 @@
 ﻿/**
  * Admin Dashboard Module
- * Fetches data from new /api/analytics/stats endpoint
+ * Fetches data from /api/analytics/stats endpoint
  * 
  * VARIANTE 3a: Keine Top-Queries Anzeige (keine Suchinhalte gespeichert)
+ * 
+ * Zeigt:
+ * - 30-Tage Metriken (totals_window)
+ * - Gesamt seit Projektstart (totals_overall)
+ * - Letzte 7 Tage Tabelle (daily)
  */
 
+// DOM Element References
+const elements = {
+  metricsGrid: null,
+  totalsOverallGrid: null,
+  tableSkeleton: null,
+  tableContainer: null,
+  tableBody: null,
+  errorBanner: null,
+  retryButton: null,
+};
+
 export function initAdminDashboard() {
-  // Check if we are on the dashboard page by looking for the metrics grid
-  const metricsGrid = document.querySelector('[data-element="metrics-grid"]');
-  if (!metricsGrid) return;
+  // Check if we are on the dashboard page
+  elements.metricsGrid = document.querySelector('[data-element="metrics-grid"]');
+  if (!elements.metricsGrid) return;
+
+  // Cache DOM references
+  elements.totalsOverallGrid = document.querySelector('[data-element="totals-overall-grid"]');
+  elements.tableSkeleton = document.getElementById('table-skeleton');
+  elements.tableContainer = document.getElementById('table-container');
+  elements.tableBody = document.getElementById('analytics-last-7-days');
+  elements.errorBanner = document.getElementById('error-banner');
+  elements.retryButton = document.getElementById('retry-button');
+
+  // Setup retry button
+  if (elements.retryButton) {
+    elements.retryButton.addEventListener('click', () => {
+      hideError();
+      showSkeletons();
+      fetchAnalytics();
+    });
+  }
 
   fetchAnalytics();
 }
@@ -16,7 +49,7 @@ export function initAdminDashboard() {
 async function fetchAnalytics() {
   try {
     const response = await fetch('/api/analytics/stats?days=30');
-    if (!response.ok) throw new Error('Failed to fetch analytics');
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
     const data = await response.json();
     renderDashboard(data);
   } catch (error) {
@@ -26,94 +59,189 @@ async function fetchAnalytics() {
 }
 
 function renderDashboard(data) {
-  // Render totals (use totals_window for period)
-  renderTotal('visitors-total', data.totals_window.visitors);
-  renderTotal('searches-total', data.totals_window.searches);
-  renderTotal('audio-total', data.totals_window.audio_plays);
-  renderTotal('errors-total', data.totals_window.errors);
+  // 1. Render 30-Tage Metriken (totals_window)
+  renderWindowTotals(data.totals_window);
   
-  // Render device breakdown
-  const mobilePercent = data.totals_window.visitors > 0 
-    ? Math.round((data.totals_window.mobile / data.totals_window.visitors) * 100) 
-    : 0;
-  const desktopPercent = 100 - mobilePercent;
-  renderDeviceBreakdown(mobilePercent, desktopPercent);
+  // 2. Render Gesamt seit Projektstart (totals_overall)
+  renderOverallTotals(data.totals_overall);
   
-  // Render daily chart
-  renderDailyChart(data.daily);
+  // 3. Render Tabelle mit letzten 7 Tagen
+  renderDailyTable(data.daily);
   
-  // VARIANTE 3a: Keine renderTopQueries() - keine Suchinhalte!
+  // Hide error banner if visible
+  hideError();
 }
 
-function renderTotal(elementId, value) {
+/**
+ * Render 30-Tage Totals in den Metric Cards
+ */
+function renderWindowTotals(totals) {
+  // Visitors + Device Breakdown
+  setMetricValue('visitors-total', totals.visitors);
+  const mobilePercent = totals.visitors > 0 
+    ? Math.round((totals.mobile / totals.visitors) * 100) 
+    : 0;
+  const desktopPercent = 100 - mobilePercent;
+  const deviceEl = document.getElementById('device-breakdown');
+  if (deviceEl) {
+    deviceEl.textContent = `Mobile ${mobilePercent}% · Desktop ${desktopPercent}%`;
+  }
+  
+  // Other metrics
+  setMetricValue('searches-total', totals.searches);
+  setMetricValue('audio-total', totals.audio_plays);
+  setMetricValue('errors-total', totals.errors);
+  
+  // Show data, hide skeletons for all metric cards
+  showMetricData(elements.metricsGrid);
+}
+
+/**
+ * Render Gesamt-Totals (seit Projektstart)
+ */
+function renderOverallTotals(totals) {
+  setMetricValue('visitors-overall', totals.visitors);
+  setMetricValue('searches-overall', totals.searches);
+  setMetricValue('audio-overall', totals.audio_plays);
+  
+  // Show data, hide skeletons
+  showMetricData(elements.totalsOverallGrid);
+}
+
+/**
+ * Set a metric value by element ID
+ */
+function setMetricValue(elementId, value) {
   const el = document.getElementById(elementId);
   if (el) {
     el.textContent = (value || 0).toLocaleString('de-DE');
   }
 }
 
-function renderDeviceBreakdown(mobile, desktop) {
-  const el = document.getElementById('device-breakdown');
-  if (el) {
-    el.textContent = `Mobile ${mobile}% · Desktop ${desktop}%`;
-  }
-}
-
-function renderDailyChart(dailyData) {
-  // dailyData is array of { date, visitors, searches, audio_plays, errors, ... }
-  // API returns DESC order, we need chronological (ASC) for display
-  const container = document.getElementById('daily-chart');
+/**
+ * Show data and hide skeletons within a container
+ */
+function showMetricData(container) {
   if (!container) return;
   
+  container.querySelectorAll('.md3-metric-card__skeleton').forEach(skeleton => {
+    skeleton.hidden = true;
+    skeleton.setAttribute('aria-hidden', 'true');
+  });
+  
+  container.querySelectorAll('.md3-metric-card__data').forEach(data => {
+    data.hidden = false;
+  });
+}
+
+/**
+ * Render die Tabelle "Letzte 7 Tage"
+ * dailyData kommt DESC sortiert vom Server, wir zeigen chronologisch (ältester Tag oben)
+ */
+function renderDailyTable(dailyData) {
+  if (!elements.tableBody) return;
+  
+  // Hide skeleton, show table
+  if (elements.tableSkeleton) {
+    elements.tableSkeleton.hidden = true;
+  }
+  if (elements.tableContainer) {
+    elements.tableContainer.hidden = false;
+  }
+  
   if (!dailyData || !dailyData.length) {
-    container.innerHTML = `
-      <div class="md3-no-data-card">
-        <span class="material-symbols-rounded md3-no-data-card__icon">analytics</span>
-        <p class="md3-body-medium md3-no-data-card__message">Noch keine Daten vorhanden.</p>
-        <p class="md3-body-small md3-no-data-card__hint">Statistiken werden nach dem ersten Besuch angezeigt.</p>
-      </div>
+    elements.tableBody.innerHTML = `
+      <tr>
+        <td colspan="3" class="md3-admin-table__empty md3-body-medium">
+          Noch keine Daten verfügbar.
+        </td>
+      </tr>
     `;
     return;
   }
   
-  // Reverse to get chronological order (oldest first, newest last)
-  // Then take last 7 days
-  const ordered = dailyData.slice().reverse();
-  const last7Days = ordered.slice(-7);
+  // dailyData ist DESC (neuester zuerst), nehme die ersten 7 und kehre um
+  const last7 = dailyData.slice(0, 7).reverse();
   
-  const html = last7Days.map(day => `
-    <div class="md3-chart-row">
-      <span class="md3-chart-label">${formatDate(day.date)}</span>
-      <span class="md3-chart-value">${day.visitors} Besuche · ${day.searches} Suchen</span>
-    </div>
+  const rows = last7.map(day => `
+    <tr>
+      <td>${formatDateLabel(day.date)}</td>
+      <td>${(day.visitors || 0).toLocaleString('de-DE')}</td>
+      <td>${(day.searches || 0).toLocaleString('de-DE')}</td>
+    </tr>
   `).join('');
   
-  container.innerHTML = html;
+  elements.tableBody.innerHTML = rows;
 }
 
 /**
- * Format ISO date string to German locale
+ * Format ISO date to German locale (z.B. "Fr., 29. Nov.")
  */
-function formatDate(isoDate) {
+function formatDateLabel(isoDate) {
   try {
     const date = new Date(isoDate);
-    return date.toLocaleDateString('de-DE', { weekday: 'short', day: 'numeric', month: 'short' });
+    return date.toLocaleDateString('de-DE', { 
+      weekday: 'short', 
+      day: 'numeric', 
+      month: 'short' 
+    });
   } catch {
     return isoDate;
   }
 }
 
-// VARIANTE 3a: renderTopQueries() Funktion ENTFERNT - keine Suchinhalte!
+/**
+ * Show all skeletons (for retry)
+ */
+function showSkeletons() {
+  // Metric cards
+  [elements.metricsGrid, elements.totalsOverallGrid].forEach(container => {
+    if (!container) return;
+    container.querySelectorAll('.md3-metric-card__skeleton').forEach(skeleton => {
+      skeleton.hidden = false;
+    });
+    container.querySelectorAll('.md3-metric-card__data').forEach(data => {
+      data.hidden = true;
+    });
+  });
+  
+  // Table
+  if (elements.tableSkeleton) {
+    elements.tableSkeleton.hidden = false;
+  }
+  if (elements.tableContainer) {
+    elements.tableContainer.hidden = true;
+  }
+}
 
+/**
+ * Show error state
+ */
 function showErrorState() {
-  const container = document.querySelector('[data-element="metrics-grid"]');
-  if (container) {
-    container.innerHTML = `
-      <div class="md3-error-card md3-card md3-card--outlined">
-        <span class="material-symbols-rounded md3-error-card__icon">error</span>
-        <p class="md3-body-large md3-error-card__message">Analytics konnten nicht geladen werden.</p>
-      </div>
-    `;
+  // Hide all skeletons
+  [elements.metricsGrid, elements.totalsOverallGrid].forEach(container => {
+    if (!container) return;
+    container.querySelectorAll('.md3-metric-card__skeleton').forEach(skeleton => {
+      skeleton.hidden = true;
+    });
+  });
+  
+  if (elements.tableSkeleton) {
+    elements.tableSkeleton.hidden = true;
+  }
+  
+  // Show error banner
+  if (elements.errorBanner) {
+    elements.errorBanner.hidden = false;
+  }
+}
+
+/**
+ * Hide error banner
+ */
+function hideError() {
+  if (elements.errorBanner) {
+    elements.errorBanner.hidden = true;
   }
 }
 

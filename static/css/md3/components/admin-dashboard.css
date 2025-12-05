@@ -1,46 +1,90 @@
 /* ============================================
    MD3 ADMIN DASHBOARD LAYOUT
+   ============================================
+   
+   Styles für das Admin-Analytics-Dashboard.
+   Verwendet ausschließlich MD3-Tokens:
+   - Spacing: --space-{1-12}
+   - Farben: --md-sys-color-*
+   - Radien: --radius-*
+   - Typographie: .md3-* Klassen
+   
+   Erweitert bestehende MD3-Komponenten:
+   - .md3-card (cards.css)
+   - .md3-table (auth.css)
+   - .md3-skeleton (progress.css)
    ============================================ */
 
-.md3-admin-page {
-  /* Inherits main container styles */
-}
-
-.md3-admin-content {
-  max-width: 1200px; /* Wider for 3 columns */
-  margin: 0 auto;
-  padding: var(--space-6);
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-8);
+/* ============================================
+   Section Titles
+   ============================================ */
+.md3-section-title {
+  margin-bottom: var(--space-4);
+  color: var(--md-sys-color-on-surface);
 }
 
 /* ============================================
-   Dashboard Grid
+   Responsive Metric Grid
+   - 1 Spalte: < 600px
+   - 2 Spalten: 600-899px  
+   - 4 Spalten: ≥ 900px (für 30-Tage Cards)
+   - 3 Spalten: ≥ 900px (für Gesamt-Cards mit --compact)
    ============================================ */
 .md3-admin-metrics {
   display: grid;
   grid-template-columns: 1fr;
   gap: var(--space-4);
+  margin-bottom: var(--space-8);
+}
+
+@media (min-width: 600px) {
+  .md3-admin-metrics {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }
 
 @media (min-width: 900px) {
   .md3-admin-metrics {
+    grid-template-columns: repeat(4, 1fr);
+    gap: var(--space-6);
+  }
+  
+  /* Compact variant für 3-spaltige Gesamt-Sektion */
+  .md3-admin-metrics--compact {
     grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (min-width: 1200px) {
+  .md3-admin-metrics {
     gap: var(--space-6);
   }
 }
 
 /* ============================================
    Metric Cards
+   Flavor-Erweiterung von .md3-card
    ============================================ */
 .md3-metric-card {
   display: flex;
   flex-direction: column;
-  padding: var(--space-6);
-  gap: var(--space-4);
-  /* card-filled styles are applied via class */
+  padding: var(--space-4);
+  gap: var(--space-3);
   height: 100%;
+  /* min-height: ca. 9rem, nutzt keine direkten Tokens */
+  min-height: 8.75rem;
+}
+
+@media (min-width: 600px) {
+  .md3-metric-card {
+    padding: var(--space-5);
+  }
+}
+
+/* Compact Variante für Gesamt-Cards */
+.md3-metric-card--compact {
+  min-height: 6.25rem;
+  padding: var(--space-4);
 }
 
 .md3-metric-card__header {
@@ -50,171 +94,218 @@
   color: var(--md-sys-color-on-surface-variant);
 }
 
+/* Icon Container mit Hintergrund */
+.md3-metric-card__icon-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--space-10);
+  height: var(--space-10);
+  border-radius: var(--radius-sm);
+  background-color: var(--md-sys-color-primary-container);
+  color: var(--md-sys-color-on-primary-container);
+  flex-shrink: 0;
+}
+
+.md3-metric-card__icon-wrapper--error {
+  background-color: color-mix(in srgb, var(--md-sys-color-error) 15%, transparent);
+  color: var(--md-sys-color-error);
+}
+
+/* Einzelnes Icon ohne Container (für compact) */
 .md3-metric-card__icon {
   font-size: 24px;
-}
-
-.md3-metric-card__title {
-  font-family: var(--font-brand);
-  font-size: var(--text-lg);
-  font-weight: 500;
-}
-
-.md3-metric-card__value {
-  font-family: var(--font-brand);
-  font-size: var(--display-sm);
-  font-weight: 700;
   color: var(--md-sys-color-primary);
-  line-height: 1.2;
-}
-
-.md3-metric-card__delta {
-  font-size: var(--text-sm);
-  color: var(--md-sys-color-on-surface-variant);
 }
 
 .md3-metric-card__content {
   display: flex;
   flex-direction: column;
-  gap: var(--space-4);
+  gap: var(--space-2);
   flex: 1;
 }
 
-/* ============================================
-   History Lists (Details)
-   ============================================ */
-.md3-metric-card__history {
-  margin-top: auto;
-  border-top: 1px solid var(--md-sys-color-outline-variant);
-  padding-top: var(--space-4);
+.md3-metric-card__sub {
+  color: var(--md-sys-color-on-surface-variant);
 }
 
-.md3-metric-card__history summary {
-  cursor: pointer;
-  font-size: var(--text-sm);
-  color: var(--md-sys-color-primary);
-  font-weight: 500;
-  user-select: none;
-  list-style: none; /* Hide default marker */
+/* Skeleton innerhalb der Metric Card */
+.md3-metric-card__skeleton {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
+  flex-direction: column;
   gap: var(--space-2);
-  padding: var(--space-2) 0;
 }
 
-.md3-metric-card__history summary:hover {
-  background-color: var(--md-sys-color-surface-variant);
-  border-radius: var(--shape-xs);
-}
-
-.md3-metric-card__history summary::-webkit-details-marker {
+.md3-metric-card__skeleton[hidden] {
   display: none;
 }
 
-.md3-metric-card__history summary::after {
-  content: 'expand_more';
-  font-family: 'Material Symbols Rounded';
-  font-size: 18px;
-  transition: transform 0.2s;
-}
-
-.md3-metric-card__history[open] summary::after {
-  transform: rotate(180deg);
+.md3-metric-card__data[hidden] {
+  display: none;
 }
 
 /* ============================================
-   Admin Info Card
+   Dashboard-spezifische Skeleton Varianten
    ============================================ */
-.md3-admin-card {
-  background-color: var(--md-sys-color-surface);
-  border-radius: var(--shape-m);
-  padding: var(--space-6);
-  border: 1px solid var(--md-sys-color-outline-variant);
+.md3-skeleton--metric-value {
+  height: 2.25rem;
+  width: 5rem;
+  border-radius: var(--radius-sm);
 }
 
-.md3-admin-card--info {
-  background-color: var(--md-sys-color-surface-container-low);
-  border: none;
+.md3-skeleton--metric-sub {
+  height: 1rem;
+  width: 8.75rem;
+  border-radius: var(--radius-sm);
 }
 
-.md3-admin-card__header {
+/* Tabellen-Skeleton */
+.md3-table-skeleton {
   display: flex;
-  align-items: center;
+  flex-direction: column;
   gap: var(--space-3);
-  margin-bottom: var(--space-4);
+  padding: var(--space-2) 0;
+}
+
+.md3-table-skeleton[hidden] {
+  display: none;
+}
+
+.md3-skeleton--table-row {
+  height: 2.75rem;
+  width: 100%;
+  border-radius: var(--radius-sm);
+}
+
+/* ============================================
+   Admin Table (erweitert .md3-table aus auth.css)
+   ============================================ */
+.md3-admin-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.md3-admin-table th,
+.md3-admin-table td {
+  padding-block: var(--space-3);
+  padding-inline: var(--space-4);
+  text-align: left;
+}
+
+@media (min-width: 600px) {
+  .md3-admin-table th,
+  .md3-admin-table td {
+    padding-inline: var(--space-6);
+  }
+}
+
+.md3-admin-table thead th {
+  font-weight: 600;
+  color: var(--md-sys-color-on-surface);
+  border-bottom: 2px solid var(--md-sys-color-outline-variant);
+  white-space: nowrap;
+}
+
+.md3-admin-table tbody td {
+  border-bottom: 1px solid var(--md-sys-color-outline-variant);
   color: var(--md-sys-color-on-surface);
 }
 
-.md3-admin-card__icon {
-  color: var(--md-sys-color-primary);
+.md3-admin-table tbody tr:last-child td {
+  border-bottom: none;
 }
 
-.md3-admin-list {
+.md3-admin-table tbody tr:nth-child(even) {
+  background-color: var(--md-sys-color-surface-container-lowest);
+}
+
+/* Numeric columns right-aligned */
+.md3-admin-table td:nth-child(2),
+.md3-admin-table td:nth-child(3),
+.md3-admin-table th:nth-child(2),
+.md3-admin-table th:nth-child(3) {
+  text-align: right;
+}
+
+/* No data row */
+.md3-admin-table__empty {
+  text-align: center;
+  color: var(--md-sys-color-on-surface-variant);
+  padding: var(--space-8) var(--space-4);
+}
+
+/* ============================================
+   Info Card (Datenschutz-Hinweis)
+   ============================================ */
+.md3-info-card {
+  background-color: var(--md-sys-color-surface-container-low);
+}
+
+.md3-info-card .md3-card__header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding-bottom: var(--space-3);
+}
+
+.md3-info-card__icon {
+  color: var(--md-sys-color-primary);
+  font-size: 24px;
+}
+
+.md3-info-list {
   list-style: disc;
   padding-left: var(--space-6);
   margin: 0;
   color: var(--md-sys-color-on-surface-variant);
 }
 
-.md3-admin-list li + li {
+.md3-info-list li + li {
   margin-top: var(--space-2);
 }
 
-/* Daily Chart Card */
-.md3-chart-card {
-  padding: var(--space-6);
-  margin-bottom: var(--space-6);
+/* ============================================
+   Error State
+   ============================================ */
+.md3-error-banner {
+  margin-top: var(--space-6);
 }
 
-.md3-chart-card__title {
-  padding-bottom: var(--space-4);
+.md3-error-banner[hidden] {
+  display: none;
 }
 
-.md3-chart-container {
-  padding: var(--space-4) 0;
-}
-
-/* Chart Rows */
-.md3-chart-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: var(--space-3) 0;
-  border-bottom: 1px solid var(--md-sys-color-outline-variant);
-}
-
-.md3-chart-row:last-child {
-  border-bottom: none;
-}
-
-.md3-chart-label {
-  font: var(--md-sys-typescale-label-large-font);
-  color: var(--md-sys-color-on-surface);
-}
-
-.md3-chart-value {
-  font: var(--md-sys-typescale-body-medium-font);
-  color: var(--md-sys-color-on-surface-variant);
-}
-
-/* Error State */
 .md3-error-card {
-  grid-column: 1 / -1;
-  padding: var(--space-8);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   text-align: center;
+  padding: var(--space-8);
+  gap: var(--space-4);
 }
 
 .md3-error-card__icon {
-  font-size: 3rem;
+  font-size: 48px;
   color: var(--md-sys-color-error);
 }
 
-.md3-error-card__message {
-  margin-top: var(--space-4);
+.md3-error-card__content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
 }
 
-/* No Data State */
+.md3-error-card__content p {
+  margin: 0;
+}
+
+.md3-error-card__content .md3-body-medium {
+  color: var(--md-sys-color-on-surface-variant);
+}
+
+/* ============================================
+   No Data State
+   ============================================ */
 .md3-no-data-card {
   display: flex;
   flex-direction: column;
@@ -226,7 +317,7 @@
 }
 
 .md3-no-data-card__icon {
-  font-size: 3rem;
+  font-size: 48px;
   color: var(--md-sys-color-outline);
   margin-bottom: var(--space-4);
 }

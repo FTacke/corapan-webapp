@@ -58,7 +58,8 @@ if ($UseSQLite) {
     Write-Host "Database mode: SQLite (fallback)" -ForegroundColor Yellow
 } else {
     $dbMode = "postgres"
-    $env:AUTH_DATABASE_URL = "postgresql+psycopg://corapan_auth:corapan_auth@localhost:54320/corapan_auth"
+    # Use 127.0.0.1 instead of localhost to avoid DNS resolution issues with psycopg3 on Windows
+    $env:AUTH_DATABASE_URL = "postgresql+psycopg://corapan_auth:corapan_auth@127.0.0.1:54320/corapan_auth"
     Write-Host "Database mode: PostgreSQL (recommended)" -ForegroundColor Green
 }
 
@@ -292,7 +293,13 @@ if (-not $SkipDevServer) {
     Write-Host "  Open http://localhost:8000 in your browser" -ForegroundColor Cyan
     Write-Host "  Login: admin / $StartAdminPassword`n" -ForegroundColor Cyan
 
-    python -m src.app.main
+    # Use venv Python (should be set up by this point)
+    $venvPython = Join-Path $repoRoot ".venv\Scripts\python.exe"
+    if (Test-Path $venvPython) {
+        & $venvPython -m src.app.main
+    } else {
+        python -m src.app.main
+    }
 } else {
     Write-Host "`n[5/5] Skipping dev server (-SkipDevServer)" -ForegroundColor Gray
 }

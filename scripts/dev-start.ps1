@@ -42,7 +42,8 @@ if ($UseSQLite) {
     Write-Host "Database mode: SQLite" -ForegroundColor Yellow
 } else {
     $dbMode = "postgres"
-    $env:AUTH_DATABASE_URL = "postgresql+psycopg://corapan_auth:corapan_auth@localhost:54320/corapan_auth"
+    # Use 127.0.0.1 instead of localhost to avoid DNS resolution issues with psycopg3 on Windows
+    $env:AUTH_DATABASE_URL = "postgresql+psycopg://corapan_auth:corapan_auth@127.0.0.1:54320/corapan_auth"
     Write-Host "Database mode: PostgreSQL" -ForegroundColor Green
 }
 
@@ -96,4 +97,11 @@ if ($dockerAvailable) {
 
 # Run the dev server
 Write-Host "`nStarting Flask dev server at http://localhost:8000" -ForegroundColor Cyan
-python -m src.app.main
+
+# Use venv Python if available, otherwise fall back to system Python
+$venvPython = Join-Path $repoRoot ".venv\Scripts\python.exe"
+if (Test-Path $venvPython) {
+    & $venvPython -m src.app.main
+} else {
+    python -m src.app.main
+}

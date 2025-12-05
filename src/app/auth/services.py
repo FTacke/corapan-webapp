@@ -17,6 +17,7 @@ from flask_jwt_extended import create_access_token
 from passlib.hash import argon2, bcrypt
 import bcrypt as _bcrypt_module  # fallback direct bcrypt usage when passlib backend behaves oddly
 from sqlalchemy import select
+from werkzeug.security import check_password_hash  # supports scrypt, pbkdf2_sha256, etc.
 
 from ..extensions.sqlalchemy_ext import get_session
 from .models import User, RefreshToken, ResetToken
@@ -63,37 +64,44 @@ def hash_password(plain: str) -> str:
 def verify_password(plain: str, hashed: str) -> bool:
     """Verify a password against a stored hash.
 
+    Supports multiple hash formats:
+    - Werkzeug (scrypt, pbkdf2_sha256) - used by generate_password_hash()
+    - argon2 - modern algorithm
+    - bcrypt - legacy but still common
+
     For development environments the runtime hashing backend may differ from
     whatever was available when a password hash was created (e.g. argon2
     backend missing). To make local logins resilient we attempt verification
-    using both argon2 and bcrypt before falling back to a direct bcrypt
-    module check. This keeps behaviour backward-compatible and safe for dev
-    setups.
+    using multiple methods.
     """
-    # Try argon2 first (best/modern algorithm), then bcrypt, then raw bcrypt
-    # check with truncation (bcrypt limit of 72 bytes).
+    # Try Werkzeug first (handles scrypt:, pbkdf2:sha256:, etc.)
+    # This is the most common format when using Flask/Werkzeug's generate_password_hash
     try:
+        if check_password_hash(hashed, plain):
+            return True
+    except Exception:
+        pass
+
+    # Try argon2 (best/modern algorithm)
+    try:
+        if argon2.verify(plain, hashed):
+            return True
+    except Exception:
+        pass
+
+    # Try passlib bcrypt
+    try:
+        if bcrypt.verify(plain, hashed):
+            return True
+    except Exception:
+        # passlib bcrypt failed — try low-level bcrypt.checkpw with truncation
         try:
-            if argon2.verify(plain, hashed):
-                return True
+            b = plain.encode("utf-8")[:72]
+            return _bcrypt_module.checkpw(b, hashed.encode("utf-8"))
         except Exception:
-            # ignore and try bcrypt
             pass
 
-        try:
-            if bcrypt.verify(plain, hashed):
-                return True
-        except Exception:
-            # passlib bcrypt failed — try low-level bcrypt.checkpw with truncation
-            try:
-                b = plain.encode("utf-8")[:72]
-                return _bcrypt_module.checkpw(b, hashed.encode("utf-8"))
-            except Exception:
-                return False
-
-    except Exception:
-        # Any unexpected error => treat as failed verification
-        return False
+    return False
 
 
 # Password strength validation
