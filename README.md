@@ -1,6 +1,8 @@
 ﻿# CO.RA.PAN Web App
 
-Eine moderne Webplattform für die Analyse und Exploration des CO.RA.PAN-Korpus (Corpus Oral de Referencia del Español Actual).
+> **Version 1.0.0** | Dezember 2025 | [Zenodo Mirror](https://zenodo.org) (coming soon)
+
+Eine moderne Webplattform für die Analyse und Exploration des CO.RA.PAN-Korpus (Corpus Oral de Referencia del Español Actual - Variación Panhispánica).
 
 ## 1. Projektübersicht
 
@@ -30,6 +32,10 @@ Diese Anwendung dient als Frontend und API-Layer für das CO.RA.PAN-Projekt. Sie
 - **Administration:**
   - Rollenbasiertes Zugriffssystem (User, Editor, Admin).
   - JSON-Editor für Transkripte.
+- **Analytics (NEU v1.0):**
+  - DSGVO-konformes, anonymes Nutzungstracking.
+  - Admin-Dashboard mit Besucher-, Such- und Audio-Statistiken.
+  - Keine personenbezogenen Daten, kein Consent-Banner nötig.
 
 ## 3. Tech-Stack
 
@@ -134,10 +140,12 @@ Eine GitHub Actions Pipeline (`.github/workflows/ci.yml`) prüft bei jedem Push 
 Die detaillierte Dokumentation befindet sich im `docs/` Ordner:
 
 - **[Konzepte](docs/concepts/)**: Architektur, Authentifizierung.
+- **[Analytics](docs/analytics/)**: DSGVO-konformes Tracking-System (NEU v1.0).
 - **[Auth Migration Guide](docs/auth-migration/auth-migration.md)**: Praktische Anleitung zur Umstellung von passwords.env auf DB-basierte Auth (JWT / Refresh Token).
 - **[Anleitungen](docs/how-to/)**: Schritt-für-Schritt Guides (z.B. Quickstart).
 - **[Betrieb](docs/operations/)**: Deployment, Security.
 - **[Referenz](docs/reference/)**: API-Doku, Datenbank-Schema.
+- **[Changelog](docs/CHANGELOG.md)**: Versionshistorie und Release Notes.
 
 ## 9. Deployment
 
@@ -157,19 +165,22 @@ Die Produktion läuft auf `marele.online.uni-marburg.de` und wird über einen **
 
 ## 10. Lizenz
 
-(Hier Lizenzinformationen einfügen, z.B. MIT oder Proprietär)
+Proprietär - Philipps-Universität Marburg
 
-- **Public Access Mode**: Configurable public/private audio snippet access
-- **Security Features**: Rate limiting, CQL injection prevention, input validation
+## 11. Versionierung & Zitation
 
-## Technology Stack
+- **Aktuelle Version:** 1.0.0 (Dezember 2025)
+- **Changelog:** [docs/CHANGELOG.md](docs/CHANGELOG.md)
+- **Zitation:** Siehe [CITATION.cff](CITATION.cff)
+- **Zenodo:** Mirror geplant für v1.0 Release
 
-### Backend
-- **Flask 3.x** with application factory pattern
-- **SQLite** databases for corpus data and statistics
-- **BlackLab Server** for advanced corpus search (Java-based)
-- **FFmpeg** and **libsndfile** for audio processing
-- **JWT** for authentication with cookie-based tokens
+### Beiträge
+
+Beiträge sind willkommen! Siehe [CONTRIBUTING.md](docs/CONTRIBUTING.md) für Richtlinien.
+
+---
+
+## Current Status (December 2025)
 
 ### Frontend
 - **Vite** for asset bundling and build process

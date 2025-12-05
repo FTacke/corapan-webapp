@@ -1,6 +1,6 @@
 [project]
 name = "corapan_web"
-version = "0.1.0"
+version = "1.0.0"
 description = "Next-generation CO.RA.PAN web application."
 authors = [
   { name = "Felix Tacke", email = "felix.tacke@uni-marburg.de" }

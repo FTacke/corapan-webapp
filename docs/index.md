@@ -2,7 +2,7 @@
 
 Willkommen zur CO.RA.PAN Dokumentation. Diese Übersicht hilft dir, die richtige Dokumentation für deine Aufgabe zu finden.
 
-> **🎯 Status (November 2025):** Webapp ist produktionsreif mit allen Hauptfeatures vollständig implementiert. Dokumentation wurde reorganisiert und aktualisiert.
+> **🎉 Version 1.0.0 (Dezember 2025):** Webapp ist produktionsreif mit allen Hauptfeatures vollständig implementiert. Bereit für Zenodo-Archivierung.
 
 ## 🚀 Quick Start
 
@@ -10,6 +10,7 @@ Willkommen zur CO.RA.PAN Dokumentation. Diese Übersicht hilft dir, die richtige
 1. **[Architecture Overview](concepts/architecture.md)** - Verstehe die Systemarchitektur
 2. **[Development Setup](operations/development-setup.md)** - Entwicklungsumgebung einrichten
 3. **[Authentication Guide](guides/authentication.md)** - Umfassender Guide zur Authentifizierung
+4. **[Analytics System](analytics/index.md)** - DSGVO-konformes Nutzungstracking ⭐ NEU v1.0
 
 ---
 
@@ -26,6 +27,15 @@ Konzeptuelle Übersichten und Architektur-Entscheidungen.
 - **[Advanced Search Architecture](concepts/advanced-search-architecture.md)** - Security hardening, streaming design, performance
 - **[Search Unification Plan](concepts/search-unification-plan.md)** - Simple vs. Advanced Search, 3-Phasen-Plan, Unified Mapping ⭐ NEU (2025-11-13)
 - **[Audio Playback](concepts/audio-playback.md)** - Konzept der Audio-Wiedergabe und 4-Minuten-Splits
+
+---
+
+### 📊 Analytics - Nutzungsstatistiken
+
+DSGVO-konforme, anonyme Analytics für Admin-Dashboard.
+
+- **[Analytics Overview](analytics/index.md)** - Übersicht und Datenschutz-Prinzipien ⭐ NEU v1.0
+- **[Analytics Implementation](analytics/analytics-implementation.md)** - Vollständige technische Dokumentation
 
 ---
 
