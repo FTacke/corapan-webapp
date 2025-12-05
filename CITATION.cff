@@ -1,34 +1,53 @@
 cff-version: 1.2.0
 title: "CO.RA.PAN Web Application"
-message: >-
-  If you use this software, please cite it using the metadata from this file.
+message: >
+  If you use this software or its infrastructure, please cite it using the
+  metadata from this file.
 type: software
+
 authors:
-  - family-names: Tacke
-    given-names: Felix
+  - given-names: Felix
+    family-names: Tacke
     email: felix.tacke@uni-marburg.de
     affiliation: Philipps-Universität Marburg
-    orcid: "https://orcid.org/0000-0003-4231-5206"
+    orcid: "https://orcid.org/0000-0002-6716-7839"
+
 repository-code: "https://github.com/FTacke/corapan-webapp"
-url: "https://marele.online.uni-marburg.de"
-abstract: >-
-  CO.RA.PAN (Corpus Oral de Referencia del Español Actual - Variación Panhispánica) 
-  is a web application for linguistic corpus analysis and exploration. It provides 
-  advanced search capabilities via BlackLab Server, interactive audio playback 
-  synchronized with transcripts, geolinguistic visualization, and comprehensive 
-  statistical analysis tools for researchers studying spoken Spanish across 
-  20+ countries and regions.
+url: "https://corapan.online.uni-marburg.de"
+
+abstract: >
+  The CO.RA.PAN Web Application is the digital interface for the Corpus
+  Radiofónico Panhispánico, a comparative corpus of professional spoken Spanish
+  covering all Spanish-speaking countries. The platform integrates data
+  preparation workflows (audio acquisition, cleaning, automatic speech
+  recognition, manual verification and segmentation, structured JSON encoding,
+  and automatic linguistic annotation) with high-performance corpus search via
+  BlackLab Server, synchronized audio–transcript playback, metadata filtering,
+  and geolinguistic visualization.
+
+  The web application enables lexical, morphological, and syntactic queries,
+  supports the analysis of national standard and near-standard varieties, and
+  provides controlled scientific access to short audio–text extracts in
+  accordance with European copyright and text-and-data mining regulations.
+
 keywords:
   - corpus linguistics
   - Spanish linguistics
-  - BlackLab
-  - corpus search
-  - audio transcription
-  - geolinguistics
-  - panhispanic
+  - pluricentric Spanish
   - spoken language
-  - Flask
+  - model speaker
+  - audio transcription
+  - ASR
+  - spaCy
+  - linguistic annotation
+  - BlackLab Server
+  - corpus search
+  - geolinguistics
+  - panhispanic variation
   - web application
-license: Proprietary
-version: 1.0.0
+  - Flask
+
+license: MIT
+
+version: "1.0.0"
 date-released: "2025-12-05"
