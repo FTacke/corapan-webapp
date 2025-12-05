@@ -84,11 +84,17 @@ def apply_migrations(db_url: str) -> None:
         print("ERROR: psycopg not installed. Run: pip install psycopg[binary]", file=sys.stderr)
         sys.exit(1)
     
-    # Load migration SQL
-    migration_file = ROOT / "migrations" / "0001_create_auth_schema_postgres.sql"
-    if not migration_file.exists():
-        print(f"ERROR: Migration file not found: {migration_file}", file=sys.stderr)
-        sys.exit(1)
+    # Migration files to apply (in order)
+    migration_files = [
+        ROOT / "migrations" / "0001_create_auth_schema_postgres.sql",
+        ROOT / "migrations" / "0002_create_analytics_tables.sql",
+    ]
+    
+    # Check all migration files exist
+    for migration_file in migration_files:
+        if not migration_file.exists():
+            print(f"ERROR: Migration file not found: {migration_file}", file=sys.stderr)
+            sys.exit(1)
     
     # Convert SQLAlchemy URL format to psycopg format
     conn_url = db_url
@@ -102,11 +108,16 @@ def apply_migrations(db_url: str) -> None:
     
     try:
         with psycopg.connect(conn_url) as conn:
-            with open(migration_file, "r", encoding="utf-8") as f:
-                sql = f.read()
-            conn.execute(sql)
-            conn.commit()
-        print("✓ Database migrations applied successfully")
+            for migration_file in migration_files:
+                print(f"  Applying {migration_file.name}...")
+                with open(migration_file, "r", encoding="utf-8") as f:
+                    sql = f.read()
+                # Remove explicit BEGIN/COMMIT as psycopg handles transactions
+                sql = sql.replace("BEGIN;", "").replace("COMMIT;", "")
+                conn.execute(sql)
+                conn.commit()
+                print(f"  ✓ {migration_file.name} applied")
+        print("✓ All database migrations applied successfully")
     except psycopg.OperationalError as e:
         print(f"ERROR: Failed to connect to database: {e}", file=sys.stderr)
         sys.exit(1)

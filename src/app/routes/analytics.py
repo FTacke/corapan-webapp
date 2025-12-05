@@ -232,78 +232,93 @@ def get_stats():
     days = request.args.get("days", 30, type=int)
     days = min(max(days, 1), 365)  # Clamp to 1-365
     
-    with get_session() as session:
-        # Get daily metrics (days-1 to include today correctly)
-        # Example: days=30 → CURRENT_DATE - 29 = today and 29 previous days = 30 total
-        daily_stmt = text("""
-            SELECT date, visitors, mobile, desktop, searches, audio_plays, errors
-            FROM analytics_daily
-            WHERE date >= CURRENT_DATE - (:days - 1)
-            ORDER BY date DESC
-        """)
-        daily_result = session.execute(daily_stmt, {"days": days})
-        daily = [
-            {
-                "date": str(row.date),
-                "visitors": row.visitors,
-                "mobile": row.mobile,
-                "desktop": row.desktop,
-                "searches": row.searches,
-                "audio_plays": row.audio_plays,
-                "errors": row.errors,
+    try:
+        with get_session() as session:
+            # Get daily metrics (days-1 to include today correctly)
+            # Example: days=30 → CURRENT_DATE - 29 = today and 29 previous days = 30 total
+            daily_stmt = text("""
+                SELECT date, visitors, mobile, desktop, searches, audio_plays, errors
+                FROM analytics_daily
+                WHERE date >= CURRENT_DATE - (:days - 1)
+                ORDER BY date DESC
+            """)
+            daily_result = session.execute(daily_stmt, {"days": days})
+            daily = [
+                {
+                    "date": str(row.date),
+                    "visitors": row.visitors,
+                    "mobile": row.mobile,
+                    "desktop": row.desktop,
+                    "searches": row.searches,
+                    "audio_plays": row.audio_plays,
+                    "errors": row.errors,
+                }
+                for row in daily_result
+            ]
+            
+            # Get totals for window (last N days, including today)
+            totals_stmt = text("""
+                SELECT 
+                    COALESCE(SUM(visitors), 0) as visitors,
+                    COALESCE(SUM(mobile), 0) as mobile,
+                    COALESCE(SUM(desktop), 0) as desktop,
+                    COALESCE(SUM(searches), 0) as searches,
+                    COALESCE(SUM(audio_plays), 0) as audio_plays,
+                    COALESCE(SUM(errors), 0) as errors
+                FROM analytics_daily
+                WHERE date >= CURRENT_DATE - (:days - 1)
+            """)
+            totals_row = session.execute(totals_stmt, {"days": days}).fetchone()
+            totals_window = {
+                "visitors": totals_row.visitors,
+                "mobile": totals_row.mobile,
+                "desktop": totals_row.desktop,
+                "searches": totals_row.searches,
+                "audio_plays": totals_row.audio_plays,
+                "errors": totals_row.errors,
             }
-            for row in daily_result
-        ]
+            
+            # Get overall totals (all time)
+            overall_stmt = text("""
+                SELECT 
+                    COALESCE(SUM(visitors), 0) as visitors,
+                    COALESCE(SUM(mobile), 0) as mobile,
+                    COALESCE(SUM(desktop), 0) as desktop,
+                    COALESCE(SUM(searches), 0) as searches,
+                    COALESCE(SUM(audio_plays), 0) as audio_plays,
+                    COALESCE(SUM(errors), 0) as errors
+                FROM analytics_daily
+            """)
+            overall_row = session.execute(overall_stmt).fetchone()
+            totals_overall = {
+                "visitors": overall_row.visitors,
+                "mobile": overall_row.mobile,
+                "desktop": overall_row.desktop,
+                "searches": overall_row.searches,
+                "audio_plays": overall_row.audio_plays,
+                "errors": overall_row.errors,
+            }
+            
+            # HINWEIS: Keine top_queries Abfrage (Variante 3a)
         
-        # Get totals for window (last N days, including today)
-        totals_stmt = text("""
-            SELECT 
-                COALESCE(SUM(visitors), 0) as visitors,
-                COALESCE(SUM(mobile), 0) as mobile,
-                COALESCE(SUM(desktop), 0) as desktop,
-                COALESCE(SUM(searches), 0) as searches,
-                COALESCE(SUM(audio_plays), 0) as audio_plays,
-                COALESCE(SUM(errors), 0) as errors
-            FROM analytics_daily
-            WHERE date >= CURRENT_DATE - (:days - 1)
-        """)
-        totals_row = session.execute(totals_stmt, {"days": days}).fetchone()
-        totals_window = {
-            "visitors": totals_row.visitors,
-            "mobile": totals_row.mobile,
-            "desktop": totals_row.desktop,
-            "searches": totals_row.searches,
-            "audio_plays": totals_row.audio_plays,
-            "errors": totals_row.errors,
-        }
-        
-        # Get overall totals (all time)
-        overall_stmt = text("""
-            SELECT 
-                COALESCE(SUM(visitors), 0) as visitors,
-                COALESCE(SUM(mobile), 0) as mobile,
-                COALESCE(SUM(desktop), 0) as desktop,
-                COALESCE(SUM(searches), 0) as searches,
-                COALESCE(SUM(audio_plays), 0) as audio_plays,
-                COALESCE(SUM(errors), 0) as errors
-            FROM analytics_daily
-        """)
-        overall_row = session.execute(overall_stmt).fetchone()
-        totals_overall = {
-            "visitors": overall_row.visitors,
-            "mobile": overall_row.mobile,
-            "desktop": overall_row.desktop,
-            "searches": overall_row.searches,
-            "audio_plays": overall_row.audio_plays,
-            "errors": overall_row.errors,
-        }
-        
-        # HINWEIS: Keine top_queries Abfrage (Variante 3a)
-    
-    return jsonify({
-        "daily": daily,
-        "totals_window": totals_window,
-        "totals_overall": totals_overall,
-        "period_days": days,
-    })
-    # KEIN top_queries Feld!
+            return jsonify({
+                "daily": daily,
+                "totals_window": totals_window,
+                "totals_overall": totals_overall,
+                "period_days": days,
+            })
+            # KEIN top_queries Feld!
+    except Exception as e:
+        # Log the error and return a helpful message
+        error_msg = str(e)
+        if "analytics_daily" in error_msg.lower() and ("does not exist" in error_msg.lower() or "undefined" in error_msg.lower()):
+            logger.error(f"Analytics table missing: {e}")
+            return jsonify({
+                "error": "Analytics table not found. Database migration 0002 may not have been applied.",
+                "detail": "Run: python scripts/setup_prod_db.py"
+            }), 500
+        logger.error(f"Analytics stats query failed: {e}")
+        return jsonify({
+            "error": "Failed to fetch analytics data",
+            "detail": str(e)
+        }), 500
