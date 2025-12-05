@@ -9,16 +9,16 @@
 {% endblock %}
 
 {% block content %}
-<!-- MD3 Admin Dashboard -->
+<!-- MD3 Admin Dashboard - Analytics (Variante 3a: nur Zähler, keine Suchinhalte) -->
 <div class="md3-page">
   <header class="md3-page__header">
     <div class="md3-hero md3-hero--card md3-hero__container">
       <div class="md3-hero__icon" aria-hidden="true"><span class="material-symbols-rounded">dashboard</span></div>
       <div class="md3-hero__content">
         <p class="md3-body-small md3-hero__eyebrow">Admin</p>
-        <h1 class="md3-headline-medium md3-hero__title">Admin-Dashboard</h1>
+        <h1 class="md3-headline-medium md3-hero__title">Analytics Dashboard</h1>
         <p class="md3-body-medium md3-hero__intro">
-          Zugrife, Besuche und Suchanfragen.
+          Anonyme Nutzungsstatistiken der letzten 30 Tage
         </p>
       </div>
     </div>
@@ -27,71 +27,25 @@
   <!-- Main Content -->
   <main class="md3-page__main">
     
-    <!-- Metrics Grid -->
+    <!-- KPI Cards Grid -->
     <div class="md3-admin-metrics" data-element="metrics-grid">
       
-      <!-- Visits Card -->
-      <div class="md3-metric-card md3-card md3-card--outlined" data-metric="visits">
+      <!-- Visitors Card -->
+      <div class="md3-metric-card md3-card md3-card--outlined">
         <div class="md3-metric-card__header">
           <div class="md3-metric-card__icon-wrapper">
-            <span class="material-symbols-rounded">public</span>
+            <span class="material-symbols-rounded">people</span>
           </div>
           <h3 class="md3-title-medium">Besuche</h3>
         </div>
         <div class="md3-metric-card__content">
-          <div class="md3-metric-value-group">
-            <span class="md3-label-medium">Gesamt</span>
-            <span class="md3-display-small" id="visits-total">-</span>
-          </div>
-          
-          <details class="md3-metric-card__history">
-            <summary>Details nach Monat/Tag</summary>
-            <div class="md3-details__content">
-              <h4 class="md3-title-small md3-space-3">Dieser Monat</h4>
-              <ul class="md3-list" id="visits-days-list">
-                <!-- Populated by JS -->
-              </ul>
-              <h4 class="md3-title-small md3-space-3">Monatshistorie</h4>
-              <ul class="md3-list" id="visits-months-list">
-                <!-- Populated by JS -->
-              </ul>
-            </div>
-          </details>
+          <span class="md3-display-small" id="visitors-total">–</span>
+          <span class="md3-label-medium" id="device-breakdown">Mobile –% · Desktop –%</span>
         </div>
       </div>
 
-      <!-- Access Card -->
-      <div class="md3-metric-card md3-card md3-card--outlined" data-metric="access">
-        <div class="md3-metric-card__header">
-          <div class="md3-metric-card__icon-wrapper">
-            <span class="material-symbols-rounded">graphic_eq</span>
-          </div>
-          <h3 class="md3-title-medium">Corpus-Zugriffe</h3>
-        </div>
-        <div class="md3-metric-card__content">
-          <div class="md3-metric-value-group">
-            <span class="md3-label-medium">Gesamt</span>
-            <span class="md3-display-small" id="access-total">-</span>
-          </div>
-          
-          <details class="md3-metric-card__history">
-            <summary>Details nach Monat/Tag</summary>
-            <div class="md3-details__content">
-              <h4 class="md3-title-small md3-space-3">Dieser Monat</h4>
-              <ul class="md3-list" id="access-days-list">
-                <!-- Populated by JS -->
-              </ul>
-              <h4 class="md3-title-small md3-space-3">Monatshistorie</h4>
-              <ul class="md3-list" id="access-months-list">
-                <!-- Populated by JS -->
-              </ul>
-            </div>
-          </details>
-        </div>
-      </div>
-
-      <!-- Search Card -->
-      <div class="md3-metric-card md3-card md3-card--outlined" data-metric="search">
+      <!-- Searches Card -->
+      <div class="md3-metric-card md3-card md3-card--outlined">
         <div class="md3-metric-card__header">
           <div class="md3-metric-card__icon-wrapper">
             <span class="material-symbols-rounded">search</span>
@@ -99,39 +53,60 @@
           <h3 class="md3-title-medium">Suchanfragen</h3>
         </div>
         <div class="md3-metric-card__content">
-          <div class="md3-metric-value-group">
-            <span class="md3-label-medium">Gesamt</span>
-            <span class="md3-display-small" id="search-total">-</span>
+          <span class="md3-display-small" id="searches-total">–</span>
+        </div>
+      </div>
+
+      <!-- Audio Card -->
+      <div class="md3-metric-card md3-card md3-card--outlined">
+        <div class="md3-metric-card__header">
+          <div class="md3-metric-card__icon-wrapper">
+            <span class="material-symbols-rounded">play_circle</span>
           </div>
-          
-          <details class="md3-metric-card__history">
-            <summary>Details nach Monat/Tag</summary>
-            <div class="md3-details__content">
-              <h4 class="md3-title-small md3-space-3">Dieser Monat</h4>
-              <ul class="md3-list" id="search-days-list">
-                <!-- Populated by JS -->
-              </ul>
-              <h4 class="md3-title-small md3-space-3">Monatshistorie</h4>
-              <ul class="md3-list" id="search-months-list">
-                <!-- Populated by JS -->
-              </ul>
-            </div>
-          </details>
+          <h3 class="md3-title-medium">Audio-Plays</h3>
+        </div>
+        <div class="md3-metric-card__content">
+          <span class="md3-display-small" id="audio-total">–</span>
+        </div>
+      </div>
+
+      <!-- Errors Card -->
+      <div class="md3-metric-card md3-card md3-card--outlined">
+        <div class="md3-metric-card__header">
+          <div class="md3-metric-card__icon-wrapper">
+            <span class="material-symbols-rounded">error</span>
+          </div>
+          <h3 class="md3-title-medium">Fehler</h3>
+        </div>
+        <div class="md3-metric-card__content">
+          <span class="md3-display-small" id="errors-total">–</span>
         </div>
       </div>
       
     </div>
 
+    <!-- Daily Chart -->
+    <div class="md3-card md3-card--outlined md3-chart-card">
+      <h2 class="md3-title-large md3-chart-card__title">Letzte 7 Tage</h2>
+      <div id="daily-chart" class="md3-chart-container">
+        <!-- Populated by JS -->
+      </div>
+    </div>
+
+    <!-- VARIANTE 3a: Keine Top-Queries Sektion! Keine Suchinhalte gespeichert. -->
+
     <!-- Info Card -->
     <div class="md3-admin-card md3-admin-card--info md3-space-6">
       <div class="md3-admin-card__header">
         <span class="material-symbols-rounded md3-admin-card__icon">info</span>
-        <h2 class="md3-admin-card__title md3-title-large">Systeminformationen</h2>
+        <h2 class="md3-admin-card__title md3-title-large">Datenschutz-Hinweis</h2>
       </div>
       <div class="md3-admin-card__body">
         <ul class="md3-admin-list md3-body-medium">
-          <li>Die Daten werden in <code>data/counters/</code> gespeichert und können mit dem Backend synchronisiert werden</li>
-          <li>Die Systemlogs befinden sich in <code>logs/corapan.log</code></li>
+          <li>Es werden ausschließlich <strong>anonyme, aggregierte Zähler</strong> gespeichert</li>
+          <li>Keine IP-Adressen, User-IDs, Cookies oder Fingerprints</li>
+          <li>Keine Suchinhalte oder Query-Texte (Variante 3a)</li>
+          <li>DSGVO-konform – kein Einwilligungsbanner erforderlich</li>
         </ul>
       </div>
     </div>

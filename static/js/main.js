@@ -4,6 +4,11 @@
 import { setupTokenRefresh } from "./modules/auth/token-refresh.js";
 
 // ============================================
+// Analytics (anonymous, GDPR-compliant)
+// ============================================
+import { initAnalytics } from "./modules/analytics.js";
+
+// ============================================
 // Navigation Drawer Handler
 // ============================================
 import { NavigationDrawer } from "./modules/navigation/drawer.js";
@@ -20,6 +25,9 @@ import { initUserMenu } from "./modules/navigation/app-bar.js";
 
 // Setup automatic token refresh on app initialization
 setupTokenRefresh();
+
+// Initialize analytics (tracks visit once per session)
+initAnalytics();
 
 // CSS.escape polyfill (MDN) - define globally for older browsers if missing
 if (typeof CSS === "undefined" || typeof CSS.escape !== "function") {

@@ -19,8 +19,10 @@ import bcrypt as _bcrypt_module  # fallback direct bcrypt usage when passlib bac
 from sqlalchemy import select
 
 from ..extensions.sqlalchemy_ext import get_session
-from ..services.counters import auth_refresh_reuse, auth_login_success, auth_login_failure
 from .models import User, RefreshToken, ResetToken
+
+# NOTE: Old counter metrics removed - analytics now handled by /api/analytics/event
+# Auth events are no longer tracked (privacy-focused approach)
 
 
 # Type for account status
@@ -214,13 +216,8 @@ def rotate_refresh_token(old_raw_token: str, user_agent: Optional[str], ip_addre
 
             # If the token already had a replacement, treat as reuse
             if token_row.replaced_by is not None and token_row.replaced_by != marker:
-                # detected reuse -> revoke all tokens for this user and increment metric
+                # detected reuse -> revoke all tokens for this user
                 session.query(RefreshToken).filter(RefreshToken.user_id == token_row.user_id).update({RefreshToken.revoked_at: datetime.now(timezone.utc)})
-                try:
-                    auth_refresh_reuse.increment()
-                except Exception:
-                    # Don't fail rotation on metric failures
-                    current_app.logger.debug("Failed to increment auth_refresh_reuse metric")
                 return None, None, "reused"
 
             # Fallback - unknown state
@@ -447,10 +444,6 @@ def on_successful_login(user: User) -> None:
             dbu.login_failed_count = 0
             dbu.locked_until = None
             dbu.last_login_at = datetime.now(timezone.utc)
-            try:
-                auth_login_success.increment()
-            except Exception:
-                current_app.logger.debug("Failed to increment auth_login_success metric")
 
 
 def on_failed_login(user: Optional[User]) -> None:
@@ -464,10 +457,6 @@ def on_failed_login(user: Optional[User]) -> None:
             # Lockout policy: 5 failed attempts -> lock for 10 minutes
             if dbu.login_failed_count >= 5:
                 dbu.locked_until = datetime.now(timezone.utc) + timedelta(minutes=10)
-            try:
-                auth_login_failure.increment()
-            except Exception:
-                current_app.logger.debug("Failed to increment auth_login_failure metric")
 
 
 def revoke_refresh_token_by_raw(raw: str) -> bool:

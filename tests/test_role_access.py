@@ -127,12 +127,12 @@ class TestAdminRouteProtection:
         resp = client.get("/admin/dashboard")
         assert resp.status_code == 200, "Admin should access dashboard"
 
-    def test_admin_metrics_requires_admin(self, client):
-        """Metrics endpoint requires admin role."""
+    def test_analytics_stats_requires_admin(self, client):
+        """Analytics stats endpoint requires admin role."""
         create_user("user1", role="user")
         login_and_get_token(client, "user1")
         
-        resp = client.get("/admin/metrics")
+        resp = client.get("/api/analytics/stats")
         assert resp.status_code == 403
 
     def test_admin_users_list_requires_admin(self, client):

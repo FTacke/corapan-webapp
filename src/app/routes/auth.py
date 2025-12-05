@@ -35,7 +35,9 @@ from ..auth.decorators import require_role
 from ..auth.jwt import issue_token
 from ..auth import services as auth_services
 from ..extensions import limiter
-from ..services.counters import counter_access, auth_login_success, auth_login_failure, auth_refresh_reuse, auth_rate_limited
+
+# NOTE: Old counter metrics removed - analytics now handled by /api/analytics/event
+# See src/app/routes/analytics.py and src/app/analytics/models.py
 
 blueprint = Blueprint("auth", __name__, url_prefix="/auth")
 
@@ -379,20 +381,12 @@ def login_post() -> Response:
 
     if not auth_services.verify_password(password, user.password_hash):
         auth_services.on_failed_login(user)
-        try:
-            auth_login_failure.increment()
-        except Exception:
-            current_app.logger.debug("Failed to increment auth_login_failure metric")
         current_app.logger.warning(f"Failed login attempt - wrong password: {identifier} from {request.remote_addr}")
         # Generic Spanish error message for invalid credentials
         flash("Nombre de usuario o contraseña incorrectos.", "error")
         return _render_login_error(400)
 
     # Success: create tokens and set cookies
-    try:
-        auth_login_success.increment()
-    except Exception:
-        current_app.logger.debug("Failed to increment auth_login_success metric")
     auth_services.on_successful_login(user)
     access_token = auth_services.create_access_token_for_user(user)
     raw_refresh, _ = auth_services.create_refresh_token_for_user(user, user_agent=request.headers.get("User-Agent"), ip_address=request.remote_addr)

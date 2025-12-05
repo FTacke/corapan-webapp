@@ -1,6 +1,8 @@
 ﻿/**
  * Admin Dashboard Module
- * Handles metrics fetching and rendering for the redesigned dashboard.
+ * Fetches data from new /api/analytics/stats endpoint
+ * 
+ * VARIANTE 3a: Keine Top-Queries Anzeige (keine Suchinhalte gespeichert)
  */
 
 export function initAdminDashboard() {
@@ -8,119 +10,110 @@ export function initAdminDashboard() {
   const metricsGrid = document.querySelector('[data-element="metrics-grid"]');
   if (!metricsGrid) return;
 
-  fetchMetrics();
+  fetchAnalytics();
 }
 
-async function fetchMetrics() {
+async function fetchAnalytics() {
   try {
-    const response = await fetch('/admin/metrics');
-    if (!response.ok) throw new Error('Failed to fetch metrics');
+    const response = await fetch('/api/analytics/stats?days=30');
+    if (!response.ok) throw new Error('Failed to fetch analytics');
     const data = await response.json();
-    renderMetrics(data);
+    renderDashboard(data);
   } catch (error) {
-    console.error('Error fetching metrics:', error);
-    // Optional: Show error state in UI
+    console.error('Error fetching analytics:', error);
+    showErrorState();
   }
 }
 
-function renderMetrics(data) {
-  // data structure: { visits: DetailedCounter, access: AccessCounter, search: DetailedCounter }
-  renderMetricCard('visits', data.visits);
-  renderMetricCard('access', data.access);
-  renderMetricCard('search', data.search);
+function renderDashboard(data) {
+  // Render totals (use totals_window for period)
+  renderTotal('visitors-total', data.totals_window.visitors);
+  renderTotal('searches-total', data.totals_window.searches);
+  renderTotal('audio-total', data.totals_window.audio_plays);
+  renderTotal('errors-total', data.totals_window.errors);
+  
+  // Render device breakdown
+  const mobilePercent = data.totals_window.visitors > 0 
+    ? Math.round((data.totals_window.mobile / data.totals_window.visitors) * 100) 
+    : 0;
+  const desktopPercent = 100 - mobilePercent;
+  renderDeviceBreakdown(mobilePercent, desktopPercent);
+  
+  // Render daily chart
+  renderDailyChart(data.daily);
+  
+  // VARIANTE 3a: Keine renderTopQueries() - keine Suchinhalte!
 }
 
-function renderMetricCard(type, metricData) {
-  if (!metricData) return;
-
-  // 1. Render Total
-  const totalEl = document.getElementById(`${type}-total`);
-  if (totalEl) {
-    // DetailedCounter: metricData.overall
-    // AccessCounter: metricData.total.overall
-    let total = 0;
-    if (typeof metricData.overall === 'number') {
-        total = metricData.overall;
-    } else if (metricData.total && typeof metricData.total.overall === 'number') {
-        total = metricData.total.overall;
-    }
-    totalEl.textContent = total.toLocaleString('es-ES');
+function renderTotal(elementId, value) {
+  const el = document.getElementById(elementId);
+  if (el) {
+    el.textContent = (value || 0).toLocaleString('de-DE');
   }
+}
 
-  // 2. Render Days (Current Month)
-  const daysList = document.getElementById(`${type}-days-list`);
-  if (daysList) {
-    daysList.innerHTML = '';
-    
-    let daysMap = {};
-    
-    // Normalize data to a map: { "YYYY-MM-DD": count }
-    if (metricData.days && !Array.isArray(metricData.days)) {
-        // DetailedCounter format: { "2023-10-27": 5 }
-        daysMap = metricData.days;
-    } else if (metricData.total && Array.isArray(metricData.total.days)) {
-        // AccessCounter format: ["2023-10-27", "2023-10-27", ...]
-        metricData.total.days.forEach(day => {
-            daysMap[day] = (daysMap[day] || 0) + 1;
-        });
-    }
-
-    // Filter for current month
-    const now = new Date();
-    const currentMonthPrefix = now.toISOString().slice(0, 7); // "YYYY-MM"
-
-    const sortedDays = Object.keys(daysMap)
-        .filter(day => day.startsWith(currentMonthPrefix))
-        .sort()
-        .reverse();
-
-    if (sortedDays.length === 0) {
-        daysList.innerHTML = '<li class="md3-list-item"><span class="md3-list-item__text">Sin datos este mes</span></li>';
-    } else {
-        sortedDays.forEach(day => {
-            const count = daysMap[day];
-            const li = document.createElement('li');
-            li.className = 'md3-list-item';
-            li.innerHTML = `
-                <span class="md3-list-item__text">${day}</span>
-                <span class="md3-list-item__meta">${count}</span>
-            `;
-            daysList.appendChild(li);
-        });
-    }
+function renderDeviceBreakdown(mobile, desktop) {
+  const el = document.getElementById('device-breakdown');
+  if (el) {
+    el.textContent = `Mobile ${mobile}% · Desktop ${desktop}%`;
   }
+}
 
-  // 3. Render Months (History)
-  const monthsList = document.getElementById(`${type}-months-list`);
-  if (monthsList) {
-    monthsList.innerHTML = '';
-    
-    let monthsMap = {};
-    
-    if (metricData.monthly) {
-        // DetailedCounter format
-        monthsMap = metricData.monthly;
-    } else if (metricData.total && metricData.total.monthly) {
-        // AccessCounter format
-        monthsMap = metricData.total.monthly;
-    }
+function renderDailyChart(dailyData) {
+  // dailyData is array of { date, visitors, searches, audio_plays, errors, ... }
+  // API returns DESC order, we need chronological (ASC) for display
+  const container = document.getElementById('daily-chart');
+  if (!container) return;
+  
+  if (!dailyData || !dailyData.length) {
+    container.innerHTML = `
+      <div class="md3-no-data-card">
+        <span class="material-symbols-rounded md3-no-data-card__icon">analytics</span>
+        <p class="md3-body-medium md3-no-data-card__message">Noch keine Daten vorhanden.</p>
+        <p class="md3-body-small md3-no-data-card__hint">Statistiken werden nach dem ersten Besuch angezeigt.</p>
+      </div>
+    `;
+    return;
+  }
+  
+  // Reverse to get chronological order (oldest first, newest last)
+  // Then take last 7 days
+  const ordered = dailyData.slice().reverse();
+  const last7Days = ordered.slice(-7);
+  
+  const html = last7Days.map(day => `
+    <div class="md3-chart-row">
+      <span class="md3-chart-label">${formatDate(day.date)}</span>
+      <span class="md3-chart-value">${day.visitors} Besuche · ${day.searches} Suchen</span>
+    </div>
+  `).join('');
+  
+  container.innerHTML = html;
+}
 
-    const sortedMonths = Object.keys(monthsMap).sort().reverse();
+/**
+ * Format ISO date string to German locale
+ */
+function formatDate(isoDate) {
+  try {
+    const date = new Date(isoDate);
+    return date.toLocaleDateString('de-DE', { weekday: 'short', day: 'numeric', month: 'short' });
+  } catch {
+    return isoDate;
+  }
+}
 
-    if (sortedMonths.length === 0) {
-        monthsList.innerHTML = '<li class="md3-list-item"><span class="md3-list-item__text">Sin historial</span></li>';
-    } else {
-        sortedMonths.forEach(month => {
-            const count = monthsMap[month];
-            const li = document.createElement('li');
-            li.className = 'md3-list-item';
-            li.innerHTML = `
-                <span class="md3-list-item__text">${month}</span>
-                <span class="md3-list-item__meta">${count}</span>
-            `;
-            monthsList.appendChild(li);
-        });
-    }
+// VARIANTE 3a: renderTopQueries() Funktion ENTFERNT - keine Suchinhalte!
+
+function showErrorState() {
+  const container = document.querySelector('[data-element="metrics-grid"]');
+  if (container) {
+    container.innerHTML = `
+      <div class="md3-error-card md3-card md3-card--outlined">
+        <span class="material-symbols-rounded md3-error-card__icon">error</span>
+        <p class="md3-body-large md3-error-card__message">Analytics konnten nicht geladen werden.</p>
+      </div>
+    `;
   }
 }
 

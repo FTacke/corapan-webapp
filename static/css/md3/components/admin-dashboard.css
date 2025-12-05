@@ -161,3 +161,80 @@
   margin-top: var(--space-2);
 }
 
+/* Daily Chart Card */
+.md3-chart-card {
+  padding: var(--space-6);
+  margin-bottom: var(--space-6);
+}
+
+.md3-chart-card__title {
+  padding-bottom: var(--space-4);
+}
+
+.md3-chart-container {
+  padding: var(--space-4) 0;
+}
+
+/* Chart Rows */
+.md3-chart-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--space-3) 0;
+  border-bottom: 1px solid var(--md-sys-color-outline-variant);
+}
+
+.md3-chart-row:last-child {
+  border-bottom: none;
+}
+
+.md3-chart-label {
+  font: var(--md-sys-typescale-label-large-font);
+  color: var(--md-sys-color-on-surface);
+}
+
+.md3-chart-value {
+  font: var(--md-sys-typescale-body-medium-font);
+  color: var(--md-sys-color-on-surface-variant);
+}
+
+/* Error State */
+.md3-error-card {
+  grid-column: 1 / -1;
+  padding: var(--space-8);
+  text-align: center;
+}
+
+.md3-error-card__icon {
+  font-size: 3rem;
+  color: var(--md-sys-color-error);
+}
+
+.md3-error-card__message {
+  margin-top: var(--space-4);
+}
+
+/* No Data State */
+.md3-no-data-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-8);
+  text-align: center;
+  color: var(--md-sys-color-on-surface-variant);
+}
+
+.md3-no-data-card__icon {
+  font-size: 3rem;
+  color: var(--md-sys-color-outline);
+  margin-bottom: var(--space-4);
+}
+
+.md3-no-data-card__message {
+  margin-bottom: var(--space-2);
+}
+
+.md3-no-data-card__hint {
+  color: var(--md-sys-color-outline);
+}

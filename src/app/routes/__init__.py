@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from flask import Flask
 
-from . import admin, auth, media, public, atlas, player, editor, stats, bls_proxy, corpus, admin_users
+from . import admin, auth, media, public, atlas, player, editor, stats, bls_proxy, corpus, admin_users, analytics
 from ..search import advanced, advanced_api
 
 
@@ -23,6 +23,7 @@ BLUEPRINTS = [
     corpus.blueprint,  # Corpus informational routes (e.g. /corpus/guia)
     advanced_api.bp,  # Advanced search API: /search/advanced/data, /search/advanced/export
     admin_users.bp,
+    analytics.bp,  # Analytics API: /api/analytics/* (VARIANTE 3a: nur Zähler)
 ]
 
 

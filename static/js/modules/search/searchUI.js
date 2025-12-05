@@ -18,6 +18,7 @@ import {
 } from "../advanced/initTable.js";
 import { destroyTokenTable } from "./initTokenTable.js";
 import { cleanupStats } from "../stats/initStatsTabAdvanced.js";
+import { trackSearch } from "../analytics.js";
 
 export class SearchUI {
   constructor() {
@@ -528,6 +529,9 @@ export class SearchUI {
    * Perform search with given parameters
    */
   async performSearch(queryParams) {
+    // Track search event (anonymous counter only, no query content - Variante 3a)
+    trackSearch();
+
     // Dispatch search start event
     document.dispatchEvent(new Event("search:start"));
 

@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import logging
 from flask import Blueprint, make_response, render_template, request, jsonify, redirect, url_for
-from ..services.counters import counter_visits
 from flask_jwt_extended import jwt_required
 import httpx
 
@@ -12,11 +11,8 @@ logger = logging.getLogger(__name__)
 
 blueprint = Blueprint("public", __name__)
 
-
-@blueprint.before_app_request
-def track_visits():
-    if request.endpoint and not request.endpoint.startswith("static"):
-        counter_visits.increment()
+# NOTE: Visit tracking moved to new analytics system (see src/app/routes/analytics.py)
+# Frontend now calls /api/analytics/event directly via static/js/modules/analytics.js
 
 
 @blueprint.get("/")
