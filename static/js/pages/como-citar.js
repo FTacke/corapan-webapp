@@ -29,7 +29,17 @@ DOI: https://doi.org/10.5281/zenodo.15360942`,
   address   = {Marburg},
   doi       = {10.5281/zenodo.15360942},
   url       = {https://corapan.online.uni-marburg.de}
-}`
+}`,
+
+    ris: `TY  - DATA
+TI  - CO.RA.PAN — Corpus Radiofónico Panhispánico
+AU  - Tacke, Felix
+PY  - 2025
+PB  - Philipps-Universität Marburg
+CY  - Marburg
+UR  - https://corapan.online.uni-marburg.de
+DO  - 10.5281/zenodo.15360942
+ER  -`
   };
 
   // DOM elements
