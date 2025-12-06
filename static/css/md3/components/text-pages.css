@@ -438,47 +438,146 @@
 }
 
 /* ============================================================================
-   Citation Format Selector Component
+   Citation Block Component (MD3 Choice Chips + Textarea + Copy Button)
    ============================================================================ */
 
-.md3-citation-selector {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-4);
+.citation-block {
+  display: grid;
+  gap: 0.75rem;
   margin-top: var(--space-4);
 }
 
-/* Limit the dropdown width */
-.md3-citation-selector .md3-outlined-textfield {
-  max-width: 240px;
-}
-
-/* Code snippet container for citations (reuse dialog.css snippet styles) */
-.md3-citation-selector .md3-snippet {
+.citation-header {
   display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: var(--space-3);
-  padding: var(--space-4);
-  border-radius: var(--radius-md);
-  background: var(--md-sys-color-surface-container-high);
-  font-family: var(--md-sys-typescale-body-small-font, ui-monospace, SFMono-Regular, Consolas, monospace);
-  font-size: var(--md-sys-typescale-body-small-size, 12px);
-  line-height: 1.5;
+  flex-direction: column;
+  gap: 0.25rem;
 }
 
-.md3-citation-selector .md3-snippet__code {
-  display: block;
-  white-space: pre-wrap;
-  word-break: break-word;
+.label-small {
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--md-sys-color-on-surface-variant);
   margin: 0;
-  flex: 1 1 auto;
-  color: var(--md-sys-color-on-surface);
 }
 
-.md3-citation-selector .md3-snippet__copy {
-  flex-shrink: 0;
-  align-self: flex-start;
+/* Citation Format Choice Chips */
+.citation-format-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.chip.chip-choice {
+  border-radius: 999px;
+  padding: 0 0.75rem;
+  height: 28px;
+  font-size: 0.75rem;
+  font-family: inherit;
+  font-weight: 500;
+  border: 1px solid var(--md-sys-color-outline-variant);
+  background: var(--md-sys-color-surface);
+  color: var(--md-sys-color-on-surface);
+  cursor: pointer;
+  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+
+.chip.chip-choice:hover {
+  background: var(--md-sys-color-surface-container-high);
+}
+
+.chip.chip-choice:focus-visible {
+  outline: 2px solid var(--md-sys-color-primary);
+  outline-offset: 2px;
+}
+
+.chip.chip-choice.is-selected {
+  background: var(--md-sys-color-secondary-container);
+  color: var(--md-sys-color-on-secondary-container);
+  border-color: transparent;
+}
+
+.chip.chip-choice.is-selected:hover {
+  background: var(--md-sys-color-secondary-container);
+  filter: brightness(0.95);
+}
+
+/* Citation Output Area */
+.citation-output {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.5rem;
+  align-items: start;
+}
+
+.md3-textarea {
+  resize: none;
+  width: 100%;
+  padding: 0.75rem;
+  border-radius: 12px;
+  border: 1px solid var(--md-sys-color-outline-variant);
+  background: var(--md-sys-color-surface-container-low);
+  color: var(--md-sys-color-on-surface);
+  font-family: var(--md-sys-typescale-body-medium-font, ui-monospace, SFMono-Regular, Consolas, monospace);
+  font-size: 0.875rem;
+  line-height: 1.4;
+  box-sizing: border-box;
+}
+
+.md3-textarea:focus {
+  outline: 2px solid var(--md-sys-color-primary);
+  outline-offset: -1px;
+  border-color: var(--md-sys-color-primary);
+}
+
+/* Citation Copy Icon Button */
+.citation-block .icon-button {
+  border: none;
+  border-radius: 999px;
+  width: 40px;
+  height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--md-sys-color-surface-variant);
+  color: var(--md-sys-color-on-surface-variant);
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.citation-block .icon-button:hover {
+  background: var(--md-sys-color-surface-container-highest);
+}
+
+.citation-block .icon-button:focus-visible {
+  outline: 2px solid var(--md-sys-color-primary);
+  outline-offset: 2px;
+}
+
+.citation-block .icon-button:active {
+  background: var(--md-sys-color-surface-container-high);
+}
+
+/* Copy button feedback states */
+.citation-block .icon-button--success {
+  background: var(--md-sys-color-primary-container);
+  color: var(--md-sys-color-on-primary-container);
+}
+
+.citation-block .icon-button--error {
+  background: var(--md-sys-color-error-container);
+  color: var(--md-sys-color-on-error-container);
+}
+
+/* Responsive: Stack on very narrow screens */
+@media (max-width: 360px) {
+  .citation-output {
+    grid-template-columns: 1fr;
+  }
+  
+  .citation-block .icon-button {
+    justify-self: end;
+  }
 }
 
 /* Copy button feedback states */

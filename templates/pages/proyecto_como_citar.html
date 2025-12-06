@@ -34,31 +34,29 @@
       <h2 class="md3-title-large md3-section-title md3-text-heading">2. Formatos de cita</h2>
       <p class="md3-body-medium">Seleccione el formato de cita y copie el texto generado.</p>
       
-      <div class="md3-citation-selector">
-        <!-- Format dropdown -->
-        <div class="md3-outlined-textfield md3-outlined-textfield--block">
-          <select id="citation-format" class="md3-outlined-textfield__input md3-outlined-textfield__input--select" aria-label="Formato de cita">
-            <option value="apa" selected>APA</option>
-            <option value="chicago">Chicago</option>
-            <option value="harvard">Harvard</option>
-            <option value="mla">MLA</option>
-            <option value="bibtex">BibTeX</option>
-            <option value="ris">RIS</option>
-          </select>
-          <label class="md3-outlined-textfield__label md3-outlined-textfield__label--select" for="citation-format">Formato</label>
-          <div class="md3-outlined-textfield__outline">
-            <div class="md3-outlined-textfield__outline-start"></div>
-            <div class="md3-outlined-textfield__outline-notch"></div>
-            <div class="md3-outlined-textfield__outline-end"></div>
+      <section class="citation-block" aria-labelledby="citation-format-label">
+        <header class="citation-header">
+          <p class="label-small" id="citation-format-label">Formato</p>
+          <div class="citation-format-chips" id="citationFormatChips" role="radiogroup" aria-labelledby="citation-format-label">
+            <button type="button" class="chip chip-choice is-selected" data-format="apa" role="radio" aria-checked="true">APA</button>
+            <button type="button" class="chip chip-choice" data-format="mla" role="radio" aria-checked="false">MLA</button>
+            <button type="button" class="chip chip-choice" data-format="chicago" role="radio" aria-checked="false">Chicago</button>
+            <button type="button" class="chip chip-choice" data-format="bibtex" role="radio" aria-checked="false">BibTeX</button>
           </div>
-        </div>
+        </header>
 
-        <!-- Code snippet with copy button -->
-        <div class="md3-snippet md3-snippet--code" aria-label="Cita formateada">
-          <code id="citation-code" class="md3-snippet__code" aria-live="polite" aria-atomic="true">Tacke, F. (2025). CO.RA.PAN — Corpus Radiofónico Panhispánico.
-Philipps-Universität Marburg, Marburg. https://corapan.online.uni-marburg.de
-DOI: https://doi.org/10.5281/zenodo.15360942</code>
-          <button id="copy-citation" class="md3-button md3-button--icon md3-snippet__copy" title="Copiar" aria-label="Copiar cita al portapapeles">
+        <div class="citation-output">
+          <textarea
+            class="md3-textarea"
+            id="citationText"
+            readonly
+            rows="4"
+            aria-label="Cita formateada"
+            aria-live="polite"
+            aria-atomic="true"
+          ></textarea>
+
+          <button type="button" class="icon-button" id="copyCitationBtn" aria-label="Copiar cita al portapapeles" title="Copiar">
             <span class="material-symbols-rounded" aria-hidden="true">content_copy</span>
           </button>
         </div>
@@ -68,7 +66,7 @@ DOI: https://doi.org/10.5281/zenodo.15360942</code>
              class="sr-only md3-status-live"
              role="status"
              aria-live="polite"></div>
-      </div>
+      </section>
     </section>
 
     <!-- 3. Citas dentro del texto -->
@@ -238,7 +236,7 @@ DOI: https://doi.org/10.5281/zenodo.15360942</code>
         <div class="md3-card md3-card--elevated doi-resource-card">
           <div class="md3-card__content">
             <h3 class="md3-title-medium doi-resource-card__title">
-              <span class="material-symbols-rounded" aria-hidden="true">public</span>
+              <span class="material-symbols-rounded" aria-hidden="true">file_open</span>
               <span>Sample Corpus</span>
             </h3>
             <p class="md3-body-large">
