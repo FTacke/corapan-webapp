@@ -108,7 +108,7 @@ def register_jwt_handlers() -> None:
         save_return_url()
         referrer = request.referrer or url_for("public.landing_page")
         try:
-            flash("Tu sesión ha expirado. Por favor inicia sesión nuevamente.", "info")
+            flash("Su sesión ha expirado. Por favor, inicie sesión nuevamente.", "info")
         except RuntimeError:
             # Session unavailable (e.g. tests without secret_key) - ignore flash
             pass
@@ -161,7 +161,7 @@ def register_jwt_handlers() -> None:
         save_return_url()
         referrer = request.referrer or url_for("public.landing_page")
         try:
-            flash("Token inválido. Por favor inicia sesión nuevamente.", "info")
+            flash("Token inválido. Por favor, inicie sesión nuevamente.", "info")
         except RuntimeError:
             pass
 
@@ -229,7 +229,7 @@ def register_jwt_handlers() -> None:
         save_return_url()
         referrer = request.referrer or url_for("public.landing_page")
         try:
-            flash("Por favor inicia sesión para acceder a este contenido.", "info")
+            flash("Por favor, inicie sesión para acceder a este contenido.", "info")
         except RuntimeError:
             pass
 

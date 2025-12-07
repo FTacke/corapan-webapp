@@ -58,7 +58,7 @@ function buildQueryParams(form) {
 
   const query = qv(form, "#q", "").trim();
   if (!query) {
-    alert("Por favor ingresa una consulta");
+    alert("Por favor, introduzca una consulta");
     return params;
   }
   params.append("q", query);

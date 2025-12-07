@@ -13,7 +13,7 @@
         </p>
         <div class="md3-prompt-container">
           <p class="md3-prompt-title">Prompt sugerido para generar consultas CQL en CORAPAN (BlackLab)</p>
-          <p class="md3-prompt-subtitle">Copia y pega este prompt en el modelo de IA generativa y luego añade tu descripción al final:</p>
+          <p class="md3-prompt-subtitle">Copie y pegue este prompt en el modelo de IA generativa y añada su descripción al final:</p>
           <div class="md3-code-block md3-full-width">
             <pre class="highlight"><code id="cql-guide-prompt" class="language-plaintext">Actúa como generador de consultas CQL para un corpus de español hablado llamado CORAPAN, indexado en BlackLab.
 
@@ -65,7 +65,7 @@ Algunos ejemplos de uso:
 * `[lemma="ir" & pos="VERB" & FutureType="periphrasticFuture"]`
   → formas de *ir* que participan en futuros perifrásticos.
 
-Además, puedes usar metadatos de documento/segmento con BlackLab (por ejemplo mediante `within`), como:
+Además, se pueden usar metadatos de documento/segmento con BlackLab (por ejemplo mediante `within`), como:
 
 * `country_code` → código de país/variedad (por ejemplo `ARG`, `ESP`, `ARG-CBA`, `ESP-SEV`, etc.)
 * `file_id`      → identificador de archivo
@@ -74,15 +74,15 @@ Además, puedes usar metadatos de documento/segmento con BlackLab (por ejemplo m
 * `city`         → ciudad (si está disponible)
 * `sentence_id`, `utterance_id` → identificadores de oración y enunciado
 
-Tu tarea:
+Su tarea:
 
-1. Léeme la descripción en lenguaje natural que te daré.
+1. Léame la descripción en lenguaje natural que le daré.
 
-2. Genera **solo** una consulta CQL válida para BlackLab, sin explicaciones ni comentarios.
+2. Genere **solo** una consulta CQL válida para BlackLab, sin explicaciones ni comentarios.
 
-3. Usa exclusivamente los atributos y metadatos listados arriba.
+3. Use exclusivamente los atributos y metadatos listados arriba.
 
-4. Representa las palabras y rasgos morfológicos con patrones como:
+4. Represente las palabras y rasgos morfológicos con patrones como:
 
    * `[lemma="hablar"]`
    * `[pos="VERB" & tense="Pres" & person="1" & number="Sing"]`
@@ -91,20 +91,20 @@ Tu tarea:
    * `[pos="VERB" & FutureType="periphrasticFuture"]` para un futuro perifrástico del tipo *ir a + INF*
    * `[pos="ADJ"][pos="NOUN"]` para un adjetivo seguido de un sustantivo
 
-5. Si menciono restricciones de variedad, origen o tipo de texto, exprésalas con metadatos, por ejemplo:
+5. Si se mencionan restricciones de variedad, origen o tipo de texto, expréselas con metadatos, por ejemplo:
 
    * `within <country_code="ARG"> [...]`
    * `within <radio="yes"> [...]`
 
-   (ajusta el valor según la codificación real).
+   (ajuste el valor según la codificación real).
 
-6. Usa siempre comillas dobles `"..."` y la sintaxis CQL estándar de BlackLab.
+6. Use siempre comillas dobles `"..."` y la sintaxis CQL estándar de BlackLab.
 
-7. Si la descripción es ambigua, elige la interpretación más común en lingüística hispánica, pero **no inventes** atributos que no existan en la lista ni valores de `PastType` o `FutureType` que no hayan sido definidos.
+7. Si la descripción es ambigua, elija la interpretación más común en lingüística hispánica, pero **no invente** atributos que no existan en la lista ni valores de `PastType` o `FutureType` que no hayan sido definidos.
 
-Ahora convierte la siguiente descripción en una consulta CQL precisa para CORAPAN:
+Ahora convierta la siguiente descripción en una consulta CQL precisa para CORAPAN:
 
-«[ESCRIBE AQUÍ TU DESCRIPCIÓN EN ESPAÑOL]»
+«[ESCRIBA AQUÍ SU DESCRIPCIÓN EN ESPAÑOL]»
 
             
             </code>

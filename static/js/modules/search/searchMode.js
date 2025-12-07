@@ -70,7 +70,7 @@ export function initSearchMode() {
         formSimple.addEventListener('submit', (e) => {
             if (!qInput.value.trim()) {
                 e.preventDefault();
-                alert('Por favor, introduce un término de búsqueda.');
+                alert('Por favor, introduzca un término de búsqueda.');
                 qInput.focus();
             }
         });
@@ -81,7 +81,7 @@ export function initSearchMode() {
         formAdvanced.addEventListener('submit', (e) => {
             if (!cqlInput.value.trim()) {
                 e.preventDefault();
-                alert('Define al menos un patrón o una consulta CQL.');
+                alert('Defina al menos un patrón o una consulta CQL.');
             }
         });
     }

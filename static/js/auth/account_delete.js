@@ -21,7 +21,7 @@ document.addEventListener('DOMContentLoaded', function () {
       }
     } catch (error) {
       console.error('[Account Delete] Error:', error);
-      showError(status, 'Error de conexión. Por favor, inténtalo de nuevo.');
+      showError(status, 'Error de conexión. Por favor, inténtelo de nuevo.');
     }
   });
 });

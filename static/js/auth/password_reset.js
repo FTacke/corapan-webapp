@@ -62,7 +62,7 @@ document.addEventListener('DOMContentLoaded', function () {
       const data = await resp.json();
       
       if (data.ok) {
-        showSuccess(status, 'Contraseña establecida correctamente. Ahora puedes iniciar sesión.');
+        showSuccess(status, 'Contraseña establecida correctamente. Ya puede iniciar sesión.');
         form.reset();
         // Optional: Redirect to login after a delay
         setTimeout(() => {
@@ -73,7 +73,7 @@ document.addEventListener('DOMContentLoaded', function () {
       }
     } catch (error) {
       console.error('[Password Reset] Error:', error);
-      showError(status, 'Error de conexión. Por favor, inténtalo de nuevo.');
+      showError(status, 'Error de conexión. Por favor, inténtelo de nuevo.');
     }
   });
 });

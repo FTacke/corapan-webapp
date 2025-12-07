@@ -369,11 +369,11 @@ def login_post() -> Response:
         current_app.logger.warning(f"Login blocked for {identifier}: {status.code}")
         # Map status codes to user-friendly Spanish messages
         error_messages = {
-            "account_inactive": "Tu cuenta ha sido desactivada. Contacta al administrador.",
+            "account_inactive": "Su cuenta ha sido desactivada. Contacte al administrador.",
             "account_deleted": "Esta cuenta ya no existe.",
-            "account_not_yet_valid": "Tu cuenta aún no está activa. Vuelve a intentarlo más tarde.",
-            "account_expired": "Tu acceso ha expirado. Contacta al administrador.",
-            "account_locked": "Tu cuenta está temporalmente bloqueada. Inténtalo más tarde.",
+            "account_not_yet_valid": "Su cuenta aún no está activa. Vuelva a intentarlo más tarde.",
+            "account_expired": "Su acceso ha expirado. Contacte al administrador.",
+            "account_locked": "Su cuenta está temporalmente bloqueada. Inténtelo más tarde.",
         }
         flash(
             error_messages.get(status.code, "No se puede acceder a esta cuenta."),

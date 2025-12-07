@@ -116,7 +116,7 @@ function reloadTokenDataTable() {
 }
 function initializeTokenDataTable() {
   if (tokIds.length === 0) {
-    alert("Por favor ingresa al menos un Token-ID");
+    alert("Por favor, introduzca al menos un Token-ID");
     return;
   }
   const tableElement = document.getElementById("token-results-table");

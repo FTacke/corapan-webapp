@@ -355,7 +355,7 @@ def register_error_handlers(app: Flask) -> None:
         # Redirect to referrer (or home) with login dialog query parameter
         # Using query param instead of hash to avoid automatic scroll-to-anchor
         referrer = request.referrer or url_for("public.landing_page")
-        flash("Por favor inicia sesión para acceder a este contenido.", "info")
+        flash("Por favor, inicie sesión para acceder a este contenido.", "info")
 
         # Add ?showlogin=1 to URL (preserves scroll position)
         separator = "&" if "?" in referrer else "?"
