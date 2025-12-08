@@ -1,42 +1,84 @@
 # =============================================================================
-# CO.RA.PAN Data Sync: Dev → Prod
+# CO.RA.PAN Data Sync: Dev -> Prod
 # =============================================================================
 #
-# Synchronisiert die Daten-Verzeichnisse vom Dev-Rechner auf den Prod-Server.
+# Zweck:
+#   Synchronisiert die CO.RA.PAN-Daten vom Dev-Rechner auf den Prod-Server.
+#   Der Sync erfolgt als Delta-Sync: nur neue oder geaenderte Dateien werden
+#   uebertragen, geaenderte Dateien ueberschreiben die Version auf dem Server.
 #
-# Synchronisierte Verzeichnisse:
-#   - counters
-#   - db_public
-#   - metadata
-#   - exports
-#   - blacklab_export
+# -----------------------------------------------------------------------------
+# SYNCHRONISIERTE VERZEICHNISSE (unter data/):
+# -----------------------------------------------------------------------------
 #
-# NICHT synchronisiert (bewusst ausgeschlossen):
-#   - blacklab_index     → wird auf Server neu gebaut
-#   - blacklab_index.backup → nur lokal
-#   - stats_temp         → temporäre Dateien
-#   - db/auth.db         → Prod-Auth-DB ist unabhängig
-#   - db/transcription.db → Prod-Transkriptions-DB ist unabhängig
-#   - db/auth_e2e.db     → nur für lokale E2E-Tests
+#   Folgende Verzeichnisse werden als Ganzes synchronisiert:
+#   - counters        -> Zaehler-Dateien fuer verschiedene Features
+#   - db_public       -> Oeffentliche Datenbank-Exports
+#   - metadata        -> Metadaten zu Korpus-Dateien
+#   - exports         -> Generierte Exports
+#   - blacklab_export -> BlackLab-Export-Dateien
 #
-# SELEKTIV synchronisierte Dateien aus data/db:
-#   - stats_files.db     → Atlas-Statistiken pro Datei
-#   - stats_country.db   → Atlas-Statistiken pro Land
-#   Diese Dateien werden lokal generiert und für die Atlas-/Stats-Funktionen
-#   auf dem Server benötigt (z.B. /api/v1/atlas/files).
+# -----------------------------------------------------------------------------
+# STATS-DATENBANKEN (aus data/db/):
+# -----------------------------------------------------------------------------
 #
-# Verwendung:
+#   Zusaetzlich werden folgende Stats-DBs einzeln synchronisiert:
+#   - stats_files.db    -> Atlas-Statistiken pro Datei
+#   - stats_country.db  -> Atlas-Statistiken pro Land
+#
+#   ERKLAERUNG: Das Verzeichnis data/db wird als Ganzes NICHT synchronisiert,
+#   weil es die Auth- und Transkriptions-Datenbanken enthaelt, die auf dem
+#   Prod-Server unabhaengig verwaltet werden. Die Stats-DBs sind jedoch
+#   logisch Teil des regulaeren Data-Syncs - sie werden nur technisch in
+#   einem separaten Abschnitt behandelt, um die Ausschlussregel fuer data/db
+#   zu umgehen. Fuer den Anwender verhalten sie sich wie jedes andere
+#   synchronisierte Element: Delta-Sync bei Aenderungen.
+#
+# -----------------------------------------------------------------------------
+# NICHT SYNCHRONISIERT (bewusst ausgeschlossen):
+# -----------------------------------------------------------------------------
+#
+#   - blacklab_index         -> wird auf dem Server neu gebaut
+#   - blacklab_index.backup  -> nur lokal relevant
+#   - stats_temp             -> temporaere Verarbeitungsdateien
+#   - db/auth.db             -> Prod-Auth-DB wird separat verwaltet
+#   - db/transcription.db    -> Prod-Transkriptions-DB ist unabhaengig
+#   - db/auth_e2e.db         -> nur fuer lokale E2E-Tests
+#
+# -----------------------------------------------------------------------------
+# FORCE-MODUS (-Force):
+# -----------------------------------------------------------------------------
+#
+#   Mit dem Parameter -Force werden alle Dateien uebertragen, unabhaengig
+#   vom Manifest-Zustand. Nuetzlich nach Manifest-Korruption oder zur
+#   vollstaendigen Resynchronisation.
+#   
+#   Beispiel: .\sync_data.ps1 -Force
+#
+# -----------------------------------------------------------------------------
+# VERWENDUNG:
+# -----------------------------------------------------------------------------
+#
 #   cd C:\dev\corapan-webapp
-#   .\scripts\deploy_sync\sync_data.ps1
+#   .\scripts\deploy_sync\sync_data.ps1           # Normal (Delta-Sync)
+#   .\scripts\deploy_sync\sync_data.ps1 -Force    # Force (alle Dateien)
+#
+# Siehe auch:
+#   - update_data_media.ps1  -> Interaktiver Maintenance-Runner
+#   - sync_media.ps1         -> Media-Verzeichnisse synchronisieren
 #
 # =============================================================================
+
+param(
+    [switch]$Force
+)
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
 # Konfiguration
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
 
 $LOCAL_BASE_PATH  = "C:\dev\corapan-webapp\data"
 $REMOTE_BASE_PATH = "/srv/webapps/corapan/data"
@@ -52,15 +94,15 @@ $DATA_DIRECTORIES = @(
 )
 
 # Selektiv zu synchronisierende DB-Dateien aus data/db
-# Diese werden für die Atlas-/Stats-Funktionen auf dem Server benötigt
+# Diese werden fuer die Atlas-/Stats-Funktionen auf dem Server benoetigt
 $STATS_DB_FILES = @(
     "stats_files.db",
     "stats_country.db"
 )
 
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
 # Core-Bibliothek laden
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
 
 $scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $coreScript = Join-Path $scriptDir "sync_core.ps1"
@@ -72,18 +114,23 @@ if (-not (Test-Path $coreScript)) {
 
 . $coreScript
 
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
 # Hauptprogramm
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
 
 Write-Host ""
 Write-Host "=============================================" -ForegroundColor Cyan
-Write-Host " CO.RA.PAN Data Sync: Dev → Prod" -ForegroundColor Cyan
+Write-Host " CO.RA.PAN Data Sync: Dev -> Prod" -ForegroundColor Cyan
 Write-Host "=============================================" -ForegroundColor Cyan
 Write-Host ""
 Write-Host "Quelle:  $LOCAL_BASE_PATH" -ForegroundColor DarkGray
 Write-Host "Ziel:    $REMOTE_BASE_PATH" -ForegroundColor DarkGray
 Write-Host "Datum:   $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')" -ForegroundColor DarkGray
+if ($Force) {
+    Write-Host "Modus:   FORCE (alle Dateien uebertragen)" -ForegroundColor Yellow
+} else {
+    Write-Host "Modus:   Delta-Sync (nur Aenderungen)" -ForegroundColor DarkGray
+}
 Write-Host ""
 
 # Prüfen ob lokales Verzeichnis existiert
@@ -100,7 +147,7 @@ foreach ($dir in $DATA_DIRECTORIES) {
     if (-not (Test-Path $localDir)) {
         Write-Host ""
         Write-Host "[$dir]" -ForegroundColor Yellow
-        Write-Host "  WARNUNG: Lokales Verzeichnis nicht gefunden - übersprungen" -ForegroundColor Yellow
+        Write-Host "  WARNUNG: Lokales Verzeichnis nicht gefunden - uebersprungen" -ForegroundColor Yellow
         continue
     }
     
@@ -108,16 +155,17 @@ foreach ($dir in $DATA_DIRECTORIES) {
         Sync-DirectoryWithDiff `
             -LocalBasePath $LOCAL_BASE_PATH `
             -RemoteBasePath $REMOTE_BASE_PATH `
-            -DirName $dir
+            -DirName $dir `
+            -Force:$Force
     } catch {
         $errorCount++
         Write-Host "  FEHLER bei $dir : $($_.Exception.Message)" -ForegroundColor Red
     }
 }
 
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
 # Selektiver Sync der Stats-DBs aus data/db
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
 
 Write-Host ""
 Write-Host "[Stats-DBs aus data/db]" -ForegroundColor Cyan
@@ -129,7 +177,7 @@ foreach ($dbFile in $STATS_DB_FILES) {
     $localFile = Join-Path $dbLocalPath $dbFile
     
     if (-not (Test-Path $localFile)) {
-        Write-Host "  WARNUNG: $dbFile nicht gefunden - übersprungen" -ForegroundColor Yellow
+        Write-Host "  WARNUNG: $dbFile nicht gefunden - uebersprungen" -ForegroundColor Yellow
         continue
     }
     

@@ -10,6 +10,15 @@
 #   - Sync-DirTarBase64: Synchronisiert Verzeichnis via tar+base64+SSH (Fallback)
 #   - Sync-DirectoryWithRsync: Synchronisiert Verzeichnis via rsync (bevorzugt)
 #   - Sync-DirectoryWithDiff: Vollstaendiger Sync mit Diff-Vorschau
+#   - Test-And-MigrateManifest: Migriert globale Manifeste zu verzeichnisspezifischen
+#   - Test-AndWarnIfPreviousSyncAborted: Warnt bei unterbrochenem vorherigen Sync
+#
+# Manifest-Speicherung:
+#   Jedes synchronisierte Verzeichnis hat sein eigenes Manifest:
+#     media/transcripts/.sync_state/transcripts_manifest.json
+#     media/mp3-full/.sync_state/mp3-full_manifest.json
+#     media/mp3-split/.sync_state/mp3-split_manifest.json
+#   Alte globale Manifeste (unter media/.sync_state/) werden automatisch migriert.
 #
 # Transport-Entscheidung:
 #   - Wenn rsync lokal verfuegbar und lauffaehig -> rsync (echter Delta-Sync)
@@ -20,6 +29,25 @@
 #   - Die Funktion Convert-ToRsyncPath konvertiert automatisch.
 #   - cwRsync-Pfad: C:\dev\corapan-webapp\tools\cwrsync\bin
 #
+# rsync-Optionen fuer grosse Dateien (z.B. Audio):
+#   - --partial: Ermoeglicht Fortsetzung unterbrochener Transfers.
+#     Bei grossen Dateien (mehrere GB) kann ein abgebrochener Upload
+#     beim naechsten Aufruf weitergefuehrt werden, statt von vorne zu beginnen.
+#   - --progress: Zeigt Fortschrittsanzeige pro Datei.
+#   - -z (Kompression): Bleibt aktiv. rsync komprimiert datenbasiert und
+#     erkennt bereits komprimierte Daten (MP3, etc.) automatisch.
+#     Der Overhead bei bereits komprimierten Dateien ist minimal.
+#   - --delete: Entfernt Dateien auf dem Ziel, die lokal nicht mehr existieren.
+#
+# Force-Modus:
+#   - $Force = $true: Alle Dateien uebertragen unabhaengig vom Zustand
+#   - rsync-Optionen: --ignore-times (ignoriert mtime-Vergleich)
+#   - Nuetzlich nach Manifest-Korruption oder zur vollstaendigen Resynchronisation
+#
+# Verbose-Modus:
+#   - $script:SyncVerbose = $true  -> Ausfuehrliche Ausgaben
+#   - $script:SyncVerbose = $false -> Reduzierte Ausgaben (Standard)
+#
 # SSH-Authentifizierung:
 #   - Dedizierter Deploy-Key: $env:USERPROFILE\.ssh\marele (OHNE Passphrase)
 #   - Der Key ist passwortlos fuer automatisierte Sync-/Deploy-Operationen
@@ -28,6 +56,7 @@
 # Fehlerhandling:
 #   - rsync-Fehler sind kritisch und fuehren zum Abbruch
 #   - Manifest-/Post-Sync-Fehler geben Warnung aus, aber kein Fehler-Exit
+#   - Manifest wird NUR bei rsync Exitcode=0 aktualisiert
 #
 # =============================================================================
 
@@ -56,6 +85,193 @@ $script:SyncConfig = @{
 
 # Flag um rsync-Verfuegbarkeits-Log nur einmal auszugeben
 $script:RsyncAvailabilityLogged = $false
+
+# Verbose-Modus: $true = ausfuehrlich, $false = reduziert (Standard)
+$script:SyncVerbose = $false
+
+# -----------------------------------------------------------------------------
+# Verbose/Quiet Steuerung
+# -----------------------------------------------------------------------------
+
+function Set-SyncVerbose {
+    param([bool]$Verbose = $true)
+    $script:SyncVerbose = $Verbose
+}
+
+function Write-VerboseSync {
+    param([string]$Message, [string]$Color = "DarkGray")
+    if ($script:SyncVerbose) {
+        Write-Host $Message -ForegroundColor $Color
+    }
+}
+
+# -----------------------------------------------------------------------------
+# ASCII-Fortschrittsbalken
+# -----------------------------------------------------------------------------
+
+function Write-ProgressBar {
+    param(
+        [int]$Current,
+        [int]$Total,
+        [string]$Activity = "Fortschritt",
+        [int]$BarLength = 30
+    )
+    
+    if ($Total -le 0) { $Total = 1 }
+    $percent = [math]::Min(100, [math]::Round(($Current / $Total) * 100))
+    $filled = [math]::Round(($percent / 100) * $BarLength)
+    $empty = $BarLength - $filled
+    
+    $bar = "[" + ("#" * $filled) + ("." * $empty) + "]"
+    $status = "$bar $Current/$Total ($percent%)"
+    
+    # Ueberschreibe aktuelle Zeile
+    Write-Host "`r    $Activity : $status" -NoNewline
+}
+
+function Complete-ProgressBar {
+    param([string]$Message = "Abgeschlossen")
+    Write-Host "`r    $Message" + (" " * 40)
+}
+
+# -----------------------------------------------------------------------------
+# Test-AndWarnIfPreviousSyncAborted: Warnt bei unterbrochenem vorherigen Sync
+# Heuristik: Manifest-mtime < Sync-Start bedeutet wahrscheinlich Abbruch
+# -----------------------------------------------------------------------------
+
+function Test-AndWarnIfPreviousSyncAborted {
+    param(
+        [Parameter(Mandatory=$true)]
+        [string]$RemoteBasePath,
+        
+        [Parameter(Mandatory=$true)]
+        [string]$DirName
+    )
+    
+    $syncStateDir = "$RemoteBasePath/$DirName/.sync_state"
+    $manifestFile = "$syncStateDir/${DirName}_manifest.json"
+    $syncStartFile = "$syncStateDir/.sync_start"
+    
+    # Pruefe ob beide Dateien existieren und vergleiche mtime
+    $checkCmd = @"
+if [ -f "$manifestFile" ] && [ -f "$syncStartFile" ]; then
+    if [ "$syncStartFile" -nt "$manifestFile" ]; then
+        echo "ABORTED"
+    else
+        echo "OK"
+    fi
+elif [ -f "$manifestFile" ]; then
+    echo "OK"
+else
+    echo "FIRST_RUN"
+fi
+"@
+    
+    try {
+        $result = Invoke-SSHCommand -Command $checkCmd -PassThru -NoThrow
+        if ($null -ne $result) {
+            $status = $result.Trim()
+            if ($status -eq "ABORTED") {
+                Write-Host "  WARNUNG: Vorheriger Sync wurde wahrscheinlich unterbrochen." -ForegroundColor Yellow
+                Write-Host "           rsync fuehrt eine Wiederaufnahme durch." -ForegroundColor Yellow
+            }
+        }
+    }
+    catch {
+        # Fehler ignorieren - kein kritischer Check
+        Write-VerboseSync "    Info: Abbruch-Erkennung fehlgeschlagen (nicht kritisch)"
+    }
+}
+
+# -----------------------------------------------------------------------------
+# Set-SyncStartMarker: Setzt einen Zeitstempel-Marker vor dem Sync
+# -----------------------------------------------------------------------------
+
+function Set-SyncStartMarker {
+    param(
+        [Parameter(Mandatory=$true)]
+        [string]$RemoteBasePath,
+        
+        [Parameter(Mandatory=$true)]
+        [string]$DirName
+    )
+    
+    $syncStateDir = "$RemoteBasePath/$DirName/.sync_state"
+    $syncStartFile = "$syncStateDir/.sync_start"
+    
+    try {
+        Invoke-SSHCommand -Command "mkdir -p '$syncStateDir' && touch '$syncStartFile'" -NoThrow | Out-Null
+    }
+    catch {
+        # Ignorieren - nicht kritisch
+    }
+}
+
+# -----------------------------------------------------------------------------
+# Remove-SyncStartMarker: Entfernt den Zeitstempel-Marker nach erfolgreichem Sync
+# -----------------------------------------------------------------------------
+
+function Remove-SyncStartMarker {
+    param(
+        [Parameter(Mandatory=$true)]
+        [string]$RemoteBasePath,
+        
+        [Parameter(Mandatory=$true)]
+        [string]$DirName
+    )
+    
+    $syncStateDir = "$RemoteBasePath/$DirName/.sync_state"
+    $syncStartFile = "$syncStateDir/.sync_start"
+    
+    try {
+        Invoke-SSHCommand -Command "rm -f '$syncStartFile'" -NoThrow | Out-Null
+    }
+    catch {
+        # Ignorieren - nicht kritisch
+    }
+}
+
+# -----------------------------------------------------------------------------
+# Get-LocalDirectorySize: Berechnet Gesamtgroesse eines Verzeichnisses
+# -----------------------------------------------------------------------------
+
+function Get-LocalDirectorySize {
+    param(
+        [Parameter(Mandatory=$true)]
+        [string]$Path
+    )
+    
+    if (-not (Test-Path $Path)) {
+        return 0
+    }
+    
+    $totalSize = (Get-ChildItem -Path $Path -Recurse -File -ErrorAction SilentlyContinue | 
+                  Measure-Object -Property Length -Sum).Sum
+    
+    if ($null -eq $totalSize) { $totalSize = 0 }
+    return $totalSize
+}
+
+# -----------------------------------------------------------------------------
+# Format-FileSize: Formatiert Bytes in lesbares Format (KB/MB/GB)
+# -----------------------------------------------------------------------------
+
+function Format-FileSize {
+    param([long]$Bytes)
+    
+    if ($Bytes -ge 1GB) {
+        return "{0:N2} GB" -f ($Bytes / 1GB)
+    }
+    elseif ($Bytes -ge 1MB) {
+        return "{0:N1} MB" -f ($Bytes / 1MB)
+    }
+    elseif ($Bytes -ge 1KB) {
+        return "{0:N0} KB" -f ($Bytes / 1KB)
+    }
+    else {
+        return "$Bytes Bytes"
+    }
+}
 
 # -----------------------------------------------------------------------------
 # rsync-Verfuegbarkeit und Pfadlogik
@@ -129,7 +345,13 @@ function Sync-DirectoryWithRsync {
         [string]$RemoteBasePath,
         
         [Parameter(Mandatory=$true)]
-        [string]$DirName
+        [string]$DirName,
+        
+        [int]$LocalFileCount = 0,
+        
+        [long]$LocalTotalSize = 0,
+        
+        [switch]$Force
     )
     
     $localPath = Join-Path $LocalBasePath $DirName
@@ -143,6 +365,17 @@ function Sync-DirectoryWithRsync {
     
     Write-Host "    [rsync] $DirName -> ${server}:$remotePath" -ForegroundColor Cyan
     
+    # Anzahl lokaler Dateien und Groesse anzeigen
+    if ($LocalFileCount -gt 0) {
+        $sizeStr = if ($LocalTotalSize -gt 0) { ", Groesse: $(Format-FileSize $LocalTotalSize)" } else { "" }
+        Write-Host "    Lokale Dateien: $LocalFileCount$sizeStr" -ForegroundColor DarkGray
+    }
+    
+    # Force-Modus Info
+    if ($Force) {
+        Write-Host "    FORCE-MODUS: Alle Dateien werden uebertragen (--ignore-times)" -ForegroundColor Yellow
+    }
+    
     # Konvertiere lokalen Pfad fuer rsync (mit trailing slash fuer Inhalt)
     $rsyncSource = (Convert-ToRsyncPath $localPath) + "/"
     
@@ -154,29 +387,110 @@ function Sync-DirectoryWithRsync {
     $sshCmd = "ssh -i '$sshKeyCygwin' -o StrictHostKeyChecking=no -o ServerAliveInterval=60 -o ServerAliveCountMax=3"
     
     # rsync-Befehl zusammenbauen
+    # --partial: Ermoeglicht Fortsetzung unterbrochener Transfers bei grossen Dateien
+    # --progress: Zeigt Fortschritt pro Datei (kompatibel mit cwRsync)
     $rsyncArgs = @(
         "-avz",
+        "--partial",
+        "--progress",
         "--delete",
         "-e", $sshCmd,
         "--exclude", "blacklab_index",
         "--exclude", "blacklab_index.backup",
         "--exclude", "stats_temp",
         "--exclude", "db",
-        "$rsyncSource",
-        "${server}:$remotePath/"
+        "--exclude", ".sync_state"
     )
     
-    Write-Host "    Fuehre aus: rsync $($rsyncArgs -join ' ')" -ForegroundColor DarkGray
+    # Force-Modus: --ignore-times ignoriert Dateizeit-Vergleich
+    if ($Force) {
+        $rsyncArgs += "--ignore-times"
+    }
     
-    # rsync ausfuehren
-    & rsync @rsyncArgs
+    # Quell- und Zielpfad anhaengen
+    $rsyncArgs += "$rsyncSource"
+    $rsyncArgs += "${server}:$remotePath/"
+    
+    Write-VerboseSync "    Fuehre aus: rsync $($rsyncArgs -join ' ')"
+    
+    $startTime = Get-Date
+    
+    # Zaehler fuer uebertragene Dateien
+    $transferredCount = 0
+    $skippedCount = 0
+    $currentFile = ""
+    
+    # rsync ausfuehren und Output parsen fuer Fortschrittsanzeige
+    $rsyncOutput = @()
+    
+    # rsync direkt ausfuehren
+    & rsync @rsyncArgs 2>&1 | ForEach-Object {
+        $line = $_
+        $rsyncOutput += $line
+        
+        # Zeige rsync-Output wenn verbose
+        if ($script:SyncVerbose) {
+            Write-Host $line
+        }
+        else {
+            # Parse rsync Output fuer Fortschritt
+            # Dateitransfer-Zeilen enthalten Prozentangaben
+            if ($line -match '^\s*[\d,]+\s+\d+%') {
+                # Fortschrittszeile - zeige wenn verbose
+            }
+            elseif ($line -match '^([\w\-_./]+)\s*$' -or $line -match '^.+\.(mp3|json|tsv|db|txt)$') {
+                # Moegliche Datei - zaehle
+                $transferredCount++
+                $currentFile = $line.Trim()
+                
+                # Kompakter Fortschrittsticker alle 10 Dateien
+                if ($LocalFileCount -gt 0 -and ($transferredCount % 10 -eq 0 -or $transferredCount -eq $LocalFileCount)) {
+                    $percent = [math]::Min(100, [math]::Round(($transferredCount / $LocalFileCount) * 100))
+                    $barLen = 20
+                    $filled = [math]::Round(($percent / 100) * $barLen)
+                    $bar = "[" + ("#" * $filled) + ("." * ($barLen - $filled)) + "]"
+                    
+                    # Kuerze Dateinamen
+                    $shortFile = if ($currentFile.Length -gt 30) { 
+                        "..." + $currentFile.Substring($currentFile.Length - 27) 
+                    } else { 
+                        $currentFile 
+                    }
+                    
+                    Write-Host "`r    $bar $transferredCount/$LocalFileCount Dateien ($percent%) - $shortFile    " -NoNewline
+                }
+            }
+        }
+    }
+    
     $exitCode = $LASTEXITCODE
+    
+    # Zeilenumbruch nach Fortschrittsanzeige
+    if (-not $script:SyncVerbose -and $LocalFileCount -gt 0 -and $transferredCount -gt 10) {
+        Write-Host ""
+    }
+    
+    $duration = (Get-Date) - $startTime
     
     if ($exitCode -ne 0) {
         throw "rsync fuer $DirName fehlgeschlagen (Exit-Code: $exitCode)"
     }
     
-    Write-Host "    [rsync] $DirName - OK" -ForegroundColor Green
+    # Zusammenfassung extrahieren aus rsync-Output
+    $sentLine = $rsyncOutput | Where-Object { $_ -match '^sent\s+[\d,]+\s+bytes' } | Select-Object -Last 1
+    $totalLine = $rsyncOutput | Where-Object { $_ -match '^total\s+size\s+is' } | Select-Object -Last 1
+    
+    if ($sentLine) {
+        Write-Host "    $sentLine" -ForegroundColor DarkGray
+    }
+    
+    Write-Host "    [rsync] $DirName - OK ($('{0:mm\:ss}' -f $duration))" -ForegroundColor Green
+    
+    return @{
+        ExitCode = $exitCode
+        Duration = $duration
+        TransferredFiles = $transferredCount
+    }
 }
 
 # -----------------------------------------------------------------------------
@@ -228,6 +542,76 @@ function Invoke-SSHCommand {
 }
 
 # -----------------------------------------------------------------------------
+# Test-And-MigrateManifest: Migriert globale Manifeste zu verzeichnisspezifischen
+# Prueft ob ein globales Manifest unter $RemoteBasePath/.sync_state/ existiert
+# und verschiebt es ggf. an den korrekten Ort $RemoteBasePath/$DirName/.sync_state/
+# -----------------------------------------------------------------------------
+
+function Test-And-MigrateManifest {
+    param(
+        [Parameter(Mandatory=$true)]
+        [string]$RemoteBasePath,
+        
+        [Parameter(Mandatory=$true)]
+        [string]$DirName
+    )
+    
+    $globalManifestDir = "$RemoteBasePath/.sync_state"
+    $globalManifestFile = "$globalManifestDir/${DirName}_manifest.json"
+    $targetManifestDir = "$RemoteBasePath/$DirName/.sync_state"
+    $targetManifestFile = "$targetManifestDir/${DirName}_manifest.json"
+    
+    # Einfaches Shell-Skript fuer Migration (robuster als Python mit Escaping)
+    $migrationCmd = @"
+if [ -f "$globalManifestFile" ]; then
+    mkdir -p "$targetManifestDir"
+    if [ -f "$targetManifestFile" ]; then
+        # Ziel existiert - vergleiche mtime
+        if [ "$globalManifestFile" -nt "$targetManifestFile" ]; then
+            cp "$globalManifestFile" "$targetManifestFile"
+            rm "$globalManifestFile"
+            echo "updated_newer"
+        else
+            rm "$globalManifestFile"
+            echo "removed_old_global"
+        fi
+    else
+        mv "$globalManifestFile" "$targetManifestFile"
+        echo "moved"
+    fi
+    # Loesche globales Verzeichnis wenn leer
+    rmdir "$globalManifestDir" 2>/dev/null || true
+else
+    echo "no_action"
+fi
+"@
+    
+    try {
+        $result = Invoke-SSHCommand -Command $migrationCmd -PassThru -NoThrow
+        if ($null -ne $result) {
+            $action = $result.Trim()
+            switch ($action) {
+                "moved" {
+                    Write-Host "    Info: Globales Manifest gefunden - migriert nach $DirName/.sync_state/" -ForegroundColor Yellow
+                }
+                "updated_newer" {
+                    Write-Host "    Info: Globales Manifest (neuer) - aktualisiert in $DirName/.sync_state/" -ForegroundColor Yellow
+                }
+                "removed_old_global" {
+                    Write-VerboseSync "    Info: Veraltetes globales Manifest entfernt"
+                }
+                "no_action" {
+                    # Nichts zu tun - kein globales Manifest vorhanden
+                }
+            }
+        }
+    }
+    catch {
+        Write-VerboseSync "    Info: Manifest-Migration-Check fehlgeschlagen (nicht kritisch)"
+    }
+}
+
+# -----------------------------------------------------------------------------
 # New-DirectoryManifest: Erzeugt JSON-Manifest fuer lokales Verzeichnis
 # -----------------------------------------------------------------------------
 
@@ -267,6 +651,7 @@ function New-DirectoryManifest {
 
 # -----------------------------------------------------------------------------
 # Get-RemoteManifest: Liest oder erzeugt Manifest auf dem Server
+# Verwendet verzeichnisspezifischen Pfad: $RemoteBasePath/$DirName/.sync_state/
 # -----------------------------------------------------------------------------
 
 function Get-RemoteManifest {
@@ -278,11 +663,32 @@ function Get-RemoteManifest {
         [string]$DirName
     )
     
-    $syncStateDir = "$RemoteBasePath/.sync_state"
+    # NEUER verzeichnisspezifischer Pfad
+    $syncStateDir = "$RemoteBasePath/$DirName/.sync_state"
     $manifestFile = "$syncStateDir/${DirName}_manifest.json"
     $targetDir = "$RemoteBasePath/$DirName"
     
-    # Python-Skript zum Erzeugen des Manifests auf dem Server
+    # Versuche zuerst das gespeicherte Manifest zu lesen
+    $readManifestCmd = "cat '$manifestFile' 2>/dev/null || echo '[]'"
+    
+    try {
+        $result = Invoke-SSHCommand -Command $readManifestCmd -PassThru -NoThrow
+        if ($null -ne $result -and $result.Trim() -ne "[]" -and $result.Trim() -ne "") {
+            $manifest = $result | ConvertFrom-Json
+            if ($null -ne $manifest -and $manifest.Count -gt 0) {
+                Write-VerboseSync "    Manifest gelesen: $($manifest.Count) Eintraege"
+                if ($manifest -isnot [array]) {
+                    return ,@($manifest)
+                }
+                return ,$manifest
+            }
+        }
+    }
+    catch {
+        Write-VerboseSync "    Info: Gespeichertes Manifest nicht lesbar, erzeuge dynamisch..."
+    }
+    
+    # Fallback: Manifest dynamisch auf dem Server erzeugen
     $pythonScript = @"
 import json
 import os
@@ -293,6 +699,8 @@ manifest = []
 
 if os.path.exists(base_path):
     for root, dirs, files in os.walk(base_path):
+        # Ueberspringe .sync_state Verzeichnisse
+        dirs[:] = [d for d in dirs if d != '.sync_state']
         for f in files:
             full = os.path.join(root, f)
             rel = os.path.relpath(full, os.path.dirname(base_path))
@@ -487,6 +895,7 @@ function Sync-DirTarBase64 {
 
 # -----------------------------------------------------------------------------
 # Update-RemoteManifest: Aktualisiert das Manifest auf dem Server
+# Verwendet verzeichnisspezifischen Pfad: $RemoteBasePath/$DirName/.sync_state/
 # Gibt $true bei Erfolg, $false bei Fehler zurueck (kein throw)
 # Bei grossen Manifests wird das JSON in eine temporaere Datei geschrieben
 # und dann via SCP/rsync uebertragen
@@ -505,7 +914,8 @@ function Update-RemoteManifest {
         [array]$Manifest
     )
     
-    $syncStateDir = "$RemoteBasePath/.sync_state"
+    # NEUER verzeichnisspezifischer Pfad
+    $syncStateDir = "$RemoteBasePath/$DirName/.sync_state"
     $manifestFile = "$syncStateDir/${DirName}_manifest.json"
     
     $json = $Manifest | ConvertTo-Json -Compress
@@ -530,7 +940,7 @@ function Update-RemoteManifest {
         }
         else {
             # Grosses Manifest: via temporaere Datei + rsync
-            Write-Host "    Info: Grosses Manifest ($($json.Length) bytes) - uebertrage via rsync" -ForegroundColor DarkGray
+            Write-VerboseSync "    Info: Grosses Manifest ($($json.Length) bytes) - uebertrage via rsync"
             
             $tempFile = Join-Path $env:TEMP "${DirName}_manifest.json"
             try {
@@ -568,6 +978,7 @@ function Update-RemoteManifest {
 # -----------------------------------------------------------------------------
 # Sync-DirectoryWithDiff: Vollstaendiger Sync mit Diff-Vorschau
 # Gibt ein Objekt mit RsyncSuccess und ManifestSuccess zurueck
+# Bei Force=true werden alle Dateien uebertragen (--ignore-times)
 # -----------------------------------------------------------------------------
 
 function Sync-DirectoryWithDiff {
@@ -583,7 +994,9 @@ function Sync-DirectoryWithDiff {
         
         [switch]$SkipIfNoChanges,
         
-        [switch]$ForceTarFallback
+        [switch]$ForceTarFallback,
+        
+        [switch]$Force
     )
     
     $result = [PSCustomObject]@{
@@ -595,10 +1008,27 @@ function Sync-DirectoryWithDiff {
     
     Write-Host ""
     Write-Host "[$DirName]" -ForegroundColor Cyan
+    
+    # Force-Modus Hinweis
+    if ($Force) {
+        Write-Host "  FORCE-MODUS aktiv - alle Dateien werden uebertragen" -ForegroundColor Yellow
+    }
+    
+    # SCHRITT 1: Manifest-Migration pruefen (globale -> verzeichnisspezifische)
+    Test-And-MigrateManifest -RemoteBasePath $RemoteBasePath -DirName $DirName
+    
+    # SCHRITT 2: Abbruch-Erkennung - warnt bei unterbrochenem vorherigen Sync
+    Test-AndWarnIfPreviousSyncAborted -RemoteBasePath $RemoteBasePath -DirName $DirName
+    
     Write-Host "  Analysiere Aenderungen..." -ForegroundColor DarkGray
     
     # Lokales Manifest erzeugen
     $localManifest = New-DirectoryManifest -BasePath $LocalBasePath -DirName $DirName
+    $localFileCount = $localManifest.Count
+    
+    # Lokale Groesse berechnen
+    $localPath = Join-Path $LocalBasePath $DirName
+    $localTotalSize = Get-LocalDirectorySize -Path $localPath
     
     # Remote Manifest lesen (Fehler hier sind nicht kritisch)
     $remoteManifest = Get-RemoteManifest -RemoteBasePath $RemoteBasePath -DirName $DirName
@@ -612,8 +1042,8 @@ function Sync-DirectoryWithDiff {
     Write-Host $diff.Summary
     Write-Host ""
     
-    # Optional: Ueberspringen wenn keine Aenderungen
-    if ($SkipIfNoChanges -and -not $diff.HasChanges) {
+    # Optional: Ueberspringen wenn keine Aenderungen (ausser bei Force)
+    if ($SkipIfNoChanges -and -not $diff.HasChanges -and -not $Force) {
         Write-Host "  Status: Keine Aenderungen - uebersprungen" -ForegroundColor Green
         $result.Skipped = $true
         $result.RsyncSuccess = $true
@@ -624,20 +1054,30 @@ function Sync-DirectoryWithDiff {
     # Transport-Methode waehlen: rsync bevorzugt, tar+base64 als Fallback
     $useRsync = (Test-RsyncAvailable) -and (-not $ForceTarFallback)
     
+    # Groesse formatieren
+    $sizeStr = Format-FileSize $localTotalSize
+    
     if ($useRsync) {
-        Write-Host "  Starte Upload (rsync)..." -ForegroundColor DarkGray
+        Write-Host "  Starte Sync fuer $DirName : $localFileCount Dateien, Gesamtgroesse: $sizeStr" -ForegroundColor DarkGray
+        Write-Host "  Methode: rsync mit Fortschrittsanzeige" -ForegroundColor DarkGray
     }
     else {
         Write-Host "  Starte Upload (tar+base64 Fallback)..." -ForegroundColor DarkGray
     }
     
+    # SCHRITT 3: Sync-Start-Marker setzen (fuer Abbruch-Erkennung)
+    Set-SyncStartMarker -RemoteBasePath $RemoteBasePath -DirName $DirName
+    
     # Rsync/Upload - kritischer Schritt
     try {
         if ($useRsync) {
-            Sync-DirectoryWithRsync `
+            $rsyncResult = Sync-DirectoryWithRsync `
                 -LocalBasePath $LocalBasePath `
                 -RemoteBasePath $RemoteBasePath `
-                -DirName $DirName
+                -DirName $DirName `
+                -LocalFileCount $localFileCount `
+                -LocalTotalSize $localTotalSize `
+                -Force:$Force
         }
         else {
             Sync-DirTarBase64 `
@@ -654,11 +1094,16 @@ function Sync-DirectoryWithDiff {
         Write-Host "    $($_.Exception.Message)" -ForegroundColor Red
         $result.RsyncSuccess = $false
         # Bei rsync-Fehler direkt zurueckgeben - nicht weiter versuchen
+        # Sync-Start-Marker bleibt bestehen -> Warnung beim naechsten Lauf
         return $result
     }
     
-    # Manifest-Update - nicht kritisch
+    # SCHRITT 4: Manifest-Update - NUR bei erfolgreichem rsync
+    # Dies ist kritisch: Manifest darf nur aktualisiert werden wenn rsync OK war
     $result.ManifestSuccess = Update-RemoteManifest -RemoteBasePath $RemoteBasePath -DirName $DirName -Manifest $localManifest
+    
+    # SCHRITT 5: Sync-Start-Marker entfernen nach erfolgreichem Sync
+    Remove-SyncStartMarker -RemoteBasePath $RemoteBasePath -DirName $DirName
     
     if ($result.ManifestSuccess) {
         Write-Host "  Status: OK" -ForegroundColor Green

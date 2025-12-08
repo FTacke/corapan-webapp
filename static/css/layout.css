@@ -30,33 +30,42 @@ body.app-shell {
 /* Expanded layout (Desktop ≥840px mit permanentem Standard Drawer) */
 @media (min-width: 840px) {
   body.app-shell {
+    /* Grid-Layout: Drawer links, Content (main+footer) rechts */
     grid-template-areas:
       "drawer main"
       "drawer footer";
     grid-template-columns: 280px 1fr; /* Fixed drawer width */
-    /* Desktop: Drawer bleibt fix, Content scrollt */
-    height: 100vh;
-    overflow: clip; /* Clips content but allows shadows to paint outside */
+    grid-template-rows: 1fr auto; /* Main nimmt verfügbaren Platz, Footer auto */
+    min-height: 100vh;
+    /* Body scrollt normal - kein overflow:hidden */
   }
   
-  /* Navigation Drawer: Sticky in Grid */
+  /* Navigation Drawer: Fixed am linken Rand, scrollt eigenständig */
   #navigation-drawer {
-    position: sticky;
+    grid-area: drawer;
+    position: fixed;
+    left: 0;
     top: 0;
+    width: 280px;
     height: 100vh;
-    max-height: 100vh;
     overflow-y: auto;
-    overflow-x: clip; /* Clips content overflow, allows shadows */
-    align-self: flex-start;
+    overflow-x: clip;
+    z-index: 5;
   }
   
-  /* Main Content: Scrollt eigenständig */
+  /* Main Content: Normale Höhe, kein internes Scrollen */
   #main-content,
   main.site-main,
   .site-main {
-    height: 100vh;
-    overflow-y: auto;
-    overflow-x: hidden;
+    grid-area: main;
+    height: auto;
+    min-height: calc(100vh - 200px); /* Mindesthöhe für kurze Seiten */
+    overflow: visible;
+  }
+  
+  /* Footer wird normal am Ende angezeigt */
+  #site-footer {
+    grid-area: footer;
   }
 }
 
