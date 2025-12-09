@@ -173,7 +173,7 @@ Abgeschlossene Analysen, obsolete Dokumentation.
 
 ## 📝 Documentation Conventions
 
-> **For Contributors:** See **[CONTRIBUTING.md](CONTRIBUTING.md)** for detailed guidelines on writing, structuring, and maintaining documentation.
+> **For Contributors:** See **[CONTRIBUTING.md](/CONTRIBUTING.md)** for detailed guidelines on writing, structuring, and maintaining documentation.
 
 ### Front-Matter Metadata
 

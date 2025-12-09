@@ -6,7 +6,7 @@ updated: "2025-11-10"
 tags: [migration, htmx, turbo, architecture, plan]
 links:
   - ../decisions/ADR-0002-htmx-migration.md
-  - ../CONTRIBUTING.md
+  - /CONTRIBUTING.md
 ---
 
 # Turbo → htmx Migration Plan (DRY RUN)
@@ -580,4 +580,4 @@ def test_htmx_login_flow(page):
 - [ADR-0002: htmx Migration](../decisions/ADR-0002-htmx-migration.md) - Rationale
 - [How-To: htmx Login Flow](../how-to/htmx-login-flow.md) - Implementierungsanleitung
 - [Reference: htmx Patterns](../reference/htmx-patterns.md) - Patterns für CO.RA.PAN
-- [CONTRIBUTING Guidelines](../CONTRIBUTING.md) - Docs-Konventionen
+- [CONTRIBUTING Guidelines](/CONTRIBUTING.md) - Docs-Konventionen

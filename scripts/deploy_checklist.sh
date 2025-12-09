@@ -70,7 +70,7 @@ echo "4. Documentation"
 echo "================"
 check_file "docs/how-to/advanced-search.md" "How-to guide (updated with export)"
 check_file "docs/operations/runbook-advanced-search.md" "Runbook (updated with incident 5)"
-check_file "docs/CHANGELOG.md" "Changelog (added [2.5.0])"
+check_file "CHANGELOG.md" "Changelog (added [2.5.0])"
 
 echo ""
 echo "5. Python Syntax Check"

@@ -301,7 +301,7 @@ AUTH_DATABASE_URL=sqlite:///data/db/auth.db
 - **[Frontend Issues](../troubleshooting/frontend-issues.md)** - DataTables, Audio, Player
 
 ### Contributing
-- **[CONTRIBUTING.md](../CONTRIBUTING.md)** - Contribution Guidelines
+- **[CONTRIBUTING.md](/CONTRIBUTING.md)** - Contribution Guidelines
 - **[Design System](../design/design-system-overview.md)** - UI/UX Guidelines
 - **[Roadmap](../decisions/roadmap.md)** - Future Development Priorities
 

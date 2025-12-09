@@ -637,6 +637,6 @@ Diese Anleitung ermöglicht es, die **erweiterte Suche** (Advanced Search) zu pl
 ## Siehe auch
 
 - [Corpus Search Architecture](../reference/corpus-search-architecture.md) - Detaillierte Architektur-Referenz
-- [CONTRIBUTING Guidelines](../CONTRIBUTING.md) - Dokumentations- und Commit-Konventionen
+- [CONTRIBUTING Guidelines](/CONTRIBUTING.md) - Dokumentations- und Commit-Konventionen
 - [Database Schema Reference](database-schema.md) - Token-Tabelle und Indizes
 - [Deployment Guide](../operations/deployment.md) - Production-Deployment mit DB-Optimierung

@@ -305,7 +305,7 @@ Requires Flask-WTF: `pip install Flask-WTF`
 - **HTTP Spec**: [RFC 7231 § 4.2.1](https://tools.ietf.org/html/rfc7231#section-4.2.1) - Safe Methods (GET, HEAD, OPTIONS are idempotent)
 - **OWASP**: [Cross-Site Request Forgery Prevention Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Cross-Site_Request_Forgery_Prevention_Cheat_Sheet.html)
 - **Flask-JWT-Extended**: [CSRF Protection](https://flask-jwt-extended.readthedocs.io/en/stable/options/#cookie-csrf-protection)
-- **Contributing Guide**: `docs/CONTRIBUTING.md` (Docs as Code, ADR format)
+- **Contributing Guide**: `/CONTRIBUTING.md` (Docs as Code, ADR format)
 
 ---
 

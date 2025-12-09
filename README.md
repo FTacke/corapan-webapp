@@ -145,7 +145,7 @@ Die detaillierte Dokumentation befindet sich im `docs/` Ordner:
 - **[Anleitungen](docs/how-to/)**: Schritt-für-Schritt Guides (z.B. Quickstart).
 - **[Betrieb](docs/operations/)**: Deployment, Security.
 - **[Referenz](docs/reference/)**: API-Doku, Datenbank-Schema.
-- **[Changelog](docs/CHANGELOG.md)**: Versionshistorie und Release Notes.
+- **[Changelog](CHANGELOG.md)**: Versionshistorie und Release Notes.
 
 ## 9. Deployment
 
@@ -177,13 +177,13 @@ permitted by the project’s legal framework and cannot be considered open data.
 ## 11. Versionierung & Zitation
 
 - **Aktuelle Version:** 1.0.0 (Dezember 2025)
-- **Changelog:** [docs/CHANGELOG.md](docs/CHANGELOG.md)
+- **Changelog:** [CHANGELOG.md](CHANGELOG.md)
 - **Zitation:** Siehe [CITATION.cff](CITATION.cff)
 - **Zenodo:** Mirror geplant für v1.0 Release
 
 ### Beiträge
 
-Beiträge sind willkommen! Siehe [CONTRIBUTING.md](docs/CONTRIBUTING.md) für Richtlinien.
+ Beiträge sind willkommen! Siehe [CONTRIBUTING.md](CONTRIBUTING.md) für Richtlinien.
 
 ---
 

@@ -825,5 +825,5 @@ See: docs/migration/turbo-to-htmx-migration-plan.md
 
 - [ADR-0002: htmx Migration](../decisions/ADR-0002-htmx-migration.md) - Rationale
 - [Migration Plan](turbo-to-htmx-migration-plan.md) - Detaillierter Plan (DRY RUN)
-- [CONTRIBUTING Guidelines](../CONTRIBUTING.md) - Dokumentations-Konventionen
-- [CHANGELOG](../CHANGELOG.md) - Projekthistorie
+- [CONTRIBUTING Guidelines](/CONTRIBUTING.md) - Dokumentations-Konventionen
+- [CHANGELOG](/CHANGELOG.md) - Projekthistorie

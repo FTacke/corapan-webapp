@@ -6,7 +6,7 @@ updated: "2025-11-09"
 tags: [migration, country-codes, standardization, usa]
 links:
   - ../reference/country-code-normalization.md
-  - ../CHANGELOG.md
+   - /CHANGELOG.md
 ---
 
 # Standardisierung EEUU → USA - Abschlussbericht

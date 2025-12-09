@@ -7,7 +7,7 @@ tags: [migration, json-annotation, implementation, v2]
 links:
   - ../reference/json-annotation-v2-specification.md
   - ../how-to/json-annotation-workflow.md
-  - ../CHANGELOG.md
+   - /CHANGELOG.md
 ---
 
 # JSON Annotation v2 - Implementation Summary
@@ -223,7 +223,7 @@ if lemma == "ir" and POS in {"AUX", "VERB"}:
 - Integration mit DB-Creation
 
 ### 3. CHANGELOG Update
-**`docs/CHANGELOG.md`**
+**`/CHANGELOG.md`**
 - Version 2.1.0 dokumentiert
 - Alle Änderungen gelistet
 - Technical Details

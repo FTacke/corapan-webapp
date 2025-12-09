@@ -529,4 +529,4 @@ python scripts/start_waitress.py
 2. **Try queries:** `http://localhost:8000/search/advanced`
 3. **Read docs:** See `docs/concepts/search-architecture.md` for architecture overview
 4. **Production deploy:** See [Production Deployment](production-deployment.md)
-5. **Contribute:** Follow [CONTRIBUTING.md](docs/CONTRIBUTING.md)
+5. **Contribute:** Follow [CONTRIBUTING.md](/CONTRIBUTING.md)
