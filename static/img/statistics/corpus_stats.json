@@ -1,5 +1,5 @@
 {
-  "generated": "2025-10-24T19:35:26.635100",
+  "generated": "2025-12-09T11:57:49.745228",
   "all_countries": {
     "total": {
       "word_count": 1464768,
@@ -17,13 +17,13 @@
     },
     "pro_gender": {
       "m": {
-        "word_count": 789467,
-        "duration": "72:19:32",
+        "word_count": 789239,
+        "duration": "72:18:25",
         "percentage": 66.4
       },
       "f": {
-        "word_count": 399234,
-        "duration": "37:48:42",
+        "word_count": 399462,
+        "duration": "37:49:49",
         "percentage": 33.6
       }
     },
@@ -37,12 +37,12 @@
         "duration": "20:05:53"
       },
       "libre_m": {
-        "word_count": 431752,
-        "duration": "37:07:51"
+        "word_count": 431524,
+        "duration": "37:06:44"
       },
       "libre_f": {
-        "word_count": 177053,
-        "duration": "15:48:27"
+        "word_count": 177281,
+        "duration": "15:49:34"
       },
       "pre_m": {
         "word_count": 15511,
@@ -80,20 +80,20 @@
       },
       "pro_gender": {
         "m": {
-          "word_count": 58201,
-          "duration": "04:53:55",
-          "percentage": 78.1
+          "word_count": 57973,
+          "duration": "04:52:48",
+          "percentage": 77.8
         },
         "f": {
-          "word_count": 16339,
-          "duration": "01:26:51",
-          "percentage": 21.9
+          "word_count": 16567,
+          "duration": "01:27:58",
+          "percentage": 22.2
         }
       },
       "pro_mode_gender": {
         "libre_m": {
-          "word_count": 50976,
-          "duration": "04:12:49"
+          "word_count": 50748,
+          "duration": "04:11:42"
         },
         "pre_m": {
           "word_count": 1009,
@@ -108,8 +108,8 @@
           "duration": "00:20:38"
         },
         "libre_f": {
-          "word_count": 12920,
-          "duration": "01:06:36"
+          "word_count": 13148,
+          "duration": "01:07:43"
         },
         "pre_f": {
           "word_count": 736,
@@ -124,8 +124,8 @@
           "duration": "00:09:04"
         },
         "general_m": {
-          "word_count": 55693,
-          "duration": "04:40:37"
+          "word_count": 55465,
+          "duration": "04:39:30"
         },
         "tiempo_m": {
           "word_count": 1331,
@@ -136,8 +136,8 @@
           "duration": "00:05:44"
         },
         "general_f": {
-          "word_count": 15247,
-          "duration": "01:20:49"
+          "word_count": 15475,
+          "duration": "01:21:56"
         },
         "tiempo_f": {
           "word_count": 1092,
@@ -187,7 +187,7 @@
         },
         "libre_m": {
           "word_count": 22584,
-          "duration": "01:55:50"
+          "duration": "01:55:51"
         },
         "lectura_m": {
           "word_count": 4662,
