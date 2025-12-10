@@ -21,6 +21,10 @@ let countryPanelsContainer = null;
 let loadingElement = null;
 let errorElement = null;
 
+// Zoom modal elements
+let zoomModal = null;
+let zoomImage = null;
+
 // ==============================================================================
 // DATA STORE
 // ==============================================================================
@@ -466,25 +470,18 @@ function renderCountryPanel(countryCode, isActive) {
   // Sort files by date descending
   files.sort((a, b) => (b.date || "").localeCompare(a.date || ""));
 
-  // Build table rows
+  // Build table rows - column order: Emisora, Fecha, Archivo, Duración, Palabras
+  // Archivo column shows filename WITHOUT player link
   const rows = files
     .map((item) => {
       const fileBase =
         item.filename?.replace(".json", "").replace(".mp3", "") || "";
-      const transcriptionPath = `/media/transcripts/${encodeURIComponent(fileBase)}.json`;
-      const audioPath = `/media/full/${encodeURIComponent(fileBase)}.mp3`;
-      const playerUrl = `/player?transcription=${encodeURIComponent(transcriptionPath)}&audio=${encodeURIComponent(audioPath)}`;
 
       return `
         <tr>
-          <td>${item.date || "—"}</td>
           <td>${item.radio || "—"}</td>
-          <td>
-            <a href="${playerUrl}" class="md3-metadata-player-link" title="Abrir en el reproductor (requiere login)">
-              <span class="material-symbols-rounded" aria-hidden="true">play_circle</span>
-              ${fileBase}
-            </a>
-          </td>
+          <td>${item.date || "—"}</td>
+          <td>${fileBase || "—"}</td>
           <td class="right-align">${formatDuration(item.duration)}</td>
           <td class="right-align">${formatNumber(item.word_count)}</td>
         </tr>
@@ -542,8 +539,8 @@ function renderCountryPanel(countryCode, isActive) {
               <table class="md3-metadata-table">
                 <thead>
                   <tr>
-                    <th>Fecha</th>
                     <th>Emisora</th>
+                    <th>Fecha</th>
                     <th>Archivo</th>
                     <th class="right-align">Duración</th>
                     <th class="right-align">Palabras</th>
@@ -659,6 +656,9 @@ function renderCountryPanels(countryCodes, activeCode) {
   
   // Initialize error handlers for statistics images (CSP-compliant)
   initStatsImageErrorHandlers();
+  
+  // Attach zoom handlers to dynamically added country stats images
+  attachZoomHandlers();
 }
 
 // ==============================================================================
@@ -708,6 +708,83 @@ function showError() {
 }
 
 // ==============================================================================
+// IMAGE ZOOM FUNCTIONALITY (migrated from stats/zoom.js)
+// ==============================================================================
+
+/**
+ * Initialize the zoom modal functionality for statistics images
+ * Supports both global stats images (.md3-stats-image) and country stats (.md3-country-stats-image)
+ */
+function initZoomModal() {
+  zoomModal = document.getElementById('statsZoomModal');
+  zoomImage = document.getElementById('statsZoomImage');
+
+  if (!zoomModal || !zoomImage) {
+    console.warn('[Corpus Metadata] Zoom modal elements not found');
+    return;
+  }
+
+  // Attach click handlers to all existing statistics images
+  attachZoomHandlers();
+
+  // Close modal on click outside content or on close button
+  zoomModal.addEventListener('click', function(e) {
+    if (e.target === zoomModal || e.target.closest('.md3-stats-zoom-modal-close')) {
+      closeZoomModal();
+    }
+  });
+
+  // Close modal with Escape key
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape' && zoomModal.classList.contains('active')) {
+      closeZoomModal();
+    }
+  });
+}
+
+/**
+ * Attach zoom click handlers to all statistics images
+ * Call this after dynamically adding content
+ */
+function attachZoomHandlers() {
+  if (!zoomModal || !zoomImage) return;
+
+  // Select all country stats images (used for both global and per-country stats)
+  const allImages = document.querySelectorAll('.md3-country-stats-image');
+
+  allImages.forEach(img => {
+    const container = img.closest('.md3-country-stats-image-container');
+    if (container && !container.dataset.zoomInitialized) {
+      container.dataset.zoomInitialized = 'true';
+      container.addEventListener('click', function(e) {
+        e.preventDefault();
+        openZoomModal(img.src, img.alt);
+      });
+    }
+  });
+}
+
+/**
+ * Open the zoom modal with a specific image
+ */
+function openZoomModal(src, alt) {
+  if (!zoomModal || !zoomImage) return;
+  zoomImage.src = src;
+  zoomImage.alt = alt || '';
+  zoomModal.classList.add('active');
+  document.body.style.overflow = 'hidden';
+}
+
+/**
+ * Close the zoom modal
+ */
+function closeZoomModal() {
+  if (!zoomModal) return;
+  zoomModal.classList.remove('active');
+  document.body.style.overflow = '';
+}
+
+// ==============================================================================
 // INITIALIZATION
 // ==============================================================================
 
@@ -728,6 +805,9 @@ async function init() {
 
   // Initialize global download menu
   initDownloadMenus();
+
+  // Initialize zoom modal for statistics images
+  initZoomModal();
 
   // Parse URL parameters
   const { view, country } = getURLParams();

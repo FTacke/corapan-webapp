@@ -317,8 +317,8 @@ def proyecto_diseno():
 
 @blueprint.get("/proyecto/estadisticas")
 def proyecto_estadisticas():
-    # Redirect to new corpus composition page
-    return redirect(url_for("corpus.composicion"), 301)
+    # Redirect to corpus metadata page (composicion merged into metadata)
+    return redirect(url_for("corpus.metadata"), 301)
 
 
 @blueprint.get("/proyecto/quienes-somos")

@@ -12,8 +12,7 @@ Endpunkte:
 ----------
 Statische Seiten:
     GET /corpus/guia          → Guía para consultar el corpus
-    GET /corpus/metadata      → Metadatos (Download-Seite)
-    GET /corpus/composicion   → Composición del corpus
+    GET /corpus/metadata      → Metadatos (Download-Seite + Composición)
 
 Globale Metadaten-Downloads:
     GET /corpus/metadata/download/tsv     → corapan_recordings.tsv
@@ -211,12 +210,6 @@ def guia() -> Response:
 def metadata() -> Response:
     """Metadatos del corpus – página con descargas FAIR."""
     return render_template("pages/corpus_metadata.html")
-
-
-@blueprint.get("/composicion")
-def composicion() -> Response:
-    """Composición del corpus – visualizaciones y datos cuantitativos."""
-    return render_template("pages/corpus_composicion.html")
 
 
 @blueprint.get("/player")

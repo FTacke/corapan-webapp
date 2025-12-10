@@ -90,6 +90,7 @@ body[data-page="player"] .md3-footer {
   text-decoration: none;
   transition: all 200ms cubic-bezier(0.2, 0, 0, 1);
   border-radius: var(--radius-sm);
+  overflow: hidden;
 }
 
 .md3-footer__brand:hover {
@@ -105,7 +106,6 @@ body[data-page="player"] .md3-footer {
   display: block;
   height: auto;
   image-rendering: -webkit-optimize-contrast;
-  /* Keep badge crisp */
 }
 
 /* Logo Marker - Border divider */
