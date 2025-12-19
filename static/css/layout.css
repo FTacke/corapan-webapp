@@ -49,7 +49,8 @@ body.app-shell {
     width: 280px;
     height: 100vh;
     overflow-y: auto;
-    overflow-x: clip;
+    box-shadow: var(--elev-2);
+    overflow-x: visible;
     z-index: 5;
   }
   

@@ -15,16 +15,7 @@ export function initPreloadGuard() {
   }, { once: true });
 }
 
-export function initDrawerAnimation() {
-  try {
-    if (new URLSearchParams(window.location.search).get('drawer_animate') === '1') {
-      var drawer = document.getElementById('navigation-drawer-standard');
-      if (drawer) {
-        drawer.classList.add('pending-slide-in');
-      }
-    }
-  } catch (e) { console.error(e); }
-}
+
 
 export function initPageTitleAndScroll() {
   if (window.__pageTitleInit) return;

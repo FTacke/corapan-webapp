@@ -107,7 +107,7 @@
 
 /* Hide Standard (permanent) Drawer on Index Page (Desktop only) */
 @media (min-width: 840px) {
-  body[data-page="index"] #navigation-drawer .md3-navigation-drawer--standard {
+  body[data-page="index"] #navigation-drawer {
     /* NEEDS_IMPORTANT: app-shell layout override */
     display: none !important;
   }

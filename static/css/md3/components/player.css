@@ -14,12 +14,13 @@
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  background: var(--md-sys-color-surface); /* White background */
+  /* Page uses the global app background (dunkleres surface-container) */
+  background: var(--app-background);
 }
 
-/* Force white background on body for Player Page */
-body.app-shell {
-  background-color: var(--md-sys-color-surface) !important;
+/* Scope background override to Player page only */
+body.app-shell[data-page="player"] {
+  background-color: var(--app-background) !important;
 }
 
 /* Player Header */
@@ -28,7 +29,7 @@ body.app-shell {
   align-items: center;
   gap: var(--space-4);
   padding: var(--space-4) var(--space-6);
-  background: var(--md-sys-color-surface-container);
+  background: var(--md-sys-color-surface);
   border-bottom: 1px solid var(--md-sys-color-outline-variant);
   box-shadow: var(--elev-1);
   transition: box-shadow 0.2s cubic-bezier(0.2, 0, 0, 1);
@@ -99,7 +100,8 @@ body.app-shell {
   margin: 0 auto;
   width: 100%;
   align-items: start; /* Sidebar startet oben */
-  background: var(--md-sys-color-surface); /* White background */
+  /* Container ist transparent - nur Cards/Header sind heller */
+  background: transparent;
 }
 
 /* Player Sidebar - Fixed beim Scrollen */
@@ -161,7 +163,7 @@ body.app-shell {
 .md3-player-card {
   padding: var(--space-3);
   border-radius: var(--radius-md);
-  background: var(--md-sys-color-surface-container);
+  background: var(--md-sys-color-surface);
   box-shadow: var(--elev-1);
   transition: box-shadow 0.2s cubic-bezier(0.2, 0, 0, 1);
 }

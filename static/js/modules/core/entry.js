@@ -6,7 +6,7 @@
 import { initCsrfProtection } from "./csrf.js";
 import { initAuthHandler, checkAutoLogin } from "./auth_handler.js";
 import { initPageRouter } from "./router.js";
-import { initPreloadGuard, initPageTitleAndScroll, initDrawerAnimation } from "./ui.js";
+import { initPreloadGuard, initPageTitleAndScroll } from "./ui.js";
 import { initConfig } from "./config.js";
 import { initFlashSnackbar } from "./snackbar.js";
 
@@ -15,9 +15,6 @@ import "../../main.js";
 
 // Initialize Config
 initConfig();
-
-// Initialize Drawer Animation
-initDrawerAnimation();
 
 // Initialize CSRF protection immediately (it attaches event listeners)
 initCsrfProtection();

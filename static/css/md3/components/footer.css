@@ -31,19 +31,17 @@
   }
 }
 
-/* Force white background on Editor and Player pages */
+/* Editor and Player pages: Footer matches page background (darker) */
 body[data-page="editor"] .md3-footer,
 body[data-page="player"] .md3-footer {
-  background: var(--md-sys-color-surface);
+  background: var(--app-background);
 }
 
 /* Dark mode override for Editor/Player if needed (assuming they stay light or handle dark mode differently) */
 @media (prefers-color-scheme: dark) {
   body[data-page="editor"] .md3-footer,
   body[data-page="player"] .md3-footer {
-    background: var(
-      --md-sys-color-surface
-    ); /* Or keep it white if that's the design intent, but usually surface in dark mode */
+    background: var(--app-background);
   }
 }
 
