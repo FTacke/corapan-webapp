@@ -7,10 +7,30 @@ Willkommen zur CO.RA.PAN Dokumentation. Diese Übersicht hilft dir, die richtige
 ## 🚀 Quick Start
 
 **Neu hier?** Starte mit diesen Dokumenten:
-1. **[Architecture Overview](concepts/architecture.md)** - Verstehe die Systemarchitektur
-2. **[Development Setup](operations/development-setup.md)** - Entwicklungsumgebung einrichten
-3. **[Authentication Guide](guides/authentication.md)** - Umfassender Guide zur Authentifizierung
-4. **[Analytics System](analytics/index.md)** - DSGVO-konformes Nutzungstracking ⭐ NEU v1.0
+1. **[README.md](../README.md)** - Projektübersicht und Installation
+2. **[startme.md](../startme.md)** - Quick Start Guide (10 Minuten)
+3. **[Development Setup](operations/development-setup.md)** - Entwicklungsumgebung einrichten
+4. **[Authentication Guide](guides/authentication.md)** - Umfassender Guide zur Authentifizierung
+
+---
+
+## 🎯 Template Documentation (NEW - Dezember 2025)
+
+**Diese Repository als Template für neue Projekte verwenden:**
+
+| Dokument | Zweck | Zielgruppe |
+|----------|-------|------------|
+| **[MODULES.md](MODULES.md)** | Modul-Inventar und Abhängigkeiten (12 Module) | Entwickler die Features anpassen |
+| **[PRUNING_GUIDE.md](PRUNING_GUIDE.md)** | Schritt-für-Schritt Modul-Entfernung | Entwickler die Minimal-Template erstellen |
+| **[ARCHITECTURE.md](ARCHITECTURE.md)** | System-Architektur (5 Layer) und Design | Architekten, Senior-Entwickler |
+| **[template/README.md](template/README.md)** | Template-Übersicht | Alle Template-Nutzer |
+| **[template/developer_guide.md](template/developer_guide.md)** | Seiten erstellen, Branding anpassen | Feature-Entwickler |
+| **[MAINTENANCE_REPORT.md](MAINTENANCE_REPORT.md)** | Maintenance-Audit und Status | Maintainer, Auditoren |
+
+**Template-Szenarien:**
+- **Minimal-Template (Auth + Admin):** [PRUNING_GUIDE.md Scenario A](PRUNING_GUIDE.md#scenario-a-minimal-template-auth--admin-only)
+- **Research-Platform:** [PRUNING_GUIDE.md Scenario B](PRUNING_GUIDE.md#scenario-b-remove-individual-modules)
+- **Full-Template:** [template/developer_guide.md](template/developer_guide.md)
 
 ---
 

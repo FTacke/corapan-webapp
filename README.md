@@ -49,7 +49,37 @@ Authentication: the project migrated to a DB-backed authentication system and no
 
 ## Using this repo as a template
 
-This repository is intentionally structured to act as a template for new projects that need a secure DB-backed authentication system and a small MD3-based UI foundation. For a short checklist and recommended steps when reusing this codebase, see `docs/how-to/template-usage.md` and follow `startme.md` for quick developer onboarding.
+This repository is intentionally structured to act as a template for new projects that need a secure DB-backed authentication system and a Material Design 3 UI foundation. The template provides:
+
+- **Secure Authentication:** JWT-based auth with refresh token rotation, DB-backed user management
+- **Role-Based Access Control:** User, Editor, Admin roles with middleware enforcement
+- **MD3 Design System:** Complete component library with theming support
+- **Admin UI:** User management, audit logs, role assignment
+- **Privacy-First Analytics:** DSGVO-compliant tracking (optional module)
+- **Production-Ready Infrastructure:** Docker, CI/CD, deployment scripts
+
+### Quick Template Usage
+
+For a comprehensive template usage guide, see:
+- **[Template Usage Guide](docs/how-to/template-usage.md)** - Quick checklist for adapting to new projects
+- **[Developer Guide](docs/template/developer_guide.md)** - Creating pages, customizing branding, adding features
+- **[Quick Start](startme.md)** - Getting the template running locally
+
+### What to customize for a new project
+
+1. **Branding:** Update colors in `static/css/md3/tokens.css`, logo in `static/img/`, titles in templates
+2. **Legal:** Edit `templates/pages/impressum.html` and `templates/pages/privacy.html`
+3. **Auth:** Configure environment variables (see `.env.example`), run DB migrations
+4. **Features:** Remove corpus-specific modules (BlackLab, audio player) if not needed (see future MODULES.md)
+
+### LOKAL/ Directory (Not Part of Template)
+
+The `LOKAL/` directory is a **separate repository** containing heavy corpus processing tools (JSON→TSV→BlackLab indexing pipeline) with large NLP and audio dependencies. It is **excluded from all template linting, testing, and formatting** via configuration in:
+- `pyproject.toml` (pytest)
+- `.gitignore` / `.dockerignore`
+- CI workflows (explicit path targeting)
+
+**For new projects:** You likely don't need LOKAL/ unless you're working with linguistic corpora. The webapp template works standalone.
 
 ## 4. Voraussetzungen
 
@@ -87,13 +117,28 @@ Erstellen Sie eine `.env` Datei basierend auf der Vorlage:
 ```powershell
 cp .env.example .env
 ```
-Passen Sie die Werte in `.env` an (insbesondere `FLASK_SECRET_KEY` und Pfade).
+Passen Sie die Werte in `.env` an (insbesondere `FLASK_SECRET_KEY` und `JWT_SECRET_KEY`).
 
-### 5. BlackLab Index (Optional/Initial)
+### 5. Datenbank initialisieren
+Erstellen Sie die Auth-Datenbank und den initialen Admin-Account:
+```powershell
+# SQLite (Development)
+python scripts/apply_auth_migration.py --db data/db/auth.db --reset
+
+# PostgreSQL (Production/Staging)
+# Apply migrations/0001_create_auth_schema_postgres.sql via psql
+
+# Initialen Admin erstellen
+python scripts/create_initial_admin.py --db data/db/auth.db --username admin --password change-me
+```
+
+### 6. BlackLab Index (Optional/Initial)
 Falls noch kein Index vorhanden ist, muss dieser erstellt werden. Siehe dazu `docs/how-to/quickstart-windows.md` oder nutzen Sie das Skript:
 ```powershell
 .\scripts\build_blacklab_index.ps1
 ```
+
+**Hinweis:** Für ein minimales Template ohne Korpus-Suchfunktion kann dieser Schritt übersprungen werden.
 
 ## 6. Entwicklung & Start
 

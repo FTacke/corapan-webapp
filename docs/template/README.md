@@ -94,11 +94,14 @@ Visit: http://localhost:8000
 
 | Document | Location |
 |----------|----------|
-| Developer Guide | `docs/template/developer_guide.md` |
-| MD3 Patterns | `docs/md3/30_patterns_and_skeletons.md` |
-| Production Setup | `docs/operations/production_hardening.md` |
-| Release Checklist | `docs/operations/release_checklist.md` |
-| Project Structure | `docs/reference/project_structure.md` |
+| **Module Overview** | `docs/MODULES.md` - Feature modules and dependencies |
+| **Removal Guide** | `docs/PRUNING_GUIDE.md` - Step-by-step module removal |
+| **Architecture** | `docs/ARCHITECTURE.md` - System design and data flow |
+| **Developer Guide** | `docs/template/developer_guide.md` - Creating pages and customizing |
+| **Template Usage** | `docs/how-to/template-usage.md` - Quick checklist |
+| **Production Setup** | `docs/operations/production_hardening.md` - Security hardening |
+| **Release Checklist** | `docs/operations/release_checklist.md` - Pre-launch checklist |
+| **Project Structure** | `docs/reference/project_structure.md` - File organization |
 
 ---
 
