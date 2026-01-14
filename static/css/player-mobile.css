@@ -289,7 +289,6 @@
 
     /* BACKGROUND: Solid, KEIN Glassmorphism */
     background: var(--md-sys-color-surface-container) !important;
-    background-color: var(--md-sys-color-surface-container) !important;
     backdrop-filter: none !important;
     -webkit-backdrop-filter: none !important;
 
@@ -306,7 +305,7 @@
     z-index: 99999 !important;
 
     /* SHADOW: Stark für Sichtbarkeit */
-    box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.2) !important;
+    box-shadow: 0 -4px 12px color-mix(in srgb, var(--md-sys-color-scrim) 20%, transparent) !important;
 
     /* HEIGHT: Auto, mindestens 100px (4 Zeilen!) */
     min-height: 100px !important;

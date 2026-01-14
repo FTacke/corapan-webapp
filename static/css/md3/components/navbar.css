@@ -326,7 +326,7 @@
   position: absolute;
   inset: 0 auto 0 0;
   width: min(320px, 80vw);
-  background: var(--color-header); /* #eaf3f5 - gleich wie Header */
+  background: var(--md-sys-color-surface-container-low);
   box-shadow: var(var(--elev-2));
   display: flex;
   flex-direction: column;

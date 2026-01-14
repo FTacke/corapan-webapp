@@ -66,7 +66,7 @@
 /* Simple divider used in templates */
 .md3-divider {
   border: 0;
-  border-top: 1px solid var(--md-sys-color-outline-variant, rgba(0,0,0,0.08));
+  border-top: 1px solid var(--md-sys-color-outline-variant);
   margin: var(--space-4, 1rem) 0;
 }
 
@@ -86,7 +86,7 @@ body.token-active #adv-summary {
 /* Add a subtle border-top to every search-card section for clearer separation
    except the first section in the card */
 .md3-search-card__section + .md3-search-card__section {
-  border-top: 1px solid var(--md-sys-color-outline-variant, rgba(0,0,0,0.06));
+  border-top: 1px solid var(--md-sys-color-outline-variant);
   padding-top: var(--space-4, 1rem);
 }
 
@@ -188,16 +188,16 @@ body.token-active #adv-summary {
   display: block;
   width: 52px;
   height: 32px;
-  background-color: var(--md-sys-color-surface-variant, #f3edf7);
-  border: 2px solid var(--md-sys-color-outline, #79747e);
+  background-color: var(--md-sys-color-surface-variant);
+  border: 2px solid var(--md-sys-color-outline);
   border-radius: 16px;
   position: relative;
   transition: all 0.2s ease;
 }
 
 .md3-advanced__expert input:checked + span::before {
-  background-color: var(--md-sys-color-primary, #0a5981);
-  border-color: var(--md-sys-color-primary, #0a5981);
+  background-color: var(--md-sys-color-primary);
+  border-color: var(--md-sys-color-primary);
 }
 
 .md3-advanced__expert::after {
@@ -206,14 +206,14 @@ body.token-active #adv-summary {
   left: var(--space-2, 0.5rem);
   width: 20px;
   height: 20px;
-  background-color: var(--md-sys-color-outline, #79747e);
+  background-color: var(--md-sys-color-outline);
   border-radius: 50%;
   transition: all 0.2s ease;
 }
 
 .md3-advanced__expert input:checked ~ span::after {
   left: 34px;
-  background-color: var(--md-sys-color-on-primary, #ffffff);
+  background-color: var(--md-sys-color-on-primary);
 }
 
 .md3-advanced__expert span {
@@ -242,22 +242,22 @@ body.token-active #adv-summary {
 }
 
 .md3-advanced__summary:focus {
-  outline: 2px solid var(--md-sys-color-primary, #0a5981);
+  outline: 2px solid var(--md-sys-color-primary);
   outline-offset: 2px;
 }
 
 .md3-advanced__summary-query {
   font-weight: 600;
-  color: var(--md-sys-color-on-surface, #1c1b1f);
+  color: var(--md-sys-color-on-surface);
 }
 
 .md3-advanced__summary-count {
   font-weight: 700;
-  color: var(--md-sys-color-primary, #0a5981);
+  color: var(--md-sys-color-primary);
 }
 
 .md3-advanced__summary-total {
-  color: var(--md-sys-color-on-surface-variant, #4a4f55);
+  color: var(--md-sys-color-on-surface-variant);
 }
 
 /* Make stats summary match results summary layout: full width, left aligned */
@@ -281,8 +281,8 @@ body.token-active #adv-summary {
   padding: var(--space-4, 1rem);
   margin-bottom: var(--space-4, 1rem);
   position: relative;
-  /* subtle elevation */
-  box-shadow: 0 6px 18px rgba(16,24,40,0.06), 0 2px 6px rgba(16,24,40,0.04);
+  /* MD3 elevation level 1 */
+  box-shadow: var(--elev-1);
 }
 
 /* Token tab content should follow the same max-width/layout as the advanced search
@@ -337,7 +337,7 @@ body.token-active #adv-summary {
 
 /* Textfield labels inside token rows need matching background for the notch cutout */
 .cql-token-row .md3-outlined-textfield .md3-outlined-textfield__label {
-  background: var(--md-sys-color-surface-container-lowest, #ffffff);
+  background: var(--md-sys-color-surface-container-lowest);
 }
 
 /* Compact numeric fields */
@@ -409,8 +409,8 @@ body.token-active #adv-summary {
   overflow-x: auto;
   overflow-y: visible;
   border-radius: var(--radius-md, 12px);
-  border: 1px solid var(--md-sys-color-outline-variant, #cac4d0);
-  background-color: var(--md-sys-color-surface, #ffffff);
+  border: 1px solid var(--md-sys-color-outline-variant);
+  background-color: var(--md-sys-color-surface);
 }
 
 /* Table: Use existing .md3-corpus-table or .md3-datatable */
@@ -464,7 +464,7 @@ body.token-active #adv-summary {
 /* Focus visible improvements */
 .md3-advanced__form input:focus-visible,
 .md3-advanced__form select:focus-visible {
-  outline: 2px solid var(--md-sys-color-primary, #0a5981);
+  outline: 2px solid var(--md-sys-color-primary);
   outline-offset: 2px;
 }
 
@@ -492,7 +492,7 @@ body.token-active #adv-summary {
 .md3-advanced__checkbox-label input[type='checkbox'] {
   width: 20px;
   height: 20px;
-  accent-color: var(--md-sys-color-primary, #0a5981);
+  accent-color: var(--md-sys-color-primary);
   cursor: pointer;
 }
 

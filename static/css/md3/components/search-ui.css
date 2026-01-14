@@ -690,7 +690,7 @@
 .md3-cql-textarea {
   width: 100%;
   padding: 12px 16px;
-  font-family: "Courier New", monospace;
+  font-family: "Consolas", "Courier New", monospace;
   font-size: 14px;
   line-height: 1.5;
   color: var(--md-sys-color-on-surface, #1c1b1f);

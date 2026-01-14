@@ -149,7 +149,7 @@ main.site-main,
   padding: 0; /* No padding on main, containers define their own */
   font-size: 1rem;
   display: block;
-  background: transparent; /* Prevent color flash on first paint */
+  /* No background set - inherits from body for proper cascade */
 }
 
 /* Remove focus outline on main container */

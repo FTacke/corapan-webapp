@@ -53,6 +53,7 @@ annotatedFields:
         forwardIndex: true
       - name: tokid
         valuePath: tokid
+        sensitivity: sensitive  # CRITICAL: Preserve case for token_id values
         uiType: text
       - name: start_ms
         valuePath: start_ms

@@ -22,7 +22,7 @@ $INDEX_TARGET_DIR_NEW = "data\blacklab_index.new"
 $BLF_CONFIG = "config\blacklab\corapan-tsv.blf.yaml"
 
 # Resolve paths
-$repoRoot = Split-Path -Parent $PSScriptRoot
+$repoRoot = (Get-Item $PSScriptRoot).Parent.Parent.FullName
 $tsvSourcePath = Join-Path $repoRoot $TSV_SOURCE_DIR
 $docmetaPath = Join-Path $repoRoot $DOCMETA_FILE
 $indexTargetPath = Join-Path $repoRoot $INDEX_TARGET_DIR

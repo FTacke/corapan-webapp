@@ -391,7 +391,7 @@
 }
 
 .tooltip-token {
-  font-family: "Courier New", "Consolas", monospace;
+  font-family: "Consolas", "Courier New", monospace;
   background: var(--md-sys-color-surface-container-lowest);
   padding: 1px 4px;
   border-radius: 2px;
