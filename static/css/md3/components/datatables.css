@@ -642,8 +642,8 @@
   position: fixed;
   inset: 0;
   z-index: 700;
-  /* MD3 Scrim: 32% opacity black per Material Design spec */
-  background: color-mix(in oklab, var(--md-sys-color-scrim, #000) 32%, transparent);
+  /* MD3 Scrim: 32% opacity per Material Design spec */
+  background: color-mix(in oklab, var(--md-sys-color-scrim) 32%, transparent);
   display: grid;
   place-items: center;
   padding: var(--space-4);
