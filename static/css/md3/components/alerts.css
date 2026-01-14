@@ -135,13 +135,13 @@
 
 /* Error Variant - Uses error-container tokens */
 .md3-alert--error {
-  background-color: var(--md-sys-color-error-container, #fdecea);
-  border-left-color: var(--md-sys-color-error, #b3261e);
-  color: var(--md-sys-color-on-error-container, #410e0b);
+  background-color: var(--md-sys-color-error-container);
+  border-left-color: var(--md-sys-color-error);
+  color: var(--md-sys-color-on-error-container);
 }
 
 .md3-alert--error .md3-alert__icon {
-  color: var(--md-sys-color-error, #b3261e);
+  color: var(--md-sys-color-error);
 }
 
 .md3-alert--error .md3-alert__title {
@@ -155,13 +155,13 @@
 
 /* Warning Variant - Amber tones */
 .md3-alert--warning {
-  background-color: var(--md-sys-color-warning-container, #fff3e0);
-  border-left-color: var(--md-sys-color-warning, #f9a825);
-  color: var(--md-sys-color-on-warning-container, #4e2c00);
+  background-color: var(--md-sys-color-warning-container);
+  border-left-color: var(--md-sys-color-warning);
+  color: var(--md-sys-color-on-warning-container);
 }
 
 .md3-alert--warning .md3-alert__icon {
-  color: var(--md-sys-color-warning, #f9a825);
+  color: var(--md-sys-color-warning);
 }
 
 .md3-alert--warning .md3-alert__title {
@@ -175,13 +175,13 @@
 
 /* Info Variant - Primary container tones */
 .md3-alert--info {
-  background-color: var(--md-sys-color-primary-container, #e8f0fe);
-  border-left-color: var(--md-sys-color-primary, #1a73e8);
-  color: var(--md-sys-color-on-primary-container, #0d3c61);
+  background-color: var(--md-sys-color-primary-container);
+  border-left-color: var(--md-sys-color-primary);
+  color: var(--md-sys-color-on-primary-container);
 }
 
 .md3-alert--info .md3-alert__icon {
-  color: var(--md-sys-color-primary, #1a73e8);
+  color: var(--md-sys-color-primary);
 }
 
 .md3-alert--info .md3-alert__title {

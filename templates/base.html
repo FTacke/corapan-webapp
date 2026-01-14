@@ -9,13 +9,16 @@
     <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#14141A">
     <!-- Critical inline CSS: Prevent flash during page load -->
     <style>
-      /* Base colors - prevent flash during navigation */
+      /* Base colors - prevent flash during navigation
+         These are FALLBACK approximations only. The canonical definition
+         is in app-tokens.css which references MD3 tokens.
+         Approximations match --md-sys-color-background values. */
       :root {
-        --app-background: #ffffff;
+        --app-background: #c7d5d8; /* Approximates surface-container light */
       }
       @media (prefers-color-scheme: dark) {
         :root {
-          --app-background: #14141A;
+          --app-background: #23272a; /* Approximates surface-container dark */
         }
       }
 

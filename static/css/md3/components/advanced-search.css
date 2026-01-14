@@ -188,16 +188,16 @@ body.token-active #adv-summary {
   display: block;
   width: 52px;
   height: 32px;
-  background-color: var(--md-sys-color-surface-variant, #f3edf7);
-  border: 2px solid var(--md-sys-color-outline, #79747e);
+  background-color: var(--md-sys-color-surface-variant);
+  border: 2px solid var(--md-sys-color-outline);
   border-radius: 16px;
   position: relative;
   transition: all 0.2s ease;
 }
 
 .md3-advanced__expert input:checked + span::before {
-  background-color: var(--md-sys-color-primary, #0a5981);
-  border-color: var(--md-sys-color-primary, #0a5981);
+  background-color: var(--md-sys-color-primary);
+  border-color: var(--md-sys-color-primary);
 }
 
 .md3-advanced__expert::after {
@@ -206,14 +206,14 @@ body.token-active #adv-summary {
   left: var(--space-2, 0.5rem);
   width: 20px;
   height: 20px;
-  background-color: var(--md-sys-color-outline, #79747e);
+  background-color: var(--md-sys-color-outline);
   border-radius: 50%;
   transition: all 0.2s ease;
 }
 
 .md3-advanced__expert input:checked ~ span::after {
   left: 34px;
-  background-color: var(--md-sys-color-on-primary, #ffffff);
+  background-color: var(--md-sys-color-on-primary);
 }
 
 .md3-advanced__expert span {
@@ -337,7 +337,7 @@ body.token-active #adv-summary {
 
 /* Textfield labels inside token rows need matching background for the notch cutout */
 .cql-token-row .md3-outlined-textfield .md3-outlined-textfield__label {
-  background: var(--md-sys-color-surface-container-lowest, #ffffff);
+  background: var(--md-sys-color-surface-container-lowest);
 }
 
 /* Compact numeric fields */
@@ -409,8 +409,8 @@ body.token-active #adv-summary {
   overflow-x: auto;
   overflow-y: visible;
   border-radius: var(--radius-md, 12px);
-  border: 1px solid var(--md-sys-color-outline-variant, #cac4d0);
-  background-color: var(--md-sys-color-surface, #ffffff);
+  border: 1px solid var(--md-sys-color-outline-variant);
+  background-color: var(--md-sys-color-surface);
 }
 
 /* Table: Use existing .md3-corpus-table or .md3-datatable */
