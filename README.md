@@ -42,10 +42,12 @@ Diese Anwendung dient als Frontend und API-Layer für das CO.RA.PAN-Projekt. Sie
 - **Backend:** Python 3.12, Flask (Web Framework)
 - **Suchmaschine:** BlackLab Server (Lucene-basiert, via Docker)
 - **Datenbank:** PostgreSQL (Production & Dev Default), SQLite (Fallback/Quickstart)
-- **Frontend:** Jinja2 Templates, Vanilla JS, CSS (Bootstrap-basiert), ECharts, Leaflet
+- **Frontend:** Jinja2 Templates, Vanilla JS, Material Design 3 (CSS Tokens), ECharts, Leaflet
 - **Deployment:** Gunicorn, Docker Compose
 
-Authentication: the project migrated to a DB-backed authentication system and now assumes DB-backed auth by default. The legacy `passwords.env` approach is deprecated and no longer automatically loaded by the app; it is kept in `passwords.env.template` for manual rollback scenarios only. See `docs/auth-migration/auth-migration.md` for details and rollout instructions.
+**Auth:** DB-backed JWT-Authentication (Argon2 Password Hashing).
+
+**Hinweis:** Legacy `passwords.env` ist deprecated. Siehe neue Dokumentation unter `docs/`.
 
 ## Using this repo as a template
 
@@ -60,17 +62,22 @@ This repository is intentionally structured to act as a template for new project
 
 ### Quick Template Usage
 
-For a comprehensive template usage guide, see:
-- **[Template Usage Guide](docs/how-to/template-usage.md)** - Quick checklist for adapting to new projects
-- **[Developer Guide](docs/template/developer_guide.md)** - Creating pages, customizing branding, adding features
-- **[Quick Start](startme.md)** - Getting the template running locally
+**Vollständige Dokumentation:** [docs/index.md](docs/index.md)
+
+**Quick Start:** [startme.md](startme.md) | [docs/operations/local-dev.md](docs/operations/local-dev.md)
+
+**Clone-Ready Checklist:** Siehe [docs/index.md](docs/index.md) für alle Anpassungspunkte (Branding, Secrets, Navigation, etc.).
 
 ### What to customize for a new project
 
-1. **Branding:** Update colors in `static/css/md3/tokens.css`, logo in `static/img/`, titles in templates
-2. **Legal:** Edit `templates/pages/impressum.html` and `templates/pages/privacy.html`
-3. **Auth:** Configure environment variables (see `.env.example`), run DB migrations
-4. **Features:** Remove corpus-specific modules (BlackLab, audio player) if not needed (see future MODULES.md)
+**Siehe [docs/index.md](docs/index.md) für die vollständige Clone-Ready Checklist.**
+
+Wichtigste Punkte:
+1. **Branding:** Colors (`static/css/md3/tokens.css`), Logo (`static/img/`), Titles (Templates)
+2. **Secrets:** ENV-Variablen setzen (siehe `docs/architecture/configuration.md`)
+3. **DB:** Migrationen ausführen (`migrations/*.sql`)
+4. **Legal:** Impressum, Datenschutz anpassen (`templates/pages/`)
+5. **Navigation:** Links in `templates/partials/_navigation_drawer.html`
 
 ### LOKAL/ Directory (Not Part of Template)
 
