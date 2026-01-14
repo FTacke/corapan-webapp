@@ -1,8 +1,14 @@
 ﻿# CO.RA.PAN Web App
 
-> **Version 1.0.0** | Dezember 2025 | [Zenodo Mirror](https://zenodo.org) (coming soon)
+> **Version 1.0.0** | Januar 2026 | Zenodo Software-Release: DOI 10.5281/zenodo.17834023
 
-Eine moderne Webplattform für die Analyse und Exploration des CO.RA.PAN-Korpus (Corpus Oral de Referencia del Español Actual - Variación Panhispánica).
+Die CO.RA.PAN Web App ist die zentrale Webanwendung für den Zugriff auf und die Analyse des **CO.RA.PAN — Corpus Radiofónico Panhispánico**, eines linguistischen Forschungsprojekts zur vergleichenden Untersuchung der gesprochenen Standardsprache des zeitgenössischen Spanisch.
+
+CO.RA.PAN basiert auf einem streng kuratierten Radiokorpus, der authentische, professionell produzierte Informations- und Nachrichtensendungen aus den nationalen Rundfunkanstalten nahezu aller spanischsprachigen Länder umfasst. Der Fokus liegt auf professioneller mündlicher Normsprache, wie sie von Moderator:innen und Journalist:innen verwendet wird, und damit auf einem funktional homogenen Register, das bislang in der Korpuslinguistik nur unzureichend abgedeckt ist.
+
+Der Korpus kombiniert Audiomaterial und Transkriptionen mit zeit- und token-alignierten linguistischen Annotationen (u. a. Lemmata, Wortarten, syntaktische Informationen) sowie einer einheitlich modellierten Metadatenstruktur. Diese Konzeption ermöglicht systematische Vergleiche panhispanischer Variation innerhalb eines klar definierten kommunikativen Rahmens.
+
+Die Web App stellt diese Forschungsinfrastruktur in Form einer integrierten Such-, Analyse- und Explorationsumgebung bereit und dient zugleich als technisches Rückgrat für nachhaltige, reproduzierbare korpuslinguistische Forschung.
 
 ## 1. Projektübersicht
 
@@ -48,45 +54,6 @@ Diese Anwendung dient als Frontend und API-Layer für das CO.RA.PAN-Projekt. Sie
 **Auth:** DB-backed JWT-Authentication (Argon2 Password Hashing).
 
 **Hinweis:** Legacy `passwords.env` ist deprecated. Siehe neue Dokumentation unter `docs/`.
-
-## Using this repo as a template
-
-This repository is intentionally structured to act as a template for new projects that need a secure DB-backed authentication system and a Material Design 3 UI foundation. The template provides:
-
-- **Secure Authentication:** JWT-based auth with refresh token rotation, DB-backed user management
-- **Role-Based Access Control:** User, Editor, Admin roles with middleware enforcement
-- **MD3 Design System:** Complete component library with theming support
-- **Admin UI:** User management, audit logs, role assignment
-- **Privacy-First Analytics:** DSGVO-compliant tracking (optional module)
-- **Production-Ready Infrastructure:** Docker, CI/CD, deployment scripts
-
-### Quick Template Usage
-
-**Vollständige Dokumentation:** [docs/index.md](docs/index.md)
-
-**Quick Start:** [startme.md](startme.md) | [docs/operations/local-dev.md](docs/operations/local-dev.md)
-
-**Clone-Ready Checklist:** Siehe [docs/index.md](docs/index.md) für alle Anpassungspunkte (Branding, Secrets, Navigation, etc.).
-
-### What to customize for a new project
-
-**Siehe [docs/index.md](docs/index.md) für die vollständige Clone-Ready Checklist.**
-
-Wichtigste Punkte:
-1. **Branding:** Colors (`static/css/md3/tokens.css`), Logo (`static/img/`), Titles (Templates)
-2. **Secrets:** ENV-Variablen setzen (siehe `docs/architecture/configuration.md`)
-3. **DB:** Migrationen ausführen (`migrations/*.sql`)
-4. **Legal:** Impressum, Datenschutz anpassen (`templates/pages/`)
-5. **Navigation:** Links in `templates/partials/_navigation_drawer.html`
-
-### LOKAL/ Directory (Not Part of Template)
-
-The `LOKAL/` directory is a **separate repository** containing heavy corpus processing tools (JSON→TSV→BlackLab indexing pipeline) with large NLP and audio dependencies. It is **excluded from all template linting, testing, and formatting** via configuration in:
-- `pyproject.toml` (pytest)
-- `.gitignore` / `.dockerignore`
-- CI workflows (explicit path targeting)
-
-**For new projects:** You likely don't need LOKAL/ unless you're working with linguistic corpora. The webapp template works standalone.
 
 ## 4. Voraussetzungen
 
@@ -228,18 +195,34 @@ permitted by the project’s legal framework and cannot be considered open data.
 
 ## 11. Versionierung & Zitation
 
-- **Aktuelle Version:** 1.0.0 (Dezember 2025)
+- **Aktuelle Version:** 1.0.0 (Januar 2026)
 - **Changelog:** [CHANGELOG.md](CHANGELOG.md)
 - **Zitation:** Siehe [CITATION.cff](CITATION.cff)
-- **Zenodo:** Mirror geplant für v1.0 Release
+- **Zenodo (Software):** DOI 10.5281/zenodo.17834023
 
-### Beiträge
+## CO.RA.PAN References and Related Resources
 
- Beiträge sind willkommen! Siehe [CONTRIBUTING.md](CONTRIBUTING.md) für Richtlinien.
+The CO.RA.PAN project consists of multiple, clearly separated components with distinct citation records.  
+Please refer to the appropriate DOI depending on whether you cite the software, metadata, or corpus data.
 
----
+**CO.RA.PAN Full Corpus (Restricted)**  
+DOI: https://doi.org/10.5281/zenodo.15360942  
+*Audio data and full JSON transcripts; access restricted due to copyright and broadcasting constraints.*
 
-## Current Status (December 2025)
+**CO.RA.PAN Sample Corpus (Public)**  
+DOI: https://doi.org/10.5281/zenodo.15378479  
+*Public sample dataset for demonstration, testing, and teaching purposes.*
+
+**CO.RA.PAN Metadata (Public)**  
+DOI: https://doi.org/10.5281/zenodo.17843469  
+*Complete metadata inventory describing the CO.RA.PAN corpus.*
+
+**CO.RA.PAN Web Application**  
+DOI: https://doi.org/10.5281/zenodo.17834023  
+*Software release of the CO.RA.PAN Web Application (this repository).*
+
+
+## Current Status (January 2026)
 
 ### Frontend
 - **Vite** for asset bundling and build process
@@ -266,42 +249,47 @@ python -m venv .venv
 .venv\Scripts\activate
 pip install -r requirements.txt
 pip install -e .
-```
+````
 
 **Run**:
+
 ```bash
 set FLASK_SECRET_KEY=your-secret-key
 python -m src.app.main
 ```
 
 **Environment Variables**:
-- `FLASK_SECRET_KEY` - Flask session secret
-- `JWT_SECRET_KEY` - JWT signing key (legacy: `JWT_SECRET`)
-- `AUTH_DATABASE_URL` - Auth database URL (PostgreSQL or SQLite)
-- `BLACKLAB_BASE_URL` - BlackLab server URL
-- `ALLOW_PUBLIC_TEMP_AUDIO` - Allow anonymous audio snippet access (default: false)
 
-## Current Status (December 2025)
+* `FLASK_SECRET_KEY` - Flask session secret
+* `JWT_SECRET_KEY` - JWT signing key (legacy: `JWT_SECRET`)
+* `AUTH_DATABASE_URL` - Auth database URL (PostgreSQL or SQLite)
+* `BLACKLAB_BASE_URL` - BlackLab server URL
+* `ALLOW_PUBLIC_TEMP_AUDIO` - Allow anonymous audio snippet access (default: false)
+
+## Current Status (January 2026)
 
 ### ✅ Production-Ready Features
-- **Basic Corpus Search**: Fully operational with token-based queries
-- **Advanced Search**: BlackLab integration complete (Stage 1-3), UI deployed
-- **Authentication System**: JWT-based auth with GET/POST logout support
-- **Audio Player**: Full playback with transcript synchronization
-- **Atlas**: Interactive map with marker tooltips showing country statistics and deep-links
-- **Corpus Metadata**: Country-tabbed dashboard with file tables and deep-link support
-- **Statistics**: ECharts-based visualization dashboard with country deep-links
-- **Editor**: JSON transcript editing interface for authorized roles
-- **Security**: CSRF protection, rate limiting, CQL injection prevention
+
+* **Basic Corpus Search**: Fully operational with token-based queries
+* **Advanced Search**: BlackLab integration complete (Stage 1-3), UI deployed
+* **Authentication System**: JWT-based auth with GET/POST logout support
+* **Audio Player**: Full playback with transcript synchronization
+* **Atlas**: Interactive map with marker tooltips showing country statistics and deep-links
+* **Corpus Metadata**: Country-tabbed dashboard with file tables and deep-link support
+* **Statistics**: ECharts-based visualization dashboard with country deep-links
+* **Editor**: JSON transcript editing interface for authorized roles
+* **Security**: CSRF protection, rate limiting, CQL injection prevention
 
 ### 🔧 Configuration
-- **Database**: PostgreSQL (production/dev default), SQLite (fallback)
-- **Media Files**: Organized by country in `media/` directory
-- **BlackLab Index**: 146 documents, 1.49M tokens, 15.89 MB index
-- **Access Control**: Public access configurable via `ALLOW_PUBLIC_TEMP_AUDIO`
+
+* **Database**: PostgreSQL (production/dev default), SQLite (fallback)
+* **Media Files**: Organized by country in `media/` directory
+* **BlackLab Index**: 146 documents, 1.49M tokens, 15.89 MB index
+* **Access Control**: Public access configurable via `ALLOW_PUBLIC_TEMP_AUDIO`
 
 ### 📊 System Metrics
-- **Corpus Size**: 146 JSON documents across 20+ countries/regions
-- **Total Tokens**: ~1.5 million indexed tokens
-- **Search Performance**: <100ms for basic queries, <1s for complex CQL
-- **Export Capability**: Up to 50,000 rows with streaming
+
+* **Corpus Size**: 146 JSON documents across 20+ countries/regions
+* **Total Tokens**: ~1.5 million indexed tokens
+* **Search Performance**: <100ms for basic queries, <1s for complex CQL
+* **Export Capability**: Up to 50,000 rows with streaming
