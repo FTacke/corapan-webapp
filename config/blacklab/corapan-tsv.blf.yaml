@@ -116,6 +116,7 @@ annotatedFields:
         displayName: "Token ID"
         description: "Unique token identifier for linking to app"
         valuePath: tokid
+        sensitivity: sensitive  # CRITICAL: Preserve case for VENb379fcc75 etc
         uiType: "text"
       
       - name: start_ms
