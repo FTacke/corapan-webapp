@@ -41,12 +41,13 @@
   transform: translateX(-25%);
   width: 90%;
   max-width: 800px;
-  background: rgba(255, 255, 255, 0.95);
+  /* Token-based glassmorphism: 92% surface + 8% transparency */
+  background: color-mix(in srgb, var(--md-sys-color-surface) 92%, transparent);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
   border-radius: 16px;
-  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.15);
-  border: 1px solid rgba(0, 0, 0, 0.05);
+  box-shadow: 0 4px 24px color-mix(in srgb, var(--md-sys-color-scrim) 15%, transparent);
+  border: 1px solid color-mix(in srgb, var(--md-sys-color-outline) 5%, transparent);
   z-index: 1000;
   padding: 16px 20px;
   box-sizing: border-box;
@@ -348,14 +349,14 @@
     box-sizing: border-box !important;
     -webkit-box-sizing: border-box !important;
 
-    /* BACKGROUND: Glassmorphism (wie Desktop) */
-    background: rgba(255, 255, 255, 0.95) !important;
+    /* BACKGROUND: Token-based glassmorphism (same as desktop) */
+    background: color-mix(in srgb, var(--md-sys-color-surface) 92%, transparent) !important;
     backdrop-filter: blur(10px) !important;
     -webkit-backdrop-filter: blur(10px) !important;
 
     /* BORDER: Nur oben, Radius oben */
     border: none !important;
-    border-top: 1px solid rgba(0, 0, 0, 0.05) !important;
+    border-top: 1px solid color-mix(in srgb, var(--md-sys-color-outline) 5%, transparent) !important;
     border-radius: 0 !important;
     border-top-left-radius: 16px !important;
     border-top-right-radius: 16px !important;
