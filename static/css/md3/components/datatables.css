@@ -112,7 +112,7 @@
   font-weight: 600;
   color: var(--md-sys-color-on-surface-variant);
   min-width: 28px;
-  font-family: "Courier New", monospace;
+  font-family: "Consolas", "Courier New", monospace;
   letter-spacing: -0.5px;
 }
 

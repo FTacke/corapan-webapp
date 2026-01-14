@@ -148,7 +148,7 @@
 
 /* Table Cell Styles */
 .md3-filename-cell {
-  font-family: "Courier New", "Consolas", monospace;
+  font-family: "Consolas", "Courier New", monospace;
   font-weight: 500;
   color: var(--md-sys-color-on-surface);
   font-size: 0.8125rem;

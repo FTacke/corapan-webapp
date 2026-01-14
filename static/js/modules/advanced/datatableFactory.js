@@ -221,9 +221,11 @@ export function makeBaseConfig() {
         targets: 10,
         data: "token_id",
         render: function (data) {
-          return escapeHtml(data || "-");
+          if (!data) return '<span class="md3-datatable__empty">-</span>';
+          return `<span class="token-id">${escapeHtml(data)}</span>`;
         },
         width: "100px",
+        className: "md3-datatable__cell--token-id",
       },
       {
         targets: 11,

@@ -157,7 +157,7 @@
 }
 
 .md3-editor-current-word {
-  font-family: "Courier New", "Consolas", monospace;
+  font-family: "Consolas", "Courier New", monospace;
   font-weight: 600;
   font-size: 1rem;
   color: var(--md-sys-color-on-secondary-container);
@@ -376,7 +376,7 @@
 }
 
 .md3-editor-bookmark-time {
-  font-family: "Courier New", "Consolas", monospace;
+  font-family: "Consolas", "Courier New", monospace;
   font-weight: 600;
   color: var(--md-sys-color-primary);
   font-size: 0.75rem;
@@ -558,12 +558,12 @@
   white-space: nowrap;
   flex-shrink: 0;
   line-height: 1;
-  font-family: "Courier New", "Consolas", monospace;
+  font-family: "Consolas", "Courier New", monospace;
 }
 
 .md3-editor-history-old-value {
   color: var(--md-sys-color-error);
-  font-family: "Courier New", "Consolas", monospace;
+  font-family: "Consolas", "Courier New", monospace;
   font-size: 0.6875rem;
   min-width: 0;
   flex-shrink: 1;
@@ -583,7 +583,7 @@
 
 .md3-editor-history-new-value {
   color: var(--md-sys-color-tertiary);
-  font-family: "Courier New", "Consolas", monospace;
+  font-family: "Consolas", "Courier New", monospace;
   font-size: 0.6875rem;
   min-width: 0;
   flex-shrink: 1;
