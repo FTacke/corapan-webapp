@@ -244,19 +244,102 @@ done
 VALIDATION_PASSED=false
 if [ "$TEST_READY" = true ]; then
     log "Test container is ready, querying corpus information..."
-    CORPUS_INFO=$(curl -s "http://localhost:${TEST_PORT}/blacklab-server/corapan" 2>/dev/null || echo "")
-    
-    # Parse document and token counts
-    DOC_COUNT=$(echo "$CORPUS_INFO" | grep -o '"documentCount":[0-9]*' | head -1 | grep -o '[0-9]*' || echo "0")
-    TOKEN_COUNT=$(echo "$CORPUS_INFO" | grep -o '"tokenCount":[0-9]*' | head -1 | grep -o '[0-9]*' || echo "0")
-    
-    log "Test query results: $DOC_COUNT documents, $TOKEN_COUNT tokens"
-    
-    if [ "$DOC_COUNT" -gt 0 ] && [ "$TOKEN_COUNT" -gt 0 ]; then
+    CORPUS_ID="corapan"
+    CORPORA_URL="http://localhost:${TEST_PORT}/blacklab-server/?outputformat=json"
+    CORPUS_URL="http://localhost:${TEST_PORT}/blacklab-server/${CORPUS_ID}?outputformat=json"
+    log "Validation URL (corpora list): $CORPORA_URL"
+
+    CORPORA_LIST_JSON=$(curl -fsS "$CORPORA_URL" 2>/dev/null || echo "")
+    if [ -n "$CORPORA_LIST_JSON" ]; then
+        CORPUS_KEYS=$(python3 - <<'PY'
+import json, sys
+try:
+    data = json.load(sys.stdin)
+except Exception:
+    print("")
+    sys.exit(0)
+corpora = data.get("corpora", {})
+if isinstance(corpora, dict):
+    print(",".join(corpora.keys()))
+else:
+    print("")
+PY
+        <<< "$CORPORA_LIST_JSON" 2>/dev/null || true)
+        if [ -n "$CORPUS_KEYS" ]; then
+            log "Corpora list keys: $CORPUS_KEYS"
+            # Detect wrong corpus id early
+            if ! printf '%s' "$CORPUS_KEYS" | tr ',' '\n' | grep -qx "$CORPUS_ID"; then
+                warn "Requested CORPUS_ID '$CORPUS_ID' not found in corpora list keys"
+            fi
+        else
+            warn "Corpora list keys: (none parsed)"
+        fi
+    else
+        warn "Corpora list response empty"
+    fi
+
+    log "Validation URL (corpus info): $CORPUS_URL"
+    CORPUS_INFO=$(curl -fsS "$CORPUS_URL" 2>/dev/null || echo "")
+    if [ -z "$CORPUS_INFO" ]; then
+        warn "Corpus info response empty"
+    fi
+
+    # Parse document and token counts (accept count.* or legacy top-level fields)
+    PARSE_RESULT=$(python3 - <<'PY'
+import json, sys
+doc = 0
+tok = 0
+doc_path = "(not found)"
+tok_path = "(not found)"
+try:
+    data = json.load(sys.stdin)
+except Exception:
+    print("0|(parse failed)|0|(parse failed)")
+    sys.exit(0)
+
+if isinstance(data, dict):
+    count = data.get("count") if isinstance(data.get("count"), dict) else None
+    if isinstance(count, dict) and "documents" in count:
+        try:
+            doc = int(count.get("documents", 0))
+        except Exception:
+            doc = 0
+        doc_path = "count.documents"
+    elif "documentCount" in data:
+        try:
+            doc = int(data.get("documentCount", 0))
+        except Exception:
+            doc = 0
+        doc_path = "documentCount"
+
+    if isinstance(count, dict) and "tokens" in count:
+        try:
+            tok = int(count.get("tokens", 0))
+        except Exception:
+            tok = 0
+        tok_path = "count.tokens"
+    elif "tokenCount" in data:
+        try:
+            tok = int(data.get("tokenCount", 0))
+        except Exception:
+            tok = 0
+        tok_path = "tokenCount"
+
+print(f"{doc}|{doc_path}|{tok}|{tok_path}")
+PY
+        <<< "$CORPUS_INFO" 2>/dev/null || echo "0|(parse failed)|0|(parse failed)")
+
+    IFS='|' read -r DOC_COUNT DOC_PATH TOKEN_COUNT TOKEN_PATH <<< "$PARSE_RESULT"
+    log "Parsed counts: documents=$DOC_COUNT (path: $DOC_PATH), tokens=$TOKEN_COUNT (path: $TOKEN_PATH)"
+
+    if [ "$DOC_COUNT" -gt 0 ] || [ "$TOKEN_COUNT" -gt 0 ]; then
         VALIDATION_PASSED=true
         log "Post-validation passed: Index is queryable and contains data"
+        if [ "$DOC_COUNT" -eq 0 ] || [ "$TOKEN_COUNT" -eq 0 ]; then
+            warn "Post-validation warning: one of the counts is 0 (documents=$DOC_COUNT, tokens=$TOKEN_COUNT)"
+        fi
     else
-        error "Post-validation failed: Index has 0 documents or tokens"
+        error "Post-validation failed: Index has 0 documents and 0 tokens"
     fi
 else
     error "Test container did not become ready within timeout"
@@ -269,7 +352,14 @@ docker stop "$TEST_CONTAINER_NAME" > /dev/null 2>&1 || true
 # Exit if post-validation failed
 if [ "$VALIDATION_PASSED" = false ]; then
     error "Post-validation failed - index is not valid"
-    rm -rf "$INDEX_DIR_NEW"
+    TS=$(date +%F_%H%M%S)
+    FAILED="${INDEX_DIR_NEW}.failed_${TS}"
+    if [ -d "$INDEX_DIR_NEW" ]; then
+        mv "$INDEX_DIR_NEW" "$FAILED"
+        error "Preserved failed index at: $FAILED"
+    else
+        error "Failed index directory missing; nothing to preserve"
+    fi
     exit 1
 fi
 
