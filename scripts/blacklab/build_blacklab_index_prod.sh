@@ -36,6 +36,17 @@ BLACKLAB_IMAGE="instituutnederlandsetaal/blacklab:latest"
 TEST_CONTAINER_NAME="corapan-blacklab-test-${TIMESTAMP}"
 TEST_PORT=18082
 
+# Java Memory Settings (configurable, defaults for low-RAM hosts)
+JAVA_XMX="${JAVA_XMX:-1400m}"
+JAVA_XMS="${JAVA_XMS:-512m}"
+
+# Optional Docker Memory Limits (disabled by default)
+DOCKER_MEM="${DOCKER_MEM:-}"          # e.g. 2500m or 3g
+DOCKER_MEMSWAP="${DOCKER_MEMSWAP:-}"  # e.g. 3g or 0 to disable swap limit
+DOCKER_LIMITS=()
+[ -n "$DOCKER_MEM" ] && DOCKER_LIMITS+=(--memory "$DOCKER_MEM")
+[ -n "$DOCKER_MEMSWAP" ] && DOCKER_LIMITS+=(--memory-swap "$DOCKER_MEMSWAP")
+
 # Colors for output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -119,18 +130,23 @@ mkdir -p "$INDEX_DIR_NEW"
 log "Building BlackLab index (this may take a while)..."
 log "Image: $BLACKLAB_IMAGE"
 log "Config: $BLF_CONFIG"
+log "Java heap: -Xms${JAVA_XMS} -Xmx${JAVA_XMX}"
+if [ -n "$DOCKER_MEM" ]; then
+    log "Docker memory limit: ${DOCKER_MEM}"
+    [ -n "$DOCKER_MEMSWAP" ] && log "Docker memory+swap limit: ${DOCKER_MEMSWAP}"
+fi
 
 # Pull latest image
 log "Pulling latest BlackLab image..."
 docker pull "$BLACKLAB_IMAGE" 2>&1 | tee -a "$LOG_FILE"
 
 # Run IndexTool
-docker run --rm \
+docker run --rm "${DOCKER_LIMITS[@]}" \
     -v "$DATA_ROOT:/data/export:ro" \
     -v "$INDEX_DIR_NEW:/data/index:rw" \
     -v "$APP_ROOT/config/blacklab:/config:ro" \
     "$BLACKLAB_IMAGE" \
-    java -Xmx2g -cp '/usr/local/lib/blacklab-tools/*' \
+    java -Xms"${JAVA_XMS}" -Xmx"${JAVA_XMX}" -cp '/usr/local/lib/blacklab-tools/*' \
         nl.inl.blacklab.tools.IndexTool create \
             /data/index \
             /data/export/tsv_for_index \
@@ -142,7 +158,14 @@ docker run --rm \
 # Capture the exit code of docker run, not tee
 RC=${PIPESTATUS[0]}
 if [ "$RC" -ne 0 ]; then
-    error "Index build failed with exit code $RC"
+    if [ "$RC" -eq 137 ]; then
+        error "Index build KILLED (exit code 137) - OUT OF MEMORY!"
+        error "The container was killed by Docker/OOM killer."
+        error "Try reducing JAVA_XMX (current: ${JAVA_XMX}) or increase system RAM."
+        error "Example: JAVA_XMX=1000m bash $0"
+    else
+        error "Index build failed with exit code $RC"
+    fi
     rm -rf "$INDEX_DIR_NEW"
     exit 1
 fi

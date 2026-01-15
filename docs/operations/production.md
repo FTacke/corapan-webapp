@@ -229,6 +229,22 @@ sudo bash /srv/webapps/corapan/app/scripts/blacklab/build_blacklab_index_prod.sh
 
 **Dauer:** Ca. 10-30 Minuten (je nach Datenmenge)
 
+**Memory-Settings** (für Low-RAM Hosts)
+
+Default: `JAVA_XMX=1400m JAVA_XMS=512m` (läuft auf 4GB-RAM Hosts)
+
+```bash
+# Custom Java heap (z.B. bei mehr RAM verfügbar)
+JAVA_XMX=2000m JAVA_XMS=512m bash /srv/webapps/corapan/app/scripts/blacklab/build_blacklab_index_prod.sh
+
+# Mit Docker Memory-Limits (optional)
+DOCKER_MEM=2500m DOCKER_MEMSWAP=3g JAVA_XMX=2000m bash /srv/webapps/corapan/app/scripts/blacklab/build_blacklab_index_prod.sh
+```
+
+**Troubleshooting OOM:**
+- Exit-Code 137 = Out of Memory
+- Lösung: `JAVA_XMX` reduzieren (z.B. `JAVA_XMX=1000m`)
+
 **Optional:** Input-Cleanup aktivieren (Standard: behalten)
 ```bash
 CLEAN_INPUTS=1 bash /srv/webapps/corapan/app/scripts/blacklab/build_blacklab_index_prod.sh
