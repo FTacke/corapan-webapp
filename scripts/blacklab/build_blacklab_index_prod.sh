@@ -30,8 +30,11 @@ INDEX_DIR="${DATA_ROOT}/blacklab_index"
 INDEX_DIR_NEW="${DATA_ROOT}/blacklab_index.new"
 METADATA_DIR="${DATA_ROOT}/metadata"
 BLF_CONFIG="${APP_ROOT}/config/blacklab/corapan-tsv.blf.yaml"
-LOG_FILE="${DATA_ROOT}/logs/blacklab_index_build.log"
+TIMESTAMP=$(date +%F_%H%M%S)
+LOG_FILE="${DATA_ROOT}/logs/blacklab_build_${TIMESTAMP}.log"
 BLACKLAB_IMAGE="instituutnederlandsetaal/blacklab:latest"
+TEST_CONTAINER_NAME="corapan-blacklab-test-${TIMESTAMP}"
+TEST_PORT=18082
 
 # Colors for output
 RED='\033[0;31m'
@@ -56,6 +59,9 @@ warn() {
     echo -e "${YELLOW}${msg}${NC}"
     echo "${msg}" >> "$LOG_FILE" 2>/dev/null || true
 }
+
+# Ensure log directory exists
+mkdir -p "${DATA_ROOT}/logs"
 
 # Create log directory
 mkdir -p "$(dirname "$LOG_FILE")"
@@ -133,37 +139,178 @@ docker run --rm \
             --threads 2 \
     2>&1 | tee -a "$LOG_FILE"
 
-if [ ${PIPESTATUS[0]} -ne 0 ]; then
-    error "Index build failed!"
+# Capture the exit code of docker run, not tee
+RC=${PIPESTATUS[0]}
+if [ "$RC" -ne 0 ]; then
+    error "Index build failed with exit code $RC"
     rm -rf "$INDEX_DIR_NEW"
     exit 1
 fi
 
-# Step 5: Verify new index
-if [ ! -d "$INDEX_DIR_NEW" ] || [ -z "$(ls -A "$INDEX_DIR_NEW")" ]; then
+# Step 5: Pre-validation of new index
+log "Validating new index structure..."
+
+# Check directory exists and is not empty
+if [ ! -d "$INDEX_DIR_NEW" ]; then
+    error "New index directory does not exist: $INDEX_DIR_NEW"
+    exit 1
+fi
+
+if [ -z "$(ls -A "$INDEX_DIR_NEW")" ]; then
     error "New index directory is empty after build"
     exit 1
 fi
 
+# Check minimum file count (should have more than 20 files for a proper index)
+FILE_COUNT=$(find "$INDEX_DIR_NEW" -type f | wc -l)
+if [ "$FILE_COUNT" -lt 20 ]; then
+    error "New index has too few files: $FILE_COUNT (expected > 20)"
+    rm -rf "$INDEX_DIR_NEW"
+    exit 1
+fi
+log "File count validation passed: $FILE_COUNT files"
+
+# Check minimum size (should be at least 50MB)
+SIZE_MB=$(du -sm "$INDEX_DIR_NEW" | cut -f1)
+if [ "$SIZE_MB" -lt 50 ]; then
+    error "New index is too small: ${SIZE_MB}MB (expected > 50MB)"
+    rm -rf "$INDEX_DIR_NEW"
+    exit 1
+fi
+log "Size validation passed: ${SIZE_MB}MB"
+
+# Check for essential BlackLab index files (*.blfi.*)
+BLFI_COUNT=$(find "$INDEX_DIR_NEW" -type f -name '*.blfi.*' | wc -l)
+if [ "$BLFI_COUNT" -eq 0 ]; then
+    error "No BlackLab index files (*.blfi.*) found in new index"
+    rm -rf "$INDEX_DIR_NEW"
+    exit 1
+fi
+log "BlackLab index files validation passed: $BLFI_COUNT *.blfi.* files found"
+
 NEW_INDEX_SIZE=$(du -sh "$INDEX_DIR_NEW" | cut -f1)
 log "New index size: $NEW_INDEX_SIZE"
 
-# Step 6: Atomic index switch
+# Step 6: Post-validation with test container
+log "Running post-validation with temporary BlackLab server..."
+
+# Start temporary test container on different port
+log "Starting test container: $TEST_CONTAINER_NAME on port $TEST_PORT"
+docker run -d --rm \
+    --name "$TEST_CONTAINER_NAME" \
+    -p "127.0.0.1:${TEST_PORT}:8080" \
+    -v "$INDEX_DIR_NEW:/data/index/corapan:ro" \
+    -v "$APP_ROOT/config/blacklab:/config:ro" \
+    "$BLACKLAB_IMAGE" \
+    java -Xmx1g -cp '/usr/local/lib/blacklab-server/*' \
+        nl.inl.blacklab.server.BlackLabServer \
+        --port 8080 \
+        --index-dir /data/index \
+    > /dev/null 2>&1
+
+# Wait for test container to be ready
+log "Waiting for test container to become ready..."
+TEST_READY=false
+for i in {1..30}; do
+    if curl -s -f "http://localhost:${TEST_PORT}/blacklab-server/" > /dev/null 2>&1; then
+        TEST_READY=true
+        break
+    fi
+    sleep 2
+done
+
+# Query corpus information
+VALIDATION_PASSED=false
+if [ "$TEST_READY" = true ]; then
+    log "Test container is ready, querying corpus information..."
+    CORPUS_INFO=$(curl -s "http://localhost:${TEST_PORT}/blacklab-server/corapan" 2>/dev/null || echo "")
+    
+    # Parse document and token counts
+    DOC_COUNT=$(echo "$CORPUS_INFO" | grep -o '"documentCount":[0-9]*' | head -1 | grep -o '[0-9]*' || echo "0")
+    TOKEN_COUNT=$(echo "$CORPUS_INFO" | grep -o '"tokenCount":[0-9]*' | head -1 | grep -o '[0-9]*' || echo "0")
+    
+    log "Test query results: $DOC_COUNT documents, $TOKEN_COUNT tokens"
+    
+    if [ "$DOC_COUNT" -gt 0 ] && [ "$TOKEN_COUNT" -gt 0 ]; then
+        VALIDATION_PASSED=true
+        log "Post-validation passed: Index is queryable and contains data"
+    else
+        error "Post-validation failed: Index has 0 documents or tokens"
+    fi
+else
+    error "Test container did not become ready within timeout"
+fi
+
+# Stop test container
+log "Stopping test container..."
+docker stop "$TEST_CONTAINER_NAME" > /dev/null 2>&1 || true
+
+# Exit if post-validation failed
+if [ "$VALIDATION_PASSED" = false ]; then
+    error "Post-validation failed - index is not valid"
+    rm -rf "$INDEX_DIR_NEW"
+    exit 1
+fi
+
+# Step 7: Atomic index switch with timestamped backup
+# Step 7: Atomic index switch with timestamped backup
 log "Performing atomic index switch..."
 
+BACKUP_DIR="${INDEX_DIR}.bak_${TIMESTAMP}"
+
 if [ -d "$INDEX_DIR" ]; then
-    log "Backing up previous index..."
+    log "Backing up current index to timestamped backup..."
+    # Remove old non-timestamped backup if it exists
     rm -rf "${INDEX_DIR}.bak" 2>/dev/null || true
-    mv "$INDEX_DIR" "${INDEX_DIR}.bak"
-    log "Previous index backed up to ${INDEX_DIR}.bak"
+    
+    # Create timestamped backup
+    mv "$INDEX_DIR" "$BACKUP_DIR"
+    log "Current index backed up to $BACKUP_DIR"
 else
     log "No previous index to backup"
 fi
 
+# Perform the swap
 mv "$INDEX_DIR_NEW" "$INDEX_DIR"
 log "New index activated: $INDEX_DIR"
 
-# Step 7: Show summary
+# Verify the swap was successful
+if [ ! -d "$INDEX_DIR" ] || [ -z "$(ls -A "$INDEX_DIR")" ]; then
+    error "CRITICAL: Index swap failed - index directory is missing or empty!"
+    
+    # Attempt rollback if backup exists
+    if [ -d "$BACKUP_DIR" ]; then
+        error "Attempting rollback to backup..."
+        mv "$BACKUP_DIR" "$INDEX_DIR"
+        if [ -d "$INDEX_DIR" ] && [ -n "$(ls -A "$INDEX_DIR")" ]; then
+            warn "Rollback successful - previous index restored"
+        else
+            error "CRITICAL: Rollback failed - manual intervention required!"
+        fi
+    fi
+    exit 1
+fi
+
+log "Index swap verified successfully"
+
+# Step 8: Cleanup
+log "Cleaning up temporary directories..."
+
+# Optional: Remove tsv_for_index (opt-in via CLEAN_INPUTS=1)
+CLEAN_INPUTS="${CLEAN_INPUTS:-0}"
+if [ "$CLEAN_INPUTS" = "1" ]; then
+    log "Removing tsv_for_index (CLEAN_INPUTS=1)"
+    rm -rf "$TSV_FOR_INDEX"
+    log "Removed temporary tsv_for_index directory"
+else
+    log "Keeping tsv_for_index (set CLEAN_INPUTS=1 to remove)"
+fi
+
+# Keep the timestamped backup for safety (can be removed manually later)
+log "Timestamped backup preserved at: $BACKUP_DIR"
+log "You can remove it manually once the new index is confirmed stable"
+
+# Step 9: Show summary
 INDEX_SIZE=$(du -sh "$INDEX_DIR" | cut -f1)
 
 echo ""

@@ -207,6 +207,49 @@ docker-compose up -d
 
 ---
 
+## BlackLab Index Rebuild (Production)
+
+**Skript:** `scripts/blacklab/build_blacklab_index_prod.sh`
+
+Der Index-Rebuild erfolgt mit mehrfacher Validierung und automatischem Rollback bei Fehlern.
+
+### Sicherheits-Mechanismen
+
+1. **Strikte Exit-Codes:** Script bricht bei jedem Fehler ab (`set -euo pipefail`)
+2. **Pre-Validation:** Prüfung von Dateizahl (>20), Größe (>50MB), BlackLab-Strukturdateien
+3. **Post-Validation:** Test-Container startet neuen Index und prüft `documentCount > 0` und `tokenCount > 0`
+4. **Atomischer Swap:** Backup mit Timestamp, erst nach erfolgreicher Validierung
+5. **Auto-Rollback:** Bei fehlgeschlagenem Swap wird automatisch auf Backup zurückgesetzt
+
+### Ausführung
+
+```bash
+sudo bash /srv/webapps/corapan/app/scripts/blacklab/build_blacklab_index_prod.sh
+```
+
+**Dauer:** Ca. 10-30 Minuten (je nach Datenmenge)
+
+**Optional:** Input-Cleanup aktivieren (Standard: behalten)
+```bash
+CLEAN_INPUTS=1 bash /srv/webapps/corapan/app/scripts/blacklab/build_blacklab_index_prod.sh
+```
+
+### Log-Überwachung
+
+Timestamped Logs unter:
+```
+/srv/webapps/corapan/data/logs/blacklab_build_YYYY-MM-DD_HHMMSS.log
+```
+
+### Nach dem Rebuild
+
+BlackLab-Server neu starten:
+```bash
+sudo bash /srv/webapps/corapan/app/scripts/blacklab/run_bls_prod.sh
+```
+
+---
+
 ## Troubleshooting
 
 Siehe [docs/operations/troubleshooting.md](troubleshooting.md)
