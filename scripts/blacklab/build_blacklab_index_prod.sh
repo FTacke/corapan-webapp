@@ -34,7 +34,9 @@ TIMESTAMP=$(date +%F_%H%M%S)
 LOG_FILE="${DATA_ROOT}/logs/blacklab_build_${TIMESTAMP}.log"
 BLACKLAB_IMAGE="instituutnederlandsetaal/blacklab:latest"
 TEST_CONTAINER_NAME="corapan-blacklab-test-${TIMESTAMP}"
-TEST_PORT=18082
+TEST_PORT_RANGE_START=18080
+TEST_PORT_RANGE_END=18150
+TEST_PORT=""
 
 # Java Memory Settings (configurable, defaults for low-RAM hosts)
 JAVA_XMX="${JAVA_XMX:-1400m}"
@@ -69,6 +71,50 @@ warn() {
     local msg="[$(date '+%Y-%m-%d %H:%M:%S')] WARN: $1"
     echo -e "${YELLOW}${msg}${NC}"
     echo "${msg}" >> "$LOG_FILE" 2>/dev/null || true
+}
+
+pick_free_port() {
+    python3 - <<PY
+import socket
+start = ${TEST_PORT_RANGE_START}
+end = ${TEST_PORT_RANGE_END}
+for port in range(start, end + 1):
+    s = socket.socket()
+    try:
+        s.bind(("127.0.0.1", port))
+    except OSError:
+        continue
+    s.close()
+    print(port)
+    raise SystemExit(0)
+raise SystemExit(1)
+PY
+}
+
+is_port_listening() {
+    local port="$1"
+    ss -lnt 2>/dev/null | awk '{print $4}' | grep -q "127.0.0.1:${port}$"
+}
+
+curl_with_logging() {
+    local url="$1"
+    local err_file
+    err_file=$(mktemp)
+    local output
+    output=$(curl -fsS "$url" 2>"$err_file")
+    local rc=$?
+    if [ "$rc" -ne 0 ]; then
+        error "curl failed (rc=$rc) for $url"
+        local err_text
+        err_text=$(cat "$err_file")
+        if [ -n "$err_text" ]; then
+            error "curl stderr: $err_text"
+        fi
+        rm -f "$err_file"
+        return "$rc"
+    fi
+    rm -f "$err_file"
+    printf '%s' "$output"
 }
 
 # Ensure log directory exists
@@ -217,28 +263,57 @@ log "New index size: $NEW_INDEX_SIZE"
 # Step 6: Post-validation with test container
 log "Running post-validation with temporary BlackLab server..."
 
+# Pick a free local port for the test container
+TEST_PORT=$(pick_free_port) || {
+    error "Failed to find a free port in range ${TEST_PORT_RANGE_START}-${TEST_PORT_RANGE_END}"
+    VALIDATION_PASSED=false
+}
+if [ -n "$TEST_PORT" ]; then
+    log "Selected test port: $TEST_PORT"
+fi
+
+VALIDATION_ERROR=false
+
 # Start temporary test container on different port
 # Use the same Tomcat-based setup as production (not the standalone Java command)
 log "Starting test container: $TEST_CONTAINER_NAME on port $TEST_PORT"
-docker run -d --rm \
-    --name "$TEST_CONTAINER_NAME" \
-    -p "127.0.0.1:${TEST_PORT}:8080" \
-    -e JAVA_TOOL_OPTIONS="-Xmx1g -Xms512m" \
-    -v "$INDEX_DIR_NEW:/data/index/corapan:ro" \
-    -v "$APP_ROOT/config/blacklab:/etc/blacklab:ro" \
-    "$BLACKLAB_IMAGE" \
-    > /dev/null 2>&1
+if [ -z "$TEST_PORT" ]; then
+    error "Cannot start test container without a free port"
+    VALIDATION_ERROR=true
+else
+    DOCKER_RUN_ERR=$(mktemp)
+    docker run -d --rm \
+        --name "$TEST_CONTAINER_NAME" \
+        -p "127.0.0.1:${TEST_PORT}:8080" \
+        -e JAVA_TOOL_OPTIONS="-Xmx1g -Xms512m" \
+        -v "$INDEX_DIR_NEW:/data/index/corapan:ro" \
+        -v "$APP_ROOT/config/blacklab:/etc/blacklab:ro" \
+        "$BLACKLAB_IMAGE" \
+        > /dev/null 2>"$DOCKER_RUN_ERR"
+    DOCKER_RUN_RC=$?
+    if [ "$DOCKER_RUN_RC" -ne 0 ]; then
+        error "Test container failed to start (rc=$DOCKER_RUN_RC)"
+        DOCKER_RUN_ERR_TEXT=$(cat "$DOCKER_RUN_ERR")
+        if [ -n "$DOCKER_RUN_ERR_TEXT" ]; then
+            error "docker run stderr: $DOCKER_RUN_ERR_TEXT"
+        fi
+        VALIDATION_ERROR=true
+    fi
+    rm -f "$DOCKER_RUN_ERR"
+fi
 
 # Wait for test container to be ready
 log "Waiting for test container to become ready..."
 TEST_READY=false
-for i in {1..30}; do
-    if curl -s -f "http://localhost:${TEST_PORT}/blacklab-server/" > /dev/null 2>&1; then
-        TEST_READY=true
-        break
-    fi
-    sleep 2
-done
+if [ "$VALIDATION_ERROR" = false ]; then
+    for i in {1..30}; do
+        if is_port_listening "$TEST_PORT" && curl -fsS "http://localhost:${TEST_PORT}/blacklab-server/" > /dev/null 2>&1; then
+            TEST_READY=true
+            break
+        fi
+        sleep 2
+    done
+fi
 
 # Query corpus information
 VALIDATION_PASSED=false
@@ -249,8 +324,8 @@ if [ "$TEST_READY" = true ]; then
     CORPUS_URL="http://localhost:${TEST_PORT}/blacklab-server/${CORPUS_ID}?outputformat=json"
     log "Validation URL (corpora list): $CORPORA_URL"
 
-    CORPORA_LIST_JSON=$(curl -fsS "$CORPORA_URL" 2>/dev/null || echo "")
-    if [ -n "$CORPORA_LIST_JSON" ]; then
+    CORPORA_LIST_JSON=""
+    if CORPORA_LIST_JSON=$(curl_with_logging "$CORPORA_URL"); then
         CORPUS_KEYS=$(python3 - <<'PY'
 import json, sys
 try:
@@ -275,13 +350,13 @@ PY
             warn "Corpora list keys: (none parsed)"
         fi
     else
-        warn "Corpora list response empty"
+        VALIDATION_ERROR=true
     fi
 
     log "Validation URL (corpus info): $CORPUS_URL"
-    CORPUS_INFO=$(curl -fsS "$CORPUS_URL" 2>/dev/null || echo "")
-    if [ -z "$CORPUS_INFO" ]; then
-        warn "Corpus info response empty"
+    CORPUS_INFO=""
+    if ! CORPUS_INFO=$(curl_with_logging "$CORPUS_URL"); then
+        VALIDATION_ERROR=true
     fi
 
     # Parse document and token counts (accept count.* or legacy top-level fields)
@@ -327,13 +402,15 @@ if isinstance(data, dict):
 
 print(f"{doc}|{doc_path}|{tok}|{tok_path}")
 PY
-        <<< "$CORPUS_INFO" 2>/dev/null || echo "0|(parse failed)|0|(parse failed)")
+    <<< "$CORPUS_INFO" 2>/dev/null || echo "0|(parse failed)|0|(parse failed)")
 
     IFS='|' read -r DOC_COUNT DOC_PATH TOKEN_COUNT TOKEN_PATH <<< "$PARSE_RESULT"
     log "Parsed counts: documents=$DOC_COUNT (path: $DOC_PATH), tokens=$TOKEN_COUNT (path: $TOKEN_PATH)"
 
     if [ "$DOC_COUNT" -gt 0 ] || [ "$TOKEN_COUNT" -gt 0 ]; then
-        VALIDATION_PASSED=true
+        if [ "$VALIDATION_ERROR" = false ]; then
+            VALIDATION_PASSED=true
+        fi
         log "Post-validation passed: Index is queryable and contains data"
         if [ "$DOC_COUNT" -eq 0 ] || [ "$TOKEN_COUNT" -eq 0 ]; then
             warn "Post-validation warning: one of the counts is 0 (documents=$DOC_COUNT, tokens=$TOKEN_COUNT)"
@@ -342,7 +419,30 @@ PY
         error "Post-validation failed: Index has 0 documents and 0 tokens"
     fi
 else
+    if [ -n "$TEST_PORT" ] && ! is_port_listening "$TEST_PORT"; then
+        error "Port check failed: no listener on 127.0.0.1:${TEST_PORT}"
+    fi
+    if [ -n "$TEST_PORT" ]; then
+        READY_ERR=$(mktemp)
+        curl -fsS "http://localhost:${TEST_PORT}/blacklab-server/" > /dev/null 2>"$READY_ERR"
+        READY_RC=$?
+        if [ "$READY_RC" -ne 0 ]; then
+            READY_ERR_TEXT=$(cat "$READY_ERR")
+            error "curl failed (rc=$READY_RC) for http://localhost:${TEST_PORT}/blacklab-server/"
+            if [ -n "$READY_ERR_TEXT" ]; then
+                error "curl stderr: $READY_ERR_TEXT"
+            fi
+        fi
+        rm -f "$READY_ERR"
+    else
+        error "No test port assigned; cannot reach test container"
+    fi
     error "Test container did not become ready within timeout"
+    VALIDATION_ERROR=true
+fi
+
+if [ "$VALIDATION_ERROR" = true ]; then
+    VALIDATION_PASSED=false
 fi
 
 # Stop test container
