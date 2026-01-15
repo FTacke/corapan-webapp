@@ -195,17 +195,15 @@ log "New index size: $NEW_INDEX_SIZE"
 log "Running post-validation with temporary BlackLab server..."
 
 # Start temporary test container on different port
+# Use the same Tomcat-based setup as production (not the standalone Java command)
 log "Starting test container: $TEST_CONTAINER_NAME on port $TEST_PORT"
 docker run -d --rm \
     --name "$TEST_CONTAINER_NAME" \
     -p "127.0.0.1:${TEST_PORT}:8080" \
+    -e JAVA_TOOL_OPTIONS="-Xmx1g -Xms512m" \
     -v "$INDEX_DIR_NEW:/data/index/corapan:ro" \
-    -v "$APP_ROOT/config/blacklab:/config:ro" \
+    -v "$APP_ROOT/config/blacklab:/etc/blacklab:ro" \
     "$BLACKLAB_IMAGE" \
-    java -Xmx1g -cp '/usr/local/lib/blacklab-server/*' \
-        nl.inl.blacklab.server.BlackLabServer \
-        --port 8080 \
-        --index-dir /data/index \
     > /dev/null 2>&1
 
 # Wait for test container to be ready
