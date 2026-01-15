@@ -93,28 +93,29 @@ PY
 
 is_port_listening() {
     local port="$1"
-    ss -lnt 2>/dev/null | awk '{print $4}' | grep -q "127.0.0.1:${port}$"
+    ss -lntH 2>/dev/null | awk '{print $4}' | grep -Eq "(^|\[::\]|127\.0\.0\.1):${port}$"
 }
 
 curl_with_logging() {
     local url="$1"
-    local err_file
+    local err_file output
     err_file=$(mktemp)
-    local output
-    output=$(curl -fsS "$url" 2>"$err_file")
-    local rc=$?
-    if [ "$rc" -ne 0 ]; then
+
+    if output=$(curl -fsS "$url" 2>"$err_file"); then
+        rm -f "$err_file"
+        printf '%s' "$output"
+        return 0
+    else
+        local rc=$?
         error "curl failed (rc=$rc) for $url"
         local err_text
-        err_text=$(cat "$err_file")
+        err_text=$(cat "$err_file" 2>/dev/null || true)
         if [ -n "$err_text" ]; then
             error "curl stderr: $err_text"
         fi
         rm -f "$err_file"
         return "$rc"
     fi
-    rm -f "$err_file"
-    printf '%s' "$output"
 }
 
 # Ensure log directory exists
@@ -307,7 +308,7 @@ log "Waiting for test container to become ready..."
 TEST_READY=false
 if [ "$VALIDATION_ERROR" = false ]; then
     for i in {1..30}; do
-        if is_port_listening "$TEST_PORT" && curl -fsS "http://localhost:${TEST_PORT}/blacklab-server/" > /dev/null 2>&1; then
+        if curl -fsS "http://localhost:${TEST_PORT}/blacklab-server/" > /dev/null 2>&1; then
             TEST_READY=true
             break
         fi
@@ -420,12 +421,14 @@ PY
     fi
 else
     if [ -n "$TEST_PORT" ] && ! is_port_listening "$TEST_PORT"; then
-        error "Port check failed: no listener on 127.0.0.1:${TEST_PORT}"
+        warn "Port check: no listener detected on 127.0.0.1:${TEST_PORT} (may be DNAT without userland-proxy)"
     fi
     if [ -n "$TEST_PORT" ]; then
         READY_ERR=$(mktemp)
-        curl -fsS "http://localhost:${TEST_PORT}/blacklab-server/" > /dev/null 2>"$READY_ERR"
-        READY_RC=$?
+        READY_RC=0
+        if ! curl -fsS "http://localhost:${TEST_PORT}/blacklab-server/" > /dev/null 2>"$READY_ERR"; then
+            READY_RC=$?
+        fi
         if [ "$READY_RC" -ne 0 ]; then
             READY_ERR_TEXT=$(cat "$READY_ERR")
             error "curl failed (rc=$READY_RC) for http://localhost:${TEST_PORT}/blacklab-server/"
