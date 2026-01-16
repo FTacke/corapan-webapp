@@ -63,6 +63,9 @@
 # =============================================================================
 
 param(
+    [Parameter(Mandatory = $false)]
+    [string]$RepoRoot,
+    
     [switch]$Force,
     [switch]$ForceMP3
 )
@@ -74,7 +77,12 @@ $ErrorActionPreference = 'Stop'
 # Konfiguration
 # -----------------------------------------------------------------------------
 
-$LOCAL_BASE_PATH  = "C:\dev\corapan-webapp\media"
+# RepoRoot-Fallback auf bisherigen Hardcode
+if (-not $RepoRoot) {
+    $RepoRoot = "C:\dev\corapan-webapp"
+}
+
+$LOCAL_BASE_PATH  = Join-Path $RepoRoot "media"
 $REMOTE_BASE_PATH = "/srv/webapps/corapan/media"
 
 # Zu synchronisierende Verzeichnisse
@@ -120,13 +128,13 @@ if ($Force) {
 }
 Write-Host ""
 
-# Prüfen ob lokales Verzeichnis existiert
+# Pruefen ob lokales Verzeichnis existiert
 if (-not (Test-Path $LOCAL_BASE_PATH)) {
     Write-Host "FEHLER: Lokales Medienverzeichnis nicht gefunden: $LOCAL_BASE_PATH" -ForegroundColor Red
     exit 1
 }
 
-# Synchronisation für jedes Verzeichnis
+# Synchronisation fuer jedes Verzeichnis
 $errorCount = 0
 foreach ($dir in $MEDIA_DIRECTORIES) {
     $localDir = Join-Path $LOCAL_BASE_PATH $dir
@@ -134,7 +142,7 @@ foreach ($dir in $MEDIA_DIRECTORIES) {
     if (-not (Test-Path $localDir)) {
         Write-Host ""
         Write-Host "[$dir]" -ForegroundColor Yellow
-        Write-Host "  WARNUNG: Lokales Verzeichnis nicht gefunden - übersprungen" -ForegroundColor Yellow
+        Write-Host "  WARNUNG: Lokales Verzeichnis nicht gefunden - uebersprungen" -ForegroundColor Yellow
         continue
     }
     

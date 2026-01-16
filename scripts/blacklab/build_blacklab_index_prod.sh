@@ -3,6 +3,8 @@
 # CO.RA.PAN Production BlackLab Index Build Script
 # =============================================================================
 #
+# DEPRECATED: Build-in-production is intentionally disabled (Variante B).
+#
 # Builds a BlackLab index from TSV files synchronized from the dev environment.
 # This script is designed to run on the production server.
 #
@@ -20,6 +22,45 @@
 # =============================================================================
 
 set -euo pipefail
+
+# ============================================================================
+# FAIL-FAST: BUILD-IN-PRODUCTION DISABLED (VARIANTE B)
+# ============================================================================
+#
+# Production is not allowed to build indices.
+# Instead, follow this workflow:
+#
+#  1. Build locally:
+#     ./scripts/blacklab/build_blacklab_index.ps1
+#
+#  2. Publish from local to production:
+#     ./scripts/deploy_sync/publish_blacklab_index.ps1
+#
+# This ensures:
+#  - Build stability is controlled locally
+#  - Production only validates, swaps, and backs up
+#  - No resource contention on production
+#
+# ============================================================================
+
+cat >&2 <<'EOF'
+================================================================================
+ERROR: Build-in-production is intentionally disabled (Variante B)
+================================================================================
+
+This script must NOT run on production.
+
+CORRECT WORKFLOW:
+  1. Build locally:  scripts/blacklab/build_blacklab_index.ps1
+  2. Publish:        scripts/deploy_sync/publish_blacklab_index.ps1
+
+Use local build + publish_blacklab_index.ps1 instead.
+
+For questions, see: docs/operations/PUBLISH_BLACKLAB_INDEX.md
+================================================================================
+EOF
+
+exit 1
 
 # Configuration
 DATA_ROOT="/srv/webapps/corapan/data"

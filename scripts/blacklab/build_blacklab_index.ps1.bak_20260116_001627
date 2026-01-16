@@ -8,8 +8,7 @@
 
 param(
     [switch]$SkipBackup,
-    [switch]$Force,
-    [switch]$Activate = $true
+    [switch]$Force
 )
 
 $ErrorActionPreference = "Stop"
@@ -266,19 +265,15 @@ if ($indexFiles.Count -eq 0) {
     exit 1
 }
 
-# Swap new index into place atomically (only if -Activate is true)
-if ($Activate) {
-    if (Test-Path $indexTargetPath) {
-        if (Test-Path $backupDir) { Remove-Item -Path $backupDir -Recurse -Force }
-        Move-Item -Path $indexTargetPath -Destination $backupDir -Force
-        Write-Host ("  OK Backup created: {0}" -f $backupDir) -ForegroundColor Green
-    }
-
-    Move-Item -Path $newIndexPath -Destination $indexTargetPath -Force
-    Write-Host ("  OK Activated new index: {0}" -f $indexTargetPath) -ForegroundColor Green
-} else {
-    Write-Host ("  INFO: Index built but NOT activated: {0}" -f $newIndexPath) -ForegroundColor Cyan
+# Swap new index into place atomically. Backup existing index if present
+if (Test-Path $indexTargetPath) {
+    if (Test-Path $backupDir) { Remove-Item -Path $backupDir -Recurse -Force }
+    Move-Item -Path $indexTargetPath -Destination $backupDir -Force
+    Write-Host ("  OK Backup created: {0}" -f $backupDir) -ForegroundColor Green
 }
+
+Move-Item -Path $newIndexPath -Destination $indexTargetPath -Force
+Write-Host ("  OK Activated new index: {0}" -f $indexTargetPath) -ForegroundColor Green
 
 $indexSizeMB = [math]::Round(($indexFiles | Measure-Object -Property Length -Sum).Sum / 1MB, 2)
 

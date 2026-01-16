@@ -70,6 +70,9 @@
 # =============================================================================
 
 param(
+    [Parameter(Mandatory = $false)]
+    [string]$RepoRoot,
+    
     [switch]$Force
 )
 
@@ -80,7 +83,12 @@ $ErrorActionPreference = 'Stop'
 # Konfiguration
 # -----------------------------------------------------------------------------
 
-$LOCAL_BASE_PATH  = "C:\dev\corapan-webapp\data"
+# RepoRoot-Fallback auf bisherigen Hardcode
+if (-not $RepoRoot) {
+    $RepoRoot = "C:\dev\corapan-webapp"
+}
+
+$LOCAL_BASE_PATH  = Join-Path $RepoRoot "data"
 $REMOTE_BASE_PATH = "/srv/webapps/corapan/data"
 
 # Zu synchronisierende Verzeichnisse
@@ -133,13 +141,13 @@ if ($Force) {
 }
 Write-Host ""
 
-# Prüfen ob lokales Verzeichnis existiert
+# Pruefen ob lokales Verzeichnis existiert
 if (-not (Test-Path $LOCAL_BASE_PATH)) {
     Write-Host "FEHLER: Lokales Datenverzeichnis nicht gefunden: $LOCAL_BASE_PATH" -ForegroundColor Red
     exit 1
 }
 
-# Synchronisation für jedes Verzeichnis
+# Synchronisation fuer jedes Verzeichnis
 $errorCount = 0
 foreach ($dir in $DATA_DIRECTORIES) {
     $localDir = Join-Path $LOCAL_BASE_PATH $dir
@@ -185,7 +193,7 @@ foreach ($dbFile in $STATS_DB_FILES) {
     Write-Host "  Synchronisiere $dbFile ($fileSizeKB KB)..." -ForegroundColor DarkGray
     
     try {
-        # rsync für einzelne Datei verwenden
+        # rsync fuer einzelne Datei verwenden
         $rsyncSource = (Convert-ToRsyncPath $localFile)
         $server = "$($script:SyncConfig.ServerUser)@$($script:SyncConfig.ServerHost)"
         $sshKeyCygwin = Convert-ToRsyncPath $script:SyncConfig.SSHKeyPath -PreserveShortName
@@ -194,7 +202,7 @@ foreach ($dbFile in $STATS_DB_FILES) {
         # Stelle sicher, dass das Zielverzeichnis existiert
         Invoke-SSHCommand -Command "mkdir -p '$dbRemotePath'" | Out-Null
         
-        # rsync für einzelne Datei
+        # rsync fuer einzelne Datei
         $rsyncArgs = @(
             "-avz",
             "-e", $sshCmd,
