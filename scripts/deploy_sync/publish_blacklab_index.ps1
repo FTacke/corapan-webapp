@@ -24,6 +24,7 @@
 
 [CmdletBinding()]
 param(
+    [Alias('Host')]
     [string]$Hostname = "137.248.186.51",
     [string]$User = "root",
     [int]$Port = 22,
@@ -201,7 +202,7 @@ Write-Host ""
 Write-Host "BlackLab Index Publisher" -ForegroundColor Magenta
 Write-Host "=========================" -ForegroundColor Magenta
 Write-Host ""
-Write-Host "Target:    $User@$Hostname`:$Port" -ForegroundColor Gray
+Write-Host "Target:    ${User}@${Hostname}:$Port" -ForegroundColor Gray
 Write-Host "Data Dir:  $DataDir" -ForegroundColor Gray
 Write-Host "Config:    $ConfigDir" -ForegroundColor Gray
 if ($DryRun) {
@@ -319,7 +320,7 @@ if (-not (Test-Command "tar")) {
     Write-Step "Using scp fallback (slower, no streaming)..."
     
     if ($DryRun) {
-        Write-Info "[DRY-RUN] Would execute: scp -O -r `"$localNew`" `"$User@$Hostname`:$DataDir/`""
+        Write-Info "[DRY-RUN] Would execute: scp -O -r `"$localNew`" `"${User}@${Hostname}:$DataDir/`""
     }
     else {
         Write-Info "Preparing remote directory..."
@@ -341,7 +342,7 @@ else {
     
     if ($DryRun) {
         Write-Info "[DRY-RUN] Would stream tar archive to remote via SSH"
-        Write-Info "Command: tar -cf - -C `"$localNew`" . | ssh $User@$Hostname `"mkdir -p '$remoteNew'; rm -rf '$remoteNew'/*; tar -xpf - -C '$remoteNew'`""
+        Write-Info "Command: tar -cf - -C `"$localNew`" . | ssh ${User}@${Hostname} `"mkdir -p '$remoteNew'; rm -rf '$remoteNew'/*; tar -xpf - -C '$remoteNew'`""
     }
     else {
         Write-Info "Streaming index to remote (this may take 5-15 minutes)..."
@@ -591,7 +592,7 @@ else {
             Write-Error "PRODUCTION SANITY FAILED: Corpus 'corapan' not found"
             Write-Host ""
             Write-Host "ROLLBACK REQUIRED:" -ForegroundColor Red
-            Write-Host "ssh $User@$Hostnamename" -ForegroundColor Yellow
+            Write-Host "ssh ${User}@${Hostname}" -ForegroundColor Yellow
             Write-Host ("mv $remoteActive " + $remoteActive + ".bad_$timestamp && mv $remoteBak $remoteActive") -ForegroundColor Yellow
             Exit-WithError "Production sanity check failed" 4
         }
