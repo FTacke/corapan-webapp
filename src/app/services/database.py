@@ -14,7 +14,6 @@ PUBLIC_DB_ROOT = DATA_ROOT / "db_public"
 DATABASES = {
     "stats_files": PRIVATE_DB_ROOT / "stats_files.db",
     "stats_country": PRIVATE_DB_ROOT / "stats_country.db",
-    "stats_all": PUBLIC_DB_ROOT / "stats_all.db",
 }
 
 

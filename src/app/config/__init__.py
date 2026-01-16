@@ -84,11 +84,16 @@ class BaseConfig:
         os.getenv("ALLOW_PUBLIC_TEMP_AUDIO", "false").lower() == "true"
     )
 
-    # Auth DB (used only when AUTH_BACKEND=db) - DSN or fallback to sqlite file
-    AUTH_DATABASE_URL = os.getenv(
-        "AUTH_DATABASE_URL",
-        f"sqlite:///{(Path(PROJECT_ROOT) / 'data' / 'db' / 'auth.db').as_posix()}",
-    )
+# Auth DB - Must be explicitly configured via AUTH_DATABASE_URL env var
+    # No fallback to SQLite - dev must use Postgres from docker-compose.dev-postgres.yml
+    # Production sets this via environment/secrets
+    AUTH_DATABASE_URL = os.getenv("AUTH_DATABASE_URL")
+    if not AUTH_DATABASE_URL:
+        raise RuntimeError(
+            "AUTH_DATABASE_URL environment variable is required.\n"
+            "For development: Start Postgres with 'docker compose -f docker-compose.dev-postgres.yml up -d'\n"
+            "Then set: AUTH_DATABASE_URL=postgresql+psycopg2://corapan_auth:corapan_auth@localhost:54320/corapan_auth"
+        )
 
     # Hashing (argon2 or bcrypt)
     AUTH_HASH_ALGO = os.getenv("AUTH_HASH_ALGO", "argon2")

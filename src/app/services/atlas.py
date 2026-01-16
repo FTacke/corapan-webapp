@@ -5,20 +5,6 @@ from __future__ import annotations
 from .database import open_db
 
 
-def fetch_overview() -> dict[str, object]:
-    with open_db("stats_all") as connection:
-        cursor = connection.cursor()
-        row = cursor.execute(
-            "SELECT total_word_count, total_duration_all FROM stats LIMIT 1"
-        ).fetchone()
-    if row is None:
-        return {"total_word_count": 0, "total_duration_all": "0"}
-    return {
-        "total_word_count": row["total_word_count"],
-        "total_duration_all": row["total_duration_all"],
-    }
-
-
 def fetch_country_stats() -> list[dict[str, object]]:
     from ..config.countries import code_to_name
 

@@ -340,16 +340,6 @@ def privacy_page():
     return render_template("pages/privacy.html")
 
 
-@blueprint.get("/get_stats_all_from_db")
-def get_stats_all_from_db():
-    from ..services.atlas import fetch_overview
-
-    response = jsonify(fetch_overview())
-    response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate"
-    response.headers["Pragma"] = "no-cache"
-    return response
-
-
 @blueprint.get("/get_stats_files_from_db")
 @jwt_required()
 def get_stats_files_from_db():

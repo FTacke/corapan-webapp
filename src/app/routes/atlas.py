@@ -5,20 +5,13 @@ from __future__ import annotations
 from flask import Blueprint, jsonify, redirect, url_for
 
 from ..extensions import cache
-from ..services.atlas import fetch_country_stats, fetch_file_metadata, fetch_overview
+from ..services.atlas import fetch_country_stats, fetch_file_metadata
 
 # New versioned blueprint
 blueprint = Blueprint("atlas_api", __name__, url_prefix="/api/v1/atlas")
 
 # Legacy blueprint for backwards compatibility (redirects to v1)
 legacy_blueprint = Blueprint("atlas_api_legacy", __name__, url_prefix="/atlas")
-
-
-@blueprint.get("/overview")
-@cache.cached(timeout=3600)  # Cache for 1 hour
-def overview():
-    """Get corpus overview statistics (cached for 1 hour)."""
-    return jsonify(fetch_overview())
 
 
 @blueprint.get("/countries")
@@ -52,12 +45,6 @@ def locations():
 # Legacy Routes (Backwards Compatibility)
 # ========================================
 # Redirect old /atlas/* endpoints to /api/v1/atlas/*
-
-
-@legacy_blueprint.get("/overview")
-def legacy_overview():
-    """Redirect to versioned API."""
-    return redirect(url_for("atlas_api.overview"), code=301)
 
 
 @legacy_blueprint.get("/countries")

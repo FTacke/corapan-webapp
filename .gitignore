@@ -96,6 +96,11 @@ media/
 !data/.gitkeep
 !media/.gitkeep
 
+# Auth databases (dev artifacts - never commit, may contain user data)
+data/db/auth.db
+data/db/auth_e2e.db
+data/db/postgres_dev/
+
 # =============================================================================
 # IDEs & Editors
 # =============================================================================

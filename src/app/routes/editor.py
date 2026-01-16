@@ -34,8 +34,8 @@ def overview():
 
     Zeigt pro Land/Region:
     - Filename
-    - Duración (aus stats_all.db)
-    - Palabras (aus stats_all.db)
+    - Duración (aus stats_files.db)
+    - Palabras (aus stats_files.db)
     - Last Edited (aus edit_log.jsonl)
     - Last Editor (aus edit_log.jsonl)
     - Edit-Button
