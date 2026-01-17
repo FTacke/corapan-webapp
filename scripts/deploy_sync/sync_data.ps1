@@ -193,13 +193,14 @@ function Test-ProductionStateProtection {
 # - Verifies remote content after upload
 #
 # Behavior:
-# - If PUBLIC_STATS_DIR env var is set, use that
-# - Else if CORAPAN_RUNTIME_ROOT env var is set, use <root>/data/public/statistics
-# - Else SKIP with warning (stats deployment is optional)
+# - If PUBLIC_STATS_DIR env var is set, use that (for backward compatibility)
+# - Else use RepoRoot/data/public/statistics (default, stats now in repo data/)
+# - Else SKIP with warning (should not happen if called from repo)
 #
 function Sync-StatisticsFiles {
     param(
         [string]$LocalStatsDir,
+        [string]$RepoRoot,
         [string]$RemoteRuntimeRoot = "/srv/webapps/corapan",
         [switch]$DryRun = $false
     )
@@ -209,26 +210,37 @@ function Sync-StatisticsFiles {
     Write-Host ""
     
     # =========================================================================
+    # PHASE 0: Auto-determine RepoRoot if not provided
+    # =========================================================================
+    if (-not $RepoRoot) {
+        try {
+            $gitRoot = git rev-parse --show-toplevel 2>$null
+            if ($LASTEXITCODE -eq 0 -and $gitRoot) {
+                # Convert forward slashes to backslashes for Windows compatibility
+                $RepoRoot = $gitRoot -replace '/', '\'
+            }
+        }
+        catch {
+            # git command failed, continue to next phase
+        }
+    }
+    
+    # =========================================================================
     # PHASE 1: Determine local statistics directory
     # =========================================================================
     
     if (-not $LocalStatsDir) {
         if ($env:PUBLIC_STATS_DIR) {
             $LocalStatsDir = $env:PUBLIC_STATS_DIR
-            Write-Host "Using PUBLIC_STATS_DIR: $LocalStatsDir" -ForegroundColor DarkGray
+            Write-Host "Using PUBLIC_STATS_DIR (env var): $LocalStatsDir" -ForegroundColor DarkGray
         }
-        elseif ($env:CORAPAN_RUNTIME_ROOT) {
-            $LocalStatsDir = Join-Path $env:CORAPAN_RUNTIME_ROOT "data\public\statistics"
-            Write-Host "Using CORAPAN_RUNTIME_ROOT: $LocalStatsDir" -ForegroundColor DarkGray
+        elseif ($RepoRoot -and (Test-Path $RepoRoot)) {
+            $LocalStatsDir = Join-Path $RepoRoot "data\public\statistics"
+            Write-Host "Using RepoRoot/data/public/statistics: $LocalStatsDir" -ForegroundColor DarkGray
         }
         else {
             Write-Host "SKIP: No statistics directory specified" -ForegroundColor Yellow
-            Write-Host "  Reason: Neither PUBLIC_STATS_DIR nor CORAPAN_RUNTIME_ROOT is set" -ForegroundColor DarkGray
-            Write-Host ""
-            Write-Host "  To enable statistics deployment:" -ForegroundColor DarkGray
-            Write-Host "    `$env:CORAPAN_RUNTIME_ROOT = 'C:\\dev\\runtime\\corapan'" -ForegroundColor DarkGray
-            Write-Host "    or" -ForegroundColor DarkGray
-            Write-Host "    `$env:PUBLIC_STATS_DIR = 'C:\\path\\to\\stats'" -ForegroundColor DarkGray
+            Write-Host "  Reason: Could not determine repository root" -ForegroundColor DarkGray
             Write-Host ""
             return $true
         }
@@ -244,7 +256,7 @@ function Sync-StatisticsFiles {
         Write-Host "  Path: $LocalStatsDir" -ForegroundColor DarkGray
         Write-Host ""
         Write-Host "  To generate statistics:" -ForegroundColor DarkGray
-        Write-Host "    python .\LOKAL\_0_json\05_publish_corpus_statistics.py --out `"$LocalStatsDir`"" -ForegroundColor DarkGray
+        Write-Host "    python .\LOKAL\_0_json\05_publish_corpus_statistics.py" -ForegroundColor DarkGray
         Write-Host ""
         return $true
     }
