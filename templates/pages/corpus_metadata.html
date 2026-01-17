@@ -146,7 +146,7 @@
           <h4 class="md3-title-medium">Composición total del corpus</h4>
           <figure class="md3-country-stats-figure">
             <div class="md3-country-stats-image-container">
-              <img src="{{ url_for('static', filename='img/statistics/viz_total_corpus.png') }}" 
+              <img src="{{ url_for('corpus.serve_statistics', filename='viz_total_corpus.png') }}" 
                    alt="Composición total del corpus" 
                    class="md3-country-stats-image"
                    loading="lazy">
@@ -163,7 +163,7 @@
           <h4 class="md3-title-medium">Distribución por sexo</h4>
           <figure class="md3-country-stats-figure">
             <div class="md3-country-stats-image-container">
-              <img src="{{ url_for('static', filename='img/statistics/viz_genero_profesionales.png') }}" 
+              <img src="{{ url_for('corpus.serve_statistics', filename='viz_genero_profesionales.png') }}" 
                    alt="Distribución por sexo" 
                    class="md3-country-stats-image"
                    loading="lazy">
@@ -180,7 +180,7 @@
           <h4 class="md3-title-medium">Modo de producción por sexo</h4>
           <figure class="md3-country-stats-figure">
             <div class="md3-country-stats-image-container">
-              <img src="{{ url_for('static', filename='img/statistics/viz_modo_genero_profesionales.png') }}" 
+              <img src="{{ url_for('corpus.serve_statistics', filename='viz_modo_genero_profesionales.png') }}" 
                    alt="Modo de producción por sexo" 
                    class="md3-country-stats-image"
                    loading="lazy">

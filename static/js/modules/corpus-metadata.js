@@ -489,8 +489,8 @@ function renderCountryPanel(countryCode, isActive) {
     })
     .join("");
 
-  // Stats image path
-  const statsImagePath = `/static/img/statistics/viz_${countryCode}_resumen.png`;
+  // Stats image path - served from API endpoint
+  const statsImagePath = `/corpus/api/statistics/viz_${countryCode}_resumen.png`;
 
   // Download menu HTML
   const downloadMenuId = `menu-download-${countryCode}`;
