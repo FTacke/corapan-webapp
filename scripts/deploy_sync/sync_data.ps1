@@ -129,21 +129,34 @@ $STATS_DB_FILES = @(
 )
 
 # -----------------------------------------------------------------------------
-# PRODUCTION STATE PROTECTION: Blocklist
+# PRODUCTION STATE PROTECTION: Hard Blocklist
 # -----------------------------------------------------------------------------
 
-# These paths contain production runtime state and must never be synced
-# unless explicitly confirmed with safety switches
-$PROTECTED_PRODUCTION_PATHS = @(
-    "counters",
-    "db/auth.db",
-    "db/transcription.db"
+# These MUST NEVER be synced (production runtime state)
+$HARD_BLOCKED_PATHS = @(
+    "counters",     # Runtime state: page views, downloads, etc.
+    "db"            # Contains auth.db, transcription.db (prod databases)
+)
+
+# Allowed individual files from data/db/ (override to main db/ exclusion)
+$ALLOWED_STATS_DBS = @(
+    "stats_files.db",
+    "stats_country.db"
+)
+
+# Additional unwanted paths
+$EXCLUDED_PATHS = @(
+    "blacklab_index",
+    "blacklab_index.backup",
+    "stats_temp"
 )
 
 # -----------------------------------------------------------------------------
 # SAFETY CHECKS: Validate production state protection
 # -----------------------------------------------------------------------------
 
+# FUNCTION: Legacy production state test (no longer used - guardrails are inline now)
+# Kept for historical reference but not called
 function Test-ProductionStateProtection {
     param(
         [string[]]$Directories,
@@ -153,91 +166,160 @@ function Test-ProductionStateProtection {
         [bool]$AcknowledgeOverwrite
     )
     
-    $violations = @()
+    # DEPRECATED: Hard guardrails are now inline in main program
+    # This function is kept for backward compatibility only
+    # It is never called
+}
+
+# =============================================================================
+# FUNCTION: Sync-StatisticsFiles
+# =============================================================================
+#
+# Synchronizes statistics files (corpus_stats.json, viz_*.png) to production
+# Remote location: /srv/webapps/corapan/data/public/statistics
+#
+# Features:
+# - Validates local statistics files exist before syncing
+# - Syncs only specific files (overwrite-only, no delete)
+# - Handles missing local stats gracefully with warning (not error)
+# - Sets remote ownership after upload
+#
+# Behavior:
+# - If PUBLIC_STATS_DIR env var is set, use that
+# - Else if CORAPAN_RUNTIME_ROOT env var is set, use <root>/data/public/statistics
+# - Else SKIP with warning (stats deployment is optional)
+#
+function Sync-StatisticsFiles {
+    param(
+        [string]$LocalStatsDir,
+        [string]$RemoteRuntimeRoot = "/srv/webapps/corapan"
+    )
     
-    # Check if counters would be synced without proper flags
-    if ($Directories -contains "counters" -and -not $IncludeCounters) {
-        $violations += "counters/ (use -IncludeCounters to override)"
-    }
+    Write-Host ""
+    Write-Host "[Statistics Files]" -ForegroundColor Cyan
+    Write-Host ""
     
-    # Check if counters flag is set but not acknowledged
-    if ($IncludeCounters -and -not $AcknowledgeOverwrite) {
-        Write-Host ""
-        Write-Host "========================================" -ForegroundColor Red
-        Write-Host "  PRODUCTION STATE OVERWRITE REFUSED" -ForegroundColor Red
-        Write-Host "========================================" -ForegroundColor Red
-        Write-Host ""
-        Write-Host "You requested to include counters/ (production runtime state)." -ForegroundColor Yellow
-        Write-Host "This will OVERWRITE production state data!" -ForegroundColor Yellow
-        Write-Host ""
-        Write-Host "To proceed, you must acknowledge this with:" -ForegroundColor White
-        Write-Host "  -IUnderstandThisWillOverwriteProductionState" -ForegroundColor Cyan
-        Write-Host ""
-        exit 2
-    }
-    
-    # Check if auth DB would be synced
-    if ($DbFiles -contains "auth.db" -and -not $IncludeAuthDb) {
-        $violations += "db/auth.db (use -IncludeAuthDb to override)"
-    }
-    
-    # Check if auth DB flag is set but not acknowledged
-    if ($IncludeAuthDb -and -not $AcknowledgeOverwrite) {
-        Write-Host ""
-        Write-Host "========================================" -ForegroundColor Red
-        Write-Host "  PRODUCTION STATE OVERWRITE REFUSED" -ForegroundColor Red
-        Write-Host "========================================" -ForegroundColor Red
-        Write-Host ""
-        Write-Host "You requested to include db/auth.db (production auth database)." -ForegroundColor Yellow
-        Write-Host "This will OVERWRITE production authentication data!" -ForegroundColor Yellow
-        Write-Host ""
-        Write-Host "To proceed, you must acknowledge this with:" -ForegroundColor White
-        Write-Host "  -IUnderstandThisWillOverwriteProductionState" -ForegroundColor Cyan
-        Write-Host ""
-        exit 2
-    }
-    
-    # If violations found, fail fast
-    if ($violations.Count -gt 0) {
-        Write-Host ""
-        Write-Host "========================================" -ForegroundColor Red
-        Write-Host "  PRODUCTION STATE PROTECTION" -ForegroundColor Red
-        Write-Host "========================================" -ForegroundColor Red
-        Write-Host ""
-        Write-Host "Refusing to sync protected production state paths:" -ForegroundColor Yellow
-        foreach ($v in $violations) {
-            Write-Host "  - $v" -ForegroundColor Yellow
+    # Phase 1: Determine local statistics directory
+    if (-not $LocalStatsDir) {
+        if ($env:PUBLIC_STATS_DIR) {
+            $LocalStatsDir = $env:PUBLIC_STATS_DIR
+            Write-Host "Using PUBLIC_STATS_DIR: $LocalStatsDir" -ForegroundColor DarkGray
         }
-        Write-Host ""
-        Write-Host "These paths contain runtime state that should NEVER be" -ForegroundColor White
-        Write-Host "overwritten by a data deploy." -ForegroundColor White
-        Write-Host ""
-        exit 3
+        elseif ($env:CORAPAN_RUNTIME_ROOT) {
+            $LocalStatsDir = Join-Path $env:CORAPAN_RUNTIME_ROOT "data\public\statistics"
+            Write-Host "Using CORAPAN_RUNTIME_ROOT: $LocalStatsDir" -ForegroundColor DarkGray
+        }
+        else {
+            Write-Host "WARNING: No statistics directory specified" -ForegroundColor Yellow
+            Write-Host "  - Set PUBLIC_STATS_DIR env var, OR" -ForegroundColor DarkGray
+            Write-Host "  - Set CORAPAN_RUNTIME_ROOT env var" -ForegroundColor DarkGray
+            Write-Host ""
+            Write-Host "  Skipping statistics deployment (optional step)" -ForegroundColor Yellow
+            return $true
+        }
     }
     
-    # If acknowledged, show prominent warning
-    if ($AcknowledgeOverwrite -and ($IncludeCounters -or $IncludeAuthDb)) {
+    # Phase 2: Validate local statistics files
+    if (-not (Test-Path $LocalStatsDir)) {
+        Write-Host "WARNING: Statistics directory does not exist" -ForegroundColor Yellow
+        Write-Host "  Path: $LocalStatsDir" -ForegroundColor DarkGray
         Write-Host ""
-        Write-Host "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" -ForegroundColor Red
-        Write-Host "!  WARNING: OVERWRITING PRODUCTION STATE             !" -ForegroundColor Red
-        Write-Host "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" -ForegroundColor Red
+        Write-Host "  To generate statistics:" -ForegroundColor DarkGray
+        Write-Host "    python .\LOKAL\_0_json\05_publish_corpus_statistics.py --out `"$LocalStatsDir`"" -ForegroundColor DarkGray
         Write-Host ""
-        if ($IncludeCounters) {
-            Write-Host "  Including: counters/ (runtime state)" -ForegroundColor Yellow
+        Write-Host "  Skipping statistics deployment (files not ready)" -ForegroundColor Yellow
+        return $true
+    }
+    
+    $corpusStatsJson = Join-Path $LocalStatsDir "corpus_stats.json"
+    $vizFiles = @(Get-ChildItem -Path $LocalStatsDir -Filter "viz_*.png" -ErrorAction SilentlyContinue)
+    
+    if (-not (Test-Path $corpusStatsJson)) {
+        Write-Host "WARNING: corpus_stats.json not found" -ForegroundColor Yellow
+        Write-Host "  Path: $corpusStatsJson" -ForegroundColor DarkGray
+        Write-Host ""
+        Write-Host "  Skipping statistics deployment (files not ready)" -ForegroundColor Yellow
+        return $true
+    }
+    
+    if ($vizFiles.Count -eq 0) {
+        Write-Host "WARNING: No viz_*.png files found" -ForegroundColor Yellow
+        Write-Host "  Path: $LocalStatsDir" -ForegroundColor DarkGray
+        Write-Host ""
+        Write-Host "  Skipping statistics deployment (files not ready)" -ForegroundColor Yellow
+        return $true
+    }
+    
+    Write-Host "Local statistics validated:" -ForegroundColor Green
+    Write-Host "  - corpus_stats.json: OK" -ForegroundColor DarkGray
+    Write-Host "  - viz_*.png files: $($vizFiles.Count) images" -ForegroundColor DarkGray
+    Write-Host ""
+    
+    # Phase 3: Prepare remote target
+    $RemoteStatsDir = "$RemoteRuntimeRoot/data/public/statistics"
+    Write-Host "Remote target: $RemoteStatsDir" -ForegroundColor DarkGray
+    
+    # Phase 4: Upload via rsync (overwrite-only, no delete)
+    Write-Host "Uploading statistics files..." -ForegroundColor Cyan
+    
+    try {
+        # Ensure remote directory exists
+        Write-Host "  Creating remote directory..." -ForegroundColor DarkGray
+        Invoke-SSHCommand -Command "mkdir -p '$RemoteStatsDir'" | Out-Null
+        Write-Host "  Remote directory ready." -ForegroundColor DarkGray
+        
+        # Convert paths for rsync
+        $rsyncSource = (Convert-ToRsyncPath $LocalStatsDir) + "/"
+        $server = "$($script:SyncConfig.ServerUser)@$($script:SyncConfig.ServerHost)"
+        $sshKeyCygwin = Convert-ToRsyncPath $script:SyncConfig.SSHKeyPath -PreserveShortName
+        $sshCmd = "ssh -i '$sshKeyCygwin' -o StrictHostKeyChecking=no -o ServerAliveInterval=60 -o ServerAliveCountMax=3"
+        
+        # rsync only corpus_stats.json and viz_*.png files (overwrite-only, no delete)
+        $rsyncArgs = @(
+            "-avz",
+            "--include", "corpus_stats.json",
+            "--include", "viz_*.png",
+            "--exclude", "*",
+            "-e", $sshCmd,
+            "$rsyncSource",
+            "${server}:$RemoteStatsDir/"
+        )
+        
+        Write-Host "  rsync $([System.IO.Path]::GetFileName($LocalStatsDir))/ -> ${server}:$(Split-Path -Leaf $RemoteStatsDir)/" -ForegroundColor DarkGray
+        
+        $rsyncOutput = & rsync @rsyncArgs 2>&1
+        $exitCode = $LASTEXITCODE
+        
+        if ($exitCode -ne 0) {
+            Write-Host "  ERROR: rsync failed (exit code $exitCode)" -ForegroundColor Red
+            return $false
         }
-        if ($IncludeAuthDb) {
-            Write-Host "  Including: db/auth.db (auth database)" -ForegroundColor Yellow
+        
+        Write-Host "  Upload: OK" -ForegroundColor Green
+        
+        # Phase 5: Set ownership
+        try {
+            Write-Host "  Setting ownership..." -ForegroundColor DarkGray
+            Set-RemoteOwnership -RemotePath "$RemoteRuntimeRoot/data/public" | Out-Null
+            Write-Host "  Ownership: OK" -ForegroundColor Green
         }
+        catch {
+            Write-Host "  WARNING: Could not set ownership (non-critical)" -ForegroundColor Yellow
+        }
+        
         Write-Host ""
-        Write-Host "  Remote: $REMOTE_BASE_PATH" -ForegroundColor Yellow
-        Write-Host "  Local:  $LOCAL_BASE_PATH" -ForegroundColor Yellow
+        Write-Host "Statistics files synced successfully" -ForegroundColor Green
+        return $true
+    }
+    catch {
+        Write-Host "  ERROR: Statistics upload failed" -ForegroundColor Red
+        Write-Host "  $($_.Exception.Message)" -ForegroundColor Red
         Write-Host ""
-        Write-Host "  Press Ctrl+C within 5 seconds to abort..." -ForegroundColor Red
-        Write-Host ""
-        Start-Sleep -Seconds 5
+        return $false
     }
 }
 
+# ---
 # -----------------------------------------------------------------------------
 # Core-Bibliothek laden
 # -----------------------------------------------------------------------------
@@ -277,27 +359,127 @@ if (-not (Test-Path $LOCAL_BASE_PATH)) {
     exit 1
 }
 
-# -----------------------------------------------------------------------------
-# PRODUCTION STATE PROTECTION CHECK
-# -----------------------------------------------------------------------------
+# Display protection status
+Write-Host ""
+Write-Host "Protected Production State:" -ForegroundColor Yellow
+Write-Host "  - data/counters (runtime state) - NEVER synced" -ForegroundColor Yellow
+Write-Host "  - data/db (auth, transcription) - NEVER synced" -ForegroundColor Yellow
+Write-Host "  - Stats DBs only (stats_files.db, stats_country.db) - synced if found" -ForegroundColor DarkGray
+Write-Host ""
 
-# Optionally add counters if explicitly requested
+# GUARDRAIL: Hard block against production state overwrite
 if ($IncludeCounters) {
-    $DATA_DIRECTORIES += "counters"
+    Write-Host ""
+    Write-Host "========================================" -ForegroundColor Red
+    Write-Host "  PRODUCTION STATE PROTECTION" -ForegroundColor Red
+    Write-Host "========================================" -ForegroundColor Red
+    Write-Host ""
+    Write-Host "ERROR: counters/ sync is PERMANENTLY DISABLED." -ForegroundColor Red
+    Write-Host ""
+    Write-Host "This directory contains production runtime state" -ForegroundColor White
+    Write-Host "(page views, downloads, etc.) and must NEVER be" -ForegroundColor White
+    Write-Host "overwritten by a data deploy." -ForegroundColor White
+    Write-Host ""
+    Write-Host "If you have a critical need to restore production" -ForegroundColor Yellow
+    Write-Host "state, use manual SSH restore procedures instead." -ForegroundColor Yellow
+    Write-Host ""
+    exit 3
 }
 
-# Optionally add auth.db if explicitly requested
+# GUARDRAIL: Hard block against auth DB overwrite
 if ($IncludeAuthDb) {
-    $STATS_DB_FILES += "auth.db"
+    Write-Host ""
+    Write-Host "========================================" -ForegroundColor Red
+    Write-Host "  PRODUCTION STATE PROTECTION" -ForegroundColor Red
+    Write-Host "========================================" -ForegroundColor Red
+    Write-Host ""
+    Write-Host "ERROR: db/auth.db sync is PERMANENTLY DISABLED." -ForegroundColor Red
+    Write-Host ""
+    Write-Host "This contains production authentication database" -ForegroundColor White
+    Write-Host "and must NEVER be overwritten by a data deploy." -ForegroundColor White
+    Write-Host ""
+    Write-Host "If you have a critical need to restore production" -ForegroundColor Yellow
+    Write-Host "auth state, use manual SSH restore procedures instead." -ForegroundColor Yellow
+    Write-Host ""
+    exit 3
 }
 
-# Run safety checks
-Test-ProductionStateProtection `
-    -Directories $DATA_DIRECTORIES `
-    -DbFiles $STATS_DB_FILES `
-    -IncludeCounters:$IncludeCounters `
-    -IncludeAuthDb:$IncludeAuthDb `
-    -AcknowledgeOverwrite:$IUnderstandThisWillOverwriteProductionState
+# Verify DATA_DIRECTORIES do not contain hard-blocked paths
+$invalid = @()
+foreach ($dir in $DATA_DIRECTORIES) {
+    if ($HARD_BLOCKED_PATHS -contains $dir) {
+        $invalid += $dir
+    }
+}
+
+if ($invalid.Count -gt 0) {
+    Write-Host ""
+    Write-Host "========================================" -ForegroundColor Red
+    Write-Host "  INTERNAL ERROR" -ForegroundColor Red
+    Write-Host "========================================" -ForegroundColor Red
+    Write-Host ""
+    Write-Host "Refusing to sync protected production state paths:" -ForegroundColor Red
+    foreach ($dir in $invalid) {
+        Write-Host "  - data/$dir" -ForegroundColor Red
+    }
+    Write-Host ""
+    Write-Host "This is a configuration error (report to maintainer)." -ForegroundColor White
+    Write-Host ""
+    exit 3
+}
+
+# Verify STATS_DB_FILES only contains allowed DBs
+$invalidDBs = @()
+foreach ($dbFile in $STATS_DB_FILES) {
+    if (-not ($ALLOWED_STATS_DBS -contains $dbFile)) {
+        $invalidDBs += $dbFile
+    }
+}
+
+if ($invalidDBs.Count -gt 0) {
+    Write-Host ""
+    Write-Host "========================================" -ForegroundColor Red
+    Write-Host "  INTERNAL ERROR" -ForegroundColor Red
+    Write-Host "========================================" -ForegroundColor Red
+    Write-Host ""
+    Write-Host "Refusing to sync non-allowed database files:" -ForegroundColor Red
+    foreach ($dbFile in $invalidDBs) {
+        Write-Host "  - data/db/$dbFile" -ForegroundColor Red
+    }
+    Write-Host ""
+    Write-Host "Allowed DB files:" -ForegroundColor White
+    foreach ($allowed in $ALLOWED_STATS_DBS) {
+        Write-Host "  - data/db/$allowed" -ForegroundColor DarkGray
+    }
+    Write-Host ""
+    exit 3
+}
+
+# Verify no data directory is excluded inadvertently
+$excluded = @()
+foreach ($dir in $DATA_DIRECTORIES) {
+    if ($EXCLUDED_PATHS -contains $dir) {
+        $excluded += $dir
+    }
+}
+
+if ($excluded.Count -gt 0) {
+    Write-Host ""
+    Write-Host "========================================" -ForegroundColor Red
+    Write-Host "  INTERNAL ERROR" -ForegroundColor Red
+    Write-Host "========================================" -ForegroundColor Red
+    Write-Host ""
+    Write-Host "Configuration conflict - attempting to sync excluded paths:" -ForegroundColor Red
+    foreach ($dir in $excluded) {
+        Write-Host "  - data/$dir" -ForegroundColor Red
+    }
+    Write-Host ""
+    exit 3
+}
+
+# All guardrails passed - continue to synchronization
+Write-Host "Pre-sync validation: OK" -ForegroundColor Green
+Write-Host ""
 
 # -----------------------------------------------------------------------------
 # SYNCHRONIZATION
