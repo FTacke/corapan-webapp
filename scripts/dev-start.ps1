@@ -38,7 +38,7 @@ if (-not $env:CORAPAN_RUNTIME_ROOT) {
     # Runtime is now repo-local under $RepoRoot\runtime\corapan
     $env:CORAPAN_RUNTIME_ROOT = Join-Path $repoRoot "runtime\corapan"
     $isDefaultRuntime = $true
-    Write-Host "ℹ️  CORAPAN_RUNTIME_ROOT not set. Using repo-local default:" -ForegroundColor Cyan
+    Write-Host "INFO: CORAPAN_RUNTIME_ROOT not set. Using repo-local default:" -ForegroundColor Cyan
     Write-Host "   $env:CORAPAN_RUNTIME_ROOT" -ForegroundColor Cyan
     Write-Host "" -ForegroundColor Cyan
 } else {
@@ -66,7 +66,7 @@ if (-not (Test-Path $env:PUBLIC_STATS_DIR)) {
 $statsFile = Join-Path $env:PUBLIC_STATS_DIR "corpus_stats.json"
 if (-not (Test-Path $statsFile)) {
     Write-Host "" -ForegroundColor Yellow
-    Write-Host "⚠️  STATISTICS NOT GENERATED" -ForegroundColor Yellow
+    Write-Host "WARNING: STATISTICS NOT GENERATED" -ForegroundColor Yellow
     Write-Host "   corpus_stats.json not found at: $statsFile" -ForegroundColor Yellow
     Write-Host "" -ForegroundColor Yellow
     Write-Host "To generate statistics in one command, copy and run:" -ForegroundColor Cyan
@@ -80,7 +80,7 @@ if (-not (Test-Path $statsFile)) {
     Write-Host "" -ForegroundColor Yellow
 } else {
     $statsInfo = Get-Item $statsFile
-    Write-Host "✓ Statistics found (generated: $(($statsInfo.LastWriteTime).ToString('yyyy-MM-dd HH:mm:ss')))" -ForegroundColor Green
+    Write-Host "SUCCESS: Statistics found (generated: $(($statsInfo.LastWriteTime).ToString('yyyy-MM-dd HH:mm:ss')))" -ForegroundColor Green
 }
 
 Write-Host "" -ForegroundColor Yellow
@@ -126,7 +126,7 @@ if ($dockerAvailable) {
     if ($needsStart.Count -gt 0) {
         $servicesStr = $needsStart -join ", "
         Write-Host "Starting Docker services: $servicesStr" -ForegroundColor Yellow
-        & docker compose -f docker-compose.dev-postgres.yml up -d @needsStart
+        docker compose -f docker-compose.dev-postgres.yml up -d $needsStart
 
         # Wait briefly for Postgres if starting
         if ($needsStart -contains "corapan_auth_db") {
@@ -145,8 +145,29 @@ Write-Host "`nStarting Flask dev server at http://localhost:8000" -ForegroundCol
 
 # Use venv Python if available, otherwise fall back to system Python
 $venvPython = Join-Path $repoRoot ".venv\Scripts\python.exe"
-if (Test-Path $venvPython) {
-    & $venvPython -m src.app.main
+if (-not (Test-Path $venvPython)) {
+    $venvPython = "python"
+}
+
+$logFile = Join-Path $repoRoot "dev-server.log"
+$errFile = Join-Path $repoRoot "dev-server.err.log"
+
+Write-Host "Starting Flask via Start-Process (Background/Detached)..." -ForegroundColor Cyan
+Write-Host "Logs redirected to:" -ForegroundColor Gray
+Write-Host "  STDOUT: $logFile" -ForegroundColor Gray
+Write-Host "  STDERR: $errFile" -ForegroundColor Gray
+
+# Start Python directly with Start-Process to avoid console buffer hangs (Pipeline issue)
+$p = Start-Process -FilePath $venvPython -ArgumentList "-m src.app.main" -NoNewWindow -PassThru -RedirectStandardOutput $logFile -RedirectStandardError $errFile
+
+if ($p) {
+    Write-Host "Server process started (PID: $($p.Id))." -ForegroundColor Green
+    Write-Host "Press Ctrl+C to stop this script (Server will continue running unless killed manually)." -ForegroundColor Yellow
+    
+    # Optional: Wait for the process so the script doesn't exit immediately, 
+    # simulating a blocking behavior while keeping pipes detached.
+    Wait-Process -Id $p.Id
 } else {
-    python -m src.app.main
+    Write-Host "Failed to start server process." -ForegroundColor Red
+    exit 1
 }
