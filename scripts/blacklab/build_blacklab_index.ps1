@@ -24,11 +24,22 @@ $BLF_CONFIG = "config\blacklab\corapan-tsv.blf.yaml"
 
 # Resolve paths
 $repoRoot = (Get-Item $PSScriptRoot).Parent.Parent.FullName
-$tsvSourcePath = Join-Path $repoRoot $TSV_SOURCE_DIR
-$docmetaPath = Join-Path $repoRoot $DOCMETA_FILE
-$indexTargetPath = Join-Path $repoRoot $INDEX_TARGET_DIR
-$indexTargetPathNew = Join-Path $repoRoot $INDEX_TARGET_DIR_NEW
-$blfConfigPath = Join-Path $repoRoot $BLF_CONFIG
+
+# Runtime root (optional): Use CORAPAN_RUNTIME_ROOT if set, otherwise fall back to repo-relative paths
+if ($env:CORAPAN_RUNTIME_ROOT) {
+    $dataRoot = Join-Path $env:CORAPAN_RUNTIME_ROOT "data"
+    $configRoot = Join-Path $env:CORAPAN_RUNTIME_ROOT "config"
+    Write-Host "INFO: CORAPAN_RUNTIME_ROOT is set; using runtime root structure" -ForegroundColor Cyan
+} else {
+    $dataRoot = Join-Path $repoRoot "data"
+    $configRoot = Join-Path $repoRoot "config"
+}
+
+$tsvSourcePath = Join-Path $dataRoot "blacklab_export\tsv"
+$docmetaPath = Join-Path $dataRoot "blacklab_export\docmeta.jsonl"
+$indexTargetPath = Join-Path $dataRoot "blacklab_index"
+$indexTargetPathNew = Join-Path $dataRoot "blacklab_index.new"
+$blfConfigPath = Join-Path $configRoot "blacklab\corapan-tsv.blf.yaml"
 $BUILD_LOG = Join-Path $indexTargetPathNew "build.log"
 
 Write-Host ""
@@ -39,6 +50,13 @@ Write-Host ""
 
 Write-Host "Configuration:" -ForegroundColor White
 Write-Host "  Repository:      $repoRoot" -ForegroundColor Gray
+if ($env:CORAPAN_RUNTIME_ROOT) {
+    Write-Host "  Runtime Root:    $env:CORAPAN_RUNTIME_ROOT" -ForegroundColor Cyan
+    Write-Host "  Data Root:       $dataRoot" -ForegroundColor Cyan
+    Write-Host "  Config Root:     $configRoot" -ForegroundColor Cyan
+} else {
+    Write-Host "  Runtime Root:    [not set; using repo-relative paths]" -ForegroundColor Gray
+}
 Write-Host "  Docker Image:    $BLACKLAB_IMAGE" -ForegroundColor Cyan
 Write-Host "  TSV Source:      $tsvSourcePath" -ForegroundColor Gray
 Write-Host "  Docmeta:         $docmetaPath" -ForegroundColor Gray
@@ -111,7 +129,7 @@ Write-Host ""
 
 Write-Host "[2/4] Backing up existing index..." -ForegroundColor Yellow
 
-$backupDir = Join-Path $repoRoot "data\blacklab_index.backup"
+$backupDir = Join-Path $dataRoot "blacklab_index.backup"
 $targetIndexPath = $indexTargetPath
 
 if (Test-Path $targetIndexPath) {
@@ -196,10 +214,10 @@ Get-ChildItem -Path $tsvSourcePath -Filter "*.tsv" -File | Where-Object { $_.Nam
 }
 
 # Convert Windows paths to Docker format
-$exportPath = Join-Path $repoRoot "data\blacklab_export"
+$exportPath = Join-Path $dataRoot "blacklab_export"
 $exportMount = $exportPath.Replace('\', '/').Replace('C:', '/c')
 $indexMount = $indexTargetPathNew.Replace('\', '/').Replace('C:', '/c')
-$configMount = (Join-Path $repoRoot "config\blacklab").Replace('\', '/').Replace('C:', '/c')
+$configMount = (Join-Path $configRoot "blacklab").Replace('\', '/').Replace('C:', '/c')
 
 # Build Docker command
     # Ensure metadata directory exists for IndexTool (IndexTool expects per-file JSONs in linked-file-dir)

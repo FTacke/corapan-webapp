@@ -68,13 +68,30 @@ Write-Host ""
 # $PSScriptRoot is scripts\blacklab, so take the parent twice to reach the repo root
 $repoRoot = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
 
+# Runtime root (optional): Use CORAPAN_RUNTIME_ROOT if set, otherwise fall back to repo-relative paths
+if ($env:CORAPAN_RUNTIME_ROOT) {
+    $dataRoot = Join-Path $env:CORAPAN_RUNTIME_ROOT "data"
+    $configRoot = Join-Path $env:CORAPAN_RUNTIME_ROOT "config"
+    Write-Host "INFO: CORAPAN_RUNTIME_ROOT is set; using runtime root structure" -ForegroundColor Cyan
+} else {
+    $dataRoot = Join-Path $repoRoot "data"
+    $configRoot = Join-Path $repoRoot "config"
+}
+
 # Make paths absolute
-$indexPath = Join-Path $repoRoot $INDEX_DIR
-$configPath = Join-Path $repoRoot $CONFIG_DIR
+$indexPath = Join-Path $dataRoot "blacklab_index"
+$configPath = Join-Path $configRoot "blacklab"
 
 Write-Host "Konfiguration:" -ForegroundColor White
 Write-Host "  Docker-Image:    $BLACKLAB_IMAGE" -ForegroundColor Gray
 Write-Host "  Container:       $CONTAINER_NAME" -ForegroundColor Gray
+if ($env:CORAPAN_RUNTIME_ROOT) {
+    Write-Host "  Runtime Root:    $env:CORAPAN_RUNTIME_ROOT" -ForegroundColor Cyan
+    Write-Host "  Data Root:       $dataRoot" -ForegroundColor Cyan
+    Write-Host "  Config Root:     $configRoot" -ForegroundColor Cyan
+} else {
+    Write-Host "  Runtime Root:    [not set; using repo-relative paths]" -ForegroundColor Gray
+}
 Write-Host "  Index:           $indexPath" -ForegroundColor Gray
 Write-Host "  Config:          $configPath" -ForegroundColor Gray
 Write-Host "  Port:            $HOST_PORT -> $CONTAINER_PORT" -ForegroundColor Gray
