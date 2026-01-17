@@ -62,8 +62,16 @@ if (-not (Test-Path $env:PUBLIC_STATS_DIR)) {
     New-Item -ItemType Directory -Path $env:PUBLIC_STATS_DIR -Force | Out-Null
 }
 
-# Check if statistics have been generated
+# Migrate legacy repo stats to runtime if needed
+$repoStatsDir = Join-Path $repoRoot "data\public\statistics"
+$repoStatsFile = Join-Path $repoStatsDir "corpus_stats.json"
 $statsFile = Join-Path $env:PUBLIC_STATS_DIR "corpus_stats.json"
+if (-not (Test-Path $statsFile) -and (Test-Path $repoStatsFile)) {
+    Write-Host "INFO: Runtime stats missing; migrating legacy repo stats to runtime." -ForegroundColor Cyan
+    & (Join-Path $repoRoot "scripts\migrate_stats_to_runtime.ps1")
+}
+
+# Check if statistics have been generated
 if (-not (Test-Path $statsFile)) {
     Write-Host "" -ForegroundColor Yellow
     Write-Host "WARNING: STATISTICS NOT GENERATED" -ForegroundColor Yellow
