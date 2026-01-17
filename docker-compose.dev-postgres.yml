@@ -26,6 +26,12 @@ services:
     restart: unless-stopped
 
   blacklab-server-v3:
+    # IMPORTANT: Image MUST be pinned to digest (not :latest).
+    # Floating tags cause unpredictable breakage when upstream image updates.
+    # If you need to update this digest, rebuild the dev index:
+    #   Rename-Item data/blacklab_index "blacklab_index.bad_$(Get-Date -Format yyyyMMdd_HHmmss)"
+    #   docker compose down && docker compose up -d
+    # See: docs/operations/blacklab_dev_health.md
     image: instituutnederlandsetaal/blacklab@sha256:3753dbce4fee11f8706b63c5b94bf06eac9d3843c75bf2eef6412ff47208c2e7
     container_name: blacklab-server-v3
     ports:
