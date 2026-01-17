@@ -26,12 +26,17 @@ This directory contains the core deployment logic for synchronizing data, media,
 Connection parameters (hostname and user) are configured in sync_core.ps1. Port is implicit (default 22) and not exposed as a config variable. Default target: `137.248.186.51` (root@22).
 
 **What it syncs:**
-- `data/counters/`
 - `data/db_public/`
 - `data/metadata/`
 - `data/exports/`
 - `data/blacklab_export/`
 - Stats databases: `data/db/stats_files.db`, `data/db/stats_country.db`
+
+**Protected Production State (NOT synced by default):**
+- `data/counters/` - Runtime state (page views, downloads, etc.)
+- `data/db/auth.db` - Production authentication database
+
+These paths contain production runtime state and must NEVER be overwritten by a normal data deploy. To sync them in an emergency (DANGEROUS), you must explicitly use `-IncludeCounters` and/or `-IncludeAuthDb` together with `-IUnderstandThisWillOverwriteProductionState`.
 
 **Note:** Does NOT sync runtime statistics files (corpus_stats.json, viz_*.png). These are handled separately by `deploy_data.ps1` orchestrator.
 

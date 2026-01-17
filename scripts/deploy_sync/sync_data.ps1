@@ -12,7 +12,6 @@
 # -----------------------------------------------------------------------------
 #
 #   Folgende Verzeichnisse werden als Ganzes synchronisiert:
-#   - counters        -> Zaehler-Dateien fuer verschiedene Features
 #   - db_public       -> Oeffentliche Datenbank-Exports
 #   - metadata        -> Metadaten zu Korpus-Dateien
 #   - exports         -> Generierte Exports
@@ -46,6 +45,18 @@
 #   - db/auth_e2e.db         -> nur fuer lokale E2E-Tests
 #
 # -----------------------------------------------------------------------------
+# PROTECTED PRODUCTION STATE (NEVER synced by default):
+# -----------------------------------------------------------------------------
+#
+#   - counters/              -> Runtime state (page views, downloads, etc.)
+#   - db/auth.db             -> Production authentication database
+#
+#   These contain production runtime state and must NEVER be overwritten
+#   by a data deploy. To sync them (DANGEROUS), you must explicitly use:
+#     -IncludeCounters and/or -IncludeAuthDb
+#     AND -IUnderstandThisWillOverwriteProductionState
+#
+# -----------------------------------------------------------------------------
 # FORCE-MODUS (-Force):
 # -----------------------------------------------------------------------------
 #
@@ -73,7 +84,16 @@ param(
     [Parameter(Mandatory = $false)]
     [string]$RepoRoot,
     
-    [switch]$Force
+    [switch]$Force,
+    
+    # PRODUCTION STATE PROTECTION
+    # These switches allow syncing of runtime state (normally excluded for safety)
+    # REQUIRES -IUnderstandThisWillOverwriteProductionState to be set as well
+    [switch]$IncludeCounters,
+    
+    [switch]$IncludeAuthDb,
+    
+    [switch]$IUnderstandThisWillOverwriteProductionState
 )
 
 Set-StrictMode -Version Latest
@@ -93,8 +113,8 @@ $REMOTE_BASE_PATH = "/srv/webapps/corapan/data"
 
 # Zu synchronisierende Verzeichnisse
 # WICHTIG: blacklab_index, blacklab_index.backup, stats_temp, db sind bewusst NICHT enthalten!
+# WICHTIG: counters ist NICHT enthalten (Production State Protection)
 $DATA_DIRECTORIES = @(
-    "counters",
     "db_public",
     "metadata",
     "exports",
@@ -107,6 +127,116 @@ $STATS_DB_FILES = @(
     "stats_files.db",
     "stats_country.db"
 )
+
+# -----------------------------------------------------------------------------
+# PRODUCTION STATE PROTECTION: Blocklist
+# -----------------------------------------------------------------------------
+
+# These paths contain production runtime state and must never be synced
+# unless explicitly confirmed with safety switches
+$PROTECTED_PRODUCTION_PATHS = @(
+    "counters",
+    "db/auth.db",
+    "db/transcription.db"
+)
+
+# -----------------------------------------------------------------------------
+# SAFETY CHECKS: Validate production state protection
+# -----------------------------------------------------------------------------
+
+function Test-ProductionStateProtection {
+    param(
+        [string[]]$Directories,
+        [string[]]$DbFiles,
+        [bool]$IncludeCounters,
+        [bool]$IncludeAuthDb,
+        [bool]$AcknowledgeOverwrite
+    )
+    
+    $violations = @()
+    
+    # Check if counters would be synced without proper flags
+    if ($Directories -contains "counters" -and -not $IncludeCounters) {
+        $violations += "counters/ (use -IncludeCounters to override)"
+    }
+    
+    # Check if counters flag is set but not acknowledged
+    if ($IncludeCounters -and -not $AcknowledgeOverwrite) {
+        Write-Host ""
+        Write-Host "========================================" -ForegroundColor Red
+        Write-Host "  PRODUCTION STATE OVERWRITE REFUSED" -ForegroundColor Red
+        Write-Host "========================================" -ForegroundColor Red
+        Write-Host ""
+        Write-Host "You requested to include counters/ (production runtime state)." -ForegroundColor Yellow
+        Write-Host "This will OVERWRITE production state data!" -ForegroundColor Yellow
+        Write-Host ""
+        Write-Host "To proceed, you must acknowledge this with:" -ForegroundColor White
+        Write-Host "  -IUnderstandThisWillOverwriteProductionState" -ForegroundColor Cyan
+        Write-Host ""
+        exit 2
+    }
+    
+    # Check if auth DB would be synced
+    if ($DbFiles -contains "auth.db" -and -not $IncludeAuthDb) {
+        $violations += "db/auth.db (use -IncludeAuthDb to override)"
+    }
+    
+    # Check if auth DB flag is set but not acknowledged
+    if ($IncludeAuthDb -and -not $AcknowledgeOverwrite) {
+        Write-Host ""
+        Write-Host "========================================" -ForegroundColor Red
+        Write-Host "  PRODUCTION STATE OVERWRITE REFUSED" -ForegroundColor Red
+        Write-Host "========================================" -ForegroundColor Red
+        Write-Host ""
+        Write-Host "You requested to include db/auth.db (production auth database)." -ForegroundColor Yellow
+        Write-Host "This will OVERWRITE production authentication data!" -ForegroundColor Yellow
+        Write-Host ""
+        Write-Host "To proceed, you must acknowledge this with:" -ForegroundColor White
+        Write-Host "  -IUnderstandThisWillOverwriteProductionState" -ForegroundColor Cyan
+        Write-Host ""
+        exit 2
+    }
+    
+    # If violations found, fail fast
+    if ($violations.Count -gt 0) {
+        Write-Host ""
+        Write-Host "========================================" -ForegroundColor Red
+        Write-Host "  PRODUCTION STATE PROTECTION" -ForegroundColor Red
+        Write-Host "========================================" -ForegroundColor Red
+        Write-Host ""
+        Write-Host "Refusing to sync protected production state paths:" -ForegroundColor Yellow
+        foreach ($v in $violations) {
+            Write-Host "  - $v" -ForegroundColor Yellow
+        }
+        Write-Host ""
+        Write-Host "These paths contain runtime state that should NEVER be" -ForegroundColor White
+        Write-Host "overwritten by a data deploy." -ForegroundColor White
+        Write-Host ""
+        exit 3
+    }
+    
+    # If acknowledged, show prominent warning
+    if ($AcknowledgeOverwrite -and ($IncludeCounters -or $IncludeAuthDb)) {
+        Write-Host ""
+        Write-Host "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" -ForegroundColor Red
+        Write-Host "!  WARNING: OVERWRITING PRODUCTION STATE             !" -ForegroundColor Red
+        Write-Host "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" -ForegroundColor Red
+        Write-Host ""
+        if ($IncludeCounters) {
+            Write-Host "  Including: counters/ (runtime state)" -ForegroundColor Yellow
+        }
+        if ($IncludeAuthDb) {
+            Write-Host "  Including: db/auth.db (auth database)" -ForegroundColor Yellow
+        }
+        Write-Host ""
+        Write-Host "  Remote: $REMOTE_BASE_PATH" -ForegroundColor Yellow
+        Write-Host "  Local:  $LOCAL_BASE_PATH" -ForegroundColor Yellow
+        Write-Host ""
+        Write-Host "  Press Ctrl+C within 5 seconds to abort..." -ForegroundColor Red
+        Write-Host ""
+        Start-Sleep -Seconds 5
+    }
+}
 
 # -----------------------------------------------------------------------------
 # Core-Bibliothek laden
@@ -146,6 +276,32 @@ if (-not (Test-Path $LOCAL_BASE_PATH)) {
     Write-Host "FEHLER: Lokales Datenverzeichnis nicht gefunden: $LOCAL_BASE_PATH" -ForegroundColor Red
     exit 1
 }
+
+# -----------------------------------------------------------------------------
+# PRODUCTION STATE PROTECTION CHECK
+# -----------------------------------------------------------------------------
+
+# Optionally add counters if explicitly requested
+if ($IncludeCounters) {
+    $DATA_DIRECTORIES += "counters"
+}
+
+# Optionally add auth.db if explicitly requested
+if ($IncludeAuthDb) {
+    $STATS_DB_FILES += "auth.db"
+}
+
+# Run safety checks
+Test-ProductionStateProtection `
+    -Directories $DATA_DIRECTORIES `
+    -DbFiles $STATS_DB_FILES `
+    -IncludeCounters:$IncludeCounters `
+    -IncludeAuthDb:$IncludeAuthDb `
+    -AcknowledgeOverwrite:$IUnderstandThisWillOverwriteProductionState
+
+# -----------------------------------------------------------------------------
+# SYNCHRONIZATION
+# -----------------------------------------------------------------------------
 
 # Synchronisation fuer jedes Verzeichnis
 $errorCount = 0
