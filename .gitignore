@@ -142,11 +142,15 @@ startme.md
 CLEAN_UP.md
 
 # =============================================================================
-# Legacy/Deprecated Files
+# Legacy/Deprecated Files & Runtime-Generated Assets
 # =============================================================================
 templates/legacy/
 static/js/*.old
 static/js/*.bak
+
+# Runtime-generated statistics (served from PUBLIC_STATS_DIR, not from Git)
+# See: docs/operations/runtime_statistics_deploy.md
+static/img/statistics/
 
 # =============================================================================
 # Temporary Files

@@ -1,5 +1,8 @@
 # Runtime Statistics Deployment
 
+> **Important:** Statistics are **runtime-only**. Do NOT look for them in `static/img/statistics/` (that's a legacy location removed from Git).
+> See [Legacy Static Statistics](./legacy_static_statistics.md) for context.
+
 ## Overview
 
 The `deploy_data.ps1` orchestrator now includes automatic upload of runtime statistics files to production. These files are generated locally and deployed separately from the main data sync.
