@@ -39,9 +39,12 @@ TIMESTAMP=$(date +%F_%H%M%S)
 LOG_FILE="${DATA_ROOT}/logs/blacklab_retention_${TIMESTAMP}.log"
 
 # Backup Retention Configuration (opt-in, default: report-only)
-BLACKLAB_KEEP_BACKUPS="${BLACKLAB_KEEP_BACKUPS:-3}"          # how many backups to retain
-BLACKLAB_RETENTION_DELETE="${BLACKLAB_RETENTION_DELETE:-0}"  # 0 = report only, 1 = actually delete
-BLACKLAB_RETENTION_OLDER_THAN_DAYS="${BLACKLAB_RETENTION_OLDER_THAN_DAYS:-}"  # optional: delete if older than N days
+# These match the schema produced by publish_blacklab_index.ps1 STEP 6:
+#   Primary:   blacklab_index.bak_YYYY-MM-DD_HHMMSS  (current schema from STEP 6)
+#   Legacy:    blacklab_index.backup_*               (historical backups)
+: "${BLACKLAB_KEEP_BACKUPS:=3}"          # how many backups to retain
+: "${BLACKLAB_RETENTION_DELETE:=0}"      # 0 = report only, 1 = actually delete
+: "${BLACKLAB_RETENTION_OLDER_THAN_DAYS:=}"  # optional: only delete if older than N days
 
 # Colors for output
 RED='\033[0;31m'
@@ -99,6 +102,10 @@ fi
 local_backups=()
 
 # Collect all matching backup directories
+# Pattern source: scripts/deploy_sync/publish_blacklab_index.ps1 STEP 6
+#   Creates: blacklab_index.bak_YYYY-MM-DD_HHMMSS
+#   Also matches legacy: blacklab_index.backup_* (if any)
+# Never matches: blacklab_index (active) or blacklab_index.new (staging)
 if [ -d "$DATA_ROOT" ]; then
     while IFS= read -r -d '' dir; do
         local_backups+=("$dir")

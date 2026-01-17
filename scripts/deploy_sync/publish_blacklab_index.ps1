@@ -124,15 +124,16 @@ function Invoke-BackupCleanup {
     Write-Step "Invoking server-side retention script..."
     
     # Build environment variables for remote script
-    $deleteFlag = if ($DryRun) { 0 } else { 1 }
+    # Default: report-only (BLACKLAB_RETENTION_DELETE=0)
+    # User must explicitly enable deletion if needed
     
     # Remote script path (injected into webapp at deployment time)
     $remoteScript = "/srv/webapps/corapan/app/scripts/blacklab/retain_blacklab_backups_prod.sh"
     
     # Build retention command with environment variables
+    # Note: BLACKLAB_RETENTION_DELETE defaults to 0 (report-only) in the script
     $retentionCmd = @"
 BLACKLAB_KEEP_BACKUPS=$Keep \
-BLACKLAB_RETENTION_DELETE=$deleteFlag \
 DATA_ROOT='$RemoteDataDir' \
 bash '$remoteScript'
 "@
