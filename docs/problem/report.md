@@ -492,6 +492,44 @@ Press Ctrl+C to stop this script (Server will continue running unless killed man
 
 ```
 
+# 1) Prozesszustand
+```powershell
+Get-Process -Id 19480 | Format-List Id,ProcessName,StartTime,Path
+```
+```
+PS C:\dev\corapan-webapp> Get-Process -Id 19480 | Format-List Id,ProcessName,StartTime,Path
+Get-Process : Es kann kein Prozess mit der Prozess-ID 19480 gefunden werden.
+In Zeile:1 Zeichen:1
++ Get-Process -Id 19480 | Format-List Id,ProcessName,StartTime,Path
++ ~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : ObjectNotFound: (19480:Int32) [Get-Process], ProcessCommandException
+    + FullyQualifiedErrorId : NoProcessFoundForGivenId,Microsoft.PowerShell.Commands.GetProcessCommand
+
+
+
+Command exited with code 1
+```
+
+# 2) Falls schon weg:
+```powershell
+Get-Process -Id 19480 -ErrorAction SilentlyContinue | Format-List Id,HasExited,ExitCode
+```
+```
+PS C:\dev\corapan-webapp> Get-Process -Id 19480 -ErrorAction SilentlyContinue | Format-List Id,HasExited,ExitCode
+PS C:\dev\corapan-webapp> 
+
+Command exited with code 1
+```
+
+# 3) Ports des Prozesses (wenn noch lebt)
+```powershell
+Get-NetTCPConnection -State Listen | Where-Object { $_.OwningProcess -eq 19480 } |
+  Format-Table LocalAddress,LocalPort,State,OwningProcess
+```
+```
+PS C:\dev\corapan-webapp> Get-NetTCPConnection -State Listen | Where-Object { $_.OwningProcess -eq 19480 } | Format-Table LocalAddress,LocalPort,State,OwningProcess
+```
+
 ### Port-Status
 ```powershell
 Get-NetTCPConnection -State Listen | Where-Object { $_.LocalPort -eq 8000 } | Format-Table LocalAddress,LocalPort,OwningProcess
@@ -526,6 +564,18 @@ PS C:\dev\corapan-webapp> Get-Content .\dev-server.log -ErrorAction SilentlyCont
  * Serving Flask app 'src.app'
  * Debug mode: off
 PS C:\dev\corapan-webapp> Get-Content .\dev-server.err.log -ErrorAction SilentlyContinue | Select-Object -Last 120
+```
+
+## API-Fehlerquelle (dev-start.ps1)
+```powershell
+Select-String -Path .\scripts\dev-start.ps1 -Pattern 'API' -Context 2,2
+```
+```
+  scripts\dev-start.ps1:77:    Write-Host "   python .\LOKAL\_0_json\05_publish_corpus_statistics.py" -ForegroundColor Gray
+  scripts\dev-start.ps1:78:    Write-Host "" -ForegroundColor Yellow
+> scripts\dev-start.ps1:79:    Write-Host "Continuing startup... (API will return 404 for stats endpoints until generated)" -ForegroundColor Gray
+  scripts\dev-start.ps1:80:    Write-Host "" -ForegroundColor Yellow
+  scripts\dev-start.ps1:81:} else {
 ```
 
 ## Anmerkung zum Script-Verhalten

@@ -23,4 +23,5 @@ if __name__ == "__main__":
     # Check FLASK_DEBUG env var explicitly to override
     # If not set, default to False to avoid auto-reload issues
     explicit_debug = os.getenv("FLASK_DEBUG", "0").lower() in ("1", "true", "yes")
-    app.run(host="0.0.0.0", port=8000, debug=explicit_debug, use_reloader=False)
+    # Enable threaded mode to handle concurrent requests (multiple CSS/JS/image requests don't block each other)
+    app.run(host="0.0.0.0", port=8000, debug=explicit_debug, use_reloader=False, threaded=True)

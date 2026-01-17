@@ -81,6 +81,19 @@ $env:JWT_SECRET_KEY = "dev-jwt-secret-change-me"
 $env:FLASK_ENV = "development"
 $env:BLACKLAB_BASE_URL = "http://localhost:8081/blacklab-server"
 
+# ==============================================================================
+# PYTHON BOOTSTRAP (DETERMINISTIC - must be before any Python calls)
+# ==============================================================================
+# NEVER call `python` without explicit path. ALWAYS use $venvPython or $venvPip.
+$venvDir    = Join-Path $repoRoot '.venv'
+$venvPython = Join-Path $venvDir 'Scripts\python.exe'
+$venvPip    = Join-Path $venvDir 'Scripts\pip.exe'
+
+Write-Host "`nPython bootstrap paths:" -ForegroundColor Cyan
+Write-Host "  venv: $venvDir" -ForegroundColor Gray
+Write-Host "  python: $venvPython" -ForegroundColor Gray
+Write-Host "  pip: $venvPip" -ForegroundColor Gray
+
 # ============================================================================
 # Step 1: Python Environment
 # ============================================================================
@@ -88,28 +101,44 @@ if (-not $SkipInstall) {
     Write-Host "`n[1/5] Setting up Python environment..." -ForegroundColor Yellow
 
     # Check for virtualenv
-    if (-not (Test-Path ".venv")) {
+    if (-not (Test-Path $venvDir)) {
         Write-Host "  Creating virtual environment (.venv)..." -ForegroundColor Gray
-        python -m venv .venv
+        # System Python only for venv bootstrap (ONE TIME EXCEPTION)
+        $sysPython = Get-Command python -ErrorAction SilentlyContinue | Select-Object -First 1
+        if (-not $sysPython) {
+            Write-Host "ERROR: 'python' not found in PATH. Install Python or add to PATH." -ForegroundColor Red
+            exit 1
+        }
+        Write-Host "  Using system Python for bootstrap: $($sysPython.Source)" -ForegroundColor Gray
+        & $sysPython.Source -m venv $venvDir
+    }
+    
+    # Verify venv Python exists
+    if (-not (Test-Path $venvPython)) {
+        Write-Host "ERROR: venv Python not found at $venvPython" -ForegroundColor Red
+        exit 1
+    }
+    
+    # Safety check: venv Python must be functional
+    Write-Host "  Verifying venv Python..." -ForegroundColor Gray
+    try {
+        & $venvPython -c "import sys, runpy; print('OK: ' + sys.executable)"
+    } catch {
+        Write-Host "ERROR: venv Python not functional: $_" -ForegroundColor Red
+        exit 1
     }
 
     # Activate virtualenv if not already active
-    $activateScript = ".\.venv\Scripts\Activate.ps1"
+    $activateScript = Join-Path $venvDir 'Scripts\Activate.ps1'
     if (Test-Path $activateScript) {
         & $activateScript
     }
 
-    $python = Get-Command python -ErrorAction SilentlyContinue
-    if (-not $python) {
-        Write-Host "ERROR: 'python' not found. Activate virtualenv or install Python." -ForegroundColor Red
-        exit 1
-    }
-
     Write-Host "  Installing Python requirements..." -ForegroundColor Gray
     try {
-        & python -m pip install --quiet --upgrade pip
-        & python -m pip install --quiet -r requirements.txt
-        & python -m pip install --quiet argon2_cffi psycopg[binary]
+        & $venvPython -m pip install --quiet --upgrade pip
+        & $venvPython -m pip install --quiet -r requirements.txt
+        & $venvPython -m pip install --quiet argon2_cffi psycopg[binary]
         Write-Host "  Python requirements installed." -ForegroundColor Green
     } catch {
         Write-Host "WARN: pip install failed: $_" -ForegroundColor Yellow
@@ -153,11 +182,17 @@ if ($dbMode -eq "postgres" -or -not $SkipBlackLab) {
         }
     }
 
-    # Start services (redirect stderr to suppress docker compose progress messages)
-    $ErrorActionPreference = 'Continue'
-    docker compose -f docker-compose.dev-postgres.yml up -d @services 2>&1 | Out-Null
-    $composeExitCode = $LASTEXITCODE
-    $ErrorActionPreference = 'Stop'
+    # Start services (suppress progress output)
+    $composeExitCode = 0
+    try {
+        $ErrorActionPreference = 'Continue'
+        & docker compose -f docker-compose.dev-postgres.yml up -d @services 2>$null
+        $composeExitCode = $LASTEXITCODE
+        $ErrorActionPreference = 'Stop'
+    } catch {
+        $ErrorActionPreference = 'Stop'
+        $composeExitCode = $LASTEXITCODE
+    }
     
     if ($composeExitCode -ne 0) {
         Write-Host "ERROR: docker compose failed (exit code: $composeExitCode)" -ForegroundColor Red
@@ -173,25 +208,19 @@ if ($dbMode -eq "postgres" -or -not $SkipBlackLab) {
         $ready = $false
 
         while ($waited -lt $maxWait) {
-            # Check container health status first
-            $status = docker inspect --format='{{.State.Health.Status}}' corapan_auth_db 2>$null
-            if ($status -eq "healthy") {
-                # Additional check: can we actually connect?
-                $testResult = docker exec corapan_auth_db pg_isready -U corapan_auth -d corapan_auth 2>$null
-                if ($LASTEXITCODE -eq 0) {
-                    $ready = $true
-                    break
-                }
+            # Check if Postgres is responding
+            $testResult = docker exec corapan_auth_db pg_isready -U corapan_auth -d corapan_auth 2>$null
+            if ($LASTEXITCODE -eq 0) {
+                $ready = $true
+                break
             }
             Start-Sleep -Seconds 2
             $waited += 2
-            $msg = "    ... waiting ($waited seconds)"
-            Write-Host $msg -ForegroundColor Gray
+            Write-Host "    ... waiting ($waited seconds)" -ForegroundColor Gray
         }
 
         if ($ready) {
-            # Give it a bit more time for init scripts to complete
-            Start-Sleep -Seconds 3
+            Start-Sleep -Seconds 2
             Write-Host "  PostgreSQL is ready." -ForegroundColor Green
         } else {
             Write-Host "ERROR: PostgreSQL not ready after ${maxWait}s." -ForegroundColor Red
@@ -206,29 +235,30 @@ if ($dbMode -eq "postgres" -or -not $SkipBlackLab) {
 # ============================================================================
 Write-Host "`n[3/5] Auth database setup..." -ForegroundColor Yellow
 
-# Determine Python executable (prefer venv)
-$pythonExe = if (Test-Path ".\.venv\Scripts\python.exe") { ".\.venv\Scripts\python.exe" } else { "python" }
+# Verify venv Python exists
+if (-not (Test-Path $venvPython)) {
+    Write-Host "ERROR: venv Python not found. Setup incomplete." -ForegroundColor Red
+    exit 1
+}
 
 # Postgres migration with error handling
 if ($ResetAuth) {
     Write-Host "  Resetting Postgres auth DB..." -ForegroundColor Gray
-    & $pythonExe scripts/apply_auth_migration.py --engine postgres --reset
+    & $venvPython scripts/apply_auth_migration.py --engine postgres --reset
 } else {
     Write-Host "  Applying Postgres migration..." -ForegroundColor Gray
-    & $pythonExe scripts/apply_auth_migration.py --engine postgres
+    & $venvPython scripts/apply_auth_migration.py --engine postgres
 }
 
 if ($LASTEXITCODE -ne 0) {
     Write-Host "  ERROR: PostgreSQL migration failed (exit code: $LASTEXITCODE)" -ForegroundColor Red
-    Write-Host "  Check that PostgreSQL container is running and healthy." -ForegroundColor Red
-    Write-Host "  Try: docker logs corapan_auth_db" -ForegroundColor Gray
     exit 1
 }
 Write-Host "  PostgreSQL migration complete." -ForegroundColor Green
 
 # Create initial admin if needed
 Write-Host "  Ensuring admin user exists..." -ForegroundColor Gray
-& $pythonExe scripts/create_initial_admin.py --username admin --password $StartAdminPassword
+& $venvPython scripts/create_initial_admin.py --username admin --password $StartAdminPassword
 if ($LASTEXITCODE -ne 0) {
     Write-Host "  ERROR: Failed to create admin user." -ForegroundColor Red
     exit 1
@@ -236,35 +266,38 @@ if ($LASTEXITCODE -ne 0) {
 Write-Host "  Postgres auth DB ready." -ForegroundColor Green
 
 # ============================================================================
-# Step 4: BlackLab Healthcheck
+# Step 4: BlackLab Healthcheck (using curl.exe, not PowerShell curl)
 # ============================================================================
 if (-not $SkipBlackLab) {
     Write-Host "`n[4/5] Checking BlackLab Server..." -ForegroundColor Yellow
-    $blUrl = "http://localhost:8081/blacklab-server/"
+    $blUrl = "http://127.0.0.1:8081/blacklab-server/"
     $maxWait = 90
     $waited = 0
     $blReady = $false
 
-    while ($waited -lt $maxWait) {
-        try {
-            $resp = Invoke-WebRequest -Uri $blUrl -UseBasicParsing -TimeoutSec 5 -ErrorAction SilentlyContinue
-            if ($resp.StatusCode -eq 200) {
+    # Use curl.exe directly (not PowerShell curl alias which -> Invoke-WebRequest)
+    $curlExe = Get-Command curl.exe -ErrorAction SilentlyContinue
+    if (-not $curlExe) {
+        Write-Host "WARN: curl.exe not found. Skipping BlackLab health check." -ForegroundColor Yellow
+    } else {
+        while ($waited -lt $maxWait) {
+            # Use curl.exe with -fsS (fail silently, exit code = HTTP status)
+            & curl.exe -fsS $blUrl *>$null
+            if ($LASTEXITCODE -eq 0) {
                 $blReady = $true
                 break
             }
-        } catch {
-            # Ignore and retry
+            Start-Sleep -Seconds 5
+            $waited += 5
+            Write-Host "  ... waiting for BlackLab ($waited seconds)" -ForegroundColor Gray
         }
-        Start-Sleep -Seconds 5
-        $waited += 5
-        $msg = "  ... waiting for BlackLab ($waited seconds)"
-        Write-Host $msg -ForegroundColor Gray
-    }
 
-    if ($blReady) {
-        Write-Host "  BlackLab Server ready at $blUrl" -ForegroundColor Green
-    } else {
-        Write-Host "WARN: BlackLab not responding after ${maxWait}s. Check docker logs." -ForegroundColor Yellow
+        if ($blReady) {
+            Write-Host "  BlackLab Server ready at $blUrl" -ForegroundColor Green
+        } else {
+            Write-Host "WARN: BlackLab not responding after ${maxWait}s at $blUrl" -ForegroundColor Yellow
+            Write-Host "  Run: docker ps; docker logs blacklab-server-v3 --tail 200" -ForegroundColor Gray
+        }
     }
 } else {
     Write-Host "`n[4/5] Skipping BlackLab check (-SkipBlackLab)" -ForegroundColor Gray
@@ -281,13 +314,7 @@ if (-not $SkipDevServer) {
     Write-Host "  Open http://localhost:8000 in your browser" -ForegroundColor Cyan
     Write-Host "  Login: admin / $StartAdminPassword`n" -ForegroundColor Cyan
 
-    # Use venv Python (should be set up by this point)
-    $venvPython = Join-Path $repoRoot ".venv\Scripts\python.exe"
-    if (Test-Path $venvPython) {
-        & $venvPython -m src.app.main
-    } else {
-        python -m src.app.main
-    }
+    & $venvPython -m src.app.main
 } else {
     Write-Host "`n[5/5] Skipping dev server (-SkipDevServer)" -ForegroundColor Gray
 }
