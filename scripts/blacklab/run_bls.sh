@@ -7,7 +7,7 @@ set -euo pipefail
 PORT=${1:-8081}
 HEAP_MAX=${2:-2g}
 HEAP_INIT=${3:-512m}
-IMAGE="instituutnederlandsetaal/blacklab:latest"
+IMAGE="instituutnederlandsetaal/blacklab@sha256:3753dbce4fee11f8706b63c5b94bf06eac9d3843c75bf2eef6412ff47208c2e7"
 CONTAINER_NAME="corapan-blacklab-${PORT}"
 
 echo "Starting BlackLab container $CONTAINER_NAME on port $PORT (Xmx=$HEAP_MAX, Xms=$HEAP_INIT)"

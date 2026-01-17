@@ -88,7 +88,7 @@ services:
       - corapan-dev
 
   blacklab:
-    image: instituutnederlandsetaal/blacklab:latest
+    image: instituutnederlandsetaal/blacklab@sha256:3753dbce4fee11f8706b63c5b94bf06eac9d3843c75bf2eef6412ff47208c2e7
     container_name: corapan-blacklab-dev
     ports:
       - "8081:8080"

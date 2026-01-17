@@ -24,7 +24,7 @@ set -euo pipefail
 
 # Configuration
 CONTAINER_NAME="corapan-blacklab"
-IMAGE="instituutnederlandsetaal/blacklab:latest"
+IMAGE="instituutnederlandsetaal/blacklab@sha256:3753dbce4fee11f8706b63c5b94bf06eac9d3843c75bf2eef6412ff47208c2e7"
 HOST_PORT=8081
 CONTAINER_PORT=8080
 NETWORK_NAME="corapan-network"

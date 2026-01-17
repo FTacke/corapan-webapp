@@ -51,7 +51,7 @@ $ErrorActionPreference = "Stop"
 # Configuration
 # BlackLab 5.x (Lucene 9.x)
 # Using :latest (Docker-based server startup)
-$BLACKLAB_IMAGE = "instituutnederlandsetaal/blacklab:latest"
+$BLACKLAB_IMAGE = "instituutnederlandsetaal/blacklab@sha256:3753dbce4fee11f8706b63c5b94bf06eac9d3843c75bf2eef6412ff47208c2e7"
 $CONTAINER_NAME = "blacklab-server-v3"
 $HOST_PORT = 8081
 $CONTAINER_PORT = 8080
