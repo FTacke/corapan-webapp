@@ -34,7 +34,53 @@ $ErrorActionPreference = 'Stop'
 $repoRoot = Split-Path -Parent $PSScriptRoot
 Set-Location $repoRoot
 
-# Determine database mode
+# ==============================================================================
+# RUNTIME CONFIGURATION (REQUIRED)
+# ==============================================================================
+
+# Set CORAPAN_RUNTIME_ROOT if not already configured
+if (-not $env:CORAPAN_RUNTIME_ROOT) {
+    # Use sensible Windows-friendly default
+    $env:CORAPAN_RUNTIME_ROOT = "C:\dev\runtime\corapan"
+    $isDefaultRuntime = $true
+    Write-Host "⚠️  CORAPAN_RUNTIME_ROOT not set. Using default:" -ForegroundColor Yellow
+    Write-Host "   $env:CORAPAN_RUNTIME_ROOT" -ForegroundColor Yellow
+    Write-Host "" -ForegroundColor Yellow
+    Write-Host "To persist across sessions, set in PowerShell profile:" -ForegroundColor Gray
+    Write-Host "   `$env:CORAPAN_RUNTIME_ROOT = '$env:CORAPAN_RUNTIME_ROOT'" -ForegroundColor Gray
+    Write-Host "" -ForegroundColor Yellow
+} else {
+    $isDefaultRuntime = $false
+    Write-Host "Using CORAPAN_RUNTIME_ROOT: $env:CORAPAN_RUNTIME_ROOT" -ForegroundColor Green
+}
+
+# Derive PUBLIC_STATS_DIR from CORAPAN_RUNTIME_ROOT
+$env:PUBLIC_STATS_DIR = Join-Path $env:CORAPAN_RUNTIME_ROOT "data\public\statistics"
+
+# Ensure runtime statistics directory exists
+if (-not (Test-Path $env:PUBLIC_STATS_DIR)) {
+    Write-Host "Creating statistics directory: $env:PUBLIC_STATS_DIR" -ForegroundColor Yellow
+    New-Item -ItemType Directory -Path $env:PUBLIC_STATS_DIR -Force | Out-Null
+}
+
+# Check if statistics have been generated
+$statsFile = Join-Path $env:PUBLIC_STATS_DIR "corpus_stats.json"
+if (-not (Test-Path $statsFile)) {
+    Write-Host "" -ForegroundColor Yellow
+    Write-Host "⚠️  STATISTICS NOT GENERATED" -ForegroundColor Yellow
+    Write-Host "   corpus_stats.json not found at: $statsFile" -ForegroundColor Yellow
+    Write-Host "" -ForegroundColor Yellow
+    Write-Host "To generate statistics, run:" -ForegroundColor Cyan
+    Write-Host "   python .\LOKAL\_0_json\04_internal_country_statistics.py" -ForegroundColor Cyan
+    Write-Host "   python .\LOKAL\_0_json\05_publish_corpus_statistics.py" -ForegroundColor Cyan
+    Write-Host "" -ForegroundColor Yellow
+    Write-Host "Continuing startup (API will return 404 for stats endpoints until generated)..." -ForegroundColor Gray
+    Write-Host "" -ForegroundColor Yellow
+}
+
+# ==============================================================================
+# DATABASE & SERVICE CONFIGURATION
+# ==============================================================================
 if ($UseSQLite) {
     $dbMode = "sqlite"
     $dbPath = "data/db/auth.db"
