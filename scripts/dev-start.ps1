@@ -70,13 +70,21 @@ if (-not (Test-Path $statsFile)) {
     Write-Host "⚠️  STATISTICS NOT GENERATED" -ForegroundColor Yellow
     Write-Host "   corpus_stats.json not found at: $statsFile" -ForegroundColor Yellow
     Write-Host "" -ForegroundColor Yellow
-    Write-Host "To generate statistics, run:" -ForegroundColor Cyan
-    Write-Host "   python .\LOKAL\_0_json\04_internal_country_statistics.py" -ForegroundColor Cyan
-    Write-Host "   python .\LOKAL\_0_json\05_publish_corpus_statistics.py" -ForegroundColor Cyan
+    Write-Host "To generate statistics in one command, copy and run:" -ForegroundColor Cyan
+    Write-Host "   python .\LOKAL\_0_json\05_publish_corpus_statistics.py --out `"$env:PUBLIC_STATS_DIR`"" -ForegroundColor Cyan
     Write-Host "" -ForegroundColor Yellow
-    Write-Host "Continuing startup (API will return 404 for stats endpoints until generated)..." -ForegroundColor Gray
+    Write-Host "Or generate CSVs first, then statistics:" -ForegroundColor Gray
+    Write-Host "   python .\LOKAL\_0_json\04_internal_country_statistics.py" -ForegroundColor Gray
+    Write-Host "   python .\LOKAL\_0_json\05_publish_corpus_statistics.py" -ForegroundColor Gray
     Write-Host "" -ForegroundColor Yellow
+    Write-Host "Continuing startup... (API will return 404 for stats endpoints until generated)" -ForegroundColor Gray
+    Write-Host "" -ForegroundColor Yellow
+} else {
+    $statsInfo = Get-Item $statsFile
+    Write-Host "✓ Statistics found (generated: $(($statsInfo.LastWriteTime).ToString('yyyy-MM-dd HH:mm:ss')))" -ForegroundColor Green
 }
+
+Write-Host "" -ForegroundColor Yellow
 
 # ==============================================================================
 # DATABASE & SERVICE CONFIGURATION
