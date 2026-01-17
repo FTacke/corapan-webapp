@@ -1,148 +1,280 @@
-# Production Deployment: Runtime-Only Statistics
-
-**Status:** ✅ Runtime-only architecture active (as of 2026-01-17)
+# Runtime Statistics Deployment
 
 ## Overview
 
-Corpus statistics (`corpus_stats.json` + `viz_*.png`) are **generated at build/deployment time** and served from the **runtime data directory**, not from Git.
+The `deploy_data.ps1` orchestrator now includes automatic upload of runtime statistics files to production. These files are generated locally and deployed separately from the main data sync.
 
-This document covers production deployment requirements and verification.
+## Statistics Files
 
----
+**Generated files:**
+- `corpus_stats.json` - JSON data for dynamic frontend consumption
+- `viz_*.png` - Visualization images (pie charts, bar charts, country summaries)
 
-## Environment Configuration
+**Examples:**
+- `viz_total_corpus.png`
+- `viz_genero_profesionales.png`
+- `viz_modo_genero_profesionales.png`
+- `viz_argentina_resumen.png`
+- `viz_colombia_resumen.png`
+- etc.
+
+## Deployment Behavior
+
+### Simple Overwrite (No Atomic Swap)
+
+Statistics deployment uses a **simple overwrite strategy**:
+- ✅ Directly uploads to `/srv/webapps/corapan/data/public/statistics/`
+- ✅ Overwrites existing files
+- ❌ No backup creation
+- ❌ No atomic swap
+- ❌ No rollback mechanism
+
+**Rationale:** Statistics files are:
+- Non-critical for app functionality
+- Quick to regenerate locally
+- Small in size (< 10 MB total)
+- Updated infrequently
+
+## Local Setup
 
 ### Required Environment Variables
 
-**Either** set `PUBLIC_STATS_DIR` directly:
+Set **ONE** of the following before deploying statistics:
+
+**Option 1: Direct statistics path**
+```powershell
+$env:PUBLIC_STATS_DIR = "C:\dev\runtime\corapan\data\public\statistics"
+```
+
+**Option 2: Runtime root (auto-derives statistics path)**
+```powershell
+$env:CORAPAN_RUNTIME_ROOT = "C:\dev\runtime\corapan"
+# Statistics path becomes: $CORAPAN_RUNTIME_ROOT\data\public\statistics
+```
+
+### Generating Statistics
+
+**Full workflow:**
+```powershell
+# 1. Set environment
+$env:CORAPAN_RUNTIME_ROOT = "C:\dev\runtime\corapan"
+
+# 2. Generate statistics (requires CSV input from step 04)
+python .\LOKAL\_0_json\04_internal_country_statistics.py
+python .\LOKAL\_0_json\05_publish_corpus_statistics.py
+
+# 3. Deploy data + statistics
+.\LOKAL\_2_deploy\deploy_data.ps1
+```
+
+**Quick regeneration (if CSVs already exist):**
+```powershell
+python .\LOKAL\_0_json\05_publish_corpus_statistics.py --out "$env:PUBLIC_STATS_DIR"
+.\LOKAL\_2_deploy\deploy_data.ps1
+```
+
+## Deployment Usage
+
+### Standard Deployment (Data + Statistics)
+
+```powershell
+.\LOKAL\_2_deploy\deploy_data.ps1
+```
+
+This will:
+1. Sync data directories (`counters`, `metadata`, `exports`, etc.)
+2. Upload statistics files to `/srv/webapps/corapan/data/public/statistics/`
+3. Set correct ownership (hrzadmin:hrzadmin)
+
+### Skip Statistics
+
+```powershell
+.\LOKAL\_2_deploy\deploy_data.ps1 -SkipStatistics
+```
+
+Use this when:
+- Statistics haven't been generated yet
+- Only data directories need updating
+- Testing data sync independently
+
+### Force Mode
+
+```powershell
+.\LOKAL\_2_deploy\deploy_data.ps1 -Force
+```
+
+Forces full data resync (ignores manifest state). Statistics upload is always overwrite, so `-Force` doesn't affect statistics behavior.
+
+## Error Handling
+
+### Missing Environment Variables
+
+If neither `PUBLIC_STATS_DIR` nor `CORAPAN_RUNTIME_ROOT` is set:
+- Deployment prints clear error message
+- Provides setup instructions
+- **Exits with code 0** (graceful skip, not fatal error)
+
+### Missing Statistics Files
+
+If environment is configured but files don't exist:
+- Validates presence of `corpus_stats.json`
+- Validates presence of at least one `viz_*.png`
+- Prints generation instructions
+- **Exits with code 0** (graceful skip)
+
+### Upload Failures
+
+rsync or SSH failures during statistics upload:
+- **Exit with code 1** (fatal error)
+- Full error details logged to `LOKAL/_2_deploy/_logs/deploy_data_<timestamp>.log`
+
+## Remote Target
+
+**Production path:**
+```
+/srv/webapps/corapan/data/public/statistics/
+```
+
+**Served via FastAPI:**
+- `/corpus/api/corpus_stats` → `corpus_stats.json`
+- `/corpus/api/statistics/viz_total_corpus.png` → image files
+- etc.
+
+## Technical Details
+
+### Transport Mechanism
+
+**rsync via cwRsync:**
+- Selective file upload (only `corpus_stats.json` and `viz_*.png`)
+- Compression enabled (`-z`)
+- Verbose output (`-v`)
+- No `--delete` flag (doesn't remove untracked files on server)
+
+**rsync pattern matching:**
+```powershell
+--include "corpus_stats.json"
+--include "viz_*.png"
+--exclude "*"
+```
+
+### SSH Authentication
+
+Uses the same SSH configuration as data/media sync:
+- Key: `$env:USERPROFILE\.ssh\marele` (8.3 short name for cwRsync)
+- User: `root`
+- Host: `marele.online.uni-marburg.de` (137.248.186.51)
+- No passphrase (dedicated deploy key)
+
+### Ownership
+
+After upload, sets ownership recursively on `/srv/webapps/corapan/data/public/`:
 ```bash
-export PUBLIC_STATS_DIR="/path/to/runtime/data/public/statistics"
+chown -R 1000:1000 /srv/webapps/corapan/data/public/
 ```
 
-**Or** set `CORAPAN_RUNTIME_ROOT` and let the app derive it:
+**Note:** Applied to parent `data/public/` directory (not just `statistics/` subdirectory) for consistency.
+
+## Verification
+
+After successful deployment, the script shows remote directory listing:
+
+```
+Remote statistics directory contents:
+  -rw-r--r-- 1 hrzadmin hrzadmin  45231 Jan 17 12:34 corpus_stats.json
+  -rw-r--r-- 1 hrzadmin hrzadmin 123456 Jan 17 12:34 viz_total_corpus.png
+  -rw-r--r-- 1 hrzadmin hrzadmin  98765 Jan 17 12:34 viz_genero_profesionales.png
+  ...
+```
+
+**Manual verification:**
 ```bash
-export CORAPAN_RUNTIME_ROOT="/path/to/runtime/root"
-# App will use: ${CORAPAN_RUNTIME_ROOT}/data/public/statistics
+ssh root@marele.online.uni-marburg.de "ls -lh /srv/webapps/corapan/data/public/statistics/"
 ```
 
-### Validation in App Startup
-
-The Flask app will:
-- **Fail to start** if neither variable is set → Error on config load
-- **Create directory** if it doesn't exist (with appropriate permissions)
-- **Warn** if `corpus_stats.json` is missing (but continue; API returns 404 for stats endpoints)
-
----
-
-## Deployment Checklist
-
-### 1. Pre-Deploy (CI/Build Step)
-
-Generate statistics **before** shipping the container or deployment package:
-
+**HTTP verification (from production):**
 ```bash
-python LOKAL/_0_json/05_publish_corpus_statistics.py --out "${PUBLIC_STATS_DIR}"
+curl https://corapan.com/corpus/api/corpus_stats
+curl -I https://corapan.com/corpus/api/statistics/viz_total_corpus.png
 ```
-
-This produces:
-- `corpus_stats.json` (metadata + aggregated stats)
-- `viz_total_corpus.png` (overall corpus composition)
-- `viz_genero_profesionales.png` (gender distribution)
-- `viz_modo_genero_profesionales.png` (production mode by gender)
-- `viz_${COUNTRY}_resumen.png` (29 country-specific charts)
-
-**Total:** 32 files (~3.6 MB).
-
-### 2. Runtime Setup
-
-Ensure the target deployment environment has:
-- `${PUBLIC_STATS_DIR}` (or `${CORAPAN_RUNTIME_ROOT}/data/public/statistics`) writable by the app process
-- All 32 generated files copied/synced to this directory
-
-### 3. App Startup
-
-Start the Flask app with environment variables set:
-
-```bash
-export PUBLIC_STATS_DIR="/path/to/statistics"  # OR
-export CORAPAN_RUNTIME_ROOT="/path/to/runtime"
-python -m src.app.main
-```
-
----
-
-## Verification (Post-Deploy)
-
-### Health Check: Endpoints
-
-#### JSON API
-```bash
-curl -i http://<host>:8000/corpus/api/corpus_stats
-```
-**Expected:** HTTP 200, Content-Type: `application/json`
-
-#### Static Asset (PNG)
-```bash
-curl -i http://<host>:8000/corpus/api/statistics/viz_total_corpus.png
-```
-**Expected:** HTTP 200, Content-Type: `image/png`
-
-#### Missing Stats (should 404, not 500)
-```bash
-curl -i http://<host>:8000/corpus/api/statistics/nonexistent.png
-```
-**Expected:** HTTP 404
-
-### Logs to Check
-
-App startup should show:
-```
-✓ Statistics found (generated: YYYY-MM-DD HH:MM:SS)
-```
-
-If missing:
-```
-⚠️  STATISTICS NOT GENERATED
-    corpus_stats.json not found at: /path/to/statistics/corpus_stats.json
-```
-
----
 
 ## Troubleshooting
 
-| Issue | Cause | Fix |
-|-------|-------|-----|
-| App fails to start | `PUBLIC_STATS_DIR` not set | Set env var before startup |
-| GET `/corpus/api/corpus_stats` → 500 | Directory misconfigured | Verify `PUBLIC_STATS_DIR` in app config |
-| GET `/corpus/api/statistics/viz_*.png` → 404 | Files not generated/synced | Run generator script or re-sync files |
-| Content-Type wrong | Static file serving misconfigured | Check Flask route for `.png` MIME type handling |
+### "rsync not available"
 
----
+**Cause:** cwRsync not found in PATH
 
-## Rollback
+**Solution:**
+```powershell
+# Verify cwRsync installation
+Test-Path "C:\dev\corapan-webapp\tools\cwrsync\bin\rsync.exe"
 
-If statistics become corrupted or out-of-date:
+# Check PATH includes cwRsync
+$env:Path -split ';' | Select-String cwrsync
+```
 
-1. **Re-generate locally** (with latest corpus data):
-   ```bash
-   python LOKAL/_0_json/04_internal_country_statistics.py
-   python LOKAL/_0_json/05_publish_corpus_statistics.py --out "${PUBLIC_STATS_DIR}"
-   ```
+### "Statistics directory does not exist"
 
-2. **Replace on server:**
-   ```bash
-   rsync -av /local/statistics/ user@prod:/path/to/PUBLIC_STATS_DIR/
-   ```
+**Cause:** Environment variable points to non-existent directory
 
-3. **Restart app** (cache will be cleared automatically):
-   ```bash
-   docker restart corapan_app  # or your deployment restart command
-   ```
+**Solution:**
+```powershell
+# Verify path
+Test-Path $env:PUBLIC_STATS_DIR
 
----
+# Create if needed
+New-Item -ItemType Directory -Path $env:PUBLIC_STATS_DIR -Force
+```
 
-## Related Documentation
+### "corpus_stats.json not found"
 
-- [Statistics Generation](./statistics_generation.md)
-- [Local Runtime Layout](../local_runtime_layout.md)
-- [Production Setup](./production.md)
+**Cause:** Statistics haven't been generated
+
+**Solution:**
+```powershell
+# Run generator with explicit output path
+python .\LOKAL\_0_json\05_publish_corpus_statistics.py --out "$env:PUBLIC_STATS_DIR"
+```
+
+### "No viz_*.png files found"
+
+**Cause:** Statistics generation incomplete or failed
+
+**Solution:**
+```powershell
+# Check generator output
+python .\LOKAL\_0_json\05_publish_corpus_statistics.py --out "$env:PUBLIC_STATS_DIR"
+
+# Look for errors in console output
+```
+
+## Development Notes
+
+### Why Separate from Data Sync?
+
+Statistics files are:
+1. **Runtime-only** - never committed to Git
+2. **Generated content** - not source data
+3. **Different cadence** - updated less frequently than core data
+4. **Optional** - app works without them (statistics page may be empty)
+
+### Why No Atomic Swap?
+
+Unlike BlackLab index deployment (which needs atomic swap for zero-downtime):
+- Statistics are read-only data
+- No locking or consistency requirements
+- Brief inconsistency during upload is acceptable
+- Files are small (upload takes seconds)
+
+### Future Enhancements
+
+Potential improvements (not currently implemented):
+- [ ] Timestamp check (skip upload if remote files are newer)
+- [ ] Checksum validation (verify upload integrity)
+- [ ] Backup creation (keep N previous versions)
+- [ ] Dry-run mode (show what would be uploaded)
+
+## See Also
+
+- [LOKAL/_0_json/05_publish_corpus_statistics.py](../../LOKAL/_0_json/05_publish_corpus_statistics.py) - Statistics generator
+- [scripts/deploy_sync/README.md](../../scripts/deploy_sync/README.md) - Core deploy sync documentation
+- [docs/local_runtime_layout.md](../../docs/local_runtime_layout.md) - Runtime directory structure

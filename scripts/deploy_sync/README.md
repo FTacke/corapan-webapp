@@ -33,7 +33,9 @@ Connection parameters (hostname and user) are configured in sync_core.ps1. Port 
 - `data/blacklab_export/`
 - Stats databases: `data/db/stats_files.db`, `data/db/stats_country.db`
 
-**Recommended:** Use via orchestrator `LOKAL/_2_deploy/deploy_data.ps1`
+**Note:** Does NOT sync runtime statistics files (corpus_stats.json, viz_*.png). These are handled separately by `deploy_data.ps1` orchestrator.
+
+**Recommended:** Use via orchestrator `LOKAL/_2_deploy/deploy_data.ps1` which handles both data sync AND statistics upload.
 
 ---
 
@@ -193,9 +195,14 @@ For data/media syncs, the manifest-based delta sync mechanism provides safety by
 
 ### Orchestrator Usage (Recommended)
 
-**Data deploy with logging:**
+**Data deploy with logging (includes statistics):**
 ```powershell
 .\LOKAL\_2_deploy\deploy_data.ps1
+```
+
+**Data deploy without statistics:**
+```powershell
+.\LOKAL\_2_deploy\deploy_data.ps1 -SkipStatistics
 ```
 
 **Media deploy with logging:**
