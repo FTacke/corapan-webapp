@@ -148,6 +148,11 @@ templates/legacy/
 static/js/*.old
 static/js/*.bak
 
+# Dev-runtime (repo-local, not committed)
+# Contains: statistics, cache, temporary data
+# Auto-created by scripts/dev-start.ps1
+/runtime/
+
 # Runtime-generated statistics (served from PUBLIC_STATS_DIR, not from Git)
 # See: docs/operations/runtime_statistics_deploy.md
 static/img/statistics/

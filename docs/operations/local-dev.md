@@ -105,20 +105,6 @@ Prüft ob Docker-Services laufen und startet sie bei Bedarf.
 
 ---
 
-## SQLite-Quickstart (ohne Docker-DB)
-
-**Für schnelle lokale Tests ohne PostgreSQL:**
-
-```powershell
-.\scripts\dev-setup.ps1 -UseSQLite
-```
-
-**Hinweis:** SQLite ist **nicht** produktionsreprä sentativ. Nutze PostgreSQL für Integrationstests.
-
-**Auth-DB:** `data/db/auth.db` (automatisch erstellt)
-
----
-
 ## Environment Variables (Dev)
 
 **Empfohlen:** `.env` Datei im Root (nicht in Git!)
@@ -146,6 +132,61 @@ ALLOW_PUBLIC_TEMP_AUDIO=true
 | 8000 | Flask Dev-Server | `http://localhost:8000` |
 | 5432 | PostgreSQL | `postgresql://localhost:5432` |
 | 8080 | BlackLab Server | `http://localhost:8080/blacklab-server` |
+
+---
+
+## Runtime-Verzeichnis (Repo-lokal)
+
+**Lage:** `RepoRoot/runtime/corapan`
+
+Die Runtime ist **vollständig innerhalb des Repos** und wird **nicht versioniert** (`.gitignore`):
+
+```
+runtime/
+├── data/
+│   ├── public/
+│   │   └── statistics/       ← Generierte Statistik-Daten (JSON + PNG)
+│   └── ...                   ← Sonstige Runtime-Daten
+└── ...
+```
+
+### Auto-Setup beim Start
+
+`scripts/dev-start.ps1` erstellt das Runtime-Verzeichnis automatisch:
+- Setzt `CORAPAN_RUNTIME_ROOT` auf `<RepoRoot>\runtime\corapan` (falls nicht überschrieben)
+- Erstellt alle notwendigen Subdirectories
+- **Keine manuelle Vorbereitung erforderlich**
+
+### Custom Runtime-Pfad
+
+Falls du die Runtime an einem anderen Ort brauchst (z.B. auf schnellerem Drive), überschreibe vor dem Start:
+
+```powershell
+$env:CORAPAN_RUNTIME_ROOT = "D:\custom-runtime\corapan"
+.\scripts\dev-start.ps1
+```
+
+Oder persistent im PowerShell-Profil (`notepad $PROFILE`):
+```powershell
+$env:CORAPAN_RUNTIME_ROOT = "D:\custom-runtime\corapan"
+```
+
+### Statistics-Generierung
+
+Statistics (JSON + PNG-Visualisierungen) werden in `$CORAPAN_RUNTIME_ROOT\data\public\statistics\` geschrieben:
+
+```powershell
+# CSV-Input generieren (einmalig)
+python .\LOKAL\_0_json\04_internal_country_statistics.py
+
+# Statistics generieren und schreiben
+python .\LOKAL\_0_json\05_publish_corpus_statistics.py
+
+# Verifikation
+ls $env:CORAPAN_RUNTIME_ROOT\data\public\statistics\
+```
+
+Der API-Endpoint `/api/statistics` serviert diese Dateien.
 
 ---
 

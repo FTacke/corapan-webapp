@@ -14,17 +14,12 @@
     .\scripts\dev-start.ps1
 
 .EXAMPLE
-    # SQLite mode (no Docker DB needed)
-    .\scripts\dev-start.ps1 -UseSQLite
-
-.EXAMPLE
     # Skip BlackLab (if you only need auth/basic features)
     .\scripts\dev-start.ps1 -SkipBlackLab
 #>
 
 [CmdletBinding()]
 param(
-    [switch]$UseSQLite,
     [switch]$SkipBlackLab
 )
 
@@ -38,24 +33,28 @@ Set-Location $repoRoot
 # RUNTIME CONFIGURATION (REQUIRED)
 # ==============================================================================
 
-# Set CORAPAN_RUNTIME_ROOT if not already configured
+# Set CORAPAN_RUNTIME_ROOT to repo-local path (inside repo, not committed)
 if (-not $env:CORAPAN_RUNTIME_ROOT) {
-    # Use sensible Windows-friendly default
-    $env:CORAPAN_RUNTIME_ROOT = "C:\dev\runtime\corapan"
+    # Runtime is now repo-local under $RepoRoot\runtime\corapan
+    $env:CORAPAN_RUNTIME_ROOT = Join-Path $repoRoot "runtime\corapan"
     $isDefaultRuntime = $true
-    Write-Host "⚠️  CORAPAN_RUNTIME_ROOT not set. Using default:" -ForegroundColor Yellow
-    Write-Host "   $env:CORAPAN_RUNTIME_ROOT" -ForegroundColor Yellow
-    Write-Host "" -ForegroundColor Yellow
-    Write-Host "To persist across sessions, set in PowerShell profile:" -ForegroundColor Gray
-    Write-Host "   `$env:CORAPAN_RUNTIME_ROOT = '$env:CORAPAN_RUNTIME_ROOT'" -ForegroundColor Gray
-    Write-Host "" -ForegroundColor Yellow
+    Write-Host "ℹ️  CORAPAN_RUNTIME_ROOT not set. Using repo-local default:" -ForegroundColor Cyan
+    Write-Host "   $env:CORAPAN_RUNTIME_ROOT" -ForegroundColor Cyan
+    Write-Host "" -ForegroundColor Cyan
 } else {
     $isDefaultRuntime = $false
-    Write-Host "Using CORAPAN_RUNTIME_ROOT: $env:CORAPAN_RUNTIME_ROOT" -ForegroundColor Green
+    Write-Host "Using CORAPAN_RUNTIME_ROOT - custom: $env:CORAPAN_RUNTIME_ROOT" -ForegroundColor Green
 }
 
 # Derive PUBLIC_STATS_DIR from CORAPAN_RUNTIME_ROOT
 $env:PUBLIC_STATS_DIR = Join-Path $env:CORAPAN_RUNTIME_ROOT "data\public\statistics"
+
+# Ensure runtime base directory exists
+$runtimeBase = $env:CORAPAN_RUNTIME_ROOT
+if (-not (Test-Path $runtimeBase)) {
+    Write-Host "Creating runtime directory: $runtimeBase" -ForegroundColor Yellow
+    New-Item -ItemType Directory -Path $runtimeBase -Force | Out-Null
+}
 
 # Ensure runtime statistics directory exists
 if (-not (Test-Path $env:PUBLIC_STATS_DIR)) {
@@ -89,17 +88,11 @@ Write-Host "" -ForegroundColor Yellow
 # ==============================================================================
 # DATABASE & SERVICE CONFIGURATION
 # ==============================================================================
-if ($UseSQLite) {
-    $dbMode = "sqlite"
-    $dbPath = "data/db/auth.db"
-    $env:AUTH_DATABASE_URL = "sqlite:///$dbPath"
-    Write-Host "Database mode: SQLite" -ForegroundColor Yellow
-} else {
-    $dbMode = "postgres"
-    # Use 127.0.0.1 instead of localhost to avoid DNS resolution issues with psycopg3 on Windows
-    $env:AUTH_DATABASE_URL = "postgresql+psycopg://corapan_auth:corapan_auth@127.0.0.1:54320/corapan_auth"
-    Write-Host "Database mode: PostgreSQL" -ForegroundColor Green
-}
+# Postgres is required (SQLite is deprecated)
+$dbMode = "postgres"
+# Use 127.0.0.1 instead of localhost to avoid DNS resolution issues with psycopg3 on Windows
+$env:AUTH_DATABASE_URL = "postgresql+psycopg://corapan_auth:corapan_auth@127.0.0.1:54320/corapan_auth"
+Write-Host "Database mode: PostgreSQL" -ForegroundColor Green
 
 # Set common environment variables
 $env:FLASK_SECRET_KEY = "dev-secret-change-me"
@@ -116,12 +109,10 @@ $dockerAvailable = Get-Command docker -ErrorAction SilentlyContinue
 if ($dockerAvailable) {
     $needsStart = @()
 
-    # Check Postgres (unless SQLite mode)
-    if ($dbMode -eq "postgres") {
-        $pgRunning = docker ps --filter "name=corapan_auth_db" --format "{{.Names}}" 2>$null
-        if (-not $pgRunning) {
-            $needsStart += "corapan_auth_db"
-        }
+    # Check Postgres (always required)
+    $pgRunning = docker ps --filter "name=corapan_auth_db" --format "{{.Names}}" 2>$null
+    if (-not $pgRunning) {
+        $needsStart += "corapan_auth_db"
     }
 
     # Check BlackLab (unless skipped)
@@ -145,8 +136,8 @@ if ($dockerAvailable) {
     } else {
         Write-Host "Docker services already running." -ForegroundColor Gray
     }
-} elseif ($dbMode -eq "postgres") {
-    Write-Host "WARN: Docker not available but Postgres mode selected. Use -UseSQLite if needed." -ForegroundColor Yellow
+} else {
+    Write-Host "WARN: Docker not available but Postgres is required for development." -ForegroundColor Red
 }
 
 # Run the dev server

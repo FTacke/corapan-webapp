@@ -5,13 +5,11 @@
 .DESCRIPTION
     One-liner to get a complete CO.RA.PAN development environment running:
     - Python virtualenv and dependencies
-    - PostgreSQL (auth DB) via Docker (or SQLite fallback with -UseSQLite)
+    - PostgreSQL (auth DB) via Docker
     - BlackLab Server via Docker
     - Auth DB migration
     - Flask dev server
-
-    Default: Postgres + BlackLab stack (production-representative).
-    Use -UseSQLite for lightweight local testing without Docker dependency for the DB.
+    - Runtime directory initialization (repo-local)
 
 .EXAMPLE
     # Recommended: Full stack with Postgres + BlackLab
@@ -20,10 +18,6 @@
 .EXAMPLE
     # Skip installing Python deps (already installed)
     .\scripts\dev-setup.ps1 -SkipInstall
-
-.EXAMPLE
-    # SQLite fallback (no Postgres Docker needed)
-    .\scripts\dev-setup.ps1 -UseSQLite
 
 .EXAMPLE
     # Reset auth DB and create initial admin with explicit password
@@ -35,7 +29,6 @@ param(
     [switch]$SkipInstall,
     [switch]$SkipBlackLab,
     [switch]$SkipDevServer,
-    [switch]$UseSQLite,
     [switch]$ResetAuth,
     [string]$StartAdminPassword = 'change-me'
 )
@@ -50,18 +43,37 @@ Write-Host "`nCO.RA.PAN Dev-Setup" -ForegroundColor Cyan
 Write-Host "===================" -ForegroundColor Cyan
 Write-Host "Repository: $repoRoot"
 
-# Determine database mode
-if ($UseSQLite) {
-    $dbMode = "sqlite"
-    $dbPath = "data/db/auth.db"
-    $env:AUTH_DATABASE_URL = "sqlite:///$dbPath"
-    Write-Host "Database mode: SQLite (fallback)" -ForegroundColor Yellow
-} else {
-    $dbMode = "postgres"
-    # Use 127.0.0.1 instead of localhost to avoid DNS resolution issues with psycopg3 on Windows
-    $env:AUTH_DATABASE_URL = "postgresql+psycopg://corapan_auth:corapan_auth@127.0.0.1:54320/corapan_auth"
-    Write-Host "Database mode: PostgreSQL (recommended)" -ForegroundColor Green
+# ==============================================================================
+# RUNTIME CONFIGURATION (MUST BE EARLY - before any Python imports)
+# ==============================================================================
+
+# Set CORAPAN_RUNTIME_ROOT to repo-local path if not already configured
+if (-not $env:CORAPAN_RUNTIME_ROOT) {
+    $env:CORAPAN_RUNTIME_ROOT = Join-Path $repoRoot "runtime\corapan"
+    Write-Host "INFO: CORAPAN_RUNTIME_ROOT not set. Using repo-local default:" -ForegroundColor Cyan
+    Write-Host "   $env:CORAPAN_RUNTIME_ROOT" -ForegroundColor Cyan
 }
+
+# Derive PUBLIC_STATS_DIR from CORAPAN_RUNTIME_ROOT
+$env:PUBLIC_STATS_DIR = Join-Path $env:CORAPAN_RUNTIME_ROOT "data\public\statistics"
+
+# Ensure runtime directories exist BEFORE Python imports
+$runtimeBase = $env:CORAPAN_RUNTIME_ROOT
+if (-not (Test-Path $runtimeBase)) {
+    Write-Host "Creating runtime directory: $runtimeBase" -ForegroundColor Yellow
+    New-Item -ItemType Directory -Path $runtimeBase -Force | Out-Null
+}
+
+if (-not (Test-Path $env:PUBLIC_STATS_DIR)) {
+    Write-Host "Creating statistics directory: $env:PUBLIC_STATS_DIR" -ForegroundColor Yellow
+    New-Item -ItemType Directory -Path $env:PUBLIC_STATS_DIR -Force | Out-Null
+}
+
+# Determine database mode (Postgres is always required in dev)
+$dbMode = "postgres"
+# Use 127.0.0.1 instead of localhost to avoid DNS resolution issues with psycopg3 on Windows
+$env:AUTH_DATABASE_URL = "postgresql+psycopg://corapan_auth:corapan_auth@127.0.0.1:54320/corapan_auth"
+Write-Host "Database mode: PostgreSQL" -ForegroundColor Green
 
 # Set common environment variables
 $env:FLASK_SECRET_KEY = "dev-secret-change-me"
@@ -116,7 +128,7 @@ if ($dbMode -eq "postgres" -or -not $SkipBlackLab) {
     Write-Host "`n[2/5] Starting Docker services..." -ForegroundColor Yellow
 
     if (-not $dockerAvailable) {
-        Write-Host "ERROR: Docker not found on PATH. Install Docker Desktop or use -UseSQLite." -ForegroundColor Red
+        Write-Host "ERROR: Docker not found on PATH. Install Docker Desktop to continue." -ForegroundColor Red
         exit 1
     }
 
@@ -173,7 +185,8 @@ if ($dbMode -eq "postgres" -or -not $SkipBlackLab) {
             }
             Start-Sleep -Seconds 2
             $waited += 2
-            Write-Host "    ... waiting ($waited s)" -ForegroundColor Gray
+            $msg = "    ... waiting ($waited seconds)"
+            Write-Host $msg -ForegroundColor Gray
         }
 
         if ($ready) {
@@ -186,8 +199,6 @@ if ($dbMode -eq "postgres" -or -not $SkipBlackLab) {
             exit 1
         }
     }
-} else {
-    Write-Host "`n[2/5] Skipping Docker services (SQLite mode, -SkipBlackLab)" -ForegroundColor Gray
 }
 
 # ============================================================================
@@ -198,55 +209,31 @@ Write-Host "`n[3/5] Auth database setup..." -ForegroundColor Yellow
 # Determine Python executable (prefer venv)
 $pythonExe = if (Test-Path ".\.venv\Scripts\python.exe") { ".\.venv\Scripts\python.exe" } else { "python" }
 
-if ($dbMode -eq "postgres") {
-    # Postgres migration with error handling
-    if ($ResetAuth) {
-        Write-Host "  Resetting Postgres auth DB..." -ForegroundColor Gray
-        & $pythonExe scripts/apply_auth_migration.py --engine postgres --reset
-    } else {
-        Write-Host "  Applying Postgres migration..." -ForegroundColor Gray
-        & $pythonExe scripts/apply_auth_migration.py --engine postgres
-    }
-    
-    if ($LASTEXITCODE -ne 0) {
-        Write-Host "  ERROR: PostgreSQL migration failed (exit code: $LASTEXITCODE)" -ForegroundColor Red
-        Write-Host "  Check that PostgreSQL container is running and healthy." -ForegroundColor Red
-        Write-Host "  Try: docker logs corapan_auth_db" -ForegroundColor Gray
-        exit 1
-    }
-    Write-Host "  PostgreSQL migration complete." -ForegroundColor Green
-    
-    # Create initial admin if needed
-    Write-Host "  Ensuring admin user exists..." -ForegroundColor Gray
-    & $pythonExe scripts/create_initial_admin.py --username admin --password $StartAdminPassword
-    if ($LASTEXITCODE -ne 0) {
-        Write-Host "  ERROR: Failed to create admin user." -ForegroundColor Red
-        exit 1
-    }
-    Write-Host "  Postgres auth DB ready." -ForegroundColor Green
+# Postgres migration with error handling
+if ($ResetAuth) {
+    Write-Host "  Resetting Postgres auth DB..." -ForegroundColor Gray
+    & $pythonExe scripts/apply_auth_migration.py --engine postgres --reset
 } else {
-    # SQLite migration
-    if ($ResetAuth -or -not (Test-Path $dbPath)) {
-        Write-Host "  Initializing SQLite auth DB ($dbPath)..." -ForegroundColor Gray
-        if ($ResetAuth) {
-            & $pythonExe scripts/apply_auth_migration.py --db $dbPath --reset
-        } else {
-            & $pythonExe scripts/apply_auth_migration.py --db $dbPath
-        }
-        if ($LASTEXITCODE -ne 0) {
-            Write-Host "  ERROR: SQLite migration failed." -ForegroundColor Red
-            exit 1
-        }
-        & $pythonExe scripts/create_initial_admin.py --db $dbPath --username admin --password $StartAdminPassword
-        if ($LASTEXITCODE -ne 0) {
-            Write-Host "  ERROR: Failed to create admin user." -ForegroundColor Red
-            exit 1
-        }
-        Write-Host "  SQLite auth DB ready." -ForegroundColor Green
-    } else {
-        Write-Host "  SQLite auth DB already exists at $dbPath" -ForegroundColor Gray
-    }
+    Write-Host "  Applying Postgres migration..." -ForegroundColor Gray
+    & $pythonExe scripts/apply_auth_migration.py --engine postgres
 }
+
+if ($LASTEXITCODE -ne 0) {
+    Write-Host "  ERROR: PostgreSQL migration failed (exit code: $LASTEXITCODE)" -ForegroundColor Red
+    Write-Host "  Check that PostgreSQL container is running and healthy." -ForegroundColor Red
+    Write-Host "  Try: docker logs corapan_auth_db" -ForegroundColor Gray
+    exit 1
+}
+Write-Host "  PostgreSQL migration complete." -ForegroundColor Green
+
+# Create initial admin if needed
+Write-Host "  Ensuring admin user exists..." -ForegroundColor Gray
+& $pythonExe scripts/create_initial_admin.py --username admin --password $StartAdminPassword
+if ($LASTEXITCODE -ne 0) {
+    Write-Host "  ERROR: Failed to create admin user." -ForegroundColor Red
+    exit 1
+}
+Write-Host "  Postgres auth DB ready." -ForegroundColor Green
 
 # ============================================================================
 # Step 4: BlackLab Healthcheck
@@ -270,7 +257,8 @@ if (-not $SkipBlackLab) {
         }
         Start-Sleep -Seconds 5
         $waited += 5
-        Write-Host "  ... waiting for BlackLab ($waited s)" -ForegroundColor Gray
+        $msg = "  ... waiting for BlackLab ($waited seconds)"
+        Write-Host $msg -ForegroundColor Gray
     }
 
     if ($blReady) {
