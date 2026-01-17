@@ -109,90 +109,58 @@ function Invoke-BackupCleanup {
         [bool]$IsPublished
     )
     
-    Write-Section "STEP 8: BACKUP RETENTION CLEANUP"
+    Write-Section "STEP 8: BACKUP RETENTION (Server-side)"
     
     if (-not $IsPublished) {
-        Write-Info "Skipping backup cleanup (deployment did not complete successfully)"
+        Write-Info "Skipping backup retention (deployment did not complete successfully)"
         return
     }
     
     if ($NoBackupCleanup) {
-        Write-Info "Backup cleanup skipped (-NoBackupCleanup flag set)"
+        Write-Info "Backup retention skipped (-NoBackupCleanup flag set)"
         return
     }
     
+    Write-Step "Invoking server-side retention script..."
+    
+    # Build environment variables for remote script
+    $deleteFlag = if ($DryRun) { 0 } else { 1 }
+    
+    # Remote script path (injected into webapp at deployment time)
+    $remoteScript = "/srv/webapps/corapan/app/scripts/blacklab/retain_blacklab_backups_prod.sh"
+    
+    # Build retention command with environment variables
+    $retentionCmd = @"
+BLACKLAB_KEEP_BACKUPS=$Keep \
+BLACKLAB_RETENTION_DELETE=$deleteFlag \
+DATA_ROOT='$RemoteDataDir' \
+bash '$remoteScript'
+"@
+    
     if ($DryRun) {
-        Write-Info "[DRY-RUN] Would analyze and potentially remove old backups"
-    }
-    
-    Write-Step "Analyzing backups in $RemoteDataDir..."
-    
-    # List all backup directories sorted by modification time
-    $listCmd = "find '$RemoteDataDir' -maxdepth 1 -type d -name 'blacklab_index.bak_*' -printf '%T@ %p\n' | sort -n"
-    
-    if ($DryRun) {
-        Write-Info "[DRY-RUN] Would analyze backups and show cleanup plan"
+        Write-Info "[DRY-RUN] Would run server-side retention script"
+        Write-Info "Command: $retentionCmd"
+        Write-Success "Retention would execute in dry-run mode (no actual deletions)"
         return
     }
     
     try {
-        $backupList = Invoke-SSHCommand -Command $listCmd -PassThru -NoThrow
+        Write-Step "Executing retention on server..."
+        $output = Invoke-RemoteBash -Script $retentionCmd -PassThru
         
-        if ([string]::IsNullOrWhiteSpace($backupList)) {
-            Write-Success "No backups found"
-            return
+        # Log server output
+        if ($output) {
+            Write-Host $output -ForegroundColor Gray
         }
         
-        $backups = @()
-        foreach ($line in $backupList -split "`n") {
-            if ($line.Trim()) {
-                $parts = $line.Trim() -split '\s+', 2
-                if ($parts.Count -eq 2) {
-                    $backups += @{ Time = [long]($parts[0] -split '\.')[0]; Path = $parts[1] }
-                }
-            }
-        }
-        
-        $backupCount = $backups.Count
-        Write-Success "Found $backupCount backup(s)"
-        
-        if ($backupCount -le $Keep) {
-            Write-Info "Backups within retention policy (keeping $backupCount, keeping latest $Keep)"
-            return
-        }
-        
-        # Sort by time descending (newest first) and keep the latest $Keep
-        $backups = $backups | Sort-Object -Property Time -Descending
-        $toDelete = $backups | Select-Object -Skip $Keep
-        
-        Write-Step "Cleanup policy: keeping latest $Keep backup(s), deleting $($toDelete.Count) old backup(s)"
-        
-        foreach ($backup in $toDelete) {
-            $backupName = Split-Path -Leaf $backup.Path
-            Write-Info "Would delete: $backupName"
-        }
-        
-        if ($toDelete.Count -gt 0) {
-            # Build safe deletion command
-            $deletePaths = @()
-            foreach ($backup in $toDelete) {
-                # Use -- to prevent path interpretation as flags
-                $deletePaths += "'$($backup.Path)'"
-            }
-            
-            $deleteCmd = "rm -rf -- $($deletePaths -join ' ')"
-            
-            Write-Step "Removing old backups..."
-            Invoke-SSHCommand -Command $deleteCmd | Out-Null
-            
-            Write-Success "Deleted $($toDelete.Count) old backup(s), keeping latest $Keep"
-        }
+        Write-Success "Server-side retention completed"
     }
     catch {
-        Write-Error "Backup cleanup failed: $_"
-        Write-Info "Continuing despite cleanup error (index is safe, backups will accumulate)"
+        Write-Error "Backup retention failed: $_"
+        Write-Info "Continuing despite retention error (index is safe, backups may accumulate)"
     }
 }
+
 
 # ============================================================================
 # MAIN SCRIPT

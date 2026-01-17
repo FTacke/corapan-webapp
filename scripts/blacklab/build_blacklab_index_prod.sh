@@ -90,11 +90,6 @@ DOCKER_LIMITS=()
 [ -n "$DOCKER_MEM" ] && DOCKER_LIMITS+=(--memory "$DOCKER_MEM")
 [ -n "$DOCKER_MEMSWAP" ] && DOCKER_LIMITS+=(--memory-swap "$DOCKER_MEMSWAP")
 
-# Backup Retention Configuration (opt-in, default: report-only)
-BLACKLAB_KEEP_BACKUPS="${BLACKLAB_KEEP_BACKUPS:-3}"          # how many backups to retain
-BLACKLAB_RETENTION_DELETE="${BLACKLAB_RETENTION_DELETE:-0}"  # 0 = report only, 1 = actually delete
-BLACKLAB_RETENTION_OLDER_THAN_DAYS="${BLACKLAB_RETENTION_OLDER_THAN_DAYS:-}"  # optional: delete if older than N days
-
 # Colors for output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -117,90 +112,6 @@ warn() {
     local msg="[$(date '+%Y-%m-%d %H:%M:%S')] WARN: $1"
     echo -e "${YELLOW}${msg}${NC}"
     echo "${msg}" >> "$LOG_FILE" 2>/dev/null || true
-}
-
-apply_backup_retention() {
-    local base_dir="$1"
-    local keep_count="${2:-3}"
-    local delete_flag="${3:-0}"
-    local older_than_days="${4:-}"
-    
-    # Find all backup directories matching known patterns
-    local backups=()
-    
-    # Collect all matching backup directories
-    if [ -d "$base_dir" ]; then
-        while IFS= read -r -d '' dir; do
-            backups+=("$dir")
-        done < <(find "$base_dir" -maxdepth 1 -type d \
-            \( -name 'blacklab_index.bak_*' -o -name 'blacklab_index.backup_*' \) \
-            -print0 2>/dev/null | sort -z)
-    fi
-    
-    local backup_count=${#backups[@]}
-    
-    # If no backups found, nothing to do
-    if [ "$backup_count" -eq 0 ]; then
-        log "[RETENTION] No backup directories found in $base_dir"
-        return 0
-    fi
-    
-    log "[RETENTION] Found $backup_count backup(s) in $base_dir"
-    
-    # Sort by mtime (newest first)
-    local -a sorted_backups
-    while IFS= read -r dir; do
-        sorted_backups+=("$dir")
-    done < <(printf '%s\n' "${backups[@]}" | while read -r dir; do
-        stat -c "%Y %n" "$dir" 2>/dev/null || echo "0 $dir"
-    done | sort -rn | cut -d' ' -f2-)
-    
-    # Determine which ones to keep and which to delete
-    local keep_list=()
-    local delete_list=()
-    
-    for i in "${!sorted_backups[@]}"; do
-        local dir="${sorted_backups[$i]}"
-        local dir_name=$(basename "$dir")
-        
-        if [ "$i" -lt "$keep_count" ]; then
-            keep_list+=("$dir_name")
-            log "[RETENTION] KEEP:   $dir_name"
-        else
-            # Check age filter if configured
-            if [ -n "$older_than_days" ] && [ "$older_than_days" -gt 0 ]; then
-                local mtime=$(stat -c %Y "$dir" 2>/dev/null || echo 0)
-                local now=$(date +%s)
-                local age_days=$(( (now - mtime) / 86400 ))
-                
-                if [ "$age_days" -lt "$older_than_days" ]; then
-                    log "[RETENTION] SKIP:   $dir_name (age: ${age_days}d < ${older_than_days}d)"
-                    keep_list+=("$dir_name")
-                    continue
-                fi
-            fi
-            
-            delete_list+=("$dir")
-            local delete_marker="(dry-run)"
-            if [ "$delete_flag" = "1" ]; then
-                delete_marker=""
-                rm -rf "$dir" 2>/dev/null && log "[RETENTION] DELETE: $dir_name" || \
-                    error "[RETENTION] Failed to delete $dir_name"
-            else
-                log "[RETENTION] DELETE: $dir_name $delete_marker"
-            fi
-        fi
-    done
-    
-    # Summary
-    local keep_cnt=${#keep_list[@]}
-    local delete_cnt=${#delete_list[@]}
-    local mode="dry-run"
-    [ "$delete_flag" = "1" ] && mode="executed"
-    
-    log "[RETENTION] Summary: keep=$keep_cnt, delete=$delete_cnt, mode=$mode"
-    
-    return 0
 }
 
 pick_free_port() {
@@ -637,10 +548,6 @@ fi
 
 log "Index swap verified successfully"
 
-# Step 7.5: Apply backup retention (opt-in)
-log "Applying backup retention policy..."
-apply_backup_retention "$DATA_ROOT" "$BLACKLAB_KEEP_BACKUPS" "$BLACKLAB_RETENTION_DELETE" "$BLACKLAB_RETENTION_OLDER_THAN_DAYS"
-
 # Step 8: Cleanup
 log "Cleaning up temporary directories..."
 
@@ -672,32 +579,3 @@ echo "Log file: $LOG_FILE"
 echo ""
 log "Next step: Run scripts/blacklab/run_bls_prod.sh to restart BlackLab server"
 
-# =============================================================================
-# Backup Retention Configuration
-# =============================================================================
-#
-# By default, this script REPORTS old backups without deleting them.
-# To enable automatic cleanup, set BLACKLAB_RETENTION_DELETE=1.
-#
-# Configuration:
-#   BLACKLAB_KEEP_BACKUPS=3              # Keep the 3 most recent backups (default)
-#   BLACKLAB_RETENTION_DELETE=0          # 0 = report only, 1 = actually delete (default: 0)
-#   BLACKLAB_RETENTION_OLDER_THAN_DAYS=  # Optional: only delete if older than N days
-#
-# Examples:
-#   # Report which backups would be deleted (no changes made)
-#   bash scripts/blacklab/build_blacklab_index_prod.sh
-#
-#   # Actually delete old backups (keep 3, delete the rest)
-#   BLACKLAB_RETENTION_DELETE=1 bash scripts/blacklab/build_blacklab_index_prod.sh
-#
-#   # Keep 5 backups, delete anything older than 30 days
-#   BLACKLAB_RETENTION_DELETE=1 BLACKLAB_KEEP_BACKUPS=5 BLACKLAB_RETENTION_OLDER_THAN_DAYS=30 \
-#     bash scripts/blacklab/build_blacklab_index_prod.sh
-#
-# Notes:
-#   - The active index is NEVER deleted
-#   - Only timestamped backups (blacklab_index.bak_*, blacklab_index.backup_*) are considered
-#   - Retention runs AFTER a successful index swap
-#   - Check the log output for [RETENTION] status messages
-# =============================================================================
