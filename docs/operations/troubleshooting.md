@@ -96,32 +96,90 @@ psql -U corapan -h localhost -d corapan_auth -f migrations/0002_create_analytics
 
 ## BlackLab-Probleme
 
-### Search timeout
+### BlackLab-Container unhealthy oder nicht erreichbar
 
-**Symptom:** Suche lädt ewig, dann Timeout
+**Symptom:** `docker ps` zeigt BlackLab mit Status `unhealthy` oder `dev-setup` meldet "BlackLab not responding"
 
-**Diagnose:**
-```bash
-# BlackLab Server läuft?
-curl http://localhost:8080/blacklab-server/
+**3-Schritt Diagnostik (führe nacheinander aus):**
 
-# Logs prüfen
-docker logs corapan-blacklab -f
+#### 1) Ist der Container da und läuft das richtige Image?
+
+```powershell
+docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}\t{{.Image}}"
+docker inspect blacklab-server-v3 --format "Image={{.Config.Image}}`nStatus={{.State.Status}}`nHealth={{json .State.Health.Status}}"
 ```
 
-**Lösung:**
-```bash
-# BlackLab neu starten
-docker restart corapan-blacklab
+**Interpretation:**
+- Wenn `Ports` NICHT `0.0.0.0:8081->8080/tcp` zeigt → Port-Mapping fehlt oder ist falsch
+- Wenn `Image` endet auf `:latest` statt Digest `@sha256:...` → **Image nicht gepinnt** (das ist das Problem!)
+- Wenn `Health` = `unhealthy` → Logs prüfen (Step 2)
 
-# Index neu laden (falls korrupt)
-docker exec corapan-blacklab rm -rf /data/index/*
-# Dann Index neu erstellen (siehe Dokumentation)
+#### 2) Was sagen die Logs?
+
+```powershell
+docker logs blacklab-server-v3 --tail 250
+```
+
+**Suche nach:**
+- `InvalidFormatException` / `FieldType` / `untokenized` → **Index-Format-Mismatch** (Lösung siehe unten)
+- `Connection refused` / `Address already in use` → Port ist belegt
+- `OutOfMemoryError` → Zu wenig RAM für BlackLab
+- Normale `GET /` Anfragen nach Startup → **Container ist OK, der Fehler liegt woanders**
+
+#### 3) Ist der Port 8081 vom Host erreichbar?
+
+```powershell
+curl.exe -fsS "http://127.0.0.1:8081/blacklab-server/"
+```
+
+**Erwartetes Ergebnis:** XML-Response mit `<apiVersion>`, `<blacklabVersion>`, `<corpora>` ...
+
+---
+
+### Harte Lösung: Index-Mismatch (häufigste Ursache)
+
+**Problem:** Logs zeigen `FieldType` Fehler oder Container ist durerhaft unhealthy
+
+**Ursache:** Alter Index ist nicht kompatibel mit aktuellem Image
+
+**Lösung:**
+
+```powershell
+# 1. Docker-Services herunterfahren
+docker compose down
+
+# 2. Alten Index als Backup umbenennen (nicht löschen!)
+Rename-Item -Path "data\blacklab_index" -NewName ("blacklab_index.bad_" + (Get-Date -Format "yyyyMMdd_HHmmss"))
+
+# 3. Mit dem richtigen (pinned) Compose starten
+docker compose -f docker-compose.dev-postgres.yml up -d
+
+# 4. Prüfen, dass Container healthy wird
+docker ps --format "table {{.Names}}\t{{.Status}}"
+curl.exe -fsS "http://127.0.0.1:8081/blacklab-server/" | Select-Object -First 1
+```
+
+Nach Step 3-4 sollte BlackLab `healthy` sein und auf Port 8081 antworten.
+
+Wenn du nun die Corpus noch benötigst:
+
+```powershell
+# 5. Index neu bauen (falls noch nicht vorhanden)
+.\scripts\blacklab\build_blacklab_index.ps1
+docker compose -f docker-compose.dev-postgres.yml down
+docker compose -f docker-compose.dev-postgres.yml up -d
 ```
 
 ---
 
-## Static Files nicht gefunden
+### Detaillierter Troubleshooting
+
+Für erweiterte Diagnostik und Hintergrund:  
+→ Siehe [docs/operations/blacklab_dev_health.md](./blacklab_dev_health.md)
+
+---
+
+## Search timeout
 
 **Symptom:** `404 Not Found` für `/static/css/...`
 
