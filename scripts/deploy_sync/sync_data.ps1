@@ -393,10 +393,30 @@ function Sync-StatisticsFiles {
         Write-Host "  Verifying uploaded content..." -ForegroundColor DarkGray
         
         # Check that remote directory contains ONLY expected files
-        $remoteCheckCmd = "ls -1 '$RemoteStatsDir' | grep -vE '^(corpus_stats\.json|viz_.*\.png)$' || true"
-        $unexpectedFiles = Invoke-SSHCommand -Command $remoteCheckCmd
+        # Note: Use explicit bash -lc to ensure stdout is captured as string
+        $remoteCheckCmd = "bash -lc 'ls -1 ""$RemoteStatsDir"" | grep -vE ""^(corpus_stats\.json|viz_.*\.png)$"" || true'"
+        $unexpectedFilesRaw = Invoke-SSHCommand -Command $remoteCheckCmd
         
-        if ($unexpectedFiles -and $unexpectedFiles.Trim()) {
+        # Robustly normalize output (Invoke-SSHCommand may return bool, array, or string)
+        $unexpectedFiles = ""
+        if ($null -eq $unexpectedFilesRaw) {
+            $unexpectedFiles = ""
+        }
+        elseif ($unexpectedFilesRaw -is [bool]) {
+            # If boolean, treat true as "has content", false as "empty"
+            $unexpectedFiles = if ($unexpectedFilesRaw) { "true" } else { "" }
+        }
+        elseif ($unexpectedFilesRaw -is [System.Object[]] -and $unexpectedFilesRaw.Count -gt 1) {
+            # If array, join with newlines
+            $unexpectedFiles = $unexpectedFilesRaw -join "`n"
+        }
+        else {
+            # Otherwise convert to string
+            $unexpectedFiles = [string]$unexpectedFilesRaw
+        }
+        $unexpectedFiles = $unexpectedFiles.Trim()
+        
+        if ($unexpectedFiles) {
             Write-Host "  VERIFICATION FAILED: Unexpected files found on remote:" -ForegroundColor Red
             Write-Host "$unexpectedFiles" -ForegroundColor Red
             Write-Host ""
@@ -404,9 +424,22 @@ function Sync-StatisticsFiles {
         }
         
         # Count files on remote
-        $remoteCountCmd = "ls -1 '$RemoteStatsDir' | wc -l"
-        $remoteCount = Invoke-SSHCommand -Command $remoteCountCmd
-        $remoteCountNum = [int]$remoteCount.Trim()
+        $remoteCountCmd = "bash -lc 'ls -1 ""$RemoteStatsDir"" | wc -l'"
+        $remoteCountRaw = Invoke-SSHCommand -Command $remoteCountCmd
+        
+        # Robustly normalize count output
+        $remoteCountStr = ""
+        if ($null -eq $remoteCountRaw) {
+            $remoteCountStr = "0"
+        }
+        elseif ($remoteCountRaw -is [bool]) {
+            $remoteCountStr = if ($remoteCountRaw) { "1" } else { "0" }
+        }
+        else {
+            $remoteCountStr = [string]$remoteCountRaw
+        }
+        $remoteCountStr = $remoteCountStr.Trim()
+        $remoteCountNum = [int]$remoteCountStr
         
         if ($remoteCountNum -ne $fileCount) {
             Write-Host "  WARNING: Remote file count mismatch (expected $fileCount, found $remoteCountNum)" -ForegroundColor Yellow
