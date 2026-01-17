@@ -141,29 +141,7 @@ if ($dockerAvailable) {
 }
 
 # Run the dev server
-Write-Host "`nStarting Flask dev server..." -ForegroundColor Cyan
-
-# First, verify Docker services are running before starting Flask
-if (-not $SkipBlackLab) {
-    Write-Host "Verifying BlackLab is responsive..." -ForegroundColor Gray
-    $blUrl = "http://127.0.0.1:8081/blacklab-server/"
-    try {
-        $resp = Invoke-WebRequest -Uri $blUrl -UseBasicParsing -TimeoutSec 3 -ErrorAction SilentlyContinue
-        if ($resp.StatusCode -eq 200) {
-            Write-Host "  ✓ BlackLab is responding" -ForegroundColor Green
-        } else {
-            Write-Host "  ⚠ BlackLab returned HTTP $($resp.StatusCode)" -ForegroundColor Yellow
-        }
-    } catch {
-        Write-Host "  ✗ BlackLab not responding at $blUrl" -ForegroundColor Red
-        Write-Host "  Check: docker ps" -ForegroundColor Gray
-        Write-Host "  Check: docker logs blacklab-server-v3 --tail 50" -ForegroundColor Gray
-    }
-}
-
-Write-Host "Flask dev server will be at http://127.0.0.1:8000" -ForegroundColor Cyan
-Write-Host "Press Ctrl+C to stop." -ForegroundColor Gray
-Write-Host ""
+Write-Host "`nStarting Flask dev server at http://localhost:8000" -ForegroundColor Cyan
 
 # Use venv Python if available, otherwise fall back to system Python
 $venvPython = Join-Path $repoRoot ".venv\Scripts\python.exe"

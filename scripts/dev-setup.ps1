@@ -240,12 +240,10 @@ Write-Host "  Postgres auth DB ready." -ForegroundColor Green
 # ============================================================================
 if (-not $SkipBlackLab) {
     Write-Host "`n[4/5] Checking BlackLab Server..." -ForegroundColor Yellow
-    $blUrl = "http://127.0.0.1:8081/blacklab-server/"
-    $maxWait = 120
+    $blUrl = "http://localhost:8081/blacklab-server/"
+    $maxWait = 90
     $waited = 0
     $blReady = $false
-
-    Write-Host "  Waiting for BlackLab on $blUrl (max ${maxWait}s)..." -ForegroundColor Gray
 
     while ($waited -lt $maxWait) {
         try {
@@ -259,31 +257,14 @@ if (-not $SkipBlackLab) {
         }
         Start-Sleep -Seconds 5
         $waited += 5
-        if ($waited % 15 -eq 0) {
-            Write-Host "    ... still waiting ($waited/$maxWait seconds)" -ForegroundColor Gray
-        }
+        $msg = "  ... waiting for BlackLab ($waited seconds)"
+        Write-Host $msg -ForegroundColor Gray
     }
 
     if ($blReady) {
-        Write-Host "  ✓ BlackLab Server ready" -ForegroundColor Green
+        Write-Host "  BlackLab Server ready at $blUrl" -ForegroundColor Green
     } else {
-        Write-Host "  ✗ ERROR: BlackLab not responding after ${maxWait}s" -ForegroundColor Red
-        Write-Host "" -ForegroundColor Red
-        Write-Host "  DIAGNOSTICS:" -ForegroundColor Red
-        Write-Host "  1) Check if container is even running:" -ForegroundColor Gray
-        Write-Host "     docker ps --filter name=blacklab" -ForegroundColor Gray
-        Write-Host "  2) Check container health status:" -ForegroundColor Gray
-        Write-Host "     docker inspect blacklab-server-v3 --format '{{.State.Health.Status}}'" -ForegroundColor Gray
-        Write-Host "  3) Check logs for errors (especially FieldType / InvalidFormat):" -ForegroundColor Gray
-        Write-Host "     docker logs blacklab-server-v3 --tail 100" -ForegroundColor Gray
-        Write-Host "  4) See detailed troubleshooting: docs/operations/troubleshooting.md" -ForegroundColor Gray
-        Write-Host "" -ForegroundColor Red
-        Write-Host "  Common fix (index-format mismatch):" -ForegroundColor Cyan
-        Write-Host "     docker compose down" -ForegroundColor Cyan
-        Write-Host "     Rename-Item data\blacklab_index `"blacklab_index.bad_`$(Get-Date -Format yyyyMMdd_HHmmss)`"" -ForegroundColor Cyan
-        Write-Host "     docker compose -f docker-compose.dev-postgres.yml up -d" -ForegroundColor Cyan
-        Write-Host "" -ForegroundColor Red
-        exit 1
+        Write-Host "WARN: BlackLab not responding after ${maxWait}s. Check docker logs." -ForegroundColor Yellow
     }
 } else {
     Write-Host "`n[4/5] Skipping BlackLab check (-SkipBlackLab)" -ForegroundColor Gray
