@@ -82,9 +82,11 @@ python .\LOKAL\_0_json\05_publish_corpus_statistics.py --out "$env:PUBLIC_STATS_
 ```
 
 This will:
-1. Sync data directories (`counters`, `metadata`, `exports`, etc.)
+1. Sync data directories (metadata, exports, db_public, blacklab_export, stats databases)
 2. Upload statistics files to `/srv/webapps/corapan/data/public/statistics/`
 3. Set correct ownership (hrzadmin:hrzadmin)
+
+**Note:** `counters/` and `db/auth.db` are protected production state and are NEVER synced by default.
 
 ### Skip Statistics
 
@@ -104,6 +106,35 @@ Use this when:
 ```
 
 Forces full data resync (ignores manifest state). Statistics upload is always overwrite, so `-Force` doesn't affect statistics behavior.
+
+## Production State Protection
+
+### What is NEVER Synced
+
+The following paths contain production runtime state and are **always protected** from being overwritten by a normal data deploy:
+
+- **`data/counters/`** - Runtime state files (page views, downloads, feature counters, etc.)
+- **`data/db/auth.db`** - Production authentication database
+
+These are critical for production stability and must never be lost or overwritten.
+
+### Emergency Override (Very Rare)
+
+In an extreme emergency, you can override the protection with three explicit flags:
+
+```powershell
+.\LOKAL\_2_deploy\deploy_data.ps1 `
+    -IncludeCounters `
+    -IncludeAuthDb `
+    -IUnderstandThisWillOverwriteProductionState
+```
+
+**This is DANGEROUS and should only be done with explicit approval from a senior team member.** The script will:
+1. Show a prominent 5-second warning
+2. Require you to acknowledge each override flag explicitly
+3. Log everything to the deployment log
+
+**Do NOT use these flags unless you fully understand the consequences.**
 
 ## Error Handling
 

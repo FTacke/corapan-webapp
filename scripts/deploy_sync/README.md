@@ -11,7 +11,7 @@ This directory contains the core deployment logic for synchronizing data, media,
 
 ### `sync_data.ps1`
 
-**Purpose:** Synchronizes application data to production (metadata, counters, stats databases, exports).
+**Purpose:** Synchronizes application data to production (metadata, stats databases, exports).
 
 **Usage:**
 ```powershell
