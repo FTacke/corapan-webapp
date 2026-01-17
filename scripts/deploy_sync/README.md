@@ -39,13 +39,34 @@ Connection parameters (hostname and user) are configured in sync_core.ps1. Port 
 
 These paths contain production runtime state that must NEVER be overwritten by any data deploy. The protection is HARD-CODED and cannot be bypassed, even with parameter flags. If you need to manually restore production state, use SSH restore procedures instead.
 
-**Statistics Deployment:**
+**Statistics Deployment (HARDENED):**
 `sync_data.ps1` does NOT handle statistics files (corpus_stats.json, viz_*.png).
-These are deployed separately via `Sync-StatisticsFiles` function:
+These are deployed separately via `Sync-StatisticsFiles` function with strict safety guards:
+
+**What gets deployed:**
+- ONLY: `corpus_stats.json` and `viz_*.png` files
 - Target: `/srv/webapps/corapan/data/public/statistics`
-- Mode: Overwrite-only (no delete)
-- Files: `corpus_stats.json` and `viz_*.png` only
+- Mode: Overwrite-only (no delete, no directory structures)
+
+**Safety Guards:**
+- Hard validation prevents syncing from repo root or parent directories
+- Per-file allowlist: corpus_stats.json + all viz_*.png (no other files)
+- Post-upload verification ensures only expected files are present on remote
+- If guard triggers: deployment is refused with clear error message
+
+**How it works:**
+- `[PHASE 1]` Determines local stats dir from env vars (PUBLIC_STATS_DIR or CORAPAN_RUNTIME_ROOT)
+- `[PHASE 2]` Hard guards: rejects if dir contains .git, src/, package.json, etc.
+- `[PHASE 3]` Validates corpus_stats.json exists and at least 1 viz_*.png exists
+- `[PHASE 4-5]` Per-file upload via rsync (corpus_stats.json, then each viz_*.png)
+- `[PHASE 6]` Post-upload verification: `ls -1 remote | grep -vE '^(corpus_stats\.json|viz_.*\.png)$'` must be empty
+- `[PHASE 7]` Sets ownership
+
+**Usage:**
 - Called by: `LOKAL/_2_deploy/deploy_data.ps1` orchestrator
+- Requires: `PUBLIC_STATS_DIR` or `CORAPAN_RUNTIME_ROOT` environment variable set
+- Behavior: SKIP with warning if stats dir not ready (non-critical)
+- Testing: Pass `-DryRun` flag to see files without uploading
 
 **Recommended:** Use via orchestrator `LOKAL/_2_deploy/deploy_data.ps1` which handles both data sync AND statistics upload.
 

@@ -175,14 +175,22 @@ function Test-ProductionStateProtection {
 # FUNCTION: Sync-StatisticsFiles
 # =============================================================================
 #
-# Synchronizes statistics files (corpus_stats.json, viz_*.png) to production
+# Synchronizes statistics files (corpus_stats.json, viz_*.png) to production.
 # Remote location: /srv/webapps/corapan/data/public/statistics
+#
+# HARDENED SECURITY:
+# - Hard guards prevent syncing from repo root or parent directories
+# - Allowlist-based: only corpus_stats.json and viz_*.png are transferred
+# - No directory structures, no recursive syncs
+# - Post-upload verification ensures no unwanted files are present
 #
 # Features:
 # - Validates local statistics files exist before syncing
-# - Syncs only specific files (overwrite-only, no delete)
+# - Syncs only specific files via explicit file list (overwrite-only, no delete)
+# - Prevents accidental repo root deployment (guards against misconfiguration)
 # - Handles missing local stats gracefully with warning (not error)
 # - Sets remote ownership after upload
+# - Verifies remote content after upload
 #
 # Behavior:
 # - If PUBLIC_STATS_DIR env var is set, use that
@@ -192,14 +200,18 @@ function Test-ProductionStateProtection {
 function Sync-StatisticsFiles {
     param(
         [string]$LocalStatsDir,
-        [string]$RemoteRuntimeRoot = "/srv/webapps/corapan"
+        [string]$RemoteRuntimeRoot = "/srv/webapps/corapan",
+        [switch]$DryRun = $false
     )
     
     Write-Host ""
     Write-Host "[Statistics Files]" -ForegroundColor Cyan
     Write-Host ""
     
-    # Phase 1: Determine local statistics directory
+    # =========================================================================
+    # PHASE 1: Determine local statistics directory
+    # =========================================================================
+    
     if (-not $LocalStatsDir) {
         if ($env:PUBLIC_STATS_DIR) {
             $LocalStatsDir = $env:PUBLIC_STATS_DIR
@@ -210,94 +222,204 @@ function Sync-StatisticsFiles {
             Write-Host "Using CORAPAN_RUNTIME_ROOT: $LocalStatsDir" -ForegroundColor DarkGray
         }
         else {
-            Write-Host "WARNING: No statistics directory specified" -ForegroundColor Yellow
-            Write-Host "  - Set PUBLIC_STATS_DIR env var, OR" -ForegroundColor DarkGray
-            Write-Host "  - Set CORAPAN_RUNTIME_ROOT env var" -ForegroundColor DarkGray
+            Write-Host "SKIP: No statistics directory specified" -ForegroundColor Yellow
+            Write-Host "  Reason: Neither PUBLIC_STATS_DIR nor CORAPAN_RUNTIME_ROOT is set" -ForegroundColor DarkGray
             Write-Host ""
-            Write-Host "  Skipping statistics deployment (optional step)" -ForegroundColor Yellow
+            Write-Host "  To enable statistics deployment:" -ForegroundColor DarkGray
+            Write-Host "    `$env:CORAPAN_RUNTIME_ROOT = 'C:\\dev\\runtime\\corapan'" -ForegroundColor DarkGray
+            Write-Host "    or" -ForegroundColor DarkGray
+            Write-Host "    `$env:PUBLIC_STATS_DIR = 'C:\\path\\to\\stats'" -ForegroundColor DarkGray
+            Write-Host ""
             return $true
         }
     }
     
-    # Phase 2: Validate local statistics files
+    # =========================================================================
+    # PHASE 2: HARD GUARDS - Prevent repo root / parent directory sync
+    # =========================================================================
+    
+    # Resolve to absolute paths
     if (-not (Test-Path $LocalStatsDir)) {
-        Write-Host "WARNING: Statistics directory does not exist" -ForegroundColor Yellow
+        Write-Host "SKIP: Statistics directory does not exist" -ForegroundColor Yellow
         Write-Host "  Path: $LocalStatsDir" -ForegroundColor DarkGray
         Write-Host ""
         Write-Host "  To generate statistics:" -ForegroundColor DarkGray
         Write-Host "    python .\LOKAL\_0_json\05_publish_corpus_statistics.py --out `"$LocalStatsDir`"" -ForegroundColor DarkGray
         Write-Host ""
-        Write-Host "  Skipping statistics deployment (files not ready)" -ForegroundColor Yellow
         return $true
     }
     
+    try {
+        $LocalStatsDirResolved = (Resolve-Path -LiteralPath $LocalStatsDir -ErrorAction Stop).Path
+    }
+    catch {
+        Write-Host "ERROR: Cannot resolve statistics directory path: $LocalStatsDir" -ForegroundColor Red
+        Write-Host "  $($_.Exception.Message)" -ForegroundColor Red
+        return $false
+    }
+    
+    # Guard 1: Prevent syncing if LocalStatsDir looks like repo root
+    $repoIndicators = @('.git', 'src', 'package.json', 'Dockerfile', 'templates', 'pyproject.toml', '.venv')
+    $suspiciousItems = @()
+    
+    foreach ($indicator in $repoIndicators) {
+        $testPath = Join-Path $LocalStatsDirResolved $indicator
+        if (Test-Path $testPath) {
+            $suspiciousItems += $indicator
+        }
+    }
+    
+    if ($suspiciousItems.Count -gt 0) {
+        Write-Host "REFUSED: Refusing to deploy statistics from non-statistics directory" -ForegroundColor Red
+        Write-Host "  Path: $LocalStatsDirResolved" -ForegroundColor Red
+        Write-Host "  Reason: Found repo-like items: $($suspiciousItems -join ', ')" -ForegroundColor Red
+        Write-Host ""
+        Write-Host "  This guard prevents accidental repo sync. Ensure your stats directory" -ForegroundColor Yellow
+        Write-Host "  contains ONLY: corpus_stats.json and viz_*.png files." -ForegroundColor Yellow
+        Write-Host ""
+        return $false
+    }
+    
+    # =========================================================================
+    # PHASE 3: Validate local statistics files (allowlist)
+    # =========================================================================
+    
+    if (-not (Test-Path $LocalStatsDir)) {
+        Write-Host "SKIP: Statistics directory does not exist" -ForegroundColor Yellow
+        Write-Host "  Path: $LocalStatsDir" -ForegroundColor DarkGray
+        Write-Host ""
+        return $true
+    }
+    
+    # Build allowlist: exactly 1 corpus_stats.json + all viz_*.png files
     $corpusStatsJson = Join-Path $LocalStatsDir "corpus_stats.json"
-    $vizFiles = @(Get-ChildItem -Path $LocalStatsDir -Filter "viz_*.png" -ErrorAction SilentlyContinue)
+    $vizFiles = @(Get-ChildItem -Path $LocalStatsDir -Filter "viz_*.png" -File -ErrorAction SilentlyContinue)
     
     if (-not (Test-Path $corpusStatsJson)) {
-        Write-Host "WARNING: corpus_stats.json not found" -ForegroundColor Yellow
-        Write-Host "  Path: $corpusStatsJson" -ForegroundColor DarkGray
+        Write-Host "SKIP: corpus_stats.json not found" -ForegroundColor Yellow
+        Write-Host "  Expected: $corpusStatsJson" -ForegroundColor DarkGray
         Write-Host ""
-        Write-Host "  Skipping statistics deployment (files not ready)" -ForegroundColor Yellow
         return $true
     }
     
     if ($vizFiles.Count -eq 0) {
-        Write-Host "WARNING: No viz_*.png files found" -ForegroundColor Yellow
-        Write-Host "  Path: $LocalStatsDir" -ForegroundColor DarkGray
+        Write-Host "SKIP: No viz_*.png files found" -ForegroundColor Yellow
+        Write-Host "  Expected: $LocalStatsDir\\viz_*.png" -ForegroundColor DarkGray
         Write-Host ""
-        Write-Host "  Skipping statistics deployment (files not ready)" -ForegroundColor Yellow
         return $true
     }
+    
+    # Count total files to be uploaded
+    $fileCount = 1 + $vizFiles.Count
     
     Write-Host "Local statistics validated:" -ForegroundColor Green
     Write-Host "  - corpus_stats.json: OK" -ForegroundColor DarkGray
     Write-Host "  - viz_*.png files: $($vizFiles.Count) images" -ForegroundColor DarkGray
+    Write-Host "  - Total files to upload: $fileCount" -ForegroundColor DarkGray
     Write-Host ""
     
-    # Phase 3: Prepare remote target
+    if ($DryRun) {
+        Write-Host "[DRY RUN] Would upload:" -ForegroundColor Cyan
+        Write-Host "  - corpus_stats.json" -ForegroundColor DarkGray
+        foreach ($viz in $vizFiles) {
+            Write-Host "  - $($viz.Name)" -ForegroundColor DarkGray
+        }
+        Write-Host ""
+        return $true
+    }
+    
+    # =========================================================================
+    # PHASE 4: Prepare remote target
+    # =========================================================================
+    
     $RemoteStatsDir = "$RemoteRuntimeRoot/data/public/statistics"
     Write-Host "Remote target: $RemoteStatsDir" -ForegroundColor DarkGray
+    Write-Host ""
     
-    # Phase 4: Upload via rsync (overwrite-only, no delete)
+    # =========================================================================
+    # PHASE 5: Upload via scp (per-file allowlist - most robust)
+    # =========================================================================
+    
     Write-Host "Uploading statistics files..." -ForegroundColor Cyan
     
     try {
-        # Ensure remote directory exists
+        # Create remote directory
         Write-Host "  Creating remote directory..." -ForegroundColor DarkGray
         Invoke-SSHCommand -Command "mkdir -p '$RemoteStatsDir'" | Out-Null
         Write-Host "  Remote directory ready." -ForegroundColor DarkGray
+        Write-Host ""
         
-        # Convert paths for rsync
-        $rsyncSource = (Convert-ToRsyncPath $LocalStatsDir) + "/"
+        # Get SSH config
         $server = "$($script:SyncConfig.ServerUser)@$($script:SyncConfig.ServerHost)"
         $sshKeyCygwin = Convert-ToRsyncPath $script:SyncConfig.SSHKeyPath -PreserveShortName
-        $sshCmd = "ssh -i '$sshKeyCygwin' -o StrictHostKeyChecking=no -o ServerAliveInterval=60 -o ServerAliveCountMax=3"
         
-        # rsync only corpus_stats.json and viz_*.png files (overwrite-only, no delete)
+        # Upload corpus_stats.json
+        Write-Host "  Uploading corpus_stats.json..." -ForegroundColor DarkGray
+        $corpusJsonRsyncPath = Convert-ToRsyncPath $corpusStatsJson
         $rsyncArgs = @(
             "-avz",
-            "--include", "corpus_stats.json",
-            "--include", "viz_*.png",
-            "--exclude", "*",
-            "-e", $sshCmd,
-            "$rsyncSource",
+            "-e", "ssh -i '$sshKeyCygwin' -o StrictHostKeyChecking=no -o ServerAliveInterval=60",
+            "$corpusJsonRsyncPath",
             "${server}:$RemoteStatsDir/"
         )
+        & rsync @rsyncArgs 2>&1 | Out-Null
+        if ($LASTEXITCODE -ne 0) {
+            throw "rsync failed for corpus_stats.json (exit code $LASTEXITCODE)"
+        }
+        Write-Host "  corpus_stats.json: OK" -ForegroundColor Green
         
-        Write-Host "  rsync $([System.IO.Path]::GetFileName($LocalStatsDir))/ -> ${server}:$(Split-Path -Leaf $RemoteStatsDir)/" -ForegroundColor DarkGray
+        # Upload each viz_*.png file
+        Write-Host "  Uploading $($vizFiles.Count) visualization files..." -ForegroundColor DarkGray
+        foreach ($viz in $vizFiles) {
+            $vizRsyncPath = Convert-ToRsyncPath $viz.FullName
+            $rsyncArgs = @(
+                "-avz",
+                "-e", "ssh -i '$sshKeyCygwin' -o StrictHostKeyChecking=no -o ServerAliveInterval=60",
+                "$vizRsyncPath",
+                "${server}:$RemoteStatsDir/"
+            )
+            & rsync @rsyncArgs 2>&1 | Out-Null
+            if ($LASTEXITCODE -ne 0) {
+                throw "rsync failed for $($viz.Name) (exit code $LASTEXITCODE)"
+            }
+        }
+        Write-Host "  All visualization files: OK" -ForegroundColor Green
+        Write-Host ""
         
-        $rsyncOutput = & rsync @rsyncArgs 2>&1
-        $exitCode = $LASTEXITCODE
+        # =====================================================================
+        # PHASE 6: Post-upload verification (CRITICAL)
+        # =====================================================================
         
-        if ($exitCode -ne 0) {
-            Write-Host "  ERROR: rsync failed (exit code $exitCode)" -ForegroundColor Red
+        Write-Host "  Verifying uploaded content..." -ForegroundColor DarkGray
+        
+        # Check that remote directory contains ONLY expected files
+        $remoteCheckCmd = "ls -1 '$RemoteStatsDir' | grep -vE '^(corpus_stats\.json|viz_.*\.png)$' || true"
+        $unexpectedFiles = Invoke-SSHCommand -Command $remoteCheckCmd
+        
+        if ($unexpectedFiles -and $unexpectedFiles.Trim()) {
+            Write-Host "  VERIFICATION FAILED: Unexpected files found on remote:" -ForegroundColor Red
+            Write-Host "$unexpectedFiles" -ForegroundColor Red
+            Write-Host ""
             return $false
         }
         
-        Write-Host "  Upload: OK" -ForegroundColor Green
+        # Count files on remote
+        $remoteCountCmd = "ls -1 '$RemoteStatsDir' | wc -l"
+        $remoteCount = Invoke-SSHCommand -Command $remoteCountCmd
+        $remoteCountNum = [int]$remoteCount.Trim()
         
-        # Phase 5: Set ownership
+        if ($remoteCountNum -ne $fileCount) {
+            Write-Host "  WARNING: Remote file count mismatch (expected $fileCount, found $remoteCountNum)" -ForegroundColor Yellow
+            Write-Host "  This may be OK if remote directory had pre-existing files." -ForegroundColor DarkGray
+        }
+        
+        Write-Host "  Remote verification: OK" -ForegroundColor Green
+        Write-Host ""
+        
+        # =====================================================================
+        # PHASE 7: Set ownership
+        # =====================================================================
+        
         try {
             Write-Host "  Setting ownership..." -ForegroundColor DarkGray
             Set-RemoteOwnership -RemotePath "$RemoteRuntimeRoot/data/public" | Out-Null
