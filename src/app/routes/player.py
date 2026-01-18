@@ -28,6 +28,13 @@ def _extract_country_code(filename: str) -> str | None:
     return None
 
 
+def _decode_media_param(value: str) -> str:
+    decoded = unquote(value)
+    if "%2F" in decoded or "%2f" in decoded:
+        decoded = unquote(decoded)
+    return decoded
+
+
 def is_authenticated() -> bool:
     """Check if user has valid JWT token (without raising exceptions)."""
     try:
@@ -77,8 +84,8 @@ def player_page():
     if not transcription or not audio:
         abort(400)
 
-    transcription = unquote(transcription)
-    audio = unquote(audio)
+    transcription = _decode_media_param(transcription)
+    audio = _decode_media_param(audio)
 
     if audio.startswith("/media/full/"):
         audio_tail = audio[len("/media/full/") :]

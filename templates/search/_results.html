@@ -64,8 +64,16 @@
     <!-- Actions -->
     <div class="md3-kwic-actions">
       {% if hit.start_ms and hit.doc_pid %}
+      {% set doc_pid = hit.doc_pid %}
+      {% if doc_pid.endswith('.json') or doc_pid.endswith('.mp3') %}
+        {% set base_pid = doc_pid.rsplit('.', 1)[0] %}
+      {% else %}
+        {% set base_pid = doc_pid %}
+      {% endif %}
+      {% set transcription_path = '/media/transcripts/' ~ base_pid ~ '.json' %}
+      {% set audio_path = '/media/full/' ~ base_pid ~ '.mp3' %}
       <a 
-        href="{{ url_for('player.player_page') }}?transcription={{ hit.doc_pid }}&audio={{ hit.doc_pid }}#t={{ hit.start_ms / 1000 }}"
+        href="{{ url_for('player.player_page') }}?transcription={{ transcription_path | urlencode }}&audio={{ audio_path | urlencode }}#t={{ hit.start_ms / 1000 }}"
         class="md3-button md3-button--text"
         target="_blank"
         rel="noopener noreferrer">

@@ -2,6 +2,7 @@
 // Exports: makeBaseConfig() -> returns an object with defaults
 
 import { MEDIA_ENDPOINT } from "../search/config.js";
+import { buildPlayerUrl } from "../player-url.js";
 
 export function escapeHtml(text) {
   if (!text) return "";
@@ -40,17 +41,6 @@ function normalizeTranscriptFilename(filename) {
   const base = normalizeBaseName(filename);
   const country = extractCountryCode(base);
   return country ? `${country}/${base}.json` : `${base}.json`;
-}
-
-function encodePath(pathValue) {
-  return pathValue
-    .split("/")
-    .map((segment) => encodeURIComponent(segment))
-    .join("/");
-}
-
-function encodeQueryPath(pathValue) {
-  return encodeURIComponent(pathValue).replace(/%2F/g, "/");
 }
 
 export function renderAudioButtons(row) {
@@ -102,12 +92,13 @@ export function renderFileLink(filename, type, row) {
   const base = normalizeBaseName(filename);
   const transcriptFile = normalizeTranscriptFilename(filename);
   const audioFile = normalizeAudioFilename(filename);
-  const transcriptionPath = `${MEDIA_ENDPOINT}/transcripts/${encodePath(transcriptFile)}`;
-  const audioPath = `${MEDIA_ENDPOINT}/full/${encodePath(audioFile)}`;
-  let playerUrl = `/player?transcription=${encodeQueryPath(transcriptionPath)}&audio=${encodeQueryPath(audioPath)}`;
-  if (row && row.token_id) {
-    playerUrl += `&token_id=${encodeURIComponent(row.token_id)}`;
-  }
+  const transcriptionPath = `${MEDIA_ENDPOINT}/transcripts/${transcriptFile}`;
+  const audioPath = `${MEDIA_ENDPOINT}/full/${audioFile}`;
+  const playerUrl = buildPlayerUrl({
+    transcriptionPath,
+    audioPath,
+    tokenId: row?.token_id,
+  });
   // MD3: Use Material Symbols
   return `
     <a href="${playerUrl}" class="player-link" title="${escapeHtml(filename)}">

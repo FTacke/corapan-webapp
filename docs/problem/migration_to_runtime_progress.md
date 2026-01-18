@@ -760,3 +760,58 @@ Output:
 
 Note:
     Local curl connectivity issue persists in this environment. Browser requests do resolve after login.
+
+Phase 17 — Player URL encoding & subfolder support
+
+Cause:
+    Double-encoded media query params (e.g. %252F) caused `/player` to pass encoded paths through, breaking subfolder media like ARG/....
+
+Fixes:
+    - [static/js/modules/player-url.js](static/js/modules/player-url.js): single-encode `audio` + `transcription` params.
+    - [static/js/modules/advanced/datatableFactory.js](static/js/modules/advanced/datatableFactory.js): use shared builder and raw paths.
+    - [static/js/modules/player-overview.js](static/js/modules/player-overview.js): use shared builder and raw paths.
+    - [templates/search/_results.html](templates/search/_results.html): build `/media/*` paths and encode once.
+    - [src/app/routes/player.py](src/app/routes/player.py): decode once; decode again only if `%2F` remains.
+
+Commands:
+    curl.exe -I --max-time 5 http://127.0.0.1:8000/media/full/ARG/2023-10-10_ARG_Mitre.mp3
+    curl.exe -I --max-time 5 http://127.0.0.1:8000/media/transcripts/ARG/2023-10-10_ARG_Mitre.json
+    curl.exe -I --max-time 5 "http://127.0.0.1:8000/player?audio=%2Fmedia%2Ffull%2FARG%2F2023-10-10_ARG_Mitre.mp3&transcription=%2Fmedia%2Ftranscripts%2FARG%2F2023-10-10_ARG_Mitre.json"
+
+Output:
+    - /media/full/... → HTTP/1.1 404 NOT FOUND
+    - /media/transcripts/... → HTTP/1.1 200 OK
+    - /player?... → HTTP/1.1 303 SEE OTHER (redirect to /login?next=...)
+
+Phase 17b — Audio 404 root cause (dev media root mismatch)
+
+Observation:
+    Transcript route works, audio route 404 even with clean `/media/full/ARG/...` URL.
+
+Filesystem evidence (runtime):
+    Command:
+        $rt = $env:CORAPAN_RUNTIME_ROOT; if (-not $rt) { $rt = Join-Path (Get-Location) "runtime\corapan" }
+        $mr = Join-Path $rt "media"
+        "RUNTIME_MEDIA_ROOT=$mr"
+        $rel = "ARG\2025-02-04_ARG_Mitre.mp3"
+        Test-Path (Join-Path $mr "mp3-full\$rel")
+        Test-Path (Join-Path $mr "full\$rel")
+        Test-Path (Join-Path $mr "mp3-split\$rel")
+    Output:
+        RUNTIME_MEDIA_ROOT=C:\dev\corapan-webapp\runtime\corapan\media
+        True
+        False
+        False
+
+HTTP evidence:
+    Command:
+        curl.exe -I --max-time 5 http://127.0.0.1:8000/media/full/ARG/2025-02-04_ARG_Mitre.mp3
+    Output:
+        HTTP/1.1 404 NOT FOUND
+
+Conclusion:
+    Runtime file exists under `mp3-full`, but the running server is resolving `MEDIA_ROOT` to the repo media path (missing), so `/media/full` returns 404.
+
+Fix:
+    In dev mode, when `CORAPAN_RUNTIME_ROOT`/`CORAPAN_MEDIA_ROOT` are unset, allow `MEDIA_ROOT` to resolve to repo-local runtime media if it exists.
+    - Updated fallback logic in [src/app/config/__init__.py](src/app/config/__init__.py) to pick `PROJECT_ROOT/runtime/corapan/media` in dev.

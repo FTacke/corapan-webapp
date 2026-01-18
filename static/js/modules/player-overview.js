@@ -9,6 +9,8 @@
  * Data source: /api/v1/atlas/files (same as corpus-metadata.js)
  */
 
+import { buildPlayerUrl } from "./player-url.js";
+
 // ==============================================================================
 // DOM ELEMENTS
 // ==============================================================================
@@ -303,16 +305,9 @@ function renderCountryPanel(countryCode, isActive) {
       const audioFile = country
         ? `${country}/${fileBase}.mp3`
         : `${fileBase}.mp3`;
-      const encodePath = (value) =>
-        value
-          .split("/")
-          .map((segment) => encodeURIComponent(segment))
-          .join("/");
-      const encodeQueryPath = (value) =>
-        encodeURIComponent(value).replace(/%2F/g, "/");
-      const transcriptionPath = `/media/transcripts/${encodePath(transcriptFile)}`;
-      const audioPath = `/media/full/${encodePath(audioFile)}`;
-      const playerUrl = `/player?transcription=${encodeQueryPath(transcriptionPath)}&audio=${encodeQueryPath(audioPath)}`;
+      const transcriptionPath = `/media/transcripts/${transcriptFile}`;
+      const audioPath = `/media/full/${audioFile}`;
+      const playerUrl = buildPlayerUrl({ transcriptionPath, audioPath });
 
       return `
         <tr>

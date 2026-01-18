@@ -91,6 +91,7 @@ logs/
 #   • media/transcripts/          (Transcript files)
 data/
 media/
+media2/
 
 # Keep directory structure for deployment
 !data/.gitkeep
