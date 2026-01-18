@@ -5,8 +5,9 @@ CO.RA.PAN – FAIR Metadata Endpoints
 Dieses Modul stellt ausschließlich die offiziellen, FAIR-konformen
 Metadaten-Download-Endpunkte des CO.RA.PAN-Korpus bereit.
 
-Alle Dateien stammen aus data/metadata/latest/, das per Export-Skript
-automatisch erzeugt und versioniert wird (vYYYY-MM-DD + Symlink latest).
+Alle Dateien stammen aus ${CORAPAN_RUNTIME_ROOT}/data/public/metadata/latest/,
+das per Export-Skript automatisch erzeugt und versioniert wird
+(vYYYY-MM-DD + Symlink latest).
 
 Endpunkte:
 ----------
@@ -57,8 +58,8 @@ blueprint = Blueprint("corpus", __name__, url_prefix="/corpus")
 # CONFIGURATION
 # ==============================================================================
 
-# Relative path from project root to metadata directory
-_METADATA_RELATIVE = Path("data") / "metadata" / "latest"
+# Relative path from runtime data root to public metadata directory
+_METADATA_RELATIVE = Path("public") / "metadata" / "latest"
 
 # TSV field order matching export schema
 _TSV_FIELDS = [
@@ -112,10 +113,10 @@ def _is_authenticated() -> bool:
 def _get_metadata_path() -> Path:
     """Get absolute path to metadata/latest directory.
 
-    Uses current_app.root_path (src/app) and navigates to project root.
+    Uses runtime data root from app configuration.
     """
-    project_root = Path(current_app.root_path).parent.parent
-    return project_root / _METADATA_RELATIVE
+    data_root = Path(current_app.config["DATA_ROOT"])
+    return data_root / _METADATA_RELATIVE
 
 
 def _load_recordings_json() -> list[dict] | None:
@@ -180,7 +181,7 @@ def _serve_metadata_file(
             description=(
                 f"Metadata file not found: {filename}. "
                 "Run the metadata export script first: "
-                "python LOKAL/metadata/export_metadata.py --corpus-version v1.0 --release-date YYYY-MM-DD"
+                "python LOKAL/_1_metadata/export_metadata.py --corpus-version v1.0 --release-date YYYY-MM-DD"
             ),
         )
 
