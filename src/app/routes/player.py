@@ -2,6 +2,10 @@
 
 from __future__ import annotations
 
+import re
+from pathlib import Path
+from urllib.parse import unquote
+
 from flask import (
     Blueprint,
     abort,
@@ -15,6 +19,13 @@ from flask import (
 from flask_jwt_extended import verify_jwt_in_request
 
 blueprint = Blueprint("player", __name__)
+
+
+def _extract_country_code(filename: str) -> str | None:
+    match = re.match(r"\d{4}-\d{2}-\d{2}_([A-Z]{3}(?:-[A-Z]{3})?)", filename)
+    if match:
+        return match.group(1)
+    return None
 
 
 def is_authenticated() -> bool:
@@ -65,6 +76,18 @@ def player_page():
     token_id = request.args.get("token_id")
     if not transcription or not audio:
         abort(400)
+
+    transcription = unquote(transcription)
+    audio = unquote(audio)
+
+    if audio.startswith("/media/full/"):
+        audio_tail = audio[len("/media/full/") :]
+        if "/" not in audio_tail:
+            country = _extract_country_code(Path(transcription).name)
+            if not country:
+                country = _extract_country_code(audio_tail)
+            if country:
+                audio = f"/media/full/{country}/{audio_tail}"
 
     # Log cookie presence for debugging
     jwt_cookie_name = current_app.config.get(

@@ -15,11 +15,49 @@ export function escapeHtml(text) {
   return String(text).replace(/[&<>"']/g, (m) => map[m]);
 }
 
+function extractCountryCode(base) {
+  const match = base.match(/\d{4}-\d{2}-\d{2}_([A-Z]{3}(?:-[A-Z]{3})?)/);
+  return match ? match[1] : "";
+}
+
+function normalizeBaseName(filename) {
+  if (!filename) return "";
+  let base = filename.trim();
+  if (base.includes("/") || base.includes("\\")) {
+    base = base.split(/[\/\\]/).pop();
+  }
+  base = base.replace(/\.(mp3|tsv)$/i, "");
+  return base;
+}
+
+function normalizeAudioFilename(filename) {
+  const base = normalizeBaseName(filename);
+  const country = extractCountryCode(base);
+  return country ? `${country}/${base}.mp3` : `${base}.mp3`;
+}
+
+function normalizeTranscriptFilename(filename) {
+  const base = normalizeBaseName(filename);
+  const country = extractCountryCode(base);
+  return country ? `${country}/${base}.json` : `${base}.json`;
+}
+
+function encodePath(pathValue) {
+  return pathValue
+    .split("/")
+    .map((segment) => encodeURIComponent(segment))
+    .join("/");
+}
+
+function encodeQueryPath(pathValue) {
+  return encodeURIComponent(pathValue).replace(/%2F/g, "/");
+}
+
 export function renderAudioButtons(row) {
   const hasAudio = row.start_ms && row.filename;
   if (!hasAudio) return '<span class="md3-datatable__empty">-</span>';
 
-  const filename = row.filename || "";
+  const filename = normalizeAudioFilename(row.filename || "");
   const tokenIdOriginal = row.token_id ? String(row.token_id).trim() : "";
   const tokenId = tokenIdOriginal.toLowerCase();
 
@@ -61,17 +99,12 @@ export function renderAudioButtons(row) {
 export function renderFileLink(filename, type, row) {
   if (!filename) return "";
   if (type === "sort" || type === "type") return filename;
-  // Extract just the base filename without path or extension
-  let base = filename.trim();
-  // If filename contains path separators, extract just the basename
-  if (base.includes('/') || base.includes('\\')) {
-    base = base.split(/[\/\\]/).pop();
-  }
-  // Remove .mp3 or .tsv extensions
-  base = base.replace(/\.(mp3|tsv)$/i, "");
-  const transcriptionPath = `${MEDIA_ENDPOINT}/transcripts/${encodeURIComponent(base)}.json`;
-  const audioPath = `${MEDIA_ENDPOINT}/full/${encodeURIComponent(base)}.mp3`;
-  let playerUrl = `/player?transcription=${encodeURIComponent(transcriptionPath)}&audio=${encodeURIComponent(audioPath)}`;
+  const base = normalizeBaseName(filename);
+  const transcriptFile = normalizeTranscriptFilename(filename);
+  const audioFile = normalizeAudioFilename(filename);
+  const transcriptionPath = `${MEDIA_ENDPOINT}/transcripts/${encodePath(transcriptFile)}`;
+  const audioPath = `${MEDIA_ENDPOINT}/full/${encodePath(audioFile)}`;
+  let playerUrl = `/player?transcription=${encodeQueryPath(transcriptionPath)}&audio=${encodeQueryPath(audioPath)}`;
   if (row && row.token_id) {
     playerUrl += `&token_id=${encodeURIComponent(row.token_id)}`;
   }

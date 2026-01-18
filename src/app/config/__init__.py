@@ -204,6 +204,12 @@ class BaseConfig:
     ALLOW_PUBLIC_TEMP_AUDIO = (
         os.getenv("ALLOW_PUBLIC_TEMP_AUDIO", "false").lower() == "true"
     )
+    ALLOW_PUBLIC_FULL_AUDIO = (
+        os.getenv("ALLOW_PUBLIC_FULL_AUDIO", "false").lower() == "true"
+    )
+    ALLOW_PUBLIC_TRANSCRIPTS = (
+        os.getenv("ALLOW_PUBLIC_TRANSCRIPTS", "false").lower() == "true"
+    )
 
 # Auth DB - Must be explicitly configured via AUTH_DATABASE_URL env var
     # No fallback to SQLite - dev must use Postgres from docker-compose.dev-postgres.yml

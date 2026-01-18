@@ -68,10 +68,10 @@ services:
       - ./static:/app/static:ro
       
       # Media files
-      - ./media/mp3-full:/app/media/mp3-full:ro
-      - ./media/mp3-split:/app/media/mp3-split:ro
-      - ./media/mp3-temp:/app/media/mp3-temp
-      - ./media/transcripts:/app/media/transcripts:ro
+      - ${CORAPAN_MEDIA_ROOT:-./runtime/corapan/media}/mp3-full:/app/media/mp3-full:ro
+      - ${CORAPAN_MEDIA_ROOT:-./runtime/corapan/media}/mp3-split:/app/media/mp3-split:ro
+      - ${CORAPAN_MEDIA_ROOT:-./runtime/corapan/media}/mp3-temp:/app/media/mp3-temp
+      - ${CORAPAN_MEDIA_ROOT:-./runtime/corapan/media}/transcripts:/app/media/transcripts:ro
       
       # Data directories
       - ./data/db:/app/data/db

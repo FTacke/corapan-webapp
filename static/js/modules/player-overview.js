@@ -296,9 +296,23 @@ function renderCountryPanel(countryCode, isActive) {
     .map((item) => {
       const fileBase =
         item.filename?.replace(".json", "").replace(".mp3", "") || "";
-      const transcriptionPath = `/media/transcripts/${encodeURIComponent(fileBase)}.json`;
-      const audioPath = `/media/full/${encodeURIComponent(fileBase)}.mp3`;
-      const playerUrl = `/player?transcription=${encodeURIComponent(transcriptionPath)}&audio=${encodeURIComponent(audioPath)}`;
+      const country = extractCode(fileBase) || item.country_code || "";
+      const transcriptFile = country
+        ? `${country}/${fileBase}.json`
+        : `${fileBase}.json`;
+      const audioFile = country
+        ? `${country}/${fileBase}.mp3`
+        : `${fileBase}.mp3`;
+      const encodePath = (value) =>
+        value
+          .split("/")
+          .map((segment) => encodeURIComponent(segment))
+          .join("/");
+      const encodeQueryPath = (value) =>
+        encodeURIComponent(value).replace(/%2F/g, "/");
+      const transcriptionPath = `/media/transcripts/${encodePath(transcriptFile)}`;
+      const audioPath = `/media/full/${encodePath(audioFile)}`;
+      const playerUrl = `/player?transcription=${encodeQueryPath(transcriptionPath)}&audio=${encodeQueryPath(audioPath)}`;
 
       return `
         <tr>
