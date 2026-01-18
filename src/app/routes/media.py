@@ -12,7 +12,6 @@ from flask import (
     jsonify,
     request,
     send_file,
-    send_from_directory,
 )
 import json
 
@@ -42,7 +41,7 @@ def _secure_path(base: Path, filename: str) -> Path:
 
 def _send_from_base(base: Path, resolved: Path, **kwargs):
     try:
-        relative_path = resolved.relative_to(base)
+        resolved.relative_to(base)
     except ValueError:
         current_app.logger.warning(
             "Resolved media path outside base: base=%s resolved=%s",
@@ -50,7 +49,15 @@ def _send_from_base(base: Path, resolved: Path, **kwargs):
             resolved,
         )
         abort(404)
-    return send_from_directory(base, str(relative_path), **kwargs)
+
+    if not resolved.exists():
+        current_app.logger.warning(
+            "Resolved media path missing: resolved=%s",
+            resolved,
+        )
+        abort(404)
+
+    return send_file(resolved, conditional=True, **kwargs)
 
 
 def _temp_access_allowed() -> bool:
@@ -77,7 +84,18 @@ def download_full(filename: str):
         abort(401, "Authentication required to access full audio files")
 
     # Use intelligent path resolution with country subfolder detection
+    current_app.logger.debug(
+        "Audio request: filename=%s AUDIO_FULL_DIR=%s",
+        filename,
+        current_app.config.get("AUDIO_FULL_DIR"),
+    )
     path = media_store.safe_audio_full_path(filename)
+    current_app.logger.debug(
+        "Audio resolution: filename=%s resolved_path=%s exists=%s",
+        filename,
+        path,
+        path.exists() if path else None,
+    )
     if path is None:
         current_app.logger.warning(
             "Full audio not found: filename=%s base=%s",
