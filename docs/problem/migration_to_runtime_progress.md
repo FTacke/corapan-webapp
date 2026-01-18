@@ -368,3 +368,259 @@ Output (excerpt):
     ...
     Output directory:    C:\dev\corapan-webapp\runtime\corapan\data\public\metadata\v2026-01-18
     'latest' updated:    Yes
+
+Phase 9 — Repo data/db cleanup (DEV)
+
+Phase 9.1 — Inventory (repo + runtime)
+
+Command:
+    git status -sb
+    "== repo data/db contents =="
+    Get-ChildItem .\data\db -Force | Select FullName,Length
+    $rt = $env:CORAPAN_RUNTIME_ROOT
+    Write-Host "CORAPAN_RUNTIME_ROOT=$rt"
+    "== runtime db/restricted exists? =="
+    Test-Path "$rt\data\db\restricted"
+Output:
+    ## work/current...origin/work/current
+    CORAPAN_RUNTIME_ROOT=
+    == repo data/db contents ==
+    C:\dev\corapan-webapp\data\db\postgres_dev
+    C:\dev\corapan-webapp\data\db\.gitkeep 56
+    C:\dev\corapan-webapp\data\db\auth.db 94208
+    C:\dev\corapan-webapp\data\db\auth_e2e.db 36864
+    == runtime db/restricted exists? ==
+    False
+
+Phase 9.2 — Auth DB usage check
+
+Command:
+    Get-ChildItem .\src -Recurse -Filter *.py | Select-String -Pattern "auth\.db|auth_e2e\.db" -Context 2,2
+Output (excerpt):
+    src\app\extensions\sqlalchemy_ext.py:4: The auth migration uses a separate AUTH database by default (data/db/auth.db), but
+    src\app\extensions\sqlalchemy_ext.py:5: this extension can accept any SQLAlchemy URL via config (AUTH_DATABASE_URL).
+
+Decision:
+    auth.db / auth_e2e.db are still referenced (docstring), so they were not deleted.
+
+Phase 9.3 — Remove repo stats DBs (if present)
+
+Command:
+    "== BEFORE delete repo stats dbs =="
+    Get-ChildItem .\data\db -File -Force | Select Name,Length
+    Remove-Item .\data\db\stats_country.db, .\data\db\stats_files.db -Force -ErrorAction SilentlyContinue
+    "== AFTER delete repo stats dbs =="
+    Get-ChildItem .\data\db -File -Force | Select Name,Length
+Output:
+    == BEFORE delete repo stats dbs ==
+    .gitkeep 56
+    auth.db 94208
+    auth_e2e.db 36864
+    == AFTER delete repo stats dbs ==
+    .gitkeep 56
+    auth.db 94208
+    auth_e2e.db 36864
+
+Phase 9.4 — Move postgres_dev to runtime db/restricted
+
+Command:
+    "== BEFORE move postgres_dev =="
+    Test-Path .\data\db\postgres_dev
+    Get-ChildItem .\data\db\postgres_dev -Recurse -Force | Select -First 30 FullName
+    $rt = Join-Path (Get-Location) "runtime\corapan"
+    New-Item -ItemType Directory -Force -Path "$rt\data\db\restricted" | Out-Null
+    Move-Item .\data\db\postgres_dev "$rt\data\db\restricted\postgres_dev" -Force
+    "== AFTER move postgres_dev (repo) =="
+    Test-Path .\data\db\postgres_dev
+    "== AFTER move postgres_dev (runtime) =="
+    Test-Path "$rt\data\db\restricted\postgres_dev"
+    Get-ChildItem "$rt\data\db\restricted\postgres_dev" -Recurse -Force | Select -First 30 FullName
+Output (excerpt):
+    == BEFORE move postgres_dev ==
+    True
+    C:\dev\corapan-webapp\data\db\postgres_dev\base
+    ...
+    == AFTER move postgres_dev (repo) ==
+    False
+    == AFTER move postgres_dev (runtime) ==
+    True
+    C:\dev\corapan-webapp\runtime\corapan\data\db\restricted\postgres_dev\base
+    ...
+
+Phase 9.5 — Runtime path config (dev)
+
+Updates:
+    - dev-start.ps1 now sets POSTGRES_DEV_DATA_DIR to ${CORAPAN_RUNTIME_ROOT}\data\db\restricted\postgres_dev
+    - docker-compose.dev-postgres.yml mounts ${POSTGRES_DEV_DATA_DIR} (fallback to runtime\corapan path)
+    - App config exposes POSTGRES_DEV_DATA_DIR derived from CORAPAN_RUNTIME_ROOT
+
+Phase 10 — Auth (Postgres-only) initialization + legacy cleanup
+
+Phase 10.1 — Error evidence (before migration)
+
+Command:
+    Get-Content .\dev-server.err.log -Tail 200
+Output (excerpt):
+    psycopg.errors.UndefinedTable: relation "users" does not exist
+    ...
+    "POST /auth/login HTTP/1.1" 500 -
+
+Phase 10.2 — Ensure dev Postgres is running
+
+Command:
+    docker compose -f .\docker-compose.dev-postgres.yml up -d
+    docker ps --format "table {{.Names}}\t{{.Ports}}\t{{.Status}}" | findstr 54320
+Output (excerpt):
+    corapan_auth_db  0.0.0.0:54320->5432/tcp  Up (health: starting)
+
+Phase 10.3 — Apply auth schema (Postgres)
+
+Command:
+    docker cp .\migrations\0001_create_auth_schema_postgres.sql corapan_auth_db:/tmp/0001.sql
+    docker exec -i corapan_auth_db psql -U corapan_auth -d corapan_auth -f /tmp/0001.sql
+    docker exec -i corapan_auth_db psql -U corapan_auth -d corapan_auth -c "\dt"
+Output (excerpt):
+    public | users          | table | corapan_auth
+    public | refresh_tokens | table | corapan_auth
+    public | reset_tokens   | table | corapan_auth
+
+Phase 10.4 — Dev server smoke (health)
+
+Command:
+    powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\dev-start.ps1
+    Start-Sleep 3
+    curl.exe --max-time 3 http://127.0.0.1:8000/health
+Output (excerpt):
+    curl: (7) Failed to connect to 127.0.0.1 port 8000 after ~2s
+Note:
+    Local connectivity issue persists, but auth schema is now present (users table).
+
+Phase 10.5 — Legacy SQLite auth removal
+
+Command:
+    Get-ChildItem .\src -Recurse -Filter *.py | Select-String -Pattern "auth\.db|auth_e2e\.db" -Context 2,2
+Output (excerpt):
+    src\app\extensions\sqlalchemy_ext.py: docstring reference only (removed)
+
+Command:
+    Get-ChildItem .\data\db -Force | Where-Object Name -in "auth.db","auth_e2e.db" | Select Name,Length
+    Remove-Item .\data\db\auth.db, .\data\db\auth_e2e.db -Force
+    Get-ChildItem .\data\db -Force | Where-Object Name -in "auth.db","auth_e2e.db"
+Output:
+    (no output after delete)
+
+Phase 11 — DEV Postgres host volume uses runtime
+
+Phase 11.1 — Runtime env + expected path
+
+Command:
+    $rt = $env:CORAPAN_RUNTIME_ROOT
+    if (-not $rt) { $rt = (Join-Path (Get-Location) "runtime\corapan"); $env:CORAPAN_RUNTIME_ROOT = $rt }
+    if (-not $env:POSTGRES_DEV_DATA_DIR) { $env:POSTGRES_DEV_DATA_DIR = Join-Path $rt "data\db\restricted\postgres_dev" }
+    Write-Host "CORAPAN_RUNTIME_ROOT=$rt"
+    Write-Host "POSTGRES_DEV_DATA_DIR=$env:POSTGRES_DEV_DATA_DIR"
+    $expected = Join-Path $rt "data\db\restricted\postgres_dev"
+    Write-Host "EXPECTED_POSTGRES_DEV_DATA_DIR=$expected"
+    Test-Path $expected
+    Get-ChildItem (Split-Path $expected -Parent) -Force | Select Name
+Output:
+    CORAPAN_RUNTIME_ROOT=C:\dev\corapan-webapp\runtime\corapan
+    POSTGRES_DEV_DATA_DIR=C:\dev\corapan-webapp\runtime\corapan\data\db\restricted\postgres_dev
+    EXPECTED_POSTGRES_DEV_DATA_DIR=C:\dev\corapan-webapp\runtime\corapan\data\db\restricted\postgres_dev
+    True
+    Name
+    ----
+    postgres_dev
+
+Phase 11.2 — Compose mount source (runtime)
+
+Command:
+    docker ps --format "{{.Names}}" | findstr -i corapan_auth_db
+    $pg = "corapan_auth_db"
+    docker inspect $pg | ConvertFrom-Json | ForEach-Object { $_.Mounts | ForEach-Object { "{0} -> {1}" -f $_.Source, $_.Destination } }
+Output:
+    corapan_auth_db
+    C:\dev\corapan-webapp -> /app
+    C:\dev\corapan-webapp\runtime\corapan\data\db\restricted\postgres_dev -> /var/lib/postgresql/data
+
+Phase 11.3 — Legacy repo postgres_dev removed
+
+Command:
+    Test-Path .\data\db\postgres_dev
+    Remove-Item .\data\db\postgres_dev -Recurse -Force -ErrorAction SilentlyContinue
+    Test-Path .\data\db\postgres_dev
+Output:
+    True
+    False
+
+Phase 12 — Media root config (CORAPAN_MEDIA_ROOT)
+
+Command:
+    Select-String .\src\app\config\__init__.py -Pattern "CORAPAN_MEDIA_ROOT|MEDIA_ROOT|mp3-full|mp3-split|mp3-temp|transcripts" -Context 2,2
+Output (excerpt):
+    src\app\config\__init__.py:109:    _explicit_media_root = os.getenv("CORAPAN_MEDIA_ROOT")
+    src\app\config\__init__.py:111:        MEDIA_ROOT = Path(_explicit_media_root)
+    src\app\config\__init__.py:113:        MEDIA_ROOT = PROJECT_ROOT / "media"
+    src\app\config\__init__.py:121:            "CORAPAN_MEDIA_ROOT environment variable not configured.\n"
+    src\app\config\__init__.py:128:    TRANSCRIPTS_DIR = MEDIA_ROOT / "transcripts"
+    src\app\config\__init__.py:129:    AUDIO_FULL_DIR = MEDIA_ROOT / "mp3-full"
+    src\app\config\__init__.py:130:    AUDIO_SPLIT_DIR = MEDIA_ROOT / "mp3-split"
+    src\app\config\__init__.py:131:    AUDIO_TEMP_DIR = MEDIA_ROOT / "mp3-temp"
+
+Command:
+    Select-String .\scripts\dev-start.ps1 -Pattern "CORAPAN_MEDIA_ROOT|media" -Context 2,2
+Output (excerpt):
+    scripts\dev-start.ps1:49:# Set CORAPAN_MEDIA_ROOT for dev only if not provided
+    scripts\dev-start.ps1:50:if (-not $env:CORAPAN_MEDIA_ROOT) {
+    scripts\dev-start.ps1:51:    $env:CORAPAN_MEDIA_ROOT = Join-Path $repoRoot "media"
+
+Command:
+    Get-ChildItem .\src -Recurse -Filter *.py | Select-String -Pattern "PROJECT_ROOT.*media|([\\/]|^)media([\\/]|$)" -Context 2,2
+Output (excerpt):
+    src\app\config\__init__.py:113:        MEDIA_ROOT = PROJECT_ROOT / "media"
+    src\app\routes\auth.py:867:    # /corpus, /search/advanced, /atlas and /media/* are "optional auth" and
+
+Phase 13 — Media data copy to runtime (robocopy)
+
+Paths:
+    SRC=C:\dev\corapan-webapp\media
+    DST=C:\dev\corapan-webapp\runtime\corapan\media
+
+Before counts:
+    total=3007
+    mp3-full=147
+    mp3-split=2706
+    transcripts=149
+
+Robocopy:
+    robocopy $src $dst /MIR /FFT /R:2 /W:2 /NFL /NDL /NP /LOG:.\logs\media_migration_robocopy.log
+    Log: .\logs\media_migration_robocopy.log
+    ExitCode: 1 (files copied)
+
+After counts:
+    total=3007
+    mp3-full=147
+    mp3-split=2706
+    transcripts=149
+
+Dev start (runtime media):
+    $env:CORAPAN_MEDIA_ROOT = "C:\dev\corapan-webapp\runtime\corapan\media"
+    powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\dev-start.ps1
+
+Phase 14 — LOKAL media path audit (read-only)
+
+LOKAL/_0_json:
+    media/transcripts references found in:
+    - LOKAL/_0_json/01_preprocess_transcripts.py (instructions/log message)
+    - LOKAL/_0_json/02_annotate_transcripts_v3.py (TRANSCRIPTS_DIR = PROJECT_ROOT / "media" / "transcripts")
+    - LOKAL/_0_json/03_build_metadata_stats.py (TRANSCRIPTS_DIR = PROJECT_ROOT / "media" / "transcripts")
+    - LOKAL/_0_json/04_internal_country_statistics.py (TRANSCRIPTS_DIR = PROJECT_ROOT / "media" / "transcripts")
+    - LOKAL/_0_json/05_publish_corpus_statistics.py (pipeline docs mention media/transcripts)
+    - LOKAL/_0_json/99_check_pipeline_json.py (TRANSCRIPTS_DIR = PROJECT_ROOT / "media" / "transcripts")
+
+LOKAL/_0_mp3:
+    LOKAL/_0_mp3/mp3_prepare_and_split.py
+        - DEFAULT_SOURCE_DIR = ../../media/mp3-full
+        - DEFAULT_TARGET_DIR = ../../media/mp3-split
+        - Header comment references ../../media/mp3-full and ../../media/mp3-split
+    (These should switch to CORAPAN_MEDIA_ROOT-based paths when updated.)

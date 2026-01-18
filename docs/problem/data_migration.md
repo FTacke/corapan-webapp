@@ -248,6 +248,8 @@ Decisions (Final)
 - Auth/sensitive DBs live in runtime/data/db/restricted and are never touched by generators.
 - Generators must only write to runtime/data/db/public (no repo fallback).
 - Runtime statistics live in runtime/data/public/statistics (via PUBLIC_STATS_DIR or CORAPAN_RUNTIME_ROOT).
+- Media root is runtime-configured via CORAPAN_MEDIA_ROOT; production must set it, dev may fall back to repo ./media (with warning).
+- Auth runs exclusively via Postgres (AUTH_DATABASE_URL); SQLite fallback removed.
 
 TO-BE Migration Template
 
@@ -260,11 +262,16 @@ TO-BE Migration Template
 - Runtime root is the authoritative location for generated statistics and stats DBs.
 - data/ contains build inputs and source artifacts only (as decided).
 - Deploy scripts explicitly sync only source-of-truth directories.
+- Repo data/ contains no active DBs (legacy only, if present).
+- Dev Postgres host volume is runtime-only: runtime/data/db/restricted/postgres_dev (no repo data/db/postgres_dev mount).
+- Media paths are resolved from CORAPAN_MEDIA_ROOT with subfolders (mp3-full, mp3-split, mp3-temp, transcripts).
 
 3) Changes (applied)
 - CORAPAN_RUNTIME_ROOT is the authoritative base for runtime data.
 - Stats DB generator writes only to runtime/data/db/public.
 - App reads stats DBs from runtime/data/db/public.
+- Dev Postgres data directory moved to runtime/data/db/restricted/postgres_dev (POSTGRES_DEV_DATA_DIR).
+- Media paths now resolve via CORAPAN_MEDIA_ROOT (dev fallback to repo ./media).
 
 4) Migration Steps (draft)
 - Step 1: Inventory existing runtime and data/public/statistics on dev and prod
@@ -320,6 +327,7 @@ runtime/corapan/data
             stats_country.db
         restricted/               # auth/sensitive (never touch)
             auth.db               # prod-owned if present (do not sync from dev)
+            postgres_dev/          # local dev state only (docker volume)
     counters/                   # prod-owned, never synced
     stats_temp/                 # ephemeral, never synced
 
@@ -340,5 +348,6 @@ Proposed Mapping (repo data → runtime data)
 - data/public/statistics → runtime/data/public/statistics (one-time migrate or regenerate)
 - data/public/metadata/* → runtime/data/public/metadata/* (one-time migrate or regenerate)
 - data/db/stats_*.db → runtime/data/db/*.db (only if these DBs are still used)
+- data/db/postgres_dev → runtime/data/db/restricted/postgres_dev (one-time move)
 - data/counters/* → do not migrate (prod-owned)
 - data/stats_temp → runtime/data/stats_temp (ephemeral) or delete
