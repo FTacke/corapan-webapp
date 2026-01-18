@@ -682,3 +682,81 @@ Output:
 
 Note:
     Local connectivity issue persists (same symptom as previous dev-start smoke tests). Server logs confirm bind to 127.0.0.1:8000.
+
+Phase 16 — Final Media Audit (runtime-only)
+
+Phase 16.1 — Repo media absent
+
+Command:
+    Test-Path .\media
+    Test-Path .\media2
+    Test-Path .\media_repo_off
+Output:
+    False
+    True
+    True
+
+Phase 16.2 — Runtime media root present
+
+Command:
+    $rt = $env:CORAPAN_RUNTIME_ROOT
+    if (-not $rt) { $rt = Join-Path (Get-Location) "runtime\corapan" }
+    $rm = Join-Path $rt "media"
+    "CORAPAN_RUNTIME_ROOT=$rt"
+    "RUNTIME_MEDIA=$rm"
+    Test-Path $rm
+    Get-ChildItem $rm -Directory | Select Name
+Output:
+    CORAPAN_RUNTIME_ROOT=C:\dev\corapan-webapp\runtime\corapan
+    RUNTIME_MEDIA=C:\dev\corapan-webapp\runtime\corapan\media
+    True
+    Name
+    ----
+    mp3-full
+    mp3-split
+    mp3-temp
+    transcripts
+
+Phase 16.3 — Python hardcoded media audit
+
+Command:
+    Get-ChildItem .\src -Recurse -Filter *.py |
+      Select-String -Pattern "(^|[\\/\s])media([\\/]|$)|PROJECT_ROOT.*media|Path\(.+media" -Context 2,2
+Output (excerpt):
+    src\app\config\__init__.py:112:        _candidate_runtime_media = Path(_runtime_root) / "media"
+    src\app\config\__init__.py:121:        MEDIA_ROOT = PROJECT_ROOT / "media"   # dev fallback only
+
+Phase 16.4 — PowerShell media audit
+
+Command:
+    Get-ChildItem .\scripts -Recurse -Filter *.ps1 |
+      Select-String -Pattern "(\.\\media\\)|(/media/)|CORAPAN_MEDIA_ROOT" -Context 2,2
+Output (excerpt):
+    scripts\dev-start.ps1:51:    $env:CORAPAN_MEDIA_ROOT = Join-Path $env:CORAPAN_RUNTIME_ROOT "media"
+    scripts\deploy_sync\sync_media.ps1:85:$localMediaRoot = $env:CORAPAN_MEDIA_ROOT
+
+Phase 16.5 — YAML/Compose media mounts
+
+Command:
+    Get-ChildItem . -Recurse -File -Include *.yml,*.yaml |
+      Select-String -Pattern "(\./media)|(\.\\media\\)|(/media:)|CORAPAN_MEDIA_ROOT" -Context 2,2
+Output (excerpt):
+    infra\docker-compose.dev.yml:71:      - ${CORAPAN_MEDIA_ROOT:-./runtime/corapan/media}/mp3-full:/app/media/mp3-full:ro
+    infra\docker-compose.dev.yml:72:      - ${CORAPAN_MEDIA_ROOT:-./runtime/corapan/media}/mp3-split:/app/media/mp3-split:ro
+    infra\docker-compose.dev.yml:73:      - ${CORAPAN_MEDIA_ROOT:-./runtime/corapan/media}/mp3-temp:/app/media/mp3-temp
+    infra\docker-compose.dev.yml:74:      - ${CORAPAN_MEDIA_ROOT:-./runtime/corapan/media}/transcripts:/app/media/transcripts:ro
+
+Phase 16.6 — Runtime media endpoint check (dev)
+
+Command:
+    Remove-Item Env:CORAPAN_MEDIA_ROOT -ErrorAction SilentlyContinue
+    powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\dev-start.ps1
+    Start-Sleep 4
+    curl.exe -I --max-time 5 http://127.0.0.1:8000/media/transcripts/ARG/2025-02-04_ARG_Mitre.json
+    curl.exe -I --max-time 5 http://127.0.0.1:8000/media/full/ARG/2025-02-04_ARG_Mitre.mp3
+Output:
+    curl: (7) Failed to connect to 127.0.0.1 port 8000 after ~2s
+    curl: (7) Failed to connect to 127.0.0.1 port 8000 after ~2s
+
+Note:
+    Local curl connectivity issue persists in this environment. Browser requests do resolve after login.

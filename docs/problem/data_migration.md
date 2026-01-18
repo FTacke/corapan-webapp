@@ -249,6 +249,7 @@ Decisions (Final)
 - Generators must only write to runtime/data/db/public (no repo fallback).
 - Runtime statistics live in runtime/data/public/statistics (via PUBLIC_STATS_DIR or CORAPAN_RUNTIME_ROOT).
 - Media root is runtime-configured via CORAPAN_MEDIA_ROOT; production must set it, dev may fall back to repo ./media (with warning).
+- Dev compose mounts media from CORAPAN_MEDIA_ROOT (fallback to runtime/corapan/media); repo ./media is deprecated.
 - Auth runs exclusively via Postgres (AUTH_DATABASE_URL); SQLite fallback removed.
 
 TO-BE Migration Template
