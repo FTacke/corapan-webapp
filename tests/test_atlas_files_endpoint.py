@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import importlib
-import sqlite3
+import json
 from pathlib import Path
 
 from flask import Flask
@@ -9,21 +9,15 @@ from flask import Flask
 from src.app.extensions import cache
 
 
-def _setup_env(monkeypatch) -> Path:
-    repo_root = Path(__file__).resolve().parents[1]
-    runtime_root = repo_root / "runtime" / "corapan"
+def _setup_env(monkeypatch, runtime_root: Path) -> None:
     monkeypatch.setenv("FLASK_ENV", "development")
     monkeypatch.setenv("CORAPAN_RUNTIME_ROOT", str(runtime_root))
-    return runtime_root
 
 
-def _reload_atlas_modules():
-    import src.app.services.database as database
+def _reload_atlas_module():
     import src.app.services.atlas as atlas
 
-    database = importlib.reload(database)
-    atlas = importlib.reload(atlas)
-    return atlas, database
+    return importlib.reload(atlas)
 
 
 def _make_app():
@@ -39,9 +33,32 @@ def _make_app():
     return app
 
 
-def test_atlas_files_endpoint_returns_200(monkeypatch):
-    _setup_env(monkeypatch)
-    _reload_atlas_modules()
+def _write_sample_metadata(metadata_dir: Path) -> None:
+    metadata_dir.mkdir(parents=True, exist_ok=True)
+    sample = [
+        {
+            "file_id": "2023-08-10_ARG_Mitre",
+            "filename": "2023-08-10_ARG_Mitre.mp3",
+            "date": "2023-08-10",
+            "country_code_alpha3": "ARG",
+            "radio": "Radio Mitre",
+            "duration_seconds": 5589,
+            "duration_hms": "01:33:09",
+            "words_transcribed": 15023,
+            "revision": "YB",
+        }
+    ]
+    (metadata_dir / "corapan_recordings.json").write_text(
+        json.dumps(sample), encoding="utf-8"
+    )
+
+
+def test_atlas_files_endpoint_returns_200(monkeypatch, tmp_path):
+    runtime_root = tmp_path / "runtime"
+    metadata_dir = runtime_root / "data" / "public" / "metadata" / "latest"
+    _write_sample_metadata(metadata_dir)
+    _setup_env(monkeypatch, runtime_root)
+    _reload_atlas_module()
 
     app = _make_app()
     client = app.test_client()
@@ -52,24 +69,18 @@ def test_atlas_files_endpoint_returns_200(monkeypatch):
     assert isinstance(payload, dict)
     assert "files" in payload
     assert isinstance(payload["files"], list)
+    assert len(payload["files"]) > 0
 
 
-def test_fetch_file_metadata_missing_table_returns_empty(monkeypatch, tmp_path):
-    _setup_env(monkeypatch)
-    atlas, database = _reload_atlas_modules()
+def test_fetch_file_metadata_reads_metadata_json(monkeypatch, tmp_path):
+    runtime_root = tmp_path / "runtime"
+    metadata_dir = runtime_root / "data" / "public" / "metadata" / "latest"
+    _write_sample_metadata(metadata_dir)
+    _setup_env(monkeypatch, runtime_root)
 
-    temp_db = tmp_path / "stats_files.db"
-    conn = sqlite3.connect(temp_db)
-    conn.execute("CREATE TABLE other_table (id INTEGER)")
-    conn.commit()
-    conn.close()
+    atlas = _reload_atlas_module()
+    files = atlas.fetch_file_metadata()
 
-    original_databases = dict(database.DATABASES)
-    try:
-        database.DATABASES["stats_files"] = temp_db
-        files = atlas.fetch_file_metadata()
-    finally:
-        database.DATABASES.clear()
-        database.DATABASES.update(original_databases)
-
-    assert files == []
+    assert len(files) == 1
+    assert files[0]["filename"] == "2023-08-10_ARG_Mitre.mp3"
+    assert files[0]["country_code"] == "ARG"
