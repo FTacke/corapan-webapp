@@ -107,8 +107,16 @@ class BaseConfig:
 
     # Media paths (runtime-configured)
     _explicit_media_root = os.getenv("CORAPAN_MEDIA_ROOT")
+    _runtime_media_root = None
+    if _runtime_root:
+        _candidate_runtime_media = Path(_runtime_root) / "media"
+        if _candidate_runtime_media.exists():
+            _runtime_media_root = _candidate_runtime_media
+
     if _explicit_media_root:
         MEDIA_ROOT = Path(_explicit_media_root)
+    elif _runtime_media_root is not None:
+        MEDIA_ROOT = _runtime_media_root
     elif _is_dev:
         MEDIA_ROOT = PROJECT_ROOT / "media"
         warnings.warn(
@@ -250,6 +258,16 @@ def load_config(app, env_name: str | None) -> None:
     env = env_name or os.getenv("FLASK_ENV", "production").lower()
     config_obj = CONFIG_MAPPING.get(env, BaseConfig)
     app.config.from_object(config_obj)
+
+    app.logger.info(
+        "Media config: CORAPAN_MEDIA_ROOT=%s MEDIA_ROOT=%s AUDIO_FULL_DIR=%s AUDIO_SPLIT_DIR=%s AUDIO_TEMP_DIR=%s TRANSCRIPTS_DIR=%s",
+        os.getenv("CORAPAN_MEDIA_ROOT"),
+        app.config.get("MEDIA_ROOT"),
+        app.config.get("AUDIO_FULL_DIR"),
+        app.config.get("AUDIO_SPLIT_DIR"),
+        app.config.get("AUDIO_TEMP_DIR"),
+        app.config.get("TRANSCRIPTS_DIR"),
+    )
 
     # We now assume the auth system is DB-backed. Legacy env-based auth (passwords.env)
     # support is deprecated and not automatically enabled by configuration.

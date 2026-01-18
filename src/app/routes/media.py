@@ -4,7 +4,16 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from flask import Blueprint, abort, current_app, g, jsonify, request, send_file
+from flask import (
+    Blueprint,
+    abort,
+    current_app,
+    g,
+    jsonify,
+    request,
+    send_file,
+    send_from_directory,
+)
 import json
 
 from ..config import code_to_name
@@ -21,8 +30,27 @@ def _secure_path(base: Path, filename: str) -> Path:
     candidate = (base / filename).resolve()
     media_store.ensure_within(base, candidate)
     if not candidate.exists():
+        current_app.logger.warning(
+            "Media file not found: base=%s filename=%s resolved=%s",
+            base,
+            filename,
+            candidate,
+        )
         abort(404)
     return candidate
+
+
+def _send_from_base(base: Path, resolved: Path, **kwargs):
+    try:
+        relative_path = resolved.relative_to(base)
+    except ValueError:
+        current_app.logger.warning(
+            "Resolved media path outside base: base=%s resolved=%s",
+            base,
+            resolved,
+        )
+        abort(404)
+    return send_from_directory(base, str(relative_path), **kwargs)
 
 
 def _temp_access_allowed() -> bool:
@@ -51,13 +79,19 @@ def download_full(filename: str):
     # Use intelligent path resolution with country subfolder detection
     path = media_store.safe_audio_full_path(filename)
     if path is None:
+        current_app.logger.warning(
+            "Full audio not found: filename=%s base=%s",
+            filename,
+            current_app.config.get("AUDIO_FULL_DIR"),
+        )
         abort(404, f"Audio file not found: {filename}")
 
     # Determine if download or streaming based on query parameter
     download_flag = request.args.get("download")
     as_attachment = download_flag is not None
 
-    return send_file(
+    return _send_from_base(
+        Path(current_app.config["AUDIO_FULL_DIR"]),
         path,
         mimetype="audio/mpeg",
         as_attachment=as_attachment,
@@ -68,8 +102,9 @@ def download_full(filename: str):
 @blueprint.get("/split/<path:filename>")
 @jwt_required()
 def download_split(filename: str):
-    path = _secure_path(media_store.audio_split_dir(), filename)
-    return send_file(path, mimetype="audio/mpeg", as_attachment=False)
+    base_dir = media_store.audio_split_dir()
+    path = _secure_path(base_dir, filename)
+    return _send_from_base(base_dir, path, mimetype="audio/mpeg", as_attachment=False)
 
 
 @blueprint.get("/temp/<path:filename>")
@@ -77,8 +112,9 @@ def download_temp(filename: str):
     """PUBLIC ROUTE (conditionally): Access controlled by ALLOW_PUBLIC_TEMP_AUDIO config."""
     if not _temp_access_allowed():
         abort(401)
-    path = _secure_path(media_store.audio_temp_dir(), filename)
-    return send_file(path, mimetype="audio/mpeg", as_attachment=False)
+    base_dir = media_store.audio_temp_dir()
+    path = _secure_path(base_dir, filename)
+    return _send_from_base(base_dir, path, mimetype="audio/mpeg", as_attachment=False)
 
 
 @blueprint.post("/snippet")
@@ -141,6 +177,11 @@ def fetch_transcript(filename: str):
 
     transcript = media_store.safe_transcript_path(filename)
     if transcript is None:
+        current_app.logger.warning(
+            "Transcript not found: filename=%s base=%s",
+            filename,
+            current_app.config.get("TRANSCRIPTS_DIR"),
+        )
         abort(404)
 
     # Load and augment transcript JSON with a human-readable country display.
@@ -149,7 +190,12 @@ def fetch_transcript(filename: str):
             data = json.load(fh)
     except Exception:
         # Fall back to sending raw file if we cannot parse it
-        return send_file(transcript, mimetype="application/json", as_attachment=False)
+        return _send_from_base(
+            Path(current_app.config["TRANSCRIPTS_DIR"]),
+            transcript,
+            mimetype="application/json",
+            as_attachment=False,
+        )
 
     # Look for several possible country fields and compute display name
     raw_country = (
@@ -204,6 +250,8 @@ def play_audio(filename: str):
         abort(400, "Missing start/end parameters")
     if end <= start:
         abort(400, "End time must be greater than start time")
+    if not filename.lower().endswith(".mp3"):
+        abort(400, "Audio filename must end with .mp3")
     # Log a simple request trace for diagnostics - but do not inspect g.user
     jwt_cookie_name = current_app.config.get(
         "JWT_ACCESS_COOKIE_NAME", "access_token_cookie"

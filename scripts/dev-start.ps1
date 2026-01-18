@@ -48,8 +48,8 @@ if (-not $env:CORAPAN_RUNTIME_ROOT) {
 
 # Set CORAPAN_MEDIA_ROOT for dev only if not provided
 if (-not $env:CORAPAN_MEDIA_ROOT) {
-    $env:CORAPAN_MEDIA_ROOT = Join-Path $repoRoot "media"
-    Write-Host "INFO: CORAPAN_MEDIA_ROOT not set. Using repo-local default:" -ForegroundColor Cyan
+    $env:CORAPAN_MEDIA_ROOT = Join-Path $env:CORAPAN_RUNTIME_ROOT "media"
+    Write-Host "INFO: CORAPAN_MEDIA_ROOT not set. Using runtime default:" -ForegroundColor Cyan
     Write-Host "   $env:CORAPAN_MEDIA_ROOT" -ForegroundColor Cyan
     Write-Host "" -ForegroundColor Cyan
 }
@@ -65,6 +65,12 @@ $runtimeBase = $env:CORAPAN_RUNTIME_ROOT
 if (-not (Test-Path $runtimeBase)) {
     Write-Host "Creating runtime directory: $runtimeBase" -ForegroundColor Yellow
     New-Item -ItemType Directory -Path $runtimeBase -Force | Out-Null
+}
+
+# Ensure runtime media directory exists
+if (-not (Test-Path $env:CORAPAN_MEDIA_ROOT)) {
+    Write-Host "Creating media directory: $env:CORAPAN_MEDIA_ROOT" -ForegroundColor Yellow
+    New-Item -ItemType Directory -Path $env:CORAPAN_MEDIA_ROOT -Force | Out-Null
 }
 
 # Ensure runtime statistics directory exists
@@ -124,6 +130,8 @@ Write-Host "Database mode: PostgreSQL" -ForegroundColor Green
 $env:FLASK_SECRET_KEY = "dev-secret-change-me"
 $env:JWT_SECRET_KEY = "dev-jwt-secret-change-me"
 $env:FLASK_ENV = "development"
+$env:ALLOW_PUBLIC_TRANSCRIPTS = "true"
+$env:ALLOW_PUBLIC_FULL_AUDIO = "true"
 $env:BLACKLAB_BASE_URL = "http://localhost:8081/blacklab-server"
 
 Write-Host "Starting CO.RA.PAN dev server..." -ForegroundColor Cyan
