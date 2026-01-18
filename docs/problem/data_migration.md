@@ -1,6 +1,6 @@
 # Data Migration Plan (AS-IS Evidence + TO-BE Template)
 
-Status: Draft (evidence collection only)
+Status: Final (runtime DB layout locked)
 Owner: TBD
 Last updated: 2026-01-18
 
@@ -197,7 +197,10 @@ Evidence:
 Touchpoints (AS-IS)
 
 Python (src)
-- Runtime stats path is derived from PUBLIC_STATS_DIR or CORAPAN_RUNTIME_ROOT. Evidence from search results in src/app/config/__init__.py and src/app/routes/corpus.py.
+- Runtime data root is derived from CORAPAN_RUNTIME_ROOT (dev fallback to runtime/corapan).
+- Runtime stats path is derived from PUBLIC_STATS_DIR or CORAPAN_RUNTIME_ROOT.
+- Metadata downloads and stats DB reads now resolve under runtime data root.
+- Stats cache now resolves under runtime data root (stats_temp).
 - Auth DB configured via AUTH_DATABASE_URL (src/app/config/__init__.py, src/app/extensions/sqlalchemy_ext.py).
 - BlackLab base URL defaults to http://localhost:8081/blacklab-server (src/app/extensions/http_client.py). Proxy routes in src/app/routes/bls_proxy.py.
 
@@ -207,7 +210,8 @@ Evidence (selected snippets from search):
     Output (excerpt):
         src\app\config\__init__.py:86:    _runtime_root = os.getenv("CORAPAN_RUNTIME_ROOT")
         src\app\config\__init__.py:87:    _explicit_stats_dir = os.getenv("PUBLIC_STATS_DIR")
-        src\app\config\__init__.py:96:        PUBLIC_STATS_DIR = Path(_runtime_root) / "data" / "public" / "statistics"
+        src\app\config\__init__.py:98:        DATA_ROOT = Path(_runtime_root) / "data"
+        src\app\config\__init__.py:123:        PUBLIC_STATS_DIR = Path(_runtime_root) / "data" / "public" / "statistics"
         src\app\config\__init__.py:156:    AUTH_DATABASE_URL = os.getenv("AUTH_DATABASE_URL")
         src\app\extensions\http_client.py:30:    "BLS_BASE_URL", "http://localhost:8081/blacklab-server"
         src\app\routes\corpus.py:221:        stats_dir = Path(current_app.config['PUBLIC_STATS_DIR'])
@@ -243,12 +247,11 @@ Evidence:
         LOKAL\_1_metadata\export_metadata.py:15:Output is written to data/metadata/vYYYY-MM-DD/ with a "latest" symlink.
         LOKAL\_1_zenodo-repos\zenodo_metadata.py:6:Quelle:     data/metadata/latest/
 
-Open Questions / TODOs
-- TODO: confirm production runtime root and whether statistics must live under /srv/webapps/corapan/data/public/statistics.
-- TODO: confirm authoritative source of statistics in prod (runtime vs repo data/public/statistics).
-- TODO: decide retention/cleanup policy for blacklab_index.backup, blacklab_index.bad, blacklab_index.testbuild.
-- TODO: determine migration handling for nested LOKAL repo (separate repo ownership and change process).
-- TODO: confirm whether deployment sync should move stats source from repo data/public/statistics to runtime path consistently.
+Decisions (Final)
+- Runtime stats DBs live in runtime/data/db/public.
+- Auth/sensitive DBs live in runtime/data/db/restricted and are never touched by generators.
+- Generators must only write to runtime/data/db/public (no repo fallback).
+- Runtime statistics live in runtime/data/public/statistics (via PUBLIC_STATS_DIR or CORAPAN_RUNTIME_ROOT).
 
 TO-BE Migration Template
 
@@ -257,17 +260,15 @@ TO-BE Migration Template
 - Ensure dev and prod align on runtime paths and environment configuration.
 - Avoid accidental sync of non-source data (temporary, backup, or generated).
 
-2) Target State (proposed)
-- Runtime root is the authoritative location for generated statistics.
+2) Target State (final)
+- Runtime root is the authoritative location for generated statistics and stats DBs.
 - data/ contains build inputs and source artifacts only (as decided).
 - Deploy scripts explicitly sync only source-of-truth directories.
 
-3) Proposed Changes (fill in)
-- Change list:
-  - TODO: set or standardize CORAPAN_RUNTIME_ROOT in dev and prod
-  - TODO: update sync scripts to read statistics from runtime path (if needed)
-  - TODO: clarify or remove legacy repo data/public/statistics references
-  - TODO: document operator workflow for generating and deploying stats
+3) Changes (applied)
+- CORAPAN_RUNTIME_ROOT is the authoritative base for runtime data.
+- Stats DB generator writes only to runtime/data/db/public.
+- App reads stats DBs from runtime/data/db/public.
 
 4) Migration Steps (draft)
 - Step 1: Inventory existing runtime and data/public/statistics on dev and prod
@@ -300,9 +301,13 @@ TO-BE Migration Template
 
 Implementation Status (DEV, non-BlackLab)
 - Runtime-aware outputs added:
-    - [LOKAL/_0_json/03_build_metadata_stats.py](LOKAL/_0_json/03_build_metadata_stats.py) now resolves DB output under `${CORAPAN_RUNTIME_ROOT}/data` when set.
+    - [LOKAL/_0_json/03_build_metadata_stats.py](LOKAL/_0_json/03_build_metadata_stats.py) now writes stats DBs to `${CORAPAN_RUNTIME_ROOT}/data/db/public` only.
     - [LOKAL/_1_metadata/export_metadata.py](LOKAL/_1_metadata/export_metadata.py) now resolves metadata output under `${CORAPAN_RUNTIME_ROOT}/data` when set.
 - Statistics generator already writes to runtime via PUBLIC_STATS_DIR/CORAPAN_RUNTIME_ROOT.
+- App read paths now resolve under runtime data root:
+    - [src/app/services/database.py](src/app/services/database.py): stats DBs under `db/public`.
+    - [src/app/routes/corpus.py](src/app/routes/corpus.py): metadata downloads.
+    - [src/app/routes/stats.py](src/app/routes/stats.py): stats cache.
 
 Target Runtime Layout (DEV/PROD) — Non-BlackLab
 
@@ -312,33 +317,30 @@ runtime/corapan/data
         latest/                   # alias to current release
         vYYYY-MM-DD/              # versioned exports
     db/
-        public/                   # regenerable stats DBs (if used)
-            stats_files.db
+        public/
+            stats_files.db        # regenerable stats DBs
             stats_country.db
-            stats_all.db (optional; deprecated if unused)
-        restricted/               # prod-owned, never synced
-            auth.db
+        restricted/               # auth/sensitive (never touch)
+            auth.db               # prod-owned if present (do not sync from dev)
     counters/                   # prod-owned, never synced
-    tmp/                        # ephemeral, never synced
-        stats_temp/
-        cache/
+    stats_temp/                 # ephemeral, never synced
 
 Class Rules
 1) Regenerable (may be generated in DEV and synced):
-     - data/public/statistics/*
-     - data/metadata/v*/
-     - data/db/public/* (only if actually used)
+    - data/public/statistics/*
+    - data/metadata/v*/
+    - data/db/public/*.db (stats_* only)
 
 2) Prod-owned (never regenerate or sync from DEV):
-     - data/db/restricted/* (auth)
-     - data/counters/*
+    - data/db/restricted/* (auth/sensitive)
+    - data/counters/*
 
 3) Ephemeral (never sync):
-     - data/tmp/** (including stats_temp, cache)
+    - data/stats_temp/**
 
 Proposed Mapping (repo data → runtime data)
 - data/public/statistics → runtime/data/public/statistics (one-time migrate or regenerate)
 - data/metadata/* → runtime/data/metadata/* (one-time migrate or regenerate)
-- data/db/*.db → runtime/data/db/public/*.db (only if these DBs are still used)
+- data/db/stats_*.db → runtime/data/db/*.db (only if these DBs are still used)
 - data/counters/* → do not migrate (prod-owned)
-- data/stats_temp → runtime/data/tmp/stats_temp (ephemeral) or delete
+- data/stats_temp → runtime/data/stats_temp (ephemeral) or delete
