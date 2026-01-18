@@ -46,12 +46,14 @@ if (-not $env:CORAPAN_RUNTIME_ROOT) {
     Write-Host "Using CORAPAN_RUNTIME_ROOT - custom: $env:CORAPAN_RUNTIME_ROOT" -ForegroundColor Green
 }
 
-# Set CORAPAN_MEDIA_ROOT for dev only if not provided
+# Set CORAPAN_MEDIA_ROOT (REQUIRED - no fallbacks allowed)
 if (-not $env:CORAPAN_MEDIA_ROOT) {
     $env:CORAPAN_MEDIA_ROOT = Join-Path $env:CORAPAN_RUNTIME_ROOT "media"
-    Write-Host "INFO: CORAPAN_MEDIA_ROOT not set. Using runtime default:" -ForegroundColor Cyan
+    Write-Host "INFO: CORAPAN_MEDIA_ROOT not set. Derived from runtime root:" -ForegroundColor Cyan
     Write-Host "   $env:CORAPAN_MEDIA_ROOT" -ForegroundColor Cyan
     Write-Host "" -ForegroundColor Cyan
+} else {
+    Write-Host "Using CORAPAN_MEDIA_ROOT - custom: $env:CORAPAN_MEDIA_ROOT" -ForegroundColor Green
 }
 
 # Derive PUBLIC_STATS_DIR from CORAPAN_RUNTIME_ROOT
@@ -67,10 +69,19 @@ if (-not (Test-Path $runtimeBase)) {
     New-Item -ItemType Directory -Path $runtimeBase -Force | Out-Null
 }
 
-# Ensure runtime media directory exists
+# Ensure runtime media directory and required subdirectories exist
 if (-not (Test-Path $env:CORAPAN_MEDIA_ROOT)) {
     Write-Host "Creating media directory: $env:CORAPAN_MEDIA_ROOT" -ForegroundColor Yellow
     New-Item -ItemType Directory -Path $env:CORAPAN_MEDIA_ROOT -Force | Out-Null
+}
+
+$requiredMediaSubdirs = @("mp3-full", "mp3-split", "mp3-temp", "transcripts")
+foreach ($subdir in $requiredMediaSubdirs) {
+    $subdirPath = Join-Path $env:CORAPAN_MEDIA_ROOT $subdir
+    if (-not (Test-Path $subdirPath)) {
+        Write-Host "Creating media subdirectory: $subdir" -ForegroundColor Yellow
+        New-Item -ItemType Directory -Path $subdirPath -Force | Out-Null
+    }
 }
 
 # Ensure runtime statistics directory exists
@@ -183,25 +194,9 @@ if (-not (Test-Path $venvPython)) {
     $venvPython = "python"
 }
 
-$logFile = Join-Path $repoRoot "dev-server.log"
-$errFile = Join-Path $repoRoot "dev-server.err.log"
+Write-Host "Starting Flask dev server..." -ForegroundColor Cyan
+Write-Host "NOTE: Server will run in foreground. Press Ctrl+C to stop." -ForegroundColor Yellow
+Write-Host ""
 
-Write-Host "Starting Flask via Start-Process (Background/Detached)..." -ForegroundColor Cyan
-Write-Host "Logs redirected to:" -ForegroundColor Gray
-Write-Host "  STDOUT: $logFile" -ForegroundColor Gray
-Write-Host "  STDERR: $errFile" -ForegroundColor Gray
-
-# Start Python directly with Start-Process to avoid console buffer hangs (Pipeline issue)
-$p = Start-Process -FilePath $venvPython -ArgumentList "-m src.app.main" -NoNewWindow -PassThru -RedirectStandardOutput $logFile -RedirectStandardError $errFile
-
-if ($p) {
-    Write-Host "Server process started (PID: $($p.Id))." -ForegroundColor Green
-    Write-Host "Press Ctrl+C to stop this script (Server will continue running unless killed manually)." -ForegroundColor Yellow
-    
-    # Optional: Wait for the process so the script doesn't exit immediately, 
-    # simulating a blocking behavior while keeping pipes detached.
-    Wait-Process -Id $p.Id
-} else {
-    Write-Host "Failed to start server process." -ForegroundColor Red
-    exit 1
-}
+# Start server in current terminal (env vars are inherited)
+& $venvPython -m src.app.main

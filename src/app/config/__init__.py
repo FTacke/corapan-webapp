@@ -105,33 +105,20 @@ class BaseConfig:
     else:
         POSTGRES_DEV_DATA_DIR = DATA_ROOT / "db" / "restricted" / "postgres_dev"
 
-    # Media paths (runtime-configured)
+    # Media paths (runtime-configured, REQUIRED - no repo fallbacks)
     _explicit_media_root = os.getenv("CORAPAN_MEDIA_ROOT")
-    _runtime_media_root = None
-    if _runtime_root:
-        _candidate_runtime_media = Path(_runtime_root) / "media"
-        if _candidate_runtime_media.exists():
-            _runtime_media_root = _candidate_runtime_media
-
-    if _explicit_media_root:
-        MEDIA_ROOT = Path(_explicit_media_root)
-    elif _runtime_media_root is not None:
-        MEDIA_ROOT = _runtime_media_root
-    elif _is_dev:
-        MEDIA_ROOT = PROJECT_ROOT / "media"
-        warnings.warn(
-            "CORAPAN_MEDIA_ROOT not configured. Defaulting to repo-local media path for development: "
-            f"{MEDIA_ROOT}",
-            RuntimeWarning,
-        )
-    else:
+    
+    if not _explicit_media_root:
         raise RuntimeError(
-            "CORAPAN_MEDIA_ROOT environment variable not configured.\n"
-            "Media storage is required for audio/transcripts paths.\n\n"
-            "Options:\n"
-            "  1. Set CORAPAN_MEDIA_ROOT (required in production):\n"
-            "     export CORAPAN_MEDIA_ROOT=/media/path\n"
+            "CORAPAN_MEDIA_ROOT environment variable is required.\n"
+            "Media storage is mandatory for audio/transcripts paths.\n\n"
+            "Setup:\n"
+            "  - Dev: Run via scripts/dev-start.ps1 (auto-sets CORAPAN_MEDIA_ROOT)\n"
+            "  - Production: export CORAPAN_MEDIA_ROOT=/path/to/runtime/media\n\n"
+            "No fallbacks to repo media paths are supported."
         )
+    
+    MEDIA_ROOT = Path(_explicit_media_root)
 
     TRANSCRIPTS_DIR = MEDIA_ROOT / "transcripts"
     AUDIO_FULL_DIR = MEDIA_ROOT / "mp3-full"
