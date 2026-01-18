@@ -74,6 +74,9 @@
 #   .\scripts\deploy_sync\sync_data.ps1           # Normal (Delta-Sync)
 #   .\scripts\deploy_sync\sync_data.ps1 -Force    # Force (alle Dateien)
 #
+# DRY-RUN:
+#   Kein Dry-Run-Modus (echter Sync).
+#
 # Siehe auch:
 #   - update_data_media.ps1  -> Interaktiver Maintenance-Runner
 #   - sync_media.ps1         -> Media-Verzeichnisse synchronisieren
@@ -102,13 +105,13 @@ $ErrorActionPreference = 'Stop'
 # -----------------------------------------------------------------------------
 # Konfiguration
 # -----------------------------------------------------------------------------
-
-# RepoRoot-Fallback auf bisherigen Hardcode
-if (-not $RepoRoot) {
-    $RepoRoot = "C:\dev\corapan-webapp"
+$runtimeRoot = $env:CORAPAN_RUNTIME_ROOT
+if (-not $runtimeRoot) {
+    Write-Host "FEHLER: CORAPAN_RUNTIME_ROOT ist nicht gesetzt. Abbruch." -ForegroundColor Red
+    exit 1
 }
 
-$LOCAL_BASE_PATH  = Join-Path $RepoRoot "data"
+$LOCAL_BASE_PATH  = Join-Path $runtimeRoot "data"
 $REMOTE_BASE_PATH = "/srv/webapps/corapan/data"
 
 # Zu synchronisierende Verzeichnisse
@@ -194,8 +197,8 @@ function Test-ProductionStateProtection {
 #
 # Behavior:
 # - If PUBLIC_STATS_DIR env var is set, use that (for backward compatibility)
-# - Else use RepoRoot/data/public/statistics (default, stats now in repo data/)
-# - Else SKIP with warning (should not happen if called from repo)
+# - Else use CORAPAN_RUNTIME_ROOT/data/public/statistics
+# - Else SKIP with warning
 #
 function Sync-StatisticsFiles {
     param(
@@ -210,22 +213,6 @@ function Sync-StatisticsFiles {
     Write-Host ""
     
     # =========================================================================
-    # PHASE 0: Auto-determine RepoRoot if not provided
-    # =========================================================================
-    if (-not $RepoRoot) {
-        try {
-            $gitRoot = git rev-parse --show-toplevel 2>$null
-            if ($LASTEXITCODE -eq 0 -and $gitRoot) {
-                # Convert forward slashes to backslashes for Windows compatibility
-                $RepoRoot = $gitRoot -replace '/', '\'
-            }
-        }
-        catch {
-            # git command failed, continue to next phase
-        }
-    }
-    
-    # =========================================================================
     # PHASE 1: Determine local statistics directory
     # =========================================================================
     
@@ -234,13 +221,13 @@ function Sync-StatisticsFiles {
             $LocalStatsDir = $env:PUBLIC_STATS_DIR
             Write-Host "Using PUBLIC_STATS_DIR (env var): $LocalStatsDir" -ForegroundColor DarkGray
         }
-        elseif ($RepoRoot -and (Test-Path $RepoRoot)) {
-            $LocalStatsDir = Join-Path $RepoRoot "data\public\statistics"
-            Write-Host "Using RepoRoot/data/public/statistics: $LocalStatsDir" -ForegroundColor DarkGray
+        elseif ($env:CORAPAN_RUNTIME_ROOT) {
+            $LocalStatsDir = Join-Path $env:CORAPAN_RUNTIME_ROOT "data\public\statistics"
+            Write-Host "Using CORAPAN_RUNTIME_ROOT/data/public/statistics: $LocalStatsDir" -ForegroundColor DarkGray
         }
         else {
             Write-Host "SKIP: No statistics directory specified" -ForegroundColor Yellow
-            Write-Host "  Reason: Could not determine repository root" -ForegroundColor DarkGray
+            Write-Host "  Reason: CORAPAN_RUNTIME_ROOT not set" -ForegroundColor DarkGray
             Write-Host ""
             return $true
         }

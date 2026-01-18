@@ -55,6 +55,9 @@
 #   .\scripts\deploy_sync\sync_media.ps1 -Force       # Force (alle Dateien)
 #   .\scripts\deploy_sync\sync_media.ps1 -ForceMP3    # Force nur MP3s
 #
+# DRY-RUN:
+#   Kein Dry-Run-Modus (echter Sync).
+#
 # Siehe auch:
 #   - update_data_media.ps1  -> Interaktiver Maintenance-Runner
 #   - sync_data.ps1          -> Data-Verzeichnisse synchronisieren
@@ -76,18 +79,13 @@ $ErrorActionPreference = 'Stop'
 # -----------------------------------------------------------------------------
 # Konfiguration
 # -----------------------------------------------------------------------------
-
-# RepoRoot-Fallback auf bisherigen Hardcode
-if (-not $RepoRoot) {
-    $RepoRoot = "C:\dev\corapan-webapp"
+$runtimeRoot = $env:CORAPAN_RUNTIME_ROOT
+if (-not $runtimeRoot) {
+    Write-Host "FEHLER: CORAPAN_RUNTIME_ROOT ist nicht gesetzt. Abbruch." -ForegroundColor Red
+    exit 1
 }
 
-$localMediaRoot = $env:CORAPAN_MEDIA_ROOT
-if (-not $localMediaRoot) {
-    $localMediaRoot = Join-Path $RepoRoot "media"
-}
-
-$LOCAL_BASE_PATH  = $localMediaRoot
+$LOCAL_BASE_PATH  = Join-Path $runtimeRoot "media"
 $REMOTE_BASE_PATH = "/srv/webapps/corapan/media"
 
 # Zu synchronisierende Verzeichnisse
