@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import logging
+import time
+from concurrent.futures import ThreadPoolExecutor, TimeoutError as FutureTimeout
 from flask import (
     Blueprint,
     make_response,
@@ -76,65 +78,81 @@ def health_check():
     from ..extensions.sqlalchemy_ext import get_engine
     from sqlalchemy import text
 
+
+    def safe_check(fn, *, timeout_s: float, base: dict | None = None) -> dict:
+        start = time.perf_counter()
+        payload = {"ok": True, "error": None}
+        if base:
+            payload.update(base)
+
+        executor = ThreadPoolExecutor(max_workers=1)
+        try:
+            future = executor.submit(fn)
+            result = future.result(timeout=timeout_s)
+            if isinstance(result, dict):
+                payload.update(result)
+        except FutureTimeout:
+            payload["ok"] = False
+            payload["error"] = "timeout"
+        except Exception as e:
+            payload["ok"] = False
+            payload["error"] = f"{type(e).__name__}: {str(e)}"
+        finally:
+            executor.shutdown(wait=False, cancel_futures=True)
+
+        payload["ms"] = int((time.perf_counter() - start) * 1000)
+        return payload
+
     checks = {
-        "flask": {"ok": True}  # If we got here, Flask is healthy
+        "flask": {"ok": True, "ms": 0}  # If we got here, Flask is healthy
     }
 
     # Check Auth DB availability (critical for production)
-    auth_db_check = {"ok": False, "backend": None, "error": None}
-    try:
+
+    def check_auth_db() -> dict:
         engine = get_engine()
         if engine is None:
-            auth_db_check["error"] = "Auth engine not initialized"
-        else:
-            with engine.connect() as conn:
-                conn.execute(text("SELECT 1"))
-            auth_db_check["ok"] = True
-            # Determine backend type
-            url = str(engine.url)
-            if "sqlite" in url:
-                auth_db_check["backend"] = "sqlite"
-            elif "postgresql" in url or "postgres" in url:
-                auth_db_check["backend"] = "postgresql"
-            else:
-                auth_db_check["backend"] = "unknown"
-    except Exception as e:
-        auth_db_check["error"] = f"{type(e).__name__}: {str(e)}"
-        logger.warning(f"Auth DB health check failed: {e}")
+            raise RuntimeError("Auth engine not initialized")
 
-    checks["auth_db"] = auth_db_check
+        with engine.connect() as conn:
+            conn.execute(text("SELECT 1"))
+
+        url = str(engine.url)
+        if "sqlite" in url:
+            backend = "sqlite"
+        elif "postgresql" in url or "postgres" in url:
+            backend = "postgresql"
+        else:
+            backend = "unknown"
+
+        return {"backend": backend}
+
+    checks["auth_db"] = safe_check(
+        check_auth_db,
+        timeout_s=0.8,
+        base={"backend": None},
+    )
 
     # Check BlackLab availability (quick preflight)
-    blacklab_check = {"url": BLS_BASE_URL, "ok": False, "error": None}
 
-    try:
+    def check_blacklab() -> dict:
+        if not BLS_BASE_URL:
+            raise RuntimeError("BLS_BASE_URL not configured")
+
         client = get_http_client()
-        # Try a simple status endpoint first, fall back to /
         response = client.get(
-            f"{BLS_BASE_URL}/", timeout=3.0
+            f"{BLS_BASE_URL}/", timeout=httpx.Timeout(0.5)
         )  # Single timeout value for all operations
-        if response.status_code in (
-            200,
-            404,
-        ):  # 200 = endpoint exists, 404 = BLS exists but endpoint doesn't
-            blacklab_check["ok"] = True
-            logger.debug(f"BlackLab health check OK at {BLS_BASE_URL}")
-        else:
-            blacklab_check["error"] = f"HTTP {response.status_code}"
-            logger.warning(
-                f"BlackLab health check returned {response.status_code}: {response.text[:100]}"
-            )
-    except httpx.ConnectError:
-        blacklab_check["error"] = "Connection refused / unreachable"
-        logger.warning(f"BlackLab health check failed (ConnectError): {BLS_BASE_URL}")
-    except httpx.TimeoutException:
-        blacklab_check["error"] = "Timeout"
-        logger.warning(f"BlackLab health check timed out: {BLS_BASE_URL}")
-    except Exception as e:
-        blacklab_check["error"] = f"{type(e).__name__}: {str(e)}"
-        logger.warning(f"BlackLab health check error: {e}")
+        if response.status_code not in (200, 404):
+            raise RuntimeError(f"HTTP {response.status_code}")
 
-    checks["blacklab"] = blacklab_check
+        return {"url": BLS_BASE_URL}
+
+    checks["blacklab"] = safe_check(
+        check_blacklab,
+        timeout_s=0.8,
+        base={"url": BLS_BASE_URL},
+    )
 
     # Determine overall status
     # Auth DB is critical, BlackLab is not (degraded mode still works)
