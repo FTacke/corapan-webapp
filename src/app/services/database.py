@@ -2,18 +2,45 @@
 
 from __future__ import annotations
 
+import os
 import sqlite3
+import warnings
 from contextlib import contextmanager
 from pathlib import Path
 from typing import Iterator
 
-DATA_ROOT = Path(__file__).resolve().parents[3] / "data"
-PRIVATE_DB_ROOT = DATA_ROOT / "db"
-PUBLIC_DB_ROOT = DATA_ROOT / "db_public"
+def _resolve_data_root() -> Path:
+    """Resolve runtime data root from CORAPAN_RUNTIME_ROOT (dev fallback supported)."""
+    env_name = (os.getenv("FLASK_ENV") or os.getenv("APP_ENV") or "production").lower()
+    is_dev = env_name in ("development", "dev")
+    runtime_root = os.getenv("CORAPAN_RUNTIME_ROOT")
+
+    if runtime_root:
+        return Path(runtime_root) / "data"
+    if is_dev:
+        data_root = Path(__file__).resolve().parents[3] / "runtime" / "corapan" / "data"
+        warnings.warn(
+            "CORAPAN_RUNTIME_ROOT not configured. Defaulting to repo-local runtime path for development: "
+            f"{data_root}",
+            RuntimeWarning,
+        )
+        return data_root
+    raise RuntimeError(
+        "CORAPAN_RUNTIME_ROOT environment variable not configured.\n"
+        "Runtime data is required for stats databases.\n\n"
+        "Options:\n"
+        "  1. Set CORAPAN_RUNTIME_ROOT (preferred):\n"
+        "     export CORAPAN_RUNTIME_ROOT=/runtime/path\n"
+        "     # Then data paths resolve to ${CORAPAN_RUNTIME_ROOT}/data\n"
+    )
+
+
+DATA_ROOT = _resolve_data_root()
+PUBLIC_DB_ROOT = DATA_ROOT / "db" / "public"
 
 DATABASES = {
-    "stats_files": PRIVATE_DB_ROOT / "stats_files.db",
-    "stats_country": PRIVATE_DB_ROOT / "stats_country.db",
+    "stats_files": PUBLIC_DB_ROOT / "stats_files.db",
+    "stats_country": PUBLIC_DB_ROOT / "stats_country.db",
 }
 
 
