@@ -82,7 +82,12 @@ if (-not $RepoRoot) {
     $RepoRoot = "C:\dev\corapan-webapp"
 }
 
-$LOCAL_BASE_PATH  = Join-Path $RepoRoot "media"
+$localMediaRoot = $env:CORAPAN_MEDIA_ROOT
+if (-not $localMediaRoot) {
+    $localMediaRoot = Join-Path $RepoRoot "media"
+}
+
+$LOCAL_BASE_PATH  = $localMediaRoot
 $REMOTE_BASE_PATH = "/srv/webapps/corapan/media"
 
 # Zu synchronisierende Verzeichnisse

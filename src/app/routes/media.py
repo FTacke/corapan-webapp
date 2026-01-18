@@ -68,7 +68,7 @@ def download_full(filename: str):
 @blueprint.get("/split/<path:filename>")
 @jwt_required()
 def download_split(filename: str):
-    path = _secure_path(media_store.MP3_SPLIT_DIR, filename)
+    path = _secure_path(media_store.audio_split_dir(), filename)
     return send_file(path, mimetype="audio/mpeg", as_attachment=False)
 
 
@@ -77,7 +77,7 @@ def download_temp(filename: str):
     """PUBLIC ROUTE (conditionally): Access controlled by ALLOW_PUBLIC_TEMP_AUDIO config."""
     if not _temp_access_allowed():
         abort(401)
-    path = _secure_path(media_store.MP3_TEMP_DIR, filename)
+    path = _secure_path(media_store.audio_temp_dir(), filename)
     return send_file(path, mimetype="audio/mpeg", as_attachment=False)
 
 

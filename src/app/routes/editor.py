@@ -15,14 +15,21 @@ from ..services.database import open_db
 
 blueprint = Blueprint("editor", __name__, url_prefix="/editor")
 
-MEDIA_DIR = Path(__file__).resolve().parents[3] / "media"
-TRANSCRIPTS_DIR = MEDIA_DIR / "transcripts"
-EDIT_LOG_FILE = MEDIA_DIR / "transcripts" / "edit_log.jsonl"
 
-# Ensure edit_log exists
-EDIT_LOG_FILE.parent.mkdir(parents=True, exist_ok=True)
-if not EDIT_LOG_FILE.exists():
-    EDIT_LOG_FILE.touch()
+def _transcripts_dir() -> Path:
+    return Path(current_app.config["TRANSCRIPTS_DIR"])
+
+
+def _edit_log_file() -> Path:
+    return _transcripts_dir() / "edit_log.jsonl"
+
+
+def _ensure_edit_log() -> Path:
+    edit_log = _edit_log_file()
+    edit_log.parent.mkdir(parents=True, exist_ok=True)
+    if not edit_log.exists():
+        edit_log.touch()
+    return edit_log
 
 
 @blueprint.get("/")
@@ -41,10 +48,11 @@ def overview():
     - Edit-Button
     """
     # Dynamische Liste: Alle Länder und Regionen im TRANSCRIPTS_DIR
+    transcripts_dir = _transcripts_dir()
     countries = sorted(
         [
             d.name
-            for d in TRANSCRIPTS_DIR.iterdir()
+            for d in transcripts_dir.iterdir()
             if d.is_dir() and d.name != ".gitkeep"
         ]
     )
@@ -52,7 +60,7 @@ def overview():
     files_by_country = {}
 
     for country in countries:
-        country_dir = TRANSCRIPTS_DIR / country
+        country_dir = transcripts_dir / country
         if not country_dir.exists():
             continue
 
@@ -90,7 +98,7 @@ def edit_file():
         abort(400, "Invalid file path")
 
     # Verify file exists
-    full_path = TRANSCRIPTS_DIR / file_path
+    full_path = _transcripts_dir() / file_path
     if not full_path.exists() or not full_path.is_file():
         abort(404, "File not found")
 
@@ -136,7 +144,7 @@ def save_edits():
     if ".." in file_path or file_path.startswith("/"):
         return {"success": False, "message": "Invalid file path"}, 400
 
-    full_path = TRANSCRIPTS_DIR / file_path
+    full_path = _transcripts_dir() / file_path
     if not full_path.exists():
         return {"success": False, "message": "File not found"}, 404
 
@@ -182,8 +190,8 @@ def save_edits():
             "changes": changes,
         }
 
-        EDIT_LOG_FILE.parent.mkdir(parents=True, exist_ok=True)
-        with open(EDIT_LOG_FILE, "a", encoding="utf-8") as log:
+        edit_log = _ensure_edit_log()
+        with open(edit_log, "a", encoding="utf-8") as log:
             log.write(json.dumps(log_entry, ensure_ascii=False) + "\n")
 
         return {
@@ -223,7 +231,7 @@ def add_bookmark():
     if ".." in file_path or file_path.startswith("/"):
         return {"success": False, "message": "Invalid file path"}, 400
 
-    full_path = TRANSCRIPTS_DIR / file_path
+    full_path = _transcripts_dir() / file_path
     if not full_path.exists():
         return {"success": False, "message": "File not found"}, 404
 
@@ -297,7 +305,7 @@ def remove_bookmark():
     if ".." in file_path or file_path.startswith("/"):
         return {"success": False, "message": "Invalid file path"}, 400
 
-    full_path = TRANSCRIPTS_DIR / file_path
+    full_path = _transcripts_dir() / file_path
     if not full_path.exists():
         return {"success": False, "message": "File not found"}, 404
 
@@ -346,7 +354,7 @@ def get_history(country: str, filename: str):
     if ".." in file_path or file_path.startswith("/"):
         return {"success": False, "message": "Invalid file path"}, 400
 
-    full_path = TRANSCRIPTS_DIR / file_path
+    full_path = _transcripts_dir() / file_path
     if not full_path.exists():
         return {"success": False, "message": "File not found"}, 404
 
@@ -393,7 +401,7 @@ def undo_change():
     if ".." in file_path or file_path.startswith("/"):
         return {"success": False, "message": "Invalid file path"}, 400
 
-    full_path = TRANSCRIPTS_DIR / file_path
+    full_path = _transcripts_dir() / file_path
     if not full_path.exists():
         return {"success": False, "message": "File not found"}, 404
 
@@ -440,8 +448,8 @@ def undo_change():
             "undo_index": undo_index,
         }
 
-        EDIT_LOG_FILE.parent.mkdir(parents=True, exist_ok=True)
-        with open(EDIT_LOG_FILE, "a", encoding="utf-8") as log:
+        edit_log = _ensure_edit_log()
+        with open(edit_log, "a", encoding="utf-8") as log:
             log.write(json.dumps(log_entry, ensure_ascii=False) + "\n")
 
         return {
@@ -468,7 +476,7 @@ def get_bookmarks(country: str, filename: str):
     if ".." in file_path or file_path.startswith("/"):
         return {"success": False, "message": "Invalid file path"}, 400
 
-    full_path = TRANSCRIPTS_DIR / file_path
+    full_path = _transcripts_dir() / file_path
     if not full_path.exists():
         return {"success": False, "message": "File not found"}, 404
 
@@ -519,10 +527,11 @@ def _get_file_info(country: str, filename: str) -> dict:
     last_edited = None
     last_editor = None
 
-    if EDIT_LOG_FILE.exists():
+    edit_log = _edit_log_file()
+    if edit_log.exists():
         try:
             # Lies Log rückwärts und finde letzten Eintrag für dieses File
-            with EDIT_LOG_FILE.open("r", encoding="utf-8") as log:
+            with edit_log.open("r", encoding="utf-8") as log:
                 lines = log.readlines()
 
             for line in reversed(lines):

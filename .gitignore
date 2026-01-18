@@ -100,6 +100,7 @@ media/
 data/db/auth.db
 data/db/auth_e2e.db
 data/db/postgres_dev/
+data/db/*.db
 
 # =============================================================================
 # IDEs & Editors

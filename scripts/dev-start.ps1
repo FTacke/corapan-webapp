@@ -46,8 +46,19 @@ if (-not $env:CORAPAN_RUNTIME_ROOT) {
     Write-Host "Using CORAPAN_RUNTIME_ROOT - custom: $env:CORAPAN_RUNTIME_ROOT" -ForegroundColor Green
 }
 
+# Set CORAPAN_MEDIA_ROOT for dev only if not provided
+if (-not $env:CORAPAN_MEDIA_ROOT) {
+    $env:CORAPAN_MEDIA_ROOT = Join-Path $repoRoot "media"
+    Write-Host "INFO: CORAPAN_MEDIA_ROOT not set. Using repo-local default:" -ForegroundColor Cyan
+    Write-Host "   $env:CORAPAN_MEDIA_ROOT" -ForegroundColor Cyan
+    Write-Host "" -ForegroundColor Cyan
+}
+
 # Derive PUBLIC_STATS_DIR from CORAPAN_RUNTIME_ROOT
 $env:PUBLIC_STATS_DIR = Join-Path $env:CORAPAN_RUNTIME_ROOT "data\public\statistics"
+
+# Dev Postgres data dir (host path for docker volume)
+$env:POSTGRES_DEV_DATA_DIR = Join-Path $env:CORAPAN_RUNTIME_ROOT "data\db\restricted\postgres_dev"
 
 # Ensure runtime base directory exists
 $runtimeBase = $env:CORAPAN_RUNTIME_ROOT
@@ -60,6 +71,13 @@ if (-not (Test-Path $runtimeBase)) {
 if (-not (Test-Path $env:PUBLIC_STATS_DIR)) {
     Write-Host "Creating statistics directory: $env:PUBLIC_STATS_DIR" -ForegroundColor Yellow
     New-Item -ItemType Directory -Path $env:PUBLIC_STATS_DIR -Force | Out-Null
+}
+
+# Ensure runtime restricted DB directory exists (for postgres_dev volume)
+$restrictedDbDir = Split-Path -Parent $env:POSTGRES_DEV_DATA_DIR
+if (-not (Test-Path $restrictedDbDir)) {
+    Write-Host "Creating restricted DB directory: $restrictedDbDir" -ForegroundColor Yellow
+    New-Item -ItemType Directory -Path $restrictedDbDir -Force | Out-Null
 }
 
 # Migrate legacy repo stats to runtime if needed

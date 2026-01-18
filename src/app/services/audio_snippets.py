@@ -8,8 +8,10 @@ from pathlib import Path
 from typing import Optional, Tuple
 
 from pydub import AudioSegment
+from flask import current_app, has_app_context
 
-from .media_store import MP3_TEMP_DIR, safe_audio_full_path, safe_audio_split_path
+from ..config import BaseConfig
+from .media_store import safe_audio_full_path, safe_audio_split_path
 
 CACHE_PREFIX = "snippet"
 CLEANUP_THRESHOLD_SECONDS = 30 * 60  # 30 Minuten
@@ -115,13 +117,14 @@ def _cache_filename(
 
 def cleanup_old_snippets() -> int:
     """Delete audio snippets older than CLEANUP_THRESHOLD_SECONDS. Returns count of deleted files."""
-    if not MP3_TEMP_DIR.exists():
+    temp_dir = _audio_temp_dir()
+    if not temp_dir.exists():
         return 0
 
     current_time = time.time()
     deleted_count = 0
 
-    for snippet_file in MP3_TEMP_DIR.glob("*.mp3"):
+    for snippet_file in temp_dir.glob("*.mp3"):
         try:
             file_age = current_time - snippet_file.stat().st_mtime
             if file_age > CLEANUP_THRESHOLD_SECONDS:
@@ -132,6 +135,12 @@ def cleanup_old_snippets() -> int:
             pass
 
     return deleted_count
+
+
+def _audio_temp_dir() -> Path:
+    if has_app_context():
+        return Path(current_app.config["AUDIO_TEMP_DIR"])
+    return Path(BaseConfig.AUDIO_TEMP_DIR)
 
 
 def build_snippet(
@@ -152,7 +161,8 @@ def build_snippet(
     if end <= start:
         raise ValueError("End time must be greater than start time")
 
-    MP3_TEMP_DIR.mkdir(parents=True, exist_ok=True)
+    temp_dir = _audio_temp_dir()
+    temp_dir.mkdir(parents=True, exist_ok=True)
 
     # Cleanup alte Snippets bei jedem 10. Aufruf (probabilistisch)
     import random
@@ -161,7 +171,7 @@ def build_snippet(
         cleanup_old_snippets()
 
     cache_name = _cache_filename(filename, start, end, token_id, snippet_type)
-    target_path = (MP3_TEMP_DIR / cache_name).resolve()
+    target_path = (temp_dir / cache_name).resolve()
 
     # Return cached snippet if it exists
     if target_path.exists():

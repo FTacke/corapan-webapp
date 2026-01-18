@@ -2,18 +2,39 @@
 
 from __future__ import annotations
 
+import re
 from pathlib import Path
 from typing import Optional
-import re
 
-MEDIA_ROOT = Path(__file__).resolve().parents[3] / "media"
-MP3_FULL_DIR = MEDIA_ROOT / "mp3-full"
-MP3_SPLIT_DIR = MEDIA_ROOT / "mp3-split"
-MP3_TEMP_DIR = MEDIA_ROOT / "mp3-temp"
-TRANSCRIPTS_DIR = MEDIA_ROOT / "transcripts"
+from flask import current_app, has_app_context
 
-for directory in (MP3_FULL_DIR, MP3_SPLIT_DIR, MP3_TEMP_DIR, TRANSCRIPTS_DIR):
-    directory.mkdir(parents=True, exist_ok=True)
+from ..config import BaseConfig
+
+
+def _config_path(key: str, fallback_attr: str) -> Path:
+    if has_app_context():
+        return Path(current_app.config[key])
+    return Path(getattr(BaseConfig, fallback_attr))
+
+
+def media_root() -> Path:
+    return _config_path("MEDIA_ROOT", "MEDIA_ROOT")
+
+
+def audio_full_dir() -> Path:
+    return _config_path("AUDIO_FULL_DIR", "AUDIO_FULL_DIR")
+
+
+def audio_split_dir() -> Path:
+    return _config_path("AUDIO_SPLIT_DIR", "AUDIO_SPLIT_DIR")
+
+
+def audio_temp_dir() -> Path:
+    return _config_path("AUDIO_TEMP_DIR", "AUDIO_TEMP_DIR")
+
+
+def transcripts_dir() -> Path:
+    return _config_path("TRANSCRIPTS_DIR", "TRANSCRIPTS_DIR")
 
 
 def extract_country_code(filename: str) -> Optional[str]:
@@ -46,15 +67,15 @@ def extract_country_code(filename: str) -> Optional[str]:
 
 
 def audio_full_path(filename: str) -> Path:
-    return (MP3_FULL_DIR / filename).resolve()
+    return (audio_full_dir() / filename).resolve()
 
 
 def audio_split_path(filename: str) -> Path:
-    return (MP3_SPLIT_DIR / filename).resolve()
+    return (audio_split_dir() / filename).resolve()
 
 
 def transcript_path(filename: str) -> Path:
-    return (TRANSCRIPTS_DIR / filename).resolve()
+    return (transcripts_dir() / filename).resolve()
 
 
 def ensure_within(base: Path, target: Path) -> None:
@@ -80,7 +101,8 @@ def safe_audio_full_path(filename: str) -> Optional[Path]:
     try:
         # Try 1: Direct path
         candidate = audio_full_path(filename)
-        ensure_within(MP3_FULL_DIR, candidate)
+        base_dir = audio_full_dir()
+        ensure_within(base_dir, candidate)
         if candidate.exists():
             return candidate
 
@@ -89,8 +111,8 @@ def safe_audio_full_path(filename: str) -> Optional[Path]:
         if country_code:
             # Get just the filename without any existing path
             base_filename = Path(filename).name
-            candidate_with_country = MP3_FULL_DIR / country_code / base_filename
-            ensure_within(MP3_FULL_DIR, candidate_with_country)
+            candidate_with_country = base_dir / country_code / base_filename
+            ensure_within(base_dir, candidate_with_country)
             if candidate_with_country.exists():
                 return candidate_with_country
     except ValueError:
@@ -106,7 +128,8 @@ def safe_audio_split_path(filename: str) -> Optional[Path]:
     try:
         # Try 1: Direct path
         candidate = audio_split_path(filename)
-        ensure_within(MP3_SPLIT_DIR, candidate)
+        base_dir = audio_split_dir()
+        ensure_within(base_dir, candidate)
         if candidate.exists():
             return candidate
 
@@ -114,8 +137,8 @@ def safe_audio_split_path(filename: str) -> Optional[Path]:
         country_code = extract_country_code(filename)
         if country_code:
             base_filename = Path(filename).name
-            candidate_with_country = MP3_SPLIT_DIR / country_code / base_filename
-            ensure_within(MP3_SPLIT_DIR, candidate_with_country)
+            candidate_with_country = base_dir / country_code / base_filename
+            ensure_within(base_dir, candidate_with_country)
             if candidate_with_country.exists():
                 return candidate_with_country
     except ValueError:
@@ -130,7 +153,8 @@ def safe_transcript_path(filename: str) -> Optional[Path]:
     try:
         # Try 1: Direct path
         candidate = transcript_path(filename)
-        ensure_within(TRANSCRIPTS_DIR, candidate)
+        base_dir = transcripts_dir()
+        ensure_within(base_dir, candidate)
         if candidate.exists():
             return candidate
 
@@ -138,8 +162,8 @@ def safe_transcript_path(filename: str) -> Optional[Path]:
         country_code = extract_country_code(filename)
         if country_code:
             base_filename = Path(filename).name
-            candidate_with_country = TRANSCRIPTS_DIR / country_code / base_filename
-            ensure_within(TRANSCRIPTS_DIR, candidate_with_country)
+            candidate_with_country = base_dir / country_code / base_filename
+            ensure_within(base_dir, candidate_with_country)
             if candidate_with_country.exists():
                 return candidate_with_country
     except ValueError:
