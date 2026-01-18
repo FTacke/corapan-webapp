@@ -102,6 +102,8 @@ docker run -d \
     -v "${LOGS_DIR}:/app/logs" \
     --env-file "${CONFIG_DIR}/passwords.env" \
     -e "FLASK_ENV=production" \
+    -e "CORAPAN_RUNTIME_ROOT=/app" \
+    -e "CORAPAN_MEDIA_ROOT=/app/media" \
     "${IMAGE_NAME}"
 
 log_info "Container started successfully"
