@@ -624,3 +624,61 @@ LOKAL/_0_mp3:
         - DEFAULT_TARGET_DIR = ../../media/mp3-split
         - Header comment references ../../media/mp3-full and ../../media/mp3-split
     (These should switch to CORAPAN_MEDIA_ROOT-based paths when updated.)
+
+Phase 15 — Media 404 debug (dev)
+
+Phase 15.1 — Media config log at startup
+
+Command:
+    Get-Content .\dev-server.err.log -Tail 5
+Output (excerpt):
+    [2026-01-18 15:40:36,705] INFO in __init__: Media config: CORAPAN_MEDIA_ROOT=C:\dev\corapan-webapp\runtime\corapan\media MEDIA_ROOT=C:\dev\corapan-webapp\runtime\corapan\media AUDIO_FULL_DIR=C:\dev\corapan-webapp\runtime\corapan\media\mp3-full AUDIO_SPLIT_DIR=C:\dev\corapan-webapp\runtime\corapan\media\mp3-split AUDIO_TEMP_DIR=C:\dev\corapan-webapp\runtime\corapan\media\mp3-temp TRANSCRIPTS_DIR=C:\dev\corapan-webapp\runtime\corapan\media\transcripts
+
+Phase 15.2 — Runtime vs repo media existence
+
+Command:
+    $rt = $env:CORAPAN_RUNTIME_ROOT
+    if (-not $rt) { $rt = Join-Path (Get-Location) "runtime\corapan" }
+    $mr = Join-Path $rt "media"
+    "CORAPAN_RUNTIME_ROOT=$rt"
+    "MEDIA_ROOT(candidate)=$mr"
+    Test-Path $mr
+    Get-ChildItem "$mr\mp3-full" -File | Select -First 3 Name
+    Get-ChildItem "$mr\transcripts" -File | Select -First 3 Name
+    Test-Path .\media
+    Test-Path .\media2
+Output:
+    CORAPAN_RUNTIME_ROOT=C:\dev\corapan-webapp\runtime\corapan
+    MEDIA_ROOT(candidate)=C:\dev\corapan-webapp\runtime\corapan\media
+    True
+    Name
+    ----
+    .gitkeep
+    .gitkeep
+    edit_log.jsonl
+    True
+    True
+
+Phase 15.3 — Route mapping evidence
+
+Command:
+    Get-ChildItem .\src -Recurse -Filter *.py | Select-String -Pattern "media/full|media/transcripts|send_from_directory|AUDIO_FULL_DIR|TRANSCRIPTS_DIR" -Context 2,2
+Output (excerpt):
+    src\app\routes\media.py:15:    send_from_directory,
+    src\app\routes\media.py:93:    return _send_from_base(
+    src\app\routes\media.py:94:        Path(current_app.config["AUDIO_FULL_DIR"]),
+    src\app\routes\media.py:181:            "Transcript not found: filename=%s base=%s",
+    src\app\routes\media.py:194:            Path(current_app.config["TRANSCRIPTS_DIR"]),
+
+Phase 15.4 — Curl smoke tests (dev)
+
+Command:
+    Start-Sleep -Seconds 6
+    curl.exe -i --max-time 5 http://127.0.0.1:8000/media/transcripts/2025-02-06_ARG_Mitre.json
+    curl.exe -i --max-time 5 http://127.0.0.1:8000/media/full/2025-02-06_ARG_Mitre.mp3
+Output:
+    curl: (7) Failed to connect to 127.0.0.1 port 8000 after ~2s
+    curl: (7) Failed to connect to 127.0.0.1 port 8000 after ~2s
+
+Note:
+    Local connectivity issue persists (same symptom as previous dev-start smoke tests). Server logs confirm bind to 127.0.0.1:8000.
