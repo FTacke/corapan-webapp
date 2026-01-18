@@ -27,6 +27,25 @@ from .countries import (
 # Sentinel value to detect missing SECRET_KEY
 DEFAULT_SECRET_SENTINEL = "___SENTINEL_CHANGE_ME___"
 
+
+def _ensure_stats_permissions(path: Path) -> None:
+    """Best-effort chmod to keep statistics assets world-readable."""
+    try:
+        if path.is_dir():
+            path.chmod(0o755)
+            for child in path.iterdir():
+                if child.is_file():
+                    child.chmod(0o644)
+        elif path.is_file():
+            path.chmod(0o644)
+            if path.parent.exists():
+                path.parent.chmod(0o755)
+    except Exception as exc:
+        warnings.warn(
+            f"Failed to adjust statistics permissions for {path}: {exc}",
+            RuntimeWarning,
+        )
+
 # Note: passwords.env support (env-based auth) is deprecated and has been
 # removed from automatic loading. Operator-managed secrets should be provided
 # directly as environment variables or via the auth database.
@@ -186,6 +205,8 @@ class BaseConfig:
                 "PUBLIC_STATS_DIR does not exist."
                 f" Expected path: {PUBLIC_STATS_DIR}"
             )
+
+    _ensure_stats_permissions(PUBLIC_STATS_DIR)
 
     # Feature flags
     ALLOW_PUBLIC_TEMP_AUDIO = (

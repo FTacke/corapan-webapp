@@ -90,6 +90,16 @@ docker network inspect corapan-network >/dev/null 2>&1 || {
     docker network create --subnet=172.18.0.0/16 corapan-network
 }
 
+# Step 4b: Ensure statistics assets are readable by container user
+STATS_DIR="${DATA_DIR}/public/statistics"
+if [ -d "${STATS_DIR}" ]; then
+    log_info "Ensuring statistics permissions in ${STATS_DIR}..."
+    chmod 755 "${STATS_DIR}" || log_warn "Failed to chmod stats directory"
+    find "${STATS_DIR}" -type f -exec chmod 644 {} \; || log_warn "Failed to chmod stats files"
+else
+    log_warn "Statistics directory not found at ${STATS_DIR}"
+fi
+
 # Step 5: Start new container
 log_info "Starting new container: ${CONTAINER_NAME}..."
 docker run -d \
