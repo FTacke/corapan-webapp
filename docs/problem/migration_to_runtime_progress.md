@@ -304,3 +304,92 @@ Output (excerpt):
 
 Notes:
 - Connectivity issue still reproduces locally; server process starts but curl times out.
+
+Out of scope (explicitly left unchanged)
+- [src/app/routes/stats.py](src/app/routes/stats.py): existing changes are not part of this migration.
+- [docs/problem/migration_devprod.md](docs/problem/migration_devprod.md): untracked; not part of this migration.
+
+Phase 8 — Metadata moved to public/metadata
+
+Phase 8.1 — Inventory (AS-IS)
+
+Command:
+    $rt = $env:CORAPAN_RUNTIME_ROOT; Write-Host "CORAPAN_RUNTIME_ROOT=$rt"; "== runtime/corapan/data tree (top) =="; Get-ChildItem "$rt\data" -Directory | Select Name; "== legacy metadata (if exists) =="; Get-ChildItem "$rt\data\metadata" -Recurse -Force -ErrorAction SilentlyContinue | Select FullName,Length; "== target public/metadata (if exists) =="; Get-ChildItem "$rt\data\public\metadata" -Recurse -Force -ErrorAction SilentlyContinue | Select FullName,Length
+Output (excerpt):
+    CORAPAN_RUNTIME_ROOT=C:\dev\corapan-webapp\runtime\corapan
+    == runtime/corapan/data tree (top) ==
+    Name
+    ----
+    db
+    metadata
+    public
+    stats_temp
+
+    == legacy metadata (if exists) ==
+    (files present; see Phase 8.3 evidence)
+
+    == target public/metadata (if exists) ==
+    (empty)
+
+Phase 8.2 — Generator alignment (evidence)
+
+Command:
+    Select-String .\LOKAL\_1_metadata\export_metadata.py -Pattern "PUBLIC_METADATA_DIR|data/public/metadata|CORAPAN_RUNTIME_ROOT" -Context 2,2
+    Select-String .\LOKAL\_1_zenodo-repos\zenodo_metadata.py -Pattern "METADATA_SRC|public\\metadata|CORAPAN_RUNTIME_ROOT" -Context 2,2
+Output (excerpt):
+    LOKAL\_1_metadata\export_metadata.py:59:PUBLIC_METADATA_DIR = PUBLIC_ROOT / "metadata"
+    LOKAL\_1_metadata\export_metadata.py:60:PUBLIC_METADATA_DIR.mkdir(parents=True, exist_ok=True)
+    LOKAL\_1_metadata\export_metadata.py:517:contentUrl ... data/public/metadata/latest/corapan_recordings.json
+    LOKAL\_1_zenodo-repos\zenodo_metadata.py:29:METADATA_SRC = os.path.join(RUNTIME_ROOT, "data", "public", "metadata", "latest")
+
+Phase 8.3 — Move legacy runtime metadata → public/metadata
+
+Command (evidence before move):
+    $rt = $env:CORAPAN_RUNTIME_ROOT; Get-ChildItem "$rt\data\metadata" -Recurse -Force | Select FullName,Length
+Output (excerpt):
+    C:\dev\corapan-webapp\runtime\corapan\data\metadata\latest
+    C:\dev\corapan-webapp\runtime\corapan\data\metadata\v2026-01-18
+    C:\dev\corapan-webapp\runtime\corapan\data\metadata\latest\corapan_recordings.json
+    ...
+
+Command (move):
+    $rt = $env:CORAPAN_RUNTIME_ROOT; New-Item -ItemType Directory -Force -Path "$rt\data\public\metadata" | Out-Null; Move-Item -Path "$rt\data\metadata\*" -Destination "$rt\data\public\metadata\" -Force
+
+Command (evidence after move):
+    $rt = $env:CORAPAN_RUNTIME_ROOT; "== legacy metadata after move (should be empty) =="; Get-ChildItem "$rt\data\metadata" -Recurse -Force -ErrorAction SilentlyContinue | Select FullName,Length; "== new public/metadata contents =="; Get-ChildItem "$rt\data\public\metadata" -Recurse -Force | Select FullName,Length
+Output (excerpt):
+    == legacy metadata after move (should be empty) ==
+    (no entries)
+    == new public/metadata contents ==
+    C:\dev\corapan-webapp\runtime\corapan\data\public\metadata\latest
+    C:\dev\corapan-webapp\runtime\corapan\data\public\metadata\v2026-01-18
+    C:\dev\corapan-webapp\runtime\corapan\data\public\metadata\latest\corapan_recordings.json
+    ...
+
+Command (remove empty legacy dir):
+    $rt = $env:CORAPAN_RUNTIME_ROOT; if (Test-Path "$rt\data\metadata") { Remove-Item "$rt\data\metadata" -Recurse -Force }; Get-ChildItem "$rt\data" -Directory | Select Name
+Output:
+    Name
+    ----
+    db
+    public
+    stats_temp
+
+Phase 8.4 — App read paths (metadata)
+
+Command:
+    Get-ChildItem .\src -Recurse -Filter *.py | Select-String -Pattern "data/metadata|\\metadata\b|/metadata\b|public/metadata" -Context 2,2
+Output (excerpt):
+    src\app\routes\corpus.py:8:Alle Dateien stammen aus ${CORAPAN_RUNTIME_ROOT}/data/public/metadata/latest/,
+
+Phase 8.5 — Rebuild metadata outputs (runtime-only)
+
+Command:
+    C:\dev\corapan-webapp\.venv\Scripts\python.exe .\LOKAL\_1_metadata\export_metadata.py --corpus-version v2026-01-18 --release-date 2026-01-18
+Output (excerpt):
+    Metadata Root:  C:\dev\corapan-webapp\runtime\corapan\data\public\metadata
+    Written: C:\dev\corapan-webapp\runtime\corapan\data\public\metadata\v2026-01-18\corapan_recordings.tsv
+    Written: C:\dev\corapan-webapp\runtime\corapan\data\public\metadata\v2026-01-18\corapan_recordings.json
+    ...
+    Output directory:    C:\dev\corapan-webapp\runtime\corapan\data\public\metadata\v2026-01-18
+    'latest' updated:    Yes

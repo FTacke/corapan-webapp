@@ -302,20 +302,22 @@ TO-BE Migration Template
 Implementation Status (DEV, non-BlackLab)
 - Runtime-aware outputs added:
     - [LOKAL/_0_json/03_build_metadata_stats.py](LOKAL/_0_json/03_build_metadata_stats.py) now writes stats DBs to `${CORAPAN_RUNTIME_ROOT}/data/db/public` only.
-    - [LOKAL/_1_metadata/export_metadata.py](LOKAL/_1_metadata/export_metadata.py) now resolves metadata output under `${CORAPAN_RUNTIME_ROOT}/data` when set.
+    - [LOKAL/_1_metadata/export_metadata.py](LOKAL/_1_metadata/export_metadata.py) now writes metadata outputs to `${CORAPAN_RUNTIME_ROOT}/data/public/metadata` only.
+    - [LOKAL/_1_zenodo-repos/zenodo_metadata.py](LOKAL/_1_zenodo-repos/zenodo_metadata.py) now reads from `${CORAPAN_RUNTIME_ROOT}/data/public/metadata/latest`.
 - Statistics generator already writes to runtime via PUBLIC_STATS_DIR/CORAPAN_RUNTIME_ROOT.
 - App read paths now resolve under runtime data root:
     - [src/app/services/database.py](src/app/services/database.py): stats DBs under `db/public`.
-    - [src/app/routes/corpus.py](src/app/routes/corpus.py): metadata downloads.
+    - [src/app/routes/corpus.py](src/app/routes/corpus.py): metadata downloads under `data/public/metadata`.
     - [src/app/routes/stats.py](src/app/routes/stats.py): stats cache.
 
 Target Runtime Layout (DEV/PROD) — Non-BlackLab
 
 runtime/corapan/data
-    public/statistics/          # generated (safe to regenerate)
-    metadata/
-        latest/                   # alias to current release
-        vYYYY-MM-DD/              # versioned exports
+    public/
+        statistics/              # generated (safe to regenerate)
+        metadata/
+            latest/               # alias to current release
+            vYYYY-MM-DD/          # versioned exports
     db/
         public/
             stats_files.db        # regenerable stats DBs
@@ -328,7 +330,7 @@ runtime/corapan/data
 Class Rules
 1) Regenerable (may be generated in DEV and synced):
     - data/public/statistics/*
-    - data/metadata/v*/
+    - data/public/metadata/v*/
     - data/db/public/*.db (stats_* only)
 
 2) Prod-owned (never regenerate or sync from DEV):
