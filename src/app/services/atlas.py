@@ -59,13 +59,16 @@ def _resolve_metadata_root() -> Path | None:
 
 
 def _select_metadata_dir(root: Path) -> Path:
-    latest_dir = root / "latest"
-    if latest_dir.exists():
-        return latest_dir
-    subdirs = [p for p in root.iterdir() if p.is_dir()]
-    if not subdirs:
-        return root
-    return max(subdirs, key=lambda p: p.stat().st_mtime)
+    return root / "tei"
+
+
+def _metadata_dir_has_files(metadata_dir: Path) -> bool:
+    if not metadata_dir.exists():
+        return False
+    candidates = list(metadata_dir.glob("corapan_recordings*.json"))
+    candidates += list(metadata_dir.glob("corapan_recordings*.tsv"))
+    candidates = [p for p in candidates if not p.name.endswith(".jsonld")]
+    return len(candidates) > 0
 
 
 def _get_metadata_mtime(metadata_dir: Path) -> float | None:
@@ -181,6 +184,12 @@ def fetch_file_metadata() -> list[dict[str, object]]:
         return []
 
     metadata_dir = _select_metadata_dir(metadata_root)
+    if not _metadata_dir_has_files(metadata_dir):
+        logger.warning(
+            "Atlas metadata directory missing or empty at %s; returning empty files list.",
+            metadata_dir,
+        )
+        return []
     dir_mtime = _get_metadata_mtime(metadata_dir)
     if dir_mtime is not None and _FILES_CACHE.get("mtime") == dir_mtime:
         return list(_FILES_CACHE.get("files", []))

@@ -8,10 +8,10 @@ worked because the local runtime DB still contained the table.
 
 ## Current Source of Truth
 
-Atlas now reads runtime metadata files from:
+Atlas reads runtime metadata files exclusively from:
 
 ```
-${CORAPAN_RUNTIME_ROOT}/data/public/metadata
+${CORAPAN_RUNTIME_ROOT}/data/public/metadata/tei
 ```
 
 Priority order:
@@ -20,7 +20,7 @@ Priority order:
 3. `corapan_recordings.tsv`
 4. `corapan_recordings_*.tsv`
 
-The `latest/` directory is preferred when present.
+Only the `tei/` directory is used. Other metadata directories are ignored.
 
 ## Required Fields
 
@@ -38,7 +38,7 @@ Missing fields fall back to `null` without dropping the record.
 
 ## Runtime Paths
 
-- Metadata directory: `/app/data/public/metadata`
+- Metadata directory: `/app/data/public/metadata/tei`
 - Stats DBs (still used elsewhere): `/app/data/db/public/*.db`
 
 ## Notes
