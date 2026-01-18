@@ -8,7 +8,7 @@
 {% endblock %}
 
 {% block content %}
-<div class="md3-page" role="main" aria-label="Player del corpus">
+<div class="md3-page" role="main" aria-label="Player del corpus" data-element="player-overview-root" data-initial-country="{{ country if country else '' }}">
   <header class="md3-page__header">
     <div class="md3-hero md3-hero--card md3-hero__container">
       <div class="md3-hero__icon" aria-hidden="true"><span class="material-symbols-rounded">play_circle</span></div>
@@ -46,9 +46,6 @@
 {% endblock %}
 
 {% block extra_scripts %}
-<script>
-  // Pass initial country from URL to JavaScript
-  window.PLAYER_OVERVIEW_INITIAL_COUNTRY = {{ (country | tojson) if country else 'null' }};
-</script>
-<script type="module" src="{{ url_for('static', filename='js/modules/player-overview.js') }}"></script>
+<script src="{{ url_for('static', filename='js/player-overview-init.js') }}" defer></script>
+<script type="module" src="{{ url_for('static', filename='js/modules/player-overview.js') }}" defer></script>
 {% endblock %}
