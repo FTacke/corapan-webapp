@@ -78,13 +78,13 @@ data/
 │   ├── stats_country.db     (atlas per-country stats)
 │   ├── auth.db              (user accounts, tokens - SENSITIVE)
 │   └── postgres_dev/        (local PostgreSQL data dir - dev only)
-├── metadata/                  3.31 MB    615 files
-│   ├── latest/              (symlink → versioned metadata export)
-│   ├── v2025-12-01/
-│   └── v2025-12-06/
-│       └── tei/             (TEI headers per recording)
-├── db_public/                 0.01 MB      2 files
-│   └── stats_all.db         (global public statistics)
+├── public/
+│   ├── metadata/             3.31 MB    615 files
+│   │   ├── latest/          (symlink → versioned metadata export)
+│   │   ├── v2025-12-01/
+│   │   └── v2025-12-06/
+│   │       └── tei/         (TEI headers per recording)
+│   └── statistics/           (public statistics assets)
 ├── stats_temp/                0.02 MB     26 files (temp calculation outputs)
 └── counters/                     0 B      7 files (feature counters)
 ```
@@ -92,7 +92,7 @@ data/
 **Notes:**
 - **Three BlackLab index copies exist:** `blacklab_index` (active), `blacklab_index.new` (staging), `blacklab_index.backup_*` (timestamped backups)
 - **Two export directories:** `blacklab_export` (737 MB, source TSVs/metadata) vs `exports` (162 MB, purpose unclear)
-- **DB split:** `data/db/` mixes public (stats) and private (auth), while `data/db_public/` is separate
+- **DB split:** `data/db/` separates public (stats) and private (auth) via `public/` and `restricted/`
 
 #### `media/` Subdirectory Breakdown
 
@@ -167,9 +167,8 @@ LOKAL/
 | **BlackLab Index (Staging)** | `data/blacklab_index.new/`              | Pre-deployment index build                       | 279 MB              |
 | **BlackLab Index (Backup)** | `data/blacklab_index.backup_<timestamp>/` | Timestamped rollback snapshots                   | ~291 MB each        |
 | **Generic Exports**      | `data/exports/`                             | Purpose unclear (overlaps with blacklab_export?) | 162 MB              |
-| **Public Metadata**      | `data/metadata/latest/`, versioned dirs     | FAIR-compliant corpus metadata (TSV, JSON, TEI)  | 3.3 MB              |
-| **Stats Databases (Private)** | `data/db/stats_files.db`, `stats_country.db` | SQLite DBs for Atlas feature (per-file, per-country) | ~46 MB total   |
-| **Stats Database (Public)** | `data/db_public/stats_all.db`            | Global public statistics for frontend            | 10 KB               |
+| **Public Metadata**      | `data/public/metadata/latest/`, versioned dirs | FAIR-compliant corpus metadata (TSV, JSON, TEI)  | 3.3 MB              |
+| **Stats Databases (Public)** | `data/db/public/stats_files.db`, `stats_country.db` | SQLite DBs for Atlas feature (per-file, per-country) | ~46 MB total   |
 | **Auth Database**        | `data/db/auth.db`                           | User accounts, tokens, analytics (SENSITIVE)     | Part of data/db/    |
 | **Temporary Stats**      | `data/stats_temp/`                          | Intermediate calculation files                   | 20 KB               |
 | **Counters**             | `data/counters/`                            | Search feature counters (e.g., downloads)        | ~0 B (empty files)  |
@@ -177,8 +176,8 @@ LOKAL/
 | **Pipeline Intermediates** | `LOKAL/_0_json/results/`                  | CSV/PNG from internal analysis (not deployed)    | ~18 MB              |
 
 **Key Observations:**
-1. **"Export" ambiguity:** `data/blacklab_export/` (TSV for search) vs `data/exports/` (purpose unclear) vs `data/metadata/` (public FAIR metadata)
-2. **"Stats" split:** Private DBs in `data/db/`, public DB in `data/db_public/`, temp files in `data/stats_temp/`
+1. **"Export" ambiguity:** `data/blacklab_export/` (TSV for search) vs `data/exports/` (purpose unclear) vs `data/public/metadata/` (public FAIR metadata)
+2. **"Stats" split:** Private DBs in `data/db/restricted/`, public DBs in `data/db/public/`, temp files in `data/stats_temp/`
 3. **"Index" proliferation:** Active + staging + timestamped backups
 4. **Pipeline boundary blur:** `LOKAL/results/` → `static/img/statistics/` crosses the local/deploy boundary
 
@@ -190,9 +189,8 @@ LOKAL/
 
 | Output Path                       | Producer Script/Module                          | Trigger                              | Evidence (File:Line) |
 |-----------------------------------|-------------------------------------------------|--------------------------------------|----------------------|
-| `data/db/stats_files.db`          | *(Unknown — not found in codebase)*             | Likely legacy/manual                 | Referenced in [src/app/services/database.py:15](src/app/services/database.py#L15) |
-| `data/db/stats_country.db`        | *(Unknown — not found in codebase)*             | Likely legacy/manual                 | Referenced in [src/app/services/database.py:16](src/app/services/database.py#L16) |
-| `data/db_public/stats_all.db`     | *(Unknown — implied by pipeline docs)*          | Step 03: `03_build_metadata_stats.py` (not in repo) | Mentioned in [LOKAL/_0_json/05_publish_corpus_statistics.py:31](LOKAL/_0_json/05_publish_corpus_statistics.py#L31) |
+| `data/db/public/stats_files.db`   | *(Unknown — not found in codebase)*             | Likely legacy/manual                 | Referenced in [src/app/services/database.py:15](src/app/services/database.py#L15) |
+| `data/db/public/stats_country.db` | *(Unknown — not found in codebase)*             | Likely legacy/manual                 | Referenced in [src/app/services/database.py:16](src/app/services/database.py#L16) |
 | `data/db/auth.db`                 | [scripts/apply_auth_migration.py](scripts/apply_auth_migration.py), [scripts/create_initial_admin.py](scripts/create_initial_admin.py) | Manual admin scripts, migration      | apply_auth_migration.py:42, create_initial_admin.py:34 |
 | `data/blacklab_export/tsv/*.tsv`  | [src/scripts/blacklab_index_creation.py](src/scripts/blacklab_index_creation.py) | Manual: `python blacklab_index_creation.py` | blacklab_index_creation.py:381 |
 | `data/blacklab_export/docmeta.jsonl` | [src/scripts/blacklab_index_creation.py](src/scripts/blacklab_index_creation.py) | Same as above                        | blacklab_index_creation.py:514 |
@@ -200,8 +198,8 @@ LOKAL/
 | `data/blacklab_index.new/`        | BlackLab Docker container (via [scripts/deploy_sync/publish_blacklab_index.ps1](scripts/deploy_sync/publish_blacklab_index.ps1)) | BlackLab indexer build               | Implied by publish script |
 | `data/blacklab_index/`            | Atomic swap from `.new` (via [publish_blacklab_index.ps1](scripts/deploy_sync/publish_blacklab_index.ps1)) | After validation                     | Implied by publish script |
 | `data/blacklab_index.backup_<ts>/`| Backup creation during swap (via [publish_blacklab_index.ps1](scripts/deploy_sync/publish_blacklab_index.ps1)) | Before activating new index          | publish_blacklab_index.ps1:~150+ |
-| `data/metadata/v<date>/`          | *(Unknown — export_metadata.py not in repo)*    | Manual metadata export               | Mentioned in [src/app/routes/corpus.py:183](src/app/routes/corpus.py#L183) |
-| `data/metadata/latest`            | Symlink created by metadata export script       | Part of metadata versioning          | Referenced in [src/app/routes/corpus.py:51](src/app/routes/corpus.py#L51) |
+| `data/public/metadata/v<date>/`   | *(Unknown — export_metadata.py not in repo)*    | Manual metadata export               | Mentioned in [src/app/routes/corpus.py:183](src/app/routes/corpus.py#L183) |
+| `data/public/metadata/latest`     | Symlink created by metadata export script       | Part of metadata versioning          | Referenced in [src/app/routes/corpus.py:51](src/app/routes/corpus.py#L51) |
 | `media/transcripts/<country>/*.json` | [LOKAL/_0_json/02_annotate_transcripts_v3.py](LOKAL/_0_json/02_annotate_transcripts_v3.py) (implied by pipeline) | Step 02: annotation pipeline         | Referenced in pipeline docs |
 | `static/img/statistics/*.png`     | [LOKAL/_0_json/05_publish_corpus_statistics.py](LOKAL/_0_json/05_publish_corpus_statistics.py) | Manual: `python 05_publish_corpus_statistics.py` | 05_publish_corpus_statistics.py:80 (`OUTPUT_DIR = PROJECT_ROOT / "static" / "img" / "statistics"`) |
 | `static/img/statistics/corpus_stats.json` | [LOKAL/_0_json/05_publish_corpus_statistics.py](LOKAL/_0_json/05_publish_corpus_statistics.py) | Same as above                        | Same file |
@@ -209,7 +207,7 @@ LOKAL/
 | `LOKAL/_0_json/results/*.png`     | [LOKAL/_0_json/04_internal_country_statistics.py](LOKAL/_0_json/04_internal_country_statistics.py) | Same as above                        | 04_internal_country_statistics.py:767-827 |
 
 **Key Findings:**
-1. **Missing producers:** Stats databases (`stats_files.db`, `stats_country.db`, `stats_all.db`) have no identifiable producer scripts in the current codebase.
+1. **Missing producers:** Stats databases (`stats_files.db`, `stats_country.db`) have no identifiable producer scripts in the current codebase.
 2. **Manual triggers:** Most data artifacts are generated by **manual script execution**, not automated CI/CD.
 3. **Git-tracked outputs:** `static/img/statistics/*` files are **written by a script** but **committed to Git** (anti-pattern).
 4. **BlackLab workflow:** TSV export → Docker build → `.new` → validate → atomic swap → backup old index.
@@ -220,16 +218,15 @@ LOKAL/
 
 | Input Path                        | Consumer Module/Route                           | Purpose                              | Evidence (File:Line) |
 |-----------------------------------|-------------------------------------------------|--------------------------------------|----------------------|
-| `data/db/stats_files.db`          | [src/app/services/atlas.py](src/app/services/atlas.py) | Atlas map: per-file statistics       | atlas.py:11, atlas.py:27 |
-| `data/db/stats_country.db`        | [src/app/services/atlas.py](src/app/services/atlas.py) | Atlas map: per-country aggregation   | atlas.py:46 |
-| `data/db_public/stats_all.db`     | *(Unknown — possibly frontend/stats routes)*    | Global public statistics             | Defined in [services/database.py:17](src/app/services/database.py#L17) |
+| `data/db/public/stats_files.db`   | [src/app/services/atlas.py](src/app/services/atlas.py) | Atlas map: per-file statistics       | atlas.py:11, atlas.py:27 |
+| `data/db/public/stats_country.db` | [src/app/services/atlas.py](src/app/services/atlas.py) | Atlas map: per-country aggregation   | atlas.py:46 |
 | `data/db/auth.db`                 | [src/app/auth/services.py](src/app/auth/services.py), [src/app/extensions/sqlalchemy_ext.py](src/app/extensions/sqlalchemy_ext.py) | User authentication, tokens, analytics | sqlalchemy_ext.py:4 |
 | `data/blacklab_export/docmeta.jsonl` | [tests/test_docmeta_lookup.py](tests/test_docmeta_lookup.py) | Unit tests                           | test_docmeta_lookup.py:7 |
 | `data/blacklab_index/`            | BlackLab Docker container (external service)    | Full-text corpus search              | Config in [config/blacklab/](config/blacklab/) |
-| `data/metadata/latest/*.tsv`      | [src/app/routes/corpus.py](src/app/routes/corpus.py) (`/corpus/metadata/download/*`) | Public FAIR metadata downloads       | corpus.py:164 |
-| `data/metadata/latest/*.json`     | [src/app/routes/corpus.py](src/app/routes/corpus.py)                                 | Same as above                        | corpus.py:164 |
-| `data/metadata/latest/*.jsonld`   | [src/app/routes/corpus.py](src/app/routes/corpus.py)                                 | Same as above                        | corpus.py:164 |
-| `data/metadata/latest/tei/*.xml`  | [src/app/routes/corpus.py](src/app/routes/corpus.py) (`/corpus/metadata/download/tei`) | TEI header download (zipped)         | corpus.py:164 |
+| `data/public/metadata/latest/*.tsv`      | [src/app/routes/corpus.py](src/app/routes/corpus.py) (`/corpus/metadata/download/*`) | Public FAIR metadata downloads       | corpus.py:164 |
+| `data/public/metadata/latest/*.json`     | [src/app/routes/corpus.py](src/app/routes/corpus.py)                                 | Same as above                        | corpus.py:164 |
+| `data/public/metadata/latest/*.jsonld`   | [src/app/routes/corpus.py](src/app/routes/corpus.py)                                 | Same as above                        | corpus.py:164 |
+| `data/public/metadata/latest/tei/*.xml`  | [src/app/routes/corpus.py](src/app/routes/corpus.py) (`/corpus/metadata/download/tei`) | TEI header download (zipped)         | corpus.py:164 |
 | `static/img/statistics/*.png`     | Frontend templates (e.g., `/corpus/metadata` page) | Display corpus composition charts    | Served via static file route |
 | `static/img/statistics/corpus_stats.json` | Frontend JS (optional dynamic loading)  | Dynamic corpus statistics            | Served via static file route |
 | `media/transcripts/<country>/*.json` | [src/app/routes/editor.py](src/app/routes/editor.py)                              | Admin: edit/backup transcripts       | editor.py:144, editor.py:153 |
@@ -240,14 +237,13 @@ LOKAL/
 1. **Database access patterns:**
    - `stats_files.db` and `stats_country.db` → Atlas feature only ([services/database.py:11-17](src/app/services/database.py#L11-17))
    - `auth.db` → Authentication + analytics ([auth/services.py](src/app/auth/services.py))
-   - `stats_all.db` → Defined but no clear consumer found (legacy?)
-2. **Metadata consumption:** All FAIR metadata served from `data/metadata/latest/` via [routes/corpus.py](src/app/routes/corpus.py)
+2. **Metadata consumption:** All FAIR metadata served from `data/public/metadata/latest/` via [routes/corpus.py](src/app/routes/corpus.py)
 3. **Statistics consumption:** `static/img/statistics/*` files are served as **static assets** (Flask default behavior, no explicit route)
 4. **Transcript editing:** [routes/editor.py](src/app/routes/editor.py) writes backups to `media/transcripts/<country>/backup/` (creates subdirs dynamically)
 
 **Failure Modes:**
-- **Missing `data/metadata/latest/`:** Metadata download endpoints return 404 (no fallback)
-- **Missing `data/db/stats_*.db`:** Atlas feature breaks (no error handling observed)
+- **Missing `data/public/metadata/latest/`:** Metadata download endpoints return 404 (no fallback)
+- **Missing `data/db/public/stats_*.db`:** Atlas feature breaks (no error handling observed)
 - **Missing `static/img/statistics/`:** Frontend displays broken images
 - **Missing `data/blacklab_index/`:** BlackLab container fails to start
 
@@ -287,16 +283,10 @@ media/      # Entire directory ignored
 # From sync_data.ps1:97-103
 $DATA_DIRECTORIES = @(
     "counters",
-    "db_public",
-    "metadata",
+   "db/public",
+   "public/metadata",
     "exports",
     "blacklab_export"
-)
-
-# Plus selective files from data/db/:
-$STATS_DB_FILES = @(
-    "stats_files.db",
-    "stats_country.db"
 )
 ```
 
@@ -342,11 +332,10 @@ $MEDIA_DIRECTORIES = @(
 |---------------------------|----------------|---------------------|--------------|------------|
 | `static/img/statistics/*` | **Git**        | `git pull`          | Manual script| Low (3 MB) |
 | `data/counters/`          | Sync           | rsync (delta)       | N/A          | None       |
-| `data/db_public/*.db`     | Sync           | rsync (delta)       | Pipeline     | None       |
-| `data/metadata/`          | Sync           | rsync (delta)       | Manual script| Low (3 MB) |
+| `data/db/public/*.db`     | Sync           | rsync (delta)       | Pipeline     | None       |
+| `data/public/metadata/`   | Sync           | rsync (delta)       | Manual script| Low (3 MB) |
 | `data/exports/`           | Sync           | rsync (delta)       | Unknown      | Medium (162 MB) |
 | `data/blacklab_export/`   | Sync           | rsync (delta)       | Manual script| High (738 MB) |
-| `data/db/stats_*.db`      | Sync           | rsync (selective)   | Unknown      | Medium (46 MB) |
 | `media/transcripts/`      | Sync           | rsync (delta)       | Pipeline     | Medium (varies) |
 | `media/mp3-full/`         | Sync           | rsync (delta, slow) | Manual       | **Very High (GB)** |
 | `media/mp3-split/`        | Sync           | rsync (delta, slow) | Manual       | **Very High (GB)** |
@@ -365,7 +354,7 @@ $MEDIA_DIRECTORIES = @(
 **Locations:**
 - `data/blacklab_export/` (738 MB) — TSV files + docmeta for BlackLab indexing
 - `data/exports/` (162 MB) — **Purpose unclear, no producer/consumer found**
-- `data/metadata/` (3.3 MB) — Public FAIR metadata exports
+- `data/public/metadata/` (3.3 MB) — Public FAIR metadata exports
 
 **Problem:**
 - **Semantic overlap:** All three contain "exported" data, but for different purposes.
@@ -396,22 +385,19 @@ $MEDIA_DIRECTORIES = @(
 
 ---
 
-#### Issue 1.3: `data/db/` vs `data/db_public/` Split
+#### Issue 1.3: `data/db/` Public vs Restricted Split
 
 **Locations:**
-- `data/db/` — Contains both:
-  - Public: `stats_files.db`, `stats_country.db`
-  - Private: `auth.db`, `postgres_dev/`
-- `data/db_public/` — Contains only `stats_all.db`
+- `data/db/public/` — Public stats DBs: `stats_files.db`, `stats_country.db`
+- `data/db/restricted/` — Sensitive DBs: `auth.db`, `postgres_dev/`
 
 **Problem:**
-- **Inconsistent organization:** Public stats are split between `db/` and `db_public/`.
-- **Security risk:** `data/db/` mixes public and sensitive data (auth DB).
-- **Sync complexity:** [sync_data.ps1](scripts/deploy_sync/sync_data.ps1) must selectively sync files from `data/db/` (excludes `auth.db`), adding fragility.
+- **Sync safety:** Ensure deploy sync only includes `data/db/public/` and never `data/db/restricted/`.
+- **Operational clarity:** Enforce the boundary in documentation and scripts so new DBs land in the correct scope.
 
 **Evidence:**
-- [sync_data.ps1:106-109](scripts/deploy_sync/sync_data.ps1#L106-109) hardcodes `$STATS_DB_FILES = @("stats_files.db", "stats_country.db")`.
-- [services/database.py:11-17](src/app/services/database.py#L11-17) defines all three stats DBs but locations are inconsistent.
+- [sync_data.ps1:97-103](scripts/deploy_sync/sync_data.ps1#L97-103) lists `db/public` in `$DATA_DIRECTORIES`.
+- [services/database.py:11-17](src/app/services/database.py#L11-17) defines public DB roots under `data/db/public`.
 
 ---
 
@@ -543,13 +529,13 @@ data/
 │   ├── public/                 # Public, read-only databases
 │   │   ├── stats_files.db      (was: data/db/stats_files.db)
 │   │   ├── stats_country.db    (was: data/db/stats_country.db)
-│   │   └── stats_all.db        (was: data/db_public/stats_all.db)
 │   └── restricted/             # Sensitive databases (NOT synced to public docs)
 │       └── auth.db             (was: data/db/auth.db)
-├── metadata/                   # FAIR corpus metadata (unchanged)
-│   ├── latest/ -> v2025-12-06
-│   ├── v2025-12-01/
-│   └── v2025-12-06/
+├── public/
+│   └── metadata/               # FAIR corpus metadata (public)
+│       ├── latest/ -> v2025-12-06
+│       ├── v2025-12-01/
+│       └── v2025-12-06/
 ├── generated/                  # Pipeline outputs (NEW - replaces static/img/statistics/)
 │   └── site-assets/
 │       └── statistics/
@@ -601,8 +587,7 @@ data/
 | | [publish_blacklab_index.ps1](scripts/deploy_sync/publish_blacklab_index.ps1) | Update remote paths |
 | `data/db/*.db` → `data/db/public/*.db` | [src/app/services/database.py:11-16](src/app/services/database.py#L11-16) | Update `DATABASES` dict |
 | | [sync_data.ps1:106-109](scripts/deploy_sync/sync_data.ps1#L106-109) | Update selective file sync paths |
-| `data/db_public/` → `data/db/public/` | [src/app/services/database.py:12,17](src/app/services/database.py#L12,17) | Update `PUBLIC_DB_ROOT` |
-| | [sync_data.ps1:98](scripts/deploy_sync/sync_data.ps1#L98) | Update directory list |
+| Metadata root → `data/public/metadata/` | [src/app/routes/corpus.py:51](src/app/routes/corpus.py#L51) | Update metadata root path |
 | `data/db/auth.db` → `data/db/restricted/auth.db` | [scripts/create_initial_admin.py:35](scripts/create_initial_admin.py#L35) | Update default path |
 | | [src/app/extensions/sqlalchemy_ext.py:4](src/app/extensions/sqlalchemy_ext.py#L4) | Update docstring |
 | | Flask config (env var) | Update `AUTH_DATABASE_URL` |
@@ -621,7 +606,6 @@ To allow gradual migration, create symlinks during transition:
 # On prod server:
 ln -s data/blacklab/exports data/blacklab_export  # Legacy path
 ln -s data/blacklab/index data/blacklab_index      # Legacy path
-ln -s data/db/public/stats_all.db data/db_public/stats_all.db  # Legacy path
 ```
 
 **Validation:**
@@ -695,23 +679,18 @@ ln -s data/db/public/stats_all.db data/db_public/stats_all.db  # Legacy path
    ```bash
    mv data/db/stats_files.db data/db/public/
    mv data/db/stats_country.db data/db/public/
-   mv data/db_public/stats_all.db data/db/public/
    mv data/db/auth.db data/db/restricted/
-   rmdir data/db_public  # Now empty
    ```
 3. Update [src/app/services/database.py](src/app/services/database.py):
    ```diff
    - PRIVATE_DB_ROOT = DATA_ROOT / "db"
-   - PUBLIC_DB_ROOT = DATA_ROOT / "db_public"
    + PUBLIC_DB_ROOT = DATA_ROOT / "db" / "public"
    + RESTRICTED_DB_ROOT = DATA_ROOT / "db" / "restricted"
    ```
 4. Update [scripts/deploy_sync/sync_data.ps1](scripts/deploy_sync/sync_data.ps1):
    ```diff
-   - $DATA_DIRECTORIES = @("db_public", ...)
-   - $STATS_DB_FILES = @("stats_files.db", "stats_country.db")
+   - $DATA_DIRECTORIES = @("db", ...)
    + $DATA_DIRECTORIES = @("db/public", ...)
-   # Remove $STATS_DB_FILES (now synced as part of db/public/)
    ```
 5. Update [scripts/create_initial_admin.py](scripts/create_initial_admin.py):
    ```diff
@@ -731,7 +710,6 @@ ssh prod "cd /srv/webapps/corapan && \
   mkdir -p data/db/public data/db/restricted && \
   ln -s $(pwd)/data/db/stats_files.db data/db/public/ && \
   ln -s $(pwd)/data/db/stats_country.db data/db/public/ && \
-  ln -s $(pwd)/data/db_public/stats_all.db data/db/public/ && \
   ln -s $(pwd)/data/db/auth.db data/db/restricted/"
 
 # Deploy PR (git pull, restart app)
@@ -741,9 +719,8 @@ ssh prod "cd /srv/webapps/corapan && \
 ssh prod "cd /srv/webapps/corapan && \
   rm data/db/public/*.db data/db/restricted/*.db && \
   mv data/db/stats_*.db data/db/public/ && \
-  mv data/db_public/stats_all.db data/db/public/ && \
   mv data/db/auth.db data/db/restricted/ && \
-  rmdir data/db_public"
+   true"
 ```
 
 **Rollback:** Reverse symlinks, revert code changes.
@@ -959,9 +936,8 @@ ssh prod "cd /srv/webapps/corapan/data && \
 | ├─ `blacklab_index/`              | 278.62    | 75    | Active index                       |
 | ├─ `exports/`                     | 161.73    | 147   | **Purpose unclear**                |
 | ├─ `db/`                          | 45.75     | 1286  | Mixed public/private DBs           |
-| ├─ `metadata/`                    | 3.31      | 615   | Versioned FAIR metadata            |
+| ├─ `public/metadata/`             | 3.31      | 615   | Versioned FAIR metadata            |
 | ├─ `stats_temp/`                  | 0.02      | 26    | Temporary stats                    |
-| ├─ `db_public/`                   | 0.01      | 2     | Public stats (isolated)            |
 | └─ `counters/`                    | 0.00      | 7     | Empty counter files                |
 | `static/img/statistics/`          | 3.50      | 29    | **In Git! (anti-pattern)**         |
 | `media/`                          | 15168.25  | 3007  | Audio + transcripts (~15 GB)       |

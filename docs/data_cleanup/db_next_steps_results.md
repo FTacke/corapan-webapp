@@ -1,3 +1,10 @@
+# Data Cleanup: Next Steps Results (Consolidated)
+
+This document has been consolidated to reflect the current state after the public DB and metadata path updates.
+
+## Summary
+
+## Current Actions
 # Database Next Steps: Results & Decisions
 
 **Date:** 2026-01-16  

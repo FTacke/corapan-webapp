@@ -182,12 +182,13 @@ if ($env:CORAPAN_RUNTIME_ROOT) {
 
 **Sub-directories:**
 - `data/db/` — SQLite auth database (dev fallback)
-- `data/db_public/` — Optional public data snapshots
+- `data/db/public/` — Public stats databases
+- `data/db/restricted/` — Auth/analytics (sensitive)
 - `data/blacklab_export/` — TSV + metadata for indexing
 - `data/blacklab_index/` — Lucene search index
 - `data/counters/` — Search counter cache
 - `data/exports/` — User/API exports
-- `data/metadata/` — Metadata caches
+- `data/public/metadata/` — Metadata caches
 
 ---
 

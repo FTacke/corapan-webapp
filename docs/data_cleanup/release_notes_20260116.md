@@ -1,3 +1,17 @@
+# Release Notes: Data Cleanup (Consolidated)
+
+This release summary reflects the current state after consolidating public DBs and metadata paths.
+
+## Changes
+- Public stats DBs stored under `data/db/public/`.
+- Sensitive DBs stored under `data/db/restricted/`.
+- FAIR metadata exports served from `data/public/metadata/`.
+- Legacy overview statistics served from static JSON assets.
+
+## Validation Checklist
+- Atlas endpoints load using `stats_files.db` and `stats_country.db`.
+- Metadata download endpoints use `data/public/metadata/`.
+- No sync includes `data/db/restricted/`.
 # Release Notes: Data Cleanup (stats_all.db Removal)
 
 **Release Date:** 2026-01-16  

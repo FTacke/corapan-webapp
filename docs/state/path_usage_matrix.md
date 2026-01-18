@@ -166,11 +166,11 @@ This matrix documents **who reads and writes what data** in the repository:
 
 ## Metadata & Config Paths
 
-### `data/metadata/` — Search Metadata Cache (Generated)
+### `data/blacklab_export/metadata/` — Search Metadata Cache (Generated)
 
 | Aspect | Details |
 |--------|---------|
-| **Path** | `data/metadata/` |
+| **Path** | `data/blacklab_export/metadata/` |
 | **Content** | Per-document metadata JSONs (facets, fields for search) |
 | **Readers** | |
 | · BlackLab Server | Linked-file metadata for indexing |
@@ -224,7 +224,7 @@ Web UI (search results)
 | Stage | Script | Input | Output | Context |
 |-------|--------|-------|--------|---------|
 | 1. Export | `src/scripts/blacklab_index_creation.py` | `media/transcripts/` | `data/blacklab_export/tsv/`, `docmeta.jsonl` | build |
-| 2. Metadata | `scripts/docmeta_to_metadata_dir.py` | `docmeta.jsonl` | `data/metadata/` | build |
+| 2. Metadata | `scripts/docmeta_to_metadata_dir.py` | `docmeta.jsonl` | `data/blacklab_export/metadata/` | build |
 | 3. Build Index | `scripts/blacklab/build_blacklab_index.ps1` | `data/blacklab_export/tsv/`, `config/blacklab/` | `data/blacklab_index/` | build |
 | 4. Serve | BlackLab Server (Docker) + Flask | `data/blacklab_index/` | Search API | runtime |
 

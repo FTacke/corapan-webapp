@@ -560,7 +560,7 @@ CLEAN_INPUTS          Default: 0        (set to 1 to remove tsv_for_index after 
    - **Source:** Synced from dev via rsync or similar (external to this script)
 
 2. **Metadata:**
-   - **Path:** `/srv/webapps/corapan/data/metadata/`
+   - **Path:** `/srv/webapps/corapan/data/public/metadata/`
    - **Required:** *.yaml files (one per corpus document)
    - **Source:** Synced from dev (external to this script)
 

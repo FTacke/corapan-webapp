@@ -108,9 +108,7 @@ Evidence:
         blacklab_index.testbuild.bak_20260117_005855
         counters
         db
-        db_public
         exports
-        metadata
         public
         stats_temp
 
@@ -127,13 +125,12 @@ Evidence:
         C:\dev\corapan-webapp\data\counters\counter_visits.json 130
         C:\dev\corapan-webapp\data\db\auth.db 94208
         C:\dev\corapan-webapp\data\db\auth_e2e.db 36864
-        C:\dev\corapan-webapp\data\db\stats_country.db 16384
+        C:\dev\corapan-webapp\data\db\public\stats_country.db 16384
         C:\dev\corapan-webapp\data\db\stats_files.db 40960
-        C:\dev\corapan-webapp\data\db_public\stats_all.db 8192
         C:\dev\corapan-webapp\data\exports\docmeta.jsonl 19512
-        C:\dev\corapan-webapp\data\metadata\latest\corapan_recordings.json 191818
-        C:\dev\corapan-webapp\data\metadata\latest\corapan_recordings.tsv 88408
-        C:\dev\corapan-webapp\data\metadata\v2025-12-06\corapan_recordings.json 191818
+        C:\dev\corapan-webapp\data\public\metadata\latest\corapan_recordings.json 191818
+        C:\dev\corapan-webapp\data\public\metadata\latest\corapan_recordings.tsv 88408
+        C:\dev\corapan-webapp\data\public\metadata\v2025-12-06\corapan_recordings.json 191818
         C:\dev\corapan-webapp\data\public\statistics\corpus_stats.json 46306
         C:\dev\corapan-webapp\data\public\statistics\viz_total_corpus.png 61129
         C:\dev\corapan-webapp\data\stats_temp\01c1f4bb47c420ff.json 2006
@@ -175,7 +172,7 @@ Evidence:
 
 Evidence:
     Command:
-        Get-ChildItem docker-compose*.yml, infra\docker-compose*.yml | Select-String -Pattern "blacklab|postgres|5432|8081|blacklab_index|db_public|data/db"
+        Get-ChildItem docker-compose*.yml, infra\docker-compose*.yml | Select-String -Pattern "blacklab|postgres|5432|8081|blacklab_index|db/public|data/db"
     Output:
         docker-compose.dev-postgres.yml:5:# Default auth DB URL: postgresql+psycopg://corapan_auth:corapan_auth@localhost:54320/corapan_auth
         docker-compose.dev-postgres.yml:16:      - "54320:5432"
@@ -239,13 +236,12 @@ LOKAL generators (Python) referencing repo data paths
 
 Evidence:
     Command:
-        Get-ChildItem .\LOKAL -Recurse -File -Filter *.py | Select-String -Pattern "data/db|data\\db|data/metadata|data\\metadata|data/exports|data\\exports|data/db_public|data\\db_public|data/public|data\\public"
+        Get-ChildItem .\LOKAL -Recurse -File -Filter *.py | Select-String -Pattern "data/db/public|data\\db\\public|data/public/metadata|data\\public\\metadata|data/exports|data\\exports|data/public|data\\public"
     Output (excerpt):
-        LOKAL\_0_json\03_build_metadata_stats.py:14:    data/db/stats_country.db        - Statistiken pro Land
-        LOKAL\_0_json\03_build_metadata_stats.py:15:    data/db/stats_files.db          - Metadaten pro Datei
-        LOKAL\_0_json\03_build_metadata_stats.py:520:  data/db_public/stats_all.db     - Globale Statistiken
-        LOKAL\_1_metadata\export_metadata.py:15:Output is written to data/metadata/vYYYY-MM-DD/ with a "latest" symlink.
-        LOKAL\_1_zenodo-repos\zenodo_metadata.py:6:Quelle:     data/metadata/latest/
+        LOKAL\_0_json\03_build_metadata_stats.py:14:    data/db/public/stats_country.db        - Statistiken pro Land
+        LOKAL\_0_json\03_build_metadata_stats.py:15:    data/db/public/stats_files.db          - Metadaten pro Datei
+        LOKAL\_1_metadata\export_metadata.py:15:Output is written to runtime/data/public/metadata/vYYYY-MM-DD/ with a "latest" symlink.
+        LOKAL\_1_zenodo-repos\zenodo_metadata.py:6:Quelle:     runtime/data/public/metadata/latest/
 
 Decisions (Final)
 - Runtime stats DBs live in runtime/data/db/public.
@@ -342,7 +338,7 @@ Class Rules
 
 Proposed Mapping (repo data → runtime data)
 - data/public/statistics → runtime/data/public/statistics (one-time migrate or regenerate)
-- data/metadata/* → runtime/data/metadata/* (one-time migrate or regenerate)
+- data/public/metadata/* → runtime/data/public/metadata/* (one-time migrate or regenerate)
 - data/db/stats_*.db → runtime/data/db/*.db (only if these DBs are still used)
 - data/counters/* → do not migrate (prod-owned)
 - data/stats_temp → runtime/data/stats_temp (ephemeral) or delete

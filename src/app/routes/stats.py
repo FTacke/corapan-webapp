@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
+import warnings
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -14,8 +16,34 @@ from ..services.stats_aggregator import StatsParams, aggregate_stats
 
 blueprint = Blueprint("stats", __name__, url_prefix="/api")
 
-# Cache directory for stats responses
-STATS_CACHE_DIR = Path(__file__).resolve().parents[3] / "data" / "stats_temp"
+def _resolve_data_root() -> Path:
+    """Resolve runtime data root from CORAPAN_RUNTIME_ROOT (dev fallback supported)."""
+    env_name = (os.getenv("FLASK_ENV") or os.getenv("APP_ENV") or "production").lower()
+    is_dev = env_name in ("development", "dev")
+    runtime_root = os.getenv("CORAPAN_RUNTIME_ROOT")
+
+    if runtime_root:
+        return Path(runtime_root) / "data"
+    if is_dev:
+        data_root = Path(__file__).resolve().parents[3] / "runtime" / "corapan" / "data"
+        warnings.warn(
+            "CORAPAN_RUNTIME_ROOT not configured. Defaulting to repo-local runtime path for development: "
+            f"{data_root}",
+            RuntimeWarning,
+        )
+        return data_root
+    raise RuntimeError(
+        "CORAPAN_RUNTIME_ROOT environment variable not configured.\n"
+        "Runtime data is required for stats cache.\n\n"
+        "Options:\n"
+        "  1. Set CORAPAN_RUNTIME_ROOT (preferred):\n"
+        "     export CORAPAN_RUNTIME_ROOT=/runtime/path\n"
+        "     # Then data paths resolve to ${CORAPAN_RUNTIME_ROOT}/data\n"
+    )
+
+
+# Cache directory for stats responses (runtime data)
+STATS_CACHE_DIR = _resolve_data_root() / "stats_temp"
 CACHE_TTL_SECONDS = 120  # 2 minutes
 
 

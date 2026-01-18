@@ -36,19 +36,19 @@ This document maps all data directories in the repository to their:
 
 ---
 
-### `data/db_public/`
+### `data/db/public/`
 
 | Attribute | Value |
 |-----------|-------|
-| **Purpose** | Public/non-secret database exports or snapshots |
+| **Purpose** | Public stats databases (read-only) |
 | **Type** | `build` / `export` |
 | **Size** | ~10-100 MB (varies) |
-| **Deployed?** | No |
-| **Readers** | Analysis scripts, possibly deployment scripts |
-| **Writers** | Export/backup scripts |
-| **Context** | Development & local analysis |
-| **Risk** | 🟡 **RISK**: Purpose unclear; check if still used |
-| **Legacy?** | ⚠️ **LEGACY**: Appears vestigial; needs audit |
+| **Deployed?** | Yes (synced to prod) |
+| **Readers** | Flask app (Atlas) |
+| **Writers** | Local stats pipeline |
+| **Context** | Public, non-sensitive data |
+| **Risk** | 🟡 **RISK**: Ensure sync excludes restricted DBs |
+| **Legacy?** | No |
 
 ---
 
@@ -187,7 +187,7 @@ This document maps all data directories in the repository to their:
 
 ---
 
-### `data/metadata/`
+### `data/public/metadata/`
 
 | Attribute | Value |
 |-----------|-------|
@@ -384,7 +384,7 @@ Contains local development & deployment orchestration tools (not deployed to pro
 | Path | Type | Deployed? | Tracked? | Risk/Legacy | Action |
 |------|------|-----------|----------|-------------|--------|
 | `data/db/` | runtime | No | ❌ ignored | 🟡 Contains user data | Keep ignored; use separate auth DB in prod |
-| `data/db_public/` | build | No | ❌ ignored | 🟡 **LEGACY**: Purpose unclear | Audit & delete if unused |
+| `data/db/public/` | build | Yes | ❌ ignored | 🟢 OK | Public stats DBs |
 | `data/blacklab_export/` | build | Yes | ❌ ignored | 🟢 OK | Critical to build pipeline |
 | `data/blacklab_index/` | runtime | Yes | ❌ ignored | 🟢 OK | Protected by backup logic |
 | `data/blacklab_index.backup*` | backup | No | ❌ ignored | 🟡 Accumulates | Establish retention policy |
@@ -393,7 +393,7 @@ Contains local development & deployment orchestration tools (not deployed to pro
 | `data/counters/` | cache | Yes | ❌ ignored | 🟢 OK | Safe to clear |
 | `data/stats_temp/` | temp | No | ❌ ignored | 🟢 OK | Safe to clear |
 | `data/exports/` | export | Varies | ❌ ignored | 🟢 OK | Regenerable |
-| `data/metadata/` | generated | Yes | ❌ ignored | 🟢 OK | Regenerable from export |
+| `data/public/metadata/` | generated | Yes | ❌ ignored | 🟢 OK | Regenerable from export |
 | `media/transcripts/` | source | Yes | ❌ ignored | 🔴 Critical | Backup essential; core corpus |
 | `media/mp3-full/` | media | Yes | ❌ ignored | 🟢 OK | Large but regenerable |
 | `media/mp3-split/` | generated | Yes | ❌ ignored | 🟡 Time-consuming to rebuild | Backup production copy |
@@ -417,7 +417,6 @@ Contains local development & deployment orchestration tools (not deployed to pro
    - Multiple `.backup*` and `.bad*` directories accumulate automatically
    - Need cleanup/retention script
 4. **Legacy/Unclear Paths:**
-   - `data/db_public/` — Unclear purpose
    - `LOKAL/_*_*` directories — Semi-manual workflow
    - `static/img/statistics/` — Check if used
 5. **Production vs. Development:**

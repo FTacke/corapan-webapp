@@ -85,7 +85,7 @@ python .\LOKAL\_0_json\05_publish_corpus_statistics.py --out "$env:PUBLIC_STATS_
 ```
 
 This will:
-1. Sync data directories (metadata, exports, db_public, blacklab_export, stats databases)
+1. Sync data directories (public/metadata, exports, db/public, blacklab_export, stats databases)
 2. Upload statistics files to `/srv/webapps/corapan/data/public/statistics/`
 3. Set correct ownership (hrzadmin:hrzadmin)
 

@@ -1,3 +1,14 @@
+# Implementation Summary (Consolidated)
+
+## Completed
+- Public stats DBs consolidated under `data/db/public/`.
+- Sensitive DBs isolated under `data/db/restricted/`.
+- FAIR metadata exports served from `data/public/metadata/`.
+- Legacy overview statistics moved to static JSON assets.
+
+## Notes
+- The local pipeline produces `stats_files.db` and `stats_country.db` only.
+- Update any remaining documentation to reference `data/db/public/` and `data/public/metadata/`.
 # Data Cleanup Implementation - Summary
 
 **Branch:** `chore/data-cleanup-dev-safe`  

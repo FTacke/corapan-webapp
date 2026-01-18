@@ -40,7 +40,7 @@ This repo contains both production and local/index build and run scripts for Bla
 
 ## Build Pipeline (as implemented)
 ### Inputs
-- Production build expects TSV in /srv/webapps/corapan/data/tsv and metadata in /srv/webapps/corapan/data/metadata. Evidence: [scripts/blacklab/build_blacklab_index_prod.sh](scripts/blacklab/build_blacklab_index_prod.sh#L9-L13)
+- Production build expects TSV in /srv/webapps/corapan/data/tsv and metadata in /srv/webapps/corapan/data/public/metadata. Evidence: [scripts/blacklab/build_blacklab_index_prod.sh](scripts/blacklab/build_blacklab_index_prod.sh#L9-L13)
 - Local build input corpus is media/transcripts, with exports in data/blacklab_export/tsv. Evidence: [scripts/blacklab/build_blacklab_index.sh](scripts/blacklab/build_blacklab_index.sh#L14-L16)
 - The export tool defaults to input media/transcripts and output data/blacklab_export/tsv + docmeta.jsonl. Evidence: [src/scripts/blacklab_index_creation.py](src/scripts/blacklab_index_creation.py#L6-L10), [src/scripts/blacklab_index_creation.py](src/scripts/blacklab_index_creation.py#L548-L563)
 - JSON preprocessing (optional) reads from media/transcripts and writes data/blacklab_export/json_ready with a top-level tokens array. Evidence: [scripts/blacklab/prepare_json_for_blacklab.py](scripts/blacklab/prepare_json_for_blacklab.py#L4-L11), [scripts/blacklab/prepare_json_for_blacklab.py](scripts/blacklab/prepare_json_for_blacklab.py#L116-L116)
@@ -84,12 +84,12 @@ This repo contains both production and local/index build and run scripts for Bla
 
 ### Blockers / unknowns (repo-only)
 - data/ and media/ (including data/blacklab_index and media/transcripts) are gitignored, so local build requires external data not present in the repo. Evidence: [.gitignore](.gitignore#L86-L91)
-- Production build expects TSV and metadata at /srv/webapps/corapan/data/tsv and /srv/webapps/corapan/data/metadata (paths outside repo). Evidence: [scripts/blacklab/build_blacklab_index_prod.sh](scripts/blacklab/build_blacklab_index_prod.sh#L9-L13)
+- Production build expects TSV and metadata at /srv/webapps/corapan/data/tsv and /srv/webapps/corapan/data/public/metadata (paths outside repo). Evidence: [scripts/blacklab/build_blacklab_index_prod.sh](scripts/blacklab/build_blacklab_index_prod.sh#L9-L13)
 
 ## Open Questions for Server Check (to verify)
 1. Which exact image digest is running for instituutnederlandsetaal/blacklab:latest? (Repo references only the tag.) Evidence: [scripts/blacklab/run_bls_prod.sh](scripts/blacklab/run_bls_prod.sh#L26-L29)
 2. Does production mount the same config directory contents as config/blacklab (and the same corapan-tsv.blf.yaml)? Evidence: [scripts/blacklab/run_bls_prod.sh](scripts/blacklab/run_bls_prod.sh#L114-L115), [config/blacklab/corapan-tsv.blf.yaml](config/blacklab/corapan-tsv.blf.yaml#L1-L32)
 3. Is the active index path /srv/webapps/corapan/data/blacklab_index and is swap/backup done as in the prod build script? Evidence: [scripts/blacklab/build_blacklab_index_prod.sh](scripts/blacklab/build_blacklab_index_prod.sh#L24-L31), [scripts/blacklab/build_blacklab_index_prod.sh](scripts/blacklab/build_blacklab_index_prod.sh#L471-L502)
-4. Are TSV inputs and metadata present at /srv/webapps/corapan/data/tsv and /srv/webapps/corapan/data/metadata? Evidence: [scripts/blacklab/build_blacklab_index_prod.sh](scripts/blacklab/build_blacklab_index_prod.sh#L9-L13)
+4. Are TSV inputs and metadata present at /srv/webapps/corapan/data/tsv and /srv/webapps/corapan/data/public/metadata? Evidence: [scripts/blacklab/build_blacklab_index_prod.sh](scripts/blacklab/build_blacklab_index_prod.sh#L9-L13)
 5. Is BlackLab reachable at http://localhost:8081/blacklab-server in production (as the scripts and default app config assume)? Evidence: [scripts/blacklab/run_bls_prod.sh](scripts/blacklab/run_bls_prod.sh#L28-L29), [src/app/extensions/http_client.py](src/app/extensions/http_client.py#L27-L30)
 6. Is corpus ID “corapan” present in the running index (used during validation and mount layout)? Evidence: [scripts/blacklab/build_blacklab_index_prod.sh](scripts/blacklab/build_blacklab_index_prod.sh#L324-L325), [docker-compose.dev-postgres.yml](docker-compose.dev-postgres.yml#L34-L36)

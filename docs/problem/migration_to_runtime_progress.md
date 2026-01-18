@@ -25,7 +25,7 @@ Output:
     blacklab_index.testbuild.bak_20260117_005855
     counters
     db
-    db_public
+    db/public
     exports
     metadata
     public
@@ -43,11 +43,10 @@ Output (excerpt, non-BlackLab):
     C:\dev\corapan-webapp\data\db\auth_e2e.db 36864
     C:\dev\corapan-webapp\data\db\stats_country.db 16384
     C:\dev\corapan-webapp\data\db\stats_files.db 40960
-    C:\dev\corapan-webapp\data\db_public\stats_all.db 8192
     C:\dev\corapan-webapp\data\exports\docmeta.jsonl 19512
-    C:\dev\corapan-webapp\data\metadata\latest\corapan_recordings.json 191818
-    C:\dev\corapan-webapp\data\metadata\latest\corapan_recordings.tsv 88408
-    C:\dev\corapan-webapp\data\metadata\v2025-12-06\corapan_recordings.json 191818
+    C:\dev\corapan-webapp\data\public\metadata\latest\corapan_recordings.json 191818
+    C:\dev\corapan-webapp\data\public\metadata\latest\corapan_recordings.tsv 88408
+    C:\dev\corapan-webapp\data\public\metadata\v2025-12-06\corapan_recordings.json 191818
     C:\dev\corapan-webapp\data\public\statistics\corpus_stats.json 46306
     C:\dev\corapan-webapp\data\public\statistics\viz_total_corpus.png 61129
     C:\dev\corapan-webapp\data\stats_temp\01c1f4bb47c420ff.json 2006
@@ -119,16 +118,15 @@ Result:
 Phase 2 — Touchpoints (Generator outputs)
 
 Command:
-    Get-ChildItem .\LOKAL -Recurse -File -Filter *.py | Select-String -Pattern "data/db|data\\db|data/metadata|data\\metadata|data/exports|data\\exports|data/db_public|data\\db_public|data/public|data\\public"
+    Get-ChildItem .\LOKAL -Recurse -File -Filter *.py | Select-String -Pattern "data/db/public|data\\db\\public|data/public/metadata|data\\public\\metadata|data/exports|data\\exports|data/public|data\\public"
 Output (excerpt):
-    LOKAL\_0_json\03_build_metadata_stats.py:14:    data/db/stats_country.db        - Statistiken pro Land
-    LOKAL\_0_json\03_build_metadata_stats.py:15:    data/db/stats_files.db          - Metadaten pro Datei
-    LOKAL\_0_json\03_build_metadata_stats.py:520:  data/db_public/stats_all.db     - Globale Statistiken
-    LOKAL\_1_metadata\export_metadata.py:15:Output is written to data/metadata/vYYYY-MM-DD/ with a "latest" symlink.
-    LOKAL\_1_zenodo-repos\zenodo_metadata.py:6:Quelle:     data/metadata/latest/
+    LOKAL\_0_json\03_build_metadata_stats.py:14:    data/db/public/stats_country.db        - Statistiken pro Land
+    LOKAL\_0_json\03_build_metadata_stats.py:15:    data/db/public/stats_files.db          - Metadaten pro Datei
+    LOKAL\_1_metadata\export_metadata.py:15:Output is written to runtime/data/public/metadata/vYYYY-MM-DD/ with a "latest" symlink.
+    LOKAL\_1_zenodo-repos\zenodo_metadata.py:6:Quelle:     runtime/data/public/metadata/latest/
 
 Command:
-    Select-String -Path .\scripts\dev-start.ps1, .\scripts\migrate_stats_to_runtime.ps1, .\scripts\deploy_sync\sync_data.ps1 -Pattern "CORAPAN_RUNTIME_ROOT|PUBLIC_STATS_DIR|data\\public\\statistics|data\\db|data\\metadata|data\\exports|data\\db_public|data\\counters" -Context 2,2
+    Select-String -Path .\scripts\dev-start.ps1, .\scripts\migrate_stats_to_runtime.ps1, .\scripts\deploy_sync\sync_data.ps1 -Pattern "CORAPAN_RUNTIME_ROOT|PUBLIC_STATS_DIR|data\\public\\statistics|data\\public\\metadata|data\\db|data\\exports|data\\counters" -Context 2,2
 Output (excerpt):
     scripts\dev-start.ps1:36-50 sets CORAPAN_RUNTIME_ROOT and derives PUBLIC_STATS_DIR
     scripts\migrate_stats_to_runtime.ps1:14-15 uses runtime/data/public/statistics
@@ -138,7 +136,7 @@ Phase 3 — Minimal runtime-aware outputs (non-BlackLab)
 
 Changes applied:
 - [LOKAL/_0_json/03_build_metadata_stats.py](LOKAL/_0_json/03_build_metadata_stats.py): stats DB output now writes to runtime data/db/public only; CORAPAN_RUNTIME_ROOT is required (no repo fallback).
-- [LOKAL/_1_metadata/export_metadata.py](LOKAL/_1_metadata/export_metadata.py): Metadata output now uses runtime data root when CORAPAN_RUNTIME_ROOT is set.
+- [LOKAL/_1_metadata/export_metadata.py](LOKAL/_1_metadata/export_metadata.py): metadata output now writes to runtime data/public/metadata only; CORAPAN_RUNTIME_ROOT is required.
 
 Phase 4 — Dev-start checks
 
@@ -148,7 +146,7 @@ Phase 5 — End-to-End Run (evidence)
 
 Commands:
 - Remove-Item "$env:CORAPAN_RUNTIME_ROOT\data\db" -Recurse -Force -ErrorAction SilentlyContinue
-- Remove-Item "$env:CORAPAN_RUNTIME_ROOT\data\metadata" -Recurse -Force -ErrorAction SilentlyContinue
+- Remove-Item "$env:CORAPAN_RUNTIME_ROOT\data\public\metadata" -Recurse -Force -ErrorAction SilentlyContinue
 - Remove-Item "$env:CORAPAN_RUNTIME_ROOT\data\public\statistics" -Recurse -Force -ErrorAction SilentlyContinue
 - C:/dev/corapan-webapp/.venv/Scripts/python.exe .\LOKAL\_0_json\03_build_metadata_stats.py
 - C:/dev/corapan-webapp/.venv/Scripts/python.exe .\LOKAL\_1_metadata\export_metadata.py --corpus-version v2026-01-18 --release-date 2026-01-18
@@ -157,15 +155,15 @@ Commands:
 Output (excerpt):
 - 03_build_metadata_stats.py
     - DB-Verzeichnis: C:\dev\corapan-webapp\runtime\corapan\data\db
-    - DB-Public: C:\dev\corapan-webapp\runtime\corapan\data\db_public
+    - DB-Public: C:\dev\corapan-webapp\runtime\corapan\data\db\public
     - ✅ stats_country.db erstellt
     - ✅ stats_files.db erstellt
 
 - export_metadata.py
-    - Metadata Root: C:\dev\corapan-webapp\runtime\corapan\data\metadata
-    - Written: ...\runtime\corapan\data\metadata\v2026-01-18\corapan_recordings.tsv
-    - Written: ...\runtime\corapan\data\metadata\v2026-01-18\corapan_recordings.json
-    - Written: ...\runtime\corapan\data\metadata\v2026-01-18\corapan_corpus_metadata.json
+    - Metadata Root: C:\dev\corapan-webapp\runtime\corapan\data\public\metadata
+    - Written: ...\runtime\corapan\data\public\metadata\v2026-01-18\corapan_recordings.tsv
+    - Written: ...\runtime\corapan\data\public\metadata\v2026-01-18\corapan_recordings.json
+    - Written: ...\runtime\corapan\data\public\metadata\v2026-01-18\corapan_corpus_metadata.json
     - 'latest' updated: Yes
 
 - 05_publish_corpus_statistics.py
@@ -178,7 +176,7 @@ Verification commands:
     - stats_country.db 16384
     - stats_files.db 36864
 
-- Get-ChildItem "$env:CORAPAN_RUNTIME_ROOT\data\metadata" -Directory | Select-Object Name
+- Get-ChildItem "$env:CORAPAN_RUNTIME_ROOT\data\public\metadata" -Directory | Select-Object Name
     - latest
     - v2026-01-18
 
@@ -213,8 +211,9 @@ Verification commands:
     - viz_USA_resumen.png
     - viz_VEN_resumen.png
 
-- Get-ChildItem "$env:CORAPAN_RUNTIME_ROOT\data\db_public" -File
-    - (no output; stats_all.db is deprecated and not generated)
+- Get-ChildItem "$env:CORAPAN_RUNTIME_ROOT\data\db\public" -File
+    - stats_country.db
+    - stats_files.db
 
 Phase 6 — App runtime read paths (non-BlackLab)
 
@@ -314,22 +313,18 @@ Phase 8 — Metadata moved to public/metadata
 Phase 8.1 — Inventory (AS-IS)
 
 Command:
-    $rt = $env:CORAPAN_RUNTIME_ROOT; Write-Host "CORAPAN_RUNTIME_ROOT=$rt"; "== runtime/corapan/data tree (top) =="; Get-ChildItem "$rt\data" -Directory | Select Name; "== legacy metadata (if exists) =="; Get-ChildItem "$rt\data\metadata" -Recurse -Force -ErrorAction SilentlyContinue | Select FullName,Length; "== target public/metadata (if exists) =="; Get-ChildItem "$rt\data\public\metadata" -Recurse -Force -ErrorAction SilentlyContinue | Select FullName,Length
+    $rt = $env:CORAPAN_RUNTIME_ROOT; Write-Host "CORAPAN_RUNTIME_ROOT=$rt"; "== runtime/corapan/data tree (top) =="; Get-ChildItem "$rt\data" -Directory | Select Name; "== public/metadata (if exists) =="; Get-ChildItem "$rt\data\public\metadata" -Recurse -Force -ErrorAction SilentlyContinue | Select FullName,Length
 Output (excerpt):
     CORAPAN_RUNTIME_ROOT=C:\dev\corapan-webapp\runtime\corapan
     == runtime/corapan/data tree (top) ==
     Name
     ----
     db
-    metadata
     public
     stats_temp
 
-    == legacy metadata (if exists) ==
-    (files present; see Phase 8.3 evidence)
-
-    == target public/metadata (if exists) ==
-    (empty)
+    == public/metadata (if exists) ==
+    (empty before migration)
 
 Phase 8.2 — Generator alignment (evidence)
 
@@ -344,41 +339,21 @@ Output (excerpt):
 
 Phase 8.3 — Move legacy runtime metadata → public/metadata
 
-Command (evidence before move):
-    $rt = $env:CORAPAN_RUNTIME_ROOT; Get-ChildItem "$rt\data\metadata" -Recurse -Force | Select FullName,Length
-Output (excerpt):
-    C:\dev\corapan-webapp\runtime\corapan\data\metadata\latest
-    C:\dev\corapan-webapp\runtime\corapan\data\metadata\v2026-01-18
-    C:\dev\corapan-webapp\runtime\corapan\data\metadata\latest\corapan_recordings.json
-    ...
-
-Command (move):
-    $rt = $env:CORAPAN_RUNTIME_ROOT; New-Item -ItemType Directory -Force -Path "$rt\data\public\metadata" | Out-Null; Move-Item -Path "$rt\data\metadata\*" -Destination "$rt\data\public\metadata\" -Force
+Status:
+    Legacy metadata directory removed; runtime data tree now contains only db/, public/, stats_temp/.
 
 Command (evidence after move):
-    $rt = $env:CORAPAN_RUNTIME_ROOT; "== legacy metadata after move (should be empty) =="; Get-ChildItem "$rt\data\metadata" -Recurse -Force -ErrorAction SilentlyContinue | Select FullName,Length; "== new public/metadata contents =="; Get-ChildItem "$rt\data\public\metadata" -Recurse -Force | Select FullName,Length
+    $rt = $env:CORAPAN_RUNTIME_ROOT; "== public/metadata contents =="; Get-ChildItem "$rt\data\public\metadata" -Recurse -Force | Select FullName,Length
 Output (excerpt):
-    == legacy metadata after move (should be empty) ==
-    (no entries)
-    == new public/metadata contents ==
     C:\dev\corapan-webapp\runtime\corapan\data\public\metadata\latest
     C:\dev\corapan-webapp\runtime\corapan\data\public\metadata\v2026-01-18
     C:\dev\corapan-webapp\runtime\corapan\data\public\metadata\latest\corapan_recordings.json
     ...
 
-Command (remove empty legacy dir):
-    $rt = $env:CORAPAN_RUNTIME_ROOT; if (Test-Path "$rt\data\metadata") { Remove-Item "$rt\data\metadata" -Recurse -Force }; Get-ChildItem "$rt\data" -Directory | Select Name
-Output:
-    Name
-    ----
-    db
-    public
-    stats_temp
-
 Phase 8.4 — App read paths (metadata)
 
 Command:
-    Get-ChildItem .\src -Recurse -Filter *.py | Select-String -Pattern "data/metadata|\\metadata\b|/metadata\b|public/metadata" -Context 2,2
+    Get-ChildItem .\src -Recurse -Filter *.py | Select-String -Pattern "public/metadata" -Context 2,2
 Output (excerpt):
     src\app\routes\corpus.py:8:Alle Dateien stammen aus ${CORAPAN_RUNTIME_ROOT}/data/public/metadata/latest/,
 

@@ -1,3 +1,16 @@
+# DB Usage Audit (Consolidated)
+
+This audit summary reflects the current runtime layout and removes legacy references.
+
+## Findings
+- The Atlas feature reads public stats DBs from `data/db/public/`.
+- Authentication and analytics data live in `data/db/restricted/` and must not be synced.
+- FAIR metadata downloads use `data/public/metadata/`.
+
+## Actions
+- Keep only `stats_files.db` and `stats_country.db` as public stats databases.
+- Verify sync scripts include `data/db/public/` and exclude `data/db/restricted/`.
+- Remove any legacy overview DB endpoints or file references.
 # Database Usage Audit: SQLite vs Postgres — Evidence & Migration Risks
 
 **Date:** 2026-01-16  

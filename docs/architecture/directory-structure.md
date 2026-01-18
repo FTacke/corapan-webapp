@@ -205,11 +205,11 @@ config/
 ```
 data/
 ├── db/                       # SQLite/Postgres Daten (lokal)
-│   └── auth.db               # Auth-DB (SQLite Dev-Fallback)
-├── db_public/                # Öffentliche DBs (falls vorhanden)
+│   ├── public/               # Öffentliche DBs (falls vorhanden)
+│   └── restricted/           # Sensitive DBs (lokal/prod getrennt)
 ├── counters/                 # App-Counters (z.B. Export-IDs)
 ├── exports/                  # Generierte CSV/TSV Exporte
-├── metadata/                 # Metadaten-Cache
+├── public/metadata/          # Metadaten-Cache
 ├── stats_temp/               # Temp-Files für Statistiken
 ├── blacklab_index/           # BlackLab Index (große Dateien, nicht in Git)
 └── blacklab_export/          # BlackLab Export-Files
