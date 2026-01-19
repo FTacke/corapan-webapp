@@ -8,7 +8,14 @@ from typing import Dict
 
 import httpx
 
-from ..extensions.http_client import get_http_client, BLS_BASE_URL
+from ..extensions.http_client import (
+    get_http_client,
+    BLS_BASE_URL,
+    BlackLabCorpusNotFound,
+    build_bls_corpus_path,
+    get_corpus_not_found_message,
+    warn_if_configured_corpus_missing,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -28,6 +35,7 @@ def get_collocations(
         A dictionary containing collocation statistics.
     """
     client = get_http_client()
+    warn_if_configured_corpus_missing()
     colloc_params = {
         "patt": cql,
         "wordsaroundhit": window_size,
@@ -39,7 +47,7 @@ def get_collocations(
     try:
         # Use the /hits endpoint to get words around the hit
         response = client.get(
-            f"{BLS_BASE_URL}/corpora/corapan/hits", params=colloc_params
+            f"{BLS_BASE_URL}{build_bls_corpus_path('hits')}", params=colloc_params
         )
         response.raise_for_status()
         data = response.json()
@@ -77,6 +85,10 @@ def get_collocations(
         }
 
     except httpx.HTTPStatusError as e:
+        corpus_message = get_corpus_not_found_message(e.response)
+        if corpus_message:
+            logger.warning(corpus_message)
+            return {"error": "corpus_not_found", "message": corpus_message}
         logger.error(
             f"BlackLab error fetching collocations: {e.response.status_code} - {e.response.text}"
         )
@@ -84,6 +96,9 @@ def get_collocations(
             "error": "bls_error",
             "message": f"BlackLab error: {e.response.status_code}",
         }
+    except BlackLabCorpusNotFound as e:
+        logger.warning(str(e))
+        return {"error": "corpus_not_found", "message": str(e)}
     except Exception as e:
         logger.exception("Error fetching collocations")
         return {"error": "server_error", "message": str(e)}

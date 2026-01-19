@@ -35,7 +35,15 @@ from .cql_validator import (
 )  # Punkt 3
 from .speaker_utils import map_speaker_attributes
 from ..extensions import limiter
-from ..extensions.http_client import get_http_client, BLS_BASE_URL
+from ..extensions.http_client import (
+    get_http_client,
+    BLS_BASE_URL,
+    BLS_CORPUS,
+    BlackLabCorpusNotFound,
+    build_bls_corpus_path,
+    get_corpus_not_found_message,
+    warn_if_configured_corpus_missing,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -109,9 +117,10 @@ EXPORT_TIMEOUT = httpx.Timeout(connect=5.0, read=30.0, write=30.0, pool=5.0)
 EXPORT_CHUNK_BYTES = 8192
 
 
-def _build_bls_url(corpus: str = "corapan") -> str:
+def _build_bls_url(corpus: str | None = None) -> str:
     """Build BlackLab Server base URL."""
-    return f"/bls/{corpus}"
+    corpus_name = corpus or BLS_CORPUS
+    return f"/bls/{corpus_name}"
 
 
 def _make_bls_request(
@@ -124,7 +133,7 @@ def _make_bls_request(
     Make request to BlackLab Server with proper error handling.
 
     Args:
-        path: BLS endpoint path (e.g., "/corpora/corapan/hits" or "corpora/corapan/hits")
+        path: BLS endpoint path (e.g., "/corpora/index/hits" or "corpora/index/hits")
         params: Query parameters
         method: HTTP method
         timeout_override: Override default timeout (seconds)
@@ -137,6 +146,7 @@ def _make_bls_request(
         httpx.HTTPStatusError: On HTTP error
     """
     client = get_http_client()
+    warn_if_configured_corpus_missing()
 
     # Build absolute URL for BLS request
     # Ensure path is clean (remove leading /bls/ if present for legacy compatibility)
@@ -148,8 +158,8 @@ def _make_bls_request(
         path = "/" + path  # Ensure leading slash
 
     # BlackLab v5 API: ensure /corpora/ prefix for corpus endpoints
-    # Convert old v4 paths like /corapan/hits to /corpora/corapan/hits
-    if path.startswith("/corapan/"):
+    # Convert old v4 paths like /<corpus>/hits to /corpora/<corpus>/hits
+    if path.startswith(f"/{BLS_CORPUS}/"):
         path = "/corpora" + path
 
     # Construct full URL
@@ -176,6 +186,10 @@ def _make_bls_request(
         logger.error(f"BLS timeout on {path}")
         raise
     except httpx.HTTPStatusError as e:
+        corpus_message = get_corpus_not_found_message(e.response)
+        if corpus_message:
+            logger.warning(corpus_message)
+            raise BlackLabCorpusNotFound(corpus_message) from e
         logger.error(
             f"BLS error on {path}: {e.response.status_code} - {e.response.text[:200]}"
         )
@@ -401,7 +415,7 @@ def datatable_data():
                 params["sort"] = sort_field
 
         # Execute request
-        response = _make_bls_request("/corpora/corapan/hits", params)
+        response = _make_bls_request(build_bls_corpus_path("hits"), params)
         data = response.json()
         summary = data.get("summary", {})
         hits = data.get("hits", [])
@@ -431,6 +445,9 @@ def datatable_data():
             }
         )
 
+    except BlackLabCorpusNotFound as e:
+        logger.warning(f"DataTables error: {e}")
+        return jsonify({"draw": get_int("draw", 1), "error": str(e), "data": []})
     except Exception as e:
         logger.exception("DataTables error")
         return jsonify({"draw": get_int("draw", 1), "error": str(e), "data": []})
@@ -518,8 +535,10 @@ def token_search():
         for param_name in ["patt", "cql", "cql_query"]:
             try:
                 test_params = {**bls_params, param_name: cql_pattern}
-                response = _make_bls_request("/corpora/corapan/hits", test_params)
+                response = _make_bls_request(build_bls_corpus_path("hits"), test_params)
                 break
+            except BlackLabCorpusNotFound:
+                raise
             except httpx.HTTPStatusError as e:
                 if e.response.status_code != 400:
                     raise
@@ -581,6 +600,19 @@ def token_search():
             response_payload["cql_debug"] = cql_pattern
 
         return jsonify(response_payload)
+
+    except BlackLabCorpusNotFound as e:
+        logger.warning(f"Token search: {e}")
+        return jsonify(
+            {
+                "draw": draw,
+                "recordsTotal": 0,
+                "recordsFiltered": 0,
+                "data": [],
+                "error": "corpus_not_found",
+                "message": str(e),
+            }
+        ), 200
 
     except httpx.ConnectError:
         logger.warning("Token search: BLS connection failed")
@@ -730,7 +762,7 @@ def export_data():
                 try:
                     test_params = {**preflight_params, param_name: cql_pattern}
                     preflight_response = _make_bls_request(
-                        "/corpora/corapan/hits", test_params
+                        build_bls_corpus_path("hits"), test_params
                     )
                     logger.debug(f"Export preflight: CQL param '{param_name}' accepted")
                     break
@@ -749,6 +781,9 @@ def export_data():
                 f"filters={'yes' if filter_query else 'no'}"
             )
 
+        except BlackLabCorpusNotFound as e:
+            logger.warning(f"Export preflight error: {e}")
+            return str(e), 502
         except httpx.ConnectError:
             logger.warning(
                 f"Export preflight failed - BLS connection refused at {BLS_BASE_URL}"
@@ -836,7 +871,7 @@ def export_data():
                             try:
                                 test_params = {**bls_params, param_name: cql_pattern}
                                 response = _make_bls_request(
-                                    "/corpora/corapan/hits", test_params
+                                    build_bls_corpus_path("hits"), test_params
                                 )
                                 break
                             except httpx.HTTPStatusError as e:
@@ -847,6 +882,10 @@ def export_data():
                         if response is None:
                             raise Exception("Could not determine BLS CQL parameter")
 
+                    except BlackLabCorpusNotFound as e:
+                        logger.warning(f"Export chunk error: {e}")
+                        yield f"\n# Export interrupted: {str(e)}\n"
+                        break
                     except httpx.ConnectError:
                         logger.error(
                             f"Export chunk connection failed at offset {first} - BLS unreachable at {BLS_BASE_URL}"
@@ -978,6 +1017,10 @@ def export_data():
         logger.warning(f"Export CQL validation: {e}")
         return f"Export error: CQL validation failed - {str(e)}", 400
 
+    except BlackLabCorpusNotFound as e:
+        logger.warning(f"Export error: {e}")
+        return str(e), 502
+
     except httpx.ConnectError:
         logger.error(f"Export connection failed - BLS unreachable at {BLS_BASE_URL}")
         return f"Export error: BlackLab Server is not reachable at {BLS_BASE_URL}", 502
@@ -1017,7 +1060,7 @@ def stats_data():
         count_params["waitfortotal"] = "true"
 
         # Execute total count request
-        count_resp = _make_bls_request("/corpora/corapan/hits", count_params)
+        count_resp = _make_bls_request(build_bls_corpus_path("hits"), count_params)
         count_data = count_resp.json()
         total_hits = count_data.get("summary", {}).get("numberOfHits", 0)
         if not total_hits:
@@ -1060,6 +1103,9 @@ def stats_data():
 
         return jsonify(stats)
 
+    except BlackLabCorpusNotFound as e:
+        logger.warning(f"Stats error: {e}")
+        return jsonify({"error": str(e)}), 502
     except Exception as e:
         logger.exception("Stats error")
         return jsonify({"error": str(e)}), 500
@@ -1087,7 +1133,7 @@ def stats_csv():
         count_params["waitfortotal"] = "true"
 
         # Execute total count request
-        count_resp = _make_bls_request("/corpora/corapan/hits", count_params)
+        count_resp = _make_bls_request(build_bls_corpus_path("hits"), count_params)
         count_data = count_resp.json()
         total_hits = count_data.get("summary", {}).get("numberOfHits", 0)
         if not total_hits:
@@ -1180,6 +1226,9 @@ def stats_csv():
             },
         )
 
+    except BlackLabCorpusNotFound as e:
+        logger.warning(f"Stats CSV export error: {e}")
+        return jsonify({"error": str(e)}), 502
     except Exception as e:
         logger.exception("Stats CSV export error")
         return jsonify({"error": str(e)}), 500
@@ -1338,7 +1387,7 @@ def bls_group_by_field(
         # Log the actual params being sent for debugging
         logger.debug(f"Grouping request {field_name}: params={params}")
 
-        response = _make_bls_request("/corpora/corapan/hits", params)
+        response = _make_bls_request(build_bls_corpus_path("hits"), params)
         duration = time.time() - start_time
 
         data = response.json()

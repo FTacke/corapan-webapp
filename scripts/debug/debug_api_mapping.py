@@ -3,9 +3,11 @@ Debug-Script: Analyse BlackLab Response und API-Mapping
 Vergleicht BlackLab-Rohdaten mit Advanced-API und Corpus-API Ausgaben
 """
 
+import os
 import httpx
 
-BLS_URL = "http://localhost:8081/blacklab-server"
+BLS_URL = os.environ.get("BLS_BASE_URL", "http://localhost:8081/blacklab-server")
+BLS_CORPUS = os.environ.get("BLS_CORPUS", "index")
 ADVANCED_API = "http://localhost:8000/search/advanced/data"
 CORPUS_API = "http://localhost:8000/corpus/search/datatables"
 
@@ -25,7 +27,7 @@ def test_blacklab_raw():
     }
 
     response = httpx.get(
-        f"{BLS_URL}/corpora/corapan/hits",
+        f"{BLS_URL}/corpora/{BLS_CORPUS}/hits",
         params=params,
         headers={"Accept": "application/json"},
         timeout=30.0,

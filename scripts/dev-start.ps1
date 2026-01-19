@@ -144,6 +144,10 @@ $env:FLASK_ENV = "development"
 $env:ALLOW_PUBLIC_TRANSCRIPTS = "true"
 $env:ALLOW_PUBLIC_FULL_AUDIO = "true"
 $env:BLACKLAB_BASE_URL = "http://localhost:8081/blacklab-server"
+$env:BLS_BASE_URL = "http://localhost:8081/blacklab-server"
+if (-not $env:BLS_CORPUS) {
+    $env:BLS_CORPUS = "index"
+}
 
 Write-Host "Starting CO.RA.PAN dev server..." -ForegroundColor Cyan
 Write-Host "AUTH_DATABASE_URL = $($env:AUTH_DATABASE_URL)"

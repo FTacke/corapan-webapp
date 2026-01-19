@@ -86,7 +86,7 @@ Total tokens: ~5 million
 
 ```powershell
 # Query for specific mixed-case token_id
-$response = Invoke-WebRequest -Uri "http://localhost:8081/blacklab-server/corpora/corapan/hits?patt=[tokid=%22VENb379fcc75%22]&first=0&number=1&listvalues=tokid" -UseBasicParsing
+$response = Invoke-WebRequest -Uri "http://localhost:8081/blacklab-server/corpora/index/hits?patt=[tokid=%22VENb379fcc75%22]&first=0&number=1&listvalues=tokid" -UseBasicParsing
 $response.Content
 ```
 
@@ -116,10 +116,10 @@ Invoke-WebRequest -Uri "http://localhost:8000/search/advanced/data?q=El&draw=1&s
 
 ```powershell
 # This should work (exact case)
-Invoke-WebRequest -Uri "http://localhost:8081/blacklab-server/corpora/corapan/hits?patt=[tokid=%22VENb379fcc75%22]&first=0&number=1" -UseBasicParsing
+Invoke-WebRequest -Uri "http://localhost:8081/blacklab-server/corpora/index/hits?patt=[tokid=%22VENb379fcc75%22]&first=0&number=1" -UseBasicParsing
 
 # This should NOT work (wrong case)
-Invoke-WebRequest -Uri "http://localhost:8081/blacklab-server/corpora/corapan/hits?patt=[tokid=%22venb379fcc75%22]&first=0&number=1" -UseBasicParsing
+Invoke-WebRequest -Uri "http://localhost:8081/blacklab-server/corpora/index/hits?patt=[tokid=%22venb379fcc75%22]&first=0&number=1" -UseBasicParsing
 ```
 
 **Expected:** Only exact case matches work

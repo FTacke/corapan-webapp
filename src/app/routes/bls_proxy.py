@@ -6,7 +6,7 @@ import logging
 from urllib.parse import urljoin
 
 from flask import Blueprint, request, Response
-from ..extensions.http_client import get_http_client
+from ..extensions.http_client import get_http_client, BLS_BASE_URL
 
 logger = logging.getLogger(__name__)
 
@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 bp = Blueprint("bls", __name__, url_prefix="/bls")
 
 # BlackLab Server upstream
-BLS_UPSTREAM = "http://127.0.0.1:8081/blacklab-server/"
+BLS_UPSTREAM = f"{BLS_BASE_URL}/"
 
 # Hop-by-hop headers to remove (per RFC 7230)
 HOP_BY_HOP_HEADERS = {

@@ -1,15 +1,17 @@
 #!/usr/bin/env python3
 """Quick test script for BlackLab Advanced Search."""
 
+import os
 import httpx
 
-BLS_BASE_URL = "http://localhost:8081/blacklab-server"
+BLS_BASE_URL = os.environ.get("BLS_BASE_URL", "http://localhost:8081/blacklab-server")
+BLS_CORPUS = os.environ.get("BLS_CORPUS", "index")
 
 # Test 1: Direct BlackLab query
 print("Test 1: Direct BlackLab API call")
 client = httpx.Client()
 response = client.get(
-    f"{BLS_BASE_URL}/corpora/corapan/hits",
+    f"{BLS_BASE_URL}/corpora/{BLS_CORPUS}/hits",
     params={"patt": '[lemma="casa"]', "number": "5"},
     headers={"Accept": "application/json"},
 )

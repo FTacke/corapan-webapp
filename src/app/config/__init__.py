@@ -62,6 +62,12 @@ class BaseConfig:
     _is_dev = _env_name in ("development", "dev")
     _runtime_root = os.getenv("CORAPAN_RUNTIME_ROOT")
 
+    # BlackLab configuration
+    BLS_BASE_URL = os.getenv(
+        "BLS_BASE_URL", "http://localhost:8081/blacklab-server"
+    ).rstrip("/")
+    BLS_CORPUS = (os.getenv("BLS_CORPUS", "index") or "index").strip() or "index"
+
     # Flask
     SECRET_KEY = os.getenv("FLASK_SECRET_KEY", DEFAULT_SECRET_SENTINEL)
     SESSION_COOKIE_SECURE = os.getenv("FLASK_SESSION_SECURE", "true").lower() == "true"
@@ -281,6 +287,12 @@ def load_config(app, env_name: str | None) -> None:
         app.config.get("AUDIO_SPLIT_DIR"),
         app.config.get("AUDIO_TEMP_DIR"),
         app.config.get("TRANSCRIPTS_DIR"),
+    )
+
+    app.logger.info(
+        "BlackLab config: BLS_BASE_URL=%s BLS_CORPUS=%s",
+        app.config.get("BLS_BASE_URL"),
+        app.config.get("BLS_CORPUS"),
     )
 
     # We now assume the auth system is DB-backed. Legacy env-based auth (passwords.env)

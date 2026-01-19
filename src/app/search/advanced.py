@@ -10,7 +10,12 @@ from urllib.parse import urlencode
 
 from .cql import build_filters, filters_to_blacklab_query
 from ..extensions import limiter
-from ..extensions.http_client import get_http_client
+from ..extensions.http_client import (
+    get_http_client,
+    build_bls_corpus_path,
+    get_corpus_not_found_message,
+    warn_if_configured_corpus_missing,
+)
 
 bp = Blueprint("advanced_search", __name__, url_prefix="/search/advanced")
 
@@ -87,7 +92,8 @@ def results():
             bls_params["filter"] = filter_query
 
         # Call BlackLab via Flask proxy (use v5 API path)
-        bls_url = f"{request.url_root}bls/corpora/corapan/hits"
+        bls_url = f"{request.url_root}bls{build_bls_corpus_path('hits')}"
+        warn_if_configured_corpus_missing()
 
         # Try CQL parameter names in order: patt (standard), cql, cql_query
         cql_param_names = ["patt", "cql", "cql_query"]
@@ -231,6 +237,15 @@ def results():
 
     except httpx.HTTPStatusError as e:
         # BlackLab server error
+        corpus_message = get_corpus_not_found_message(e.response)
+        if corpus_message:
+            current_app.logger.warning(corpus_message)
+            return render_template(
+                "search/_results.html",
+                error=corpus_message,
+                hits=[],
+                total=0,
+            ), 502
         current_app.logger.error(
             f"BlackLab error: {e.response.status_code} - {e.response.text}"
         )

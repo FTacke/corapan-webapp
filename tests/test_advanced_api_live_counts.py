@@ -10,6 +10,7 @@ import pytest
 
 BASE_FLASK = os.environ.get("FLASK_BASE_URL", "http://localhost:8000")
 BASE_BLS = os.environ.get("BLS_BASE_URL", "http://localhost:8081/blacklab-server")
+BLS_CORPUS = os.environ.get("BLS_CORPUS", "index")
 TIMEOUT = httpx.Timeout(connect=2.0, read=6.0, write=2.0, pool=2.0)
 
 
@@ -17,7 +18,8 @@ def bls_available():
     try:
         with httpx.Client(timeout=TIMEOUT) as c:
             r = c.get(
-                f"{BASE_BLS}/corpora/corapan/hits", params={"first": 0, "number": 0}
+                f"{BASE_BLS}/corpora/{BLS_CORPUS}/hits",
+                params={"first": 0, "number": 0},
             )
             return r.status_code == 200
     except Exception:
@@ -47,7 +49,7 @@ def test_advanced_api_returns_counts_against_real_bls():
         # Query BL directly for a known token; using 'casa' as a frequent token
         bls_params = {"patt": '[lemma="casa"]', "first": 0, "number": 1}
         bls_resp = client.get(
-            f"{BASE_BLS}/corpora/corapan/hits",
+            f"{BASE_BLS}/corpora/{BLS_CORPUS}/hits",
             params=bls_params,
             headers={"Accept": "application/json"},
         )

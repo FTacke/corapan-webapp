@@ -58,7 +58,7 @@ BlackLab Format files (`.blf.yaml`) define how fields are indexed. By default, *
    - Confirmed: `tokid` column contains mixed case (`VENb379fcc75`)
    
 2. **BlackLab Response Check** ❌ **ROOT CAUSE FOUND**
-   - Query: `http://localhost:8081/blacklab-server/corpora/corapan/hits?patt=[word="El"]&listvalues=word,tokid`
+   - Query: `http://localhost:8081/blacklab-server/corpora/index/hits?patt=[word="El"]&listvalues=word,tokid`
    - Response: All `tokid` values returned as lowercase (`arg53b36e4ff`, etc.)
    - **Conclusion:** BlackLab index was lowercasing at indexing time
 
@@ -154,7 +154,7 @@ Remove-Item -Path "data\blacklab_index" -Recurse -Force
 2. **Integration Test** (After index rebuild)
    ```powershell
    # Query BlackLab directly
-   Invoke-WebRequest -Uri "http://localhost:8081/blacklab-server/corpora/corapan/hits?patt=[tokid=%22VENb379fcc75%22]&first=0&number=1&listvalues=tokid" -UseBasicParsing
+   Invoke-WebRequest -Uri "http://localhost:8081/blacklab-server/corpora/index/hits?patt=[tokid=%22VENb379fcc75%22]&first=0&number=1&listvalues=tokid" -UseBasicParsing
    ```
    - Expected: `<value>VENb379fcc75</value>` (mixed case preserved)
    - Current (before rebuild): `<value>venb379fcc75</value>` (lowercase only)

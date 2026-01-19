@@ -14,6 +14,7 @@ Requirements:
 from __future__ import annotations
 
 import sys
+import os
 import requests
 from urllib.parse import urlencode
 from pathlib import Path
@@ -29,6 +30,7 @@ from src.app.services.audio_snippets import SPLIT_TIMES, build_snippet, find_spl
 from src.app.services.blacklab_search import _hit_to_canonical  # noqa: E402
 
 BL_PROXY_BASE = "http://127.0.0.1:8000/bls"
+BLS_CORPUS = os.environ.get("BLS_CORPUS", "index")
 
 LISTVALUES = (
     "tokid,start_ms,end_ms,filename,file_id,word,lemma,country,country_code,radio"
@@ -43,7 +45,7 @@ def query_blacklab(tokid: str):
         "listvalues": LISTVALUES,
         "patt": f'[tokid="{tokid}"]',
     }
-    url = f"{BL_PROXY_BASE}/corpora/corapan/hits"
+    url = f"{BL_PROXY_BASE}/corpora/{BLS_CORPUS}/hits"
     print(f"Querying BL proxy: {url}?{urlencode(params)}")
     r = requests.get(
         url, params=params, timeout=10, headers={"Accept": "application/json"}

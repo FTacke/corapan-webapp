@@ -1,10 +1,14 @@
 #!/usr/bin/env python3
 """Test BlackLab v5 response structure."""
 
+import os
 import httpx
 
+BLS_BASE_URL = os.environ.get("BLS_BASE_URL", "http://localhost:8081/blacklab-server")
+BLS_CORPUS = os.environ.get("BLS_CORPUS", "index")
+
 response = httpx.get(
-    "http://localhost:8081/blacklab-server/corpora/corapan/hits",
+    f"{BLS_BASE_URL}/corpora/{BLS_CORPUS}/hits",
     params={"patt": '[lemma="casa"]', "number": "1", "wordsaroundhit": "3"},
     headers={"Accept": "application/json"},
 )

@@ -8,10 +8,17 @@ from __future__ import annotations
 
 import logging
 import math
+import httpx
 from typing import Any
 
 from flask import request
-from ..extensions.http_client import get_http_client
+from ..extensions.http_client import (
+    get_http_client,
+    BlackLabCorpusNotFound,
+    build_bls_corpus_path,
+    get_corpus_not_found_message,
+    warn_if_configured_corpus_missing,
+)
 from ..search.cql import build_cql_with_speaker_filter, build_filters
 
 logger = logging.getLogger(__name__)
@@ -461,7 +468,8 @@ def search_blacklab(params: Any) -> dict[str, Any]:
         cql = merged
 
     # Use 'corpora' path segment for BlackLab v5 API via proxy
-    bls_url = f"{request.url_root}bls/corpora/corapan/hits"
+    bls_url = f"{request.url_root}bls{build_bls_corpus_path('hits')}"
+    warn_if_configured_corpus_missing()
 
     bls_params = {
         "first": first,
@@ -477,9 +485,16 @@ def search_blacklab(params: Any) -> dict[str, Any]:
     # Add filter param if present (deprecated), use filter only if build filters returned any
     # Not needed: blacklab filter doc-level maybe included in CQL
 
-    response = http.get(bls_url, params=bls_params)
-    response.raise_for_status()
-    data = response.json()
+    try:
+        response = http.get(bls_url, params=bls_params)
+        response.raise_for_status()
+        data = response.json()
+    except httpx.HTTPStatusError as e:
+        corpus_message = get_corpus_not_found_message(e.response)
+        if corpus_message:
+            logger.warning(corpus_message)
+            raise BlackLabCorpusNotFound(corpus_message) from e
+        raise
 
     summary = data.get("summary") or data.get("resultsStats", {})
     total = summary.get("hits") or summary.get("numberOfHits") or 0
