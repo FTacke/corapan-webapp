@@ -1,4 +1,4 @@
-# CO.RA.PAN Production Stack: App + PostgreSQL Auth DB
+# CO.RA.PAN Production Stack: App + PostgreSQL Auth DB 19.01.2026
 #
 # Usage:
 #   docker-compose -f infra/docker-compose.prod.yml up -d --build     # Deploy
