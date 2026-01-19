@@ -32,3 +32,10 @@ On the first BlackLab request, the app fetches the corpus list and logs a warnin
 ## Notes
 - Default corpus is `index` to match production deployments.
 - All application calls use `/corpora/${BLS_CORPUS}/...` and must match the BlackLab index name.
+
+## Optional Cache/Stats Directories
+The following paths are **optional / cache-only** and do not block startup:
+- `PUBLIC_STATS_DIR` (default runtime path or env override)
+- `STATS_TEMP_DIR` (default runtime path or env override)
+
+The app creates these directories automatically at startup if they are missing. If creation fails, it logs a warning and continues running (no fatal error).

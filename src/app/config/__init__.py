@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import os
 import warnings
+import logging
 from pathlib import Path
 
 # Re-export from countries module
@@ -23,6 +24,8 @@ from .countries import (
     name_to_code,
     normalize_country_code,
 )
+
+logger = logging.getLogger(__name__)
 
 # Sentinel value to detect missing SECRET_KEY
 DEFAULT_SECRET_SENTINEL = "___SENTINEL_CHANGE_ME___"
@@ -172,45 +175,46 @@ class BaseConfig:
             RuntimeWarning,
         )
     else:
-        # Neither env var set - FAIL FAST (production default)
-        raise RuntimeError(
-            "PUBLIC_STATS_DIR environment variable not configured.\n"
-            "Statistics are RUNTIME DATA and must be explicitly provided.\n\n"
-            "Options:\n"
-            "  1. Set PUBLIC_STATS_DIR directly:\n"
-            "     export PUBLIC_STATS_DIR=/path/to/statistics\n\n"
-            "  2. Set CORAPAN_RUNTIME_ROOT (preferred):\n"
-            "     export CORAPAN_RUNTIME_ROOT=/runtime/path\n"
-            "     # Then PUBLIC_STATS_DIR will be ${CORAPAN_RUNTIME_ROOT}/data/public/statistics\n\n"
-            "Workflow:\n"
-            "  python LOKAL/_0_json/05_publish_corpus_statistics.py\n"
-            "  # Generates files to ${CORAPAN_RUNTIME_ROOT}/data/public/statistics/\n"
-            "  python -m src.app.main\n"
-            "  # Reads from same location\n"
+        # Neither env var set - fall back to repo-local runtime (non-fatal)
+        PUBLIC_STATS_DIR = (
+            PROJECT_ROOT / "runtime" / "corapan" / "data" / "public" / "statistics"
+        )
+        logger.warning(
+            "PUBLIC_STATS_DIR not configured. Falling back to repo-local runtime path: %s",
+            PUBLIC_STATS_DIR,
         )
 
-    if _is_dev:
-        try:
-            PUBLIC_STATS_DIR.mkdir(parents=True, exist_ok=True)
-        except Exception as exc:
-            warnings.warn(
-                f"Failed to create PUBLIC_STATS_DIR at {PUBLIC_STATS_DIR}: {exc}",
-                RuntimeWarning,
-            )
-
-        _stats_file = PUBLIC_STATS_DIR / "corpus_stats.json"
-        if not _stats_file.exists():
-            warnings.warn(
-                "Statistics not generated yet; stats endpoints will return 404 until corpus_stats.json exists. "
-                f"Expected: {_stats_file}",
-                RuntimeWarning,
-            )
+    _explicit_stats_temp_dir = os.getenv("STATS_TEMP_DIR")
+    if _explicit_stats_temp_dir:
+        STATS_TEMP_DIR = Path(_explicit_stats_temp_dir)
+    elif _runtime_root:
+        STATS_TEMP_DIR = Path(_runtime_root) / "data" / "stats_temp"
+    elif _is_dev:
+        STATS_TEMP_DIR = PROJECT_ROOT / "runtime" / "corapan" / "data" / "stats_temp"
     else:
-        if not PUBLIC_STATS_DIR.exists():
-            raise RuntimeError(
-                "PUBLIC_STATS_DIR does not exist."
-                f" Expected path: {PUBLIC_STATS_DIR}"
-            )
+        STATS_TEMP_DIR = PROJECT_ROOT / "runtime" / "corapan" / "data" / "stats_temp"
+        logger.warning(
+            "STATS_TEMP_DIR not configured. Falling back to repo-local runtime path: %s",
+            STATS_TEMP_DIR,
+        )
+
+    try:
+        PUBLIC_STATS_DIR.mkdir(parents=True, exist_ok=True)
+    except Exception as exc:
+        logger.warning("Failed to create PUBLIC_STATS_DIR at %s: %s", PUBLIC_STATS_DIR, exc)
+
+    try:
+        STATS_TEMP_DIR.mkdir(parents=True, exist_ok=True)
+    except Exception as exc:
+        logger.warning("Failed to create STATS_TEMP_DIR at %s: %s", STATS_TEMP_DIR, exc)
+
+    _stats_file = PUBLIC_STATS_DIR / "corpus_stats.json"
+    if not _stats_file.exists():
+        warnings.warn(
+            "Statistics not generated yet; stats endpoints will return 404 until corpus_stats.json exists. "
+            f"Expected: {_stats_file}",
+            RuntimeWarning,
+        )
 
     _ensure_stats_permissions(PUBLIC_STATS_DIR)
 
