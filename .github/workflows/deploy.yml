@@ -39,22 +39,6 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Ensure docker-compose v1
-        run: |
-          if command -v docker-compose >/dev/null 2>&1; then
-            docker-compose --version
-            exit 0
-          fi
-
-          INSTALL_DIR="$HOME/.local/bin"
-          COMPOSE_BIN="$INSTALL_DIR/docker-compose"
-          mkdir -p "$INSTALL_DIR"
-          curl -fsSL "https://github.com/docker/compose/releases/download/1.29.2/docker-compose-$(uname -s)-$(uname -m)" -o "$COMPOSE_BIN"
-          chmod +x "$COMPOSE_BIN"
-          echo "DOCKER_COMPOSE_BIN=$COMPOSE_BIN" >> "$GITHUB_ENV"
-          echo "$INSTALL_DIR" >> "$GITHUB_PATH"
-          "$COMPOSE_BIN" --version
-
       - name: Deploy corapan-webapp
         run: |
           cd "${GITHUB_WORKSPACE}"
