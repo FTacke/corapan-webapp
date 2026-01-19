@@ -63,8 +63,10 @@ services:
       JWT_COOKIE_SECURE: "true"
 
       # Runtime roots (host runtime root is mounted into container at same path)
-      CORAPAN_RUNTIME_ROOT: ${CORAPAN_RUNTIME_ROOT:-/srv/webapps/corapan/runtime/corapan}
-      CORAPAN_MEDIA_ROOT: ${CORAPAN_MEDIA_ROOT:-/srv/webapps/corapan/runtime/corapan/media}
+      CORAPAN_RUNTIME_ROOT: ${CORAPAN_RUNTIME_ROOT:-/app}
+      CORAPAN_MEDIA_ROOT: ${CORAPAN_MEDIA_ROOT:-/app/media}
+      PUBLIC_STATS_DIR: ${PUBLIC_STATS_DIR:-/app/data/public/statistics}
+      STATS_TEMP_DIR: ${STATS_TEMP_DIR:-/app/data/stats_temp}
       
       # Session cookies
       FLASK_SESSION_SECURE: "true"
