@@ -85,20 +85,14 @@ fi
 # Step 4: Deploy using docker-compose.prod.yml (runtime-first mounts)
 # Note: Running from app directory where infra/docker-compose.prod.yml exists
 log_info "Deploying via docker-compose -f infra/${COMPOSE_FILE}..."
+log_info "Using compose v1 syntax (docker-compose command)"
 log_info "Current directory: $(pwd)"
 
-# Try to find docker-compose (v1) or use docker compose (v2 plugin)
-if command -v docker-compose &> /dev/null; then
-    log_info "Using docker-compose v1 (standalone)"
-    docker-compose -f "infra/${COMPOSE_FILE}" up -d --force-recreate --build
-elif docker compose version &> /dev/null; then
-    log_info "Using docker compose v2 (plugin)"
-    docker compose -f "infra/${COMPOSE_FILE}" up -d --force-recreate --build
-else
-    log_error "Neither docker-compose (v1) nor docker compose (v2) found!"
-    exit 1
-fi
+# Use full path to docker-compose (GitHub Actions runner may not have it in PATH)
+DOCKER_COMPOSE_CMD=$(which docker-compose 2>/dev/null || echo "/usr/local/bin/docker-compose")
+log_info "Using docker-compose at: ${DOCKER_COMPOSE_CMD}"
 
+"${DOCKER_COMPOSE_CMD}" -f "infra/${COMPOSE_FILE}" up -d --force-recreate --build
 log_info "Containers started successfully"
 echo ""
 
