@@ -104,30 +104,27 @@ echo ""
 # Step 5: Verify runtime-first mounts
 log_info "Verifying runtime-first mounts..."
 
-mounts_raw="$(docker inspect "${CONTAINER_NAME}" --format '{{range .Mounts}}{{printf "%s <- %s\n" .Destination .Source}}{{end}}' | sort)"
-
-# Normalize whitespace INSIDE each line, but keep line breaks
-mounts_norm="$(printf '%s\n' "${mounts_raw}" | sed -E 's/[[:space:]]+/ /g; s/^ //; s/ $//')"
+mount_pairs="$(docker inspect "${CONTAINER_NAME}" --format '{{range .Mounts}}{{printf "%s<<<%s\n" .Destination .Source}}{{end}}' \
+  | tr -d '\r' | sort)"
 
 missing=0
-required_mounts=(
-  "/app/data <- ${RUNTIME_DIR}/data"
-  "/app/media <- ${RUNTIME_DIR}/media"
-  "/app/logs <- ${RUNTIME_DIR}/logs"
-  "/app/config <- ${RUNTIME_DIR}/config"
+required_pairs=(
+  "/app/data<<<${RUNTIME_DIR}/data"
+  "/app/media<<<${RUNTIME_DIR}/media"
+  "/app/logs<<<${RUNTIME_DIR}/logs"
+  "/app/config<<<${RUNTIME_DIR}/config"
 )
 
-for required in "${required_mounts[@]}"; do
-  required_norm="$(printf '%s\n' "${required}" | sed -E 's/[[:space:]]+/ /g; s/^ //; s/ $//')"
-  if ! printf '%s\n' "${mounts_norm}" | grep -Fqx "${required_norm}"; then
-    log_error "Missing mount: ${required}"
+for pair in "${required_pairs[@]}"; do
+  if ! printf '%s\n' "${mount_pairs}" | grep -Fqx "${pair}"; then
+    log_error "Missing mount: ${pair}"
     missing=1
   fi
 done
 
 if [ "${missing}" -ne 0 ]; then
-  log_error "Runtime-first mounts mismatch. Actual mounts:"
-  printf '%s\n' "${mounts_raw}"
+  log_error "Runtime-first mounts mismatch. Actual mount pairs:"
+  printf '%s\n' "${mount_pairs}"
   exit 1
 fi
 
