@@ -112,7 +112,7 @@ required_mounts=(
 
 for required in "${required_mounts[@]}"; do
   required_norm="$(printf '%s\n' "${required}" | tr -s '[:space:]' ' ' | sed 's/^ //; s/ $//')"
-  if ! printf '%s\n' "${mounts_norm}" | grep -Fxq "${required_norm}"; then
+  if ! printf '%s\n' "${mounts_norm}" | grep -Fqx "${required_norm}"; then
     log_error "Missing mount: ${required}"
     missing=1
   fi
