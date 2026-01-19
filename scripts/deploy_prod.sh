@@ -66,19 +66,13 @@ git reset --hard origin/main
 log_info "Code updated to: $(git rev-parse --short HEAD)"
 echo ""
 
-# Step 2: Change to base directory (where docker-compose.prod.yml is located)
-log_info "Changing to base directory: ${BASE_DIR}..."
-cd "${BASE_DIR}"
-log_info "Current directory: $(pwd)"
-echo ""
-
-# Step 3: Ensure runtime directories exist
-log_info "Ensuring runtime directories exist..."
+# Step 2: Ensure runtime directories exist (on host)
+log_info "Ensuring runtime directories exist at ${RUNTIME_DIR}..."
 mkdir -p "${RUNTIME_DIR}/data" "${RUNTIME_DIR}/media" "${RUNTIME_DIR}/logs" "${RUNTIME_DIR}/config"
-log_info "Runtime directories ready at ${RUNTIME_DIR}"
+log_info "Runtime directories ready"
 echo ""
 
-# Step 4: Ensure statistics assets are readable by container user
+# Step 3: Ensure statistics assets are readable by container user
 STATS_DIR="${RUNTIME_DIR}/data/public/statistics"
 if [ -d "${STATS_DIR}" ]; then
     log_info "Ensuring statistics permissions in ${STATS_DIR}..."
@@ -88,15 +82,16 @@ else
     log_warn "Statistics directory not found at ${STATS_DIR}"
 fi
 
-# Step 5: Deploy using docker-compose.prod.yml (runtime-first mounts)
+# Step 4: Deploy using docker-compose.prod.yml (runtime-first mounts)
+# Note: Running from app directory where infra/docker-compose.prod.yml exists
 log_info "Deploying via docker-compose -f infra/${COMPOSE_FILE}..."
 log_info "Using compose v1 syntax (docker-compose command)"
-cd "${BASE_DIR}"
+log_info "Current directory: $(pwd)"
 docker-compose -f "infra/${COMPOSE_FILE}" up -d --force-recreate --build
 log_info "Containers started successfully"
 echo ""
 
-# Step 6: Wait for container to be ready
+# Step 5: Wait for container to be ready
 log_info "Waiting for container to be ready..."
 sleep 10
 
@@ -110,7 +105,7 @@ else
 fi
 echo ""
 
-# Step 7: Verify runtime-first mounts are correct
+# Step 6: Verify runtime-first mounts are correct
 log_info "Verifying runtime-first mounts..."
 MOUNTS=$(docker inspect "${CONTAINER_NAME}" --format '{{range .Mounts}}{{println .Destination "<-" .Source}}{{end}}' | sort)
 echo "${MOUNTS}"
@@ -142,7 +137,7 @@ fi
 log_info "All mounts verified successfully!"
 echo ""
 
-# Step 8: Run database setup (optional - uncomment if needed)
+# Step 7: Run database setup (optional - uncomment if needed)
 # This creates tables and ensures admin user exists
 log_info "Running database setup..."
 docker exec "${CONTAINER_NAME}" python scripts/setup_prod_db.py || {
