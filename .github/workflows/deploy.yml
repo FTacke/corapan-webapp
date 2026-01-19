@@ -15,9 +15,8 @@
 # Prerequisites on the server:
 #   - GitHub self-hosted runner configured and running
 #   - Docker installed
-#   - /srv/webapps/corapan/{app,data,media,config,logs} directories set up
+#   - /srv/webapps/corapan/{app,config,runtime} directories set up
 #   - passwords.env configured in /srv/webapps/corapan/config/
-#   - data/media synced via rsync (not part of this workflow)
 #
 # =============================================================================
 
@@ -47,11 +46,25 @@ jobs:
           # Wait a moment for the container to fully start
           sleep 10
           # Check if container is running
-          if docker ps --format '{{.Names}}' | grep -q '^corapan-webapp$'; then
-            echo "✓ Container corapan-webapp is running"
-            docker ps --filter "name=corapan-webapp" --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
+          if docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}" | grep -E '^corapan-web-prod'; then
+            echo "✓ Container corapan-web-prod is running"
           else
-            echo "✗ Container corapan-webapp is not running!"
-            docker logs corapan-webapp 2>&1 | tail -50
+            echo "✗ Container corapan-web-prod is not running!"
+            docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
             exit 1
           fi
+
+          # Verify runtime-first mounts
+          mounts=$(docker inspect corapan-web-prod --format '{{range .Mounts}}{{println .Destination " <- " .Source}}{{end}}' | sort)
+          required=(
+            "/app/data <- /srv/webapps/corapan/runtime/corapan/data"
+            "/app/media <- /srv/webapps/corapan/runtime/corapan/media"
+            "/app/logs <- /srv/webapps/corapan/runtime/corapan/logs"
+            "/app/config <- /srv/webapps/corapan/runtime/corapan/config"
+          )
+          for r in "${required[@]}"; do
+            echo "$mounts" | grep -qx "$r" || { echo "✗ Missing mount: $r"; exit 1; }
+          done
+
+          # Health check
+          curl -fsS http://127.0.0.1:6000/health

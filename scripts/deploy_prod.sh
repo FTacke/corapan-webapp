@@ -23,20 +23,17 @@
 #
 # =============================================================================
 
-set -e  # Exit on any error
+set -euo pipefail
 
 # Configuration
-CONTAINER_NAME="corapan-webapp"
-IMAGE_NAME="corapan-webapp:latest"
-HOST_PORT=6000
-CONTAINER_PORT=5000
-
-# Paths (on the host)
 BASE_DIR="/srv/webapps/corapan"
-DATA_DIR="${BASE_DIR}/data"
-MEDIA_DIR="${BASE_DIR}/media"
-CONFIG_DIR="${BASE_DIR}/config"
-LOGS_DIR="${BASE_DIR}/logs"
+APP_DIR="${BASE_DIR}/app"
+RUNTIME_DIR="${BASE_DIR}/runtime/corapan"
+ENV_FILE="${BASE_DIR}/config/passwords.env"
+COMPOSE_FILE="${APP_DIR}/infra/docker-compose.prod.yml"
+CONTAINER_NAME="corapan-web-prod"
+LEGACY_CONTAINER="corapan-webapp"
+HEALTH_URL="http://127.0.0.1:6000/health"
 
 # Colors for output
 RED='\033[0;31m'
@@ -62,6 +59,8 @@ echo "=============================================="
 echo "Started at: $(date)"
 echo ""
 
+cd "${APP_DIR}"
+
 # Step 1: Update code from Git
 log_info "Fetching latest code from origin/main..."
 git fetch origin
@@ -69,76 +68,65 @@ git reset --hard origin/main
 log_info "Code updated to: $(git rev-parse --short HEAD)"
 echo ""
 
-# Step 2: Build Docker image
-# Note: BuildKit disabled - server lacks buildx component
-log_info "Building Docker image: ${IMAGE_NAME}..."
-DOCKER_BUILDKIT=0 docker build -t "${IMAGE_NAME}" .
-log_info "Docker image built successfully"
-echo ""
-
-# Step 3: Stop and remove old container (if exists)
-log_info "Stopping old container (if running)..."
-docker stop "${CONTAINER_NAME}" 2>/dev/null || true
-docker rm "${CONTAINER_NAME}" 2>/dev/null || true
-log_info "Old container removed"
-echo ""
-
-# Step 4: Ensure corapan-network exists
-log_info "Ensuring Docker network corapan-network exists..."
-docker network inspect corapan-network >/dev/null 2>&1 || {
-    log_info "Creating Docker network: corapan-network (172.18.0.0/16)"
-    docker network create --subnet=172.18.0.0/16 corapan-network
-}
-
-# Step 4b: Ensure statistics assets are readable by container user
-STATS_DIR="${DATA_DIR}/public/statistics"
-if [ -d "${STATS_DIR}" ]; then
-    log_info "Ensuring statistics permissions in ${STATS_DIR}..."
-    chmod 755 "${STATS_DIR}" || log_warn "Failed to chmod stats directory"
-    find "${STATS_DIR}" -type f -exec chmod 644 {} \; || log_warn "Failed to chmod stats files"
+# Step 2: Remove legacy container if present (avoid port conflicts)
+log_info "Removing legacy container if present..."
+if docker ps --format '{{.Names}}' | grep -qx "${LEGACY_CONTAINER}"; then
+    docker rm -f "${LEGACY_CONTAINER}"
+    log_info "Removed legacy container: ${LEGACY_CONTAINER}"
 else
-    log_warn "Statistics directory not found at ${STATS_DIR}"
+    log_info "Legacy container not running"
 fi
-
-# Step 5: Start new container
-log_info "Starting new container: ${CONTAINER_NAME}..."
-docker run -d \
-    --name "${CONTAINER_NAME}" \
-    --restart unless-stopped \
-    --network corapan-network \
-    -p "${HOST_PORT}:${CONTAINER_PORT}" \
-    -v "${DATA_DIR}:/app/data" \
-    -v "${MEDIA_DIR}:/app/media" \
-    -v "${LOGS_DIR}:/app/logs" \
-    --env-file "${CONFIG_DIR}/passwords.env" \
-    -e "FLASK_ENV=production" \
-    -e "CORAPAN_RUNTIME_ROOT=/app" \
-    -e "CORAPAN_MEDIA_ROOT=/app/media" \
-    "${IMAGE_NAME}"
-
-log_info "Container started successfully"
 echo ""
 
-# Step 6: Wait for container to be healthy
-log_info "Waiting for container to be ready..."
-sleep 5
+# Step 3: Start via docker-compose (runtime-first)
+log_info "Starting production stack via docker-compose..."
+docker-compose --env-file "${ENV_FILE}" \
+  -f "${COMPOSE_FILE}" up -d --force-recreate --build
+echo ""
 
-# Check if container is running
-if docker ps --format '{{.Names}}' | grep -q "^${CONTAINER_NAME}$"; then
-    log_info "Container is running"
+# Step 4: Verify container is running
+log_info "Verifying container is running..."
+if docker ps --format '{{.Names}}' | grep -qx "${CONTAINER_NAME}"; then
+    log_info "Container is running: ${CONTAINER_NAME}"
 else
-    log_error "Container failed to start!"
-    docker logs "${CONTAINER_NAME}" 2>&1 | tail -20
+    log_error "Container ${CONTAINER_NAME} is not running"
+    docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
     exit 1
 fi
 echo ""
 
-# Step 7: Run database setup (optional - uncomment if needed)
-# This creates tables and ensures admin user exists
-log_info "Running database setup..."
-docker exec "${CONTAINER_NAME}" python scripts/setup_prod_db.py || {
-    log_warn "Database setup failed or skipped. Check logs for details."
-}
+# Step 5: Verify runtime-first mounts
+log_info "Verifying runtime-first mounts..."
+mounts=$(docker inspect "${CONTAINER_NAME}" --format '{{range .Mounts}}{{println .Destination " <- " .Source}}{{end}}' | sort)
+missing=0
+required_mounts=(
+  "/app/data <- ${RUNTIME_DIR}/data"
+  "/app/media <- ${RUNTIME_DIR}/media"
+  "/app/logs <- ${RUNTIME_DIR}/logs"
+  "/app/config <- ${RUNTIME_DIR}/config"
+)
+for required in "${required_mounts[@]}"; do
+  if ! printf '%s\n' "${mounts}" | grep -qx "${required}"; then
+    log_error "Missing mount: ${required}"
+    missing=1
+  fi
+done
+if [ "${missing}" -ne 0 ]; then
+    log_error "Runtime-first mounts mismatch. Actual mounts:"
+    printf '%s\n' "${mounts}"
+    exit 1
+fi
+log_info "Runtime-first mounts verified"
+echo ""
+
+# Step 6: Health check
+log_info "Checking health endpoint..."
+if ! curl -fsS "${HEALTH_URL}"; then
+    log_error "Health check failed: ${HEALTH_URL}"
+    docker logs --tail 200 "${CONTAINER_NAME}" || true
+    exit 1
+fi
+log_info "Health check ok"
 echo ""
 
 # Summary
@@ -146,8 +134,6 @@ echo "=============================================="
 log_info "Deployment completed successfully!"
 echo "=============================================="
 echo "Container: ${CONTAINER_NAME}"
-echo "Image: ${IMAGE_NAME}"
-echo "Port: ${HOST_PORT} -> ${CONTAINER_PORT}"
 echo "Commit: $(git rev-parse --short HEAD)"
 echo "Finished at: $(date)"
 echo ""

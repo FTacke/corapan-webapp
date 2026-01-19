@@ -1,9 +1,9 @@
 # CO.RA.PAN Production Stack: App + PostgreSQL Auth DB
 #
 # Usage:
-#   docker compose -f infra/docker-compose.prod.yml up -d --build    # Deploy
-#   docker compose -f infra/docker-compose.prod.yml down             # Stop
-#   docker compose -f infra/docker-compose.prod.yml logs -f web      # Follow logs
+#   docker-compose -f infra/docker-compose.prod.yml up -d --build     # Deploy
+#   docker-compose -f infra/docker-compose.prod.yml down              # Stop
+#   docker-compose -f infra/docker-compose.prod.yml logs -f web       # Follow logs
 #
 # REQUIRED environment variables (set in shell or .env file):
 #   FLASK_SECRET_KEY     - Strong random secret (generate: python -c "import secrets; print(secrets.token_hex(32))")
@@ -39,7 +39,7 @@ services:
 
   web:
     build:
-      context: .
+      context: ..
       dockerfile: Dockerfile
     container_name: corapan-web-prod
     depends_on:
@@ -76,6 +76,10 @@ services:
       
       # Hashing algorithm
       AUTH_HASH_ALGO: argon2
+
+      # Production guardrail: BlackLab must be reachable via Docker network name,
+      # not via localhost/host-port mapping.
+      BLS_BASE_URL: http://corapan-blacklab:8080/blacklab-server
     volumes:
       # Production uses runtime-first mounts.
       # Container paths (/app/*) are treated as stable API.

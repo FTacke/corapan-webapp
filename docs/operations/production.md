@@ -1,7 +1,7 @@
 # Produktion
 
 **Scope:** Production Deployment und Betrieb  
-**Source-of-truth:** `docker-compose.yml`, `Dockerfile`, `scripts/deploy_prod.sh`
+**Source-of-truth:** `infra/docker-compose.prod.yml`, `Dockerfile`, `scripts/deploy_prod.sh`
 
 ## Voraussetzungen
 
@@ -38,16 +38,12 @@ CORAPAN_MEDIA_ROOT=/srv/webapps/corapan/runtime/corapan/media
 python -c "import secrets; print(secrets.token_hex(32))"
 ```
 
-### 3. Docker Image bauen
+### 3. Production Start (docker-compose v1)
 
 ```bash
-docker-compose build
-```
-
-### 4. Container starten
-
-```bash
-docker-compose up -d
+cd /srv/webapps/corapan/app
+docker-compose --env-file /srv/webapps/corapan/config/passwords.env \
+    -f infra/docker-compose.prod.yml up -d --force-recreate --build
 ```
 
 ### 5. Health Check
@@ -60,7 +56,7 @@ curl http://localhost:6000/health
 ### 6. Logs prüfen
 
 ```bash
-docker logs corapan-container -f
+docker logs corapan-web-prod -f
 ```
 
 ---
@@ -78,6 +74,17 @@ App path resolution (evidence):
 **Expected production roots:**
 - Data: `/srv/webapps/corapan/runtime/corapan/data`
 - Media: `/srv/webapps/corapan/runtime/corapan/media`
+
+**Expected runtime-first mounts (container paths):**
+- `/app/data <- /srv/webapps/corapan/runtime/corapan/data`
+- `/app/media <- /srv/webapps/corapan/runtime/corapan/media`
+- `/app/logs <- /srv/webapps/corapan/runtime/corapan/logs`
+- `/app/config <- /srv/webapps/corapan/runtime/corapan/config`
+
+**Legacy:** Container `corapan-webapp` ist deprecated und darf nicht mehr gestartet werden.
+
+**BlackLab:** In Production muss BlackLab via Docker-Netz erreichbar sein:
+`BLS_BASE_URL=http://corapan-blacklab:8080/blacklab-server` (kein localhost/Host-Port).
 
 Sync scripts and docker mounts are aligned to these paths.
 
