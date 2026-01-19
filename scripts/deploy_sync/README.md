@@ -26,11 +26,11 @@ This directory contains the core deployment logic for synchronizing data, media,
 Connection parameters (hostname and user) are configured in sync_core.ps1. Port is implicit (default 22) and not exposed as a config variable. Default target: `137.248.186.51` (root@22).
 
 **What it syncs:**
-- `data/db_public/`
-- `data/metadata/`
-- `data/exports/`
-- `data/blacklab_export/`
-- Stats databases: `data/db/stats_files.db`, `data/db/stats_country.db`
+- `runtime/corapan/data/db/public/`
+- `runtime/corapan/data/public/metadata/`
+- `runtime/corapan/data/exports/`
+- `runtime/corapan/data/blacklab_export/`
+- Stats databases: `runtime/corapan/data/db/public/stats_files.db`, `runtime/corapan/data/db/public/stats_country.db`
 
 **PROTECTED PRODUCTION STATE (PERMANENTLY EXCLUDED):**
 - `data/counters/` - Runtime state (page views, downloads, etc.) - **NEVER synced**

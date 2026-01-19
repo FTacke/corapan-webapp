@@ -8,12 +8,12 @@
 #   uebertragen, geaenderte Dateien ueberschreiben die Version auf dem Server.
 #
 # -----------------------------------------------------------------------------
-# SYNCHRONISIERTE VERZEICHNISSE (unter data/):
+# SYNCHRONISIERTE VERZEICHNISSE (unter runtime/data/):
 # -----------------------------------------------------------------------------
 #
 #   Folgende Verzeichnisse werden als Ganzes synchronisiert:
-#   - db_public       -> Oeffentliche Datenbank-Exports
-#   - metadata        -> Metadaten zu Korpus-Dateien
+#   - db/public        -> Oeffentliche Datenbank-Exports
+#   - public/metadata  -> Metadaten zu Korpus-Dateien
 #   - exports         -> Generierte Exports
 #   - blacklab_export -> BlackLab-Export-Dateien
 #
@@ -118,8 +118,8 @@ $REMOTE_BASE_PATH = "/srv/webapps/corapan/data"
 # WICHTIG: blacklab_index, blacklab_index.backup, stats_temp, db sind bewusst NICHT enthalten!
 # WICHTIG: counters ist NICHT enthalten (Production State Protection)
 $DATA_DIRECTORIES = @(
-    "db_public",
-    "metadata",
+    "db/public",
+    "public/metadata",
     "exports",
     "blacklab_export"
 )

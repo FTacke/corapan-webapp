@@ -122,7 +122,7 @@ AUTH_DATABASE_URL="sqlite:///data/db/auth.db"
 |----------|---------|--------|-------|-------|
 | `PROJECT_ROOT` | *(auto-detected)* | Path | Repo-Root | `src/app/config/__init__.py` |
 | `DB_DIR` | `{PROJECT_ROOT}/data/db` | Path | Runtime-DBs | `src/app/config/__init__.py` |
-| `DB_PUBLIC_DIR` | `{PROJECT_ROOT}/data/db/public` | Path | Public DBs (falls vorhanden) | `src/app/config/__init__.py` |
+| `db/public_DIR` | `{PROJECT_ROOT}/data/db/public` | Path | Public DBs (falls vorhanden) | `src/app/config/__init__.py` |
 | `MEDIA_DIR` | `{PROJECT_ROOT}/media` | Path | Audio & Transkripte | `src/app/config/__init__.py` |
 | `TRANSCRIPTS_DIR` | `{MEDIA_DIR}/transcripts` | Path | JSON-Transkripte | `src/app/config/__init__.py` |
 | `AUDIO_FULL_DIR` | `{MEDIA_DIR}/mp3-full` | Path | Vollständige Audio-Dateien | `src/app/config/__init__.py` |

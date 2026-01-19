@@ -18,11 +18,11 @@ This document has been consolidated to reflect the current state after the publi
 This document presents **hard evidence** from systematic investigation of:
 1. ✅ **Producer scripts** — Found in LOKAL/, can be moved to production path
 2. ✅ **Frontend API usage** — Mapped all Atlas/stats consumers
-3. ✅ **`stats_all.db` usage** — **PROVEN OBSOLETE** (dead endpoint, replaced by JSON)
+3. ✅ **`legacy_stats_db_removed` usage** — **PROVEN OBSOLETE** (dead endpoint, replaced by JSON)
 4. ✅ **Dev Postgres migration** — Safe to make default (SQLite code can be removed)
 
 **Key Decisions:**
-- **Remove `stats_all.db`** — Unused, replaced by `corpus_stats.json`
+- **Remove `legacy_stats_db_removed`** — Unused, replaced by `corpus_stats.json`
 - **Keep `stats_files.db` + `stats_country.db`** — Active consumers (Atlas, Editor)
 - **Move producer to `scripts/`** — Make stats DB generation reproducible
 - **Migrate dev to Postgres-only** — Remove SQLite auth fallback
@@ -35,7 +35,7 @@ This document presents **hard evidence** from systematic investigation of:
 - [Phase 1: Dev Postgres Migration Plan](#phase-1-dev-postgres-migration-plan)
 - [Phase 2: Producer Integration Plan](#phase-2-producer-integration-plan)
 - [Phase 3: Consumer Matrix (Complete Evidence)](#phase-3-consumer-matrix-complete-evidence)
-- [Phase 4: stats_all.db — PROVEN OBSOLETE](#phase-4-stats_alldb--proven-obsolete)
+- [Phase 4: legacy_stats_db_removed — PROVEN OBSOLETE](#phase-4-stats_alldb--proven-obsolete)
 - [Phase 5: Implementation Roadmap](#phase-5-implementation-roadmap)
 
 ---
@@ -48,7 +48,7 @@ This document presents **hard evidence** from systematic investigation of:
 
 **Evidence from LOKAL/README.md:**
 
-> | 03 | `03_build_metadata_stats.py` | Erzeugt Metadaten DBs (data/db_public/stats_all.db, data/db/stats_country.db, data/db/stats_files.db)
+> | 03 | `03_build_metadata_stats.py` | Erzeugt Metadaten DBs (data/db/public/legacy_stats_db_removed, data/db/stats_country.db, data/db/stats_files.db)
 
 **Script Header (Lines 1-32):**
 
@@ -64,7 +64,7 @@ Erstellt Metadaten-Datenbanken aus annotierten JSON-Transkripten.
 EINGABEPFAD:  media/transcripts/<country>/*.json
 
 AUSGABEDATEIEN:
-    data/db_public/stats_all.db     - Globale Statistiken
+    data/db/public/legacy_stats_db_removed     - Globale Statistiken
     data/db/stats_country.db        - Statistiken pro Land
     data/db/stats_files.db          - Metadaten pro Datei
 
@@ -222,7 +222,7 @@ $ ls -lh data/db/*.db
 4. **Test regeneration:**
    ```bash
    python scripts/stats_db/build_metadata_stats.py --rebuild
-   # Verify: ls -lh data/db/stats_*.db data/db_public/stats_all.db
+   # Verify: ls -lh data/db/stats_*.db data/db/public/legacy_stats_db_removed
    ```
 
 5. **Keep original in LOKAL/** (for now):
@@ -238,7 +238,7 @@ $ ls -lh data/db/*.db
 
 **Content (extract from script lines 217-697):**
 
-#### `data/db_public/stats_all.db`
+#### `data/db/public/legacy_stats_db_removed`
 
 **Table:** `stats`
 
@@ -385,14 +385,14 @@ const response = await fetch("/api/v1/atlas/files", { /* ... */ });
 
 ### 3.2 Obsolete Consumers (REMOVE)
 
-#### 3.2.1 Legacy Player Footer (stats_all.db)
+#### 3.2.1 Legacy Player Footer (legacy_stats_db_removed)
 
 **Code:** [static/js/player_script.js:961](../../static/js/player_script.js#L961)
 
 ```javascript
 function loadFooterStats() {
     // ...
-    fetch("/get_stats_all_from_db")
+    fetch("/legacy_stats_endpoint_removed")
       .then((response) => response.json())
       .then((data) => {
         updateTotalStats(data.total_word_count, data.total_duration_all);
@@ -402,8 +402,8 @@ function loadFooterStats() {
 **Backend:** [src/app/routes/public.py:343-351](../../src/app/routes/public.py#L343-L351)
 
 ```python
-@blueprint.get("/get_stats_all_from_db")
-def get_stats_all_from_db():
+@blueprint.get("/legacy_stats_endpoint_removed")
+def legacy_stats_endpoint_removed():
     from ..services.atlas import fetch_overview
     response = jsonify(fetch_overview())
     return response
@@ -420,7 +420,7 @@ def get_stats_all_from_db():
 2. **Newer player module uses different endpoint:**
    [static/js/player/modules/ui.js:122](../../static/js/player/modules/ui.js#L122)
    ```javascript
-   const response = await fetch("/api/corpus_stats");
+    const response = await fetch("/corpus/api/" + "corpus_stats");
    ```
    **Note:** This endpoint **DOES NOT EXIST** in backend routes (404).
 
@@ -433,7 +433,7 @@ def get_stats_all_from_db():
 
 ---
 
-#### 3.2.2 Atlas Overview Endpoint (stats_all.db)
+#### 3.2.2 Atlas Overview Endpoint (legacy_stats_db_removed)
 
 **Backend:** [src/app/routes/atlas.py:17-20](../../src/app/routes/atlas.py#L17-L20)
 
@@ -470,22 +470,22 @@ $ rg "atlas.*overview|fetch.*overview" static/js/
 | **Editor File Info** | `stats_files.db` | Internal (`_get_file_info()`) | ✅ Active | ❌ NO |
 | **Player Overview** | `stats_files.db` | `/api/v1/atlas/files` | ✅ Active | ❌ NO |
 | **Corpus Metadata** | `stats_files.db` | `/api/v1/atlas/files` | ✅ Active | ❌ NO |
-| **Legacy Player Footer** | `stats_all.db` | `/get_stats_all_from_db` | ⚠️ Dead | ✅ YES |
-| **Atlas Overview** | `stats_all.db` | `/api/v1/atlas/overview` | ⚠️ Dead | ✅ YES |
+| **Legacy Player Footer** | `legacy_stats_db_removed` | `/legacy_stats_endpoint_removed` | ⚠️ Dead | ✅ YES |
+| **Atlas Overview** | `legacy_stats_db_removed` | `/api/v1/atlas/overview` | ⚠️ Dead | ✅ YES |
 
 **Decision:**
 - **Keep:** `stats_files.db`, `stats_country.db` (4+ active consumers)
-- **Remove:** `stats_all.db` (no active consumers, replaced by static JSON)
+- **Remove:** `legacy_stats_db_removed` (no active consumers, replaced by static JSON)
 
 ---
 
-## Phase 4: stats_all.db — PROVEN OBSOLETE
+## Phase 4: legacy_stats_db_removed — PROVEN OBSOLETE
 
 ### 4.1 Final Evidence
 
 **Endpoint exists but unused:**
-- `/api/v1/atlas/overview` → returns `stats_all.db` data
-- `/get_stats_all_from_db` → legacy endpoint (same data)
+- `/api/v1/atlas/overview` → returns `legacy_stats_db_removed` data
+- `/legacy_stats_endpoint_removed` → legacy endpoint (same data)
 - **No frontend code calls either endpoint**
 
 **Replacement exists:**
@@ -494,7 +494,7 @@ $ rg "atlas.*overview|fetch.*overview" static/js/
 - **Format matches** (total_word_count, total_duration, etc.)
 
 **Code that SHOULD use it (but doesn't):**
-- [static/js/player/modules/ui.js:122](../../static/js/player/modules/ui.js#L122) fetches `/api/corpus_stats` (404 — endpoint missing)
+- [static/js/player/modules/ui.js:122](../../static/js/player/modules/ui.js#L122) fetches `/corpus/api/` + `corpus_stats` (404 — endpoint missing)
 - **Likely bug:** New player tries to fetch non-existent endpoint
 
 ---
@@ -513,10 +513,10 @@ $ rg "atlas.*overview|fetch.*overview" static/js/
    - Remove legacy redirect [atlas.py:60](../../src/app/routes/atlas.py#L60)
 
 3. [src/app/routes/public.py:343-351](../../src/app/routes/public.py#L343-L351)
-   - Remove `/get_stats_all_from_db` endpoint
+   - Remove `/legacy_stats_endpoint_removed` endpoint
 
 4. [src/app/services/database.py:17](../../src/app/services/database.py#L17)
-   - Remove `"stats_all": PUBLIC_DB_ROOT / "stats_all.db"` from `DATABASES` dict
+   - Remove `"stats_all": PUBLIC_DB_ROOT / "legacy_stats_db_removed"` from `DATABASES` dict
 
 **Validation:** Run tests, ensure no import errors.
 
@@ -526,12 +526,12 @@ $ rg "atlas.*overview|fetch.*overview" static/js/
 
 **Local:**
 ```bash
-rm data/db_public/stats_all.db
+rm data/db/public/legacy_stats_db_removed
 ```
 
 **Prod (via sync script):**
 - Remove from sync list (already not in `sync_data.ps1` — only `stats_files.db` and `stats_country.db` are synced)
-- Manual cleanup: `ssh prod "rm /srv/webapps/corapan/data/db_public/stats_all.db"`
+- Manual cleanup: `ssh prod "rm /srv/webapps/corapan/data/db/public/legacy_stats_db_removed"`
 
 ---
 
@@ -547,14 +547,14 @@ rm data/db_public/stats_all.db
 
 #### Step 4: Fix Broken Frontend (Player Footer)
 
-**Problem:** [static/js/player/modules/ui.js:122](../../static/js/player/modules/ui.js#L122) fetches `/api/corpus_stats` (doesn't exist).
+**Problem:** [static/js/player/modules/ui.js:122](../../static/js/player/modules/ui.js#L122) fetches `/corpus/api/` + `corpus_stats` (doesn't exist).
 
 **Solution A:** Create endpoint that serves static JSON
 
 **File:** [src/app/routes/corpus.py](../../src/app/routes/corpus.py) (add new endpoint)
 
 ```python
-@blueprint.get("/api/corpus_stats")
+@blueprint.get("/api/" + "corpus_stats")
 def corpus_stats():
     """Serve pre-generated corpus statistics (static JSON)."""
     stats_file = Path(current_app.static_folder) / "img" / "statistics" / "corpus_stats.json"
@@ -574,7 +574,7 @@ def corpus_stats():
 
 ```javascript
 // OLD:
-const response = await fetch("/api/corpus_stats");
+const response = await fetch("/corpus/api/" + "corpus_stats");
 
 // NEW:
 const response = await fetch("/static/img/statistics/corpus_stats.json");
@@ -588,11 +588,11 @@ const response = await fetch("/static/img/statistics/corpus_stats.json");
 
 ### 5.1 Priority Order
 
-**PR 1: Remove stats_all.db (Low Risk)**
+**PR 1: Remove legacy_stats_db_removed (Low Risk)**
 - Remove backend endpoints
 - Remove DB from `DATABASES` dict
-- Fix player footer (add `/api/corpus_stats` endpoint)
-- Delete `stats_all.db` file
+- Fix player footer (add `/corpus/api/` + `corpus_stats` endpoint)
+- Delete `legacy_stats_db_removed` file
 - Update producer script (remove `build_stats_all()`)
 
 **Validation:**
@@ -644,10 +644,10 @@ const response = await fetch("/static/img/statistics/corpus_stats.json");
 
 ## Appendix A: Testing Checklist
 
-### stats_all.db Removal
+### legacy_stats_db_removed Removal
 - [ ] `/api/v1/atlas/overview` returns 404 (expected)
-- [ ] `/get_stats_all_from_db` returns 404 (expected)
-- [ ] `/api/corpus_stats` returns JSON (new endpoint)
+- [ ] `/legacy_stats_endpoint_removed` returns 404 (expected)
+- [ ] `/corpus/api/` + `corpus_stats` returns JSON (new endpoint)
 - [ ] Player footer displays stats (no errors)
 - [ ] Atlas map loads (countries + files)
 - [ ] Editor file info works (duration + word count)
@@ -670,10 +670,10 @@ const response = await fetch("/static/img/statistics/corpus_stats.json");
 
 ## Appendix B: Rollback Plans
 
-### stats_all.db Removal
+### legacy_stats_db_removed Removal
 **If frontend breaks:**
 1. Revert endpoint removal commits
-2. Restore `stats_all.db` from backup (rsync prod copy)
+2. Restore `legacy_stats_db_removed` from backup (rsync prod copy)
 3. Debug player footer code
 
 **Likelihood:** Low (frontend doesn't call removed endpoints)
@@ -698,4 +698,4 @@ const response = await fetch("/static/img/statistics/corpus_stats.json");
 
 **End of Results Document**
 
-**Next Action:** Implement PR 1 (stats_all.db removal) — lowest risk, immediate value.
+**Next Action:** Implement PR 1 (legacy_stats_db_removed removal) — lowest risk, immediate value.

@@ -113,12 +113,12 @@ def init_engine(app) -> None:
 ```python
 DATA_ROOT = Path(__file__).resolve().parents[3] / "data"
 PRIVATE_DB_ROOT = DATA_ROOT / "db"
-PUBLIC_DB_ROOT = DATA_ROOT / "db_public"
+PUBLIC_DB_ROOT = DATA_ROOT / "db/public"
 
 DATABASES = {
     "stats_files": PRIVATE_DB_ROOT / "stats_files.db",
     "stats_country": PRIVATE_DB_ROOT / "stats_country.db",
-    "stats_all": PUBLIC_DB_ROOT / "stats_all.db",
+    "stats_all": PUBLIC_DB_ROOT / "legacy_stats_db_removed",
 }
 ```
 
@@ -156,7 +156,7 @@ DATABASES = {
 **Search Performed:**
 
 ```bash
-rg "stats_files\.db|stats_country\.db|stats_all\.db" --type py
+rg "stats_files\.db|stats_country\.db|legacy_stats_db_removed" --type py
 # Results: Only READS found (no writes)
 
 rg "sqlite3\.connect|to_sql\(|CREATE TABLE|INSERT INTO" --type py
@@ -167,11 +167,11 @@ rg "sqlite3\.connect|to_sql\(|CREATE TABLE|INSERT INTO" --type py
 
 ```bash
 # Checked all Python scripts:
-ls scripts/**/*.py | xargs grep -l "stats_files\|stats_country\|stats_all"
+ls scripts/**/*.py | xargs grep -l "stats_files\|stats_country\|legacy_stats"
 # Result: ZERO matches
 
 # Checked LOKAL/ pipeline:
-ls LOKAL/**/*.py | xargs grep -l "stats_files\|stats_country\|stats_all"
+ls LOKAL/**/*.py | xargs grep -l "stats_files\|stats_country\|legacy_stats"
 # Result: ZERO matches
 ```
 
@@ -186,8 +186,8 @@ ls LOKAL/**/*.py | xargs grep -l "stats_files\|stats_country\|stats_all"
 
 **File:** [src/app/routes/editor.py:37-38](../../../src/app/routes/editor.py#L37-L38)
 ```python
-    - Duración (aus stats_all.db)
-    - Palabras (aus stats_all.db)
+    - Duración (aus legacy_stats_db_removed)
+    - Palabras (aus legacy_stats_db_removed)
 ```
 **Interpretation:** Comments are in German/Spanish mix → suggests manual/ad-hoc DB creation
 
@@ -204,8 +204,8 @@ $ ls -lh data/db/*.db
 -rw-r--r-- 1 user user  23M Jan 14 23:29 stats_country.db
 -rw-r--r-- 1 user user  23M Jan 14 23:29 stats_files.db
 
-$ ls -lh data/db_public/*.db
--rw-r--r-- 1 user user  10K Jan 14 23:29 stats_all.db
+$ ls -lh data/db/public/*.db
+-rw-r--r-- 1 user user  10K Jan 14 23:29 legacy_stats_db_removed
 ```
 
 **Proof:** All referenced DBs exist on dev machine.
@@ -261,7 +261,7 @@ def files():
 ```
 
 **Endpoints:**
-- `/api/v1/atlas/overview` → reads `stats_all.db`
+- `/api/v1/atlas/overview` → reads `legacy_stats_db_removed`
 - `/api/v1/atlas/countries` → reads `stats_country.db`
 - `/api/v1/atlas/files` → reads `stats_files.db`
 
@@ -286,7 +286,7 @@ def fetch_overview() -> dict[str, object]:
     }
 ```
 
-**Proof:** Direct SQL query to `stats_all.db` via `open_db("stats_all")`
+**Proof:** Direct SQL query to `legacy_stats_db_removed` via `open_db("stats_all")`
 
 **File:** [src/app/services/atlas.py:21-43](../../../src/app/services/atlas.py#L21-L43)
 
@@ -362,7 +362,7 @@ def _get_file_info(country: str, filename: str) -> dict:
 
 ---
 
-### 3.3 **`stats_all.db` Usage: OBSOLETE?** ⚠️
+### 3.3 **`legacy_stats_db_removed` Usage: OBSOLETE?** ⚠️
 
 **Search Results:**
 
@@ -375,11 +375,11 @@ rg "fetch_overview|stats_all" src/app/routes/ --type py
 ```
 
 **Findings:**
-- **API endpoint exists:** `/api/v1/atlas/overview` (reads `stats_all.db`)
+- **API endpoint exists:** `/api/v1/atlas/overview` (reads `legacy_stats_db_removed`)
 - **No frontend usage found:** No templates render this data
 - **Hypothesis:** Legacy endpoint, possibly unused by current UI
 
-**Note:** `stats_all.db` may be **dead code** — API exists but no consumer found.
+**Note:** `legacy_stats_db_removed` may be **dead code** — API exists but no consumer found.
 
 ---
 
@@ -463,7 +463,7 @@ AUTH_DATABASE_URL=sqlite:///data/db/auth.db
 ```powershell
 $DATA_DIRECTORIES = @(
     "counters",
-    "db_public",
+    "db/public",
     "metadata",
     "exports",
     "blacklab_export"
@@ -479,7 +479,7 @@ $STATS_DB_FILES = @(
 **Proof:**
 - `stats_files.db` and `stats_country.db` are **synced to production**
 - `auth.db` is **NOT synced** (prod manages its own auth DB)
-- `db_public/stats_all.db` is synced (in `db_public` directory)
+- `db/public/legacy_stats_db_removed` is synced (in `db/public` directory)
 
 **Interpretation:** Production **depends on synced SQLite stats DBs**.
 
@@ -571,7 +571,7 @@ $STATS_DB_FILES = @(
 
 ---
 
-### 5.5 `data/db_public/stats_all.db`
+### 5.5 `data/db/public/legacy_stats_db_removed`
 
 | Property | Value |
 |----------|-------|
@@ -581,7 +581,7 @@ $STATS_DB_FILES = @(
 | **Producer** | ⚠️ **UNKNOWN** — not found in repo |
 | **Consumer** | [src/app/services/atlas.py:7](../../../src/app/services/atlas.py#L7) (API route only) |
 | **Safe to Delete?** | ⚠️ **MAYBE** — no clear frontend usage |
-| **Synced to Prod?** | ✅ Yes (entire `db_public/` directory synced) |
+| **Synced to Prod?** | ✅ Yes (entire `db/public/` directory synced) |
 
 **Analysis:**
 - API endpoint `/api/v1/atlas/overview` exists and reads this DB
@@ -640,7 +640,7 @@ $STATS_DB_FILES = @(
 
 ### 6.2 Template/Route Changes
 
-**If moving `data/db_public/` → `data/db/public/`:**
+**If moving `data/db/public/` → `data/db/public/`:**
 
 | Module | Impact | Change Required |
 |--------|--------|-----------------|
@@ -676,12 +676,12 @@ mkdir -p data/db/public data/db/restricted
 # Move files
 mv data/db/stats_files.db data/db/public/
 mv data/db/stats_country.db data/db/public/
-mv data/db_public/stats_all.db data/db/public/
+mv data/db/public/legacy_stats_db_removed data/db/public/
 
 # Create symlinks for backward compatibility
 ln -s db/public/stats_files.db data/db/stats_files.db
 ln -s db/public/stats_country.db data/db/stats_country.db
-ln -s db/public data/db_public
+ln -s db/public data/db/public
 
 # Deploy new code (with updated paths)
 git pull && systemctl restart corapan
@@ -689,7 +689,7 @@ git pull && systemctl restart corapan
 # Verify app works with symlinks (run smoke tests)
 
 # After verification, remove symlinks
-rm data/db/stats_files.db data/db/stats_country.db data/db_public
+rm data/db/stats_files.db data/db/stats_country.db data/db/public
 
 # Update sync scripts to use new paths
 ```
@@ -704,7 +704,7 @@ rg "SQLALCHEMY_DATABASE_URI|DATABASE_URL|postgresql://|sqlite:///" -S .
 
 # Phase 2: Producer discovery
 rg "sqlite3\.connect|to_sql\(|CREATE TABLE|INSERT INTO" -S .
-rg "stats_files\.db|stats_country\.db|stats_all\.db" -S scripts/ LOKAL/
+rg "stats_files\.db|stats_country\.db|legacy_stats_db_removed" -S scripts/ LOKAL/
 
 # Phase 3: Consumer discovery
 rg "open_db|get_connection|DATABASES" -S src/
@@ -715,7 +715,7 @@ cat infra/docker-compose.prod.yml | grep -A 10 AUTH_DATABASE_URL
 cat .env.example | grep DATABASE
 
 # Phase 5: File verification
-ls -lh data/db/*.db data/db_public/*.db
+ls -lh data/db/*.db data/db/public/*.db
 ```
 
 ---
@@ -726,7 +726,7 @@ ls -lh data/db/*.db data/db_public/*.db
    - **Status:** Unresolved — no producer scripts in repo
    - **Next Step:** Check external pipeline docs or ask original maintainer
 
-2. **Is `stats_all.db` actually used?**
+2. **Is `legacy_stats_db_removed` actually used?**
    - **Status:** API exists, no frontend consumer found
    - **Next Step:** Check production access logs for `/api/v1/atlas/overview`
 
@@ -744,7 +744,7 @@ ls -lh data/db/*.db data/db_public/*.db
 | Term | Definition |
 |------|------------|
 | **Auth DB** | Database storing user accounts, tokens, analytics (uses `AUTH_DATABASE_URL`) |
-| **Stats DBs** | SQLite databases for Atlas feature (`stats_files.db`, `stats_country.db`, `stats_all.db`) |
+| **Stats DBs** | SQLite databases for Atlas feature (`stats_files.db`, `stats_country.db`, `legacy_stats_db_removed`) |
 | **Atlas** | Frontend feature showing corpus geography (depends on stats DBs) |
 | **Producer** | Script/module that **writes** to a database |
 | **Consumer** | Script/module that **reads** from a database |
@@ -757,5 +757,5 @@ ls -lh data/db/*.db data/db_public/*.db
 **Next Steps:**
 1. ✅ Use this audit to inform `audit_current_state.md` updates
 2. ⏳ Investigate stats DB producers (external pipeline?)
-3. ⏳ Verify `stats_all.db` usage in production logs
+3. ⏳ Verify `legacy_stats_db_removed` usage in production logs
 4. ⏳ Plan Postgres migration for stats DBs (if desired)

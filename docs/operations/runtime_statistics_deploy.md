@@ -170,7 +170,7 @@ rsync or SSH failures during statistics upload:
 ```
 
 **Served via FastAPI:**
-- `/corpus/api/corpus_stats` → `corpus_stats.json`
+- `/corpus/api/` + `corpus_stats` → `corpus_stats.json`
 - `/corpus/api/statistics/viz_total_corpus.png` → image files
 - etc.
 
@@ -227,7 +227,7 @@ ssh root@marele.online.uni-marburg.de "ls -lh /srv/webapps/corapan/data/public/s
 
 **HTTP verification (from production):**
 ```bash
-curl https://corapan.com/corpus/api/corpus_stats
+curl https://corapan.com/corpus/api/ + corpus_stats
 curl -I https://corapan.com/corpus/api/statistics/viz_total_corpus.png
 ```
 

@@ -11,7 +11,7 @@ worked because the local runtime DB still contained the table.
 Atlas reads runtime metadata files exclusively from:
 
 ```
-${CORAPAN_RUNTIME_ROOT}/data/public/metadata/tei
+${CORAPAN_RUNTIME_ROOT}/data/public/metadata/latest/tei
 ```
 
 Priority order:
@@ -38,7 +38,7 @@ Missing fields fall back to `null` without dropping the record.
 
 ## Runtime Paths
 
-- Metadata directory: `/app/data/public/metadata/tei`
+- Metadata directory: `/app/data/public/metadata/latest/tei`
 - Stats DBs (still used elsewhere): `/app/data/db/public/*.db`
 
 ## Notes

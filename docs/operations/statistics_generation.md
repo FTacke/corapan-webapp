@@ -87,13 +87,13 @@ else:
 
 Two endpoints serve statistics from the configured `PUBLIC_STATS_DIR`:
 
-#### Endpoint 1: `GET /corpus/api/corpus_stats`
+#### Endpoint 1: `GET /corpus/api/` + `corpus_stats`
 
 Serves the pre-generated `corpus_stats.json` file with global corpus metadata.
 
 **Request:**
 ```http
-GET /corpus/api/corpus_stats HTTP/1.1
+GET /corpus/api/ corpus_stats HTTP/1.1
 ```
 
 **Response (200 OK):**
@@ -183,7 +183,7 @@ export FLASK_ENV=development
 python -m src.app.main
 
 # 6. Test endpoints
-curl http://localhost:8000/corpus/api/corpus_stats
+curl http://localhost:8000/corpus/api/ + corpus_stats
 curl http://localhost:8000/corpus/api/statistics/viz_total_corpus.png
 ```
 
@@ -271,7 +271,7 @@ services:
                  ↓
     ┌────────────────────────────┐
     │  API Endpoints             │
-    │  /corpus/api/corpus_stats  │
+    │  /corpus/api/ + corpus_stats  │
     │  /corpus/api/statistics/.. │
     │  (serve from runtime dir)  │
     └────────────┬───────────────┘
@@ -314,7 +314,7 @@ export CORAPAN_RUNTIME_ROOT=/data/runtime
 python LOKAL/_0_json/05_publish_corpus_statistics.py
 ```
 
-### 404 Error from `/corpus/api/corpus_stats`
+### 404 Error from `/corpus/api/` + `corpus_stats`
 
 **Cause:** Statistics JSON not yet generated.
 

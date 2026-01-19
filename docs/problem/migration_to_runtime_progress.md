@@ -218,7 +218,7 @@ Verification commands:
 Phase 6 — App runtime read paths (non-BlackLab)
 
 Changes applied:
-- [src/app/config/__init__.py](src/app/config/__init__.py): added `DATA_ROOT` derived from `CORAPAN_RUNTIME_ROOT` (dev fallback) and use it for `DB_DIR` and `DB_PUBLIC_DIR`.
+- [src/app/config/__init__.py](src/app/config/__init__.py): added `DATA_ROOT` derived from `CORAPAN_RUNTIME_ROOT` (dev fallback) and use it for `DB_DIR` and `db/public_DIR`.
 - [src/app/services/database.py](src/app/services/database.py): stats DBs now resolve under runtime data/db/public.
 - [src/app/routes/corpus.py](src/app/routes/corpus.py): metadata downloads resolve under runtime data root.
 - [src/app/routes/stats.py](src/app/routes/stats.py): stats response cache now uses runtime data root.

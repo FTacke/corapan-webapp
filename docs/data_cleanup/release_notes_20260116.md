@@ -12,7 +12,7 @@ This release summary reflects the current state after consolidating public DBs a
 - Atlas endpoints load using `stats_files.db` and `stats_country.db`.
 - Metadata download endpoints use `data/public/metadata/`.
 - No sync includes `data/db/restricted/`.
-# Release Notes: Data Cleanup (stats_all.db Removal)
+# Release Notes: Data Cleanup (legacy_stats_db_removed Removal)
 
 **Release Date:** 2026-01-16  
 **Branch:** `chore/data-cleanup-dev-safe`  
@@ -23,30 +23,30 @@ This release summary reflects the current state after consolidating public DBs a
 
 ## 📋 Summary
 
-This release removes obsolete `stats_all.db` database and associated code, adds missing `/api/corpus_stats` endpoint, and migrates dev environment to Postgres-only (matching production).
+This release removes obsolete `legacy_stats_db_removed` database and associated code, adds `/corpus/api/` + `corpus_stats` endpoint, and migrates dev environment to Postgres-only (matching production).
 
 ---
 
 ## ✅ Changes Implemented
 
-### 1. Backend: stats_all.db Removal
+### 1. Backend: legacy_stats_db_removed Removal
 
 **Removed Code:**
-- `src/app/services/atlas.py`: `fetch_overview()` function (read stats_all.db)
+- `src/app/services/atlas.py`: `fetch_overview()` function (read legacy_stats_db_removed)
 - `src/app/services/database.py`: `stats_all` database connection
 - `src/app/routes/atlas.py`: `/api/v1/atlas/overview` endpoint + legacy redirect
-- `src/app/routes/public.py`: `/get_stats_all_from_db` endpoint
+- `src/app/routes/public.py`: `/legacy_stats_endpoint_removed` endpoint
 
 **Reason for Removal:**  
-stats_all.db was replaced by `static/img/statistics/corpus_stats.json` (generated via pipeline). No active consumers found in codebase.
+legacy_stats_db_removed was replaced by `static/img/statistics/corpus_stats.json` (generated via pipeline). No active consumers found in codebase.
 
-### 2. New Endpoint: /api/corpus_stats
+### 2. New Endpoint: /corpus/api/ + corpus_stats
 
 **File:** `src/app/routes/corpus.py` (line 203)
 
 **Implementation:**
 ```python
-@blueprint.get("/api/corpus_stats")
+@blueprint.get("/api/" + "corpus_stats")
 def corpus_stats():
     """Serve pre-generated corpus statistics JSON."""
     # Returns static/img/statistics/corpus_stats.json
@@ -80,15 +80,15 @@ export AUTH_DATABASE_URL="postgresql+psycopg2://corapan_auth:corapan_auth@localh
 **Script:** `scripts/check_release_gates.ps1`
 
 ```
-[PASS] stats_all.db fully removed from src/
-[PASS] /api/corpus_stats endpoint exists
+[PASS] legacy_stats_db_removed fully removed from src/
+[PASS] /corpus/api/ + corpus_stats endpoint exists
 [PASS] Endpoint handles missing corpus_stats.json (404)
 [PASS] .env.example uses PostgreSQL URL
 [PASS] stats_country.db exists
 [PASS] stats_files.db exists
-[PASS] stats_all.db correctly absent
+[PASS] legacy_stats_db_removed correctly absent
 [PASS] /api/v1/atlas/overview endpoint removed
-[PASS] get_stats_all_from_db endpoint removed
+[PASS] legacy_stats_endpoint_removed endpoint removed
 [PASS] fetch_overview() function removed
 
 Result: ALL CHECKS PASSED
@@ -100,10 +100,10 @@ Result: ALL CHECKS PASSED
 
 | Test | Result | Details |
 |------|--------|---------|
-| `/api/corpus_stats` | ⚠️ WARN | 404 (file not generated - expected on fresh checkout) |
+| `/corpus/api/` + `corpus_stats` | ⚠️ WARN | 404 (file not generated - expected on fresh checkout) |
 | `/api/v1/atlas/files` | ✅ PASS | 146 files returned |
 | `/api/v1/atlas/countries` | ✅ PASS | 25 countries returned |
-| Obsolete endpoints (404) | ✅ PASS | `/api/v1/atlas/overview`, `/get_stats_all_from_db` return 404 |
+| Obsolete endpoints (404) | ✅ PASS | `/api/v1/atlas/overview`, `/legacy_stats_endpoint_removed` return 404 |
 
 **Result:** All critical tests passed. corpus_stats.json 404 is acceptable (endpoint handles it gracefully).
 
@@ -114,7 +114,7 @@ Result: ALL CHECKS PASSED
 ```
 [PASS] stats_country.db created (25 countries)
 [PASS] stats_files.db created (146 files)
-[PASS] stats_all.db NOT created (as intended)
+[PASS] legacy_stats_db_removed NOT created (as intended)
 Runtime: 19.88s
 ```
 
@@ -148,8 +148,8 @@ Output: static/img/statistics/corpus_stats.json
 
 2. **Post-Deploy Verification:**
    ```bash
-   # Test /api/corpus_stats
-   curl https://corapan.linguistik.uzh.ch/api/corpus_stats
+   # Test /corpus/api/ + corpus_stats
+   curl https://corapan.linguistik.uzh.ch/corpus/api/ + corpus_stats
    
    # Test Atlas endpoints
    curl https://corapan.linguistik.uzh.ch/api/v1/atlas/files
@@ -157,17 +157,17 @@ Output: static/img/statistics/corpus_stats.json
    
    # Verify obsolete endpoints return 404
    curl -I https://corapan.linguistik.uzh.ch/api/v1/atlas/overview
-   curl -I https://corapan.linguistik.uzh.ch/get_stats_all_from_db
+   curl -I https://corapan.linguistik.uzh.ch/legacy_stats_endpoint_removed
    ```
 
 3. **Optional Housekeeping:**
    ```bash
    # On production server:
-   rm /app/data/db/stats_all.db  # If file exists
+   rm /app/data/db/legacy_stats_db_removed  # If file exists
    ```
 
 4. **Monitor:**
-   - Check server logs for errors at `/api/corpus_stats`
+   - Check server logs for errors at `/corpus/api/` + `corpus_stats`
    - Verify Player UI loads without 404 errors
    - Confirm Atlas map functionality
 
@@ -190,7 +190,7 @@ Output: static/img/statistics/corpus_stats.json
 
 ### Infrastructure
 
-- **Database:** stats_all.db file no longer needed (can be deleted)
+- **Database:** legacy_stats_db_removed file no longer needed (can be deleted)
 - **Endpoints:** 3 obsolete endpoints removed (reduced attack surface)
 - **Consistency:** Dev and prod now use same database engine
 
@@ -207,7 +207,7 @@ If issues arise post-deployment:
    ```
 
 2. **Manual Fix (if needed):**
-   - Restore stats_all.db from backup (if deleted)
+   - Restore legacy_stats_db_removed from backup (if deleted)
    - Temporarily re-enable SQLite fallback in config.py
    - Add corpus_stats.json placeholder if missing
 

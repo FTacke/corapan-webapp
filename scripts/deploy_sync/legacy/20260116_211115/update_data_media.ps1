@@ -12,7 +12,7 @@
 #
 # Was wird synchronisiert?
 #   [D] Data (sync_data.ps1):
-#       - counters, db_public, metadata, exports, blacklab_export
+#       - counters, db/public, public/metadata, exports, blacklab_export
 #       - Stats-DBs: stats_files.db, stats_country.db
 #
 #   [M] Media (sync_media.ps1):
@@ -112,7 +112,7 @@ function Write-SyncOverview {
     Write-Host "-------------------------------------------------------------------" -ForegroundColor DarkGray
     Write-Host ""
     Write-Host "  `[D`]  Data-Sync (Delta)" -ForegroundColor Green
-    Write-Host "       - counters, db_public, metadata, exports, blacklab_export" -ForegroundColor DarkGray
+    Write-Host "       - counters, db/public, public/metadata, exports, blacklab_export" -ForegroundColor DarkGray
     Write-Host "       - Stats-DBs: stats_files.db, stats_country.db" -ForegroundColor DarkGray
     Write-Host ""
     Write-Host "  `[M`]  Media-Sync (Delta)" -ForegroundColor Magenta

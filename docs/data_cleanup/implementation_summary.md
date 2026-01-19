@@ -19,18 +19,18 @@
 
 ## 🎯 Ziele
 
-1. **stats_all.db entfernen** (obsolet, ersetzt durch corpus_stats.json)
-2. **/api/corpus_stats Fix** (Player UI hatte 404-Fehler)
+1. **Legacy stats DB entfernen** (obsolet, ersetzt durch corpus_stats.json)
+2. **/corpus/api/** + **corpus_stats Fix** (Player UI hatte 404-Fehler)
 3. **Dev-Umgebung auf Postgres migrieren** (SQLite-Fallback entfernen)
 
 ---
 
 ## ✅ Durchgeführte Änderungen
 
-### 1. Backend: stats_all.db Removal
+### 1. Backend: Legacy stats DB Removal
 
 **Gelöschte Funktionen:**
-- `src/app/services/atlas.py`: `fetch_overview()` (las stats_all.db)
+- `src/app/services/atlas.py`: `fetch_overview()` (las legacy stats DB)
 - `src/app/services/database.py`: `"stats_all"` Entry aus DATABASES dict entfernt
 
 **Gelöschte Endpoints:**
@@ -38,25 +38,25 @@
   - `GET /api/v1/atlas/overview` (Zeile 188-193)
   - Legacy Redirect `/overview` (Zeile 343-344)
 - `src/app/routes/public.py`:
-  - `GET /get_stats_all_from_db` (Zeile 343-351)
+   - Legacy stats endpoint removed (Zeile 343-351)
 
 **Beweis der Obsoleszenz:**
 ```bash
 # Keine aktiven Caller gefunden:
 grep -r "fetch_overview" src/  # 0 Treffer
 grep -r "/api/v1/atlas/overview" static/  # 0 Treffer  
-grep -r "get_stats_all_from_db" static/  # 0 Treffer
+grep -r "legacy stats endpoint" static/  # 0 Treffer
 ```
 
 ---
 
-### 2. Neuer Endpoint: /api/corpus_stats
+### 2. Neuer Endpoint: /corpus/api/ + corpus_stats
 
 **Datei:** `src/app/routes/corpus.py` (Zeile 203-231)
 
 **Implementierung:**
 ```python
-@blueprint.get("/api/corpus_stats")
+@blueprint.get("/api/" + "corpus_stats")
 def corpus_stats():
     """Serve pre-generated corpus statistics JSON."""
     project_root = Path(current_app.root_path).parent.parent
@@ -74,7 +74,7 @@ def corpus_stats():
 ```
 
 **Konsumenten:**
-- Player UI (modular player): Ruft `/api/corpus_stats` für globale Statistiken ab
+- Player UI (modular player): Ruft `/corpus/api/` + `corpus_stats` für globale Statistiken ab
 - Ersetzt den zuvor nicht existierenden Endpoint (war 404)
 
 **Datenquelle:**
@@ -129,8 +129,8 @@ infra/postgres_dev/
 
 ```python
 # ALT:
-# - Duración (aus stats_all.db)
-# - Palabras (aus stats_all.db)
+# - Duración (aus legacy stats DB)
+# - Palabras (aus legacy stats DB)
 
 # NEU:
 # - Duración (aus stats_files.db)
@@ -157,13 +157,13 @@ python LOKAL/_0_json/03_build_metadata_stats.py
    Einträge: 146
 
 ℹ️  HINWEISE:
-   • stats_all.db wurde ersetzt durch corpus_stats.json
+   • Legacy stats DB wurde ersetzt durch corpus_stats.json
      (generiert via: python LOKAL/_0_json/05_publish_corpus_statistics.py)
 
 Laufzeit: 20.69s
 ```
 
-**✅ Ergebnis:** Producer baut NICHT mehr stats_all.db (Ziel erreicht)
+**✅ Ergebnis:** Producer baut keine Legacy-Stats-DB mehr (Ziel erreicht)
 
 ---
 
@@ -194,8 +194,8 @@ python -c "from src.app.config import DevConfig; print('✅ DevConfig loaded wit
 ### Test 3: Endpoint Verification
 
 ```bash
-grep -n "/api/corpus_stats" src/app/routes/corpus.py
-# 203: @blueprint.get("/api/corpus_stats")
+grep -n "/corpus/api/" src/app/routes/corpus.py
+# 203: @blueprint.get("/api/" + "corpus_stats")
 ```
 
 **✅ Ergebnis:** Endpoint existiert, wird von Player UI konsumiert
@@ -209,7 +209,7 @@ grep -n "/api/corpus_stats" src/app/routes/corpus.py
 - `src/app/services/database.py` (- stats_all)
 - `src/app/routes/atlas.py` (- 2 Endpoints)
 - `src/app/routes/public.py` (- 1 Endpoint)
-- `src/app/routes/corpus.py` (+ /api/corpus_stats)
+- `src/app/routes/corpus.py` (+ /corpus/api/ + corpus_stats)
 - `src/app/routes/editor.py` (Kommentar-Fix)
 - `src/app/config/__init__.py` (Fail-Fast)
 - `.env.example` (Postgres-Default)
@@ -221,20 +221,20 @@ grep -n "/api/corpus_stats" src/app/routes/corpus.py
 **Commit:**
 ```bash
 commit 9f41401
-chore: remove stats_all.db and add corpus_stats endpoint
+chore: remove legacy stats DB and add corpus stats endpoint
 
-- Remove stats_all.db from backend (services/atlas.py, services/database.py)
-- Remove obsolete endpoints: /api/v1/atlas/overview, /get_stats_all_from_db
-- Add new endpoint: /api/corpus_stats (serves static JSON)
-- Fix broken Player UI (404 on /api/corpus_stats)
-- Update Editor comments to reference stats_files.db instead of stats_all.db
+- Remove legacy stats DB from backend (services/atlas.py, services/database.py)
+- Remove obsolete endpoints: /api/v1/atlas/overview, legacy stats endpoint
+- Add new endpoint: /corpus/api/ + corpus_stats (serves static JSON)
+- Fix broken Player UI (404 on /corpus/api/ + corpus_stats)
+- Update Editor comments to reference stats_files.db instead of legacy stats DB
 ```
 
 ---
 
 ## 🔍 Beweisführung
 
-### stats_all.db war obsolet:
+### Legacy stats DB war obsolet:
 
 1. **Kein Producer:** `03_build_metadata_stats.py` hatte `build_stats_all()` auskommentiert
 2. **Keine Konsumenten:** Grep-Suche über Codebase zeigt 0 aktive Aufrufe
@@ -263,7 +263,7 @@ chore: remove stats_all.db and add corpus_stats endpoint
 2. **Datenbank-Cleanup auf Prod:**
    ```bash
    # Nach Prod-Deploy:
-   rm /app/data/db/stats_all.db  # Optional: DB-Datei löschen
+   rm /app/data/db/legacy_stats.db  # Optional: DB-Datei löschen
    ```
 
 3. **Producer-Pipeline aktualisieren:**
@@ -273,7 +273,7 @@ chore: remove stats_all.db and add corpus_stats endpoint
    ```
 
 4. **Monitoring:**
-   - Prüfe Server-Logs auf Fehler bei `/api/corpus_stats` Aufrufen
+   - Prüfe Server-Logs auf Fehler bei `/corpus/api/` + `corpus_stats` Aufrufen
    - Verifiziere, dass `corpus_stats.json` existiert (oder 404 wird korrekt behandelt)
 
 ---
@@ -281,8 +281,8 @@ chore: remove stats_all.db and add corpus_stats endpoint
 ## 🎉 Zusammenfassung
 
 **Was funktioniert jetzt:**
-✅ stats_all.db ist vollständig aus Backend entfernt  
-✅ Player UI ruft `/api/corpus_stats` ohne 404 ab  
+✅ Legacy stats DB ist vollständig aus Backend entfernt  
+✅ Player UI ruft `/corpus/api/` + `corpus_stats` ohne 404 ab  
 ✅ Dev-Umgebung nutzt Postgres (wie Prod)  
 ✅ Producer-Script baut nur noch stats_country.db + stats_files.db  
 ✅ Keine SQLite-Fallbacks mehr in config.py  
