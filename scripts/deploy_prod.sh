@@ -102,34 +102,40 @@ fi
 echo ""
 
 # Step 5: Verify runtime-first mounts
-log_info "Verifying runtime-first mounts..."
+# NOTE: Skip in CI environments (GitHub Actions runner / CI), because host bind paths
+# like /srv/webapps/... may not exist there and mount verification would false-fail.
+if [ "${CI:-}" = "true" ] || [ -n "${GITHUB_ACTIONS:-}" ]; then
+  log_info "Skipping runtime-first mount verification in CI (CI/GITHUB_ACTIONS detected)"
+else
+  log_info "Verifying runtime-first mounts..."
 
-mount_pairs="$(docker inspect "${CONTAINER_NAME}" --format '{{range .Mounts}}{{printf "%s<<<%s\n" .Destination .Source}}{{end}}' \
-  | tr -d '\r' | sort)"
+  mount_pairs="$(docker inspect "${CONTAINER_NAME}" --format '{{range .Mounts}}{{printf "%s<<<%s\n" .Destination .Source}}{{end}}' \
+    | tr -d '\r' | sort)"
 
-missing=0
-required_pairs=(
-  "/app/data<<<${RUNTIME_DIR}/data"
-  "/app/media<<<${RUNTIME_DIR}/media"
-  "/app/logs<<<${RUNTIME_DIR}/logs"
-  "/app/config<<<${RUNTIME_DIR}/config"
-)
+  missing=0
+  required_pairs=(
+    "/app/data<<<${RUNTIME_DIR}/data"
+    "/app/media<<<${RUNTIME_DIR}/media"
+    "/app/logs<<<${RUNTIME_DIR}/logs"
+    "/app/config<<<${RUNTIME_DIR}/config"
+  )
 
-for pair in "${required_pairs[@]}"; do
-  if ! printf '%s\n' "${mount_pairs}" | grep -Fqx "${pair}"; then
-    log_error "Missing mount: ${pair}"
-    missing=1
+  for pair in "${required_pairs[@]}"; do
+    if ! printf '%s\n' "${mount_pairs}" | grep -Fqx "${pair}"; then
+      log_error "Missing mount: ${pair}"
+      missing=1
+    fi
+  done
+
+  if [ "${missing}" -ne 0 ]; then
+    log_error "Runtime-first mounts mismatch. Actual mount pairs:"
+    printf '%s\n' "${mount_pairs}"
+    exit 1
   fi
-done
 
-if [ "${missing}" -ne 0 ]; then
-  log_error "Runtime-first mounts mismatch. Actual mount pairs:"
-  printf '%s\n' "${mount_pairs}"
-  exit 1
+  log_info "Runtime-first mounts verified"
+  echo ""
 fi
-
-log_info "Runtime-first mounts verified"
-echo ""
 
 # Step 6: Health check (wait/retry)
 log_info "Checking health endpoint (with retries)..."
