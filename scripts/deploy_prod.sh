@@ -97,7 +97,11 @@ echo ""
 
 # Step 5: Verify runtime-first mounts
 log_info "Verifying runtime-first mounts..."
-mounts=$(docker inspect "${CONTAINER_NAME}" --format '{{range .Mounts}}{{println .Destination " <- " .Source}}{{end}}' | sort)
+
+# Generate stable lines (no variable whitespace) and keep raw for debugging
+mounts_raw="$(docker inspect "${CONTAINER_NAME}" --format '{{range .Mounts}}{{printf "%s <- %s\n" .Destination .Source}}{{end}}' | sort)"
+mounts_norm="$(printf '%s\n' "${mounts_raw}" | tr -s '[:space:]' ' ' | sed 's/^ //; s/ $//')"
+
 missing=0
 required_mounts=(
   "/app/data <- ${RUNTIME_DIR}/data"
@@ -105,17 +109,21 @@ required_mounts=(
   "/app/logs <- ${RUNTIME_DIR}/logs"
   "/app/config <- ${RUNTIME_DIR}/config"
 )
+
 for required in "${required_mounts[@]}"; do
-  if ! printf '%s\n' "${mounts}" | grep -qx "${required}"; then
+  required_norm="$(printf '%s\n' "${required}" | tr -s '[:space:]' ' ' | sed 's/^ //; s/ $//')"
+  if ! printf '%s\n' "${mounts_norm}" | grep -Fxq "${required_norm}"; then
     log_error "Missing mount: ${required}"
     missing=1
   fi
 done
+
 if [ "${missing}" -ne 0 ]; then
-    log_error "Runtime-first mounts mismatch. Actual mounts:"
-    printf '%s\n' "${mounts}"
-    exit 1
+  log_error "Runtime-first mounts mismatch. Actual mounts:"
+  printf '%s\n' "${mounts_raw}"
+  exit 1
 fi
+
 log_info "Runtime-first mounts verified"
 echo ""
 
