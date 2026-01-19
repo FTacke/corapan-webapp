@@ -33,8 +33,9 @@ CONTAINER_PORT=5000
 
 # Paths (on the host)
 BASE_DIR="/srv/webapps/corapan"
-DATA_DIR="${BASE_DIR}/data"
-MEDIA_DIR="${BASE_DIR}/media"
+RUNTIME_DIR="${BASE_DIR}/runtime/corapan"
+DATA_DIR="${RUNTIME_DIR}/data"
+MEDIA_DIR="${RUNTIME_DIR}/media"
 CONFIG_DIR="${BASE_DIR}/config"
 LOGS_DIR="${BASE_DIR}/logs"
 
@@ -54,6 +55,14 @@ log_warn() {
 
 log_error() {
     echo -e "${RED}[ERROR]${NC} $1"
+}
+
+check_required_path() {
+    local path="$1"
+    if [ ! -d "${path}" ]; then
+        log_error "Required path missing: ${path}"
+        return 1
+    fi
 }
 
 echo "=============================================="
@@ -90,15 +99,24 @@ docker network inspect corapan-network >/dev/null 2>&1 || {
     docker network create --subnet=172.18.0.0/16 corapan-network
 }
 
-# Step 4b: Ensure statistics assets are readable by container user
-STATS_DIR="${DATA_DIR}/public/statistics"
-if [ -d "${STATS_DIR}" ]; then
-    log_info "Ensuring statistics permissions in ${STATS_DIR}..."
-    chmod 755 "${STATS_DIR}" || log_warn "Failed to chmod stats directory"
-    find "${STATS_DIR}" -type f -exec chmod 644 {} \; || log_warn "Failed to chmod stats files"
-else
-    log_warn "Statistics directory not found at ${STATS_DIR}"
+# Step 4b: Hard checks for required runtime paths
+log_info "Checking required runtime paths..."
+missing=0
+check_required_path "${DATA_DIR}/public/statistics" || missing=1
+check_required_path "${DATA_DIR}/public/metadata" || missing=1
+check_required_path "${DATA_DIR}/db/public" || missing=1
+check_required_path "${MEDIA_DIR}" || missing=1
+
+if [ "${missing}" -ne 0 ]; then
+    log_error "Aborting deploy due to missing runtime paths."
+    exit 1
 fi
+
+# Step 4c: Ensure statistics assets are readable by container user
+STATS_DIR="${DATA_DIR}/public/statistics"
+log_info "Ensuring statistics permissions in ${STATS_DIR}..."
+chmod 755 "${STATS_DIR}" || log_warn "Failed to chmod stats directory"
+find "${STATS_DIR}" -type f -exec chmod 644 {} \; || log_warn "Failed to chmod stats files"
 
 # Step 5: Start new container
 log_info "Starting new container: ${CONTAINER_NAME}..."

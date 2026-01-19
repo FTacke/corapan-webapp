@@ -75,19 +75,13 @@ services:
     volumes:
       # Production: only mount data directories, no source code
       # Media files (managed externally)
-      - ~/corapan/media/mp3-full:/app/media/mp3-full:ro
-      - ~/corapan/media/mp3-split:/app/media/mp3-split:ro
-      - ~/corapan/media/mp3-temp:/app/media/mp3-temp
-      - ~/corapan/media/transcripts:/app/media/transcripts:ro
+      - /srv/webapps/corapan/runtime/corapan/media:/app/media
       
       # Config & Keys (read-only)
       - ~/corapan/config/keys:/app/config/keys:ro
       
-      # Database files (read-only corpus data)
-      - ~/corapan/data/db:/app/data/db:ro
-      
       # Runtime data (read-write)
-      - ~/corapan/data/counters:/app/data/counters
+      - /srv/webapps/corapan/runtime/corapan/data:/app/data
       - ~/corapan/logs:/app/logs
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
