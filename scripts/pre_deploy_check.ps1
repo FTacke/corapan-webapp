@@ -235,7 +235,7 @@ try {
     Write-Host "  - Login flow working with admin credentials"
     Write-Host ""
     Write-Host "Ready for deployment:"
-    Write-Host "  Production: cd /srv/webapps/corapan/infra ; docker-compose -f docker-compose.prod.yml up -d --force-recreate"
+    Write-Host "  Production: docker-compose -f /srv/webapps/corapan/infra/docker-compose.prod.yml up -d --force-recreate"
     Write-Host ""
 
     exit 0

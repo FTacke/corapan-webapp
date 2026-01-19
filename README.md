@@ -180,8 +180,7 @@ Die Produktion läuft auf einer VM am HRZ der Philipps-Universität Marburg und 
 
 **Startbefehl (Server nutzt docker-compose v1):**
 ```bash
-cd /srv/webapps/corapan/infra
-docker-compose -f docker-compose.prod.yml up -d --force-recreate
+docker-compose -f /srv/webapps/corapan/infra/docker-compose.prod.yml up -d --force-recreate
 ```
 
 **Runtime-first Mounts (erwartet):**
