@@ -183,28 +183,27 @@ class BaseConfig:
             "  # Reads from same location\n"
         )
 
-    if _is_dev:
-        try:
-            PUBLIC_STATS_DIR.mkdir(parents=True, exist_ok=True)
-        except Exception as exc:
+    try:
+        PUBLIC_STATS_DIR.mkdir(parents=True, exist_ok=True)
+    except Exception as exc:
+        if _is_dev:
             warnings.warn(
                 f"Failed to create PUBLIC_STATS_DIR at {PUBLIC_STATS_DIR}: {exc}",
                 RuntimeWarning,
             )
-
-        _stats_file = PUBLIC_STATS_DIR / "corpus_stats.json"
-        if not _stats_file.exists():
-            warnings.warn(
-                "Statistics not generated yet; stats endpoints will return 404 until corpus_stats.json exists. "
-                f"Expected: {_stats_file}",
-                RuntimeWarning,
-            )
-    else:
-        if not PUBLIC_STATS_DIR.exists():
+        else:
             raise RuntimeError(
-                "PUBLIC_STATS_DIR does not exist."
-                f" Expected path: {PUBLIC_STATS_DIR}"
+                "PUBLIC_STATS_DIR does not exist and could not be created."
+                f" Expected path: {PUBLIC_STATS_DIR}. Error: {exc}"
             )
+
+    _stats_file = PUBLIC_STATS_DIR / "corpus_stats.json"
+    if not _stats_file.exists():
+        warnings.warn(
+            "Statistics not generated yet; stats endpoints will return 404 until corpus_stats.json exists. "
+            f"Expected: {_stats_file}",
+            RuntimeWarning,
+        )
 
     _ensure_stats_permissions(PUBLIC_STATS_DIR)
 
