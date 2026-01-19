@@ -131,14 +131,51 @@ fi
 log_info "Runtime-first mounts verified"
 echo ""
 
-# Step 6: Health check
-log_info "Checking health endpoint..."
-if ! curl -fsS "${HEALTH_URL}"; then
-    log_error "Health check failed: ${HEALTH_URL}"
+# Step 6: Health check (wait/retry)
+log_info "Checking health endpoint (with retries)..."
+
+max_tries=60
+sleep_s=2
+
+for i in $(seq 1 "${max_tries}"); do
+  # If container vanished or restarted, surface it early
+  if ! docker ps --format '{{.Names}}' | grep -qx "${CONTAINER_NAME}"; then
+    log_error "Container ${CONTAINER_NAME} is not running during health wait"
+    docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
     docker logs --tail 200 "${CONTAINER_NAME}" || true
     exit 1
+  fi
+
+  # Prefer docker health status if present
+  health_status="$(docker inspect "${CONTAINER_NAME}" --format '{{if .State.Health}}{{.State.Health.Status}}{{else}}none{{end}}' 2>/dev/null || echo "unknown")"
+  log_info "Health wait ${i}/${max_tries} (docker health=${health_status})"
+
+  # External check
+  if curl -fsS "${HEALTH_URL}" >/dev/null 2>&1; then
+    log_info "Health check ok"
+    echo ""
+    break
+  fi
+
+  # If docker health says unhealthy, fail fast with diagnostics
+  if [ "${health_status}" = "unhealthy" ]; then
+    log_error "Container reported unhealthy"
+    docker inspect "${CONTAINER_NAME}" --format '{{json .State.Health}}' | head -c 4000 || true
+    docker logs --tail 200 "${CONTAINER_NAME}" || true
+    exit 1
+  fi
+
+  sleep "${sleep_s}"
+done
+
+# If we exhausted retries, fail with diagnostics
+if ! curl -fsS "${HEALTH_URL}" >/dev/null 2>&1; then
+  log_error "Health check failed after $((max_tries * sleep_s))s: ${HEALTH_URL}"
+  docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
+  docker logs --tail 200 "${CONTAINER_NAME}" || true
+  exit 1
 fi
-log_info "Health check ok"
+
 echo ""
 
 # Summary
