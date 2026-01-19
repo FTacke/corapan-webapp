@@ -180,6 +180,29 @@ Invoke-SSH -Hostname $Hostname -User $User -Port $Port -Command "ls -la /srv"
 
 ## Safety & Best Practices
 
+### Runtime-First Production Contract
+
+**Production is runtime-first.** The runtime root is:
+
+- `/srv/webapps/corapan/runtime/corapan`
+
+The container **must** mount runtime paths directly into `/app`:
+
+- `/srv/webapps/corapan/runtime/corapan/data`  -> `/app/data`
+- `/srv/webapps/corapan/runtime/corapan/media` -> `/app/media`
+- `/srv/webapps/corapan/runtime/corapan/logs`  -> `/app/logs`
+- `/srv/webapps/corapan/runtime/corapan/config`-> `/app/config`
+
+**Legacy paths are deprecated:**
+
+- `/srv/webapps/corapan/data|media|logs` are legacy and **not** target paths for deploy scripts.
+
+**Preflight guard:**
+
+`sync_data.ps1` and `sync_media.ps1` run a remote preflight check. If the container is not running or mounts drift from the contract, the script aborts with:
+
+> Prod mount drift: corapan-webapp is not runtime-first. Fix docker-compose.prod.yml mounts.
+
 ### Production State Protection (Hard-Coded)
 
 **CRITICAL:** The following directory is **PERMANENTLY PROTECTED** and can NEVER be synced by any deploy:

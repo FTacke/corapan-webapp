@@ -115,6 +115,9 @@ $remotePaths = Get-RemotePaths
 $REMOTE_RUNTIME_ROOT = $remotePaths.RuntimeRoot
 $REMOTE_MEDIA_ROOT = $remotePaths.MediaRoot
 
+# Runtime-first guard (fail fast if prod mounts drift)
+Assert-RemoteRuntimeFirstMounts -RuntimeRoot $REMOTE_RUNTIME_ROOT
+
 # -----------------------------------------------------------------------------
 # Hauptprogramm
 # -----------------------------------------------------------------------------

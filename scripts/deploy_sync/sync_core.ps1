@@ -95,6 +95,72 @@ $script:RsyncAvailabilityLogged = $false
 $script:SyncVerbose = $false
 
 # -----------------------------------------------------------------------------
+# Runtime-First Guard: Validate production container mounts
+# -----------------------------------------------------------------------------
+
+function Assert-RemoteRuntimeFirstMounts {
+    param(
+        [Parameter(Mandatory=$true)]
+        [string]$RuntimeRoot
+    )
+    
+    $containerName = "corapan-webapp"
+    $errorMessage = "Prod mount drift: corapan-webapp is not runtime-first. Fix docker-compose.prod.yml mounts."
+    
+    try {
+        $runningRaw = Invoke-SSHCommand -Command "docker inspect -f '{{.State.Running}}' $containerName 2>/dev/null" -PassThru -NoThrow
+        $running = if ($null -eq $runningRaw) { "" } else { ([string]$runningRaw).Trim() }
+        if ($running -ne "true") {
+            Write-Host $errorMessage -ForegroundColor Red
+            exit 3
+        }
+        
+        $mountsRaw = Invoke-SSHCommand -Command "docker inspect -f '{{range .Mounts}}{{println .Source \"->\" .Destination}}{{end}}' $containerName 2>/dev/null" -PassThru -NoThrow
+        if ($null -eq $mountsRaw) {
+            Write-Host $errorMessage -ForegroundColor Red
+            exit 3
+        }
+        
+        $mountLines = @()
+        if ($mountsRaw -is [System.Object[]]) {
+            $mountLines = $mountsRaw
+        }
+        else {
+            $mountLines = ([string]$mountsRaw) -split "`n"
+        }
+        $mountLines = $mountLines | ForEach-Object { $_.Trim() } | Where-Object { $_ -ne "" }
+        
+        $expected = @(
+            @{ Source = "$RuntimeRoot/data";  Destination = "/app/data" },
+            @{ Source = "$RuntimeRoot/media"; Destination = "/app/media" },
+            @{ Source = "$RuntimeRoot/logs";  Destination = "/app/logs" },
+            @{ Source = "$RuntimeRoot/config"; Destination = "/app/config" }
+        )
+        
+        $missing = @()
+        foreach ($entry in $expected) {
+            $needle = "$($entry.Source)->$($entry.Destination)"
+            if (-not ($mountLines -contains $needle)) {
+                $missing += $needle
+            }
+        }
+        
+        if ($missing.Count -gt 0) {
+            Write-Host $errorMessage -ForegroundColor Red
+            Write-Host "Missing mounts:" -ForegroundColor Red
+            foreach ($item in $missing) {
+                Write-Host "  - $item" -ForegroundColor Red
+            }
+            exit 3
+        }
+    }
+    catch {
+        Write-Host $errorMessage -ForegroundColor Red
+        exit 3
+    }
+}
+
+# -----------------------------------------------------------------------------
 # Verbose/Quiet Steuerung
 # -----------------------------------------------------------------------------
 

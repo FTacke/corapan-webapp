@@ -345,7 +345,7 @@ function Sync-StatisticsFiles {
     try {
         # Create remote directory
         Write-Host "  Creating remote directory..." -ForegroundColor DarkGray
-        Invoke-SSHCommand -Command "mkdir -p '$RemoteStatsDir'" | Out-Null
+        Invoke-SSHCommand -Command "mkdir -p '$RemoteStatsDir' && chmod 755 '$RemoteStatsDir'" | Out-Null
         Write-Host "  Remote directory ready." -ForegroundColor DarkGray
         Write-Host ""
         
@@ -385,6 +385,9 @@ function Sync-StatisticsFiles {
         }
         Write-Host "  All visualization files: OK" -ForegroundColor Green
         Write-Host ""
+
+        # Set file permissions (non-fatal if missing)
+        Invoke-SSHCommand -Command "bash -lc 'chmod 644 \"$RemoteStatsDir\"/corpus_stats.json \"$RemoteStatsDir\"/viz_*.png 2>/dev/null || true'" -NoThrow | Out-Null
         
         # =====================================================================
         # PHASE 6: Post-upload verification (CRITICAL)
@@ -492,6 +495,9 @@ if (-not (Test-Path $coreScript)) {
 $remotePaths = Get-RemotePaths
 $REMOTE_RUNTIME_ROOT = $remotePaths.RuntimeRoot
 $REMOTE_DATA_ROOT = $remotePaths.DataRoot
+
+# Runtime-first guard (fail fast if prod mounts drift)
+Assert-RemoteRuntimeFirstMounts -RuntimeRoot $REMOTE_RUNTIME_ROOT
 
 # -----------------------------------------------------------------------------
 # Hauptprogramm
