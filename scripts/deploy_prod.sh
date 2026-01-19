@@ -61,16 +61,28 @@ log_error() {
 }
 
 resolve_compose() {
+    if [ -n "${DOCKER_COMPOSE_BIN:-}" ] && [ -x "${DOCKER_COMPOSE_BIN}" ]; then
+        echo "${DOCKER_COMPOSE_BIN}"
+        return 0
+    fi
     if command -v docker-compose >/dev/null 2>&1; then
         echo "docker-compose"
         return 0
     fi
-    if [ -x "/usr/local/bin/docker-compose" ]; then
-        echo "/usr/local/bin/docker-compose"
-        return 0
-    fi
-    if [ -x "/usr/bin/docker-compose" ]; then
-        echo "/usr/bin/docker-compose"
+    for candidate in \
+        "/usr/local/bin/docker-compose" \
+        "/usr/bin/docker-compose" \
+        "/snap/bin/docker-compose" \
+        "/usr/local/bin/docker-compose-v1" \
+        "/usr/bin/docker-compose-v1"; do
+        if [ -x "${candidate}" ]; then
+            echo "${candidate}"
+            return 0
+        fi
+    done
+    SEARCH_BIN=$(find /usr /snap -maxdepth 4 -type f -name docker-compose 2>/dev/null | head -n 1)
+    if [ -n "${SEARCH_BIN}" ] && [ -x "${SEARCH_BIN}" ]; then
+        echo "${SEARCH_BIN}"
         return 0
     fi
     return 1
