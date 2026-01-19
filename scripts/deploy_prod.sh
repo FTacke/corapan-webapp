@@ -101,9 +101,7 @@ else
 fi
 echo ""
 
-# Step 5: Verify runtime-first mounts
-# NOTE: Skip in CI environments (GitHub Actions runner / CI), because host bind paths
-# like /srv/webapps/... may not exist there and mount verification would false-fail.
+# Step 5: Verify runtime-first mounts (container destinations + write test)
 log_info "Verifying runtime-first mounts..."
 
 mount_dests="$(docker inspect "${CONTAINER_NAME}" --format '{{range .Mounts}}{{println .Destination}}{{end}}' \
@@ -133,7 +131,8 @@ fi
 # Minimal write proof (permissions)
 docker exec "${CONTAINER_NAME}" bash -lc 'set -e; touch /app/data/stats_temp/.deploy_write_test && rm -f /app/data/stats_temp/.deploy_write_test'
 
-log_info "Runtime-first mounts verified"
+log_info "✓ Mount destinations present"
+log_info "✓ Write check ok"
 echo ""
 
 # Step 6: Health check (wait/retry)

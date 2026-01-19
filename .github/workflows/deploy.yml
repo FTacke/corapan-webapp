@@ -69,7 +69,7 @@ jobs:
           echo "✓ Mount destinations present"
 
           # Minimal write check (proves permissions)
-          docker exec corapan-web-prod bash -lc 'set -e; touch /app/data/stats_temp/.ci_write_test && rm -f /app/data/stats_temp/.ci_write_test'
+          docker exec corapan-web-prod bash -lc 'set -e; touch /app/data/stats_temp/.deploy_write_test && rm -f /app/data/stats_temp/.deploy_write_test'
           echo "✓ Write check ok"
 
           # Health check

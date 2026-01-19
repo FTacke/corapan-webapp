@@ -75,11 +75,14 @@ App path resolution (evidence):
 - Data: `/srv/webapps/corapan/runtime/corapan/data`
 - Media: `/srv/webapps/corapan/runtime/corapan/media`
 
-**Expected runtime-first mounts (container paths):**
-- `/app/data <- /srv/webapps/corapan/runtime/corapan/data`
-- `/app/media <- /srv/webapps/corapan/runtime/corapan/media`
-- `/app/logs <- /srv/webapps/corapan/runtime/corapan/logs`
-- `/app/config <- /srv/webapps/corapan/runtime/corapan/config`
+**Expected runtime-first mount destinations (container paths only):**
+- `/app/data`
+- `/app/media`
+- `/app/logs`
+- `/app/config`
+
+**Write-Test (permission proof):**
+- `touch /app/data/stats_temp/.deploy_write_test`
 
 **Legacy:** Container `corapan-webapp` ist deprecated und darf nicht mehr gestartet werden.
 
