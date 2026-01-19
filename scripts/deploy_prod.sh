@@ -40,7 +40,7 @@ LOGS_DIR="${RUNTIME_ROOT}/logs"
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
-COMPOSE_FILE="${REPO_ROOT}/docker-compose.prod.yml"
+COMPOSE_FILE="${REPO_ROOT}/infra/docker-compose.prod.yml"
 
 # Colors for output
 RED='\033[0;31m'
@@ -127,7 +127,11 @@ COMPOSE_BIN=$(resolve_compose) || {
     log_error "docker-compose (v1) not found in PATH. Install or add to PATH."
     exit 1
 }
-COMPOSE_CMD=("${COMPOSE_BIN}" -f "${COMPOSE_FILE}" up -d --force-recreate)
+COMPOSE_CMD=("${COMPOSE_BIN}")
+if [ -f "${ENV_FILE}" ]; then
+    COMPOSE_CMD+=(--env-file "${ENV_FILE}")
+fi
+COMPOSE_CMD+=(-f "${COMPOSE_FILE}" up -d --force-recreate)
 if [ "${COMPOSE_BUILD:-0}" = "1" ]; then
     COMPOSE_CMD+=(--build)
 fi
