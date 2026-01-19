@@ -48,12 +48,11 @@
 # PROTECTED PRODUCTION STATE (NEVER synced by default):
 # -----------------------------------------------------------------------------
 #
-#   - counters/              -> Runtime state (page views, downloads, etc.)
 #   - db/auth.db             -> Production authentication database
 #
-#   These contain production runtime state and must NEVER be overwritten
-#   by a data deploy. To sync them (DANGEROUS), you must explicitly use:
-#     -IncludeCounters and/or -IncludeAuthDb
+#   This contains production runtime state and must NEVER be overwritten
+#   by a data deploy. To sync it (DANGEROUS), you must explicitly use:
+#     -IncludeAuthDb
 #     AND -IUnderstandThisWillOverwriteProductionState
 #
 # -----------------------------------------------------------------------------
@@ -92,8 +91,6 @@ param(
     # PRODUCTION STATE PROTECTION
     # These switches allow syncing of runtime state (normally excluded for safety)
     # REQUIRES -IUnderstandThisWillOverwriteProductionState to be set as well
-    [switch]$IncludeCounters,
-    
     [switch]$IncludeAuthDb,
     
     [switch]$IUnderstandThisWillOverwriteProductionState
@@ -112,11 +109,12 @@ if (-not $runtimeRoot) {
 }
 
 $LOCAL_BASE_PATH  = Join-Path $runtimeRoot "data"
-$REMOTE_BASE_PATH = "/srv/webapps/corapan/data"
+$REMOTE_RUNTIME_ROOT = "/srv/webapps/corapan/runtime/corapan"
+$REMOTE_DATA_ROOT = "$REMOTE_RUNTIME_ROOT/data"
 
 # Zu synchronisierende Verzeichnisse
 # WICHTIG: blacklab_index, blacklab_index.backup, stats_temp, db sind bewusst NICHT enthalten!
-# WICHTIG: counters ist NICHT enthalten (Production State Protection)
+# WICHTIG: Produktions-DBs sind NICHT enthalten (Production State Protection)
 $DATA_DIRECTORIES = @(
     "db/public",
     "public/metadata",
@@ -137,7 +135,6 @@ $STATS_DB_FILES = @(
 
 # These MUST NEVER be synced (production runtime state)
 $HARD_BLOCKED_PATHS = @(
-    "counters",     # Runtime state: page views, downloads, etc.
     "db"            # Contains auth.db, transcription.db (prod databases)
 )
 
@@ -164,7 +161,6 @@ function Test-ProductionStateProtection {
     param(
         [string[]]$Directories,
         [string[]]$DbFiles,
-        [bool]$IncludeCounters,
         [bool]$IncludeAuthDb,
         [bool]$AcknowledgeOverwrite
     )
@@ -179,7 +175,7 @@ function Test-ProductionStateProtection {
 # =============================================================================
 #
 # Synchronizes statistics files (corpus_stats.json, viz_*.png) to production.
-# Remote location: /srv/webapps/corapan/data/public/statistics
+# Remote location: /srv/webapps/corapan/runtime/corapan/data/public/statistics
 #
 # HARDENED SECURITY:
 # - Hard guards prevent syncing from repo root or parent directories
@@ -204,7 +200,7 @@ function Sync-StatisticsFiles {
     param(
         [string]$LocalStatsDir,
         [string]$RepoRoot,
-        [string]$RemoteRuntimeRoot = "/srv/webapps/corapan",
+        [string]$RemoteRuntimeRoot = "/srv/webapps/corapan/runtime/corapan",
         [switch]$DryRun = $false
     )
     
@@ -498,7 +494,7 @@ Write-Host " CO.RA.PAN Data Sync: Dev -> Prod" -ForegroundColor Cyan
 Write-Host "=============================================" -ForegroundColor Cyan
 Write-Host ""
 Write-Host "Quelle:  $LOCAL_BASE_PATH" -ForegroundColor DarkGray
-Write-Host "Ziel:    $REMOTE_BASE_PATH" -ForegroundColor DarkGray
+Write-Host "Ziel:    $REMOTE_DATA_ROOT" -ForegroundColor DarkGray
 Write-Host "Datum:   $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')" -ForegroundColor DarkGray
 if ($Force) {
     Write-Host "Modus:   FORCE (alle Dateien uebertragen)" -ForegroundColor Yellow
@@ -516,29 +512,9 @@ if (-not (Test-Path $LOCAL_BASE_PATH)) {
 # Display protection status
 Write-Host ""
 Write-Host "Protected Production State:" -ForegroundColor Yellow
-Write-Host "  - data/counters (runtime state) - NEVER synced" -ForegroundColor Yellow
 Write-Host "  - data/db (auth, transcription) - NEVER synced" -ForegroundColor Yellow
 Write-Host "  - Stats DBs only (stats_files.db, stats_country.db) - synced if found" -ForegroundColor DarkGray
 Write-Host ""
-
-# GUARDRAIL: Hard block against production state overwrite
-if ($IncludeCounters) {
-    Write-Host ""
-    Write-Host "========================================" -ForegroundColor Red
-    Write-Host "  PRODUCTION STATE PROTECTION" -ForegroundColor Red
-    Write-Host "========================================" -ForegroundColor Red
-    Write-Host ""
-    Write-Host "ERROR: counters/ sync is PERMANENTLY DISABLED." -ForegroundColor Red
-    Write-Host ""
-    Write-Host "This directory contains production runtime state" -ForegroundColor White
-    Write-Host "(page views, downloads, etc.) and must NEVER be" -ForegroundColor White
-    Write-Host "overwritten by a data deploy." -ForegroundColor White
-    Write-Host ""
-    Write-Host "If you have a critical need to restore production" -ForegroundColor Yellow
-    Write-Host "state, use manual SSH restore procedures instead." -ForegroundColor Yellow
-    Write-Host ""
-    exit 3
-}
 
 # GUARDRAIL: Hard block against auth DB overwrite
 if ($IncludeAuthDb) {
@@ -654,7 +630,7 @@ foreach ($dir in $DATA_DIRECTORIES) {
     try {
         Sync-DirectoryWithDiff `
             -LocalBasePath $LOCAL_BASE_PATH `
-            -RemoteBasePath $REMOTE_BASE_PATH `
+            -RemoteBasePath $REMOTE_DATA_ROOT `
             -DirName $dir `
             -Force:$Force
     } catch {
@@ -671,7 +647,7 @@ Write-Host ""
 Write-Host "[Stats-DBs aus data/db]" -ForegroundColor Cyan
 
 $dbLocalPath = Join-Path $LOCAL_BASE_PATH "db"
-$dbRemotePath = "$REMOTE_BASE_PATH/db"
+$dbRemotePath = "$REMOTE_DATA_ROOT/db"
 
 foreach ($dbFile in $STATS_DB_FILES) {
     $localFile = Join-Path $dbLocalPath $dbFile
@@ -716,9 +692,19 @@ foreach ($dbFile in $STATS_DB_FILES) {
     }
 }
 
+# -----------------------------------------------------------------------------
+# Statistik-Dateien (public/statistics)
+# -----------------------------------------------------------------------------
+
+$statsOk = Sync-StatisticsFiles -RepoRoot $RepoRoot -RemoteRuntimeRoot $REMOTE_RUNTIME_ROOT
+if (-not $statsOk) {
+    $errorCount++
+    Write-Host "  FEHLER: Statistik-Dateien konnten nicht synchronisiert werden" -ForegroundColor Red
+}
+
 # Rechte auf Server setzen
 if ($errorCount -eq 0) {
-    Set-RemoteOwnership -RemotePath $REMOTE_BASE_PATH
+    Set-RemoteOwnership -RemotePath $REMOTE_DATA_ROOT
 }
 
 # Zusammenfassung

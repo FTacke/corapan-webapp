@@ -5,9 +5,9 @@ CO.RA.PAN – FAIR Metadata Endpoints
 Dieses Modul stellt ausschließlich die offiziellen, FAIR-konformen
 Metadaten-Download-Endpunkte des CO.RA.PAN-Korpus bereit.
 
-Alle Dateien stammen aus ${CORAPAN_RUNTIME_ROOT}/data/public/metadata/latest/,
-das per Export-Skript automatisch erzeugt und versioniert wird
-(vYYYY-MM-DD + Symlink latest).
+Alle Dateien stammen aus ${CORAPAN_RUNTIME_ROOT}/data/public/metadata/.
+Falls ein Unterverzeichnis "latest" existiert, wird es bevorzugt verwendet
+(vYYYY-MM-DD + Symlink latest); andernfalls wird direkt metadata/ genutzt.
 
 Endpunkte:
 ----------
@@ -59,7 +59,7 @@ blueprint = Blueprint("corpus", __name__, url_prefix="/corpus")
 # ==============================================================================
 
 # Relative path from runtime data root to public metadata directory
-_METADATA_RELATIVE = Path("public") / "metadata" / "latest"
+_METADATA_RELATIVE = Path("public") / "metadata"
 
 # Avoid hard-coded literal for the corpus stats route to prevent legacy references.
 _CORPUS_STATS_ROUTE = "/api/" + "corpus_stats"
@@ -114,12 +114,16 @@ def _is_authenticated() -> bool:
 
 
 def _get_metadata_path() -> Path:
-    """Get absolute path to metadata/latest directory.
+    """Get absolute path to metadata directory (prefers latest/ if present).
 
     Uses runtime data root from app configuration.
     """
     data_root = Path(current_app.config["DATA_ROOT"])
-    return data_root / _METADATA_RELATIVE
+    metadata_root = data_root / _METADATA_RELATIVE
+    latest_root = metadata_root / "latest"
+    if latest_root.exists() and latest_root.is_dir():
+        return latest_root
+    return metadata_root
 
 
 def _load_recordings_json() -> list[dict] | None:
@@ -162,7 +166,7 @@ def _filter_by_country(records: list[dict], country_code: str) -> list[dict]:
 def _serve_metadata_file(
     filename: str, mimetype: str, download_name: str | None = None
 ) -> Response:
-    """Serve a metadata file from the latest directory.
+    """Serve a metadata file from the resolved metadata directory.
 
     Args:
         filename: Name of the file in metadata/latest/
@@ -176,17 +180,17 @@ def _serve_metadata_file(
         404: If the metadata file is not found
         500: If there's an error serving the file
     """
-    metadata_path = _get_metadata_path() / filename
+    metadata_root = _get_metadata_path()
+    metadata_path = metadata_root / filename
 
     if not metadata_path.exists():
-        abort(
-            404,
-            description=(
-                f"Metadata file not found: {filename}. "
-                "Run the metadata export script first: "
-                "python LOKAL/_1_metadata/export_metadata.py --corpus-version v1.0 --release-date YYYY-MM-DD"
-            ),
+        message = (
+            "Metadata not available. "
+            f"Expected file: {metadata_path}. "
+            "Run the metadata export script first: "
+            "python LOKAL/_1_metadata/export_metadata.py --corpus-version v1.0 --release-date YYYY-MM-DD"
         )
+        return Response(message, status=404, mimetype="text/plain")
 
     try:
         return send_file(

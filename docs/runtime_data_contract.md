@@ -11,9 +11,11 @@ runtime/
     data/
       public/
         metadata/
-          latest/
+          latest/                 # Optional: preferred if present
             tei/                  # Atlas inputs: corapan_recordings*.json|tsv
             corapan_recordings.*  # FAIR exports (tsv/json/jsonld/tei zip)
+          tei/                    # Fallback when latest/ is absent
+          corapan_recordings.*    # Fallback when latest/ is absent
         statistics/
           corpus_stats.json
           viz_*.png
@@ -36,9 +38,9 @@ runtime/
 - **GET /api/v1/atlas/files** → `data/public/metadata/latest/tei/corapan_recordings*.{json,tsv}`
 
 ### Corpus Metadata
-- **GET /corpus/metadata/download/tsv|json|jsonld|tei** → `data/public/metadata/latest/*`
-- **GET /corpus/metadata/download/tsv/<country>** → `data/public/metadata/latest/corapan_recordings.json`
-- **GET /corpus/metadata/download/json/<country>** → `data/public/metadata/latest/corapan_recordings.json`
+- **GET /corpus/metadata/download/tsv|json|jsonld|tei** → `data/public/metadata/latest/*` (if present) else `data/public/metadata/*`
+- **GET /corpus/metadata/download/tsv/<country>** → `data/public/metadata/latest/corapan_recordings.json` (if present) else `data/public/metadata/corapan_recordings.json`
+- **GET /corpus/metadata/download/json/<country>** → `data/public/metadata/latest/corapan_recordings.json` (if present) else `data/public/metadata/corapan_recordings.json`
 
 ### Corpus Statistics
 - **GET /corpus/api/** + **corpus_stats** → `data/public/statistics/corpus_stats.json`
@@ -67,7 +69,7 @@ runtime/
 ## 4) Legacy Removed
 
 - Legacy stats DB and related endpoints are removed.
-- No alternative metadata roots without `latest/` are supported.
+- Metadata root is `data/public/metadata/` with optional `latest/` (preferred if present).
 - No data paths outside `runtime/corapan/data` and `runtime/corapan/media` are supported.
 
 ## 5) Notes

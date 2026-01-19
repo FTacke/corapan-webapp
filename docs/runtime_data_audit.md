@@ -202,17 +202,17 @@
 ### Corpus Metadata + Statistics
 **/corpus/metadata/download/tsv|json|jsonld|tei**  
 - Route: `metadata_download_*()` in [src/app/routes/corpus.py](src/app/routes/corpus.py#L421-L460)  
-- Data source: Filesystem under `DATA_ROOT/public/metadata/latest`  
+- Data source: Filesystem under `DATA_ROOT/public/metadata` (prefers `latest/` if present)  
   - Resolution: `DATA_ROOT` from `CORAPAN_RUNTIME_ROOT` or dev fallback.  
-  - Evidence: [src/app/routes/corpus.py](src/app/routes/corpus.py#L112-L120), [src/app/config/__init__.py](src/app/config/__init__.py#L96-L118)
+  - Evidence: [src/app/routes/corpus.py](src/app/routes/corpus.py#L112-L134), [src/app/config/__init__.py](src/app/config/__init__.py#L96-L118)
 - Resolved path (pseudo-trace):  
-  - If `CORAPAN_RUNTIME_ROOT` set: `${CORAPAN_RUNTIME_ROOT}/data/public/metadata/latest`  
-  - Dev fallback: repo/runtime/corapan/data/public/metadata/latest  
+  - If `CORAPAN_RUNTIME_ROOT` set: `${CORAPAN_RUNTIME_ROOT}/data/public/metadata/latest` when present, else `${CORAPAN_RUNTIME_ROOT}/data/public/metadata`  
+  - Dev fallback: repo/runtime/corapan/data/public/metadata/latest when present, else repo/runtime/corapan/data/public/metadata  
 - Public/restricted: **public**
 
 **/corpus/metadata/download/tsv/<country>**, **/corpus/metadata/download/json/<country>**  
 - Route: `metadata_country_tsv()` and `metadata_country_json()` in [src/app/routes/corpus.py](src/app/routes/corpus.py#L466-L535)  
-- Data source: `corapan_recordings.json` from `DATA_ROOT/public/metadata/latest`  
+- Data source: `corapan_recordings.json` from `DATA_ROOT/public/metadata/latest` if present, else `DATA_ROOT/public/metadata`  
   Evidence: [src/app/routes/corpus.py](src/app/routes/corpus.py#L122-L166)
 
 **/corpus/api/statistics/<filename>**  

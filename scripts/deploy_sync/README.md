@@ -33,19 +33,18 @@ Connection parameters (hostname and user) are configured in sync_core.ps1. Port 
 - Stats databases: `runtime/corapan/data/db/public/stats_files.db`, `runtime/corapan/data/db/public/stats_country.db`
 
 **PROTECTED PRODUCTION STATE (PERMANENTLY EXCLUDED):**
-- `data/counters/` - Runtime state (page views, downloads, etc.) - **NEVER synced**
 - `data/db/` - Contains auth.db, transcription.db (production databases) - **NEVER synced**
   - Only exception: specific stats DB files listed above are synced
 
 These paths contain production runtime state that must NEVER be overwritten by any data deploy. The protection is HARD-CODED and cannot be bypassed, even with parameter flags. If you need to manually restore production state, use SSH restore procedures instead.
 
 **Statistics Deployment (HARDENED):**
-`sync_data.ps1` does NOT handle statistics files (corpus_stats.json, viz_*.png).
-These are deployed separately via `Sync-StatisticsFiles` function with strict safety guards:
+`sync_data.ps1` runs `Sync-StatisticsFiles` for statistics files (corpus_stats.json, viz_*.png)
+with strict safety guards:
 
 **What gets deployed:**
 - ONLY: `corpus_stats.json` and `viz_*.png` files
-- Target: `/srv/webapps/corapan/data/public/statistics`
+- Target: `/srv/webapps/corapan/runtime/corapan/data/public/statistics`
 - Mode: Overwrite-only (no delete, no directory structures)
 
 **Safety Guards:**
@@ -63,7 +62,7 @@ These are deployed separately via `Sync-StatisticsFiles` function with strict sa
 - `[PHASE 7]` Sets ownership
 
 **Usage:**
-- Called by: `LOKAL/_2_deploy/deploy_data.ps1` orchestrator
+- Called by: `sync_data.ps1` (and by `LOKAL/_2_deploy/deploy_data.ps1` orchestrator)
 - Requires: `PUBLIC_STATS_DIR` or `CORAPAN_RUNTIME_ROOT` environment variable set
 - Behavior: SKIP with warning if stats dir not ready (non-critical)
 - Testing: Pass `-DryRun` flag to see files without uploading
@@ -119,7 +118,7 @@ Connection parameters (hostname and user) are configured in sync_core.ps1. Port 
 - `-Hostname`: Production server hostname/IP (default: 137.248.186.51)
 - `-User`: SSH user (default: root)
 - `-Port`: SSH port (default: 22)
-- `-DataDir`: Remote data directory (default: /srv/webapps/corapan/data)
+- `-DataDir`: Remote data directory (default: /srv/webapps/corapan/runtime/corapan/data)
 - `-ConfigDir`: Remote BlackLab config directory (default: /srv/webapps/corapan/app/config/blacklab)
 - `-DryRun`: Show what would be done without making changes
 - `-KeepBackups`: Number of backups to retain (default: 2)
@@ -175,9 +174,8 @@ Invoke-SSH -Hostname $Hostname -User $User -Port $Port -Command "ls -la /srv"
 
 ### Production State Protection (Hard-Coded)
 
-**CRITICAL:** The following directories are **PERMANENTLY PROTECTED** and can NEVER be synced by any deploy:
+**CRITICAL:** The following directory is **PERMANENTLY PROTECTED** and can NEVER be synced by any deploy:
 
-- `data/counters/` - Runtime state (page views, downloads, impressions, etc.)
 - `data/db/` - Production databases including auth.db and transcription.db
 
 These protections are **NOT configurable** via parameters. They are enforced at the script level:
@@ -196,8 +194,8 @@ This design prevents accidental overwrites of production runtime state during no
 ### Statistics Deployment (Controlled & Optional)
 
 Statistics files (corpus_stats.json, viz_*.png) are:
-- Deployed separately from data sync
-- Synced to: `/srv/webapps/corapan/data/public/statistics`
+- Deployed by `sync_data.ps1` via `Sync-StatisticsFiles`
+- Synced to: `/srv/webapps/corapan/runtime/corapan/data/public/statistics`
 - Mode: Overwrite-only (no delete, no atomic swap)
 - Optional: Deployment continues even if stats are not ready
 - Controlled by: `Sync-StatisticsFiles` function in `sync_data.ps1`

@@ -36,6 +36,12 @@ def _check(name: str, url: str, ok_statuses: set[int], timeout: float) -> bool:
     status, body = _request(url, timeout)
     if status in ok_statuses:
         print(f"[PASS] {name} -> {status}", flush=True)
+        if status == 404 and "/corpus/metadata/download" in url:
+            print(
+                "[WARN] Metadata not available. Expected runtime path: "
+                "${CORAPAN_RUNTIME_ROOT}/data/public/metadata (or metadata/latest if present).",
+                flush=True,
+            )
         return True
     safe_url = urllib.parse.urlsplit(url).path or url
     print(f"[FAIL] {name} -> {status} ({safe_url})\n{body[:200]}", flush=True)
@@ -60,6 +66,8 @@ def main() -> int:
         ("Stats image", f"{base}/corpus/api/statistics/viz_total_corpus.png", {200, 404}),
         ("Metadata TSV", f"{base}/corpus/metadata/download/tsv", {200, 404}),
         ("Metadata JSON", f"{base}/corpus/metadata/download/json", {200, 404}),
+        ("Metadata JSON-LD", f"{base}/corpus/metadata/download/jsonld", {200, 404}),
+        ("Metadata TEI", f"{base}/corpus/metadata/download/tei", {200, 404}),
     ]
 
     # Auth-protected endpoints: accept 401/303 in unauthenticated context.
