@@ -42,13 +42,13 @@ python -c "import secrets; print(secrets.token_hex(32))"
 ### 3. Docker Image bauen
 
 ```bash
-docker-compose -f /srv/webapps/corapan/infra/docker-compose.prod.yml build
+docker-compose -f /srv/webapps/corapan/docker-compose.prod.yml build
 ```
 
 ### 4. Container starten
 
 ```bash
-docker-compose -f /srv/webapps/corapan/infra/docker-compose.prod.yml up -d --force-recreate
+docker-compose -f /srv/webapps/corapan/docker-compose.prod.yml up -d --force-recreate
 ```
 
 ### 5. Health Check
@@ -220,11 +220,11 @@ echo "Backup completed: $DATE"
 
 ```bash
 # Graceful Restart (Zero-Downtime)
-docker-compose -f /srv/webapps/corapan/infra/docker-compose.prod.yml restart
+docker-compose -f /srv/webapps/corapan/docker-compose.prod.yml restart
 
 # Hard Restart
-docker-compose -f /srv/webapps/corapan/infra/docker-compose.prod.yml down
-docker-compose -f /srv/webapps/corapan/infra/docker-compose.prod.yml up -d --force-recreate
+docker-compose -f /srv/webapps/corapan/docker-compose.prod.yml down
+docker-compose -f /srv/webapps/corapan/docker-compose.prod.yml up -d --force-recreate
 ```
 
 ---
@@ -234,8 +234,8 @@ docker-compose -f /srv/webapps/corapan/infra/docker-compose.prod.yml up -d --for
 ```bash
 # Zu vorherigem Commit
 git checkout <previous-commit-hash>
-docker-compose -f /srv/webapps/corapan/infra/docker-compose.prod.yml build
-docker-compose -f /srv/webapps/corapan/infra/docker-compose.prod.yml up -d --force-recreate
+docker-compose -f /srv/webapps/corapan/docker-compose.prod.yml build
+docker-compose -f /srv/webapps/corapan/docker-compose.prod.yml up -d --force-recreate
 ```
 
 ---
