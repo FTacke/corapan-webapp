@@ -561,10 +561,11 @@ function Test-And-MigrateManifest {
         [string]$DirName
     )
     
+    $safeDirName = $DirName -replace '[\\/]', '_'
     $globalManifestDir = "$RemoteBasePath/.sync_state"
-    $globalManifestFile = "$globalManifestDir/${DirName}_manifest.json"
+    $globalManifestFile = "$globalManifestDir/${safeDirName}_manifest.json"
     $targetManifestDir = "$RemoteBasePath/$DirName/.sync_state"
-    $targetManifestFile = "$targetManifestDir/${DirName}_manifest.json"
+    $targetManifestFile = "$targetManifestDir/${safeDirName}_manifest.json"
     
     # Einfaches Shell-Skript fuer Migration (robuster als Python mit Escaping)
     $migrationCmd = @"
@@ -670,7 +671,8 @@ function Get-RemoteManifest {
     
     # NEUER verzeichnisspezifischer Pfad
     $syncStateDir = "$RemoteBasePath/$DirName/.sync_state"
-    $manifestFile = "$syncStateDir/${DirName}_manifest.json"
+    $safeDirName = $DirName -replace '[\\/]', '_'
+    $manifestFile = "$syncStateDir/${safeDirName}_manifest.json"
     $targetDir = "$RemoteBasePath/$DirName"
     
     # Versuche zuerst das gespeicherte Manifest zu lesen
@@ -921,7 +923,8 @@ function Update-RemoteManifest {
     
     # NEUER verzeichnisspezifischer Pfad
     $syncStateDir = "$RemoteBasePath/$DirName/.sync_state"
-    $manifestFile = "$syncStateDir/${DirName}_manifest.json"
+    $safeDirName = $DirName -replace '[\\/]', '_'
+    $manifestFile = "$syncStateDir/${safeDirName}_manifest.json"
     
     $json = $Manifest | ConvertTo-Json -Compress
     if ([string]::IsNullOrEmpty($json) -or $json -eq "null") {

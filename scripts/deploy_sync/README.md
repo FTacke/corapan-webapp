@@ -41,7 +41,7 @@ These paths contain production runtime state that must NEVER be overwritten by a
 
 **Manifest-Speicherung:**
 - Pro Verzeichnis wird ein eigenes Manifest unter `data/<segment>/.sync_state/` gespeichert.
-- Beispiel: `data/public/metadata/.sync_state/public/metadata_manifest.json`
+- Beispiel: `data/public/metadata/.sync_state/public_metadata_manifest.json`
 - **Robustheit:** Falls `.sync_state` oder Manifest-Dateien geloescht wurden, erstellt der Sync die Verzeichnisse/Manifeste automatisch neu.
 
 **Statistics Deployment (HARDENED):**
