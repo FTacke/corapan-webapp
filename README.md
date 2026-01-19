@@ -176,24 +176,11 @@ Für den produktiven Betrieb wird empfohlen:
 
 ### Deployment (Production)
 
-Die Produktion läuft auf einer VM am HRZ der Philipps-Universität Marburg und wird über einen **self-hosted GitHub Runner** automatisiert. Ein `push` auf den `main`-Branch führt `scripts/deploy_prod.sh` aus und startet **ausschließlich** via `docker-compose.prod.yml` (runtime-first mounts).
+Die Produktion läuft auf einer VM am HRZ der Philipps-Universität Marburg und wird über einen **self-hosted GitHub Runner** automatisiert. Ein `push` auf den `main`-Branch führt automatisch `scripts/deploy_prod.sh` aus, welches das Docker-Image baut und den Container aktualisiert. Große Daten- und Medienbestände kommen **nicht** über Git, sondern werden unter `/srv/webapps/corapan/runtime/corapan/data` und `/srv/webapps/corapan/runtime/corapan/media` per rsync bereitgestellt.
 
-**Startbefehl (Server nutzt docker-compose v1):**
-```bash
-docker-compose -f /srv/webapps/corapan/docker-compose.prod.yml up -d --force-recreate
-```
+> **Secrets:** Die Datei `passwords.env` liegt auf dem Server unter `/srv/webapps/corapan/config/` und wird per `--env-file` in den Container geladen. Die App erwartet die Secrets (z. B. `DATABASE_URL`, `FLASK_SECRET_KEY`) als Umgebungsvariablen.
 
-**Runtime-first Mounts (erwartet):**
-- `/app/data`  <- `/srv/webapps/corapan/runtime/corapan/data`
-- `/app/media` <- `/srv/webapps/corapan/runtime/corapan/media`
-- `/app/logs`  <- `/srv/webapps/corapan/runtime/corapan/logs`
-- `/app/config`<- `/srv/webapps/corapan/runtime/corapan/config`
-
-**Legacy-Paths sind verboten:** `/srv/webapps/corapan/{data,media,logs}` dürfen in Production **nicht** mehr verwendet werden.
-
-> **Secrets:** Die Datei `passwords.env` liegt auf dem Server unter `/srv/webapps/corapan/config/` und wird von `deploy_prod.sh` in die Environment geladen (Compose-Variablen). Die App erwartet die Secrets (z. B. `DATABASE_URL`, `FLASK_SECRET_KEY`) als Umgebungsvariablen.
-
-→ Vollständige Dokumentation: [`docs/operations/production.md`](docs/operations/production.md)
+→ Vollständige Dokumentation: [`docs/deploy_plan.md`](docs/deploy_plan.md)
 
 ## 10. Lizenz / Licensing
 

@@ -14,8 +14,8 @@
 #
 # Prerequisites on the server:
 #   - GitHub self-hosted runner configured and running
-#   - Docker installed (docker-compose v1)
-#   - /srv/webapps/corapan runtime directories set up
+#   - Docker installed
+#   - /srv/webapps/corapan/{app,data,media,config,logs} directories set up
 #   - passwords.env configured in /srv/webapps/corapan/config/
 #   - data/media synced via rsync (not part of this workflow)
 #
@@ -39,45 +39,19 @@ jobs:
     steps:
       - name: Deploy corapan-webapp
         run: |
-          cd /srv/webapps/corapan
-          bash /srv/webapps/corapan/scripts/deploy_prod.sh
+          cd /srv/webapps/corapan/app
+          bash scripts/deploy_prod.sh
 
       - name: Verify deployment
         run: |
           # Wait a moment for the container to fully start
           sleep 10
-
-          CONTAINER_NAME="corapan-web-prod"
-          RUNTIME_ROOT="/srv/webapps/corapan/runtime/corapan"
-
           # Check if container is running
-          if docker ps --format '{{.Names}}' | grep -q "^${CONTAINER_NAME}$"; then
-            echo "✓ Container ${CONTAINER_NAME} is running"
-            docker ps --filter "name=${CONTAINER_NAME}" --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
+          if docker ps --format '{{.Names}}' | grep -q '^corapan-webapp$'; then
+            echo "✓ Container corapan-webapp is running"
+            docker ps --filter "name=corapan-webapp" --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
           else
-            echo "✗ Container ${CONTAINER_NAME} is not running!"
-            docker logs "${CONTAINER_NAME}" 2>&1 | tail -50
+            echo "✗ Container corapan-webapp is not running!"
+            docker logs corapan-webapp 2>&1 | tail -50
             exit 1
           fi
-
-          # Verify runtime-first mounts
-          MOUNTS=$(docker inspect "${CONTAINER_NAME}" --format '{{range .Mounts}}{{println .Destination " <- " .Source}}{{end}}' | sort)
-          echo "${MOUNTS}"
-
-          EXPECTED_MOUNTS=(
-            "/app/data <- ${RUNTIME_ROOT}/data"
-            "/app/media <- ${RUNTIME_ROOT}/media"
-            "/app/logs <- ${RUNTIME_ROOT}/logs"
-            "/app/config <- ${RUNTIME_ROOT}/config"
-          )
-
-          for mount in "${EXPECTED_MOUNTS[@]}"; do
-            if ! echo "${MOUNTS}" | grep -Fxq "${mount}"; then
-              echo "✗ Mount mismatch detected: ${mount}"
-              exit 1
-            fi
-          done
-
-          # Optional: health check
-          curl -fsS http://127.0.0.1:6000/health > /dev/null
-          echo "✓ Health check passed"

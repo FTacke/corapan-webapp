@@ -1,8 +1,7 @@
 # Produktion
 
 **Scope:** Production Deployment und Betrieb  
-**Source-of-truth:** `docker-compose.prod.yml`, `Dockerfile`, `scripts/deploy_prod.sh`  
-**Hinweis:** Production nutzt **docker-compose v1** (kein `docker compose` Plugin).
+**Source-of-truth:** `docker-compose.yml`, `Dockerfile`, `scripts/deploy_prod.sh`
 
 ## Voraussetzungen
 
@@ -19,7 +18,7 @@
 ### 1. Code aktualisieren
 
 ```bash
-cd /srv/webapps/corapan
+cd ~/corapan-webapp
 git pull origin main
 ```
 
@@ -42,13 +41,13 @@ python -c "import secrets; print(secrets.token_hex(32))"
 ### 3. Docker Image bauen
 
 ```bash
-docker-compose -f /srv/webapps/corapan/docker-compose.prod.yml build
+docker-compose build
 ```
 
 ### 4. Container starten
 
 ```bash
-docker-compose -f /srv/webapps/corapan/docker-compose.prod.yml up -d --force-recreate
+docker-compose up -d
 ```
 
 ### 5. Health Check
@@ -61,7 +60,7 @@ curl http://localhost:6000/health
 ### 6. Logs prüfen
 
 ```bash
-docker logs corapan-web-prod -f
+docker logs corapan-container -f
 ```
 
 ---
@@ -69,8 +68,6 @@ docker logs corapan-web-prod -f
 ## Runtime Roots (Source of Truth)
 
 **Production runtime root:** `/srv/webapps/corapan/runtime/corapan`
-
-**Legacy-Pfade dürfen nicht verwendet werden:** `/srv/webapps/corapan/{data,media,logs}`
 
 App path resolution (evidence):
 - Data root resolves to `${CORAPAN_RUNTIME_ROOT}/data` in [src/app/config/__init__.py](src/app/config/__init__.py#L66-L120).
@@ -168,17 +165,17 @@ sudo certbot --nginx -d corapan.hispanistica.com
 
 ```bash
 docker ps
-docker stats corapan-web-prod
+docker stats corapan-container
 ```
 
 ### Logs
 
 ```bash
 # Live Logs
-docker logs corapan-web-prod -f
+docker logs corapan-container -f
 
 # Letzte 100 Zeilen
-docker logs corapan-web-prod --tail 100
+docker logs corapan-container --tail 100
 ```
 
 ### Health Check
@@ -199,7 +196,7 @@ DATE=$(date +%Y%m%d_%H%M%S)
 mkdir -p /backup/corapan
 
 # PostgreSQL Dump
-docker exec corapan-db-prod pg_dump -U corapan_app corapan_auth > /backup/corapan/db_${DATE}.sql
+docker exec corapan-postgres pg_dump -U corapan corapan_auth > /backup/corapan/db_${DATE}.sql
 
 # Logs, Counters
 tar -czf /backup/corapan/data_${DATE}.tar.gz \
@@ -220,11 +217,11 @@ echo "Backup completed: $DATE"
 
 ```bash
 # Graceful Restart (Zero-Downtime)
-docker-compose -f /srv/webapps/corapan/docker-compose.prod.yml restart
+docker-compose restart
 
 # Hard Restart
-docker-compose -f /srv/webapps/corapan/docker-compose.prod.yml down
-docker-compose -f /srv/webapps/corapan/docker-compose.prod.yml up -d --force-recreate
+docker-compose down
+docker-compose up -d
 ```
 
 ---
@@ -234,8 +231,8 @@ docker-compose -f /srv/webapps/corapan/docker-compose.prod.yml up -d --force-rec
 ```bash
 # Zu vorherigem Commit
 git checkout <previous-commit-hash>
-docker-compose -f /srv/webapps/corapan/docker-compose.prod.yml build
-docker-compose -f /srv/webapps/corapan/docker-compose.prod.yml up -d --force-recreate
+docker-compose build
+docker-compose up -d
 ```
 
 ---
