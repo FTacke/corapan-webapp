@@ -12,14 +12,15 @@
 #   5. Optionally runs the database setup script
 #
 # Prerequisites:
-#   - Docker installed and running
-#   - Git repository cloned to /srv/webapps/corapan
-#   - Runtime data/media populated via rsync
+#   - Docker installed and running (docker-compose v1)
+#   - Git repository cloned on the server (self-hosted runner workspace)
+#   - Runtime data/media already present under /srv/webapps/corapan/runtime/corapan
 #   - passwords.env configured in /srv/webapps/corapan/config/
 #
 # Usage:
-#   cd /srv/webapps/corapan
 #   bash scripts/deploy_prod.sh
+#
+# NOTE: This is a code-only deploy (no data/media sync). Runtime data is not modified.
 #
 # =============================================================================
 
@@ -29,14 +30,17 @@ set -euo pipefail  # Exit on any error
 CONTAINER_NAME="corapan-web-prod"
 
 # Paths (on the host)
-BASE_DIR="/srv/webapps/corapan"
-COMPOSE_FILE="${BASE_DIR}/docker-compose.prod.yml"
-ENV_FILE="${BASE_DIR}/config/passwords.env"
-RUNTIME_ROOT="${BASE_DIR}/runtime/corapan"
+RUNTIME_BASE="/srv/webapps/corapan"
+ENV_FILE="${RUNTIME_BASE}/config/passwords.env"
+RUNTIME_ROOT="${RUNTIME_BASE}/runtime/corapan"
 DATA_DIR="${RUNTIME_ROOT}/data"
 MEDIA_DIR="${RUNTIME_ROOT}/media"
 CONFIG_DIR="${RUNTIME_ROOT}/config"
 LOGS_DIR="${RUNTIME_ROOT}/logs"
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
+COMPOSE_FILE="${REPO_ROOT}/docker-compose.prod.yml"
 
 # Colors for output
 RED='\033[0;31m'
@@ -62,8 +66,8 @@ echo "=============================================="
 echo "Started at: $(date)"
 echo ""
 
-log_info "Changing to deploy root: ${BASE_DIR}"
-cd "${BASE_DIR}"
+log_info "Using repo root: ${REPO_ROOT}"
+cd "${REPO_ROOT}"
 
 # Step 1: Update code from Git
 log_info "Fetching latest code from origin/main..."
@@ -83,16 +87,6 @@ else
     log_warn "Environment file not found at ${ENV_FILE} (compose will use shell env/.env)"
 fi
 echo ""
-
-# Step 3: Ensure statistics assets are readable by container user
-STATS_DIR="${DATA_DIR}/public/statistics"
-if [ -d "${STATS_DIR}" ]; then
-    log_info "Ensuring statistics permissions in ${STATS_DIR}..."
-    chmod 755 "${STATS_DIR}" || log_warn "Failed to chmod stats directory"
-    find "${STATS_DIR}" -type f -exec chmod 644 {} \; || log_warn "Failed to chmod stats files"
-else
-    log_warn "Statistics directory not found at ${STATS_DIR}"
-fi
 
 if [ ! -f "${COMPOSE_FILE}" ]; then
     log_error "Compose file not found: ${COMPOSE_FILE}"

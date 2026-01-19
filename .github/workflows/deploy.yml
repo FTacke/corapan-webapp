@@ -6,11 +6,10 @@
 # (marele.online.uni-marburg.de) when code is pushed to the main branch.
 #
 # The deployment runs on a self-hosted GitHub Actions runner installed on the
-# production server itself. The runner executes the deploy_prod.sh script which:
+# production server itself. The runner executes scripts/deploy_prod.sh which:
 #   - Updates the code from Git
-#   - Builds a new Docker image
-#   - Restarts the container with new image
-#   - Runs database migrations
+#   - Starts the stack via docker-compose.prod.yml (code-only)
+#   - Verifies runtime-first mounts
 #
 # Prerequisites on the server:
 #   - GitHub self-hosted runner configured and running
@@ -39,8 +38,8 @@ jobs:
     steps:
       - name: Deploy corapan-webapp
         run: |
-          cd /srv/webapps/corapan
-          bash /srv/webapps/corapan/scripts/deploy_prod.sh
+          cd "${GITHUB_WORKSPACE}"
+          bash scripts/deploy_prod.sh
 
       - name: Verify deployment
         run: |
