@@ -25,10 +25,10 @@
 [CmdletBinding()]
 param(
     [Alias('Host')]
-    [string]$Hostname = "137.248.186.51",
-    [string]$User = "root",
+    [string]$Hostname,
+    [string]$User,
     [int]$Port = 22,
-    [string]$DataDir = "/srv/webapps/corapan/data",
+    [string]$DataDir,
     [string]$ConfigDir = "/srv/webapps/corapan/app/config/blacklab",
     [switch]$DryRun,
     [int]$KeepBackups = 2,
@@ -54,9 +54,26 @@ $PROD_PORT = 8081
 $MIN_FILES = 10
 $MIN_SIZE_MB = 50
 
+# ==========================================================================
+# MAIN SCRIPT
 # ============================================================================
-# HELPER FUNCTIONS
-# ============================================================================
+
+if (-not $Hostname) {
+    $Hostname = $script:SSHConfig.Hostname
+}
+
+if (-not $User) {
+    $User = $script:SSHConfig.User
+}
+
+if (-not $Port) {
+    $Port = $script:SSHConfig.Port
+}
+
+if (-not $DataDir) {
+    $remotePaths = Get-RemotePaths
+    $DataDir = $remotePaths.DataRoot
+}
 
 function Write-Section {
     param([string]$Title)

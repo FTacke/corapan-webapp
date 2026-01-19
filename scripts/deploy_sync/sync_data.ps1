@@ -72,9 +72,10 @@
 #   cd C:\dev\corapan-webapp
 #   .\scripts\deploy_sync\sync_data.ps1           # Normal (Delta-Sync)
 #   .\scripts\deploy_sync\sync_data.ps1 -Force    # Force (alle Dateien)
+#   .\scripts\deploy_sync\sync_data.ps1 -DryRun   # Dry-Run (nur Zielpfade)
 #
 # DRY-RUN:
-#   Kein Dry-Run-Modus (echter Sync).
+#   -DryRun zeigt nur Zielpfade und transferiert keine Dateien.
 #
 # Siehe auch:
 #   - update_data_media.ps1  -> Interaktiver Maintenance-Runner
@@ -87,6 +88,7 @@ param(
     [string]$RepoRoot,
     
     [switch]$Force,
+    [switch]$DryRun,
     
     # PRODUCTION STATE PROTECTION
     # These switches allow syncing of runtime state (normally excluded for safety)
@@ -109,8 +111,6 @@ if (-not $runtimeRoot) {
 }
 
 $LOCAL_BASE_PATH  = Join-Path $runtimeRoot "data"
-$REMOTE_RUNTIME_ROOT = "/srv/webapps/corapan/runtime/corapan"
-$REMOTE_DATA_ROOT = "$REMOTE_RUNTIME_ROOT/data"
 
 # Zu synchronisierende Verzeichnisse
 # WICHTIG: blacklab_index, blacklab_index.backup, stats_temp, db sind bewusst NICHT enthalten!
@@ -200,7 +200,7 @@ function Sync-StatisticsFiles {
     param(
         [string]$LocalStatsDir,
         [string]$RepoRoot,
-        [string]$RemoteRuntimeRoot = "/srv/webapps/corapan/runtime/corapan",
+        [string]$RemoteRuntimeRoot,
         [switch]$DryRun = $false
     )
     
@@ -212,6 +212,11 @@ function Sync-StatisticsFiles {
     # PHASE 1: Determine local statistics directory
     # =========================================================================
     
+    if (-not $RemoteRuntimeRoot) {
+        $remotePaths = Get-RemotePaths
+        $RemoteRuntimeRoot = $remotePaths.RuntimeRoot
+    }
+
     if (-not $LocalStatsDir) {
         if ($env:PUBLIC_STATS_DIR) {
             $LocalStatsDir = $env:PUBLIC_STATS_DIR
@@ -484,6 +489,10 @@ if (-not (Test-Path $coreScript)) {
 
 . $coreScript
 
+$remotePaths = Get-RemotePaths
+$REMOTE_RUNTIME_ROOT = $remotePaths.RuntimeRoot
+$REMOTE_DATA_ROOT = $remotePaths.DataRoot
+
 # -----------------------------------------------------------------------------
 # Hauptprogramm
 # -----------------------------------------------------------------------------
@@ -498,6 +507,8 @@ Write-Host "Ziel:    $REMOTE_DATA_ROOT" -ForegroundColor DarkGray
 Write-Host "Datum:   $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')" -ForegroundColor DarkGray
 if ($Force) {
     Write-Host "Modus:   FORCE (alle Dateien uebertragen)" -ForegroundColor Yellow
+} elseif ($DryRun) {
+    Write-Host "Modus:   DRY-RUN (keine Dateien werden transferiert)" -ForegroundColor Yellow
 } else {
     Write-Host "Modus:   Delta-Sync (nur Aenderungen)" -ForegroundColor DarkGray
 }
@@ -610,6 +621,18 @@ if ($excluded.Count -gt 0) {
 # All guardrails passed - continue to synchronization
 Write-Host "Pre-sync validation: OK" -ForegroundColor Green
 Write-Host ""
+
+if ($DryRun) {
+    Write-Host "[DRY RUN] Remote targets:" -ForegroundColor Cyan
+    Write-Host "  - Base: $REMOTE_DATA_ROOT" -ForegroundColor DarkGray
+    foreach ($dir in $DATA_DIRECTORIES) {
+        Write-Host "  - data/$dir -> $REMOTE_DATA_ROOT/$dir" -ForegroundColor DarkGray
+    }
+    Write-Host "  - stats DBs -> $REMOTE_DATA_ROOT/db" -ForegroundColor DarkGray
+    Write-Host ""
+    Sync-StatisticsFiles -RepoRoot $RepoRoot -RemoteRuntimeRoot $REMOTE_RUNTIME_ROOT -DryRun
+    exit 0
+}
 
 # -----------------------------------------------------------------------------
 # SYNCHRONIZATION

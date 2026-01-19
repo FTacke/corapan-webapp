@@ -54,9 +54,10 @@
 #   .\scripts\deploy_sync\sync_media.ps1              # Normal (Delta-Sync)
 #   .\scripts\deploy_sync\sync_media.ps1 -Force       # Force (alle Dateien)
 #   .\scripts\deploy_sync\sync_media.ps1 -ForceMP3    # Force nur MP3s
+#   .\scripts\deploy_sync\sync_media.ps1 -DryRun      # Dry-Run (nur Zielpfade)
 #
 # DRY-RUN:
-#   Kein Dry-Run-Modus (echter Sync).
+#   -DryRun zeigt nur Zielpfade und transferiert keine Dateien.
 #
 # Siehe auch:
 #   - update_data_media.ps1  -> Interaktiver Maintenance-Runner
@@ -70,7 +71,8 @@ param(
     [string]$RepoRoot,
     
     [switch]$Force,
-    [switch]$ForceMP3
+    [switch]$ForceMP3,
+    [switch]$DryRun
 )
 
 Set-StrictMode -Version Latest
@@ -86,7 +88,6 @@ if (-not $runtimeRoot) {
 }
 
 $LOCAL_BASE_PATH  = Join-Path $runtimeRoot "media"
-$REMOTE_BASE_PATH = "/srv/webapps/corapan/media"
 
 # Zu synchronisierende Verzeichnisse
 # Alle aktiven Media-Verzeichnisse inkl. grosser Audio-Ordner:
@@ -110,6 +111,10 @@ if (-not (Test-Path $coreScript)) {
 
 . $coreScript
 
+$remotePaths = Get-RemotePaths
+$REMOTE_RUNTIME_ROOT = $remotePaths.RuntimeRoot
+$REMOTE_MEDIA_ROOT = $remotePaths.MediaRoot
+
 # -----------------------------------------------------------------------------
 # Hauptprogramm
 # -----------------------------------------------------------------------------
@@ -120,12 +125,14 @@ Write-Host " CO.RA.PAN Media Sync: Dev -> Prod" -ForegroundColor Magenta
 Write-Host "=============================================" -ForegroundColor Magenta
 Write-Host ""
 Write-Host "Quelle:  $LOCAL_BASE_PATH" -ForegroundColor DarkGray
-Write-Host "Ziel:    $REMOTE_BASE_PATH" -ForegroundColor DarkGray
+Write-Host "Ziel:    $REMOTE_MEDIA_ROOT" -ForegroundColor DarkGray
 Write-Host "Datum:   $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')" -ForegroundColor DarkGray
 if ($Force) {
     Write-Host "Modus:   FORCE (alle Dateien uebertragen)" -ForegroundColor Yellow
 } elseif ($ForceMP3) {
     Write-Host "Modus:   FORCE-MP3 (nur mp3-full/mp3-split)" -ForegroundColor Yellow
+} elseif ($DryRun) {
+    Write-Host "Modus:   DRY-RUN (keine Dateien werden transferiert)" -ForegroundColor Yellow
 } else {
     Write-Host "Modus:   Delta-Sync (nur Aenderungen)" -ForegroundColor DarkGray
 }
@@ -139,6 +146,15 @@ if (-not (Test-Path $LOCAL_BASE_PATH)) {
 
 # Synchronisation fuer jedes Verzeichnis
 $errorCount = 0
+if ($DryRun) {
+    Write-Host "[DRY RUN] Remote targets:" -ForegroundColor Cyan
+    Write-Host "  - Base: $REMOTE_MEDIA_ROOT" -ForegroundColor DarkGray
+    foreach ($dir in $MEDIA_DIRECTORIES) {
+        Write-Host "  - media/$dir -> $REMOTE_MEDIA_ROOT/$dir" -ForegroundColor DarkGray
+    }
+    Write-Host ""
+    exit 0
+}
 foreach ($dir in $MEDIA_DIRECTORIES) {
     $localDir = Join-Path $LOCAL_BASE_PATH $dir
     
@@ -155,7 +171,7 @@ foreach ($dir in $MEDIA_DIRECTORIES) {
         
         Sync-DirectoryWithDiff `
             -LocalBasePath $LOCAL_BASE_PATH `
-            -RemoteBasePath $REMOTE_BASE_PATH `
+            -RemoteBasePath $REMOTE_MEDIA_ROOT `
             -DirName $dir `
             -Force:$useForce
     } catch {
@@ -166,7 +182,7 @@ foreach ($dir in $MEDIA_DIRECTORIES) {
 
 # Rechte auf Server setzen
 if ($errorCount -eq 0) {
-    Set-RemoteOwnership -RemotePath $REMOTE_BASE_PATH
+    Set-RemoteOwnership -RemotePath $REMOTE_MEDIA_ROOT
 }
 
 # Zusammenfassung

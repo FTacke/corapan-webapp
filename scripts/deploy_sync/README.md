@@ -21,9 +21,10 @@ This directory contains the core deployment logic for synchronizing data, media,
 **Key Parameters:**
 - `-RepoRoot`: Path to webapp repository root (default: C:\dev\corapan-webapp)
 - `-Force`: Force full resync (ignores manifest state)
+- `-DryRun`: Print remote targets only (no transfer)
 
 **Connection Configuration:**
-Connection parameters (hostname and user) are configured in sync_core.ps1. Port is implicit (default 22) and not exposed as a config variable. Default target: `137.248.186.51` (root@22).
+Connection parameters (hostname/user/port/key) and remote runtime roots are configured in `scripts/deploy_sync/_lib/ssh.ps1` (single source of truth).
 
 **What it syncs:**
 - `runtime/corapan/data/db/public/`
@@ -79,16 +80,17 @@ with strict safety guards:
 
 **Usage:**
 ```powershell
-.\scripts\deploy_sync\sync_media.ps1 [-RepoRoot <path>] [-Force] [-ForceMP3]
+.\scripts\deploy_sync\sync_media.ps1 [-RepoRoot <path>] [-Force] [-ForceMP3] [-DryRun]
 ```
 
 **Key Parameters:**
 - `-RepoRoot`: Path to webapp repository root (default: C:\dev\corapan-webapp)
 - `-Force`: Force full resync of all media
 - `-ForceMP3`: Force full resync of MP3 files only (transcripts remain delta)
+- `-DryRun`: Print remote targets only (no transfer)
 
 **Connection Configuration:**
-Connection parameters (hostname and user) are configured in sync_core.ps1. Port is implicit (default 22) and not exposed as a config variable. Default target: `137.248.186.51` (root@22).
+Connection parameters (hostname/user/port/key) and remote runtime roots are configured in `scripts/deploy_sync/_lib/ssh.ps1` (single source of truth).
 
 **What it syncs:**
 - `media/transcripts/`
@@ -115,10 +117,10 @@ Connection parameters (hostname and user) are configured in sync_core.ps1. Port 
 ```
 
 **Key Parameters:**
-- `-Hostname`: Production server hostname/IP (default: 137.248.186.51)
-- `-User`: SSH user (default: root)
-- `-Port`: SSH port (default: 22)
-- `-DataDir`: Remote data directory (default: /srv/webapps/corapan/runtime/corapan/data)
+- `-Hostname`: Production server hostname/IP (default: from `scripts/deploy_sync/_lib/ssh.ps1`)
+- `-User`: SSH user (default: from `scripts/deploy_sync/_lib/ssh.ps1`)
+- `-Port`: SSH port (default: from `scripts/deploy_sync/_lib/ssh.ps1`)
+- `-DataDir`: Remote data directory (default: `${CORAPAN_RUNTIME_ROOT}/data` via `scripts/deploy_sync/_lib/ssh.ps1`)
 - `-ConfigDir`: Remote BlackLab config directory (default: /srv/webapps/corapan/app/config/blacklab)
 - `-DryRun`: Show what would be done without making changes
 - `-KeepBackups`: Number of backups to retain (default: 2)
@@ -211,10 +213,8 @@ Statistics files (corpus_stats.json, viz_*.png) are:
 
 Entry points have varying DryRun support:
 - `publish_blacklab_index.ps1`: **Supports `-DryRun`** - shows planned actions without executing
-- `sync_data.ps1`: **No DryRun support** - executes delta sync based on manifest
-- `sync_media.ps1`: **No DryRun support** - executes delta sync based on manifest
-
-For data/media syncs, the manifest-based delta sync mechanism provides safety by only transferring changed files.
+- `sync_data.ps1`: **Supports `-DryRun`** - prints remote targets only
+- `sync_media.ps1`: **Supports `-DryRun`** - prints remote targets only
 
 ### Logging & Encoding
 

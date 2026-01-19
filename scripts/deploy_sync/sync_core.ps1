@@ -67,16 +67,21 @@ $ErrorActionPreference = 'Stop'
 # Konfiguration
 # -----------------------------------------------------------------------------
 
+$sshLib = Join-Path $PSScriptRoot "_lib\ssh.ps1"
+if (Test-Path $sshLib) {
+    . $sshLib
+}
+
 $script:SyncConfig = @{
-    ServerHost     = "marele.online.uni-marburg.de"
+    ServerHost     = $script:SSHConfig.Hostname
     ServerIP       = "137.248.186.51"
-    ServerUser     = "root"
+    ServerUser     = $script:SSHConfig.User
     # Deploy-Key ohne Passphrase - 8.3-Format fuer cwRsync-Kompatibilitaet
-    SSHKeyPath     = "C:\Users\FELIXT~1\.ssh\marele"
+    SSHKeyPath     = $script:SSHConfig.SSHKeyPathShort
     # Voller Pfad zum Key (fuer Windows OpenSSH)
-    SSHKeyPathFull = "$env:USERPROFILE\.ssh\marele"
+    SSHKeyPathFull = $script:SSHConfig.SSHKeyPath
     # Windows OpenSSH fuer direkte SSH-Aufrufe
-    WindowsSSHPath = "C:\Windows\System32\OpenSSH\ssh.exe"
+    WindowsSSHPath = $script:SSHConfig.SSHExe
     AppUser        = "hrzadmin"
     AppUid         = 1000
     AppGid         = 1000

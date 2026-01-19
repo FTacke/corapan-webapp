@@ -28,12 +28,21 @@ $ErrorActionPreference = 'Stop'
 
 $script:SSHConfig = @{
     # Defaults - koennen ueberschrieben werden
-    Hostname    = $null
-    User        = $null
-    Port        = 22
-    SSHExe      = "C:\Windows\System32\OpenSSH\ssh.exe"
-    SSHKeyPath  = "$env:USERPROFILE\.ssh\marele"
-    DryRun      = $false
+    Hostname        = "marele.online.uni-marburg.de"
+    User            = "root"
+    Port            = 22
+    SSHExe          = "C:\Windows\System32\OpenSSH\ssh.exe"
+    # Full path for OpenSSH
+    SSHKeyPath      = "$env:USERPROFILE\.ssh\marele"
+    # Short path for cwRsync (8.3 format)
+    SSHKeyPathShort = "C:\Users\FELIXT~1\.ssh\marele"
+    DryRun          = $false
+}
+
+$script:RemotePaths = @{
+    RuntimeRoot = "/srv/webapps/corapan/runtime/corapan"
+    DataRoot    = "/srv/webapps/corapan/runtime/corapan/data"
+    MediaRoot   = "/srv/webapps/corapan/runtime/corapan/media"
 }
 
 # -----------------------------------------------------------------------------
@@ -47,6 +56,7 @@ function Set-SSHConfig {
         [int]$Port = 22,
         [string]$SSHExe = "C:\Windows\System32\OpenSSH\ssh.exe",
         [string]$SSHKeyPath = "$env:USERPROFILE\.ssh\marele",
+        [string]$SSHKeyPathShort = "C:\Users\FELIXT~1\.ssh\marele",
         [switch]$DryRun
     )
     
@@ -55,7 +65,28 @@ function Set-SSHConfig {
     if ($Port) { $script:SSHConfig.Port = $Port }
     if ($SSHExe) { $script:SSHConfig.SSHExe = $SSHExe }
     if ($SSHKeyPath) { $script:SSHConfig.SSHKeyPath = $SSHKeyPath }
+    if ($SSHKeyPathShort) { $script:SSHConfig.SSHKeyPathShort = $SSHKeyPathShort }
     $script:SSHConfig.DryRun = $DryRun.IsPresent
+}
+
+# -----------------------------------------------------------------------------
+# Remote path configuration (runtime roots)
+# -----------------------------------------------------------------------------
+
+function Set-RemotePaths {
+    param(
+        [string]$RuntimeRoot
+    )
+
+    if ($RuntimeRoot) {
+        $script:RemotePaths.RuntimeRoot = $RuntimeRoot
+        $script:RemotePaths.DataRoot = "$RuntimeRoot/data"
+        $script:RemotePaths.MediaRoot = "$RuntimeRoot/media"
+    }
+}
+
+function Get-RemotePaths {
+    return $script:RemotePaths
 }
 
 # -----------------------------------------------------------------------------

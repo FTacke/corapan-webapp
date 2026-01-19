@@ -29,6 +29,8 @@ git pull origin main
 FLASK_SECRET_KEY=<64-char-hex-secret>
 JWT_SECRET_KEY=<64-char-hex-secret>
 AUTH_DATABASE_URL=postgresql://corapan:<password>@localhost:5432/corapan_auth
+CORAPAN_RUNTIME_ROOT=/srv/webapps/corapan/runtime/corapan
+CORAPAN_MEDIA_ROOT=/srv/webapps/corapan/runtime/corapan/media
 ```
 
 **Generierung:**
@@ -62,6 +64,34 @@ docker logs corapan-container -f
 ```
 
 ---
+
+## Runtime Roots (Source of Truth)
+
+**Production runtime root:** `/srv/webapps/corapan/runtime/corapan`
+
+App path resolution (evidence):
+- Data root resolves to `${CORAPAN_RUNTIME_ROOT}/data` in [src/app/config/__init__.py](src/app/config/__init__.py#L66-L120).
+- Media root is required via `CORAPAN_MEDIA_ROOT` in [src/app/config/__init__.py](src/app/config/__init__.py#L137-L154).
+- Statistics root resolves from `CORAPAN_RUNTIME_ROOT` in [src/app/config/__init__.py](src/app/config/__init__.py#L159-L169).
+- Advanced search docmeta reads from `DATA_ROOT/blacklab_export/docmeta.jsonl` in [src/app/search/advanced_api.py](src/app/search/advanced_api.py#L72-L77).
+
+**Expected production roots:**
+- Data: `/srv/webapps/corapan/runtime/corapan/data`
+- Media: `/srv/webapps/corapan/runtime/corapan/media`
+
+Sync scripts and docker mounts are aligned to these paths.
+
+Metadata layout: `data/public/metadata/` is canonical; `latest/` is optional and preferred if present.
+
+### BlackLab Export (Sync Decision)
+
+Decision: **Keep syncing** `data/blacklab_export/` to runtime data root.
+
+Evidence:
+- **Runtime-required:** advanced search enriches results from `DATA_ROOT/blacklab_export/docmeta.jsonl` in [src/app/search/advanced_api.py](src/app/search/advanced_api.py#L72-L77).
+- **Build-only (generation):** export and index scripts write to `data/blacklab_export/` in [src/scripts/blacklab_index_creation.py](src/scripts/blacklab_index_creation.py#L554-L563) and [scripts/blacklab/build_blacklab_index.ps1](scripts/blacklab/build_blacklab_index.ps1#L17-L39).
+
+Rationale: the app reads `docmeta.jsonl` at runtime; syncing keeps advanced search metadata enrichment consistent with production.
 
 ## Nginx-Konfiguration
 
@@ -170,8 +200,8 @@ docker exec corapan-postgres pg_dump -U corapan corapan_auth > /backup/corapan/d
 
 # Logs, Counters
 tar -czf /backup/corapan/data_${DATE}.tar.gz \
-  ~/corapan/logs \
-  ~/corapan/data/counters
+    /srv/webapps/corapan/runtime/corapan/logs \
+    /srv/webapps/corapan/runtime/corapan/data/counters
 
 echo "Backup completed: $DATE"
 ```
@@ -254,7 +284,7 @@ CLEAN_INPUTS=1 bash /srv/webapps/corapan/app/scripts/blacklab/build_blacklab_ind
 
 Timestamped Logs unter:
 ```
-/srv/webapps/corapan/data/logs/blacklab_build_YYYY-MM-DD_HHMMSS.log
+/srv/webapps/corapan/runtime/corapan/logs/blacklab_build_YYYY-MM-DD_HHMMSS.log
 ```
 
 ### Nach dem Rebuild

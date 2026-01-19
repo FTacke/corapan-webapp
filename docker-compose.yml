@@ -10,12 +10,15 @@ services:
       # Port 6000 (extern) -> 8000 (intern im Container)
       # nginx reverse proxy leitet dann an localhost:6000 weiter
       - "6000:8000"
+    environment:
+      CORAPAN_RUNTIME_ROOT: ${CORAPAN_RUNTIME_ROOT:-/srv/webapps/corapan/runtime/corapan}
+      CORAPAN_MEDIA_ROOT: ${CORAPAN_MEDIA_ROOT:-/srv/webapps/corapan/runtime/corapan/media}
     volumes:
       # Media-Dateien (read-only, da auf Server extern gepflegt)
-      - ~/corapan/media/mp3-full:/app/media/mp3-full:ro
-      - ~/corapan/media/mp3-split:/app/media/mp3-split:ro
-      - ~/corapan/media/mp3-temp:/app/media/mp3-temp
-      - ~/corapan/media/transcripts:/app/media/transcripts:ro
+      - ${CORAPAN_RUNTIME_ROOT:-/srv/webapps/corapan/runtime/corapan}/media/mp3-full:${CORAPAN_RUNTIME_ROOT:-/srv/webapps/corapan/runtime/corapan}/media/mp3-full:ro
+      - ${CORAPAN_RUNTIME_ROOT:-/srv/webapps/corapan/runtime/corapan}/media/mp3-split:${CORAPAN_RUNTIME_ROOT:-/srv/webapps/corapan/runtime/corapan}/media/mp3-split:ro
+      - ${CORAPAN_RUNTIME_ROOT:-/srv/webapps/corapan/runtime/corapan}/media/mp3-temp:${CORAPAN_RUNTIME_ROOT:-/srv/webapps/corapan/runtime/corapan}/media/mp3-temp
+      - ${CORAPAN_RUNTIME_ROOT:-/srv/webapps/corapan/runtime/corapan}/media/transcripts:${CORAPAN_RUNTIME_ROOT:-/srv/webapps/corapan/runtime/corapan}/media/transcripts:ro
       
       # Config & Credentials (read-only)
       # NOTE: mounting passwords.env is legacy (env-based auth). Migrations use DB-based auth (AUTH_BACKEND=db).
@@ -24,13 +27,13 @@ services:
       - ~/corapan/config/keys:/app/config/keys:ro
       
       # Datenbank (read-only, wird extern neu geschrieben bei neuen Medien)
-      - ~/corapan/data/db:/app/data/db:ro
+      - ${CORAPAN_RUNTIME_ROOT:-/srv/webapps/corapan/runtime/corapan}/data/db:${CORAPAN_RUNTIME_ROOT:-/srv/webapps/corapan/runtime/corapan}/data/db:ro
       
       # Counters (read-write, App muss schreiben können)
-      - ~/corapan/data/counters:/app/data/counters
+      - ${CORAPAN_RUNTIME_ROOT:-/srv/webapps/corapan/runtime/corapan}/data/counters:${CORAPAN_RUNTIME_ROOT:-/srv/webapps/corapan/runtime/corapan}/data/counters
       
       # Logs (damit sie auf dem Host bleiben)
-      - ~/corapan/logs:/app/logs
+      - ${CORAPAN_RUNTIME_ROOT:-/srv/webapps/corapan/runtime/corapan}/logs:${CORAPAN_RUNTIME_ROOT:-/srv/webapps/corapan/runtime/corapan}/logs
     
     restart: unless-stopped
     

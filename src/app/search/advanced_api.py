@@ -44,6 +44,7 @@ from ..extensions.http_client import (
     get_corpus_not_found_message,
     warn_if_configured_corpus_missing,
 )
+from ..services.database import DATA_ROOT
 
 logger = logging.getLogger(__name__)
 
@@ -72,12 +73,7 @@ MAX_WORDS_AROUND_HIT = 40
 # Load docmeta.jsonl for metadata lookup (file_id -> metadata)
 def _load_docmeta():
     """Load document metadata from docmeta.jsonl."""
-    docmeta_path = (
-        Path(__file__).parent.parent.parent.parent
-        / "data"
-        / "blacklab_export"
-        / "docmeta.jsonl"
-    )
+    docmeta_path = DATA_ROOT / "blacklab_export" / "docmeta.jsonl"
     docmeta = {}
     country_codes_by_parent = {}
 
