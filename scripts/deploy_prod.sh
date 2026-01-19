@@ -25,6 +25,12 @@
 
 set -euo pipefail
 
+# DEBUG (temporary): prove which deploy script revision actually runs
+echo "[DEBUG] deploy_prod.sh path: $0"
+echo "[DEBUG] deploy_prod.sh sha256:"
+sha256sum "$0"
+echo ""
+
 # Configuration
 BASE_DIR="/srv/webapps/corapan"
 APP_DIR="${BASE_DIR}/app"
@@ -98,9 +104,10 @@ echo ""
 # Step 5: Verify runtime-first mounts
 log_info "Verifying runtime-first mounts..."
 
-# Generate stable lines (no variable whitespace) and keep raw for debugging
 mounts_raw="$(docker inspect "${CONTAINER_NAME}" --format '{{range .Mounts}}{{printf "%s <- %s\n" .Destination .Source}}{{end}}' | sort)"
-mounts_norm="$(printf '%s\n' "${mounts_raw}" | tr -s '[:space:]' ' ' | sed 's/^ //; s/ $//')"
+
+# Normalize whitespace INSIDE each line, but keep line breaks
+mounts_norm="$(printf '%s\n' "${mounts_raw}" | sed -E 's/[[:space:]]+/ /g; s/^ //; s/ $//')"
 
 missing=0
 required_mounts=(
@@ -111,7 +118,7 @@ required_mounts=(
 )
 
 for required in "${required_mounts[@]}"; do
-  required_norm="$(printf '%s\n' "${required}" | tr -s '[:space:]' ' ' | sed 's/^ //; s/ $//')"
+  required_norm="$(printf '%s\n' "${required}" | sed -E 's/[[:space:]]+/ /g; s/^ //; s/ $//')"
   if ! printf '%s\n' "${mounts_norm}" | grep -Fqx "${required_norm}"; then
     log_error "Missing mount: ${required}"
     missing=1
