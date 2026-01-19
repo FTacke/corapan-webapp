@@ -394,7 +394,7 @@ function Sync-StatisticsFiles {
         
         # Check that remote directory contains ONLY expected files
         # Note: Use explicit bash -lc to ensure stdout is captured as string
-        $remoteCheckCmd = "bash -lc 'ls -1 ""$RemoteStatsDir"" | grep -vE ""^(corpus_stats\.json|viz_.*\.png)$"" || true'"
+        $remoteCheckCmd = "bash -lc 'ls -1 ""$RemoteStatsDir"" | grep -vE ''^(corpus_stats\.json|viz_.*\.png)$'' || true'"
         $unexpectedFilesRaw = Invoke-SSHCommand -Command $remoteCheckCmd
         
         # Robustly normalize output (Invoke-SSHCommand may return bool, array, or string)

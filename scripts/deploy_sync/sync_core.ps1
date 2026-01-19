@@ -949,6 +949,10 @@ function Update-RemoteManifest {
             
             $tempFile = Join-Path $env:TEMP "${DirName}_manifest.json"
             try {
+                $tempDir = Split-Path $tempFile -Parent
+                if ($tempDir -and -not (Test-Path $tempDir)) {
+                    New-Item -ItemType Directory -Force -Path $tempDir | Out-Null
+                }
                 # Schreibe Manifest in temporaere Datei
                 $json | Out-File -FilePath $tempFile -Encoding utf8 -NoNewline
                 

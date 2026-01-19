@@ -39,6 +39,11 @@ Connection parameters (hostname/user/port/key) and remote runtime roots are conf
 
 These paths contain production runtime state that must NEVER be overwritten by any data deploy. The protection is HARD-CODED and cannot be bypassed, even with parameter flags. If you need to manually restore production state, use SSH restore procedures instead.
 
+**Manifest-Speicherung:**
+- Pro Verzeichnis wird ein eigenes Manifest unter `data/<segment>/.sync_state/` gespeichert.
+- Beispiel: `data/public/metadata/.sync_state/public/metadata_manifest.json`
+- **Robustheit:** Falls `.sync_state` oder Manifest-Dateien geloescht wurden, erstellt der Sync die Verzeichnisse/Manifeste automatisch neu.
+
 **Statistics Deployment (HARDENED):**
 `sync_data.ps1` runs `Sync-StatisticsFiles` for statistics files (corpus_stats.json, viz_*.png)
 with strict safety guards:
@@ -49,6 +54,7 @@ with strict safety guards:
 - Mode: Overwrite-only (no delete, no directory structures)
 
 **Safety Guards:**
+- **Regex Quoting:** Remote verification uses single-quoted regex to avoid bash syntax errors.
 - Hard validation prevents syncing from repo root or parent directories
 - Per-file allowlist: corpus_stats.json + all viz_*.png (no other files)
 - Post-upload verification ensures only expected files are present on remote
