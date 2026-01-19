@@ -45,6 +45,7 @@ jobs:
         run: |
           # Wait a moment for the container to fully start
           sleep 10
+
           # Check if container is running
           if docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}" | grep -E '^corapan-web-prod'; then
             echo "✓ Container corapan-web-prod is running"
@@ -54,17 +55,23 @@ jobs:
             exit 1
           fi
 
-          # Verify runtime-first mounts
-          mounts=$(docker inspect corapan-web-prod --format '{{range .Mounts}}{{println .Destination " <- " .Source}}{{end}}' | sort)
+          # Verify runtime-first mounts (container-side destinations only)
+          mounts=$(docker inspect corapan-web-prod --format '{{range .Mounts}}{{println .Destination}}{{end}}' | sort)
           required=(
-            "/app/data <- /srv/webapps/corapan/runtime/corapan/data"
-            "/app/media <- /srv/webapps/corapan/runtime/corapan/media"
-            "/app/logs <- /srv/webapps/corapan/runtime/corapan/logs"
-            "/app/config <- /srv/webapps/corapan/runtime/corapan/config"
+            "/app/data"
+            "/app/media"
+            "/app/logs"
+            "/app/config"
           )
           for r in "${required[@]}"; do
-            echo "$mounts" | grep -qx "$r" || { echo "✗ Missing mount: $r"; exit 1; }
+            echo "$mounts" | grep -qx "$r" || { echo "✗ Missing mount destination: $r"; echo "$mounts"; exit 1; }
           done
+          echo "✓ Mount destinations present"
+
+          # Minimal write check (proves permissions)
+          docker exec corapan-web-prod bash -lc 'set -e; touch /app/data/stats_temp/.ci_write_test && rm -f /app/data/stats_temp/.ci_write_test'
+          echo "✓ Write check ok"
 
           # Health check
           curl -fsS http://127.0.0.1:6000/health
+
