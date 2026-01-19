@@ -87,7 +87,12 @@ fi
 log_info "Deploying via docker-compose -f infra/${COMPOSE_FILE}..."
 log_info "Using compose v1 syntax (docker-compose command)"
 log_info "Current directory: $(pwd)"
-docker-compose -f "infra/${COMPOSE_FILE}" up -d --force-recreate --build
+
+# Use full path to docker-compose (GitHub Actions runner may not have it in PATH)
+DOCKER_COMPOSE_CMD=$(which docker-compose 2>/dev/null || echo "/usr/local/bin/docker-compose")
+log_info "Using docker-compose at: ${DOCKER_COMPOSE_CMD}"
+
+"${DOCKER_COMPOSE_CMD}" -f "infra/${COMPOSE_FILE}" up -d --force-recreate --build
 log_info "Containers started successfully"
 echo ""
 
