@@ -106,36 +106,34 @@ echo ""
 # like /srv/webapps/... may not exist there and mount verification would false-fail.
 log_info "Verifying runtime-first mounts..."
 
-# If runtime dirs aren't present on this host, mount verification would false-fail.
-if [ ! -d "${RUNTIME_DIR}/data" ] || [ ! -d "${RUNTIME_DIR}/media" ] || [ ! -d "${RUNTIME_DIR}/logs" ] || [ ! -d "${RUNTIME_DIR}/config" ]; then
-  log_warn "Skipping mount verification (runtime dirs not present on host): ${RUNTIME_DIR}"
-else
-  mount_pairs="$(docker inspect "${CONTAINER_NAME}" --format '{{range .Mounts}}{{printf "%s<<<%s\n" .Destination .Source}}{{end}}' \
-    | tr -d '\r' | sort)"
+mount_dests="$(docker inspect "${CONTAINER_NAME}" --format '{{range .Mounts}}{{println .Destination}}{{end}}' \
+  | tr -d '\r' | sort)"
 
-  missing=0
-  required_pairs=(
-    "/app/data<<<${RUNTIME_DIR}/data"
-    "/app/media<<<${RUNTIME_DIR}/media"
-    "/app/logs<<<${RUNTIME_DIR}/logs"
-    "/app/config<<<${RUNTIME_DIR}/config"
-  )
+required_dests=(
+  "/app/data"
+  "/app/media"
+  "/app/logs"
+  "/app/config"
+)
 
-  for pair in "${required_pairs[@]}"; do
-    if ! printf '%s\n' "${mount_pairs}" | grep -Fqx "${pair}"; then
-      log_error "Missing mount: ${pair}"
-      missing=1
-    fi
-  done
-
-  if [ "${missing}" -ne 0 ]; then
-    log_error "Runtime-first mounts mismatch. Actual mount pairs:"
-    printf '%s\n' "${mount_pairs}"
-    exit 1
+missing=0
+for d in "${required_dests[@]}"; do
+  if ! printf '%s\n' "${mount_dests}" | grep -Fqx "${d}"; then
+    log_error "Missing mount destination: ${d}"
+    missing=1
   fi
+done
 
-  log_info "Runtime-first mounts verified"
+if [ "${missing}" -ne 0 ]; then
+  log_error "Mount destinations mismatch. Actual mount destinations:"
+  printf '%s\n' "${mount_dests}"
+  exit 1
 fi
+
+# Minimal write proof (permissions)
+docker exec "${CONTAINER_NAME}" bash -lc 'set -e; touch /app/data/stats_temp/.deploy_write_test && rm -f /app/data/stats_temp/.deploy_write_test'
+
+log_info "Runtime-first mounts verified"
 echo ""
 
 # Step 6: Health check (wait/retry)
