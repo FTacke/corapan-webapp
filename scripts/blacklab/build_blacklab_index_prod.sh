@@ -11,7 +11,7 @@
 # Prerequisites:
 #   - TSV files in /srv/webapps/corapan/data/tsv
 #   - Metadata files in /srv/webapps/corapan/data/metadata
-#   - BlackLab Docker image: instituutnederlandsetaal/blacklab:latest
+#   - BlackLab Docker image: instituutnederlandsetaal/blacklab@sha256:3753dbce4fee11f8706b63c5b94bf06eac9d3843c75bf2eef6412ff47208c2e7
 #   - BlackLab config: /srv/webapps/corapan/app/config/blacklab/corapan-tsv.blf.yaml
 #
 # Usage:
@@ -73,7 +73,7 @@ METADATA_DIR="${DATA_ROOT}/metadata"
 BLF_CONFIG="${APP_ROOT}/config/blacklab/corapan-tsv.blf.yaml"
 TIMESTAMP=$(date +%F_%H%M%S)
 LOG_FILE="${DATA_ROOT}/logs/blacklab_build_${TIMESTAMP}.log"
-BLACKLAB_IMAGE="instituutnederlandsetaal/blacklab:latest"
+BLACKLAB_IMAGE="instituutnederlandsetaal/blacklab@sha256:3753dbce4fee11f8706b63c5b94bf06eac9d3843c75bf2eef6412ff47208c2e7"
 TEST_CONTAINER_NAME="corapan-blacklab-test-${TIMESTAMP}"
 TEST_PORT_RANGE_START=18080
 TEST_PORT_RANGE_END=18150

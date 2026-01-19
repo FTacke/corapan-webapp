@@ -37,6 +37,19 @@ services:
       - corapan-prod
     # Production: no external port exposure, only internal network
 
+  blacklab:
+    # Pinned digest to avoid breaking changes from :latest; update only by replacing the digest intentionally.
+    image: instituutnederlandsetaal/blacklab@sha256:3753dbce4fee11f8706b63c5b94bf06eac9d3843c75bf2eef6412ff47208c2e7
+    container_name: corapan-blacklab
+    ports:
+      - "8081:8080"
+    volumes:
+      - /srv/webapps/corapan/app/config/blacklab:/etc/blacklab:ro
+      - /srv/webapps/corapan/data/blacklab_index:/data/index:ro
+    restart: unless-stopped
+    networks:
+      - corapan-prod
+
   web:
     build:
       context: .
