@@ -60,14 +60,6 @@ log_error() {
     echo -e "${RED}[ERROR]${NC} $1"
 }
 
-extract_db_password() {
-    local url="$1"
-    # Expected: scheme://user:pass@host:port/db
-    if [[ "${url}" =~ ^[^:]+://[^:]+:([^@]+)@ ]]; then
-        echo "${BASH_REMATCH[1]}"
-    fi
-}
-
 resolve_compose() {
     if [ -n "${DOCKER_COMPOSE_BIN:-}" ] && [ -x "${DOCKER_COMPOSE_BIN}" ]; then
         echo "${DOCKER_COMPOSE_BIN}"
@@ -119,19 +111,6 @@ if [ -f "${ENV_FILE}" ]; then
     # shellcheck source=/dev/null
     . "${ENV_FILE}"
     set +a
-
-    if [ -z "${POSTGRES_PASSWORD:-}" ]; then
-        if [ -n "${AUTH_DATABASE_URL:-}" ]; then
-            POSTGRES_PASSWORD="$(extract_db_password "${AUTH_DATABASE_URL}")"
-        fi
-        if [ -z "${POSTGRES_PASSWORD:-}" ] && [ -n "${DATABASE_URL:-}" ]; then
-            POSTGRES_PASSWORD="$(extract_db_password "${DATABASE_URL}")"
-        fi
-        if [ -n "${POSTGRES_PASSWORD:-}" ]; then
-            export POSTGRES_PASSWORD
-            log_info "Derived POSTGRES_PASSWORD from database URL"
-        fi
-    fi
 else
     log_warn "Environment file not found at ${ENV_FILE} (compose will use shell env/.env)"
 fi
