@@ -264,7 +264,7 @@ echo "  - Health endpoint working (auth_db connected)"
 echo "  - Login flow working with admin credentials"
 echo ""
 echo "Ready for deployment:"
-echo "  Production: docker-compose -f /srv/webapps/corapan/infra/docker-compose.prod.yml up -d --force-recreate"
+echo "  Production: cd /srv/webapps/corapan/infra && docker-compose -f docker-compose.prod.yml up -d --force-recreate"
 echo ""
 
 exit 0

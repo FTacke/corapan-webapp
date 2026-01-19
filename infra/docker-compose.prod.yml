@@ -1,9 +1,10 @@
 # CO.RA.PAN Production Stack: App + PostgreSQL Auth DB
 #
 # Usage (server uses docker-compose v1):
-#   docker-compose -f /srv/webapps/corapan/infra/docker-compose.prod.yml up -d --build    # Deploy
-#   docker-compose -f /srv/webapps/corapan/infra/docker-compose.prod.yml down             # Stop
-#   docker-compose -f /srv/webapps/corapan/infra/docker-compose.prod.yml logs -f web      # Follow logs
+#   cd /srv/webapps/corapan/infra
+#   docker-compose -f docker-compose.prod.yml up -d --build    # Deploy
+#   docker-compose -f docker-compose.prod.yml down             # Stop
+#   docker-compose -f docker-compose.prod.yml logs -f web      # Follow logs
 #
 # REQUIRED environment variables (set in shell or .env file):
 #   FLASK_SECRET_KEY     - Strong random secret (generate: python -c "import secrets; print(secrets.token_hex(32))")
