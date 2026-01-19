@@ -1,11 +1,48 @@
 # Produktion
 
 **Scope:** Production Deployment und Betrieb  
-**Source-of-truth:** `docker-compose.yml`, `Dockerfile`, `scripts/deploy_prod.sh`
+**Source-of-truth:** `infra/docker-compose.prod.yml`, `Dockerfile`, `scripts/deploy_prod.sh`
 
-## Voraussetzungen
+## Automated Deployment (GitHub Actions)
 
-- **Docker & Docker Compose** installiert
+**Production uses automated deployment via GitHub self-hosted runner.**
+
+When code is pushed to `main`:
+1. GitHub Actions triggers [.github/workflows/deploy.yml](../../.github/workflows/deploy.yml)
+2. Self-hosted runner on production server executes [scripts/deploy_prod.sh](../../scripts/deploy_prod.sh)
+3. Script performs:
+   - Git fetch/reset to latest main
+   - Deployment via `docker-compose -f infra/docker-compose.prod.yml up -d --force-recreate --build`
+   - **Mount verification** (runtime-first paths only)
+   - Database setup
+
+**Container Names:**
+- Web: `corapan-web-prod`
+- DB: `corapan-db-prod`
+
+**Mount Requirements (Runtime-First):**
+```
+/app/data   ← /srv/webapps/corapan/runtime/corapan/data
+/app/media  ← /srv/webapps/corapan/runtime/corapan/media
+/app/logs   ← /srv/webapps/corapan/runtime/corapan/logs
+/app/config ← /srv/webapps/corapan/runtime/corapan/config
+```
+
+**CRITICAL:** Legacy mounts (`/srv/webapps/corapan/{data,media,logs}`) are **NOT** allowed.  
+Deploy script will fail if wrong mounts are detected.
+
+**Server uses docker-compose v1** (`docker-compose` command, not `docker compose`).
+
+---
+
+## Manual Deployment (For Reference)
+
+**Note:** Automated deployment via GitHub Actions is the standard process.  
+Manual steps are documented here for troubleshooting or emergency scenarios.
+
+### Voraussetzungen
+
+- **Docker & Docker Compose (v1)** installiert
 - **Nginx** konfiguriert (Reverse Proxy)
 - **SSL-Zertifikate** (Let's Encrypt)
 - **Domain** konfiguriert (DNS)
@@ -13,22 +50,22 @@
 
 ---
 
-## Deployment-Prozess
+## Manual Deployment Process
 
 ### 1. Code aktualisieren
 
 ```bash
-cd ~/corapan-webapp
+cd /srv/webapps/corapan
 git pull origin main
 ```
 
 ### 2. Secrets konfigurieren
 
-**Host `.env` (nicht in Git!):**
+**Host `passwords.env` (nicht in Git!):**
 ```bash
 FLASK_SECRET_KEY=<64-char-hex-secret>
 JWT_SECRET_KEY=<64-char-hex-secret>
-AUTH_DATABASE_URL=postgresql://corapan:<password>@localhost:5432/corapan_auth
+POSTGRES_PASSWORD=<db-password>
 CORAPAN_RUNTIME_ROOT=/srv/webapps/corapan/runtime/corapan
 CORAPAN_MEDIA_ROOT=/srv/webapps/corapan/runtime/corapan/media
 ```
@@ -38,16 +75,26 @@ CORAPAN_MEDIA_ROOT=/srv/webapps/corapan/runtime/corapan/media
 python -c "import secrets; print(secrets.token_hex(32))"
 ```
 
-### 3. Docker Image bauen
+### 3. Deploy mit docker-compose.prod.yml
 
+**IMPORTANT: Use docker-compose v1 syntax:**
 ```bash
-docker-compose build
+cd /srv/webapps/corapan
+docker-compose -f infra/docker-compose.prod.yml up -d --force-recreate --build
 ```
 
-### 4. Container starten
+### 4. Verify runtime-first mounts
 
 ```bash
-docker-compose up -d
+docker inspect corapan-web-prod --format '{{range .Mounts}}{{println .Destination "<-" .Source}}{{end}}' | sort
+```
+
+Expected output should include:
+```
+/app/data <- /srv/webapps/corapan/runtime/corapan/data
+/app/media <- /srv/webapps/corapan/runtime/corapan/media
+/app/logs <- /srv/webapps/corapan/runtime/corapan/logs
+/app/config <- /srv/webapps/corapan/runtime/corapan/config
 ```
 
 ### 5. Health Check
@@ -60,7 +107,7 @@ curl http://localhost:6000/health
 ### 6. Logs prüfen
 
 ```bash
-docker logs corapan-container -f
+docker logs corapan-web-prod -f
 ```
 
 ---
@@ -165,17 +212,17 @@ sudo certbot --nginx -d corapan.hispanistica.com
 
 ```bash
 docker ps
-docker stats corapan-container
+docker stats corapan-web-prod
 ```
 
 ### Logs
 
 ```bash
 # Live Logs
-docker logs corapan-container -f
+docker logs corapan-web-prod -f
 
 # Letzte 100 Zeilen
-docker logs corapan-container --tail 100
+docker logs corapan-web-prod --tail 100
 ```
 
 ### Health Check

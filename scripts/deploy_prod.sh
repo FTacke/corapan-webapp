@@ -6,37 +6,34 @@
 # This script is executed by the GitHub self-hosted runner on the server
 # after a push to the main branch. It performs the following steps:
 #   1. Fetches latest code from origin/main
-#   2. Builds the Docker image
-#   3. Stops and removes the old container
-#   4. Starts a new container with the configured volumes
-#   5. Optionally runs the database setup script
+#   2. Deploys using docker-compose.prod.yml (runtime-first mounts)
+#   3. Verifies container mounts are correct
+#   4. Optionally runs the database setup script
 #
 # Prerequisites:
-#   - Docker installed and running
+#   - docker-compose (v1) installed and running
 #   - Git repository cloned to /srv/webapps/corapan/app
-#   - Data/media directories populated via rsync
+#   - Runtime directory at /srv/webapps/corapan/runtime/corapan
 #   - passwords.env configured in /srv/webapps/corapan/config/
 #
 # Usage:
 #   cd /srv/webapps/corapan/app
 #   bash scripts/deploy_prod.sh
 #
+# IMPORTANT: Production MUST use docker-compose.prod.yml with runtime-first mounts.
+# Legacy mounts (/srv/webapps/corapan/{data,media,logs}) are NOT supported.
 # =============================================================================
 
-set -e  # Exit on any error
+set -euo pipefail  # Exit on error, undefined variables, and pipe failures
 
 # Configuration
-CONTAINER_NAME="corapan-webapp"
-IMAGE_NAME="corapan-webapp:latest"
-HOST_PORT=6000
-CONTAINER_PORT=5000
+CONTAINER_NAME="corapan-web-prod"  # Must match container_name in docker-compose.prod.yml
+COMPOSE_FILE="docker-compose.prod.yml"
 
 # Paths (on the host)
 BASE_DIR="/srv/webapps/corapan"
-DATA_DIR="${BASE_DIR}/data"
-MEDIA_DIR="${BASE_DIR}/media"
+RUNTIME_DIR="${BASE_DIR}/runtime/corapan"
 CONFIG_DIR="${BASE_DIR}/config"
-LOGS_DIR="${BASE_DIR}/logs"
 
 # Colors for output
 RED='\033[0;31m'
@@ -69,29 +66,20 @@ git reset --hard origin/main
 log_info "Code updated to: $(git rev-parse --short HEAD)"
 echo ""
 
-# Step 2: Build Docker image
-# Note: BuildKit disabled - server lacks buildx component
-log_info "Building Docker image: ${IMAGE_NAME}..."
-DOCKER_BUILDKIT=0 docker build -t "${IMAGE_NAME}" .
-log_info "Docker image built successfully"
+# Step 2: Change to base directory (where docker-compose.prod.yml is located)
+log_info "Changing to base directory: ${BASE_DIR}..."
+cd "${BASE_DIR}"
+log_info "Current directory: $(pwd)"
 echo ""
 
-# Step 3: Stop and remove old container (if exists)
-log_info "Stopping old container (if running)..."
-docker stop "${CONTAINER_NAME}" 2>/dev/null || true
-docker rm "${CONTAINER_NAME}" 2>/dev/null || true
-log_info "Old container removed"
+# Step 3: Ensure runtime directories exist
+log_info "Ensuring runtime directories exist..."
+mkdir -p "${RUNTIME_DIR}/data" "${RUNTIME_DIR}/media" "${RUNTIME_DIR}/logs" "${RUNTIME_DIR}/config"
+log_info "Runtime directories ready at ${RUNTIME_DIR}"
 echo ""
 
-# Step 4: Ensure corapan-network exists
-log_info "Ensuring Docker network corapan-network exists..."
-docker network inspect corapan-network >/dev/null 2>&1 || {
-    log_info "Creating Docker network: corapan-network (172.18.0.0/16)"
-    docker network create --subnet=172.18.0.0/16 corapan-network
-}
-
-# Step 4b: Ensure statistics assets are readable by container user
-STATS_DIR="${DATA_DIR}/public/statistics"
+# Step 4: Ensure statistics assets are readable by container user
+STATS_DIR="${RUNTIME_DIR}/data/public/statistics"
 if [ -d "${STATS_DIR}" ]; then
     log_info "Ensuring statistics permissions in ${STATS_DIR}..."
     chmod 755 "${STATS_DIR}" || log_warn "Failed to chmod stats directory"
@@ -100,40 +88,61 @@ else
     log_warn "Statistics directory not found at ${STATS_DIR}"
 fi
 
-# Step 5: Start new container
-log_info "Starting new container: ${CONTAINER_NAME}..."
-docker run -d \
-    --name "${CONTAINER_NAME}" \
-    --restart unless-stopped \
-    --network corapan-network \
-    -p "${HOST_PORT}:${CONTAINER_PORT}" \
-    -v "${DATA_DIR}:/app/data" \
-    -v "${MEDIA_DIR}:/app/media" \
-    -v "${LOGS_DIR}:/app/logs" \
-    --env-file "${CONFIG_DIR}/passwords.env" \
-    -e "FLASK_ENV=production" \
-    -e "CORAPAN_RUNTIME_ROOT=/app" \
-    -e "CORAPAN_MEDIA_ROOT=/app/media" \
-    "${IMAGE_NAME}"
-
-log_info "Container started successfully"
+# Step 5: Deploy using docker-compose.prod.yml (runtime-first mounts)
+log_info "Deploying via docker-compose -f infra/${COMPOSE_FILE}..."
+log_info "Using compose v1 syntax (docker-compose command)"
+cd "${BASE_DIR}"
+docker-compose -f "infra/${COMPOSE_FILE}" up -d --force-recreate --build
+log_info "Containers started successfully"
 echo ""
 
-# Step 6: Wait for container to be healthy
+# Step 6: Wait for container to be ready
 log_info "Waiting for container to be ready..."
-sleep 5
+sleep 10
 
 # Check if container is running
 if docker ps --format '{{.Names}}' | grep -q "^${CONTAINER_NAME}$"; then
-    log_info "Container is running"
+    log_info "Container ${CONTAINER_NAME} is running"
 else
-    log_error "Container failed to start!"
+    log_error "Container ${CONTAINER_NAME} failed to start!"
     docker logs "${CONTAINER_NAME}" 2>&1 | tail -20
     exit 1
 fi
 echo ""
 
-# Step 7: Run database setup (optional - uncomment if needed)
+# Step 7: Verify runtime-first mounts are correct
+log_info "Verifying runtime-first mounts..."
+MOUNTS=$(docker inspect "${CONTAINER_NAME}" --format '{{range .Mounts}}{{println .Destination "<-" .Source}}{{end}}' | sort)
+echo "${MOUNTS}"
+
+# Check critical mounts
+if echo "${MOUNTS}" | grep -q "/app/data <- /srv/webapps/corapan/runtime/corapan/data"; then
+    log_info "✓ /app/data mount is correct (runtime-first)"
+else
+    log_error "✗ /app/data mount is WRONG! Expected: /srv/webapps/corapan/runtime/corapan/data"
+    log_error "Actual mounts:"
+    echo "${MOUNTS}"
+    exit 1
+fi
+
+if echo "${MOUNTS}" | grep -q "/app/media <- /srv/webapps/corapan/runtime/corapan/media"; then
+    log_info "✓ /app/media mount is correct (runtime-first)"
+else
+    log_error "✗ /app/media mount is WRONG! Expected: /srv/webapps/corapan/runtime/corapan/media"
+    exit 1
+fi
+
+if echo "${MOUNTS}" | grep -q "/app/logs <- /srv/webapps/corapan/runtime/corapan/logs"; then
+    log_info "✓ /app/logs mount is correct (runtime-first)"
+else
+    log_error "✗ /app/logs mount is WRONG! Expected: /srv/webapps/corapan/runtime/corapan/logs"
+    exit 1
+fi
+
+log_info "All mounts verified successfully!"
+echo ""
+
+# Step 8: Run database setup (optional - uncomment if needed)
 # This creates tables and ensures admin user exists
 log_info "Running database setup..."
 docker exec "${CONTAINER_NAME}" python scripts/setup_prod_db.py || {
@@ -146,11 +155,13 @@ echo "=============================================="
 log_info "Deployment completed successfully!"
 echo "=============================================="
 echo "Container: ${CONTAINER_NAME}"
-echo "Image: ${IMAGE_NAME}"
-echo "Port: ${HOST_PORT} -> ${CONTAINER_PORT}"
-echo "Commit: $(git rev-parse --short HEAD)"
+echo "Compose File: infra/${COMPOSE_FILE}"
+echo "Runtime Root: ${RUNTIME_DIR}"
+echo "Commit: $(git rev-parse --short HEAD) (in app/)"
 echo "Finished at: $(date)"
 echo ""
 
 # Show container status
 docker ps --filter "name=${CONTAINER_NAME}" --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
+
+log_info "Verify deployment with: docker inspect ${CONTAINER_NAME} --format '{{range .Mounts}}{{println .Destination \"<-\" .Source}}{{end}}'"
