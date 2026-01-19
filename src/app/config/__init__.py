@@ -115,7 +115,7 @@ class BaseConfig:
     # NOTE: This directory contains runtime DBs such as stats DBs.
     # Corpus data is served via BlackLab indexes (no transcription.db).
     DB_DIR = DATA_ROOT / "db"
-    DB_PUBLIC_DIR = DATA_ROOT / "db" / "public"
+    PUBLIC_DB_DIR = DATA_ROOT / "db" / "public"
 
     # Dev Postgres data directory (host path for docker volume)
     _explicit_postgres_dev_dir = os.getenv("POSTGRES_DEV_DATA_DIR")

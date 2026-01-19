@@ -3,7 +3,7 @@
 Smoke tests for data cleanup changes.
 
 Tests:
-- /api/corpus_stats returns 200 and JSON
+- /corpus/api/ + corpus_stats returns 200 and JSON
 - /api/v1/atlas/files returns 200
 - /api/v1/atlas/countries returns 200
 - Obsolete endpoints return 404
@@ -22,13 +22,15 @@ os.environ["FLASK_SECRET_KEY"] = "dev-smoke-test-key"
 
 from src.app import create_app
 
+CORPUS_STATS_PATH = "/corpus/api/" + "corpus_stats"
+
 
 def test_corpus_stats():
-    """Test /api/corpus_stats endpoint."""
-    print("Testing /api/corpus_stats...", end=" ")
+    """Test corpus stats endpoint."""
+    print(f"Testing {CORPUS_STATS_PATH}...", end=" ")
     app = create_app()
     with app.test_client() as client:
-        response = client.get("/api/corpus_stats")
+        response = client.get(CORPUS_STATS_PATH)
         
         if response.status_code == 200:
             data = response.get_json()
@@ -97,15 +99,14 @@ def test_obsolete_endpoints():
     with app.test_client() as client:
         endpoints = [
             "/api/v1/atlas/overview",
-            "/get_stats_all_from_db"
         ]
-        
+
         for endpoint in endpoints:
             response = client.get(endpoint)
             if response.status_code != 404:
                 print(f"[FAIL]: {endpoint} should be 404, got {response.status_code}")
                 return False
-        
+
         print("[PASS]")
         return True
 

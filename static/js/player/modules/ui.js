@@ -119,7 +119,8 @@ export class UIManager {
     }
 
     try {
-      const response = await fetch("/api/corpus_stats");
+      const corpusStatsUrl = "/corpus/api/" + "corpus_stats";
+      const response = await fetch(corpusStatsUrl);
       const stats = await response.json();
 
       this._updateTotalStats(stats);

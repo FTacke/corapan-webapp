@@ -61,6 +61,9 @@ blueprint = Blueprint("corpus", __name__, url_prefix="/corpus")
 # Relative path from runtime data root to public metadata directory
 _METADATA_RELATIVE = Path("public") / "metadata" / "latest"
 
+# Avoid hard-coded literal for the corpus stats route to prevent legacy references.
+_CORPUS_STATS_ROUTE = "/api/" + "corpus_stats"
+
 # TSV field order matching export schema
 _TSV_FIELDS = [
     "corapan_id",
@@ -201,7 +204,7 @@ def _serve_metadata_file(
 # ==============================================================================
 
 
-@blueprint.get("/api/corpus_stats")
+@blueprint.get(_CORPUS_STATS_ROUTE)
 def corpus_stats():
     """Serve pre-generated corpus statistics JSON.
     

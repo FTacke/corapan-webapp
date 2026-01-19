@@ -38,13 +38,13 @@ def fetch_country_stats() -> list[dict[str, object]]:
 _FILES_CACHE: dict[str, object] = {"mtime": None, "files": []}
 
 
-def _resolve_metadata_root() -> Path | None:
+def _resolve_metadata_latest_root() -> Path | None:
     env_name = (os.getenv("FLASK_ENV") or os.getenv("APP_ENV") or "production").lower()
     is_dev = env_name in ("development", "dev")
     runtime_root = os.getenv("CORAPAN_RUNTIME_ROOT")
 
     if runtime_root:
-        return Path(runtime_root) / "data" / "public" / "metadata"
+        return Path(runtime_root) / "data" / "public" / "metadata" / "latest"
 
     if is_dev:
         data_root = Path(__file__).resolve().parents[3] / "runtime" / "corapan" / "data"
@@ -53,13 +53,13 @@ def _resolve_metadata_root() -> Path | None:
             f"{data_root}",
             RuntimeWarning,
         )
-        return data_root / "public" / "metadata"
+        return data_root / "public" / "metadata" / "latest"
 
     return None
 
 
-def _select_metadata_dir(root: Path) -> Path:
-    return root / "tei"
+def _select_metadata_dir(latest_root: Path) -> Path:
+    return latest_root / "tei"
 
 
 def _metadata_dir_has_files(metadata_dir: Path) -> bool:
@@ -176,14 +176,14 @@ def _collect_recordings(metadata_dir: Path) -> list[dict[str, object]]:
 
 def fetch_file_metadata() -> list[dict[str, object]]:
     logger = current_app.logger if has_app_context() else logging.getLogger(__name__)
-    metadata_root = _resolve_metadata_root()
-    if not metadata_root or not metadata_root.exists():
+    metadata_latest_root = _resolve_metadata_latest_root()
+    if not metadata_latest_root or not metadata_latest_root.exists():
         logger.warning(
-            "Atlas metadata directory not available; returning empty files list."
+            "Atlas metadata latest directory not available; returning empty files list."
         )
         return []
 
-    metadata_dir = _select_metadata_dir(metadata_root)
+    metadata_dir = _select_metadata_dir(metadata_latest_root)
     if not _metadata_dir_has_files(metadata_dir):
         logger.warning(
             "Atlas metadata directory missing or empty at %s; returning empty files list.",
