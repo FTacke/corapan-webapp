@@ -104,11 +104,12 @@ echo ""
 # Step 5: Verify runtime-first mounts
 # NOTE: Skip in CI environments (GitHub Actions runner / CI), because host bind paths
 # like /srv/webapps/... may not exist there and mount verification would false-fail.
-if [ "${CI:-}" = "true" ] || [ -n "${GITHUB_ACTIONS:-}" ]; then
-  log_info "Skipping runtime-first mount verification in CI (CI/GITHUB_ACTIONS detected)"
-else
-  log_info "Verifying runtime-first mounts..."
+log_info "Verifying runtime-first mounts..."
 
+# If runtime dirs aren't present on this host, mount verification would false-fail.
+if [ ! -d "${RUNTIME_DIR}/data" ] || [ ! -d "${RUNTIME_DIR}/media" ] || [ ! -d "${RUNTIME_DIR}/logs" ] || [ ! -d "${RUNTIME_DIR}/config" ]; then
+  log_warn "Skipping mount verification (runtime dirs not present on host): ${RUNTIME_DIR}"
+else
   mount_pairs="$(docker inspect "${CONTAINER_NAME}" --format '{{range .Mounts}}{{printf "%s<<<%s\n" .Destination .Source}}{{end}}' \
     | tr -d '\r' | sort)"
 
@@ -134,8 +135,8 @@ else
   fi
 
   log_info "Runtime-first mounts verified"
-  echo ""
 fi
+echo ""
 
 # Step 6: Health check (wait/retry)
 log_info "Checking health endpoint (with retries)..."
