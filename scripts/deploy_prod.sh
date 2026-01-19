@@ -60,6 +60,22 @@ log_error() {
     echo -e "${RED}[ERROR]${NC} $1"
 }
 
+resolve_compose() {
+    if command -v docker-compose >/dev/null 2>&1; then
+        echo "docker-compose"
+        return 0
+    fi
+    if [ -x "/usr/local/bin/docker-compose" ]; then
+        echo "/usr/local/bin/docker-compose"
+        return 0
+    fi
+    if [ -x "/usr/bin/docker-compose" ]; then
+        echo "/usr/bin/docker-compose"
+        return 0
+    fi
+    return 1
+}
+
 echo "=============================================="
 echo "CO.RA.PAN Production Deployment"
 echo "=============================================="
@@ -95,7 +111,11 @@ fi
 
 # Step 4: Start services via docker-compose (v1)
 log_info "Starting production stack via docker-compose..."
-COMPOSE_CMD=(docker-compose -f "${COMPOSE_FILE}" up -d --force-recreate)
+COMPOSE_BIN=$(resolve_compose) || {
+    log_error "docker-compose (v1) not found in PATH. Install or add to PATH."
+    exit 1
+}
+COMPOSE_CMD=("${COMPOSE_BIN}" -f "${COMPOSE_FILE}" up -d --force-recreate)
 if [ "${COMPOSE_BUILD:-0}" = "1" ]; then
     COMPOSE_CMD+=(--build)
 fi
