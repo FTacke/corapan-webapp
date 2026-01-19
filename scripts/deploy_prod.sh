@@ -6,37 +6,37 @@
 # This script is executed by the GitHub self-hosted runner on the server
 # after a push to the main branch. It performs the following steps:
 #   1. Fetches latest code from origin/main
-#   2. Builds the Docker image
-#   3. Stops and removes the old container
-#   4. Starts a new container with the configured volumes
+#   2. Loads production secrets for compose variable expansion
+#   3. Starts the stack via docker-compose.prod.yml (runtime-first mounts)
+#   4. Verifies runtime-first mounts
 #   5. Optionally runs the database setup script
 #
 # Prerequisites:
 #   - Docker installed and running
-#   - Git repository cloned to /srv/webapps/corapan/app
-#   - Data/media directories populated via rsync
+#   - Git repository cloned to /srv/webapps/corapan
+#   - Runtime data/media populated via rsync
 #   - passwords.env configured in /srv/webapps/corapan/config/
 #
 # Usage:
-#   cd /srv/webapps/corapan/app
+#   cd /srv/webapps/corapan
 #   bash scripts/deploy_prod.sh
 #
 # =============================================================================
 
-set -e  # Exit on any error
+set -euo pipefail  # Exit on any error
 
 # Configuration
-CONTAINER_NAME="corapan-webapp"
-IMAGE_NAME="corapan-webapp:latest"
-HOST_PORT=6000
-CONTAINER_PORT=5000
+CONTAINER_NAME="corapan-web-prod"
 
 # Paths (on the host)
 BASE_DIR="/srv/webapps/corapan"
-DATA_DIR="${BASE_DIR}/data"
-MEDIA_DIR="${BASE_DIR}/media"
-CONFIG_DIR="${BASE_DIR}/config"
-LOGS_DIR="${BASE_DIR}/logs"
+COMPOSE_FILE="${BASE_DIR}/docker-compose.prod.yml"
+ENV_FILE="${BASE_DIR}/config/passwords.env"
+RUNTIME_ROOT="${BASE_DIR}/runtime/corapan"
+DATA_DIR="${RUNTIME_ROOT}/data"
+MEDIA_DIR="${RUNTIME_ROOT}/media"
+CONFIG_DIR="${RUNTIME_ROOT}/config"
+LOGS_DIR="${RUNTIME_ROOT}/logs"
 
 # Colors for output
 RED='\033[0;31m'
@@ -62,6 +62,9 @@ echo "=============================================="
 echo "Started at: $(date)"
 echo ""
 
+log_info "Changing to deploy root: ${BASE_DIR}"
+cd "${BASE_DIR}"
+
 # Step 1: Update code from Git
 log_info "Fetching latest code from origin/main..."
 git fetch origin
@@ -69,28 +72,19 @@ git reset --hard origin/main
 log_info "Code updated to: $(git rev-parse --short HEAD)"
 echo ""
 
-# Step 2: Build Docker image
-# Note: BuildKit disabled - server lacks buildx component
-log_info "Building Docker image: ${IMAGE_NAME}..."
-DOCKER_BUILDKIT=0 docker build -t "${IMAGE_NAME}" .
-log_info "Docker image built successfully"
+# Step 2: Load env secrets (for compose variable expansion)
+if [ -f "${ENV_FILE}" ]; then
+    log_info "Loading environment file: ${ENV_FILE}"
+    set -a
+    # shellcheck source=/dev/null
+    . "${ENV_FILE}"
+    set +a
+else
+    log_warn "Environment file not found at ${ENV_FILE} (compose will use shell env/.env)"
+fi
 echo ""
 
-# Step 3: Stop and remove old container (if exists)
-log_info "Stopping old container (if running)..."
-docker stop "${CONTAINER_NAME}" 2>/dev/null || true
-docker rm "${CONTAINER_NAME}" 2>/dev/null || true
-log_info "Old container removed"
-echo ""
-
-# Step 4: Ensure corapan-network exists
-log_info "Ensuring Docker network corapan-network exists..."
-docker network inspect corapan-network >/dev/null 2>&1 || {
-    log_info "Creating Docker network: corapan-network (172.18.0.0/16)"
-    docker network create --subnet=172.18.0.0/16 corapan-network
-}
-
-# Step 4b: Ensure statistics assets are readable by container user
+# Step 3: Ensure statistics assets are readable by container user
 STATS_DIR="${DATA_DIR}/public/statistics"
 if [ -d "${STATS_DIR}" ]; then
     log_info "Ensuring statistics permissions in ${STATS_DIR}..."
@@ -100,26 +94,23 @@ else
     log_warn "Statistics directory not found at ${STATS_DIR}"
 fi
 
-# Step 5: Start new container
-log_info "Starting new container: ${CONTAINER_NAME}..."
-docker run -d \
-    --name "${CONTAINER_NAME}" \
-    --restart unless-stopped \
-    --network corapan-network \
-    -p "${HOST_PORT}:${CONTAINER_PORT}" \
-    -v "${DATA_DIR}:/app/data" \
-    -v "${MEDIA_DIR}:/app/media" \
-    -v "${LOGS_DIR}:/app/logs" \
-    --env-file "${CONFIG_DIR}/passwords.env" \
-    -e "FLASK_ENV=production" \
-    -e "CORAPAN_RUNTIME_ROOT=/app" \
-    -e "CORAPAN_MEDIA_ROOT=/app/media" \
-    "${IMAGE_NAME}"
+if [ ! -f "${COMPOSE_FILE}" ]; then
+    log_error "Compose file not found: ${COMPOSE_FILE}"
+    exit 1
+fi
 
-log_info "Container started successfully"
+# Step 4: Start services via docker-compose (v1)
+log_info "Starting production stack via docker-compose..."
+COMPOSE_CMD=(docker-compose -f "${COMPOSE_FILE}" up -d --force-recreate)
+if [ "${COMPOSE_BUILD:-0}" = "1" ]; then
+    COMPOSE_CMD+=(--build)
+fi
+"${COMPOSE_CMD[@]}"
+
+log_info "Compose stack started successfully"
 echo ""
 
-# Step 6: Wait for container to be healthy
+# Step 5: Wait for container to be healthy
 log_info "Waiting for container to be ready..."
 sleep 5
 
@@ -131,6 +122,27 @@ else
     docker logs "${CONTAINER_NAME}" 2>&1 | tail -20
     exit 1
 fi
+echo ""
+
+# Step 6: Verify mounts are runtime-first
+log_info "Verifying runtime-first mounts..."
+MOUNTS=$(docker inspect "${CONTAINER_NAME}" --format '{{range .Mounts}}{{println .Destination " <- " .Source}}{{end}}' | sort)
+echo "${MOUNTS}"
+
+EXPECTED_MOUNTS=(
+    "/app/data <- ${RUNTIME_ROOT}/data"
+    "/app/media <- ${RUNTIME_ROOT}/media"
+    "/app/logs <- ${RUNTIME_ROOT}/logs"
+    "/app/config <- ${RUNTIME_ROOT}/config"
+)
+
+for mount in "${EXPECTED_MOUNTS[@]}"; do
+    if ! echo "${MOUNTS}" | grep -Fxq "${mount}"; then
+        log_error "Mount mismatch detected: ${mount}"
+        exit 1
+    fi
+done
+log_info "Mounts verified"
 echo ""
 
 # Step 7: Run database setup (optional - uncomment if needed)
@@ -146,8 +158,7 @@ echo "=============================================="
 log_info "Deployment completed successfully!"
 echo "=============================================="
 echo "Container: ${CONTAINER_NAME}"
-echo "Image: ${IMAGE_NAME}"
-echo "Port: ${HOST_PORT} -> ${CONTAINER_PORT}"
+echo "Compose file: ${COMPOSE_FILE}"
 echo "Commit: $(git rev-parse --short HEAD)"
 echo "Finished at: $(date)"
 echo ""
