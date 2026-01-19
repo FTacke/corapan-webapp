@@ -14,11 +14,13 @@
 #
 # Prerequisites on the server:
 #   - GitHub self-hosted runner configured and running
-#   - Docker installed
-#   - /srv/webapps/corapan/{app,data,media,config,logs} directories set up
-#   - passwords.env configured in /srv/webapps/corapan/config/
-#   - data/media synced via rsync (not part of this workflow)
+#   - docker-compose (v1) installed
+#   - /srv/webapps/corapan/{app,runtime/corapan} directories set up
+#   - passwords.env configured with required environment variables
+#   - data/media synced to /srv/webapps/corapan/runtime/corapan/ (not part of this workflow)
 #
+# IMPORTANT: Production uses runtime-first mounts via docker-compose.prod.yml.
+# Legacy mounts (/srv/webapps/corapan/{data,media,logs}) are NOT supported.
 # =============================================================================
 
 name: Deploy to Production
@@ -46,12 +48,44 @@ jobs:
         run: |
           # Wait a moment for the container to fully start
           sleep 10
-          # Check if container is running
-          if docker ps --format '{{.Names}}' | grep -q '^corapan-webapp$'; then
-            echo "✓ Container corapan-webapp is running"
-            docker ps --filter "name=corapan-webapp" --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
+          
+          # Check if container is running (must match docker-compose.prod.yml container_name)
+          CONTAINER_NAME="corapan-web-prod"
+          if docker ps --format '{{.Names}}' | grep -q "^${CONTAINER_NAME}$"; then
+            echo "✓ Container ${CONTAINER_NAME} is running"
+            docker ps --filter "name=${CONTAINER_NAME}" --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
           else
-            echo "✗ Container corapan-webapp is not running!"
-            docker logs corapan-webapp 2>&1 | tail -50
+            echo "✗ Container ${CONTAINER_NAME} is not running!"
+            docker logs "${CONTAINER_NAME}" 2>&1 | tail -50
             exit 1
           fi
+          
+          # Verify runtime-first mounts are correct
+          echo ""
+          echo "Verifying runtime-first mounts..."
+          MOUNTS=$(docker inspect "${CONTAINER_NAME}" --format '{{range .Mounts}}{{println .Destination "<-" .Source}}{{end}}' | sort)
+          echo "${MOUNTS}"
+          
+          # Check critical mounts
+          if echo "${MOUNTS}" | grep -q "/app/data <- /srv/webapps/corapan/runtime/corapan/data"; then
+            echo "✓ /app/data mount is correct (runtime-first)"
+          else
+            echo "✗ /app/data mount is WRONG! Expected: /srv/webapps/corapan/runtime/corapan/data"
+            exit 1
+          fi
+          
+          if echo "${MOUNTS}" | grep -q "/app/media <- /srv/webapps/corapan/runtime/corapan/media"; then
+            echo "✓ /app/media mount is correct (runtime-first)"
+          else
+            echo "✗ /app/media mount is WRONG! Expected: /srv/webapps/corapan/runtime/corapan/media"
+            exit 1
+          fi
+          
+          if echo "${MOUNTS}" | grep -q "/app/logs <- /srv/webapps/corapan/runtime/corapan/logs"; then
+            echo "✓ /app/logs mount is correct (runtime-first)"
+          else
+            echo "✗ /app/logs mount is WRONG! Expected: /srv/webapps/corapan/runtime/corapan/logs"
+            exit 1
+          fi
+          
+          echo "✓ All mounts verified successfully!"
