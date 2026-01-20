@@ -83,13 +83,26 @@ jobs:
         run: |
           until pg_isready -h localhost -p 5432 -U corapan_auth; do sleep 1; done
 
-      - name: Apply migration and create admin
+      - name: Apply migration
         env:
           AUTH_DATABASE_URL: postgresql+psycopg2://corapan_auth:corapan_auth@localhost:5432/corapan_auth
           AUTH_HASH_ALGO: argon2
         run: |
           python scripts/apply_auth_migration.py --engine postgres
-          python scripts/create_initial_admin.py --username admin --password testpass123
+
+      - name: Smoke check auth DB
+        env:
+          AUTH_DATABASE_URL: postgresql+psycopg2://corapan_auth:corapan_auth@localhost:5432/corapan_auth
+        run: |
+          python - <<'PY'
+          from sqlalchemy import create_engine, text
+          import os
+
+          engine = create_engine(os.environ["AUTH_DATABASE_URL"])
+          with engine.connect() as conn:
+              conn.execute(text("SELECT 1"))
+          print("Auth DB smoke check OK")
+          PY
 
       - name: Run auth tests against Postgres
         env:
