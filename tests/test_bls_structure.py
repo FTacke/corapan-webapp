@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# ruff: noqa: E402
 """Test BlackLab v5 response structure."""
 
 import pytest
