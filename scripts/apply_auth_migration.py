@@ -55,10 +55,11 @@ def apply_postgres_migration(reset: bool = False) -> None:
     import sys
 
     try:
-        import psycopg
+        import psycopg2
+        from psycopg2 import OperationalError
     except ImportError:
         print(
-            "ERROR: psycopg not installed. Run: pip install psycopg[binary]",
+            "ERROR: psycopg2 not installed. Run: pip install psycopg2-binary",
             file=sys.stderr,
         )
         sys.exit(1)
@@ -73,8 +74,11 @@ def apply_postgres_migration(reset: bool = False) -> None:
         db_url = "postgresql://corapan_auth:corapan_auth@localhost:54320/corapan_auth"
         print(f"Using default dev Postgres URL: {db_url}")
 
-    # Convert SQLAlchemy URL to psycopg format
-    # postgresql+psycopg://... -> postgresql://...
+    # Convert SQLAlchemy URL to psycopg2 format
+    # postgresql+psycopg2://... -> postgresql://...
+    # postgresql+psycopg://...  -> postgresql://...
+    if "+psycopg2" in db_url:
+        db_url = db_url.replace("+psycopg2", "")
     if "+psycopg" in db_url:
         db_url = db_url.replace("+psycopg", "")
 
@@ -93,7 +97,7 @@ def apply_postgres_migration(reset: bool = False) -> None:
     conn = None
     try:
         print("Connecting to PostgreSQL...")
-        conn = psycopg.connect(db_url)
+        conn = psycopg2.connect(db_url)
         print("Connected successfully.")
 
         with conn.cursor() as cur:
@@ -128,10 +132,10 @@ def apply_postgres_migration(reset: bool = False) -> None:
             else:
                 print(f"Warning: Analytics migration not found: {ANALYTICS_SQL_FILE}")
 
-    except psycopg.OperationalError as e:
+    except OperationalError as e:
         print(f"ERROR: Database connection failed: {e}", file=sys.stderr)
         sys.exit(1)
-    except psycopg.Error as e:
+    except psycopg2.Error as e:
         print(f"ERROR: Migration failed: {e}", file=sys.stderr)
         sys.exit(1)
     except Exception as e:

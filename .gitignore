@@ -74,6 +74,7 @@ opt/
 *.log
 logs/
 *.log.*
+flask-full-log.txt
 
 # =============================================================================
 # Data & Media (NEVER COMMIT - generated data, databases, media files)
@@ -170,6 +171,7 @@ temp/
 *.swo
 _tmp_*
 *.scratch.*
+blacklab_response_debug.json
 
 # =============================================================================
 # Testing

@@ -46,6 +46,9 @@ jobs:
       env:
         FLASK_ENV: testing
         FLASK_SECRET_KEY: test-key
+        JWT_SECRET_KEY: test-jwt-key
+        SECRET_KEY: test-secret
+        AUTH_DATABASE_URL: sqlite:///data/db/auth_test.db
         AUTH_HASH_ALGO: ${{ matrix.auth-hash-algo }}
 
   migration-postgres:
