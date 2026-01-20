@@ -78,7 +78,6 @@ def health_check():
     from ..extensions.sqlalchemy_ext import get_engine
     from sqlalchemy import text
 
-
     def safe_check(fn, *, timeout_s: float, base: dict | None = None) -> dict:
         start = time.perf_counter()
         payload = {"ok": True, "error": None}

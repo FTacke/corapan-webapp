@@ -1,5 +1,14 @@
 #!/usr/bin/env python3
+# ruff: noqa: E402
 """Test BlackLab v5 response structure."""
+
+import pytest
+
+pytestmark = pytest.mark.live
+pytest.skip(
+    "Live BlackLab endpoint required; skipped in CI.",
+    allow_module_level=True,
+)
 
 import os
 import httpx

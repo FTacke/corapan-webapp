@@ -3,6 +3,7 @@
 find "$CFG" -type f -print0 | sort -z | xargs -0 sha256sum > /tmp/blacklab_config_local.sha256
 sha256sum /tmp/blacklab_config_local.sha256
 """
+
 from pathlib import Path
 import hashlib
 import tempfile
@@ -27,11 +28,11 @@ for p in files:
 
 tmp = Path(tempfile.gettempdir()) / "blacklab_config_local.sha256"
 # write as text with UTF-8
-tmp.write_text(''.join(lines), encoding='utf-8')
+tmp.write_text("".join(lines), encoding="utf-8")
 final = hashlib.sha256(tmp.read_bytes()).hexdigest()
 print(f"wrote {tmp}")
 print("==== sample (first 10 lines) ====")
-print(''.join(lines[:10]))
+print("".join(lines[:10]))
 print(f"sha256({tmp}) = {final}")
 print(f"expected = {expected}")
 if final == expected:

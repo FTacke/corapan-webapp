@@ -9,6 +9,7 @@ from contextlib import contextmanager
 from pathlib import Path
 from typing import Iterator
 
+
 def _resolve_data_root() -> Path:
     """Resolve runtime data root from CORAPAN_RUNTIME_ROOT (dev fallback supported)."""
     env_name = (os.getenv("FLASK_ENV") or os.getenv("APP_ENV") or "production").lower()
