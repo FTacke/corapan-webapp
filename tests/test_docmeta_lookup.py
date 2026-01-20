@@ -1,5 +1,13 @@
 """Test docmeta lookup logic."""
 
+import pytest
+
+pytestmark = pytest.mark.data
+pytest.skip(
+    "Requires docmeta.jsonl runtime data; skipped in CI.",
+    allow_module_level=True,
+)
+
 import json
 from pathlib import Path
 

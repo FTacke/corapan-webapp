@@ -52,7 +52,7 @@ jobs:
         
     - name: Run tests
       run: |
-        pytest
+        pytest -m "not live and not e2e and not data"
       env:
         FLASK_ENV: testing
         FLASK_SECRET_KEY: test-key

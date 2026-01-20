@@ -1,6 +1,14 @@
 #!/usr/bin/env python3
 """Quick test script for BlackLab Advanced Search."""
 
+import pytest
+
+pytestmark = pytest.mark.live
+pytest.skip(
+    "Live BlackLab/Flask endpoints required; skipped in CI.",
+    allow_module_level=True,
+)
+
 import os
 import httpx
 
