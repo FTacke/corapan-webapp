@@ -171,6 +171,8 @@ temp/
 *.swo
 _tmp_*
 *.scratch.*
+*_debug.json
+*.dump
 blacklab_response_debug.json
 
 # =============================================================================
