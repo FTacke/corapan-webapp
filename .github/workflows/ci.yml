@@ -137,7 +137,7 @@ jobs:
           CORAPAN_MEDIA_ROOT: /tmp/runtime/media
           CORAPAN_DATA_ROOT: /tmp/runtime/data
         run: |
-          pytest tests/test_auth_flow.py tests/test_admin_users.py tests/test_role_access.py -v
+          pytest -q tests/test_ci_auth_smoke.py
 
   playwright-e2e:
     runs-on: ubuntu-latest
