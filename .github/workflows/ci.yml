@@ -34,6 +34,16 @@ jobs:
     - name: Check project structure
       run: |
         python scripts/check_structure.py
+
+    - name: Prepare minimal runtime for CI
+      run: |
+        set -euo pipefail
+        export R=/tmp/runtime
+        mkdir -p "$R"/{data,media,logs,config}
+        mkdir -p "$R"/data/blacklab_export
+        # tests expect this file; empty is fine for collection
+        touch "$R"/data/blacklab_export/docmeta.jsonl
+        echo "CI runtime prepared at $R"
         
     - name: Lint with Ruff
       run: |
@@ -50,6 +60,9 @@ jobs:
         SECRET_KEY: test-secret
         AUTH_DATABASE_URL: sqlite:///data/db/auth_test.db
         AUTH_HASH_ALGO: ${{ matrix.auth-hash-algo }}
+        CORAPAN_RUNTIME_ROOT: /tmp/runtime
+        CORAPAN_MEDIA_ROOT: /tmp/runtime/media
+        CORAPAN_DATA_ROOT: /tmp/runtime/data
 
   migration-postgres:
     runs-on: ubuntu-latest
@@ -90,6 +103,15 @@ jobs:
         run: |
           python scripts/apply_auth_migration.py --engine postgres
 
+      - name: Prepare minimal runtime for CI
+        run: |
+          set -euo pipefail
+          export R=/tmp/runtime
+          mkdir -p "$R"/{data,media,logs,config}
+          mkdir -p "$R"/data/blacklab_export
+          touch "$R"/data/blacklab_export/docmeta.jsonl
+          echo "CI runtime prepared at $R"
+
       - name: Smoke check auth DB
         env:
           AUTH_DATABASE_URL: postgresql+psycopg2://corapan_auth:corapan_auth@localhost:5432/corapan_auth
@@ -111,6 +133,9 @@ jobs:
           JWT_SECRET_KEY: test-jwt-key
           AUTH_DATABASE_URL: postgresql+psycopg2://corapan_auth:corapan_auth@localhost:5432/corapan_auth
           AUTH_HASH_ALGO: argon2
+          CORAPAN_RUNTIME_ROOT: /tmp/runtime
+          CORAPAN_MEDIA_ROOT: /tmp/runtime/media
+          CORAPAN_DATA_ROOT: /tmp/runtime/data
         run: |
           pytest tests/test_auth_flow.py tests/test_admin_users.py tests/test_role_access.py -v
 
