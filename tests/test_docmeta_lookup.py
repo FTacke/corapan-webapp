@@ -1,5 +1,4 @@
 """Test docmeta lookup logic."""
-# ruff: noqa: E402
 
 import pytest
 

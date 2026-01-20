@@ -47,11 +47,22 @@ jobs:
         
     - name: Lint with Ruff
       run: |
-        ruff check src/app || true
+        ruff check src tests
+        ruff format --check src tests
         
-    - name: Skip tests (CI minimal)
+    - name: Run tests
       run: |
-        echo "Pytest disabled in CI – legacy tests incompatible with current app"
+        pytest -m "not live and not e2e and not data"
+      env:
+        FLASK_ENV: testing
+        FLASK_SECRET_KEY: test-key
+        JWT_SECRET_KEY: test-jwt-key
+        SECRET_KEY: test-secret
+        AUTH_DATABASE_URL: sqlite:///data/db/auth_test.db
+        AUTH_HASH_ALGO: ${{ matrix.auth-hash-algo }}
+        CORAPAN_RUNTIME_ROOT: /tmp/runtime
+        CORAPAN_MEDIA_ROOT: /tmp/runtime/media
+        CORAPAN_DATA_ROOT: /tmp/runtime/data
 
   migration-postgres:
     runs-on: ubuntu-latest
@@ -131,7 +142,7 @@ jobs:
   playwright-e2e:
     runs-on: ubuntu-latest
     needs: test
-    if: github.event_name == 'workflow_dispatch'
+    if: github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch'
     steps:
       - uses: actions/checkout@v4
 
