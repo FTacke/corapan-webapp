@@ -1,24 +1,5 @@
 ﻿# CO.RA.PAN - Quick Start.
 
-## Empfohlener Quickstart (Postgres + BlackLab)
-
-Ein Befehl startet alles: Virtualenv, Dependencies, PostgreSQL + BlackLab (Docker), Auth-Migration, Dev-Server.
-
-```powershell
-# Im Repository-Root ausfuehren
-.\scripts\dev-setup.ps1
-```
-
-Das Skript:
-1. Richtet `.venv` + Python-Dependencies ein
-2. Startet PostgreSQL + BlackLab via Docker (`docker-compose.dev-postgres.yml`)
-3. Fuehrt die Postgres Auth-DB-Migration aus
-4. Startet den Flask Dev-Server unter `http://localhost:8000`
-
-**Login:** `admin` / `change-me`
-
----
-
 ## Nur neu starten (ohne Neuinstallation) 
 
 Wenn alles bereits eingerichtet ist:
@@ -59,6 +40,27 @@ $env:CORAPAN_RUNTIME_ROOT = "D:\my-custom-runtime"
 # notepad $PROFILE
 # Dann: $env:CORAPAN_RUNTIME_ROOT = "D:\my-custom-runtime"
 ```
+
+
+## Start mit Neuinstallation (Postgres + BlackLab)
+
+Ein Befehl startet alles: Virtualenv, Dependencies, PostgreSQL + BlackLab (Docker), Auth-Migration, Dev-Server.
+
+```powershell
+# Im Repository-Root ausfuehren
+.\scripts\dev-setup.ps1
+```
+
+Das Skript:
+1. Richtet `.venv` + Python-Dependencies ein
+2. Startet PostgreSQL + BlackLab via Docker (`docker-compose.dev-postgres.yml`)
+3. Fuehrt die Postgres Auth-DB-Migration aus
+4. Startet den Flask Dev-Server unter `http://localhost:8000`
+
+**Login:** `admin` / `change-me`
+
+---
+
 
 ---
 
