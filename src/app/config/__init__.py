@@ -49,6 +49,7 @@ def _ensure_stats_permissions(path: Path) -> None:
             RuntimeWarning,
         )
 
+
 # Note: passwords.env support (env-based auth) is deprecated and has been
 # removed from automatic loading. Operator-managed secrets should be provided
 # directly as environment variables or via the auth database.
@@ -135,7 +136,7 @@ class BaseConfig:
 
     # Media paths (runtime-configured, REQUIRED - no repo fallbacks)
     _explicit_media_root = os.getenv("CORAPAN_MEDIA_ROOT")
-    
+
     if not _explicit_media_root:
         raise RuntimeError(
             "CORAPAN_MEDIA_ROOT environment variable is required.\n"
@@ -145,7 +146,7 @@ class BaseConfig:
             "  - Production: export CORAPAN_MEDIA_ROOT=/path/to/runtime/media\n\n"
             "No fallbacks to repo media paths are supported."
         )
-    
+
     MEDIA_ROOT = Path(_explicit_media_root)
 
     TRANSCRIPTS_DIR = MEDIA_ROOT / "transcripts"
@@ -201,7 +202,9 @@ class BaseConfig:
     try:
         PUBLIC_STATS_DIR.mkdir(parents=True, exist_ok=True)
     except Exception as exc:
-        logger.warning("Failed to create PUBLIC_STATS_DIR at %s: %s", PUBLIC_STATS_DIR, exc)
+        logger.warning(
+            "Failed to create PUBLIC_STATS_DIR at %s: %s", PUBLIC_STATS_DIR, exc
+        )
 
     try:
         STATS_TEMP_DIR.mkdir(parents=True, exist_ok=True)
@@ -229,7 +232,7 @@ class BaseConfig:
         os.getenv("ALLOW_PUBLIC_TRANSCRIPTS", "false").lower() == "true"
     )
 
-# Auth DB - Must be explicitly configured via AUTH_DATABASE_URL env var
+    # Auth DB - Must be explicitly configured via AUTH_DATABASE_URL env var
     # No fallback to SQLite - dev must use Postgres from docker-compose.dev-postgres.yml
     # Production sets this via environment/secrets
     AUTH_DATABASE_URL = os.getenv("AUTH_DATABASE_URL")

@@ -13,7 +13,6 @@ Auth-protected endpoints are treated as PASS if they return 401 or 303.
 from __future__ import annotations
 
 import argparse
-import json
 import sys
 import urllib.request
 import urllib.error
@@ -63,7 +62,11 @@ def main() -> int:
         ("Atlas countries", f"{base}/api/v1/atlas/countries", {200}),
         ("Atlas files", f"{base}/api/v1/atlas/files", {200}),
         ("Corpus stats", f"{base}/corpus/api/" + "corpus_stats", {200, 404}),
-        ("Stats image", f"{base}/corpus/api/statistics/viz_total_corpus.png", {200, 404}),
+        (
+            "Stats image",
+            f"{base}/corpus/api/statistics/viz_total_corpus.png",
+            {200, 404},
+        ),
         ("Metadata TSV", f"{base}/corpus/metadata/download/tsv", {200, 404}),
         ("Metadata JSON", f"{base}/corpus/metadata/download/json", {200, 404}),
         ("Metadata JSON-LD", f"{base}/corpus/metadata/download/jsonld", {200, 404}),
@@ -73,7 +76,11 @@ def main() -> int:
     # Auth-protected endpoints: accept 401/303 in unauthenticated context.
     protected = [
         ("Player overview", f"{base}/corpus/player", {200, 303, 401, 204}),
-        ("Player", f"{base}/player?transcription=/media/transcripts/TEST.json&audio=/media/full/TEST.mp3", {200, 303, 401}),
+        (
+            "Player",
+            f"{base}/player?transcription=/media/transcripts/TEST.json&audio=/media/full/TEST.mp3",
+            {200, 303, 401},
+        ),
         ("Transcript", f"{base}/media/transcripts/TEST.json", {200, 401, 404}),
         ("Audio full", f"{base}/media/full/TEST.mp3", {200, 401, 404}),
     ]

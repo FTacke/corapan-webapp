@@ -13,7 +13,6 @@ import io
 import json
 import logging
 import os
-from pathlib import Path
 from typing import Generator, Optional
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import time

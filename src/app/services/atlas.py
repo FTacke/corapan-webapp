@@ -155,7 +155,11 @@ def _collect_recordings(metadata_dir: Path) -> list[dict[str, object]]:
         return _load_recordings_from_json(json_master)
 
     json_candidates = sorted(
-        [p for p in metadata_dir.glob("corapan_recordings_*.json") if not p.name.endswith(".jsonld")]
+        [
+            p
+            for p in metadata_dir.glob("corapan_recordings_*.json")
+            if not p.name.endswith(".jsonld")
+        ]
     )
     if json_candidates:
         records: list[dict[str, object]] = []

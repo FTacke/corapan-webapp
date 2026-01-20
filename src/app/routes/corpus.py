@@ -211,132 +211,142 @@ def _serve_metadata_file(
 @blueprint.get(_CORPUS_STATS_ROUTE)
 def corpus_stats():
     """Serve pre-generated corpus statistics JSON.
-    
-    This endpoint provides global corpus statistics (total word count, duration, 
+
+    This endpoint provides global corpus statistics (total word count, duration,
     country count) from the runtime statistics directory.
-    
+
     Location: Configured via PUBLIC_STATS_DIR (derived from CORAPAN_RUNTIME_ROOT)
-    
+
     Returns:
         JSON response with corpus statistics
-        
+
     HTTP Status Codes:
         200: Statistics successfully loaded
         404: Statistics file not found (run 05_publish_corpus_statistics.py)
         500: Statistics directory not configured or file read error
     """
     try:
-        stats_dir = Path(current_app.config['PUBLIC_STATS_DIR'])
+        stats_dir = Path(current_app.config["PUBLIC_STATS_DIR"])
     except KeyError:
-        return jsonify({
-            "error": "Statistics not configured",
-            "message": "PUBLIC_STATS_DIR not set in app configuration"
-        }), 500
-    
+        return jsonify(
+            {
+                "error": "Statistics not configured",
+                "message": "PUBLIC_STATS_DIR not set in app configuration",
+            }
+        ), 500
+
     stats_file = stats_dir / "corpus_stats.json"
-    
+
     if not stats_file.exists():
-        return jsonify({
-            "error": "Corpus statistics not available",
-            "message": f"Statistics file not found at {stats_file}. Run: python LOKAL/_0_json/05_publish_corpus_statistics.py"
-        }), 404
-    
+        return jsonify(
+            {
+                "error": "Corpus statistics not available",
+                "message": f"Statistics file not found at {stats_file}. Run: python LOKAL/_0_json/05_publish_corpus_statistics.py",
+            }
+        ), 404
+
     try:
         with open(stats_file, "r", encoding="utf-8") as f:
             data = json.load(f)
-        
+
         response = jsonify(data)
         response.headers["Cache-Control"] = "public, max-age=3600"  # Cache for 1 hour
         return response
     except (json.JSONDecodeError, IOError) as e:
-        return jsonify({
-            "error": "Failed to load corpus statistics",
-            "message": str(e)
-        }), 500
+        return jsonify(
+            {"error": "Failed to load corpus statistics", "message": str(e)}
+        ), 500
 
 
 @blueprint.get("/api/statistics/<path:filename>")
 def serve_statistics(filename: str) -> Response:
     """Serve generated statistics assets (PNG, JSON) from runtime directory.
-    
+
     Serves pre-generated visualizations and data files from the configured
     PUBLIC_STATS_DIR location.
-    
+
     Security:
     - Only allows .png and .json file extensions
     - Prevents directory traversal via safe path joining
-    
+
     Args:
         filename: Name or relative path of the file to serve
-        
+
     Returns:
         File content (PNG image or JSON)
-        
+
     HTTP Status Codes:
         200: File found and served
         400: Invalid file extension
         404: File not found in statistics directory
         500: Statistics directory not configured
-        
+
     Examples:
         GET /corpus/api/statistics/viz_total_corpus.png
         GET /corpus/api/statistics/viz_ES_resumen.png
         GET /corpus/api/statistics/corpus_stats.json
     """
     # Security: Allowlist file extensions
-    ALLOWED_EXTENSIONS = {'.png', '.json'}
-    
+    ALLOWED_EXTENSIONS = {".png", ".json"}
+
     try:
-        stats_dir = Path(current_app.config['PUBLIC_STATS_DIR'])
+        stats_dir = Path(current_app.config["PUBLIC_STATS_DIR"])
     except KeyError:
-        return jsonify({
-            "error": "Statistics not configured",
-            "message": "PUBLIC_STATS_DIR not set in app configuration"
-        }), 500
-    
+        return jsonify(
+            {
+                "error": "Statistics not configured",
+                "message": "PUBLIC_STATS_DIR not set in app configuration",
+            }
+        ), 500
+
     # Validate file extension
     file_ext = Path(filename).suffix.lower()
     if file_ext not in ALLOWED_EXTENSIONS:
-        return jsonify({
-            "error": "Invalid file type",
-            "message": f"Only {', '.join(ALLOWED_EXTENSIONS)} files are allowed"
-        }), 400
-    
+        return jsonify(
+            {
+                "error": "Invalid file type",
+                "message": f"Only {', '.join(ALLOWED_EXTENSIONS)} files are allowed",
+            }
+        ), 400
+
     # Safe path construction - prevent directory traversal
     # Resolve to absolute path and verify it's within stats_dir
     try:
         target_file = (stats_dir / filename).resolve()
         stats_dir_resolved = stats_dir.resolve()
-        
+
         # Ensure target is within stats directory
         if not str(target_file).startswith(str(stats_dir_resolved)):
-            return jsonify({
-                "error": "Access denied",
-                "message": "Requested file is outside statistics directory"
-            }), 400
+            return jsonify(
+                {
+                    "error": "Access denied",
+                    "message": "Requested file is outside statistics directory",
+                }
+            ), 400
     except (ValueError, RuntimeError):
-        return jsonify({
-            "error": "Invalid path",
-            "message": "Could not resolve file path"
-        }), 400
-    
+        return jsonify(
+            {"error": "Invalid path", "message": "Could not resolve file path"}
+        ), 400
+
     # Check file exists
     if not target_file.exists() or not target_file.is_file():
-        return jsonify({
-            "error": "File not found",
-            "message": f"Statistics file not found: {filename}"
-        }), 404
-    
+        return jsonify(
+            {
+                "error": "File not found",
+                "message": f"Statistics file not found: {filename}",
+            }
+        ), 404
+
     # Serve file with appropriate cache headers
     try:
         # Determine MIME type based on extension
-        if file_ext == '.png':
-            mimetype = 'image/png'
-        elif file_ext == '.json':
-            mimetype = 'application/json'
+        if file_ext == ".png":
+            mimetype = "image/png"
+        elif file_ext == ".json":
+            mimetype = "application/json"
         else:
-            mimetype = 'application/octet-stream'
-        
+            mimetype = "application/octet-stream"
+
         # Send file
         response = send_file(
             target_file,
@@ -347,10 +357,7 @@ def serve_statistics(filename: str) -> Response:
         response.headers["Cache-Control"] = "public, max-age=3600"
         return response
     except Exception as e:
-        return jsonify({
-            "error": "File read error",
-            "message": str(e)
-        }), 500
+        return jsonify({"error": "File read error", "message": str(e)}), 500
 
 
 # ==============================================================================

@@ -16,6 +16,7 @@ from ..services.stats_aggregator import StatsParams, aggregate_stats
 
 blueprint = Blueprint("stats", __name__, url_prefix="/api")
 
+
 def _resolve_data_root() -> Path:
     """Resolve runtime data root from CORAPAN_RUNTIME_ROOT (dev fallback supported)."""
     env_name = (os.getenv("FLASK_ENV") or os.getenv("APP_ENV") or "production").lower()
