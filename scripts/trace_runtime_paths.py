@@ -62,25 +62,51 @@ def _print_path(label: str, path: Path | None, public: bool | None = None) -> No
 
 def main() -> None:
     print("Runtime path trace (no secrets)")
-    print(f"- FLASK_ENV/APP_ENV: {os.getenv('FLASK_ENV') or os.getenv('APP_ENV') or 'production'}")
+    print(
+        f"- FLASK_ENV/APP_ENV: {os.getenv('FLASK_ENV') or os.getenv('APP_ENV') or 'production'}"
+    )
 
     runtime_root = _resolve_runtime_root()
     media_root = _env("CORAPAN_MEDIA_ROOT")
 
     _print_path("CORAPAN_RUNTIME_ROOT", runtime_root)
-    _print_path("CORAPAN_MEDIA_ROOT", Path(media_root) if media_root else None, public=False)
+    _print_path(
+        "CORAPAN_MEDIA_ROOT", Path(media_root) if media_root else None, public=False
+    )
 
     if runtime_root:
         data_root = runtime_root / "data"
         _print_path("DATA_ROOT", data_root)
         _print_path("PUBLIC_DB_DIR", data_root / "db" / "public", public=True)
         _print_path("DB_RESTRICTED_DIR", data_root / "db" / "restricted", public=False)
-        _print_path("PUBLIC_METADATA_ROOT", data_root / "public" / "metadata", public=True)
-        _print_path("PUBLIC_METADATA_LATEST", data_root / "public" / "metadata" / "latest", public=True)
-        _print_path("PUBLIC_STATS_DIR", _resolve_public_stats_dir(runtime_root), public=True)
-        _print_path("STATS_FILES_DB", data_root / "db" / "public" / "stats_files.db", public=True)
-        _print_path("STATS_COUNTRY_DB", data_root / "db" / "public" / "stats_country.db", public=True)
-        _print_path("POSTGRES_DEV_DATA_DIR", Path(_env("POSTGRES_DEV_DATA_DIR")) if _env("POSTGRES_DEV_DATA_DIR") else data_root / "db" / "restricted" / "postgres_dev", public=False)
+        _print_path(
+            "PUBLIC_METADATA_ROOT", data_root / "public" / "metadata", public=True
+        )
+        _print_path(
+            "PUBLIC_METADATA_LATEST",
+            data_root / "public" / "metadata" / "latest",
+            public=True,
+        )
+        _print_path(
+            "PUBLIC_STATS_DIR", _resolve_public_stats_dir(runtime_root), public=True
+        )
+        _print_path(
+            "STATS_FILES_DB",
+            data_root / "db" / "public" / "stats_files.db",
+            public=True,
+        )
+        _print_path(
+            "STATS_COUNTRY_DB",
+            data_root / "db" / "public" / "stats_country.db",
+            public=True,
+        )
+        _print_path(
+            "POSTGRES_DEV_DATA_DIR",
+            Path(_env("POSTGRES_DEV_DATA_DIR"))
+            if _env("POSTGRES_DEV_DATA_DIR")
+            else data_root / "db" / "restricted" / "postgres_dev",
+            public=False,
+        )
 
     if media_root:
         media_root_path = Path(media_root)
@@ -90,7 +116,11 @@ def main() -> None:
         _print_path("AUDIO_SPLIT_DIR", media_root_path / "mp3-split", public=False)
         _print_path("AUDIO_TEMP_DIR", media_root_path / "mp3-temp", public=False)
 
-    print("- AUTH_DATABASE_URL: <redacted>" if _env("AUTH_DATABASE_URL") else "- AUTH_DATABASE_URL: <missing>")
+    print(
+        "- AUTH_DATABASE_URL: <redacted>"
+        if _env("AUTH_DATABASE_URL")
+        else "- AUTH_DATABASE_URL: <missing>"
+    )
 
 
 if __name__ == "__main__":

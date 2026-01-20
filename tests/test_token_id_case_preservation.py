@@ -16,7 +16,7 @@ def test_token_id_preserves_uppercase():
             "tokid": ["VENb379fcc75"],  # Mixed case
         },
     }
-    
+
     mapped = _hit_to_canonical(hit)
     assert mapped["token_id"] == "VENb379fcc75", (
         f"Expected 'VENb379fcc75' but got '{mapped['token_id']}' - "
@@ -28,11 +28,11 @@ def test_token_id_preserves_various_cases():
     """Test various case patterns in token IDs."""
     test_cases = [
         "ESP8c0a4e499",
-        "VENb379fcc75", 
+        "VENb379fcc75",
         "ARGTEST123",
         "mixedCase456",
     ]
-    
+
     for token_id in test_cases:
         hit = {
             "docPid": "test",
@@ -41,7 +41,7 @@ def test_token_id_preserves_various_cases():
                 "tokid": [token_id],
             },
         }
-        
+
         mapped = _hit_to_canonical(hit)
         assert mapped["token_id"] == token_id, (
             f"Token ID '{token_id}' was transformed to '{mapped['token_id']}' - "

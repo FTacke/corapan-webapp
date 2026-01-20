@@ -17,10 +17,17 @@ from pathlib import Path
 project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
 
-os.environ["AUTH_DATABASE_URL"] = "postgresql+psycopg2://corapan_auth:corapan_auth@localhost:54320/corapan_auth"
+os.environ["AUTH_DATABASE_URL"] = (
+    "postgresql+psycopg2://corapan_auth:corapan_auth@localhost:54320/corapan_auth"
+)
 os.environ["FLASK_SECRET_KEY"] = "dev-smoke-test-key"
 
-from src.app import create_app
+
+def get_app():
+    from src.app import create_app
+
+    return create_app()
+
 
 CORPUS_STATS_PATH = "/corpus/api/" + "corpus_stats"
 
@@ -28,10 +35,10 @@ CORPUS_STATS_PATH = "/corpus/api/" + "corpus_stats"
 def test_corpus_stats():
     """Test corpus stats endpoint."""
     print(f"Testing {CORPUS_STATS_PATH}...", end=" ")
-    app = create_app()
+    app = get_app()
     with app.test_client() as client:
         response = client.get(CORPUS_STATS_PATH)
-        
+
         if response.status_code == 200:
             data = response.get_json()
             if "total_words" in data and "total_duration" in data:
@@ -51,18 +58,24 @@ def test_corpus_stats():
 def test_atlas_files():
     """Test /api/v1/atlas/files endpoint."""
     print("Testing /api/v1/atlas/files...", end=" ")
-    app = create_app()
+    app = get_app()
     with app.test_client() as client:
         response = client.get("/api/v1/atlas/files")
-        
+
         if response.status_code == 200:
             data = response.get_json()
-            if isinstance(data, dict) and "files" in data and isinstance(data["files"], list):
+            if (
+                isinstance(data, dict)
+                and "files" in data
+                and isinstance(data["files"], list)
+            ):
                 print(f"[PASS] ({len(data['files'])} files)")
                 return True
             else:
-                print(f"[FAIL]: Expected dict with 'files' array")
-                print(f"   Keys: {data.keys() if isinstance(data, dict) else 'not a dict'}")
+                print("[FAIL]: Expected dict with 'files' array")
+                print(
+                    f"   Keys: {data.keys() if isinstance(data, dict) else 'not a dict'}"
+                )
                 return False
         else:
             print(f"[FAIL]: Status {response.status_code}")
@@ -73,18 +86,24 @@ def test_atlas_files():
 def test_atlas_countries():
     """Test /api/v1/atlas/countries endpoint."""
     print("Testing /api/v1/atlas/countries...", end=" ")
-    app = create_app()
+    app = get_app()
     with app.test_client() as client:
         response = client.get("/api/v1/atlas/countries")
-        
+
         if response.status_code == 200:
             data = response.get_json()
-            if isinstance(data, dict) and "countries" in data and isinstance(data["countries"], list):
+            if (
+                isinstance(data, dict)
+                and "countries" in data
+                and isinstance(data["countries"], list)
+            ):
                 print(f"[PASS] ({len(data['countries'])} countries)")
                 return True
             else:
-                print(f"[FAIL]: Expected dict with 'countries' array")
-                print(f"   Keys: {data.keys() if isinstance(data, dict) else 'not a dict'}")
+                print("[FAIL]: Expected dict with 'countries' array")
+                print(
+                    f"   Keys: {data.keys() if isinstance(data, dict) else 'not a dict'}"
+                )
                 return False
         else:
             print(f"[FAIL]: Status {response.status_code}")
@@ -95,7 +114,7 @@ def test_atlas_countries():
 def test_obsolete_endpoints():
     """Test that obsolete endpoints return 404."""
     print("Testing obsolete endpoints removed...", end=" ")
-    app = create_app()
+    app = get_app()
     with app.test_client() as client:
         endpoints = [
             "/api/v1/atlas/overview",
@@ -116,16 +135,16 @@ def main():
     print("Data Cleanup Smoke Tests")
     print("=" * 70)
     print()
-    
+
     tests = [
         test_corpus_stats,
         test_atlas_files,
         test_atlas_countries,
-        test_obsolete_endpoints
+        test_obsolete_endpoints,
     ]
-    
+
     results = [test() for test in tests]
-    
+
     print()
     print("=" * 70)
     if all(results):
