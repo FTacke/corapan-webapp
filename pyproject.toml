@@ -27,3 +27,10 @@ markers = [
   "data: requires large runtime data files",
   "e2e: end-to-end / long running"
 ]
+
+[tool.ruff]
+extend-select = ["E", "F"]
+src = ["src", "tests"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["E402"]
