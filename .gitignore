@@ -21,7 +21,6 @@ venv/
 env/
 .venv/
 ENV/
-.python-version
 
 # =============================================================================
 # Environment Variables & Secrets (CRITICAL - NEVER COMMIT!)
@@ -107,7 +106,8 @@ data/db/*.db
 # =============================================================================
 # IDEs & Editors
 # =============================================================================
-.vscode/
+.vscode/*
+!.vscode/settings.json
 .idea/
 *.swp
 *.swo

@@ -1,0 +1,25 @@
+{
+  "html.validate.styles": false,
+  "html.validate.scripts": false,
+  "files.associations": {
+    "*.html": "jinja-html"
+  },
+  "htmlhint.enable": true,
+  "htmlhint.configPath": "./.htmlhintrc",
+  "[html]": {
+    "editor.formatOnSave": false
+  },
+  "python.defaultInterpreterPath": "${workspaceFolder}\\.venv\\Scripts\\python.exe",
+  "python.terminal.activateEnvironment": true,
+  "python.analysis.typeCheckingMode": "basic",
+  "python.analysis.extraPaths": [
+    "${workspaceFolder}"
+  ],
+  "[python]": {
+    "editor.defaultFormatter": "charliermarsh.ruff"
+  },
+  "editor.codeActionsOnSave": {
+    "source.organizeImports.ruff": "explicit",
+    "source.fixAll.ruff": "explicit"
+  }
+}

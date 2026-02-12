@@ -61,7 +61,98 @@ Diese Anwendung dient als Frontend und API-Layer für das CO.RA.PAN-Projekt. Sie
 - **Docker Desktop:** Für den Betrieb des BlackLab Servers
 - **PowerShell:** (Windows) für Hilfsskripte (empfohlen Version 5.1 oder 7+)
 
-## 5. Installation & Setup
+### Reproduzierbare Python-Basis (zu bestätigen)
+
+- **Python-Standard für lokales Dev-Setup:** `3.12.10` (siehe `.python-version`)
+- **Package Tooling:** `uv`
+- **Virtuelle Umgebung:** `.venv/` im Repo-Root (nicht versioniert)
+
+Quellenlage für Python-Version:
+
+- Autoritativ: Docker und CI pinnen den Minor-Stand `3.12` (kein Patch):
+  - `Dockerfile` (`FROM python:3.12-slim`)
+  - `.github/workflows/ci.yml` (`python-version: "3.12"`)
+- Lokaler Hinweis (nicht autoritativ): `.venv/pyvenv.cfg` kann ein konkretes Patchlevel zeigen.
+
+Entscheidung:
+
+- Docker/CI bleiben auf Minor-Pin `3.12` (latest Patchlevel pro Environment).
+- `.python-version` ist bewusst ein konkreter **Local Dev Pin**: `3.12.10`.
+
+`uv` installieren (Windows PowerShell):
+
+```powershell
+powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
+```
+
+## 5. Setup (Windows)
+
+```powershell
+git clone <repo-url>
+cd <repo-name>
+
+powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
+.\scripts\bootstrap.ps1
+
+# optional:
+# .\scripts\bootstrap.ps1 -Dev
+
+# nur falls lokal benötigt:
+# Copy-Item .env.example .env
+
+python -m <entrypoint>
+```
+
+## 6. Dependency-Workflow (requirements.in + lock)
+
+- Runtime-Quelle: `requirements.in`
+- Runtime-Lock: `requirements.txt`
+- Dev-Quelle: `requirements-dev.in`
+- Dev-Lock: `requirements-dev.txt`
+
+Lockfiles aktualisieren:
+
+```powershell
+.\scripts\refresh-lockfiles.ps1
+```
+
+## 7. Data / Media (nicht im Git)
+
+- Laufzeitdaten und Medien werden nicht versioniert (`data/`, `runtime/`, `media/`).
+- Für neuen PC manuell migrieren oder aus Quellen neu erzeugen.
+- Details und Größenabschätzung: siehe `MIGRATION.md`.
+- Empfohlene Auslagerung (Windows): `D:\data\corapan-webapp\...`
+
+## 8. Secrets / Environment
+
+Lege lokal `.env` aus `.env.example` an. Niemals `.env` oder Schlüsseldateien committen.
+
+Benötigte Variablen (Minimal-Startsatz):
+
+- `FLASK_SECRET_KEY` – Secret für Flask Session-Signing
+- `JWT_SECRET_KEY` – Secret für JWT-Signing
+- `AUTH_DATABASE_URL` – Verbindung zur Auth-Datenbank
+- `CORAPAN_MEDIA_ROOT` – Root-Pfad der Laufzeit-Medien
+
+Weitere häufig benötigte Variablen:
+
+- `FLASK_ENV` – Laufzeitmodus (`development`/`production`)
+- `FLASK_DEBUG` – Debug-Flag für lokale Entwicklung
+- `AUTH_HASH_ALGO` – Hashing-Algorithmus (`argon2`/`bcrypt`)
+- `BLS_BASE_URL` – URL des BlackLab-Servers
+- `BLS_CORPUS` – BlackLab-Korpusname/Indexname
+- `CORAPAN_RUNTIME_ROOT` – Runtime-Root für Datenpfade
+- `PUBLIC_STATS_DIR` – Zielpfad veröffentlichter Statistikdateien
+- `STATS_TEMP_DIR` – Temp-Pfad für Statistik-Erzeugung
+- `ALLOW_PUBLIC_TEMP_AUDIO` – öffentlicher Zugriff auf Audio-Snippets
+
+Bezugsquelle für Werte:
+
+- Lokal/Dev: Team-Passwortmanager (z. B. 1Password/Bitwarden) oder lokal gepflegte Dev-Secrets.
+- Team/Prod: zentrales Secret-Management (z. B. Vault/KeyVault/Secrets Manager).
+- Niemals echte Secret-Werte in Git committen.
+
+## 9. Installation & Setup (Legacy/Manuell)
 
 ### 1. Repository klonen
 ```bash
@@ -114,7 +205,7 @@ Falls noch kein Index vorhanden ist, muss dieser erstellt werden. Siehe dazu `do
 
 **Hinweis:** Für ein minimales Template ohne Korpus-Suchfunktion kann dieser Schritt übersprungen werden.
 
-## 6. Entwicklung & Start
+## 10. Entwicklung & Start
 
 ### BlackLab Server starten
 Der Such-Server muss im Hintergrund laufen:
@@ -133,7 +224,7 @@ $env:FLASK_ENV="development"; python -m src.app.main
 ```
 URL: http://localhost:8000
 
-## 7. Tests & Qualitätssicherung
+## 11. Tests & Qualitätssicherung
 
 ### Tests ausführen
 Das Projekt nutzt `pytest`. Alle Tests (Unit & Integration) können wie folgt gestartet werden:
@@ -154,7 +245,7 @@ ruff format .
 ### CI/CD
 Eine GitHub Actions Pipeline (`.github/workflows/ci.yml`) prüft bei jedem Push automatisch Tests und Linter-Regeln.
 
-## 8. Dokumentation
+## 12. Dokumentation
 
 Die detaillierte Dokumentation befindet sich im `docs/` Ordner:
 
@@ -166,7 +257,7 @@ Die detaillierte Dokumentation befindet sich im `docs/` Ordner:
 - **[Referenz](docs/reference/)**: API-Doku, Datenbank-Schema.
 - **[Changelog](CHANGELOG.md)**: Versionshistorie und Release Notes.
 
-## 9. Deployment
+## 13. Deployment
 
 Für den produktiven Betrieb wird empfohlen:
 - Einsatz eines WSGI-Servers (z.B. Gunicorn).
@@ -182,7 +273,7 @@ Die Produktion läuft auf einer VM am HRZ der Philipps-Universität Marburg und 
 
 → Vollständige Dokumentation: [`docs/deploy_plan.md`](docs/deploy_plan.md)
 
-## 10. Lizenz / Licensing
+## 14. Lizenz / Licensing
 
 The CO.RA.PAN Web Application is released under the MIT License.  
 This applies to the software code only.
@@ -193,7 +284,7 @@ restricted due to copyright and broadcasting rights.
 These materials may not be redistributed or reused outside the scope explicitly
 permitted by the project’s legal framework and cannot be considered open data.
 
-## 11. Versionierung & Zitation
+## 15. Versionierung & Zitation
 
 - **Aktuelle Version:** 1.0.0 (Januar 2026)
 - **Changelog:** [CHANGELOG.md](CHANGELOG.md)
