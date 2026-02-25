@@ -117,7 +117,7 @@ def track_event():
             # Return 204 (success) but don't count - attacker doesn't know
             return "", 204
 
-        data = request.get_json(silent=True) or {}
+        data = request.get_json(silent=True, force=True) or {}
         event_type = data.get("type", "").lower()
         payload = data.get("payload", {})
 

@@ -26,10 +26,15 @@ function isMobile() {
 function sendAnalyticsEvent(type, payload = {}) {
   // Use sendBeacon for reliability, fallback to fetch
   const data = JSON.stringify({ type, payload });
-  
-  if (navigator.sendBeacon) {
-    navigator.sendBeacon(ANALYTICS_ENDPOINT, new Blob([data], { type: 'application/json' }));
-  } else {
+
+  // Use text/plain to avoid CORS preflight on iOS Safari (known WebKit bug:
+  // sendBeacon with application/json triggers preflight even for same-origin).
+  // Server uses force=True to parse JSON regardless of Content-Type.
+  const blob = new Blob([data], { type: 'text/plain' });
+  const sent = navigator.sendBeacon ? navigator.sendBeacon(ANALYTICS_ENDPOINT, blob) : false;
+
+  if (!sent) {
+    // Fallback: sendBeacon returned false (quota exceeded) or not available
     fetch(ANALYTICS_ENDPOINT, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
