@@ -48,6 +48,8 @@ ALLOWED_ORIGINS = {
     # Production
     "https://corapan.online.uni-marburg.de",
     "http://corapan.online.uni-marburg.de",
+    "https://corapan.hispanistica.com",
+    "http://corapan.hispanistica.com",
 }
 
 
