@@ -82,6 +82,7 @@ services:
       # Production guardrail: BlackLab must be reachable via Docker network name,
       # not via localhost/host-port mapping.
       BLS_BASE_URL: http://corapan-blacklab:8080/blacklab-server
+      BLS_CORPUS: corapan
     volumes:
       # Production uses runtime-first mounts.
       # Container paths (/app/*) are treated as stable API.
