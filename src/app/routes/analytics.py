@@ -274,6 +274,7 @@ def get_stats():
                 WHERE date >= CURRENT_DATE - (:days - 1)
             """)
             totals_row = session.execute(totals_stmt, {"days": days}).fetchone()
+            assert totals_row is not None  # COALESCE guarantees one row
             totals_window = {
                 "visitors": totals_row.visitors,
                 "mobile": totals_row.mobile,
@@ -295,6 +296,7 @@ def get_stats():
                 FROM analytics_daily
             """)
             overall_row = session.execute(overall_stmt).fetchone()
+            assert overall_row is not None  # COALESCE guarantees one row
             totals_overall = {
                 "visitors": overall_row.visitors,
                 "mobile": overall_row.mobile,
