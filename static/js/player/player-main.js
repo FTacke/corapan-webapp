@@ -11,7 +11,7 @@ import HighlightingManager from "./modules/highlighting.js";
 import ExportManager from "./modules/export.js";
 import UIManager from "./modules/ui.js";
 import MobileHandler from "./modules/mobile.js";
-import { trackAudioPlay } from "../modules/analytics.js";
+
 
 class PlayerController {
   constructor() {
@@ -66,17 +66,9 @@ class PlayerController {
       console.log("[Player] Step 5: Initializing transcription manager");
       this.transcription = new TranscriptionManager(this.audio, this.tokens);
 
-      // Track first audio play for analytics (once per session)
-      let audioPlayTracked = false;
-
       // Connect audio playback events to word highlighting
       this.audio.onPlay = () => {
         this.transcription.startWordHighlighting();
-        // Track audio play event (anonymous, only once per player instance)
-        if (!audioPlayTracked) {
-          trackAudioPlay();
-          audioPlayTracked = true;
-        }
       };
       this.audio.onPause = () => this.transcription.stopWordHighlighting();
       this.audio.onEnded = () => this.transcription.stopWordHighlighting();

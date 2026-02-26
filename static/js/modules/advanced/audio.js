@@ -3,12 +3,35 @@
  * This copy is used by the advanced search page to decouple from the legacy `corpus` module.
  */
 import { MEDIA_ENDPOINT } from "../search/config.js";
+import { trackAudioPlay } from "../analytics.js";
 
 export class AdvancedAudioManager {
   constructor() {
     this.currentAudio = null;
     this.currentPlayButton = null;
+    // Tracks snippet keys already counted this session (play/download, once per unique snippet)
+    this.trackedSnippets = new Set();
     console.log("[Advanced Audio] Constructor initialized");
+  }
+
+  /**
+   * Unique key for a snippet – used to deduplicate analytics events.
+   * @private
+   */
+  _snippetKey(filename, start, end, snippetType) {
+    return `${filename}:${start}:${end}:${snippetType || ""}`;
+  }
+
+  /**
+   * Track play event for a snippet, but only once per unique snippet key.
+   * @private
+   */
+  _trackOnce(filename, start, end, snippetType) {
+    const key = this._snippetKey(filename, start, end, snippetType);
+    if (!this.trackedSnippets.has(key)) {
+      this.trackedSnippets.add(key);
+      trackAudioPlay();
+    }
   }
 
   bindEvents() {
@@ -36,6 +59,8 @@ export class AdvancedAudioManager {
           this.stopCurrentAudio();
           return;
         }
+        // Track on first play of this unique snippet
+        this._trackOnce(filename, start, end, snippetType);
         this.playAudioSegment(filename, start, end, $btn, tokenId, snippetType);
       });
 
@@ -54,6 +79,8 @@ export class AdvancedAudioManager {
         if (tokenId) downloadUrl += `&token_id=${encodeURIComponent(tokenId)}`;
         if (snippetType)
           downloadUrl += `&type=${encodeURIComponent(snippetType)}`;
+        // Track on first download of this unique snippet
+        this._trackOnce(filename, start, end, snippetType);
         const a = document.createElement("a");
         a.href = downloadUrl;
         a.target = "_blank";

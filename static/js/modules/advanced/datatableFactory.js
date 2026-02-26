@@ -65,7 +65,7 @@ export function renderAudioButtons(row) {
   return `
     <div class="md3-corpus-audio-buttons">
       <div class="md3-corpus-audio-row">
-        <span class="md3-corpus-audio-label">Res.:</span>
+        <span class="md3-corpus-audio-label">Item:</span>
         <a class="audio-button" data-filename="${escapeHtml(filename)}" data-start="${startSec}" data-end="${endSec}" data-token-id="${escapeHtml(tokenIdOriginal)}" data-token-id-lower="${escapeHtml(tokenId)}" data-type="pal">
           <span class="material-symbols-rounded">play_arrow</span>
         </a>
