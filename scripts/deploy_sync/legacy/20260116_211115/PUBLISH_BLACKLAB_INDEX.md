@@ -327,7 +327,7 @@ Invoke-WebRequest http://127.0.0.1:18081/blacklab-server/corpora/?outputformat=j
 .\scripts\deploy_sync\publish_blacklab_index.ps1
 
 # 6. Test production
-Invoke-WebRequest https://corapan.online.uni-marburg.de/blacklab-server/corpora/?outputformat=json
+Invoke-WebRequest https://corapan.hispanistica.com/blacklab-server/corpora/?outputformat=json
 ```
 
 ## Technical Improvements Over Original

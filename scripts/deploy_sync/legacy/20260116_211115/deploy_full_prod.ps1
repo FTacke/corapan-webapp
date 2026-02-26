@@ -27,7 +27,7 @@ $SERVER_HOST    = "137.248.186.51"
 $SERVER_USER    = "root"
 $SSH_KEY_PATH   = "$env:USERPROFILE\.ssh\marele"
 $DEPLOY_SCRIPT  = "/srv/webapps/corapan/app/scripts/deploy_prod.sh"
-$HEALTH_URL     = "https://corapan.online.uni-marburg.de/health"
+$HEALTH_URL     = "https://corapan.hispanistica.com/health"
 $HEALTH_URL_LOCAL = "http://localhost:6000/health"
 $WAIT_SECONDS   = 15
 

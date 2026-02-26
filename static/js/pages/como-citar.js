@@ -10,15 +10,15 @@
   // Citation formats data
   const CITATION_FORMATS = {
     apa: `Tacke, F. (2025). CO.RA.PAN — Corpus Radiofónico Panhispánico.
-Philipps-Universität Marburg, Marburg. https://corapan.online.uni-marburg.de
+Philipps-Universität Marburg, Marburg. https://corapan.hispanistica.com
 DOI: https://doi.org/10.5281/zenodo.15360942`,
 
     chicago: `Tacke, Felix. 2025. CO.RA.PAN — Corpus Radiofónico Panhispánico.
-Marburg: Philipps-Universität Marburg. https://corapan.online.uni-marburg.de
+Marburg: Philipps-Universität Marburg. https://corapan.hispanistica.com
 DOI: https://doi.org/10.5281/zenodo.15360942`,
 
     mla: `Tacke, Felix. CO.RA.PAN — Corpus Radiofónico Panhispánico.
-Philipps-Universität Marburg, Marburg, 2025. https://corapan.online.uni-marburg.de
+Philipps-Universität Marburg, Marburg, 2025. https://corapan.hispanistica.com
 DOI: https://doi.org/10.5281/zenodo.15360942`,
 
     bibtex: `@dataset{corapan2025,
@@ -28,7 +28,7 @@ DOI: https://doi.org/10.5281/zenodo.15360942`,
   publisher = {Philipps-Universität Marburg},
   address   = {Marburg},
   doi       = {10.5281/zenodo.15360942},
-  url       = {https://corapan.online.uni-marburg.de}
+  url       = {https://corapan.hispanistica.com}
 }`,
 
     ris: `TY  - DATA
@@ -37,7 +37,7 @@ AU  - Tacke, Felix
 PY  - 2025
 PB  - Philipps-Universität Marburg
 CY  - Marburg
-UR  - https://corapan.online.uni-marburg.de
+UR  - https://corapan.hispanistica.com
 DO  - 10.5281/zenodo.15360942
 ER  -`
   };
