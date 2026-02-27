@@ -60,6 +60,13 @@
   padding-top: var(--space-6);
   padding-bottom: var(--space-6);
 }
+
+.md3-page__section--compact {
+  /* Reduced vertical padding for denser dashboard layouts.
+     Uses --space-4 (16px) — one step below the default --space-6 (24px). */
+  padding-top: var(--space-4);
+  padding-bottom: var(--space-4);
+}
 .md3-auth-page {
   /* Centered auth page container for login/profile/password flows.
      Keeps a safe max-width for auth content and token-driven padding.
