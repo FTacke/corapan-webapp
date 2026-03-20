@@ -362,6 +362,19 @@ Ziel: Dev muss vollständig über **kanonische Pfade** laufen.
 - Neue Zusatzregel:
   Veraltete Infrastruktur-CLI-Pfade duerfen in produktiven Deploy-Skripten nicht still weiterlaufen; sie muessen entweder explizit als unterstuetzt belegt oder hart blockiert werden.
 
+## Lessons Learned – Run 2026-03-20 (Compose Bootstrap Forensics)
+
+- Problem:
+  Der Deploy-Fehler `KeyError: 'ContainerConfig'` trat weiter auf, obwohl der Compose-Guard bereits in `scripts/deploy_prod.sh` implementiert worden war.
+- Ursache:
+  Der Workflow rief `cd /srv/webapps/corapan/app ; bash scripts/deploy_prod.sh` direkt auf, ohne den Ziel-Checkout vorher auf den ausloesenden Commit zu aktualisieren. Dadurch konnten Aenderungen an `scripts/deploy_prod.sh` selbst im ersten betroffenen Lauf noch von der alten on-disk-Version ueberschrieben werden.
+- Fix:
+  Der Workflow setzt `/srv/webapps/corapan/app` jetzt vor dem Skriptaufruf per `git fetch --prune origin` und `git reset --hard "${GITHUB_SHA}"` auf den ausloesenden Commit.
+- Neue Regel:
+  Wenn ein Deploy-Workflow ein Skript aus einem persistenten Server-Checkout startet und dieses Skript sich selbst per Git aktualisiert, sind Aenderungen an genau diesem Skript nicht self-applying. Der Checkout muss vor dem Skriptstart auf den Trigger-Commit gebracht werden.
+- Neue Zusatzregel:
+  Bei Forensik zu self-hosted Deploys muss zwischen Workflow-Version, on-disk-Zielcheckout und Runner-Workspace unterschieden werden. Ein alter Runner-Workspace ist Drift-Signal, aber nicht automatisch der aktive Ausfuehrungspfad.
+
 ---
 
 ---

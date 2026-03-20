@@ -39,6 +39,8 @@ jobs:
       - name: Deploy corapan-webapp
         run: |
           cd /srv/webapps/corapan/app
+          git fetch --prune origin
+          git reset --hard "${GITHUB_SHA}"
           bash scripts/deploy_prod.sh
 
       - name: Verify deployment
