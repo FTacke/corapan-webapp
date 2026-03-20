@@ -40,9 +40,9 @@ jobs:
         set -euo pipefail
         export R=/tmp/runtime
         mkdir -p "$R"/{data,media,logs,config}
-        mkdir -p "$R"/data/blacklab_export
+        mkdir -p "$R"/data/blacklab/export
         # tests expect this file; empty is fine for collection
-        touch "$R"/data/blacklab_export/docmeta.jsonl
+        touch "$R"/data/blacklab/export/docmeta.jsonl
         echo "CI runtime prepared at $R"
         
     - name: Lint with Ruff
@@ -97,8 +97,8 @@ jobs:
           set -euo pipefail
           export R=/tmp/runtime
           mkdir -p "$R"/{data,media,logs,config}
-          mkdir -p "$R"/data/blacklab_export
-          touch "$R"/data/blacklab_export/docmeta.jsonl
+          mkdir -p "$R"/data/blacklab/export
+          touch "$R"/data/blacklab/export/docmeta.jsonl
           echo "CI runtime prepared at $R"
 
       - name: Smoke check auth DB

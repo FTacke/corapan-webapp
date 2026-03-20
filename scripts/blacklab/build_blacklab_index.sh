@@ -12,13 +12,16 @@ NC='\033[0m' # No Color
 
 # Configuration (all relative paths from project root)
 CORAPAN_JSON_DIR="${CORAPAN_JSON_DIR:-media/transcripts}"
-EXPORT_DIR="data/blacklab_export/tsv"
-INDEX_DIR="data/blacklab_index"
-INDEX_DIR_NEW="data/blacklab_index.new"
+BLACKLAB_ROOT="data/blacklab"
+EXPORT_DIR="${BLACKLAB_ROOT}/export/tsv"
+INDEX_DIR="${BLACKLAB_ROOT}/index"
+INDEX_DIR_NEW="${BLACKLAB_ROOT}/quarantine/index.build"
 # output area for JSON-ready files and json index
-JSON_EXPORT_DIR="data/blacklab_export/json_ready"
-INDEX_DIR_JSON="data/blacklab_index_json"
-INDEX_DIR_NEW_JSON="data/blacklab_index_json.new"
+JSON_EXPORT_DIR="${BLACKLAB_ROOT}/export/json_ready"
+INDEX_DIR_JSON="${BLACKLAB_ROOT}/quarantine/index_json"
+INDEX_DIR_NEW_JSON="${BLACKLAB_ROOT}/quarantine/index_json.build"
+BACKUP_DIR_ROOT="${BLACKLAB_ROOT}/backups"
+QUARANTINE_DIR_ROOT="${BLACKLAB_ROOT}/quarantine"
 BLF_CONFIG="config/blacklab/corapan-tsv.blf.yaml"
 LOG_FILE="logs/bls/index_build.log"
 
@@ -67,6 +70,9 @@ fi
 
 # Step 2: Prepare directories
 log "Preparing directories..."
+mkdir -p "$BACKUP_DIR_ROOT"
+mkdir -p "$QUARANTINE_DIR_ROOT"
+rm -rf "$INDEX_DIR_NEW"
 mkdir -p "$INDEX_DIR_NEW"
 
 # Step 3: Check for exported files
@@ -186,10 +192,10 @@ log "Index build successful"
 
 # Step 6: Atomic index switch
 log "Performing atomic index switch..."
+TIMESTAMP=$(date +%F_%H%M%S)
 if [ -d "$INDEX_DIR" ]; then
     log "Backing up previous index..."
-    rm -rf "${INDEX_DIR}.bak" 2>/dev/null || true
-    mv "$INDEX_DIR" "${INDEX_DIR}.bak"
+    mv "$INDEX_DIR" "${BACKUP_DIR_ROOT}/index_${TIMESTAMP}"
 else
     log "No previous index to backup"
 fi

@@ -2,13 +2,13 @@
 """Prepare production v3 JSON transcripts for BlackLab JSON indexing.
 
 For each JSON in media/transcripts/**, this script writes a file to
-data/blacklab_export/json_ready/<basename>.json with a top-level 'tokens'
+data/blacklab/export/json_ready/<basename>.json with a top-level 'tokens'
 array where each token contains the flattened fields that the BLF expects.
 
 This preserves document-level metadata at top-level and copies speaker info
 from segment objects into each token.
 
-Usage: python scripts/prepare_json_for_blacklab.py --in media/transcripts --out data/blacklab_export/json_ready
+Usage: python scripts/prepare_json_for_blacklab.py --in media/transcripts --out data/blacklab/export/json_ready
 """
 
 from __future__ import annotations

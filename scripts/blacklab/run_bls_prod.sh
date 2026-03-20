@@ -7,7 +7,7 @@
 # The container will mount the BlackLab index and configuration.
 #
 # Prerequisites:
-#   - BlackLab index in /srv/webapps/corapan/data/blacklab_index
+#   - BlackLab index in /srv/webapps/corapan/data/blacklab/index
 #   - BlackLab config in /srv/webapps/corapan/app/config/blacklab
 #   - Docker network: corapan-network
 #
@@ -32,7 +32,7 @@ NETWORK_NAME="corapan-network-prod"
 # Paths
 DATA_ROOT="/srv/webapps/corapan/data"
 APP_ROOT="/srv/webapps/corapan/app"
-INDEX_DIR="${DATA_ROOT}/blacklab_index"
+INDEX_DIR="${DATA_ROOT}/blacklab/index"
 CONFIG_DIR="${APP_ROOT}/config/blacklab"
 
 # JVM settings

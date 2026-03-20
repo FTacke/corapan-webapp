@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Check that all TSV files in data/blacklab_export/tsv/ share the same header and schema.
+Check that all TSV files in data/blacklab/export/tsv/ share the same header and schema.
 
 Usage: python scripts/check_tsv_schema.py
 """
@@ -9,7 +9,7 @@ from pathlib import Path
 import sys
 
 ROOT = Path(__file__).resolve().parent.parent
-TSV_DIR = ROOT / "data" / "blacklab_export" / "tsv"
+TSV_DIR = ROOT / "data" / "blacklab" / "export" / "tsv"
 
 if not TSV_DIR.exists():
     print(f"TSV directory not found: {TSV_DIR}")

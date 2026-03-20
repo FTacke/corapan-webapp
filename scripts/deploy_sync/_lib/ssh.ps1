@@ -43,7 +43,7 @@ $script:RemotePaths = @{
     RuntimeRoot = "/srv/webapps/corapan/runtime/corapan"
     DataRoot    = "/srv/webapps/corapan/runtime/corapan/data"
     MediaRoot   = "/srv/webapps/corapan/runtime/corapan/media"
-    BlackLabDataRoot = "/srv/webapps/corapan/data"
+    BlackLabDataRoot = "/srv/webapps/corapan/data/blacklab"
 }
 
 # -----------------------------------------------------------------------------

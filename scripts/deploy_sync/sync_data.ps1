@@ -15,7 +15,8 @@
 #   - db/public        -> Oeffentliche Datenbank-Exports
 #   - public/metadata  -> Metadaten zu Korpus-Dateien
 #   - exports         -> Generierte Exports
-#   - blacklab_export -> BlackLab-Export-Dateien
+#   - BlackLab-Exports werden nicht ueber runtime/data synchronisiert.
+#     Canonical path: data/blacklab/export (separate BlackLab wave)
 #
 # -----------------------------------------------------------------------------
 # STATS-DATENBANKEN (aus data/db/):
@@ -37,8 +38,7 @@
 # NICHT SYNCHRONISIERT (bewusst ausgeschlossen):
 # -----------------------------------------------------------------------------
 #
-#   - blacklab_index         -> wird auf dem Server neu gebaut
-#   - blacklab_index.backup  -> nur lokal relevant
+#   - blacklab               -> BlackLab index/export/backups/quarantine werden separat verwaltet
 #   - stats_temp             -> temporaere Verarbeitungsdateien
 #   - db/auth.db             -> Prod-Auth-DB wird separat verwaltet
 #   - db/transcription.db    -> Prod-Transkriptions-DB ist unabhaengig
@@ -113,13 +113,12 @@ if (-not $runtimeRoot) {
 $LOCAL_BASE_PATH  = Join-Path $runtimeRoot "data"
 
 # Zu synchronisierende Verzeichnisse
-# WICHTIG: blacklab_index, blacklab_index.backup, stats_temp, db sind bewusst NICHT enthalten!
+# WICHTIG: blacklab, stats_temp, db sind bewusst NICHT enthalten!
 # WICHTIG: Produktions-DBs sind NICHT enthalten (Production State Protection)
 $DATA_DIRECTORIES = @(
     "db/public",
     "public/metadata",
-    "exports",
-    "blacklab_export"
+    "exports"
 )
 
 # Selektiv zu synchronisierende DB-Dateien aus data/db
@@ -146,8 +145,7 @@ $ALLOWED_STATS_DBS = @(
 
 # Additional unwanted paths
 $EXCLUDED_PATHS = @(
-    "blacklab_index",
-    "blacklab_index.backup",
+    "blacklab",
     "stats_temp"
 )
 

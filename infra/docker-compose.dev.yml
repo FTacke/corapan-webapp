@@ -93,7 +93,7 @@ services:
     ports:
       - "8081:8080"
     volumes:
-      - ./data/blacklab_index:/data/index/corapan:ro
+      - ./data/blacklab/index:/data/index/corapan:ro
       - ./config/blacklab:/etc/blacklab:ro
     environment:
       JAVA_OPTS: "-Xmx2g -Xms512m"

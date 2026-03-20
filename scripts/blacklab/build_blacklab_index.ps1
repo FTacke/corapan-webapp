@@ -16,31 +16,27 @@ $ErrorActionPreference = "Stop"
 
 # Configuration
 $BLACKLAB_IMAGE = if ($env:BLACKLAB_IMAGE) { $env:BLACKLAB_IMAGE } else { "instituutnederlandsetaal/blacklab@sha256:3753dbce4fee11f8706b63c5b94bf06eac9d3843c75bf2eef6412ff47208c2e7" }
-$TSV_SOURCE_DIR = "data\blacklab_export\tsv"
-$DOCMETA_FILE = "data\blacklab_export\docmeta.jsonl"
-$INDEX_TARGET_DIR = "data\blacklab_index"
-$INDEX_TARGET_DIR_NEW = "data\blacklab_index.new"
+$TSV_SOURCE_DIR = "data\blacklab\export\tsv"
+$DOCMETA_FILE = "data\blacklab\export\docmeta.jsonl"
+$INDEX_TARGET_DIR = "data\blacklab\index"
+$INDEX_TARGET_DIR_NEW = "data\blacklab\quarantine\index.build"
 $BLF_CONFIG = "config\blacklab\corapan-tsv.blf.yaml"
 
 # Resolve paths
 $repoRoot = (Get-Item $PSScriptRoot).Parent.Parent.FullName
+$dataRoot = Join-Path $repoRoot "data"
+$blacklabRoot = Join-Path $dataRoot "blacklab"
+$exportRoot = Join-Path $blacklabRoot "export"
+$backupRoot = Join-Path $blacklabRoot "backups"
+$quarantineRoot = Join-Path $blacklabRoot "quarantine"
+$configRoot = Join-Path $repoRoot "config"
 
-# Runtime root (optional): Use CORAPAN_RUNTIME_ROOT if set, otherwise fall back to repo-relative paths
-if ($env:CORAPAN_RUNTIME_ROOT) {
-    $dataRoot = Join-Path $env:CORAPAN_RUNTIME_ROOT "data"
-    $configRoot = Join-Path $env:CORAPAN_RUNTIME_ROOT "config"
-    Write-Host "INFO: CORAPAN_RUNTIME_ROOT is set; using runtime root structure" -ForegroundColor Cyan
-} else {
-    $dataRoot = Join-Path $repoRoot "data"
-    $configRoot = Join-Path $repoRoot "config"
-}
-
-$tsvSourcePath = Join-Path $dataRoot "blacklab_export\tsv"
-$docmetaPath = Join-Path $dataRoot "blacklab_export\docmeta.jsonl"
-$indexTargetPath = Join-Path $dataRoot "blacklab_index"
-$indexTargetPathNew = Join-Path $dataRoot "blacklab_index.new"
+$tsvSourcePath = Join-Path $exportRoot "tsv"
+$docmetaPath = Join-Path $exportRoot "docmeta.jsonl"
+$indexTargetPath = Join-Path $blacklabRoot "index"
+$indexTargetPathNew = Join-Path $quarantineRoot "index.build"
 $blfConfigPath = Join-Path $configRoot "blacklab\corapan-tsv.blf.yaml"
-$BUILD_LOG = Join-Path $indexTargetPathNew "build.log"
+$BUILD_LOG = Join-Path $quarantineRoot "build.log"
 
 Write-Host ""
 Write-Host "================================================================" -ForegroundColor Cyan
@@ -50,13 +46,10 @@ Write-Host ""
 
 Write-Host "Configuration:" -ForegroundColor White
 Write-Host "  Repository:      $repoRoot" -ForegroundColor Gray
-if ($env:CORAPAN_RUNTIME_ROOT) {
-    Write-Host "  Runtime Root:    $env:CORAPAN_RUNTIME_ROOT" -ForegroundColor Cyan
-    Write-Host "  Data Root:       $dataRoot" -ForegroundColor Cyan
-    Write-Host "  Config Root:     $configRoot" -ForegroundColor Cyan
-} else {
-    Write-Host "  Runtime Root:    [not set; using repo-relative paths]" -ForegroundColor Gray
-}
+Write-Host "  BlackLab Root:   $blacklabRoot" -ForegroundColor Cyan
+Write-Host "  Export Root:     $exportRoot" -ForegroundColor Cyan
+Write-Host "  Backup Root:     $backupRoot" -ForegroundColor Cyan
+Write-Host "  Quarantine Root: $quarantineRoot" -ForegroundColor Cyan
 Write-Host "  Docker Image:    $BLACKLAB_IMAGE" -ForegroundColor Cyan
 Write-Host "  TSV Source:      $tsvSourcePath" -ForegroundColor Gray
 Write-Host "  Docmeta:         $docmetaPath" -ForegroundColor Gray
@@ -124,50 +117,21 @@ Write-Host "  OK BLF config found" -ForegroundColor Green
 Write-Host ""
 
 # ============================================================================
-# Step 2: Backup Existing Index
+# Step 2: Prepare canonical BlackLab directories
 # ============================================================================
 
-Write-Host "[2/4] Backing up existing index..." -ForegroundColor Yellow
+Write-Host "[2/4] Preparing BlackLab directories..." -ForegroundColor Yellow
 
-$backupDir = Join-Path $dataRoot "blacklab_index.backup"
-$targetIndexPath = $indexTargetPath
+New-Item -ItemType Directory -Path $exportRoot -Force | Out-Null
+New-Item -ItemType Directory -Path $backupRoot -Force | Out-Null
+New-Item -ItemType Directory -Path $quarantineRoot -Force | Out-Null
 
-if (Test-Path $targetIndexPath) {
-    $indexFiles = @(Get-ChildItem -Path $indexTargetPath -File -Recurse -ErrorAction SilentlyContinue)
-    if ($indexFiles.Count -gt 0) {
-        if (-not $SkipBackup) {
-            # Remove old backup if it exists
-            if (Test-Path $backupDir) {
-                Write-Host "  Removing old backup..." -ForegroundColor Gray
-                Remove-Item -Path $backupDir -Recurse -Force
-            }
-            
-            Write-Host ("  Creating backup: {0}" -f $backupDir) -ForegroundColor Gray
-            
-            if (-not $Force) {
-                $confirm = Read-Host "  Continue? (y/n)"
-                if ($confirm -ne 'y' -and $confirm -ne 'Y') {
-                    Write-Host "Aborted."
-                    exit 0
-                }
-            }
-            
-            Move-Item -Path $targetIndexPath -Destination $backupDir -Force
-            Write-Host ("  OK Backup created: {0}" -f $backupDir) -ForegroundColor Green
-        } else {
-            Write-Host "  INFO: Backup skipped" -ForegroundColor Yellow
-            if (-not $Force) {
-                $confirm = Read-Host "  Delete existing index? (y/n)"
-                if ($confirm -ne 'y' -and $confirm -ne 'Y') {
-                    Write-Host "Aborted."
-                    exit 0
-                }
-            }
-            Remove-Item -Path $indexTargetPath -Recurse -Force
-            Write-Host "  OK Index deleted" -ForegroundColor Green
-        }
-    }
+if (Test-Path $indexTargetPathNew) {
+    Write-Host "  Removing previous staged build..." -ForegroundColor Gray
+    Remove-Item -Path $indexTargetPathNew -Recurse -Force
 }
+
+Write-Host "  OK Canonical BlackLab directories are ready" -ForegroundColor Green
 
 Write-Host ""
 
@@ -199,7 +163,6 @@ Write-Host "  This will take 5-10 minutes..." -ForegroundColor Gray
 Write-Host ""
 
 # Create a clean temporary index directory (we'll swap atomically after a successful build)
-if (Test-Path $indexTargetPathNew) { Remove-Item -Path $indexTargetPathNew -Recurse -Force }
 New-Item -ItemType Directory -Path $indexTargetPathNew -Force | Out-Null
 
 # Prepare a clean TSV directory that excludes *_min.tsv files (these are small/alternate-format TSVs used for tests)
@@ -214,7 +177,7 @@ Get-ChildItem -Path $tsvSourcePath -Filter "*.tsv" -File | Where-Object { $_.Nam
 }
 
 # Convert Windows paths to Docker format
-$exportPath = Join-Path $dataRoot "blacklab_export"
+$exportPath = $exportRoot
 $exportMount = $exportPath.Replace('\', '/').Replace('C:', '/c')
 $indexMount = $indexTargetPathNew.Replace('\', '/').Replace('C:', '/c')
 $configMount = (Join-Path $configRoot "blacklab").Replace('\', '/').Replace('C:', '/c')
@@ -225,7 +188,7 @@ $configMount = (Join-Path $configRoot "blacklab").Replace('\', '/').Replace('C:'
     if (-not (Test-Path $exportMetadataDir)) {
         if (Test-Path $docmetaPath) {
             Write-Host "  metadata dir missing; creating from docmeta.jsonl..." -ForegroundColor Gray
-            python scripts/docmeta_to_metadata_dir.py 2>&1 | Out-Host
+            python (Join-Path $repoRoot "scripts\blacklab\docmeta_to_metadata_dir.py") 2>&1 | Out-Host
         } else {
             Write-Host "  WARNING: docmeta.jsonl missing; continuing without metadata directory" -ForegroundColor Yellow
         }
@@ -286,10 +249,16 @@ if ($indexFiles.Count -eq 0) {
 
 # Swap new index into place atomically (only if -Activate is true)
 if ($Activate) {
+    $backupDir = Join-Path $backupRoot ("index_{0}" -f (Get-Date -Format "yyyy-MM-dd_HHmmss"))
+
     if (Test-Path $indexTargetPath) {
-        if (Test-Path $backupDir) { Remove-Item -Path $backupDir -Recurse -Force }
-        Move-Item -Path $indexTargetPath -Destination $backupDir -Force
-        Write-Host ("  OK Backup created: {0}" -f $backupDir) -ForegroundColor Green
+        if (-not $SkipBackup) {
+            Move-Item -Path $indexTargetPath -Destination $backupDir -Force
+            Write-Host ("  OK Backup created: {0}" -f $backupDir) -ForegroundColor Green
+        } else {
+            Remove-Item -Path $indexTargetPath -Recurse -Force
+            Write-Host "  INFO: Existing active index removed without backup" -ForegroundColor Yellow
+        }
     }
 
     Move-Item -Path $newIndexPath -Destination $indexTargetPath -Force
@@ -311,7 +280,7 @@ Write-Host ("  Index Size:  {0} MB" -f $indexSizeMB) -ForegroundColor Gray
 Write-Host ("  Index Path:  {0}" -f $targetIndexPath) -ForegroundColor Gray
 Write-Host ""
 Write-Host "Next Steps:" -ForegroundColor Cyan
-Write-Host "  1. Start server:  .\scripts\start_blacklab_docker_v3.ps1 -Detach" -ForegroundColor Gray
+Write-Host "  1. Start server:  .\scripts\blacklab\start_blacklab_docker_v3.ps1 -Detach" -ForegroundColor Gray
 Write-Host "  2. Test server:   Invoke-WebRequest 'http://localhost:8081/blacklab-server/' -UseBasicParsing" -ForegroundColor Gray
 Write-Host "  3. Start Flask:   .venv\Scripts\activate; python -m src.app.main" -ForegroundColor Gray
 Write-Host "  4. Test webapp:   http://localhost:8000/search/advanced" -ForegroundColor Gray

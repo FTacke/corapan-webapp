@@ -19,7 +19,7 @@
 #   BLACKLAB_RETENTION_OLDER_THAN_DAYS=  # Optional: only delete if older than N days
 #
 # Environment (injected by publish script):
-#   DATA_ROOT (optional, default: /srv/webapps/corapan/data)
+#   BLACKLAB_ROOT (optional, default: /srv/webapps/corapan/data/blacklab)
 #
 # Exit Codes:
 #   0 = Success (retention applied/analyzed)
@@ -33,15 +33,16 @@ set -euo pipefail
 # CONFIGURATION
 # ============================================================================
 
-DATA_ROOT="${DATA_ROOT:-/srv/webapps/corapan/data}"
+BLACKLAB_ROOT="${BLACKLAB_ROOT:-${DATA_ROOT:-/srv/webapps/corapan/data/blacklab}}"
+BACKUP_ROOT="${BLACKLAB_ROOT}/backups"
 
 TIMESTAMP=$(date +%F_%H%M%S)
-LOG_FILE="${DATA_ROOT}/logs/blacklab_retention_${TIMESTAMP}.log"
+LOG_FILE="${BACKUP_ROOT}/logs/blacklab_retention_${TIMESTAMP}.log"
 
 # Backup Retention Configuration (opt-in, default: report-only)
 # These match the schema produced by publish_blacklab_index.ps1 STEP 6:
-#   Primary:   blacklab_index.bak_YYYY-MM-DD_HHMMSS  (current schema from STEP 6)
-#   Legacy:    blacklab_index.backup_*               (historical backups)
+#   Primary:   backups/index_YYYY-MM-DD_HHMMSS
+#   Legacy:    blacklab_index.bak_* / blacklab_index.backup_*
 : "${BLACKLAB_KEEP_BACKUPS:=3}"          # how many backups to retain
 : "${BLACKLAB_RETENTION_DELETE:=0}"      # 0 = report only, 1 = actually delete
 : "${BLACKLAB_RETENTION_OLDER_THAN_DAYS:=}"  # optional: only delete if older than N days
@@ -86,12 +87,13 @@ echo "=============================================="
 log "=== Backup Retention Started ==="
 
 # Verify data directory exists
-if [ ! -d "$DATA_ROOT" ]; then
-    error "Data root directory does not exist: $DATA_ROOT"
+if [ ! -d "$BLACKLAB_ROOT" ]; then
+    error "BlackLab root directory does not exist: $BLACKLAB_ROOT"
     exit 1
 fi
 
-log "Data root: $DATA_ROOT"
+log "BlackLab root: $BLACKLAB_ROOT"
+log "Backup root: $BACKUP_ROOT"
 log "Keep backups: $BLACKLAB_KEEP_BACKUPS"
 log "Delete enabled: $BLACKLAB_RETENTION_DELETE"
 if [ -n "$BLACKLAB_RETENTION_OLDER_THAN_DAYS" ]; then
@@ -103,14 +105,14 @@ local_backups=()
 
 # Collect all matching backup directories
 # Pattern source: scripts/deploy_sync/publish_blacklab_index.ps1 STEP 6
-#   Creates: blacklab_index.bak_YYYY-MM-DD_HHMMSS
-#   Also matches legacy: blacklab_index.backup_* (if any)
-# Never matches: blacklab_index (active) or blacklab_index.new (staging)
-if [ -d "$DATA_ROOT" ]; then
+#   Creates: backups/index_YYYY-MM-DD_HHMMSS
+#   Also matches legacy names only when passed in manually via DATA_ROOT
+# Never matches: index (active) or quarantine/index.upload_* (staging)
+if [ -d "$BACKUP_ROOT" ]; then
     while IFS= read -r -d '' dir; do
         local_backups+=("$dir")
-    done < <(find "$DATA_ROOT" -maxdepth 1 -type d \
-        \( -name 'blacklab_index.bak_*' -o -name 'blacklab_index.backup_*' \) \
+    done < <(find "$BACKUP_ROOT" -maxdepth 1 -mindepth 1 -type d \
+        -name 'index_*' \
         -print0 2>/dev/null | sort -z)
 fi
 
@@ -118,7 +120,7 @@ backup_count=${#local_backups[@]}
 
 # If no backups found, nothing to do
 if [ "$backup_count" -eq 0 ]; then
-    log "[RETENTION] No backup directories found in $DATA_ROOT"
+    log "[RETENTION] No backup directories found in $BACKUP_ROOT"
     echo ""
     echo "=============================================="
     log "Backup retention completed (no backups found)"
@@ -181,7 +183,7 @@ local mode="dry-run"
 [ "$BLACKLAB_RETENTION_DELETE" = "1" ] && mode="executed"
 
 log "[RETENTION] Summary: keep=$keep_cnt, delete=$delete_cnt, mode=$mode"
-log "[RETENTION] path: $DATA_ROOT"
+log "[RETENTION] path: $BACKUP_ROOT"
 
 echo ""
 echo "=============================================="

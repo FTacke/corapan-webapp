@@ -1,11 +1,11 @@
 from pathlib import Path
 
 files = [
-    "data/blacklab_export/tsv/2022-01-18_VEN_RCR.tsv",
-    "data/blacklab_export/tsv/2022-03-14_VEN_RCR.tsv",
-    "data/blacklab_export/tsv/2022-04-22_VEN_RCR.tsv",
-    "data/blacklab_export/tsv/2022-06-10_VEN_RCR.tsv",
-    "data/blacklab_export/tsv/2022-08-15_VEN_RCR.tsv",
+    "data/blacklab/export/tsv/2022-01-18_VEN_RCR.tsv",
+    "data/blacklab/export/tsv/2022-03-14_VEN_RCR.tsv",
+    "data/blacklab/export/tsv/2022-04-22_VEN_RCR.tsv",
+    "data/blacklab/export/tsv/2022-06-10_VEN_RCR.tsv",
+    "data/blacklab/export/tsv/2022-08-15_VEN_RCR.tsv",
 ]
 for f in files:
     p = Path(f)

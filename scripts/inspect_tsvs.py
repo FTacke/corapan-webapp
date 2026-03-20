@@ -1,7 +1,7 @@
 from pathlib import Path
 
 
-def check_tsvs(tsv_dir="data/blacklab_export/tsv", max_files=1000):
+def check_tsvs(tsv_dir="data/blacklab/export/tsv", max_files=1000):
     p = Path(tsv_dir)
     files = sorted(p.glob("*.tsv"))
     print("Checking", len(files), "TSV files in", tsv_dir)

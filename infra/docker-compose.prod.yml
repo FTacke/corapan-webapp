@@ -87,6 +87,7 @@ services:
       # Production uses runtime-first mounts.
       # Container paths (/app/*) are treated as stable API.
       - /srv/webapps/corapan/runtime/corapan/data:/app/data
+      - /srv/webapps/corapan/data/blacklab/export:/app/data/blacklab/export:ro
       - /srv/webapps/corapan/runtime/corapan/media:/app/media
       - /srv/webapps/corapan/runtime/corapan/logs:/app/logs
       - /srv/webapps/corapan/runtime/corapan/config:/app/config

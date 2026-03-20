@@ -29,7 +29,7 @@ services:
     # IMPORTANT: Image MUST be pinned to digest (not :latest).
     # Floating tags cause unpredictable breakage when upstream image updates.
     # If you need to update this digest, rebuild the dev index:
-    #   Rename-Item data/blacklab_index "blacklab_index.bad_$(Get-Date -Format yyyyMMdd_HHmmss)"
+    #   Rename-Item data/blacklab/index "index.bad_$(Get-Date -Format yyyyMMdd_HHmmss)"
     #   docker compose down && docker compose up -d
     # See: docs/operations/blacklab_dev_health.md
     image: instituutnederlandsetaal/blacklab@sha256:3753dbce4fee11f8706b63c5b94bf06eac9d3843c75bf2eef6412ff47208c2e7
@@ -37,12 +37,8 @@ services:
     ports:
       - "8081:8080"
     volumes:
-      # ACTIVE_LEGACY (BlackLab only): repo-local index stays mounted until the
-      # BlackLab path wave is handled separately.
       # Mount index as /data/index/corapan so BlackLab sees corpus "corapan"
-      - ./data/blacklab_index:/data/index/corapan:ro
-      # ACTIVE_LEGACY (BlackLab only): repo-local BlackLab config remains the
-      # canonical dev source for the container in this wave.
+      - ./data/blacklab/index:/data/index/corapan:ro
       - ./config/blacklab:/etc/blacklab:ro
     environment:
       JAVA_OPTS: "-Xmx2g -Xms512m"

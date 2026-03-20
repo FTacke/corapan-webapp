@@ -2,7 +2,7 @@
 .SYNOPSIS
     Publish BlackLab index from local staging to production server
 .DESCRIPTION
-    Uploads data/blacklab_index.new to production, validates it, performs atomic swap,
+    Uploads data/blacklab/quarantine/index.build to production, validates it, performs atomic swap,
     and verifies production server health. Designed for Windows with SSH+tar fallback.
 .PARAMETER Host
     Production server hostname or IP address
@@ -53,6 +53,7 @@ $VALIDATE_PORT = 18092
 $PROD_PORT = 8081
 $MIN_FILES = 10
 $MIN_SIZE_MB = 50
+$timestamp = Get-Date -Format "yyyy-MM-dd_HHmmss"
 
 # ==========================================================================
 # MAIN SCRIPT
@@ -154,7 +155,7 @@ function Invoke-BackupCleanup {
     # Note: BLACKLAB_RETENTION_DELETE defaults to 0 (report-only) in the script
     $retentionCmd = @"
 BLACKLAB_KEEP_BACKUPS=$Keep \
-DATA_ROOT='$RemoteDataDir' \
+BLACKLAB_ROOT='$RemoteDataDir' \
 bash '$remoteScript'
 "@
     
@@ -210,12 +211,12 @@ Write-Section "STEP 1: LOCAL PREFLIGHT"
 
 # Calculate repo root (script is now in scripts/deploy_sync/)
 $repoRoot = (Get-Item $PSScriptRoot).Parent.Parent.FullName
-$localNew = Join-Path $repoRoot "data\blacklab_index.new"
+$localNew = Join-Path $repoRoot "data\blacklab\quarantine\index.build"
 
 Write-Step "Checking local staging index: $localNew"
 
 if (-not (Test-Path $localNew)) {
-    Exit-WithError "Local staging index not found: $localNew`nMake sure you run this script from the repository root or that data/blacklab_index.new exists."
+    Exit-WithError "Local staging index not found: $localNew`nMake sure you built the index into data/blacklab/quarantine/index.build before publishing."
 }
 
 Write-Success "Directory exists"
@@ -261,15 +262,15 @@ catch {
 
 Write-Step "Verifying remote paths..."
 
-$remoteActive = "$DataDir/blacklab_index"
-$remoteNew = "$DataDir/blacklab_index.new"
+$remoteActive = "$DataDir/index"
+$remoteNew = "$DataDir/quarantine/index.upload_$timestamp"
 
 if ($DryRun) {
     Write-Info "[DRY-RUN] Would verify paths: $DataDir, $ConfigDir"
     Write-Success "Remote paths verified (dry-run)"
 }
 else {
-    $pathCheck = Invoke-SSHCommand -Command "test -d '$DataDir' && test -d '$ConfigDir' && echo 'OK' || echo 'FAIL'" -PassThru
+    $pathCheck = Invoke-SSHCommand -Command "mkdir -p '$DataDir' '$DataDir/backups' '$DataDir/quarantine' && test -d '$ConfigDir' && echo 'OK' || echo 'FAIL'" -PassThru
     if ($pathCheck -notmatch "OK") {
         Exit-WithError "Remote paths do not exist: $DataDir or $ConfigDir"
     }
@@ -522,8 +523,8 @@ else {
 
 Write-Section "STEP 6: ATOMIC INDEX SWAP"
 
-$timestamp = Get-Date -Format "yyyy-MM-dd_HHmmss"
-$remoteBak = "$DataDir/blacklab_index.bak_$timestamp"
+$remoteBak = "$DataDir/backups/index_$timestamp"
+$remoteFailed = "$DataDir/quarantine/index.failed_$timestamp"
 
 Write-Step "Performing atomic swap..."
 Write-Info "ACTIVE -> BAK:    $remoteActive -> $remoteBak"
@@ -536,7 +537,9 @@ else {
     try {
         $swapScript = @"
 set -euo pipefail
-mv '$remoteActive' '$remoteBak'
+if [ -d '$remoteActive' ]; then
+    mv '$remoteActive' '$remoteBak'
+fi
 mv '$remoteNew' '$remoteActive'
 "@
         Invoke-RemoteBash -Script $swapScript | Out-Null
@@ -582,7 +585,7 @@ else {
             Write-Host ""
             Write-Host "ROLLBACK REQUIRED:" -ForegroundColor Red
             Write-Host "ssh ${User}@${Hostname}" -ForegroundColor Yellow
-            Write-Host ("mv $remoteActive " + $remoteActive + ".bad_$timestamp && mv $remoteBak $remoteActive") -ForegroundColor Yellow
+            Write-Host ("mv $remoteActive $remoteFailed && mv $remoteBak $remoteActive") -ForegroundColor Yellow
             Exit-WithError "Production sanity check failed" 4
         }
         
@@ -604,7 +607,7 @@ else {
         Write-Host ""
         Write-Host "ROLLBACK COMMAND:" -ForegroundColor Red
         Write-Host "ssh $User@$Hostname" -ForegroundColor Yellow
-        Write-Host ("mv $remoteActive " + $remoteActive + ".bad_$timestamp && mv $remoteBak $remoteActive") -ForegroundColor Yellow
+        Write-Host ("mv $remoteActive $remoteFailed && mv $remoteBak $remoteActive") -ForegroundColor Yellow
         Exit-WithError "Production sanity check failed" 4
     }
 }
@@ -637,7 +640,7 @@ Write-Host ""
 if (-not $DryRun) {
     Write-Host "Rollback command (if needed within 24h):" -ForegroundColor Yellow
     Write-Host "ssh $User@$Hostname" -ForegroundColor Cyan
-    Write-Host ("mv $remoteActive " + $remoteActive + ".bad_$timestamp && mv $remoteBak $remoteActive") -ForegroundColor Cyan
+    Write-Host ("mv $remoteActive $remoteFailed && mv $remoteBak $remoteActive") -ForegroundColor Cyan
     Write-Host ""
 }
 

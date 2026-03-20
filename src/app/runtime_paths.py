@@ -114,8 +114,12 @@ def get_transcripts_dir() -> Path:
 
 
 def get_docmeta_path(runtime_root: Path | None = None) -> Path:
+    explicit = os.getenv("CORAPAN_BLACKLAB_DOCMETA_PATH")
+    if explicit and explicit.strip():
+        return Path(explicit).expanduser()
+
     resolved_runtime_root = runtime_root or get_runtime_root()
-    return resolved_runtime_root / "data" / "blacklab_export" / "docmeta.jsonl"
+    return resolved_runtime_root / "data" / "blacklab" / "export" / "docmeta.jsonl"
 
 
 def log_resolved_paths(log: logging.Logger | None = None) -> None:
@@ -123,7 +127,7 @@ def log_resolved_paths(log: logging.Logger | None = None) -> None:
     runtime_root = get_runtime_root()
     active_logger.info("Resolved runtime paths: RUNTIME_ROOT=%s", runtime_root)
     active_logger.info(
-        "Resolved runtime paths: DATA_ROOT=%s MEDIA_ROOT=%s CONFIG_ROOT=%s LOGS_DIR=%s METADATA_DIR=%s STATS_DIR=%s STATS_TEMP_DIR=%s",
+        "Resolved runtime paths: DATA_ROOT=%s MEDIA_ROOT=%s CONFIG_ROOT=%s LOGS_DIR=%s METADATA_DIR=%s STATS_DIR=%s STATS_TEMP_DIR=%s DOCMETA_PATH=%s",
         get_data_root(),
         get_media_root(),
         get_config_root(),
@@ -131,6 +135,7 @@ def log_resolved_paths(log: logging.Logger | None = None) -> None:
         get_metadata_dir(runtime_root),
         get_stats_dir(runtime_root),
         get_stats_temp_dir(runtime_root),
+        get_docmeta_path(runtime_root),
     )
 
 

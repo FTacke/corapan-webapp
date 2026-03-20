@@ -466,8 +466,7 @@ function Sync-DirectoryWithRsync {
         "--progress",
         "--delete",
         "-e", $sshCmd,
-        "--exclude", "blacklab_index",
-        "--exclude", "blacklab_index.backup",
+        "--exclude", "blacklab",
         "--exclude", "stats_temp",
         "--exclude", "db",
         "--exclude", ".sync_state"

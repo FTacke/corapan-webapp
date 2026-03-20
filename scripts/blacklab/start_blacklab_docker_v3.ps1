@@ -7,7 +7,7 @@
     It exposes the server on http://localhost:8081/blacklab-server/
     
     The container mounts:
-    - data/blacklab_index (read-only) for the index
+    - data/blacklab/index (read-only) for the index
     - config/blacklab for server configuration
 
 .PARAMETER Detach
@@ -55,7 +55,7 @@ $BLACKLAB_IMAGE = "instituutnederlandsetaal/blacklab@sha256:3753dbce4fee11f8706b
 $CONTAINER_NAME = "blacklab-server-v3"
 $HOST_PORT = 8081
 $CONTAINER_PORT = 8080
-$INDEX_DIR = "data\blacklab_index"
+$INDEX_DIR = "data\blacklab\index"
 $CONFIG_DIR = "config\blacklab"
 
 Write-Host ""
@@ -67,31 +67,18 @@ Write-Host ""
 # Get repository root (two levels up from scripts/blacklab -> repo root)
 # $PSScriptRoot is scripts\blacklab, so take the parent twice to reach the repo root
 $repoRoot = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
-
-# Runtime root (optional): Use CORAPAN_RUNTIME_ROOT if set, otherwise fall back to repo-relative paths
-if ($env:CORAPAN_RUNTIME_ROOT) {
-    $dataRoot = Join-Path $env:CORAPAN_RUNTIME_ROOT "data"
-    $configRoot = Join-Path $env:CORAPAN_RUNTIME_ROOT "config"
-    Write-Host "INFO: CORAPAN_RUNTIME_ROOT is set; using runtime root structure" -ForegroundColor Cyan
-} else {
-    $dataRoot = Join-Path $repoRoot "data"
-    $configRoot = Join-Path $repoRoot "config"
-}
+$dataRoot = Join-Path $repoRoot "data"
+$configRoot = Join-Path $repoRoot "config"
 
 # Make paths absolute
-$indexPath = Join-Path $dataRoot "blacklab_index"
+$indexPath = Join-Path $dataRoot "blacklab\index"
 $configPath = Join-Path $configRoot "blacklab"
 
 Write-Host "Konfiguration:" -ForegroundColor White
 Write-Host "  Docker-Image:    $BLACKLAB_IMAGE" -ForegroundColor Gray
 Write-Host "  Container:       $CONTAINER_NAME" -ForegroundColor Gray
-if ($env:CORAPAN_RUNTIME_ROOT) {
-    Write-Host "  Runtime Root:    $env:CORAPAN_RUNTIME_ROOT" -ForegroundColor Cyan
-    Write-Host "  Data Root:       $dataRoot" -ForegroundColor Cyan
-    Write-Host "  Config Root:     $configRoot" -ForegroundColor Cyan
-} else {
-    Write-Host "  Runtime Root:    [not set; using repo-relative paths]" -ForegroundColor Gray
-}
+Write-Host "  Data Root:       $dataRoot" -ForegroundColor Cyan
+Write-Host "  Config Root:     $configRoot" -ForegroundColor Cyan
 Write-Host "  Index:           $indexPath" -ForegroundColor Gray
 Write-Host "  Config:          $configPath" -ForegroundColor Gray
 Write-Host "  Port:            $HOST_PORT -> $CONTAINER_PORT" -ForegroundColor Gray

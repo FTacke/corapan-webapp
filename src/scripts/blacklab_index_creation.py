@@ -553,9 +553,7 @@ def main() -> int:
     parser.add_argument(
         "--out",
         dest="out_dir",
-        default="data/blacklab_export/tsv",
-        # ACTIVE_LEGACY (BlackLab only): repo-local export paths remain explicit
-        # in this helper to avoid changing BlackLab index behavior in Welle 3.
+        default="data/blacklab/export/tsv",
         help="Output directory (relative to project root)",
     )
     parser.add_argument(
@@ -564,9 +562,7 @@ def main() -> int:
     parser.add_argument(
         "--docmeta",
         dest="docmeta_file",
-        default="data/blacklab_export/docmeta.jsonl",
-        # ACTIVE_LEGACY (BlackLab only): repo-local docmeta output remains part
-        # of the BlackLab export flow until that wave is executed separately.
+        default="data/blacklab/export/docmeta.jsonl",
         help="Docmeta output file",
     )
     parser.add_argument(
