@@ -376,6 +376,7 @@ Ziel: Dev muss vollständig über **kanonische Pfade** laufen.
   Bei Forensik zu self-hosted Deploys muss zwischen Workflow-Version, on-disk-Zielcheckout und Runner-Workspace unterschieden werden. Ein alter Runner-Workspace ist Drift-Signal, aber nicht automatisch der aktive Ausfuehrungspfad.
 
 ---
+---
 
 ---
 
