@@ -59,13 +59,55 @@ log_error() {
     echo -e "${RED}[ERROR]${NC} $1"
 }
 
+resolve_compose_cmd() {
+  if docker compose version >/dev/null 2>&1; then
+    COMPOSE_CMD=(docker compose)
+    COMPOSE_VARIANT="docker compose"
+    COMPOSE_VERSION="$(docker compose version --short 2>/dev/null || docker compose version)"
+    return 0
+  fi
+
+  if command -v docker-compose >/dev/null 2>&1; then
+    local raw_version
+    raw_version="$(docker-compose version --short 2>/dev/null || docker-compose version 2>/dev/null | head -n 1)"
+
+    if printf '%s\n' "${raw_version}" | grep -Eiq '(^|[[:space:]]|v)2(\.|[[:space:]]|$)'; then
+      COMPOSE_CMD=(docker-compose)
+      COMPOSE_VARIANT="docker-compose"
+      COMPOSE_VERSION="${raw_version}"
+      return 0
+    fi
+
+    log_error "Docker Compose V2 plugin is required on the production server, but only docker-compose v1 was found: ${raw_version}"
+    log_error "This deploy runs locally on the target server via the self-hosted GitHub Actions runner. Refusing to use docker-compose v1 because it is a known failure source for modern Docker/Compose deploys."
+    log_error "Install the Docker Compose V2 plugin on the server so 'docker compose' is available, then rerun the deploy."
+    exit 1
+  fi
+
+  log_error "No supported Docker Compose command found on the production server. Expected 'docker compose' (preferred) or a docker-compose wrapper backed by Compose V2."
+  exit 1
+}
+
 echo "=============================================="
 echo "CO.RA.PAN Production Deployment"
 echo "=============================================="
 echo "Started at: $(date)"
+echo "Host: $(hostname)"
+echo "User: $(whoami)"
+echo "PWD: $(pwd)"
+echo "Runner: ${RUNNER_NAME:-unknown}"
+echo "GitHub Actions: ${GITHUB_ACTIONS:-false}"
 echo ""
 
 cd "${APP_DIR}"
+
+# Step 0: Resolve Docker Compose implementation on the target host
+log_info "Resolving Docker Compose implementation on target host..."
+resolve_compose_cmd
+log_info "Compose command: ${COMPOSE_VARIANT}"
+log_info "Compose version: ${COMPOSE_VERSION}"
+log_info "Docker version: $(docker version --format '{{.Client.Version}}|{{.Server.Version}}')"
+echo ""
 
 # Step 1: Update code from Git
 log_info "Fetching latest code from origin/main..."
@@ -84,9 +126,9 @@ else
 fi
 echo ""
 
-# Step 3: Start via docker-compose (runtime-first)
-log_info "Starting production stack via docker-compose..."
-docker-compose --env-file "${ENV_FILE}" \
+# Step 3: Start via Docker Compose (runtime-first)
+log_info "Starting production stack via ${COMPOSE_VARIANT}..."
+"${COMPOSE_CMD[@]}" --env-file "${ENV_FILE}" \
   -f "${COMPOSE_FILE}" up -d --force-recreate --build
 echo ""
 

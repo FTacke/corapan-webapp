@@ -349,6 +349,19 @@ Ziel: Dev muss vollständig über **kanonische Pfade** laufen.
 - Neue Zusatzregel:
   Ein gemeinsam genutzter Helper darf fuer Spezialpfade nur erweitert, aber nicht still umgedeutet werden, wenn dadurch andere aktive Deploy-Flows betroffen waeren.
 
+## Lessons Learned – Run 2026-03-20 (Compose Deploy Fix)
+
+- Problem:
+  Der produktive Deploy scheiterte in `docker-compose` mit `KeyError: 'ContainerConfig'`, obwohl der Fehler zunaechst auch als Runner- oder Workflow-Problem haette fehlklassifiziert werden koennen.
+- Ursache:
+  Der reale Deploy-Pfad laeuft lokal auf dem Zielserver ueber den self-hosted Runner und `scripts/deploy_prod.sh`. Dort war kein `docker compose` verfuegbar, sondern nur `docker-compose 1.29.2` neben Docker `28.2.2`.
+- Fix:
+  Das Deploy-Skript loest das Compose-Kommando jetzt explizit auf, bevorzugt Compose V2, blockiert Compose v1 hart und macht Host-, Runner- und Versionskontext vor dem Deploy sichtbar.
+- Neue Regel:
+  Bei Deploy-Fehlern muss zuerst der reale Ausfuehrungsort verifiziert werden. Tooling darf nicht auf dem Runner vermutet werden, wenn der Workflow in Wahrheit lokal auf dem Zielserver laeuft.
+- Neue Zusatzregel:
+  Veraltete Infrastruktur-CLI-Pfade duerfen in produktiven Deploy-Skripten nicht still weiterlaufen; sie muessen entweder explizit als unterstuetzt belegt oder hart blockiert werden.
+
 ---
 
 ---
