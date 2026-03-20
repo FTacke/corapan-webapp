@@ -388,7 +388,7 @@ Ziel: Dev muss vollständig über **kanonische Pfade** laufen.
 - Neue Zusatzregel:
   Wenn ein bestehendes Produktionsnetzwerk aktiv verwendet wird und nur die logische Compose-ID abweicht, ist die kleinste sichere Korrektur eine Repo-seitige Schluesselangleichung statt `external: true`, Neuanlage oder Server-Bereinigung.
 
----
+
 ---
 
 ---
