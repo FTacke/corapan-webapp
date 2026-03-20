@@ -375,6 +375,19 @@ Ziel: Dev muss vollständig über **kanonische Pfade** laufen.
 - Neue Zusatzregel:
   Bei Forensik zu self-hosted Deploys muss zwischen Workflow-Version, on-disk-Zielcheckout und Runner-Workspace unterschieden werden. Ein alter Runner-Workspace ist Drift-Signal, aber nicht automatisch der aktive Ausfuehrungspfad.
 
+## Lessons Learned – Run 2026-03-20 (Compose Network Label Fix)
+
+- Problem:
+  Compose V2 konnte beim produktiven Deploy mit einem bestehenden aktiven Netzwerk in einen Label-Konflikt laufen, obwohl Realname und Projektname bereits zur Produktionsrealitaet passten.
+- Ursache:
+  Der reale Netzwerkname war korrekt auf `corapan-network-prod` gesetzt, aber der logische Compose-Netzwerk-Key im Repo lautete noch `corapan-prod`. Damit wich die Repo-Metadaten-ID von der bestehenden Compose-Netzwerkrealitaet ab.
+- Fix:
+  Im produktiven Compose-File wurde ausschliesslich der logische Netzwerk-Key auf `corapan-network-prod` angeglichen und alle Service-Referenzen wurden entsprechend umgestellt.
+- Neue Regel:
+  Bei Compose-V2-Konflikten muessen realer Ressourcenname und logische Compose-ID getrennt geprueft werden. Ein passender Realname beweist nicht, dass die Compose-Metadaten konsistent sind.
+- Neue Zusatzregel:
+  Wenn ein bestehendes Produktionsnetzwerk aktiv verwendet wird und nur die logische Compose-ID abweicht, ist die kleinste sichere Korrektur eine Repo-seitige Schluesselangleichung statt `external: true`, Neuanlage oder Server-Bereinigung.
+
 ---
 ---
 
