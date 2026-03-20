@@ -3,6 +3,13 @@
 **Scope:** Setup und Development Workflow  
 **Source-of-truth:** `startme.md`, `scripts/dev-setup.ps1`, `scripts/dev-start.ps1`
 
+Die Dev-Skripte bevorzugen ein Workspace-Layout mit Geschwisterordnern neben `webapp/`:
+- `../data`
+- `../media`
+
+Dieses Layout ist jetzt verpflichtend fuer den kanonischen Dev-Start.
+`runtime/corapan` innerhalb des Repositories ist in Dev inaktiv und wird von den aktiven Dev-Skripten nicht mehr als Fallback verwendet.
+
 ## Quick Start
 
 **Ein Befehl startet alles:**
@@ -67,7 +74,9 @@ docker-compose -f docker-compose.dev-postgres.yml up -d
 
 ```powershell
 # PowerShell
-$env:AUTH_DATABASE_URL = "postgresql://corapan:corapan@localhost:5432/corapan_auth"
+$env:AUTH_DATABASE_URL = "postgresql+psycopg2://corapan_auth:corapan_auth@127.0.0.1:54320/corapan_auth"
+$env:BLS_BASE_URL = "http://localhost:8081/blacklab-server"
+$env:BLS_CORPUS = "corapan"
 python -c "from src.app.extensions.sqlalchemy_ext import init_engine; from src.app.config import load_config; from flask import Flask; app = Flask(__name__); load_config(app, 'development'); init_engine(app); from src.app.auth.models import Base; Base.metadata.create_all(app.config['AUTH_DATABASE_URL'])"
 ```
 
@@ -114,7 +123,9 @@ Prüft ob Docker-Services laufen und startet sie bei Bedarf.
 FLASK_ENV=development
 FLASK_SECRET_KEY=dev-secret-change-me
 JWT_SECRET_KEY=dev-jwt-secret-change-me
-AUTH_DATABASE_URL=postgresql://corapan:corapan@localhost:5432/corapan_auth
+AUTH_DATABASE_URL=postgresql+psycopg2://corapan_auth:corapan_auth@127.0.0.1:54320/corapan_auth
+BLS_BASE_URL=http://localhost:8081/blacklab-server
+BLS_CORPUS=corapan
 ALLOW_PUBLIC_TEMP_AUDIO=true
 ```
 
@@ -135,31 +146,39 @@ ALLOW_PUBLIC_TEMP_AUDIO=true
 
 ---
 
-## Runtime-Verzeichnis (Repo-lokal)
+## Runtime-Verzeichnis (Dev)
 
-**Lage:** `RepoRoot/runtime/corapan`
+**Kanonische Lage:** `<WorkspaceRoot>` mit `data/` und `media/` neben `webapp/`
 
-Die Runtime ist **vollständig innerhalb des Repos** und wird **nicht versioniert** (`.gitignore`):
+Die aktive Dev-Runtime liegt damit ausserhalb des Repositories und wird ueber `CORAPAN_RUNTIME_ROOT` aufgeloest:
 
 ```
-runtime/
+<WorkspaceRoot>/
 ├── data/
 │   ├── public/
 │   │   └── statistics/       ← Generierte Statistik-Daten (JSON + PNG)
-│   └── ...                   ← Sonstige Runtime-Daten
-└── ...
+│   ├── public/metadata/
+│   ├── db/
+│   └── blacklab_export/      ← Dev-docmeta fuer die Web-App
+├── media/
+│   ├── mp3-full/
+│   ├── mp3-split/
+│   ├── mp3-temp/
+│   └── transcripts/
+└── webapp/
 ```
 
 ### Auto-Setup beim Start
 
 `scripts/dev-start.ps1` erstellt das Runtime-Verzeichnis automatisch:
-- Setzt `CORAPAN_RUNTIME_ROOT` auf `<RepoRoot>\runtime\corapan` (falls nicht überschrieben)
-- Erstellt alle notwendigen Subdirectories
-- **Keine manuelle Vorbereitung erforderlich**
+- Setzt `CORAPAN_RUNTIME_ROOT` auf den Workspace-Root mit den Geschwisterordnern `data/` und `media/`
+- Setzt `CORAPAN_MEDIA_ROOT` auf `<WorkspaceRoot>/media`
+- Erstellt fehlende Unterordner unter der kanonischen Dev-Struktur
+- bricht ab, wenn nur die alte repo-lokale `runtime/corapan`-Struktur verfuegbar ist
 
 ### Custom Runtime-Pfad
 
-Falls du die Runtime an einem anderen Ort brauchst (z.B. auf schnellerem Drive), überschreibe vor dem Start:
+Falls du die Runtime an einem anderen Ort brauchst, muss dort dieselbe kanonische Struktur mit `data/` und `media/` existieren. Ueberschreibe dann vor dem Start:
 
 ```powershell
 $env:CORAPAN_RUNTIME_ROOT = "D:\custom-runtime\corapan"

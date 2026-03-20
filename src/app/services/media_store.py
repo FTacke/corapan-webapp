@@ -9,6 +9,13 @@ from typing import Optional
 from flask import current_app, has_app_context
 
 from ..config import BaseConfig
+from ..runtime_paths import (
+    get_audio_full_dir,
+    get_audio_split_dir,
+    get_audio_temp_dir,
+    get_media_root,
+    get_transcripts_dir,
+)
 
 
 def _config_path(key: str, fallback_attr: str) -> Path:
@@ -18,23 +25,33 @@ def _config_path(key: str, fallback_attr: str) -> Path:
 
 
 def media_root() -> Path:
-    return _config_path("MEDIA_ROOT", "MEDIA_ROOT")
+    if has_app_context():
+        return _config_path("MEDIA_ROOT", "MEDIA_ROOT")
+    return get_media_root()
 
 
 def audio_full_dir() -> Path:
-    return _config_path("AUDIO_FULL_DIR", "AUDIO_FULL_DIR")
+    if has_app_context():
+        return _config_path("AUDIO_FULL_DIR", "AUDIO_FULL_DIR")
+    return get_audio_full_dir()
 
 
 def audio_split_dir() -> Path:
-    return _config_path("AUDIO_SPLIT_DIR", "AUDIO_SPLIT_DIR")
+    if has_app_context():
+        return _config_path("AUDIO_SPLIT_DIR", "AUDIO_SPLIT_DIR")
+    return get_audio_split_dir()
 
 
 def audio_temp_dir() -> Path:
-    return _config_path("AUDIO_TEMP_DIR", "AUDIO_TEMP_DIR")
+    if has_app_context():
+        return _config_path("AUDIO_TEMP_DIR", "AUDIO_TEMP_DIR")
+    return get_audio_temp_dir()
 
 
 def transcripts_dir() -> Path:
-    return _config_path("TRANSCRIPTS_DIR", "TRANSCRIPTS_DIR")
+    if has_app_context():
+        return _config_path("TRANSCRIPTS_DIR", "TRANSCRIPTS_DIR")
+    return get_transcripts_dir()
 
 
 def extract_country_code(filename: str) -> Optional[str]:

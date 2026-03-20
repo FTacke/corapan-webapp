@@ -10,6 +10,7 @@ SQLAlchemy
 passlib
 bcrypt
 httpx
+imageio-ffmpeg
 pydub
 python-dotenv
 requests

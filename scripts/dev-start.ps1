@@ -28,32 +28,51 @@ $ErrorActionPreference = 'Stop'
 # Repository root
 $repoRoot = Split-Path -Parent $PSScriptRoot
 Set-Location $repoRoot
+$workspaceRoot = Split-Path -Parent $repoRoot
+$externalDataRoot = Join-Path $workspaceRoot "data"
+$externalMediaRoot = Join-Path $workspaceRoot "media"
+$useExternalRuntime = (Test-Path $externalDataRoot) -and (Test-Path $externalMediaRoot)
 
 # ==============================================================================
 # RUNTIME CONFIGURATION (REQUIRED)
 # ==============================================================================
 
-# Set CORAPAN_RUNTIME_ROOT to repo-local path (inside repo, not committed)
+# Set canonical dev runtime roots.
 if (-not $env:CORAPAN_RUNTIME_ROOT) {
-    # Runtime is now repo-local under $RepoRoot\runtime\corapan
-    $env:CORAPAN_RUNTIME_ROOT = Join-Path $repoRoot "runtime\corapan"
-    $isDefaultRuntime = $true
-    Write-Host "INFO: CORAPAN_RUNTIME_ROOT not set. Using repo-local default:" -ForegroundColor Cyan
+    if (-not $useExternalRuntime) {
+        throw "Canonical dev layout missing. Expected sibling data/ and media/ next to webapp/. Repo-local runtime/corapan is inactive in dev."
+    }
+    $env:CORAPAN_RUNTIME_ROOT = $workspaceRoot
+    Write-Host "INFO: CORAPAN_RUNTIME_ROOT not set. Using canonical sibling dev runtime root:" -ForegroundColor Cyan
     Write-Host "   $env:CORAPAN_RUNTIME_ROOT" -ForegroundColor Cyan
+    Write-Host "   data -> $externalDataRoot" -ForegroundColor Cyan
+    Write-Host "   media -> $externalMediaRoot" -ForegroundColor Cyan
+    Write-Host "   runtime/corapan is inactive in dev" -ForegroundColor Cyan
     Write-Host "" -ForegroundColor Cyan
+    $isDefaultRuntime = $true
 } else {
     $isDefaultRuntime = $false
     Write-Host "Using CORAPAN_RUNTIME_ROOT - custom: $env:CORAPAN_RUNTIME_ROOT" -ForegroundColor Green
 }
 
+$legacyRuntimeRoot = Join-Path $repoRoot "runtime\corapan"
+if ([System.IO.Path]::GetFullPath($env:CORAPAN_RUNTIME_ROOT) -eq [System.IO.Path]::GetFullPath($legacyRuntimeRoot)) {
+    throw "Repo-local runtime/corapan is inactive in dev. Use the sibling workspace root instead."
+}
+
 # Set CORAPAN_MEDIA_ROOT (REQUIRED - no fallbacks allowed)
 if (-not $env:CORAPAN_MEDIA_ROOT) {
-    $env:CORAPAN_MEDIA_ROOT = Join-Path $env:CORAPAN_RUNTIME_ROOT "media"
-    Write-Host "INFO: CORAPAN_MEDIA_ROOT not set. Derived from runtime root:" -ForegroundColor Cyan
+    $env:CORAPAN_MEDIA_ROOT = $externalMediaRoot
+    Write-Host "INFO: CORAPAN_MEDIA_ROOT not set. Using canonical sibling media root:" -ForegroundColor Cyan
     Write-Host "   $env:CORAPAN_MEDIA_ROOT" -ForegroundColor Cyan
     Write-Host "" -ForegroundColor Cyan
 } else {
     Write-Host "Using CORAPAN_MEDIA_ROOT - custom: $env:CORAPAN_MEDIA_ROOT" -ForegroundColor Green
+}
+
+$legacyMediaRoot = Join-Path $legacyRuntimeRoot "media"
+if ([System.IO.Path]::GetFullPath($env:CORAPAN_MEDIA_ROOT) -eq [System.IO.Path]::GetFullPath($legacyMediaRoot)) {
+    throw "Repo-local runtime/corapan/media is inactive in dev. Use the sibling media root instead."
 }
 
 # Derive PUBLIC_STATS_DIR from CORAPAN_RUNTIME_ROOT
@@ -97,14 +116,7 @@ if (-not (Test-Path $restrictedDbDir)) {
     New-Item -ItemType Directory -Path $restrictedDbDir -Force | Out-Null
 }
 
-# Migrate legacy repo stats to runtime if needed
-$repoStatsDir = Join-Path $repoRoot "data\public\statistics"
-$repoStatsFile = Join-Path $repoStatsDir "corpus_stats.json"
 $statsFile = Join-Path $env:PUBLIC_STATS_DIR "corpus_stats.json"
-if (-not (Test-Path $statsFile) -and (Test-Path $repoStatsFile)) {
-    Write-Host "INFO: Runtime stats missing; migrating legacy repo stats to runtime." -ForegroundColor Cyan
-    & (Join-Path $repoRoot "scripts\migrate_stats_to_runtime.ps1")
-}
 
 # Check if statistics have been generated
 if (-not (Test-Path $statsFile)) {
@@ -133,8 +145,8 @@ Write-Host "" -ForegroundColor Yellow
 # ==============================================================================
 # Postgres is required (SQLite is deprecated)
 $dbMode = "postgres"
-# Use 127.0.0.1 instead of localhost to avoid DNS resolution issues with psycopg3 on Windows
-$env:AUTH_DATABASE_URL = "postgresql+psycopg://corapan_auth:corapan_auth@127.0.0.1:54320/corapan_auth"
+# Use psycopg2 DSN in local dev because the checked-in dev environment installs psycopg2.
+$env:AUTH_DATABASE_URL = "postgresql+psycopg2://corapan_auth:corapan_auth@127.0.0.1:54320/corapan_auth"
 Write-Host "Database mode: PostgreSQL" -ForegroundColor Green
 
 # Set common environment variables
@@ -143,11 +155,9 @@ $env:JWT_SECRET_KEY = "dev-jwt-secret-change-me"
 $env:FLASK_ENV = "development"
 $env:ALLOW_PUBLIC_TRANSCRIPTS = "true"
 $env:ALLOW_PUBLIC_FULL_AUDIO = "true"
-$env:BLACKLAB_BASE_URL = "http://localhost:8081/blacklab-server"
 $env:BLS_BASE_URL = "http://localhost:8081/blacklab-server"
-if (-not $env:BLS_CORPUS) {
-    $env:BLS_CORPUS = "index"
-}
+$env:BLACKLAB_BASE_URL = $env:BLS_BASE_URL
+$env:BLS_CORPUS = "corapan"
 
 Write-Host "Starting CO.RA.PAN dev server..." -ForegroundColor Cyan
 Write-Host "AUTH_DATABASE_URL = $($env:AUTH_DATABASE_URL)"
@@ -177,10 +187,29 @@ if ($dockerAvailable) {
         Write-Host "Starting Docker services: $servicesStr" -ForegroundColor Yellow
         docker compose -f docker-compose.dev-postgres.yml up -d $needsStart
 
-        # Wait briefly for Postgres if starting
+        # Wait for Postgres to become ready before starting Flask.
         if ($needsStart -contains "corapan_auth_db") {
             Write-Host "Waiting for PostgreSQL..." -ForegroundColor Gray
-            Start-Sleep -Seconds 5
+            $maxWait = 60
+            $waited = 0
+            $pgReady = $false
+
+            while ($waited -lt $maxWait) {
+                docker exec corapan_auth_db pg_isready -U corapan_auth -d corapan_auth *>$null
+                if ($LASTEXITCODE -eq 0) {
+                    $pgReady = $true
+                    break
+                }
+                Start-Sleep -Seconds 2
+                $waited += 2
+                Write-Host "  ... waiting for PostgreSQL ($waited seconds)" -ForegroundColor Gray
+            }
+
+            if (-not $pgReady) {
+                Write-Host "ERROR: PostgreSQL not ready after ${maxWait}s." -ForegroundColor Red
+                Write-Host "  Check: docker logs corapan_auth_db" -ForegroundColor Gray
+                exit 1
+            }
         }
     } else {
         Write-Host "Docker services already running." -ForegroundColor Gray

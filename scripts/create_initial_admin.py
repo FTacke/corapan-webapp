@@ -4,14 +4,11 @@ NOTE: This script is a development / staging helper and is intentionally
 convenient and non-destructive for local usage. Do NOT run this against
 production databases unless you understand the consequences.
 
-This helper supports both a local sqlite DB file (default) and any SQLAlchemy
-URL provided via the `AUTH_DATABASE_URL` environment variable.
+This helper requires `AUTH_DATABASE_URL` and only supports PostgreSQL for
+auth/core workflows.
 
 Usage (PowerShell):
     $env:START_ADMIN_USERNAME='admin'; $env:START_ADMIN_PASSWORD='change-me'; python scripts/create_initial_admin.py
-
-Or explicit DB file (sqlite):
-    python scripts/create_initial_admin.py --db data/db/auth.db --username admin --password mypass
 
 This script creates tables if missing and will either create a new admin user
 or update an existing user with the same username. When updating it will
@@ -29,11 +26,6 @@ from datetime import datetime, timezone
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument(
-        "--db",
-        help="Path to sqlite DB file (defaults data/db/auth.db)",
-        default="data/db/auth.db",
-    )
     parser.add_argument(
         "--username", default=os.environ.get("START_ADMIN_USERNAME", "admin")
     )
@@ -63,11 +55,18 @@ def main():
 
     # Setup a minimal app-like config for the SQLAlchemy helpers
     # config must behave like a mapping with .get() for the SQLAlchemy helper
-    cfg = {
-        "AUTH_DATABASE_URL": os.environ.get(
-            "AUTH_DATABASE_URL", f"sqlite:///{Path(args.db).as_posix()}"
+    auth_database_url = os.environ.get("AUTH_DATABASE_URL", "").strip()
+    if not auth_database_url:
+        parser.error(
+            "AUTH_DATABASE_URL is required. "
+            "For the canonical dev stack, set AUTH_DATABASE_URL to the local PostgreSQL DSN."
         )
-    }
+    if not auth_database_url.startswith("postgresql"):
+        parser.error(
+            "AUTH_DATABASE_URL must point to PostgreSQL for auth/core workflows."
+        )
+
+    cfg = {"AUTH_DATABASE_URL": auth_database_url}
     # allow optional override for the hashing algorithm used by services
     cfg["AUTH_HASH_ALGO"] = os.environ.get("AUTH_HASH_ALGO", "argon2")
 

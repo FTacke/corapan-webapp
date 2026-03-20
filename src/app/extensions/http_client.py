@@ -7,11 +7,10 @@ Configuration:
         - Example (Docker): http://blacklab:8081/blacklab-server
         - Must include protocol and path, trailing slash will be removed
 
-        Set before creating the app:
-            export BLS_BASE_URL=http://localhost:8080/blacklab-server  # for dev
-
-        Or in passwords.env (loaded at startup):
-            BLS_BASE_URL=http://localhost:8081/blacklab-server
+    BLS_CORPUS: Required BlackLab corpus name
+        - Environment variable: BLS_CORPUS
+        - No default is allowed
+        - Canonical dev value: corapan
 """
 
 from __future__ import annotations
@@ -34,8 +33,14 @@ BLS_BASE_URL = os.environ.get(
     "BLS_BASE_URL", "http://localhost:8081/blacklab-server"
 ).rstrip("/")
 
-# Configurable BlackLab corpus name (default matches production)
-BLS_CORPUS = (os.environ.get("BLS_CORPUS", "index") or "index").strip() or "index"
+# Configurable BlackLab corpus name. No default is allowed.
+_bls_corpus = os.environ.get("BLS_CORPUS")
+if not _bls_corpus or not _bls_corpus.strip():
+    raise RuntimeError(
+        "BLS_CORPUS environment variable is required. "
+        "For the canonical dev stack, set BLS_CORPUS=corapan."
+    )
+BLS_CORPUS = _bls_corpus.strip()
 
 # Corpus availability cache
 _CORPORA_CACHE_TTL = 60.0

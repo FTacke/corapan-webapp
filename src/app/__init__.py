@@ -12,6 +12,7 @@ from werkzeug.middleware.proxy_fix import ProxyFix
 
 from .extensions import register_extensions
 from .routes import register_blueprints
+from .runtime_paths import get_logs_dir
 
 # Import load_config from the config.py module (bypassing the config package)
 from .config import load_config
@@ -56,7 +57,7 @@ def _verify_critical_dependencies() -> list[str]:
 
 def _verify_auth_db_connection(app: Flask) -> None:
     """Verify auth database connection works. Raises exception on failure."""
-    from sqlalchemy import text
+    from sqlalchemy import inspect, text
     from .extensions.sqlalchemy_ext import get_engine
 
     engine = get_engine()
@@ -66,6 +67,13 @@ def _verify_auth_db_connection(app: Flask) -> None:
     # Try a simple query
     with engine.connect() as conn:
         conn.execute(text("SELECT 1"))
+
+    inspector = inspect(engine)
+    if not inspector.has_table("users"):
+        raise RuntimeError(
+            "Auth DB schema is not initialized: required table 'users' is missing. "
+            "Run scripts/dev-setup.ps1 or apply the auth migration before starting the app."
+        )
 
     app.logger.info(f"Auth DB connection verified: {engine.url}")
 
@@ -96,29 +104,32 @@ def create_app(env_name: str | None = None) -> Flask:
     # This ensures url_for(_external=True) generates https:// URLs when behind HTTPS proxy
     app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_prefix=1)
 
-    # Initialize auth DB engine with fail-fast behavior in production
+    # Initialize auth DB engine. Dev must not continue in a half-initialized auth state.
     from .extensions.sqlalchemy_ext import init_engine as init_auth_db
 
+    auth_db_url = app.config.get("AUTH_DATABASE_URL", "")
+    auth_db_driver = auth_db_url.split(":", 1)[0] if auth_db_url else "<missing>"
+
     try:
+        app.logger.info(
+            "Initializing auth DB engine for FLASK_ENV=%s using driver=%s",
+            app.config.get("FLASK_ENV"),
+            auth_db_driver,
+        )
         init_auth_db(app)
         # Verify DB connection works (fail fast if misconfigured)
         _verify_auth_db_connection(app)
     except Exception as e:
-        is_production = (
-            env_name == "production" or app.config.get("FLASK_ENV") == "production"
+        app.logger.error(
+            "Auth DB initialization failed for FLASK_ENV=%s with driver=%s: %s",
+            app.config.get("FLASK_ENV"),
+            auth_db_driver,
+            e,
         )
-        if is_production:
-            # In production, fail fast if auth DB is not available
-            app.logger.error(f"FATAL: Auth DB initialization failed: {e}")
-            app.logger.error(
-                "Production requires a working auth database. Check AUTH_DATABASE_URL."
-            )
-            raise RuntimeError(f"Auth DB initialization failed: {e}") from e
-        else:
-            # In development, warn but continue (allows testing without DB)
-            app.logger.warning(
-                f"Auth DB not initialized: {e}. Some features may be unavailable."
-            )
+        app.logger.error(
+            "Refusing to continue with auth half-initialized. Check AUTH_DATABASE_URL, DB readiness, and installed PostgreSQL driver."
+        )
+        raise RuntimeError(f"Auth DB initialization failed: {e}") from e
 
     # Add build ID for cache busting and deployment verification
     import time
@@ -391,7 +402,7 @@ def setup_logging(app: Flask) -> None:
     """Configure application logging."""
     if not app.debug:
         # Create logs directory
-        log_dir = Path(__file__).resolve().parents[2] / "logs"
+        log_dir = get_logs_dir()
         log_dir.mkdir(exist_ok=True)
 
         # Setup rotating file handler

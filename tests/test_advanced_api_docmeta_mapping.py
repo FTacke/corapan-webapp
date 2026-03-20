@@ -1,3 +1,10 @@
+import os
+from pathlib import Path
+
+os.environ.setdefault("CORAPAN_RUNTIME_ROOT", str(Path(__file__).resolve().parents[2]))
+os.environ.setdefault("BLS_BASE_URL", "http://localhost:8081/blacklab-server")
+os.environ.setdefault("BLS_CORPUS", "corapan")
+
 from src.app.search.advanced_api import _enrich_hits_with_docmeta
 from src.app.services.blacklab_search import _hit_to_canonical
 

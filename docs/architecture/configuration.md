@@ -45,7 +45,7 @@ class DevConfig(BaseConfig):
 |----------|----------|---------|--------|-------|
 | `FLASK_SECRET_KEY` | **Ja** | *(fehlt)* | String (min. 32 Zeichen) | Session-Signierung, CSRF |
 | `JWT_SECRET_KEY` | **Ja** | *(fällt zurück auf `FLASK_SECRET_KEY`)* | String (min. 32 Zeichen) | JWT-Token-Signierung |
-| `AUTH_DATABASE_URL` | Nein | `sqlite:///data/db/auth.db` | SQLAlchemy DSN | Auth-Datenbank (PostgreSQL empfohlen) |
+| `AUTH_DATABASE_URL` | **Ja** | *(fehlt)* | SQLAlchemy DSN | Auth-Datenbank für Auth/Core, PostgreSQL erforderlich |
 
 **Wichtig:** In Produktion **niemals** Defaults nutzen! Secrets müssen via ENV-Vars gesetzt werden.
 
@@ -94,7 +94,7 @@ JWT_COOKIE_CSRF_PROTECT = False  # vereinfacht lokales Testen
 
 | Variable | Default | Format | Zweck | Datei |
 |----------|---------|--------|-------|-------|
-| `AUTH_DATABASE_URL` | `sqlite:///.../data/db/auth.db` | SQLAlchemy DSN | Auth & Analytics DB | `src/app/config/__init__.py` |
+| `AUTH_DATABASE_URL` | *(kein Default)* | SQLAlchemy DSN | Auth & Analytics DB | `src/app/config/__init__.py` |
 
 **DSN-Formate:**
 ```bash
@@ -103,9 +103,6 @@ AUTH_DATABASE_URL="postgresql://user:pass@localhost:5432/corapan_auth"
 
 # PostgreSQL (mit psycopg2)
 AUTH_DATABASE_URL="postgresql+psycopg2://user:pass@localhost/corapan_auth"
-
-# SQLite (Dev-Fallback)
-AUTH_DATABASE_URL="sqlite:///data/db/auth.db"
 ```
 
 **Hinweis:** Die Anwendung nutzt **eine** Datenbank für:
@@ -156,7 +153,7 @@ AUTH_DATABASE_URL="sqlite:///data/db/auth.db"
 
 ## Config-Layering (Beispiel)
 
-**Szenario:** PostgreSQL in Produktion, SQLite in Dev
+**Szenario:** PostgreSQL in Produktion und im kanonischen Dev-Stack
 
 ### Development (lokal)
 ```powershell
@@ -164,7 +161,9 @@ AUTH_DATABASE_URL="sqlite:///data/db/auth.db"
 FLASK_ENV=development
 FLASK_SECRET_KEY=dev-secret-change-me
 JWT_SECRET_KEY=dev-jwt-secret-change-me
-# AUTH_DATABASE_URL nicht gesetzt → Default: sqlite:///data/db/auth.db
+AUTH_DATABASE_URL=postgresql+psycopg://corapan_auth:corapan_auth@127.0.0.1:54320/corapan_auth
+BLS_BASE_URL=http://localhost:8081/blacklab-server
+BLS_CORPUS=corapan
 ```
 
 ### Production (Docker Compose)

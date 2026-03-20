@@ -6,8 +6,9 @@ This document describes how the CO.RA.PAN backend connects to BlackLab, how the 
 ## Required Environment Variables
 - `BLS_BASE_URL` – BlackLab server base URL (must include /blacklab-server).
   - Example: `http://localhost:8081/blacklab-server`
-- `BLS_CORPUS` – BlackLab corpus/index name (default: `index`).
+- `BLS_CORPUS` – BlackLab corpus/index name (required, no default).
   - This must match the corpus ID returned by BlackLab.
+   - Canonical dev value: `corapan`
 
 ### How to discover available corpora
 Run:
@@ -30,8 +31,8 @@ On the first BlackLab request, the app fetches the corpus list and logs a warnin
    - `GET ${BLS_BASE_URL}/corpora/${BLS_CORPUS}/hits?patt=[lemma="casa"]&number=1&wordsaroundhit=3`
 
 ## Notes
-- Default corpus is `index` to match production deployments.
 - All application calls use `/corpora/${BLS_CORPUS}/...` and must match the BlackLab index name.
+- The app fails fast when `BLS_CORPUS` is missing instead of guessing a corpus name.
 
 ## Optional Cache/Stats Directories
 The following paths are **optional / cache-only** and do not block startup:

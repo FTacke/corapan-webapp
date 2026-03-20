@@ -9,23 +9,29 @@ Wenn alles bereits eingerichtet ist:
 ```
 
 Das Skript:
-1. Setzt `CORAPAN_RUNTIME_ROOT` auf Standardwert (falls nicht gesetzt): `<RepoRoot>/runtime/corapan` (repo-lokal!)
+1. Setzt `CORAPAN_RUNTIME_ROOT` automatisch auf den aktiven Dev-Runtime-Root:
+	- `<WorkspaceRoot>` mit `data/` und `media/` neben `webapp/`
 2. Erstellt Runtime-Verzeichnis(se): `${CORAPAN_RUNTIME_ROOT}/data/public/statistics/`
 3. Warnt, wenn Statistics noch nicht generiert wurden (mit Anleitung zum Generieren)
 4. Prüft, ob Docker-Services laufen und startet sie bei Bedarf
 5. Startet den Flask Dev-Server
 
+Wenn dieses kanonische Layout fehlt, bricht das Skript ab. `runtime/corapan` innerhalb des Repositories ist in Dev inaktiv.
+
 **Hinweis zu Statistics:** Beim ersten Start werden wahrscheinlich noch keine Statistics vorhanden sein. Das ist normal! Die API gibt dann 404 zurück. Um Statistics zu generieren, siehe [Statistiken generieren](#statistiken-generieren).
 
-### Runtime-Verzeichnis (Repo-lokal)
+### Runtime-Verzeichnis (Dev)
 
-Die Runtime liegt jetzt **vollständig im Repo**:
-- Pfad: `RepoRoot/runtime/corapan`
-- Nicht versioniert (`.gitignore`)
-- Wird automatisch angelegt beim ersten Start
-- Enthält: Statistics, Cache, temporäre Daten
+Die Dev-Skripte bevorzugen ein externes Workspace-Layout:
+- App: `C:\dev\corapan\webapp`
+- Data: `C:\dev\corapan\data`
+- Media: `C:\dev\corapan\media`
 
-**Keine manuelle Vorbereitung nötig!** Einfach `dev-start.ps1` ausführen.
+Wenn `data/` und `media/` neben `webapp/` existieren, wird dieser übergeordnete Ordner als Runtime-Root verwendet.
+
+`RepoRoot/runtime/corapan` ist fuer die aktiven Dev-Skripte kein gueltiger Fallback mehr.
+
+**Keine manuelle Vorbereitung nötig!** `dev-start.ps1` verwendet automatisch das vorhandene Dev-Layout.
 
 ### Custom Runtime-Pfad (optional)
 
@@ -68,7 +74,7 @@ Das Skript:
 
 Statistics (PNG-Visualisierungen und JSON-Daten) werden in die Runtime-Directory geschrieben und vom App-API-Endpoint serviert.
 
-**Vorbedingung:** `CORAPAN_RUNTIME_ROOT` wird von `dev-start.ps1` automatisch gesetzt (repo-lokal, falls nicht überschrieben).
+**Vorbedingung:** `CORAPAN_RUNTIME_ROOT` wird von `dev-start.ps1` automatisch auf den kanonischen Workspace-Root gesetzt.
 
 ```powershell
 # Schritt 1: Input-CSVs generieren (falls noch nicht vorhanden)
@@ -122,11 +128,13 @@ Die Dev-Skripte setzen automatisch:
 
 | Variable | Dev-Wert | Beschreibung |
 |----------|----------|-------------|
-| `AUTH_DATABASE_URL` | `postgresql+psycopg://corapan_auth:corapan_auth@localhost:54320/corapan_auth` | Auth-DB Connection |
+| `AUTH_DATABASE_URL` | `postgresql+psycopg2://corapan_auth:corapan_auth@127.0.0.1:54320/corapan_auth` | Auth-DB Connection |
 | `JWT_SECRET_KEY` | `dev-jwt-secret-change-me` | JWT-Signing-Key |
 | `FLASK_SECRET_KEY` | `dev-secret-change-me` | Flask Session-Encryption |
-| `BLACKLAB_BASE_URL` | `http://localhost:8081/blacklab-server` | Corpus-Search-Service |
-| `CORAPAN_RUNTIME_ROOT` | `C:\dev\runtime\corapan` (Default) | Runtime Data Directory |
+| `BLS_BASE_URL` | `http://localhost:8081/blacklab-server` | Kanonische BlackLab-Basis-URL |
+| `BLACKLAB_BASE_URL` | `http://localhost:8081/blacklab-server` | Legacy-Kompatibilitätsspiegel |
+| `BLS_CORPUS` | `corapan` | Expliziter lokaler BlackLab-Korpus |
+| `CORAPAN_RUNTIME_ROOT` | `<WorkspaceRoot>` mit `data/` und `media/` neben `webapp/` | Runtime Data Directory |
 | `PUBLIC_STATS_DIR` | `${CORAPAN_RUNTIME_ROOT}\data\public\statistics` (Auto) | Statistics Output Location |
 
 ---

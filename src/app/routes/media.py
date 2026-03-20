@@ -166,6 +166,15 @@ def create_snippet():
         snippet_path = audio_snippets.build_snippet(filename, start_val, end_val)
     except FileNotFoundError:
         abort(404, "Audio source not found")
+    except audio_snippets.AudioProcessingDependencyError as exc:
+        current_app.logger.error(
+            "Snippet backend unavailable: filename=%s start=%s end=%s error=%s",
+            filename,
+            start_val,
+            end_val,
+            exc,
+        )
+        abort(503, "Audio snippet backend unavailable")
     except ValueError as exc:
         abort(400, str(exc))
     download_name = snippet_path.name
@@ -193,7 +202,18 @@ def fetch_transcript(filename: str):
     ):
         abort(401, "Authentication required to access transcripts")
 
+    current_app.logger.debug(
+        "Transcript request: filename=%s TRANSCRIPTS_DIR=%s",
+        filename,
+        current_app.config.get("TRANSCRIPTS_DIR"),
+    )
     transcript = media_store.safe_transcript_path(filename)
+    current_app.logger.debug(
+        "Transcript resolution: filename=%s resolved_path=%s exists=%s",
+        filename,
+        transcript,
+        transcript.exists() if transcript else None,
+    )
     if transcript is None:
         current_app.logger.warning(
             "Transcript not found: filename=%s base=%s",
@@ -284,6 +304,17 @@ def play_audio(filename: str):
         )
     except FileNotFoundError:
         abort(404, "Audio source not found")
+    except audio_snippets.AudioProcessingDependencyError as exc:
+        current_app.logger.error(
+            "play_audio backend unavailable: filename=%s start=%s end=%s token_id=%s type=%s error=%s",
+            filename,
+            start,
+            end,
+            token_id,
+            snippet_type,
+            exc,
+        )
+        abort(503, "Audio snippet backend unavailable")
     except ValueError as exc:
         abort(400, str(exc))
     download_flag = request.args.get("download")

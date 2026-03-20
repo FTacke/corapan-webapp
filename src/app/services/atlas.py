@@ -5,23 +5,33 @@ from __future__ import annotations
 import csv
 import json
 import logging
-import os
-import warnings
+import sqlite3
 from pathlib import Path
 
 from flask import current_app, has_app_context
 
 from .database import open_db
+from ..runtime_paths import get_metadata_dir
 
 
 def fetch_country_stats() -> list[dict[str, object]]:
     from ..config.countries import code_to_name
 
-    with open_db("stats_country") as connection:
-        cursor = connection.cursor()
-        rows = cursor.execute(
-            "SELECT country_code, total_word_count, total_duration_country FROM stats_country ORDER BY country_code"
-        ).fetchall()
+    logger = current_app.logger if has_app_context() else logging.getLogger(__name__)
+
+    try:
+        with open_db("stats_country") as connection:
+            cursor = connection.cursor()
+            rows = cursor.execute(
+                "SELECT country_code, total_word_count, total_duration_country FROM stats_country ORDER BY country_code"
+            ).fetchall()
+    except (FileNotFoundError, sqlite3.OperationalError) as exc:
+        logger.warning(
+            "Atlas country stats DB unavailable in local runtime; returning empty countries list. %s",
+            exc,
+        )
+        return []
+
     return [
         {
             "country_code": row["country_code"],
@@ -36,30 +46,6 @@ def fetch_country_stats() -> list[dict[str, object]]:
 
 
 _FILES_CACHE: dict[str, object] = {"mtime": None, "files": []}
-
-
-def _resolve_metadata_latest_root() -> Path | None:
-    env_name = (os.getenv("FLASK_ENV") or os.getenv("APP_ENV") or "production").lower()
-    is_dev = env_name in ("development", "dev")
-    runtime_root = os.getenv("CORAPAN_RUNTIME_ROOT")
-
-    if runtime_root:
-        return Path(runtime_root) / "data" / "public" / "metadata" / "latest"
-
-    if is_dev:
-        data_root = Path(__file__).resolve().parents[3] / "runtime" / "corapan" / "data"
-        warnings.warn(
-            "CORAPAN_RUNTIME_ROOT not configured. Defaulting to repo-local runtime path for development: "
-            f"{data_root}",
-            RuntimeWarning,
-        )
-        return data_root / "public" / "metadata" / "latest"
-
-    return None
-
-
-def _select_metadata_dir(latest_root: Path) -> Path:
-    return latest_root / "tei"
 
 
 def _metadata_dir_has_files(metadata_dir: Path) -> bool:
@@ -180,14 +166,15 @@ def _collect_recordings(metadata_dir: Path) -> list[dict[str, object]]:
 
 def fetch_file_metadata() -> list[dict[str, object]]:
     logger = current_app.logger if has_app_context() else logging.getLogger(__name__)
-    metadata_latest_root = _resolve_metadata_latest_root()
-    if not metadata_latest_root or not metadata_latest_root.exists():
+    metadata_dir = get_metadata_dir()
+    logger.debug("Atlas metadata directory resolved: %s", metadata_dir)
+    if not metadata_dir.exists():
         logger.warning(
-            "Atlas metadata latest directory not available; returning empty files list."
+            "Atlas metadata directory not available; returning empty files list. %s",
+            metadata_dir,
         )
         return []
 
-    metadata_dir = _select_metadata_dir(metadata_latest_root)
     if not _metadata_dir_has_files(metadata_dir):
         logger.warning(
             "Atlas metadata directory missing or empty at %s; returning empty files list.",
@@ -195,7 +182,11 @@ def fetch_file_metadata() -> list[dict[str, object]]:
         )
         return []
     dir_mtime = _get_metadata_mtime(metadata_dir)
-    if dir_mtime is not None and _FILES_CACHE.get("mtime") == dir_mtime:
+    if (
+        dir_mtime is not None
+        and _FILES_CACHE.get("mtime") == dir_mtime
+        and _FILES_CACHE.get("source") == str(metadata_dir)
+    ):
         return list(_FILES_CACHE.get("files", []))
 
     try:
@@ -208,6 +199,7 @@ def fetch_file_metadata() -> list[dict[str, object]]:
     files.sort(key=lambda item: item.get("date") or "", reverse=True)
 
     _FILES_CACHE["mtime"] = dir_mtime
+    _FILES_CACHE["source"] = str(metadata_dir)
     _FILES_CACHE["files"] = files
 
     return list(files)

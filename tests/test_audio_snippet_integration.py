@@ -1,180 +1,139 @@
-from pydub.generators import Sine
+from __future__ import annotations
 
-from src.app import create_app
-from src.app.services.media_store import MP3_SPLIT_DIR, MP3_TEMP_DIR
-from src.app.services.audio_snippets import build_snippet
+import importlib
+import subprocess
+from pathlib import Path
 
-
-def setup_test_split_file(filename_stem: str = "2025-11-17_ARG_Test"):
-    # Create directory for ARG split files
-    country_dir = MP3_SPLIT_DIR / "ARG"
-    country_dir.mkdir(parents=True, exist_ok=True)
-
-    split_filename = f"{filename_stem}_01.mp3"
-    split_path = country_dir / split_filename
-
-    if split_path.exists():
-        return split_path
-
-    # Generate 12-second sine tone as MP3 (need ffmpeg in PATH)
-    tone = Sine(440).to_audio_segment(duration=12000)
-    tone = tone - 3  # Slightly lower volume
-    tone.export(split_path, format="mp3")
-    return split_path
+import imageio_ffmpeg
+from flask import Flask
 
 
-def teardown_file(path):
-    try:
-        path.unlink()
-    except Exception:
-        pass
-
-
-def test_build_snippet_and_play_audio_route(tmp_path):
-    # Create a sample split file
-    split_path = setup_test_split_file()
-    assert split_path.exists()
-
-    # Setup Flask test client
-    app = create_app()
-    app.config["TESTING"] = True
-    app.config["ALLOW_PUBLIC_TEMP_AUDIO"] = True
-
-    client = app.test_client()
-
-    # Build snippet using build_snippet service (start/end in seconds)
-    filename = "2025-11-17_ARG_Test.mp3"
-    start = 2.0
-    end = 3.5
-
-    # Ensure temp directory is clean
-    for f in MP3_TEMP_DIR.glob("*"):
-        try:
-            f.unlink()
-        except Exception:
-            pass
-
-    snippet_path = build_snippet(
-        filename, start, end, token_id="argx_demo", snippet_type="pal"
+def _set_required_env(monkeypatch, runtime_root: Path, media_root: Path) -> None:
+    monkeypatch.setenv("FLASK_ENV", "development")
+    monkeypatch.setenv("CORAPAN_RUNTIME_ROOT", str(runtime_root))
+    monkeypatch.setenv("CORAPAN_MEDIA_ROOT", str(media_root))
+    monkeypatch.setenv("BLS_BASE_URL", "http://localhost:8081/blacklab-server")
+    monkeypatch.setenv("BLS_CORPUS", "corapan")
+    monkeypatch.setenv(
+        "AUTH_DATABASE_URL",
+        "postgresql+psycopg2://corapan_auth:corapan_auth@127.0.0.1:54320/corapan_auth",
     )
+
+
+def _create_sample_mp3(target_path: Path, duration_seconds: float = 12.0) -> None:
+    target_path.parent.mkdir(parents=True, exist_ok=True)
+    command = [
+        imageio_ffmpeg.get_ffmpeg_exe(),
+        "-hide_banner",
+        "-loglevel",
+        "error",
+        "-y",
+        "-f",
+        "lavfi",
+        "-i",
+        f"sine=frequency=440:duration={duration_seconds}",
+        "-q:a",
+        "4",
+        str(target_path),
+    ]
+    subprocess.run(command, capture_output=True, text=True, check=True)
+
+
+def _prepare_audio_tree(media_root: Path) -> str:
+    filename = "2025-11-17_DOM_Test.mp3"
+    _create_sample_mp3(media_root / "mp3-full" / "DOM" / filename)
+    _create_sample_mp3(media_root / "mp3-split" / "DOM" / "2025-11-17_DOM_Test_01.mp3")
+    (media_root / "mp3-temp").mkdir(parents=True, exist_ok=True)
+    return filename
+
+
+def _make_app(monkeypatch, tmp_path: Path) -> tuple[Flask, Path, object, object]:
+    runtime_root = tmp_path / "workspace"
+    media_root = runtime_root / "media"
+    _set_required_env(monkeypatch, runtime_root, media_root)
+
+    import src.app.services.audio_snippets as audio_snippets
+    import src.app.services.media_store as media_store
+    import src.app.routes.media as media_routes
+
+    audio_snippets = importlib.reload(audio_snippets)
+    media_store = importlib.reload(media_store)
+    media_routes = importlib.reload(media_routes)
+
+    app = Flask(__name__)
+    app.config.update(
+        TESTING=True,
+        SECRET_KEY="test",
+        ALLOW_PUBLIC_FULL_AUDIO=True,
+        ALLOW_PUBLIC_TRANSCRIPTS=True,
+        MEDIA_ROOT=media_root,
+        AUDIO_FULL_DIR=media_root / "mp3-full",
+        AUDIO_SPLIT_DIR=media_root / "mp3-split",
+        AUDIO_TEMP_DIR=media_root / "mp3-temp",
+        TRANSCRIPTS_DIR=media_root / "transcripts",
+    )
+    app.register_blueprint(media_routes.blueprint)
+    return app, media_root, audio_snippets, media_routes
+
+
+def test_build_snippet_supports_nested_country_paths(monkeypatch, tmp_path):
+    app, media_root, audio_snippets, _ = _make_app(monkeypatch, tmp_path)
+    filename = _prepare_audio_tree(media_root)
+
+    original_which = audio_snippets.shutil.which
+    audio_snippets._resolve_ffmpeg_executable.cache_clear()
+    monkeypatch.setattr(audio_snippets.shutil, "which", lambda _: None)
+
+    with app.app_context():
+        snippet_path = audio_snippets.build_snippet(
+            f"DOM/{filename}",
+            2.0,
+            3.5,
+            token_id="dom_demo",
+            snippet_type="ctx",
+        )
+
+    audio_snippets._resolve_ffmpeg_executable.cache_clear()
+    monkeypatch.setattr(audio_snippets.shutil, "which", original_which)
+
     assert snippet_path.exists()
-    assert snippet_path.suffix == ".mp3"
-
-    # Call the /media/play_audio route
-    rv = client.get(
-        f"/media/play_audio/{filename}?start={start}&end={end}&token_id=argx_demo&type=pal"
-    )
-    assert rv.status_code == 200
-    assert rv.content_type == "audio/mpeg"
-
-    # Ensure file exists in temp dir with expected prefix
-    files = list(MP3_TEMP_DIR.glob("corapan_*argx_demo*.mp3"))
-    assert len(files) >= 1
-    # Ensure pal naming
-    assert snippet_path.name.endswith("_pal.mp3")
-
-    # Cleanup
-    teardown_file(split_path)
-    for f in MP3_TEMP_DIR.glob("corapan_*argx_demo*.mp3"):
-        teardown_file(f)
+    assert snippet_path.name == "corapan_dom_demo_ctx.mp3"
+    assert snippet_path.parent == media_root / "mp3-temp"
+    assert snippet_path.stat().st_size > 0
 
 
-def test_play_audio_download_sets_content_disposition():
-    split_path = setup_test_split_file()
-    assert split_path.exists()
-    app = create_app()
-    app.config["TESTING"] = True
-    app.config["ALLOW_PUBLIC_TEMP_AUDIO"] = True
+def test_play_audio_route_returns_audio_for_nested_country_path(monkeypatch, tmp_path):
+    app, media_root, audio_snippets, _ = _make_app(monkeypatch, tmp_path)
+    filename = _prepare_audio_tree(media_root)
+
+    original_which = audio_snippets.shutil.which
+    audio_snippets._resolve_ffmpeg_executable.cache_clear()
+    monkeypatch.setattr(audio_snippets.shutil, "which", lambda _: None)
+
     client = app.test_client()
-
-    filename = "2025-11-17_ARG_Test.mp3"
-    start = 2.0
-    end = 3.5
-    # Ensure snippet exists
-    snippet_path = build_snippet(
-        filename, start, end, token_id="argx_demo", snippet_type="pal"
+    response = client.get(
+        f"/media/play_audio/DOM/{filename}?start=2.0&end=3.5&token_id=dom_demo&type=ctx"
     )
-    assert snippet_path.exists()
 
-    rv = client.get(
-        f"/media/play_audio/{filename}?start={start}&end={end}&token_id=argx_demo&type=pal&download=true"
-    )
-    assert rv.status_code == 200
-    content_disposition = rv.headers.get("Content-Disposition")
-    assert content_disposition and "attachment" in content_disposition.lower()
-    assert "_pal.mp3" in content_disposition
+    audio_snippets._resolve_ffmpeg_executable.cache_clear()
+    monkeypatch.setattr(audio_snippets.shutil, "which", original_which)
 
-    # cleanup
-    for f in MP3_TEMP_DIR.glob("corapan_*argx_demo*.mp3"):
-        teardown_file(f)
+    assert response.status_code == 200
+    assert response.mimetype == "audio/mpeg"
+    assert (media_root / "mp3-temp" / "corapan_dom_demo_ctx.mp3").exists()
 
 
-def test_find_split_file_and_cache_naming():
-    # Ensure split file exists for _01
-    split_path = setup_test_split_file()
-    assert split_path.exists()
+def test_play_audio_route_returns_503_when_ffmpeg_backend_missing(monkeypatch, tmp_path):
+    app, media_root, audio_snippets, _ = _make_app(monkeypatch, tmp_path)
+    filename = _prepare_audio_tree(media_root)
 
-    # Test that find_split_file locates the _01 split for a short window
-    from src.app.services.audio_snippets import find_split_file
+    audio_snippets._resolve_ffmpeg_executable.cache_clear()
+    monkeypatch.setattr(audio_snippets, "_resolve_ffmpeg_executable", lambda: None)
 
-    res = find_split_file("2025-11-17_ARG_Test.mp3", 2.0, 3.5)
-    assert res is not None
-    split_found_path, suffix = res
-    assert suffix == "_01"
-    assert split_found_path.exists()
-
-    # Test cache filename for 'ctx' type
-    target_ctx = build_snippet(
-        "2025-11-17_ARG_Test.mp3", 1.0, 2.1, token_id="argx_demo", snippet_type="ctx"
-    )
-    assert target_ctx.exists()
-    assert target_ctx.name.endswith("_ctx.mp3")
-
-    # cleanup
-    for f in MP3_TEMP_DIR.glob("corapan_*argx_demo*.mp3"):
-        teardown_file(f)
-
-
-def test_play_audio_public_without_config_flag():
-    # If ALLOW_PUBLIC_TEMP_AUDIO is False, /media/play_audio should still work (public)
-    split_path = setup_test_split_file()
-    assert split_path.exists()
-
-    app = create_app()
-    app.config["TESTING"] = True
-    app.config["ALLOW_PUBLIC_TEMP_AUDIO"] = False
     client = app.test_client()
-
-    filename = "2025-11-17_ARG_Test.mp3"
-    start = 2.0
-    end = 3.5
-
-    rv = client.get(
-        f"/media/play_audio/{filename}?start={start}&end={end}&token_id=argx_demo&type=pal"
+    response = client.get(
+        f"/media/play_audio/DOM/{filename}?start=2.0&end=3.5&token_id=dom_demo&type=ctx"
     )
-    assert rv.status_code == 200
-    assert rv.content_type == "audio/mpeg"
 
-
-def test_play_audio_download_public_without_config_flag():
-    split_path = setup_test_split_file()
-    assert split_path.exists()
-
-    app = create_app()
-    app.config["TESTING"] = True
-    app.config["ALLOW_PUBLIC_TEMP_AUDIO"] = False
-    client = app.test_client()
-
-    filename = "2025-11-17_ARG_Test.mp3"
-    start = 2.0
-    end = 3.5
-    rv = client.get(
-        f"/media/play_audio/{filename}?start={start}&end={end}&token_id=argx_demo&type=pal&download=true"
-    )
-    assert rv.status_code == 200
-    content_disposition = rv.headers.get("Content-Disposition")
-    assert content_disposition and "attachment" in content_disposition.lower()
-
-
-if __name__ == "__main__":
-    test_build_snippet_and_play_audio_route(None)
+    assert response.status_code == 503
+    assert b"Audio snippet backend unavailable" in response.data

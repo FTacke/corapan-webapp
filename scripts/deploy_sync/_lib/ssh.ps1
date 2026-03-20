@@ -43,6 +43,7 @@ $script:RemotePaths = @{
     RuntimeRoot = "/srv/webapps/corapan/runtime/corapan"
     DataRoot    = "/srv/webapps/corapan/runtime/corapan/data"
     MediaRoot   = "/srv/webapps/corapan/runtime/corapan/media"
+    BlackLabDataRoot = "/srv/webapps/corapan/data"
 }
 
 # -----------------------------------------------------------------------------
@@ -75,13 +76,18 @@ function Set-SSHConfig {
 
 function Set-RemotePaths {
     param(
-        [string]$RuntimeRoot
+        [string]$RuntimeRoot,
+        [string]$BlackLabDataRoot
     )
 
     if ($RuntimeRoot) {
         $script:RemotePaths.RuntimeRoot = $RuntimeRoot
         $script:RemotePaths.DataRoot = "$RuntimeRoot/data"
         $script:RemotePaths.MediaRoot = "$RuntimeRoot/media"
+    }
+
+    if ($BlackLabDataRoot) {
+        $script:RemotePaths.BlackLabDataRoot = $BlackLabDataRoot
     }
 }
 

@@ -3,8 +3,8 @@
 Usage:
   python scripts/trace_runtime_paths.py
 
-The script prints resolved runtime paths based on environment variables and
-repo-local fallbacks used in code. It does not print credentials.
+The script prints resolved runtime paths based on the canonical environment
+variables. It does not print credentials.
 """
 
 from __future__ import annotations
@@ -18,21 +18,10 @@ def _env(name: str) -> str | None:
     return value if value else None
 
 
-def _is_dev() -> bool:
-    env = (os.getenv("FLASK_ENV") or os.getenv("APP_ENV") or "production").lower()
-    return env in ("development", "dev")
-
-
-def _repo_root() -> Path:
-    return Path(__file__).resolve().parents[1]
-
-
 def _resolve_runtime_root() -> Path | None:
     runtime_root = _env("CORAPAN_RUNTIME_ROOT")
     if runtime_root:
         return Path(runtime_root)
-    if _is_dev():
-        return _repo_root() / "runtime" / "corapan"
     return None
 
 
@@ -42,8 +31,6 @@ def _resolve_public_stats_dir(runtime_root: Path | None) -> Path | None:
         return Path(explicit)
     if runtime_root:
         return runtime_root / "data" / "public" / "statistics"
-    if _is_dev():
-        return _repo_root() / "runtime" / "corapan" / "data" / "public" / "statistics"
     return None
 
 
@@ -68,6 +55,9 @@ def main() -> None:
 
     runtime_root = _resolve_runtime_root()
     media_root = _env("CORAPAN_MEDIA_ROOT")
+
+    if not runtime_root:
+        print("- NOTE: repo-local runtime/corapan is inactive in dev; CORAPAN_RUNTIME_ROOT must be set explicitly")
 
     _print_path("CORAPAN_RUNTIME_ROOT", runtime_root)
     _print_path(

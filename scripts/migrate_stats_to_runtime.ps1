@@ -6,9 +6,9 @@ $ErrorActionPreference = 'Stop'
 # Repository root
 $repoRoot = Split-Path -Parent $PSScriptRoot
 
-# Ensure CORAPAN_RUNTIME_ROOT (dev default)
+# Require explicit canonical runtime root
 if (-not $env:CORAPAN_RUNTIME_ROOT) {
-    $env:CORAPAN_RUNTIME_ROOT = Join-Path $repoRoot "runtime\corapan"
+    throw "CORAPAN_RUNTIME_ROOT is required. Repo-local runtime/corapan is inactive in dev."
 }
 
 $sourceDir = Join-Path $repoRoot "data\public\statistics"

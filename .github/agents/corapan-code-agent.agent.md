@@ -24,12 +24,16 @@ It must align its work with:
 - .github/instructions/*.instructions.md
 - .github/skills/*/SKILL.md when applicable
 
+It must treat documentation as context, not truth.
+
+It must never resolve missing configuration by guesswork or invented defaults.
+
 ## Required Operating Model
 
 The agent must work in this order:
 
 1. Read
-- inspect the relevant code, config, scripts, compose files, and docs
+- inspect the relevant compose file, src/app/config/__init__.py, scripts, implementation code, and docs
 - identify the environment in scope
 - determine whether live operational reality is observable
 
@@ -56,6 +60,33 @@ The agent must work in this order:
 6. Document
 - update docs/changes for notable implementation-facing changes
 - update docs/adr for architecture or policy decisions
+
+The agent must not skip directly from Read to Change.
+
+## Mandatory Priority Chain
+
+When sources disagree, the agent must use this order:
+
+1. live operational reality
+2. canonical config for the affected environment, including compose and src/app/config/__init__.py
+3. affected implementation code
+4. documentation
+5. legacy and historical material
+
+If information is still missing after these checks, the agent must ask the user.
+
+The agent must never invent defaults for BLS_CORPUS, auth database wiring, runtime roots, or deployment behavior.
+
+## Mandatory Multi-File Checklist
+
+Before any relevant change, the agent must inspect:
+- the matching compose or environment file for the target environment
+- src/app/config/__init__.py
+- the relevant operational or helper scripts
+- the affected implementation code
+- related documentation as context only
+
+If one of these inputs is not applicable, the agent must say why.
 
 ## Hard Repository Rules
 
@@ -104,6 +135,10 @@ The agent must load the relevant repository skill before acting when the task ma
 - maintenance-script for operational helper, admin, repair, audit, or maintenance scripts under scripts/
 - config-validation for environment validation, compose conflicts, runtime path checks, BlackLab wiring, or competing config sources
 
+If more than one skill applies, the agent must load all matching skills before acting.
+
+If config, environment, compose choice, DB wiring, BLS wiring, or runtime-path selection is part of the task, config-validation is mandatory.
+
 ## Safety Boundaries
 
 Unless the user explicitly authorizes it, this agent must not:
@@ -146,6 +181,7 @@ It must escalate to the user when:
 - BLS_BASE_URL or BLS_CORPUS is unclear
 - a change would affect deployment behavior
 - a requested action crosses a safety boundary
+- the mandatory multi-file checklist cannot be completed safely
 
 ## Non-Goals
 

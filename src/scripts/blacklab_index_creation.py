@@ -546,12 +546,16 @@ def main() -> int:
         "--in",
         dest="in_dir",
         default="media/transcripts",
+        # ACTIVE_LEGACY (BlackLab only): this helper still uses repo-local input
+        # roots until the BlackLab/index wave is handled separately.
         help="Input JSON directory (relative to project root)",
     )
     parser.add_argument(
         "--out",
         dest="out_dir",
         default="data/blacklab_export/tsv",
+        # ACTIVE_LEGACY (BlackLab only): repo-local export paths remain explicit
+        # in this helper to avoid changing BlackLab index behavior in Welle 3.
         help="Output directory (relative to project root)",
     )
     parser.add_argument(
@@ -561,6 +565,8 @@ def main() -> int:
         "--docmeta",
         dest="docmeta_file",
         default="data/blacklab_export/docmeta.jsonl",
+        # ACTIVE_LEGACY (BlackLab only): repo-local docmeta output remains part
+        # of the BlackLab export flow until that wave is executed separately.
         help="Docmeta output file",
     )
     parser.add_argument(

@@ -48,6 +48,8 @@ from flask import (
 )
 from flask_jwt_extended import verify_jwt_in_request
 
+from ..runtime_paths import get_metadata_dir, get_stats_dir
+
 # ==============================================================================
 # BLUEPRINT SETUP
 # ==============================================================================
@@ -57,9 +59,6 @@ blueprint = Blueprint("corpus", __name__, url_prefix="/corpus")
 # ==============================================================================
 # CONFIGURATION
 # ==============================================================================
-
-# Relative path from runtime data root to public metadata directory
-_METADATA_RELATIVE = Path("public") / "metadata"
 
 # Avoid hard-coded literal for the corpus stats route to prevent legacy references.
 _CORPUS_STATS_ROUTE = "/api/" + "corpus_stats"
@@ -114,16 +113,10 @@ def _is_authenticated() -> bool:
 
 
 def _get_metadata_path() -> Path:
-    """Get absolute path to metadata directory (prefers latest/ if present).
-
-    Uses runtime data root from app configuration.
-    """
-    data_root = Path(current_app.config["DATA_ROOT"])
-    metadata_root = data_root / _METADATA_RELATIVE
-    latest_root = metadata_root / "latest"
-    if latest_root.exists() and latest_root.is_dir():
-        return latest_root
-    return metadata_root
+    """Get the canonical metadata directory path."""
+    metadata_dir = get_metadata_dir()
+    current_app.logger.debug("Corpus metadata directory resolved: %s", metadata_dir)
+    return metadata_dir
 
 
 def _load_recordings_json() -> list[dict] | None:
@@ -182,6 +175,12 @@ def _serve_metadata_file(
     """
     metadata_root = _get_metadata_path()
     metadata_path = metadata_root / filename
+    current_app.logger.debug(
+        "Corpus metadata file request: filename=%s resolved_path=%s exists=%s",
+        filename,
+        metadata_path,
+        metadata_path.exists(),
+    )
 
     if not metadata_path.exists():
         message = (
@@ -226,16 +225,21 @@ def corpus_stats():
         500: Statistics directory not configured or file read error
     """
     try:
-        stats_dir = Path(current_app.config["PUBLIC_STATS_DIR"])
-    except KeyError:
+        stats_dir = get_stats_dir()
+    except RuntimeError as exc:
         return jsonify(
             {
                 "error": "Statistics not configured",
-                "message": "PUBLIC_STATS_DIR not set in app configuration",
+                "message": str(exc),
             }
         ), 500
 
     stats_file = stats_dir / "corpus_stats.json"
+    current_app.logger.debug(
+        "Corpus stats request: resolved_path=%s exists=%s",
+        stats_file,
+        stats_file.exists(),
+    )
 
     if not stats_file.exists():
         return jsonify(
@@ -290,12 +294,12 @@ def serve_statistics(filename: str) -> Response:
     ALLOWED_EXTENSIONS = {".png", ".json"}
 
     try:
-        stats_dir = Path(current_app.config["PUBLIC_STATS_DIR"])
-    except KeyError:
+        stats_dir = get_stats_dir()
+    except RuntimeError as exc:
         return jsonify(
             {
                 "error": "Statistics not configured",
-                "message": "PUBLIC_STATS_DIR not set in app configuration",
+                "message": str(exc),
             }
         ), 500
 
@@ -314,6 +318,12 @@ def serve_statistics(filename: str) -> Response:
     try:
         target_file = (stats_dir / filename).resolve()
         stats_dir_resolved = stats_dir.resolve()
+        current_app.logger.debug(
+            "Statistics asset request: filename=%s resolved_path=%s base_dir=%s",
+            filename,
+            target_file,
+            stats_dir_resolved,
+        )
 
         # Ensure target is within stats directory
         if not str(target_file).startswith(str(stats_dir_resolved)):

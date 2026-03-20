@@ -72,7 +72,10 @@ if (-not $Port) {
 
 if (-not $DataDir) {
     $remotePaths = Get-RemotePaths
-    $DataDir = $remotePaths.DataRoot
+    if (-not $remotePaths.BlackLabDataRoot) {
+        throw "BlackLabDataRoot is not configured in scripts/deploy_sync/_lib/ssh.ps1. Refusing to fall back to the runtime data root."
+    }
+    $DataDir = $remotePaths.BlackLabDataRoot
 }
 
 function Write-Section {

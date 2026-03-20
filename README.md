@@ -187,14 +187,15 @@ Passen Sie die Werte in `.env` an (insbesondere `FLASK_SECRET_KEY` und `JWT_SECR
 ### 5. Datenbank initialisieren
 Erstellen Sie die Auth-Datenbank und den initialen Admin-Account:
 ```powershell
-# SQLite (Development)
-python scripts/apply_auth_migration.py --db data/db/auth.db --reset
+# PostgreSQL (canonical dev / production / staging)
+# AUTH_DATABASE_URL must be set explicitly.
+python scripts/apply_auth_migration.py --engine postgres --reset
 
-# PostgreSQL (Production/Staging)
+# Or apply the SQL files manually
 # Apply migrations/0001_create_auth_schema_postgres.sql via psql
 
 # Initialen Admin erstellen
-python scripts/create_initial_admin.py --db data/db/auth.db --username admin --password change-me
+python scripts/create_initial_admin.py --username admin --password change-me
 ```
 
 ### 6. BlackLab Index (Optional/Initial)
@@ -269,7 +270,7 @@ Für den produktiven Betrieb wird empfohlen:
 
 Die Produktion läuft auf einer VM am HRZ der Philipps-Universität Marburg und wird über einen **self-hosted GitHub Runner** automatisiert. Ein `push` auf den `main`-Branch führt automatisch `scripts/deploy_prod.sh` aus, welches das Docker-Image baut und den Container aktualisiert. Große Daten- und Medienbestände kommen **nicht** über Git, sondern werden unter `/srv/webapps/corapan/runtime/corapan/data` und `/srv/webapps/corapan/runtime/corapan/media` per rsync bereitgestellt.
 
-> **Secrets:** Die Datei `passwords.env` liegt auf dem Server unter `/srv/webapps/corapan/config/` und wird per `--env-file` in den Container geladen. Die App erwartet die Secrets (z. B. `DATABASE_URL`, `FLASK_SECRET_KEY`) als Umgebungsvariablen.
+> **Secrets:** Die Datei `passwords.env` liegt auf dem Server unter `/srv/webapps/corapan/config/` und wird per `--env-file` in den Container geladen. Die App erwartet die Secrets (z. B. `AUTH_DATABASE_URL`, `FLASK_SECRET_KEY`, `BLS_BASE_URL`, `BLS_CORPUS`) als Umgebungsvariablen.
 
 → Vollständige Dokumentation: [`docs/deploy_plan.md`](docs/deploy_plan.md)
 
@@ -353,8 +354,9 @@ python -m src.app.main
 
 * `FLASK_SECRET_KEY` - Flask session secret
 * `JWT_SECRET_KEY` - JWT signing key (legacy: `JWT_SECRET`)
-* `AUTH_DATABASE_URL` - Auth database URL (PostgreSQL or SQLite)
-* `BLACKLAB_BASE_URL` - BlackLab server URL
+* `AUTH_DATABASE_URL` - Auth database URL (PostgreSQL required for auth/core)
+* `BLS_BASE_URL` - BlackLab server URL
+* `BLS_CORPUS` - Explicit BlackLab corpus name (canonical dev value: `corapan`)
 * `ALLOW_PUBLIC_TEMP_AUDIO` - Allow anonymous audio snippet access (default: false)
 
 ## Current Status (January 2026)

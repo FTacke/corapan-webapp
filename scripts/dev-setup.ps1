@@ -9,7 +9,7 @@
     - BlackLab Server via Docker
     - Auth DB migration
     - Flask dev server
-    - Runtime directory initialization (repo-local)
+    - Canonical sibling data/media runtime initialization
 
 .EXAMPLE
     # Recommended: Full stack with Postgres + BlackLab
@@ -38,6 +38,10 @@ $ErrorActionPreference = 'Stop'
 # Repository root (scripts is under scripts/) — go up one level
 $repoRoot = Split-Path -Parent $PSScriptRoot
 Set-Location $repoRoot
+$workspaceRoot = Split-Path -Parent $repoRoot
+$externalDataRoot = Join-Path $workspaceRoot "data"
+$externalMediaRoot = Join-Path $workspaceRoot "media"
+$useExternalRuntime = (Test-Path $externalDataRoot) -and (Test-Path $externalMediaRoot)
 
 Write-Host "`nCO.RA.PAN Dev-Setup" -ForegroundColor Cyan
 Write-Host "===================" -ForegroundColor Cyan
@@ -47,11 +51,33 @@ Write-Host "Repository: $repoRoot"
 # RUNTIME CONFIGURATION (MUST BE EARLY - before any Python imports)
 # ==============================================================================
 
-# Set CORAPAN_RUNTIME_ROOT to repo-local path if not already configured
+# Set canonical dev runtime roots.
 if (-not $env:CORAPAN_RUNTIME_ROOT) {
-    $env:CORAPAN_RUNTIME_ROOT = Join-Path $repoRoot "runtime\corapan"
-    Write-Host "INFO: CORAPAN_RUNTIME_ROOT not set. Using repo-local default:" -ForegroundColor Cyan
+    if (-not $useExternalRuntime) {
+        throw "Canonical dev layout missing. Expected sibling data/ and media/ next to webapp/. Repo-local runtime/corapan is inactive in dev."
+    }
+    $env:CORAPAN_RUNTIME_ROOT = $workspaceRoot
+    Write-Host "INFO: CORAPAN_RUNTIME_ROOT not set. Using canonical sibling dev runtime root:" -ForegroundColor Cyan
+    Write-Host "   data -> $externalDataRoot" -ForegroundColor Cyan
+    Write-Host "   media -> $externalMediaRoot" -ForegroundColor Cyan
+    Write-Host "   runtime/corapan is inactive in dev" -ForegroundColor Cyan
     Write-Host "   $env:CORAPAN_RUNTIME_ROOT" -ForegroundColor Cyan
+}
+
+$legacyRuntimeRoot = Join-Path $repoRoot "runtime\corapan"
+if ([System.IO.Path]::GetFullPath($env:CORAPAN_RUNTIME_ROOT) -eq [System.IO.Path]::GetFullPath($legacyRuntimeRoot)) {
+    throw "Repo-local runtime/corapan is inactive in dev. Use the sibling workspace root instead."
+}
+
+if (-not $env:CORAPAN_MEDIA_ROOT) {
+    $env:CORAPAN_MEDIA_ROOT = $externalMediaRoot
+    Write-Host "INFO: CORAPAN_MEDIA_ROOT not set. Using canonical sibling media root:" -ForegroundColor Cyan
+    Write-Host "   $env:CORAPAN_MEDIA_ROOT" -ForegroundColor Cyan
+}
+
+$legacyMediaRoot = Join-Path $legacyRuntimeRoot "media"
+if ([System.IO.Path]::GetFullPath($env:CORAPAN_MEDIA_ROOT) -eq [System.IO.Path]::GetFullPath($legacyMediaRoot)) {
+    throw "Repo-local runtime/corapan/media is inactive in dev. Use the sibling media root instead."
 }
 
 # Derive PUBLIC_STATS_DIR from CORAPAN_RUNTIME_ROOT
@@ -64,6 +90,19 @@ if (-not (Test-Path $runtimeBase)) {
     New-Item -ItemType Directory -Path $runtimeBase -Force | Out-Null
 }
 
+if (-not (Test-Path $env:CORAPAN_MEDIA_ROOT)) {
+    Write-Host "Creating media directory: $env:CORAPAN_MEDIA_ROOT" -ForegroundColor Yellow
+    New-Item -ItemType Directory -Path $env:CORAPAN_MEDIA_ROOT -Force | Out-Null
+}
+
+foreach ($subdir in @('mp3-full', 'mp3-split', 'mp3-temp', 'transcripts')) {
+    $subdirPath = Join-Path $env:CORAPAN_MEDIA_ROOT $subdir
+    if (-not (Test-Path $subdirPath)) {
+        Write-Host "Creating media subdirectory: $subdir" -ForegroundColor Yellow
+        New-Item -ItemType Directory -Path $subdirPath -Force | Out-Null
+    }
+}
+
 if (-not (Test-Path $env:PUBLIC_STATS_DIR)) {
     Write-Host "Creating statistics directory: $env:PUBLIC_STATS_DIR" -ForegroundColor Yellow
     New-Item -ItemType Directory -Path $env:PUBLIC_STATS_DIR -Force | Out-Null
@@ -71,15 +110,17 @@ if (-not (Test-Path $env:PUBLIC_STATS_DIR)) {
 
 # Determine database mode (Postgres is always required in dev)
 $dbMode = "postgres"
-# Use 127.0.0.1 instead of localhost to avoid DNS resolution issues with psycopg3 on Windows
-$env:AUTH_DATABASE_URL = "postgresql+psycopg://corapan_auth:corapan_auth@127.0.0.1:54320/corapan_auth"
+# Use psycopg2 DSN in local dev because the checked-in dev environment installs psycopg2.
+$env:AUTH_DATABASE_URL = "postgresql+psycopg2://corapan_auth:corapan_auth@127.0.0.1:54320/corapan_auth"
 Write-Host "Database mode: PostgreSQL" -ForegroundColor Green
 
 # Set common environment variables
 $env:FLASK_SECRET_KEY = "dev-secret-change-me"
 $env:JWT_SECRET_KEY = "dev-jwt-secret-change-me"
 $env:FLASK_ENV = "development"
-$env:BLACKLAB_BASE_URL = "http://localhost:8081/blacklab-server"
+$env:BLS_BASE_URL = "http://localhost:8081/blacklab-server"
+$env:BLACKLAB_BASE_URL = $env:BLS_BASE_URL
+$env:BLS_CORPUS = "corapan"
 
 # ==============================================================================
 # PYTHON BOOTSTRAP (DETERMINISTIC - must be before any Python calls)
@@ -309,7 +350,9 @@ if (-not $SkipBlackLab) {
 if (-not $SkipDevServer) {
     Write-Host "`n[5/5] Starting Flask dev server..." -ForegroundColor Yellow
     Write-Host "  AUTH_DATABASE_URL = $($env:AUTH_DATABASE_URL)" -ForegroundColor Gray
-    Write-Host "  BLACKLAB_BASE_URL = $($env:BLACKLAB_BASE_URL)" -ForegroundColor Gray
+    Write-Host "  BLS_BASE_URL = $($env:BLS_BASE_URL)" -ForegroundColor Gray
+    Write-Host "  BLACKLAB_BASE_URL = $($env:BLACKLAB_BASE_URL) (legacy compatibility)" -ForegroundColor Gray
+    Write-Host "  BLS_CORPUS = $($env:BLS_CORPUS)" -ForegroundColor Gray
     Write-Host "`n  Dev server will run in foreground. Press Ctrl+C to stop." -ForegroundColor Cyan
     Write-Host "  Open http://localhost:8000 in your browser" -ForegroundColor Cyan
     Write-Host "  Login: admin / $StartAdminPassword`n" -ForegroundColor Cyan

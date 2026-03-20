@@ -84,3 +84,18 @@ def test_fetch_file_metadata_reads_metadata_json(monkeypatch, tmp_path):
     assert len(files) == 1
     assert files[0]["filename"] == "2023-08-10_ARG_Mitre.mp3"
     assert files[0]["country_code"] == "ARG"
+
+
+def test_fetch_file_metadata_uses_canonical_latest_dir(monkeypatch, tmp_path):
+    runtime_root = tmp_path / "runtime"
+    latest_dir = runtime_root / "data" / "public" / "metadata" / "latest"
+    tei_dir = latest_dir / "tei"
+    tei_dir.mkdir(parents=True, exist_ok=True)
+    _write_sample_metadata(latest_dir)
+    _setup_env(monkeypatch, runtime_root)
+
+    atlas = _reload_atlas_module()
+    files = atlas.fetch_file_metadata()
+
+    assert len(files) == 1
+    assert files[0]["filename"] == "2023-08-10_ARG_Mitre.mp3"

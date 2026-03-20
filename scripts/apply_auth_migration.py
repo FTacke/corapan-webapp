@@ -1,53 +1,22 @@
-"""Apply auth database migrations for SQLite or PostgreSQL.
+"""Apply auth database migrations for PostgreSQL.
 
 Usage:
-  # SQLite (default)
-  python scripts/apply_auth_migration.py --db data/db/auth.db
+    # PostgreSQL (requires AUTH_DATABASE_URL)
+    python scripts/apply_auth_migration.py --engine postgres
 
-  # PostgreSQL (uses AUTH_DATABASE_URL or connection args)
-  python scripts/apply_auth_migration.py --engine postgres
-
-  # Reset and recreate
-  python scripts/apply_auth_migration.py --engine postgres --reset
+    # Reset and recreate
+    python scripts/apply_auth_migration.py --engine postgres --reset
 """
 
 from __future__ import annotations
 
 import os
-import sqlite3
 from pathlib import Path
 import argparse
 
 ROOT = Path(__file__).resolve().parents[1]
-SQLITE_SQL_FILE = ROOT / "migrations" / "0001_create_auth_schema_sqlite.sql"
 POSTGRES_SQL_FILE = ROOT / "migrations" / "0001_create_auth_schema_postgres.sql"
 ANALYTICS_SQL_FILE = ROOT / "migrations" / "0002_create_analytics_tables.sql"
-DEFAULT_DB = ROOT / "data" / "db" / "auth.db"
-
-
-def apply_sqlite_migration(db_file: Path, reset: bool = False) -> None:
-    """Apply SQLite migration."""
-    if not SQLITE_SQL_FILE.exists():
-        raise FileNotFoundError(f"Migration SQL not found: {SQLITE_SQL_FILE}")
-
-    if reset and db_file.exists():
-        try:
-            db_file.unlink()
-            print(f"Deleted existing DB file: {db_file}")
-        except OSError as e:
-            print(f"Warning: failed to delete DB file {db_file}: {e}")
-
-    db_file.parent.mkdir(parents=True, exist_ok=True)
-
-    with sqlite3.connect(str(db_file)) as conn:
-        with open(SQLITE_SQL_FILE, "r", encoding="utf-8") as f:
-            sql = f.read()
-        try:
-            conn.executescript(sql)
-            print(f"SQLite migration applied to {db_file}")
-        except sqlite3.DatabaseError as e:
-            print(f"Failed to apply migration: {e}")
-            raise
 
 
 def apply_postgres_migration(reset: bool = False) -> None:
@@ -69,10 +38,18 @@ def apply_postgres_migration(reset: bool = False) -> None:
         sys.exit(1)
 
     db_url = os.getenv("AUTH_DATABASE_URL", "")
-    if not db_url or not db_url.startswith("postgresql"):
-        # Default to local dev Postgres
-        db_url = "postgresql://corapan_auth:corapan_auth@localhost:54320/corapan_auth"
-        print(f"Using default dev Postgres URL: {db_url}")
+    if not db_url:
+        print(
+            "ERROR: AUTH_DATABASE_URL is required for auth/core migrations.",
+            file=sys.stderr,
+        )
+        sys.exit(1)
+    if not db_url.startswith("postgresql"):
+        print(
+            "ERROR: AUTH_DATABASE_URL must point to PostgreSQL for auth/core migrations.",
+            file=sys.stderr,
+        )
+        sys.exit(1)
 
     # Convert SQLAlchemy URL to psycopg2 format
     # postgresql+psycopg2://... -> postgresql://...
@@ -148,12 +125,11 @@ def apply_postgres_migration(reset: bool = False) -> None:
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Apply auth database migrations")
-    parser.add_argument("--db", help="Path to SQLite DB file", default=str(DEFAULT_DB))
     parser.add_argument(
         "--engine",
-        choices=["sqlite", "postgres"],
-        default="sqlite",
-        help="Database engine to use (default: sqlite)",
+        choices=["postgres"],
+        default="postgres",
+        help="Database engine to use (only postgres is supported for auth/core)",
     )
     parser.add_argument(
         "--reset",
@@ -162,10 +138,5 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
 
-    if args.engine == "postgres":
-        print(f"Applying PostgreSQL migration (reset={args.reset})...")
-        apply_postgres_migration(reset=args.reset)
-    else:
-        db_file = Path(args.db)
-        print(f"Applying SQLite migration to: {db_file} (reset={args.reset})")
-        apply_sqlite_migration(db_file, reset=args.reset)
+    print(f"Applying PostgreSQL migration (reset={args.reset})...")
+    apply_postgres_migration(reset=args.reset)

@@ -126,11 +126,13 @@ Connection parameters (hostname/user/port/key) and remote runtime roots are conf
 - `-Hostname`: Production server hostname/IP (default: from `scripts/deploy_sync/_lib/ssh.ps1`)
 - `-User`: SSH user (default: from `scripts/deploy_sync/_lib/ssh.ps1`)
 - `-Port`: SSH port (default: from `scripts/deploy_sync/_lib/ssh.ps1`)
-- `-DataDir`: Remote data directory (default: `${CORAPAN_RUNTIME_ROOT}/data` via `scripts/deploy_sync/_lib/ssh.ps1`)
+- `-DataDir`: Remote data directory (default: `/srv/webapps/corapan/data` via `scripts/deploy_sync/_lib/ssh.ps1`)
 - `-ConfigDir`: Remote BlackLab config directory (default: /srv/webapps/corapan/app/config/blacklab)
 - `-DryRun`: Show what would be done without making changes
 - `-KeepBackups`: Number of backups to retain (default: 2)
 - `-NoBackupCleanup`: Skip automatic cleanup of old backups
+
+`publish_blacklab_index.ps1` intentionally does not reuse the runtime-first `DataRoot` that powers `sync_data.ps1`. BlackLab publish defaults to the live top-level reader path, while data and media deploy remain runtime-first.
 
 **Process:**
 1. Validates local `data/blacklab_index.new/` exists

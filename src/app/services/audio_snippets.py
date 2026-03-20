@@ -3,18 +3,33 @@
 from __future__ import annotations
 
 import hashlib
+import logging
+import os
+import shutil
+import subprocess
 import time
+from functools import lru_cache
 from pathlib import Path
 from typing import Optional, Tuple
 
-from pydub import AudioSegment
 from flask import current_app, has_app_context
 
 from ..config import BaseConfig
-from .media_store import safe_audio_full_path, safe_audio_split_path
+from .media_store import audio_temp_dir, safe_audio_full_path, safe_audio_split_path
+
+try:
+    import imageio_ffmpeg
+except ImportError:  # pragma: no cover - dependency is installed in runtime/test env
+    imageio_ffmpeg = None
 
 CACHE_PREFIX = "snippet"
 CLEANUP_THRESHOLD_SECONDS = 30 * 60  # 30 Minuten
+
+logger = logging.getLogger(__name__)
+
+
+class AudioProcessingDependencyError(RuntimeError):
+    """Raised when snippet generation cannot access an ffmpeg backend."""
 
 # Split-file mapping from old webapp: 4-minute chunks with 30s overlap
 SPLIT_TIMES = {
@@ -139,8 +154,77 @@ def cleanup_old_snippets() -> int:
 
 def _audio_temp_dir() -> Path:
     if has_app_context():
-        return Path(current_app.config["AUDIO_TEMP_DIR"])
+        return audio_temp_dir()
     return Path(BaseConfig.AUDIO_TEMP_DIR)
+
+
+@lru_cache(maxsize=1)
+def _resolve_ffmpeg_executable() -> str | None:
+    explicit_path = os.getenv("CORAPAN_FFMPEG_PATH")
+    if explicit_path and explicit_path.strip():
+        resolved = Path(explicit_path).expanduser()
+        if resolved.exists():
+            return str(resolved)
+
+    system_ffmpeg = shutil.which("ffmpeg")
+    if system_ffmpeg:
+        return system_ffmpeg
+
+    if imageio_ffmpeg is not None:
+        try:
+            return imageio_ffmpeg.get_ffmpeg_exe()
+        except Exception as exc:  # pragma: no cover - defensive logging
+            logger.warning("Bundled ffmpeg lookup failed: %s", exc)
+
+    return None
+
+
+def _snippet_logger() -> logging.Logger:
+    if has_app_context():
+        return current_app.logger
+    return logger
+
+
+def _extract_snippet_with_ffmpeg(
+    source_path: Path,
+    target_path: Path,
+    start: float,
+    end: float,
+) -> None:
+    ffmpeg_executable = _resolve_ffmpeg_executable()
+    if not ffmpeg_executable:
+        raise AudioProcessingDependencyError(
+            "Audio snippet backend unavailable: ffmpeg executable not found. "
+            "Install ffmpeg or provide imageio-ffmpeg."
+        )
+
+    duration = end - start
+    if duration <= 0:
+        raise ValueError("End time must be greater than start time")
+
+    command = [
+        ffmpeg_executable,
+        "-hide_banner",
+        "-loglevel",
+        "error",
+        "-y",
+        "-ss",
+        f"{start:.3f}",
+        "-t",
+        f"{duration:.3f}",
+        "-i",
+        str(source_path),
+        "-vn",
+        "-acodec",
+        "libmp3lame",
+        "-q:a",
+        "4",
+        str(target_path),
+    ]
+    completed = subprocess.run(command, capture_output=True, text=True, check=False)
+    if completed.returncode != 0 or not target_path.exists():
+        stderr = completed.stderr.strip() or "ffmpeg did not create an output file"
+        raise RuntimeError(f"Audio snippet export failed for {source_path}: {stderr}")
 
 
 def build_snippet(
@@ -177,32 +261,47 @@ def build_snippet(
     if target_path.exists():
         return target_path
 
+    active_logger = _snippet_logger()
+
     # Strategy 1: Try to use split file (FAST ⚡)
     split_result = find_split_file(filename, start, end)
 
     if split_result is not None:
         split_path, split_suffix = split_result
         split_start, _ = SPLIT_TIMES[split_suffix]
-
-        # Load only the ~4MB split file instead of ~30MB full file
-        audio = AudioSegment.from_file(split_path)
-
-        # Calculate local offsets within the split file
+        source_path = split_path
         local_start_ms = int((start - split_start) * 1000)
         local_end_ms = int((end - split_start) * 1000)
-
-        snippet = audio[local_start_ms:local_end_ms]
+        local_start = local_start_ms / 1000
+        local_end = local_end_ms / 1000
+        source_kind = "split"
     else:
         # Strategy 2: Fallback to full file (slower but always works)
         source = safe_audio_full_path(filename)
         if source is None:
             raise FileNotFoundError(f"Audio source not found for {filename}")
 
-        audio = AudioSegment.from_file(source)
-        snippet = audio[int(start * 1000) : int(end * 1000)]
+        source_path = source
+        local_start = start
+        local_end = end
+        source_kind = "full"
 
-    if len(snippet) == 0:
-        raise ValueError("Snippet window produced empty audio")
+    active_logger.debug(
+        "Audio snippet build: filename=%s source_kind=%s source_path=%s start=%s end=%s local_start=%s local_end=%s target_path=%s ffmpeg=%s",
+        filename,
+        source_kind,
+        source_path,
+        start,
+        end,
+        local_start,
+        local_end,
+        target_path,
+        _resolve_ffmpeg_executable(),
+    )
 
-    snippet.export(target_path, format="mp3")
+    _extract_snippet_with_ffmpeg(source_path, target_path, local_start, local_end)
+
+    if not target_path.exists() or target_path.stat().st_size == 0:
+        raise RuntimeError(f"Audio snippet export produced no output for {filename}")
+
     return target_path

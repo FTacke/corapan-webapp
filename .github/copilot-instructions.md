@@ -2,17 +2,29 @@
 
 This repository uses a strict source-of-truth model based on operational reality.
 
-## Operational Truth Order
+## Priority Order
 
-When code, docs, and runtime disagree, use this order:
+When runtime, config, code, and docs disagree, use this order:
 
 1. The live operational environment that is currently running
-2. The canonical environment files for that environment
-3. Application config code
+2. The canonical environment files for that environment and src/app/config/__init__.py
+3. The affected implementation code
 4. Documentation
 5. Legacy scripts and historical notes
 
-Agents must prioritize real runtime behavior over stale code comments or documentation.
+Documentation is context, not truth.
+
+Agents must prioritize observable runtime behavior and canonical config over stale code comments or documentation.
+
+## Anti-Guess Rule
+
+When required information is missing, ambiguous, or contradictory:
+- inspect runtime and canonical config first
+- inspect the relevant implementation code next
+- ask the user if the answer is still unclear
+- never invent a default to make progress
+
+This rule is mandatory for environment selection, database wiring, BlackLab wiring, runtime paths, and deployment behavior.
 
 ## Canonical Environment Paths
 
@@ -27,6 +39,12 @@ Production source of truth:
 - server-side passwords.env as an operator-managed secret source
 
 Do not treat alternative compose files or older setup paths as equal unless the user explicitly says so.
+
+Before changing anything relevant to runtime, configuration, scripts, auth, BlackLab, or deployment, agents must inspect:
+- the matching compose or environment file for the affected environment
+- src/app/config/__init__.py
+- the relevant operational script or helper
+- related documentation only as supporting context
 
 ## Database Rules
 
@@ -75,6 +93,17 @@ BLS_CORPUS is mandatory and must always be set explicitly.
 
 Agents must never guess BlackLab configuration.
 
+## High-Risk Areas
+
+The following areas require explicit validation before any change:
+- BLS_CORPUS: no default, never guessed, must be explicitly verified
+- AUTH_DATABASE_URL: the only valid auth and core database variable
+- DATABASE_URL: legacy only, never a new auth or core source of truth
+- SQLite: allowed only for public stats and documented side databases
+- Dev vs Prod separation: never mix defaults, scripts, docs, or workflow assumptions across environments
+
+If a task touches any high-risk area, agents must validate the affected environment and canonical config before proposing or making a change.
+
 ## Config Discipline
 
 Do not invent parallel configuration systems.
@@ -87,6 +116,8 @@ This applies especially to:
 - BLS_CORPUS
 - CORAPAN_RUNTIME_ROOT
 - CORAPAN_MEDIA_ROOT
+
+If these sources disagree, classify the conflict explicitly as active, legacy, dangerous, or redundant before editing.
 
 ## Dev and Prod Separation
 

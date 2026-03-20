@@ -2,54 +2,29 @@
 
 from __future__ import annotations
 
-import os
 import sqlite3
-import warnings
 from contextlib import contextmanager
 from pathlib import Path
 from typing import Iterator
 
-
-def _resolve_data_root() -> Path:
-    """Resolve runtime data root from CORAPAN_RUNTIME_ROOT (dev fallback supported)."""
-    env_name = (os.getenv("FLASK_ENV") or os.getenv("APP_ENV") or "production").lower()
-    is_dev = env_name in ("development", "dev")
-    runtime_root = os.getenv("CORAPAN_RUNTIME_ROOT")
-
-    if runtime_root:
-        return Path(runtime_root) / "data"
-    if is_dev:
-        data_root = Path(__file__).resolve().parents[3] / "runtime" / "corapan" / "data"
-        warnings.warn(
-            "CORAPAN_RUNTIME_ROOT not configured. Defaulting to repo-local runtime path for development: "
-            f"{data_root}",
-            RuntimeWarning,
-        )
-        return data_root
-    raise RuntimeError(
-        "CORAPAN_RUNTIME_ROOT environment variable not configured.\n"
-        "Runtime data is required for stats databases.\n\n"
-        "Options:\n"
-        "  1. Set CORAPAN_RUNTIME_ROOT (preferred):\n"
-        "     export CORAPAN_RUNTIME_ROOT=/runtime/path\n"
-        "     # Then data paths resolve to ${CORAPAN_RUNTIME_ROOT}/data\n"
-    )
+from ..runtime_paths import get_data_root
 
 
-DATA_ROOT = _resolve_data_root()
-PUBLIC_DB_ROOT = DATA_ROOT / "db" / "public"
+def get_public_db_root() -> Path:
+    return get_data_root() / "db" / "public"
 
 DATABASES = {
-    "stats_files": PUBLIC_DB_ROOT / "stats_files.db",
-    "stats_country": PUBLIC_DB_ROOT / "stats_country.db",
+    "stats_files": lambda: get_public_db_root() / "stats_files.db",
+    "stats_country": lambda: get_public_db_root() / "stats_country.db",
 }
 
 
 def get_connection(name: str) -> sqlite3.Connection:
     """Return a sqlite3 connection with row factory enabled."""
-    path = DATABASES.get(name)
-    if path is None:
+    path_factory = DATABASES.get(name)
+    if path_factory is None:
         raise KeyError(f"Unknown database identifier: {name}")
+    path = path_factory()
     connection = sqlite3.connect(str(path), detect_types=sqlite3.PARSE_DECLTYPES)
     connection.row_factory = sqlite3.Row
     return connection

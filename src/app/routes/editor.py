@@ -12,12 +12,13 @@ from flask_jwt_extended import jwt_required, get_jwt_identity
 from ..auth import Role
 from ..auth.decorators import require_role
 from ..services.database import open_db
+from ..services.media_store import transcripts_dir
 
 blueprint = Blueprint("editor", __name__, url_prefix="/editor")
 
 
 def _transcripts_dir() -> Path:
-    return Path(current_app.config["TRANSCRIPTS_DIR"])
+    return transcripts_dir()
 
 
 def _edit_log_file() -> Path:

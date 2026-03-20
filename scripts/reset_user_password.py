@@ -12,7 +12,7 @@ Usage:
     python scripts/reset_user_password.py admin  # prompts for password
 
 Environment:
-    AUTH_DATABASE_URL - Database connection string (default: sqlite:///data/db/auth.db)
+    AUTH_DATABASE_URL - PostgreSQL database connection string for auth/core data
     AUTH_HASH_ALGO    - Hashing algorithm: argon2 (default) or bcrypt
 """
 
@@ -68,11 +68,19 @@ def main():
         sys.exit(1)
 
     # Setup minimal config
+    auth_database_url = os.environ.get("AUTH_DATABASE_URL", "").strip()
+    if not auth_database_url:
+        parser.error(
+            "AUTH_DATABASE_URL is required. "
+            "For the canonical dev stack, set AUTH_DATABASE_URL to the local PostgreSQL DSN."
+        )
+    if not auth_database_url.startswith("postgresql"):
+        parser.error(
+            "AUTH_DATABASE_URL must point to PostgreSQL for auth/core workflows."
+        )
+
     cfg = {
-        "AUTH_DATABASE_URL": os.environ.get(
-            "AUTH_DATABASE_URL",
-            f"sqlite:///{(ROOT / 'data' / 'db' / 'auth.db').as_posix()}",
-        ),
+        "AUTH_DATABASE_URL": auth_database_url,
         "AUTH_HASH_ALGO": os.environ.get("AUTH_HASH_ALGO", "argon2"),
     }
 

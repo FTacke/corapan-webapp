@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from flask import Blueprint, jsonify, redirect, url_for
+from flask import Blueprint, current_app, jsonify, redirect, url_for
 
 from ..extensions import cache
 from ..services.atlas import fetch_country_stats, fetch_file_metadata
@@ -22,10 +22,29 @@ def countries():
 
 
 @blueprint.get("/files")
-@cache.cached(timeout=3600)  # Cache for 1 hour
 def files():
-    """Get file metadata (cached for 1 hour)."""
-    return jsonify({"files": fetch_file_metadata()})
+    """Get file metadata.
+
+    In development, avoid persisting empty responses because path fixes and
+    metadata refreshes should become visible immediately.
+    """
+    cache_key = "atlas_files_v2"
+
+    if not current_app.debug and not current_app.testing:
+        cached = cache.get(cache_key)
+        if cached is not None:
+            return jsonify({"files": cached})
+
+    files_payload = fetch_file_metadata()
+
+    if current_app.debug or current_app.testing:
+        cache.delete(cache_key)
+    elif files_payload:
+        cache.set(cache_key, files_payload, timeout=3600)
+    else:
+        cache.delete(cache_key)
+
+    return jsonify({"files": files_payload})
 
 
 @blueprint.get("/locations")

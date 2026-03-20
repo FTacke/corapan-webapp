@@ -5,6 +5,25 @@ description: "Use when creating or editing helper, admin, repair, audit, or oper
 
 # Maintenance Script Skill
 
+## Use This Skill When
+
+Use this skill when creating, editing, reviewing, or classifying scripts under scripts/ that perform helper, admin, repair, audit, migration-adjacent, or operational tasks.
+
+## Do Not Use When
+
+Do not use this skill for:
+- application runtime code outside scripts/
+- compose-only or deployment-only changes with no script impact
+- pure documentation updates with no script behavior involved
+
+## Required Check Order
+
+1. identify whether the script is dev-only, prod-only, or shared
+2. inspect the matching canonical compose or startup path
+3. inspect src/app/config/__init__.py if the script touches config or auth
+4. inspect the script's direct consumers and related docs
+5. classify any conflicting behavior before editing
+
 All operational helper scripts belong under scripts/.
 
 ## Hard Rules
@@ -24,3 +43,4 @@ All operational helper scripts belong under scripts/.
 - environment assumptions must be explicit
 - dev and prod behavior must not be mixed
 - documentation must be updated for new long-lived scripts
+- conflicting paths or variables must be classified as active, legacy, dangerous, or redundant before the script is changed
