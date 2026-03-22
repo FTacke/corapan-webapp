@@ -15,7 +15,7 @@ from pathlib import Path
 
 # Load docmeta
 runtime_root = Path(os.environ.get("CORAPAN_RUNTIME_ROOT", Path(__file__).resolve().parents[2]))
-docmeta_path = runtime_root / "data" / "blacklab_export" / "docmeta.jsonl"
+docmeta_path = runtime_root / "data" / "blacklab" / "export" / "docmeta.jsonl"
 docmeta = {}
 with open(docmeta_path, "r", encoding="utf-8") as f:
     for line in f:

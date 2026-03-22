@@ -10,6 +10,7 @@ function Write-Step {
 }
 
 $repoRoot = Split-Path -Parent $PSScriptRoot
+$workspaceRoot = Split-Path -Parent $repoRoot
 Set-Location $repoRoot
 
 if (-not (Get-Command uv -ErrorAction SilentlyContinue)) {
@@ -42,7 +43,7 @@ if (-not (Test-Path ".venv")) {
     Write-Step "Verwende bestehende .venv"
 }
 
-$pythonExe = Join-Path $repoRoot ".venv\Scripts\python.exe"
+$pythonExe = Join-Path $workspaceRoot ".venv\Scripts\python.exe"
 if (-not (Test-Path $pythonExe)) {
     throw "Python-Interpreter in .venv nicht gefunden: $pythonExe"
 }

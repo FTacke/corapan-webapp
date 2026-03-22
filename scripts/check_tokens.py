@@ -30,7 +30,13 @@ from src.app.services.audio_snippets import SPLIT_TIMES, build_snippet, find_spl
 from src.app.services.blacklab_search import _hit_to_canonical  # noqa: E402
 
 BL_PROXY_BASE = "http://127.0.0.1:8000/bls"
-BLS_CORPUS = os.environ.get("BLS_CORPUS", "index")
+_bls_corpus = os.environ.get("BLS_CORPUS")
+if not _bls_corpus or not _bls_corpus.strip():
+    raise RuntimeError(
+        "BLS_CORPUS environment variable is required. "
+        "For the canonical dev stack, set BLS_CORPUS=corapan."
+    )
+BLS_CORPUS = _bls_corpus.strip()
 
 LISTVALUES = (
     "tokid,start_ms,end_ms,filename,file_id,word,lemma,country,country_code,radio"

@@ -7,14 +7,12 @@ This directory contains production scripts, maintenance tools, debug utilities, 
 ```
 scripts/
 ├── README.md                           # This file
-├── build_blacklab_index.ps1            # Canonical BlackLab index builder (production)
-├── build_blacklab_index_v3.ps1         # Docker-based index builder (v5.x)
-├── build_blacklab_index.old.ps1        # Legacy index builder (deprecated)
-├── start_blacklab_docker_v3.ps1        # Start BlackLab Docker server (v5.x)
-├── start_blacklab_docker.ps1           # Start BlackLab Docker server (v4.x)
+├── blacklab/
+│   ├── build_blacklab_index.ps1        # Canonical dev BlackLab index builder
+│   ├── migrate_legacy_blacklab_dev_layout.ps1 # Explicit one-time legacy -> canonical migration
+│   ├── run_export.py                   # Run JSON to TSV export pipeline
+│   └── ...
 ├── check_tsv_schema.py                 # Validate TSV schema consistency
-├── build_index_wrapper.ps1             # Wrapper for index building
-├── run_export.py                       # Run JSON to TSV export pipeline
 │
 ├── debug/                              # Debug and troubleshooting tools
 │   ├── README.md
@@ -35,17 +33,17 @@ scripts/
 
 ### BlackLab Index Management
 
-- **`build_blacklab_index.ps1`** - Canonical index builder
+- **`blacklab/build_blacklab_index.ps1`** - Canonical index builder
   - Builds BlackLab index from TSV exports
   - Uses Docker-based IndexTool
   - Documented in `docs/blacklab_stack.md`
   - Default: `--threads 1` to avoid concurrency issues
 
-- **`build_blacklab_index_v3.ps1`** - Docker-based builder (v5.x)
-  - Uses BlackLab 5.x Docker image
-  - Mounts TSV directory and outputs index
+- **`blacklab/migrate_legacy_blacklab_dev_layout.ps1`** - Explicit local layout migration
+  - Moves legacy top-level `data/blacklab_export`, `data/blacklab_index*` artifacts into `data/blacklab/*`
+  - Default mode is dry-run; `-Apply` performs the migration
   
-- **`start_blacklab_docker_v3.ps1`** - Start BlackLab server (v5.x)
+- **`blacklab/start_blacklab_docker_v3.ps1`** - Start BlackLab server (v5.x)
   - Starts pinned Docker image with proper mounts
   - Default port: 8081
 
@@ -56,7 +54,7 @@ scripts/
   - Detects structural differences across export files
   - Usage: `python scripts/check_tsv_schema.py`
 
-- **`run_export.py`** - JSON to TSV Export Runner
+- **`blacklab/run_export.py`** - JSON to TSV Export Runner
   - Runs the export pipeline from `media/transcripts/` to TSV
   - Calls `src/scripts/blacklab_index_creation.py`
 
@@ -83,20 +81,20 @@ See `testing/README.md` for ad-hoc test scripts and integration tests.
 
 ```powershell
 # Run canonical index builder
-.\scripts\build_blacklab_index.ps1
+.\scripts\blacklab\build_blacklab_index.ps1
 
 # Force rebuild without prompts
-.\scripts\build_blacklab_index.ps1 -Force
+.\scripts\blacklab\build_blacklab_index.ps1 -Force
 ```
 
 ### Start BlackLab Server
 
 ```powershell
 # Start in foreground
-.\scripts\start_blacklab_docker_v3.ps1
+.\scripts\blacklab\start_blacklab_docker_v3.ps1
 
 # Start detached (background)
-.\scripts\start_blacklab_docker_v3.ps1 -Detach
+.\scripts\blacklab\start_blacklab_docker_v3.ps1 -Detach
 ```
 
 ### Validate TSV Schema
@@ -108,7 +106,7 @@ python scripts/check_tsv_schema.py
 ### Run Export Pipeline
 
 ```bash
-python scripts/run_export.py
+python scripts/blacklab/run_export.py
 ```
 
 ## Notes

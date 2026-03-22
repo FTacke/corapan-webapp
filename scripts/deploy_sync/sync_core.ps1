@@ -85,7 +85,7 @@ $script:SyncConfig = @{
     AppUser        = "hrzadmin"
     AppUid         = 1000
     AppGid         = 1000
-    CwRsyncPath    = "C:\dev\corapan-webapp\tools\cwrsync\bin"
+    CwRsyncPath    = (Join-Path (Split-Path -Parent (Split-Path -Parent $PSScriptRoot)) "tools\cwrsync\bin")
 }
 
 # Flag um rsync-Verfuegbarkeits-Log nur einmal auszugeben

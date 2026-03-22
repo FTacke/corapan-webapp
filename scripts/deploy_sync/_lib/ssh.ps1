@@ -40,9 +40,9 @@ $script:SSHConfig = @{
 }
 
 $script:RemotePaths = @{
-    RuntimeRoot = "/srv/webapps/corapan/runtime/corapan"
-    DataRoot    = "/srv/webapps/corapan/runtime/corapan/data"
-    MediaRoot   = "/srv/webapps/corapan/runtime/corapan/media"
+    RuntimeRoot = "/srv/webapps/corapan"
+    DataRoot    = "/srv/webapps/corapan/data"
+    MediaRoot   = "/srv/webapps/corapan/media"
     BlackLabDataRoot = "/srv/webapps/corapan/data/blacklab"
 }
 

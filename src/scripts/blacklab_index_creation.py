@@ -546,9 +546,7 @@ def main() -> int:
         "--in",
         dest="in_dir",
         default="media/transcripts",
-        # ACTIVE_LEGACY (BlackLab only): this helper still uses repo-local input
-        # roots until the BlackLab/index wave is handled separately.
-        help="Input JSON directory (relative to project root)",
+        help="Input JSON directory (relative to CORAPAN workspace root)",
     )
     parser.add_argument(
         "--out",
@@ -577,18 +575,24 @@ def main() -> int:
 
     args = parser.parse_args()
 
-    # Resolve paths from project root (where src/ and media/ exist)
-    project_root = (
-        Path(__file__).resolve().parent.parent.parent
-    )  # src/scripts/... → project_root
-    in_dir = project_root / args.in_dir
-    out_dir = project_root / args.out_dir
-    docmeta_file = project_root / args.docmeta_file
+    webapp_root = Path(__file__).resolve().parents[2]
+    workspace_root = webapp_root.parent
+
+    def resolve_from_workspace(raw_path: str) -> Path:
+        candidate = Path(raw_path).expanduser()
+        if candidate.is_absolute():
+            return candidate
+        return workspace_root / candidate
+
+    in_dir = resolve_from_workspace(args.in_dir)
+    out_dir = resolve_from_workspace(args.out_dir)
+    docmeta_file = resolve_from_workspace(args.docmeta_file)
 
     if not in_dir.exists():
         logger.error(f"Input directory not found: {in_dir}")
         logger.error(f"  (relative: {args.in_dir})")
-        logger.error(f"  (project root: {project_root})")
+        logger.error(f"  (workspace root: {workspace_root})")
+        logger.error(f"  (webapp root: {webapp_root})")
         return 1
 
     result = run_export(

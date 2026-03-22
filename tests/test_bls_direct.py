@@ -13,7 +13,7 @@ import os
 import httpx
 
 BLS_BASE_URL = os.environ.get("BLS_BASE_URL", "http://localhost:8081/blacklab-server")
-BLS_CORPUS = os.environ.get("BLS_CORPUS", "index")
+BLS_CORPUS = os.environ.get("BLS_CORPUS", "corapan")
 
 # Test 1: Direct BlackLab query
 print("Test 1: Direct BlackLab API call")

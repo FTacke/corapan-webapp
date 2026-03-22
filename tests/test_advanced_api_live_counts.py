@@ -10,7 +10,7 @@ import pytest
 
 BASE_FLASK = os.environ.get("FLASK_BASE_URL", "http://localhost:8000")
 BASE_BLS = os.environ.get("BLS_BASE_URL", "http://localhost:8081/blacklab-server")
-BLS_CORPUS = os.environ.get("BLS_CORPUS", "index")
+BLS_CORPUS = os.environ.get("BLS_CORPUS", "corapan")
 TIMEOUT = httpx.Timeout(connect=2.0, read=6.0, write=2.0, pool=2.0)
 
 

@@ -73,7 +73,7 @@ python scripts/debug/check_db.py
 
 1. **Check TSV schema**: `python scripts/check_tsv_schema.py`
 2. **Test with subset**: `.\scripts\debug\build_index_test.ps1`
-3. **Review logs**: Check `data/blacklab_index/build.log`
+3. **Review logs**: Check `data/blacklab/quarantine/build.log`
 4. **Validate BLF**: Review `config/blacklab/corapan-tsv.blf.yaml`
 
 ### API/Mapping Issues

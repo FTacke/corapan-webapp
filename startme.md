@@ -33,6 +33,25 @@ Wenn `data/` und `media/` neben `webapp/` existieren, wird dieser übergeordnete
 
 **Keine manuelle Vorbereitung nötig!** `dev-start.ps1` verwendet automatisch das vorhandene Dev-Layout.
 
+### BlackLab-Verzeichnisbaum (Repo)
+
+BlackLab-Artefakte werden im Repo selbst unter der kanonischen Struktur erwartet:
+
+- `data/blacklab/index`
+- `data/blacklab/export`
+- `data/blacklab/backups`
+- `data/blacklab/quarantine`
+
+Alte Top-Level-Verzeichnisse wie `data/blacklab_export`, `data/blacklab_index` oder `data/blacklab_index.*` sind in Dev nur noch Legacy-Artefakte und nicht mehr die Quelle der Wahrheit.
+
+Wenn dein lokales Repo noch diese Altstruktur enthält, migriere sie einmal explizit:
+
+```powershell
+# Erst prüfen, dann anwenden
+.\scripts\blacklab\migrate_legacy_blacklab_dev_layout.ps1
+.\scripts\blacklab\migrate_legacy_blacklab_dev_layout.ps1 -Apply
+```
+
 ### Custom Runtime-Pfad (optional)
 
 Falls du eine Custom Runtime an anderem Ort brauchst, setze `CORAPAN_RUNTIME_ROOT` vor dem Start:
@@ -172,10 +191,10 @@ Nur beim ersten Setup oder nach Daten-Reset:
 
 ```powershell
 # Schritt 1: JSON -> TSV Export
-python "scripts/blacklab/run_export.py"
+python .\scripts\blacklab\run_export.py
 
 # Schritt 2: TSV -> Lucene Index
-.\scripts\build_blacklab_index.ps1
+.\scripts\blacklab\build_blacklab_index.ps1
 ```
 
 Mehr Details: `docs/troubleshooting/blacklab-issues.md`

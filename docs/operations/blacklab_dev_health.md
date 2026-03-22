@@ -8,7 +8,7 @@
 - Error: `FieldType` Enum deserialization mismatch in logs
 
 ### Root Cause
-**Index Format Incompatibility:** The existing BlackLab index at `data/blacklab_index` was built with an **older version** of BlackLab (pre-5.0). The `latest` image tag pulled a newer `5.0.0-SNAPSHOT` version with incompatible metadata format:
+**Index Format Incompatibility:** The existing BlackLab index at `data/blacklab/index` was built with an **older version** of BlackLab (pre-5.0). The `latest` image tag pulled a newer `5.0.0-SNAPSHOT` version with incompatible metadata format:
 
 ```
 Old format: FieldType = "untokenized" (lowercase)
@@ -37,7 +37,7 @@ from String "untokenized": not one of the values accepted for Enum class:
 
 2. **Backup old index** (do not delete):
    ```powershell
-   Rename-Item -Path "data/blacklab_index" -NewName "blacklab_index.bad_20260117_000048"
+  Rename-Item -Path "data/blacklab/index" -NewName "index.bad_20260117_000048"
    ```
 
 3. **Restart Docker**:
@@ -107,7 +107,7 @@ docker inspect blacklab-server-v3 --format "{{.Image}}"
 ## Index Management
 
 ### Current Dev Index Location
-- **Host path:** `C:\dev\corapan-webapp\data\blacklab_index`
+- **Host path:** `C:\dev\corapan\webapp\data\blacklab\index`
 - **Container mount:** `/data/index/corapan` (read-only)
 - **Size:** ~280 MB
 
@@ -127,7 +127,7 @@ If index becomes corrupted or needs refresh:
 
 ```powershell
 # 1. Backup current
-Rename-Item "data/blacklab_index" "blacklab_index.backup_$(Get-Date -Format 'yyyyMMdd_HHmmss')"
+Move-Item "data/blacklab/index" "data/blacklab/backups/index_$(Get-Date -Format 'yyyyMMdd_HHmmss')"
 
 # 2. Build new index
 .\scripts\blacklab\build_blacklab_index.ps1
@@ -172,7 +172,7 @@ healthcheck:
    - Tomcat startup errors
 
 3. **If still broken:**
-   - Remove index: `Remove-Item -Recurse -Force data/blacklab_index`
+  - Remove index: `Remove-Item -Recurse -Force data/blacklab/index`
    - Rebuild: `.\scripts\blacklab\build_blacklab_index.ps1`
 
 ### Port Already in Use?
@@ -200,7 +200,7 @@ ports:
 | File | Change | Reason |
 |------|--------|--------|
 | `docker-compose.dev-postgres.yml` | Pin image to digest (sha256:3753...) | Prevent floating-tag breakage |
-| `data/blacklab_index.bad_*` | Backed up old index | Preserve for recovery, not in git |
+| `data/blacklab/quarantine/index.bad_*` | Backed up old index | Preserve for recovery, not in git |
 
 **Status:** ✅ Fixed 2026-01-17  
 **Next check:** 2026-02-17 (monthly health review)

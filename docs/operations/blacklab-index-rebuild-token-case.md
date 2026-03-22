@@ -16,7 +16,7 @@ BlackLab index was configured with case-insensitive `tokid` field, causing all T
 
 ✅ Docker Desktop running  
 ✅ BlackLab server container running (`blacklab-server-v3`)  
-✅ TSV export files exist in `data/blacklab_export/tsv/`  
+✅ TSV export files exist in `data/blacklab/export/tsv/`  
 
 ---
 
@@ -26,9 +26,9 @@ BlackLab index was configured with case-insensitive `tokid` field, causing all T
 
 ```powershell
 # Create timestamped backup
-$backupName = "blacklab_index.backup_$(Get-Date -Format 'yyyyMMdd_HHmmss')"
-Copy-Item -Path "data\blacklab_index" -Destination "data\$backupName" -Recurse
-Write-Host "Backup created: data\$backupName"
+$backupName = "index_$(Get-Date -Format 'yyyyMMdd_HHmmss')"
+Copy-Item -Path "data\blacklab\index" -Destination "data\blacklab\backups\$backupName" -Recurse
+Write-Host "Backup created: data\blacklab\backups\$backupName"
 ```
 
 ### 2. Stop BlackLab Server
@@ -40,7 +40,7 @@ docker compose -f docker-compose.dev-postgres.yml stop blacklab-server-v3
 ### 3. Delete Old Index
 
 ```powershell
-Remove-Item -Path "data\blacklab_index" -Recurse -Force
+Remove-Item -Path "data\blacklab\index" -Recurse -Force
 Write-Host "Old index deleted"
 ```
 
@@ -57,11 +57,11 @@ Start-Sleep -Seconds 15
 
 ```powershell
 # Run the index build script
-.\scripts\build_blacklab_index.ps1
+.\scripts\blacklab\build_blacklab_index.ps1
 
 # This will:
 # - Create new empty index with updated config
-# - Import all TSV files from data/blacklab_export/tsv/
+# - Import all TSV files from data/blacklab/export/tsv/
 # - Apply case-sensitive tokid indexing
 ```
 
@@ -86,7 +86,7 @@ Total tokens: ~5 million
 
 ```powershell
 # Query for specific mixed-case token_id
-$response = Invoke-WebRequest -Uri "http://localhost:8081/blacklab-server/corpora/index/hits?patt=[tokid=%22VENb379fcc75%22]&first=0&number=1&listvalues=tokid" -UseBasicParsing
+$response = Invoke-WebRequest -Uri "http://localhost:8081/blacklab-server/corpora/corapan/hits?patt=[tokid=%22VENb379fcc75%22]&first=0&number=1&listvalues=tokid" -UseBasicParsing
 $response.Content
 ```
 
@@ -116,10 +116,10 @@ Invoke-WebRequest -Uri "http://localhost:8000/search/advanced/data?q=El&draw=1&s
 
 ```powershell
 # This should work (exact case)
-Invoke-WebRequest -Uri "http://localhost:8081/blacklab-server/corpora/index/hits?patt=[tokid=%22VENb379fcc75%22]&first=0&number=1" -UseBasicParsing
+Invoke-WebRequest -Uri "http://localhost:8081/blacklab-server/corpora/corapan/hits?patt=[tokid=%22VENb379fcc75%22]&first=0&number=1" -UseBasicParsing
 
 # This should NOT work (wrong case)
-Invoke-WebRequest -Uri "http://localhost:8081/blacklab-server/corpora/index/hits?patt=[tokid=%22venb379fcc75%22]&first=0&number=1" -UseBasicParsing
+Invoke-WebRequest -Uri "http://localhost:8081/blacklab-server/corpora/corapan/hits?patt=[tokid=%22venb379fcc75%22]&first=0&number=1" -UseBasicParsing
 ```
 
 **Expected:** Only exact case matches work
@@ -135,10 +135,10 @@ If rebuild fails or causes issues:
 docker compose -f docker-compose.dev-postgres.yml stop blacklab-server-v3
 
 # Delete failed index
-Remove-Item -Path "data\blacklab_index" -Recurse -Force
+Remove-Item -Path "data\blacklab\index" -Recurse -Force
 
 # Restore backup (use actual backup name)
-Copy-Item -Path "data\blacklab_index.backup_YYYYMMDD_HHmmss" -Destination "data\blacklab_index" -Recurse
+Copy-Item -Path "data\blacklab\backups\index_YYYYMMDD_HHmmss" -Destination "data\blacklab\index" -Recurse
 
 # Restart server
 docker compose -f docker-compose.dev-postgres.yml start blacklab-server-v3
@@ -159,7 +159,7 @@ docker exec blacklab-server-v3 rm -rf /data/index/corapan
 
 ```powershell
 # Check TSV files exist
-Get-ChildItem data\blacklab_export\tsv\*.tsv
+Get-ChildItem data\blacklab\export\tsv\*.tsv
 
 # Check BlackLab server logs
 docker logs blacklab-server-v3 --tail 50
@@ -204,7 +204,7 @@ If stuck for >1 hour, check Docker logs for errors.
 
 - **Root Cause Analysis:** [docs/architecture/token-id-case-bug-postmortem.md](./token-id-case-bug-postmortem.md)
 - **BlackLab Config:** [config/blacklab/corapan-tsv.blf.yaml](../../config/blacklab/corapan-tsv.blf.yaml)
-- **Build Script:** [scripts/build_blacklab_index.ps1](../../scripts/build_blacklab_index.ps1)
+- **Build Script:** [scripts/blacklab/build_blacklab_index.ps1](../../scripts/blacklab/build_blacklab_index.ps1)
 
 ---
 

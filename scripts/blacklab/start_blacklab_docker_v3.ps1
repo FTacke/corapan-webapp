@@ -48,6 +48,81 @@ param(
 
 $ErrorActionPreference = "Stop"
 
+function Convert-ToDockerMountPath {
+    param([Parameter(Mandatory = $true)][string]$Path)
+
+    $mountPath = $Path.Replace('\\', '/')
+    if ($mountPath -match '^[A-Za-z]:') {
+        $mountPath = '/' + ($mountPath.Substring(0,1).ToLower()) + $mountPath.Substring(2)
+    }
+
+    return $mountPath
+}
+
+function Get-BlackLabSmokePattern {
+    param([Parameter(Mandatory = $true)][string]$WorkspaceRoot)
+
+    $tsvDir = Join-Path $WorkspaceRoot "data\blacklab\export\tsv"
+    if (Test-Path $tsvDir) {
+        $candidateFiles = @(Get-ChildItem -Path $tsvDir -Filter "*.tsv" -File | Where-Object { $_.Name -notlike '*_min.tsv' } | Sort-Object Name)
+        foreach ($candidateFile in $candidateFiles) {
+            $candidateLines = @(Get-Content -Path $candidateFile.FullName -TotalCount 25 | Select-Object -Skip 1)
+            foreach ($line in $candidateLines) {
+                if ([string]::IsNullOrWhiteSpace($line)) {
+                    continue
+                }
+
+                $columns = $line -split "`t"
+                if ($columns.Count -eq 0) {
+                    continue
+                }
+
+                $token = $columns[0].Trim()
+                if ([string]::IsNullOrWhiteSpace($token)) {
+                    continue
+                }
+
+                $escapedToken = $token.Replace('\\', '\\\\').Replace('"', '\\"')
+                return '[word="' + $escapedToken + '"]'
+            }
+        }
+    }
+
+    return '[word="casa"]'
+}
+
+function Test-BlackLabHttpReadiness {
+    param(
+        [Parameter(Mandatory = $true)][string]$BaseUrl,
+        [Parameter(Mandatory = $true)][string]$SmokePattern,
+        [Parameter(Mandatory = $true)][int]$TimeoutSeconds
+    )
+
+    $deadline = (Get-Date).AddSeconds($TimeoutSeconds)
+    $rootReady = $false
+    while ((Get-Date) -lt $deadline) {
+        try {
+            $response = Invoke-WebRequest -Uri $BaseUrl -UseBasicParsing -TimeoutSec 2 -ErrorAction Stop
+            if ($response.StatusCode -eq 200 -or $response.StatusCode -eq 404) {
+                $rootReady = $true
+                break
+            }
+        } catch {
+        }
+        Start-Sleep -Seconds 2
+    }
+
+    if (-not $rootReady) {
+        throw "BlackLab root endpoint did not become ready within $TimeoutSeconds seconds"
+    }
+
+    $queryUrl = "${BaseUrl}corpora/corapan/hits?patt=$([System.Uri]::EscapeDataString($SmokePattern))&number=1"
+    $queryResponse = Invoke-WebRequest -Uri $queryUrl -UseBasicParsing -TimeoutSec 10 -ErrorAction Stop
+    if ($queryResponse.StatusCode -ne 200) {
+        throw "BlackLab smoke query returned HTTP $($queryResponse.StatusCode)"
+    }
+}
+
 # Configuration
 # BlackLab 5.x (Lucene 9.x)
 # Using :latest (Docker-based server startup)
@@ -64,11 +139,16 @@ Write-Host "BlackLab Server Start (5.x)" -ForegroundColor Cyan
 Write-Host "=========================================" -ForegroundColor Cyan
 Write-Host ""
 
-# Get repository root (two levels up from scripts/blacklab -> repo root)
-# $PSScriptRoot is scripts\blacklab, so take the parent twice to reach the repo root
-$repoRoot = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
-$dataRoot = Join-Path $repoRoot "data"
-$configRoot = Join-Path $repoRoot "config"
+# Resolve roots
+# $PSScriptRoot is webapp\scripts\blacklab
+$webappRoot = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
+$workspaceRoot = Split-Path -Parent $webappRoot
+$dataRoot = Join-Path $workspaceRoot "data"
+$configRoot = Join-Path $workspaceRoot "config"
+$legacyBlackLabExport = Join-Path $workspaceRoot "data\blacklab_export"
+$legacyBlackLabIndex = Join-Path $workspaceRoot "data\blacklab_index"
+$repoLocalDataRoot = Join-Path $webappRoot "data"
+$stagedIndexPath = Join-Path $workspaceRoot "data\blacklab\quarantine\index.build"
 
 # Make paths absolute
 $indexPath = Join-Path $dataRoot "blacklab\index"
@@ -77,6 +157,8 @@ $configPath = Join-Path $configRoot "blacklab"
 Write-Host "Konfiguration:" -ForegroundColor White
 Write-Host "  Docker-Image:    $BLACKLAB_IMAGE" -ForegroundColor Gray
 Write-Host "  Container:       $CONTAINER_NAME" -ForegroundColor Gray
+Write-Host "  Workspace Root:  $workspaceRoot" -ForegroundColor Cyan
+Write-Host "  Webapp Root:     $webappRoot" -ForegroundColor Cyan
 Write-Host "  Data Root:       $dataRoot" -ForegroundColor Cyan
 Write-Host "  Config Root:     $configRoot" -ForegroundColor Cyan
 Write-Host "  Index:           $indexPath" -ForegroundColor Gray
@@ -110,11 +192,23 @@ try {
     exit 1
 }
 
+if (Test-Path $repoLocalDataRoot) {
+    Write-Host "  FEHLER: Repo-local webapp\\data exists." -ForegroundColor Red
+    Write-Host "    Dev BlackLab must mount the sibling workspace root data\\blacklab tree, not webapp\\data." -ForegroundColor Yellow
+    exit 1
+}
+
+if ((Test-Path $legacyBlackLabExport) -or (Test-Path $legacyBlackLabIndex)) {
+    Write-Host "  FEHLER: Legacy BlackLab dev layout detected under data\\blacklab_export or data\\blacklab_index." -ForegroundColor Red
+    Write-Host "    Migrate first: .\\scripts\\blacklab\\migrate_legacy_blacklab_dev_layout.ps1 -Apply" -ForegroundColor Yellow
+    exit 1
+}
+
 # Check if index exists
 if (-not (Test-Path $indexPath)) {
     Write-Host "  FEHLER: Index-Verzeichnis nicht gefunden: $indexPath" -ForegroundColor Red
     Write-Host "    Bitte baue zuerst den Index:" -ForegroundColor Yellow
-    Write-Host "    .\scripts\build_blacklab_index_v3.ps1" -ForegroundColor Gray
+    Write-Host "    .\webapp\scripts\blacklab\build_blacklab_index.ps1" -ForegroundColor Gray
     exit 1
 }
 
@@ -122,16 +216,36 @@ $indexFiles = Get-ChildItem -Path $indexPath -File -Recurse -ErrorAction Silentl
 if ($indexFiles.Count -eq 0) {
     Write-Host "  FEHLER: Index-Verzeichnis ist leer: $indexPath" -ForegroundColor Red
     Write-Host "    Bitte baue zuerst den Index:" -ForegroundColor Yellow
-    Write-Host "    .\scripts\build_blacklab_index_v3.ps1" -ForegroundColor Gray
+    Write-Host "    .\webapp\scripts\blacklab\build_blacklab_index.ps1" -ForegroundColor Gray
     exit 1
 }
 
 Write-Host "  OK Index gefunden: $($indexFiles.Count) Dateien" -ForegroundColor Green
 
+if (Test-Path $stagedIndexPath) {
+    $stagedIndexFiles = @(Get-ChildItem -Path $stagedIndexPath -File -Recurse -ErrorAction SilentlyContinue)
+    if ($stagedIndexFiles.Count -gt 0) {
+        Write-Host "  WARNUNG: Staged index exists under data\\blacklab\\quarantine\\index.build." -ForegroundColor Yellow
+        Write-Host "    Ensure a previous rebuild completed before serving the active index." -ForegroundColor Yellow
+    }
+}
+
 # Check config
 if (-not (Test-Path $configPath)) {
-    Write-Host "  WARNUNG: Config-Verzeichnis nicht gefunden: $configPath" -ForegroundColor Yellow
-    Write-Host "    Server wird mit Default-Config starten." -ForegroundColor Gray
+    Write-Host "  FEHLER: Config-Verzeichnis nicht gefunden: $configPath" -ForegroundColor Red
+    Write-Host "    Dev BlackLab must use the canonical sibling config\\blacklab tree." -ForegroundColor Yellow
+    exit 1
+}
+
+$requiredConfigFiles = @(
+    (Join-Path $configPath "blacklab-server.yaml"),
+    (Join-Path $configPath "corapan-tsv.blf.yaml")
+)
+foreach ($requiredConfigFile in $requiredConfigFiles) {
+    if (-not (Test-Path $requiredConfigFile)) {
+        Write-Host "  FEHLER: Required BlackLab config missing: $requiredConfigFile" -ForegroundColor Red
+        exit 1
+    }
 }
 
 Write-Host ""
@@ -145,7 +259,13 @@ Write-Host "[2/4] Pruefe vorhandene Container..." -ForegroundColor Yellow
 $existingContainer = docker ps -a --filter "name=$CONTAINER_NAME" --format "{{.Names}}" 2>$null
 
 if ($existingContainer -eq $CONTAINER_NAME) {
-    Write-Host "  Container '$CONTAINER_NAME' existiert bereits, stoppe..." -ForegroundColor Gray
+    if (-not $Restart) {
+        Write-Host "  FEHLER: Container '$CONTAINER_NAME' existiert bereits." -ForegroundColor Red
+        Write-Host "    Stoppe ihn manuell oder starte dieses Skript explizit mit -Restart." -ForegroundColor Yellow
+        exit 1
+    }
+
+    Write-Host "  Container '$CONTAINER_NAME' existiert bereits, ersetze ihn wegen -Restart..." -ForegroundColor Gray
     docker stop $CONTAINER_NAME 2>&1 | Out-Null
     docker rm $CONTAINER_NAME 2>&1 | Out-Null
     Write-Host "  OK Alter Container entfernt" -ForegroundColor Green
@@ -186,11 +306,8 @@ Write-Host ""
 Write-Host "[4/4] Starte BlackLab Server..." -ForegroundColor Yellow
 
 # Convert Windows paths to Docker volume format
-# Replace backslashes and transform drive letter (C:) into /c prefix for Docker
-$indexMount = $indexPath.Replace('\', '/')
-$configMount = $configPath.Replace('\', '/')
-if ($indexMount -match '^[A-Za-z]:') { $indexMount = '/' + ($indexMount.Substring(0,1).ToLower()) + $indexMount.Substring(2) }
-if ($configMount -match '^[A-Za-z]:') { $configMount = '/' + ($configMount.Substring(0,1).ToLower()) + $configMount.Substring(2) }
+$indexMount = Convert-ToDockerMountPath -Path $indexPath
+$configMount = Convert-ToDockerMountPath -Path $configPath
 
 # Build docker run arguments
 # Note: BlackLab 5.x expects indexLocations to contain subdirectories, each being an index
@@ -276,35 +393,25 @@ if ($Detach) {
     Write-Host "Container stoppen:" -ForegroundColor White
     Write-Host "  docker stop $CONTAINER_NAME" -ForegroundColor Gray
     Write-Host ""
-    # Health check: wait for BlackLab HTTP endpoint to respond before returning
-    Write-Host "Warte auf BlackLab-Server (HTTP) ..." -ForegroundColor Yellow
-    $startTime = Get-Date
-    $timeoutSeconds = 90
-    $ready = $false
+    Write-Host "Warte auf BlackLab-Server und pruefe Lesbarkeit des aktiven Index ..." -ForegroundColor Yellow
+    $smokePattern = Get-BlackLabSmokePattern -WorkspaceRoot $workspaceRoot
 
-    while ( ((Get-Date) - $startTime).TotalSeconds -lt $timeoutSeconds -and -not $ready ) {
+    try {
+        Test-BlackLabHttpReadiness -BaseUrl "http://localhost:$HOST_PORT/blacklab-server/" -SmokePattern $smokePattern -TimeoutSeconds 90
+        Write-Host "BlackLab ist erreichbar und der aktive Index beantwortet Suchanfragen." -ForegroundColor Green
+    } catch {
+        Write-Host "FEHLER: BlackLab startete, aber der aktive Index ist nicht lesbar." -ForegroundColor Red
+        Write-Host "  Smoke query: $smokePattern" -ForegroundColor Yellow
+        Write-Host "  Logs: docker logs --tail 100 $CONTAINER_NAME" -ForegroundColor Yellow
         try {
-            $response = Invoke-WebRequest -Uri "http://localhost:$HOST_PORT/blacklab-server/" -UseBasicParsing -TimeoutSec 2 -ErrorAction Stop
-            if ($response.StatusCode -eq 200 -or $response.StatusCode -eq 404) {
-                $ready = $true
-                break
-            }
+            docker logs --tail 100 $CONTAINER_NAME
         } catch {
-            # ignore and retry
         }
-        Start-Sleep -Seconds 2
-    }
-
-    if ($ready) {
-        Write-Host "BlackLab ist erreichbar auf http://localhost:$HOST_PORT/blacklab-server/" -ForegroundColor Green
-    } else {
-        Write-Host "WARNUNG: BlackLab antwortete nicht innerhalb von $timeoutSeconds Sekunden." -ForegroundColor Yellow
-        Write-Host "Pruefen Sie Container-Logs: docker logs --tail 100 $CONTAINER_NAME" -ForegroundColor Gray
         try {
-            docker logs --tail 50 $CONTAINER_NAME
+            docker stop $CONTAINER_NAME *>$null
         } catch {
-            Write-Host "Fehler beim Lesen der Container-Logs: $_" -ForegroundColor Red
         }
+        exit 1
     }
 } else {
     Write-Host ""

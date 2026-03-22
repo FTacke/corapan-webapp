@@ -173,7 +173,7 @@ function Test-ProductionStateProtection {
 # =============================================================================
 #
 # Synchronizes statistics files (corpus_stats.json, viz_*.png) to production.
-# Remote location: /srv/webapps/corapan/runtime/corapan/data/public/statistics
+# Remote location: /srv/webapps/corapan/data/public/statistics
 #
 # HARDENED SECURITY:
 # - Hard guards prevent syncing from repo root or parent directories
@@ -242,7 +242,7 @@ function Sync-StatisticsFiles {
         Write-Host "  Path: $LocalStatsDir" -ForegroundColor DarkGray
         Write-Host ""
         Write-Host "  To generate statistics:" -ForegroundColor DarkGray
-        Write-Host "    python .\LOKAL\_0_json\05_publish_corpus_statistics.py" -ForegroundColor DarkGray
+        Write-Host "    python .\maintenance_pipelines\_0_json\05_publish_corpus_statistics.py" -ForegroundColor DarkGray
         Write-Host ""
         return $true
     }

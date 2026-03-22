@@ -15,7 +15,7 @@ services:
     ports:
       - "54320:5432"
     volumes:
-      - ./data/db/postgres_dev:/var/lib/postgresql/data
+      - ../data/db/restricted/postgres_dev:/var/lib/postgresql/data
       - ./:/app:ro
     healthcheck:
       test: ["CMD", "pg_isready", "-U", "corapan_auth", "-d", "corapan_auth"]
@@ -38,8 +38,8 @@ services:
       - "8081:8080"
     volumes:
       # Mount index as /data/index/corapan so BlackLab sees corpus "corapan"
-      - ./data/blacklab/index:/data/index/corapan:ro
-      - ./config/blacklab:/etc/blacklab:ro
+      - ../data/blacklab/index:/data/index/corapan:ro
+      - ../config/blacklab:/etc/blacklab:ro
     environment:
       JAVA_OPTS: "-Xmx2g -Xms512m"
       BLACKLAB_CONFIG_DIR: "/etc/blacklab"

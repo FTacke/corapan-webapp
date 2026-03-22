@@ -48,9 +48,9 @@ index:
 	@echo "This will:"
 	@echo "  1. Export JSON corpus to TSV"
 	@echo "  2. Generate docmeta.jsonl"
-	@echo "  3. Build index → /data/blacklab_index"
+	@echo "  3. Build index → ../data/blacklab/index"
 	@echo ""
-	bash scripts/build_blacklab_index.sh tsv 4
+	bash scripts/blacklab/build_blacklab_index.sh tsv 4
 
 index-dry:
 	@echo "Dry-run export (showing sample)..."

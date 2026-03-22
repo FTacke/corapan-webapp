@@ -14,7 +14,7 @@ import os
 import httpx
 
 BLS_BASE_URL = os.environ.get("BLS_BASE_URL", "http://localhost:8081/blacklab-server")
-BLS_CORPUS = os.environ.get("BLS_CORPUS", "index")
+BLS_CORPUS = os.environ.get("BLS_CORPUS", "corapan")
 
 response = httpx.get(
     f"{BLS_BASE_URL}/corpora/{BLS_CORPUS}/hits",

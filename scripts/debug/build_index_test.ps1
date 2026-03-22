@@ -3,13 +3,14 @@
 
 $SCRIPT_DIR = Split-Path -Parent $MyInvocation.MyCommand.Path
 $PROJECT_ROOT = Split-Path -Parent (Split-Path -Parent (Split-Path -Parent $SCRIPT_DIR))
+$WORKSPACE_ROOT = Split-Path -Parent $PROJECT_ROOT
 $PYTHON_SCRIPT = Join-Path $SCRIPT_DIR "blacklab_index_creation.py"
 $MEDIA_ROOT = $env:CORAPAN_MEDIA_ROOT
 if (-not $MEDIA_ROOT) {
-    $MEDIA_ROOT = Join-Path $PROJECT_ROOT "media"
+    $MEDIA_ROOT = Join-Path $WORKSPACE_ROOT "media"
 }
 $TRANSCRIPTS_DIR = Join-Path $MEDIA_ROOT "transcripts"
-$EXPORTS_DIR = Join-Path $PROJECT_ROOT "data\exports"
+$EXPORTS_DIR = Join-Path $WORKSPACE_ROOT "data\exports"
 $EXPORT_TSV_DIR = Join-Path $EXPORTS_DIR "tsv"
 $DOCMETA_PATH = Join-Path $EXPORTS_DIR "docmeta.jsonl"
 

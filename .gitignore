@@ -95,6 +95,21 @@ media2/
 
 # Keep directory structure for deployment
 !data/.gitkeep
+!data/blacklab/
+data/blacklab/*
+!data/blacklab/.gitkeep
+!data/blacklab/index/
+data/blacklab/index/*
+!data/blacklab/index/.gitkeep
+!data/blacklab/export/
+data/blacklab/export/*
+!data/blacklab/export/.gitkeep
+!data/blacklab/backups/
+data/blacklab/backups/*
+!data/blacklab/backups/.gitkeep
+!data/blacklab/quarantine/
+data/blacklab/quarantine/*
+!data/blacklab/quarantine/.gitkeep
 !media/.gitkeep
 
 # Auth databases (dev artifacts - never commit, may contain user data)

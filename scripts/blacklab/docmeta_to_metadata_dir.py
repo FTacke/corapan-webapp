@@ -4,8 +4,9 @@ import json
 
 
 def main():
-    p = Path("data/blacklab/export/docmeta.jsonl")
-    md_dir = Path("data/blacklab/export/metadata")
+    workspace_root = Path(__file__).resolve().parents[3]
+    p = workspace_root / "data" / "blacklab" / "export" / "docmeta.jsonl"
+    md_dir = workspace_root / "data" / "blacklab" / "export" / "metadata"
     md_dir.mkdir(parents=True, exist_ok=True)
     count = 0
     if not p.exists():

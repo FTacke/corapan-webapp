@@ -25,10 +25,76 @@ param(
 
 $ErrorActionPreference = 'Stop'
 
+function Get-BlackLabSmokePattern {
+    param([Parameter(Mandatory = $true)][string]$WorkspaceRoot)
+
+    $tsvDir = Join-Path $WorkspaceRoot 'data\blacklab\export\tsv'
+    if (Test-Path $tsvDir) {
+        $candidateFiles = @(Get-ChildItem -Path $tsvDir -Filter '*.tsv' -File | Where-Object { $_.Name -notlike '*_min.tsv' } | Sort-Object Name)
+        foreach ($candidateFile in $candidateFiles) {
+            $candidateLines = @(Get-Content -Path $candidateFile.FullName -TotalCount 25 | Select-Object -Skip 1)
+            foreach ($line in $candidateLines) {
+                if ([string]::IsNullOrWhiteSpace($line)) {
+                    continue
+                }
+
+                $columns = $line -split "`t"
+                if ($columns.Count -eq 0) {
+                    continue
+                }
+
+                $token = $columns[0].Trim()
+                if ([string]::IsNullOrWhiteSpace($token)) {
+                    continue
+                }
+
+                $escapedToken = $token.Replace('\\', '\\\\').Replace('"', '\\"')
+                return '[word="' + $escapedToken + '"]'
+            }
+        }
+    }
+
+    return '[word="casa"]'
+}
+
+function Test-BlackLabAvailability {
+    param(
+        [Parameter(Mandatory = $true)][string]$BaseUrl,
+        [Parameter(Mandatory = $true)][string]$SmokePattern,
+        [Parameter(Mandatory = $true)][int]$TimeoutSeconds
+    )
+
+    $deadline = (Get-Date).AddSeconds($TimeoutSeconds)
+    $rootReady = $false
+    while ((Get-Date) -lt $deadline) {
+        try {
+            $response = Invoke-WebRequest -Uri $BaseUrl -UseBasicParsing -TimeoutSec 2 -ErrorAction Stop
+            if ($response.StatusCode -eq 200 -or $response.StatusCode -eq 404) {
+                $rootReady = $true
+                break
+            }
+        } catch {
+        }
+
+        Start-Sleep -Seconds 2
+    }
+
+    if (-not $rootReady) {
+        throw "BlackLab root endpoint did not become ready within $TimeoutSeconds seconds"
+    }
+
+    $queryUrl = "${BaseUrl}corpora/corapan/hits?patt=$([System.Uri]::EscapeDataString($SmokePattern))&number=1"
+    $queryResponse = Invoke-WebRequest -Uri $queryUrl -UseBasicParsing -TimeoutSec 10 -ErrorAction Stop
+    if ($queryResponse.StatusCode -ne 200) {
+        throw "BlackLab smoke query returned HTTP $($queryResponse.StatusCode)"
+    }
+}
+
 # Repository root
 $repoRoot = Split-Path -Parent $PSScriptRoot
 Set-Location $repoRoot
 $workspaceRoot = Split-Path -Parent $repoRoot
+$composeFile = Join-Path $workspaceRoot "docker-compose.dev-postgres.yml"
 $externalDataRoot = Join-Path $workspaceRoot "data"
 $externalMediaRoot = Join-Path $workspaceRoot "media"
 $useExternalRuntime = (Test-Path $externalDataRoot) -and (Test-Path $externalMediaRoot)
@@ -159,6 +225,50 @@ $env:BLS_BASE_URL = "http://localhost:8081/blacklab-server"
 $env:BLACKLAB_BASE_URL = $env:BLS_BASE_URL
 $env:BLS_CORPUS = "corapan"
 
+$blacklabRoot = Join-Path $workspaceRoot "data\blacklab"
+$canonicalBlackLabDirs = @(
+    $blacklabRoot,
+    (Join-Path $blacklabRoot "index"),
+    (Join-Path $blacklabRoot "export"),
+    (Join-Path $blacklabRoot "backups"),
+    (Join-Path $blacklabRoot "quarantine")
+)
+
+foreach ($directory in $canonicalBlackLabDirs) {
+    if (-not (Test-Path $directory)) {
+        New-Item -ItemType Directory -Path $directory -Force | Out-Null
+    }
+}
+
+$legacyBlackLabExport = Join-Path $workspaceRoot "data\blacklab_export"
+$legacyBlackLabIndex = Join-Path $workspaceRoot "data\blacklab_index"
+$canonicalBlackLabExport = Join-Path $blacklabRoot "export"
+$canonicalBlackLabIndex = Join-Path $blacklabRoot "index"
+$canonicalBlackLabExportContent = @(
+    Get-ChildItem -Path $canonicalBlackLabExport -Force -ErrorAction SilentlyContinue |
+        Where-Object { $_.Name -ne ".gitkeep" }
+)
+$canonicalBlackLabIndexContent = @(
+    Get-ChildItem -Path $canonicalBlackLabIndex -Force -ErrorAction SilentlyContinue |
+        Where-Object { $_.Name -ne ".gitkeep" }
+)
+
+if (
+    -not $SkipBlackLab -and
+    ((Test-Path $legacyBlackLabExport) -or (Test-Path $legacyBlackLabIndex)) -and
+    ($canonicalBlackLabExportContent.Count -eq 0 -or $canonicalBlackLabIndexContent.Count -eq 0)
+) {
+    throw (
+        "Legacy BlackLab dev layout detected under data\\blacklab_export or data\\blacklab_index, but the canonical tree data\\blacklab\\{index,export,backups,quarantine} is not populated. " +
+        "Run .\\scripts\\blacklab\\migrate_legacy_blacklab_dev_layout.ps1 -Apply before starting BlackLab."
+    )
+}
+
+$repoLocalDataRoot = Join-Path $repoRoot 'data'
+if (-not $SkipBlackLab -and (Test-Path $repoLocalDataRoot)) {
+    throw "Repo-local webapp/data exists. Dev BlackLab must use sibling data/blacklab, not webapp/data."
+}
+
 Write-Host "Starting CO.RA.PAN dev server..." -ForegroundColor Cyan
 Write-Host "AUTH_DATABASE_URL = $($env:AUTH_DATABASE_URL)"
 
@@ -185,7 +295,7 @@ if ($dockerAvailable) {
     if ($needsStart.Count -gt 0) {
         $servicesStr = $needsStart -join ", "
         Write-Host "Starting Docker services: $servicesStr" -ForegroundColor Yellow
-        docker compose -f docker-compose.dev-postgres.yml up -d $needsStart
+        docker compose -f $composeFile up -d $needsStart
 
         # Wait for Postgres to become ready before starting Flask.
         if ($needsStart -contains "corapan_auth_db") {
@@ -214,6 +324,21 @@ if ($dockerAvailable) {
     } else {
         Write-Host "Docker services already running." -ForegroundColor Gray
     }
+
+    if (-not $SkipBlackLab) {
+        $smokePattern = Get-BlackLabSmokePattern -WorkspaceRoot $workspaceRoot
+        Write-Host "Validating BlackLab readiness with a live query..." -ForegroundColor Gray
+        try {
+            Test-BlackLabAvailability -BaseUrl "http://127.0.0.1:8081/blacklab-server/" -SmokePattern $smokePattern -TimeoutSeconds 90
+            Write-Host "BlackLab is reachable and the active index answers search requests." -ForegroundColor Green
+        } catch {
+            Write-Host "ERROR: BlackLab is running but the active index is not readable." -ForegroundColor Red
+            Write-Host "  Smoke query: $smokePattern" -ForegroundColor Yellow
+            Write-Host "  Rebuild the index with .\webapp\scripts\blacklab\build_blacklab_index.ps1 after stopping blacklab-server-v3." -ForegroundColor Yellow
+            Write-Host "  Inspect logs with: docker logs --tail 100 blacklab-server-v3" -ForegroundColor Yellow
+            exit 1
+        }
+    }
 } else {
     Write-Host "WARN: Docker not available but Postgres is required for development." -ForegroundColor Red
 }
@@ -221,8 +346,8 @@ if ($dockerAvailable) {
 # Run the dev server
 Write-Host "`nStarting Flask dev server at http://localhost:8000" -ForegroundColor Cyan
 
-# Use venv Python if available, otherwise fall back to system Python
-$venvPython = Join-Path $repoRoot ".venv\Scripts\python.exe"
+# Use workspace-root venv Python if available, otherwise fall back to system Python
+$venvPython = Join-Path $workspaceRoot ".venv\Scripts\python.exe"
 if (-not (Test-Path $venvPython)) {
     $venvPython = "python"
 }

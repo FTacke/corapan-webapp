@@ -1,8 +1,24 @@
 from __future__ import annotations
 
+import os
+import importlib.util
 from pathlib import Path
 
-from src.app import runtime_paths
+os.environ.setdefault("FLASK_ENV", "development")
+os.environ.setdefault("CORAPAN_RUNTIME_ROOT", str(Path(__file__).resolve().parents[2]))
+os.environ.setdefault(
+    "CORAPAN_MEDIA_ROOT",
+    str(Path(__file__).resolve().parents[2] / "media"),
+)
+
+_runtime_paths_spec = importlib.util.spec_from_file_location(
+    "runtime_paths_under_test",
+    Path(__file__).resolve().parents[1] / "src" / "app" / "runtime_paths.py",
+)
+assert _runtime_paths_spec is not None
+assert _runtime_paths_spec.loader is not None
+runtime_paths = importlib.util.module_from_spec(_runtime_paths_spec)
+_runtime_paths_spec.loader.exec_module(runtime_paths)
 
 
 def test_central_runtime_getters_resolve_canonical_paths(monkeypatch, tmp_path):
@@ -22,7 +38,7 @@ def test_central_runtime_getters_resolve_canonical_paths(monkeypatch, tmp_path):
     assert runtime_paths.get_stats_dir() == runtime_root / "data" / "public" / "statistics"
     assert runtime_paths.get_stats_temp_dir() == runtime_root / "data" / "stats_temp"
     assert runtime_paths.get_metadata_dir() == runtime_root / "data" / "public" / "metadata" / "latest"
-    assert runtime_paths.get_docmeta_path() == runtime_root / "data" / "blacklab_export" / "docmeta.jsonl"
+    assert runtime_paths.get_docmeta_path() == runtime_root / "data" / "blacklab" / "export" / "docmeta.jsonl"
 
 
 def test_explicit_stats_env_overrides_still_use_single_source(monkeypatch, tmp_path):

@@ -7,7 +7,13 @@ import os
 import httpx
 
 BLS_URL = os.environ.get("BLS_BASE_URL", "http://localhost:8081/blacklab-server")
-BLS_CORPUS = os.environ.get("BLS_CORPUS", "index")
+_bls_corpus = os.environ.get("BLS_CORPUS")
+if not _bls_corpus or not _bls_corpus.strip():
+    raise RuntimeError(
+        "BLS_CORPUS environment variable is required. "
+        "For the canonical dev stack, set BLS_CORPUS=corapan."
+    )
+BLS_CORPUS = _bls_corpus.strip()
 ADVANCED_API = "http://localhost:8000/search/advanced/data"
 CORPUS_API = "http://localhost:8000/corpus/search/datatables"
 

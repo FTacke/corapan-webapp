@@ -4,15 +4,19 @@
 
 set -euo pipefail
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+WEBAPP_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
+WORKSPACE_ROOT="$(cd "${WEBAPP_ROOT}/.." && pwd)"
+
 # Colors for output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
-# Configuration (all relative paths from project root)
-CORAPAN_JSON_DIR="${CORAPAN_JSON_DIR:-media/transcripts}"
-BLACKLAB_ROOT="data/blacklab"
+# Configuration (workspace-root data/media, webapp-root config)
+CORAPAN_JSON_DIR="${CORAPAN_JSON_DIR:-${WORKSPACE_ROOT}/media/transcripts}"
+BLACKLAB_ROOT="${WORKSPACE_ROOT}/data/blacklab"
 EXPORT_DIR="${BLACKLAB_ROOT}/export/tsv"
 INDEX_DIR="${BLACKLAB_ROOT}/index"
 INDEX_DIR_NEW="${BLACKLAB_ROOT}/quarantine/index.build"
@@ -22,8 +26,8 @@ INDEX_DIR_JSON="${BLACKLAB_ROOT}/quarantine/index_json"
 INDEX_DIR_NEW_JSON="${BLACKLAB_ROOT}/quarantine/index_json.build"
 BACKUP_DIR_ROOT="${BLACKLAB_ROOT}/backups"
 QUARANTINE_DIR_ROOT="${BLACKLAB_ROOT}/quarantine"
-BLF_CONFIG="config/blacklab/corapan-tsv.blf.yaml"
-LOG_FILE="logs/bls/index_build.log"
+BLF_CONFIG="${WORKSPACE_ROOT}/config/blacklab/corapan-tsv.blf.yaml"
+LOG_FILE="${WEBAPP_ROOT}/logs/bls/index_build.log"
 
 FORMAT="${1:-tsv}"
 WORKERS="${2:-4}"
@@ -50,11 +54,11 @@ log "Export dir: $EXPORT_DIR"
 log "Index target: $INDEX_DIR"
 
 # Ensure JSON migration to v3 runs before export: migrate legacy top-level fields into morph
-if [ -f "scripts/migrate_json_v3.py" ]; then
+if [ -f "${WEBAPP_ROOT}/scripts/migrate_json_v3.py" ]; then
     log "Running JSON v3 migration to normalize past/future fields..."
-    python scripts/migrate_json_v3.py 2>&1 | tee -a "$LOG_FILE" || warn "Migration script reported errors"
+    python "${WEBAPP_ROOT}/scripts/migrate_json_v3.py" 2>&1 | tee -a "$LOG_FILE" || warn "Migration script reported errors"
 else
-    warn "Migration script not found: scripts/migrate_json_v3.py"
+    warn "Migration script not found: ${WEBAPP_ROOT}/scripts/migrate_json_v3.py"
 fi
 
 # Step 1: Verify prerequisites
@@ -82,7 +86,7 @@ if [ "$FORMAT" = "json" ]; then
     JSON_COUNT=$(find "$JSON_EXPORT_DIR" -maxdepth 1 -type f -name '*.json' | wc -l)
     if [ "$JSON_COUNT" -eq 0 ]; then
         log "No JSON-ready files found. Preparing json_ready export..."
-        python3 scripts/prepare_json_for_blacklab.py --in "$CORAPAN_JSON_DIR" --out "$JSON_EXPORT_DIR" 2>&1 | tee -a "$LOG_FILE"
+        python3 "${WEBAPP_ROOT}/scripts/blacklab/prepare_json_for_blacklab.py" --in "$CORAPAN_JSON_DIR" --out "$JSON_EXPORT_DIR" 2>&1 | tee -a "$LOG_FILE"
     else
         log "Using existing JSON-ready files in $JSON_EXPORT_DIR"
     fi
@@ -91,13 +95,15 @@ else
     log "No exported $FORMAT files found. Running export..."
     mkdir -p "$EXPORT_DIR"
     
-    python -m src.scripts.blacklab_index_creation \
-        --in "$CORAPAN_JSON_DIR" \
-        --out "$EXPORT_DIR" \
-        --docmeta "$EXPORT_DIR/docmeta.jsonl" \
-        --format "$FORMAT" \
-        --workers "$WORKERS" \
-        2>&1 | tee -a "$LOG_FILE"
+    (
+        cd "$WEBAPP_ROOT"
+        python -m src.scripts.blacklab_index_creation \
+            --in "$CORAPAN_JSON_DIR" \
+            --out "$EXPORT_DIR" \
+            --docmeta "${BLACKLAB_ROOT}/export/docmeta.jsonl" \
+            --format "$FORMAT" \
+            --workers "$WORKERS"
+    ) 2>&1 | tee -a "$LOG_FILE"
 else
     log "Using existing exported $FORMAT files"
 fi
@@ -154,7 +160,10 @@ elif [ "$FORMAT" = "json" ]; then
     JSON_TSV_DIR="$EXPORT_DIR/../tsv_json"
     mkdir -p "$JSON_TSV_DIR"
     log "Exporting JSON -> TSV to $JSON_TSV_DIR"
-    python -m src.scripts.blacklab_index_creation --in "$CORAPAN_JSON_DIR" --out "$JSON_TSV_DIR" --docmeta "$JSON_TSV_DIR/docmeta.jsonl" --format tsv --workers "$WORKERS" 2>&1 | tee -a "$LOG_FILE"
+    (
+        cd "$WEBAPP_ROOT"
+        python -m src.scripts.blacklab_index_creation --in "$CORAPAN_JSON_DIR" --out "$JSON_TSV_DIR" --docmeta "$JSON_TSV_DIR/docmeta.jsonl" --format tsv --workers "$WORKERS"
+    ) 2>&1 | tee -a "$LOG_FILE"
 
     # prepare clean TSV dir inside json_tsv dir
     CLEAN_JSON_TSV_DIR="$JSON_TSV_DIR/tsv_for_index"

@@ -1,32 +1,24 @@
 #!/usr/bin/env python3
-"""
-Central wrapper to run the canonical BlackLab export runner under LOKAL
-This allows starting the export from a central `scripts` path while keeping the
-single source-of-truth script at `LOKAL/01 - Add New Transcriptions/03b_generate_blacklab_export.py`.
-"""
+"""Run the canonical BlackLab export entrypoint from the webapp script path."""
 
 from pathlib import Path
+import os
 import subprocess
 import sys
 
-REPO_ROOT = Path(__file__).resolve().parents[1]
-LOKAL_RUNNER = (
-    REPO_ROOT
-    / "LOKAL"
-    / "01 - Add New Transcriptions"
-    / "03b_generate_blacklab_export.py"
-)
+
+WEBAPP_ROOT = Path(__file__).resolve().parents[2]
+WORKSPACE_ROOT = WEBAPP_ROOT.parent
+
 
 if __name__ == "__main__":
-    if not LOKAL_RUNNER.exists():
-        print(f"ERROR: LOKAL runner not found: {LOKAL_RUNNER}")
-        sys.exit(1)
-
-    cmd = [sys.executable, str(LOKAL_RUNNER)]
+    cmd = [sys.executable, "-m", "src.scripts.blacklab_index_creation", *sys.argv[1:]]
+    print(f"[INFO] Workspace root: {WORKSPACE_ROOT}")
+    print(f"[INFO] Webapp root: {WEBAPP_ROOT}")
     print(f"[INFO] Invoking: {' '.join(cmd)}")
     rc = subprocess.call(
         cmd,
-        cwd=str(REPO_ROOT),
-        env={**subprocess.os.environ, "PYTHONIOENCODING": "utf-8"},
+        cwd=str(WEBAPP_ROOT),
+        env={**os.environ, "PYTHONIOENCODING": "utf-8"},
     )
     sys.exit(rc)

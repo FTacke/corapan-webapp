@@ -6,7 +6,7 @@
     This script creates a temporary index and runs the IndexTool inside Docker
     with only the provided VEN TSV files (or default two problem files). It uses
     `--threads 1` to isolate the concurrency factor and outputs logs to
-    `data/blacklab_index.debug_ven/build.log`.
+    `data/blacklab/quarantine/debug_ven_index/build.log`.
 #>
 
 param(
@@ -21,9 +21,9 @@ $BLACKLAB_IMAGE = "instituutnederlandsetaal/blacklab:latest"
 
 # Paths
 $repoRoot = Split-Path -Parent $PSScriptRoot
-$EXPORT_DIR = Join-Path $repoRoot "data\blacklab_export"
+$EXPORT_DIR = Join-Path $repoRoot "data\blacklab\export"
 $TSV_DIR = Join-Path $EXPORT_DIR "tsv"
-$DEBUG_INDEX_DIR = Join-Path $repoRoot "data\blacklab_index.debug_ven"
+$DEBUG_INDEX_DIR = Join-Path $repoRoot "data\blacklab\quarantine\debug_ven_index"
 $BLF_CONFIG = Join-Path $repoRoot "config\blacklab\corapan-tsv.blf.yaml"
 $BUILD_LOG = Join-Path $DEBUG_INDEX_DIR "build.log"
 

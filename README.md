@@ -201,7 +201,7 @@ python scripts/create_initial_admin.py --username admin --password change-me
 ### 6. BlackLab Index (Optional/Initial)
 Falls noch kein Index vorhanden ist, muss dieser erstellt werden. Siehe dazu `docs/how-to/quickstart-windows.md` oder nutzen Sie das Skript:
 ```powershell
-.\scripts\build_blacklab_index.ps1
+.\scripts\blacklab\build_blacklab_index.ps1
 ```
 
 **Hinweis:** Für ein minimales Template ohne Korpus-Suchfunktion kann dieser Schritt übersprungen werden.
