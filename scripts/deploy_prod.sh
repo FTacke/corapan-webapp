@@ -126,7 +126,7 @@ else
 fi
 echo ""
 
-# Step 3: Start via Docker Compose (runtime-first)
+# Step 3: Start via Docker Compose (canonical top-level mounts)
 log_info "Starting production stack via ${COMPOSE_VARIANT}..."
 "${COMPOSE_CMD[@]}" --env-file "${ENV_FILE}" \
   -f "${COMPOSE_FILE}" up -d --force-recreate --build
@@ -143,8 +143,8 @@ else
 fi
 echo ""
 
-# Step 5: Verify runtime-first mounts (container destinations + write test)
-log_info "Verifying runtime-first mounts..."
+# Step 5: Verify canonical mounts (container destinations + write test)
+log_info "Verifying canonical mounts..."
 
 mount_dests="$(docker inspect "${CONTAINER_NAME}" --format '{{range .Mounts}}{{println .Destination}}{{end}}' \
   | tr -d '\r' | sort)"
@@ -173,8 +173,8 @@ fi
 # Minimal write proof (permissions)
 docker exec "${CONTAINER_NAME}" bash -lc 'set -e; touch /app/data/stats_temp/.deploy_write_test && rm -f /app/data/stats_temp/.deploy_write_test'
 
-log_info "✓ Mount destinations present"
-log_info "✓ Write check ok"
+log_info "Mount destinations present"
+log_info "Write check ok"
 echo ""
 
 # Step 6: Health check (wait/retry)

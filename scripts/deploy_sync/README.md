@@ -134,7 +134,7 @@ Connection parameters (hostname/user/port/key) and remote runtime roots are conf
 - `-KeepBackups`: Number of backups to retain (default: 2)
 - `-NoBackupCleanup`: Skip automatic cleanup of old backups
 
-`publish_blacklab_index.ps1` intentionally does not reuse the runtime-first `DataRoot` that powers `sync_data.ps1`. BlackLab publish defaults to the canonical top-level BlackLab root `/srv/webapps/corapan/data/blacklab`, while data and media deploy remain runtime-first.
+`publish_blacklab_index.ps1` intentionally does not reuse the general `DataRoot` that powers `sync_data.ps1`. BlackLab publish defaults to the canonical BlackLab root `/srv/webapps/corapan/data/blacklab`.
 
 **Process:**
 1. Validates local `data/blacklab/quarantine/index.build/` exists
@@ -184,28 +184,31 @@ Invoke-SSH -Hostname $Hostname -User $User -Port $Port -Command "ls -la /srv"
 
 ## Safety & Best Practices
 
-### Runtime-First Production Contract
+### Canonical Production Contract
 
-**Production is runtime-first.** The runtime root is:
+**Production uses the canonical top-level layout.** The remote roots are:
 
-- `/srv/webapps/corapan/runtime/corapan`
+- `/srv/webapps/corapan/data`
+- `/srv/webapps/corapan/media`
+- `/srv/webapps/corapan/logs`
+- `/srv/webapps/corapan/data/config`
 
-The container **must** mount runtime paths directly into `/app`:
+The container **must** mount these paths directly into `/app`:
 
-- `/srv/webapps/corapan/runtime/corapan/data`  -> `/app/data`
-- `/srv/webapps/corapan/runtime/corapan/media` -> `/app/media`
-- `/srv/webapps/corapan/runtime/corapan/logs`  -> `/app/logs`
-- `/srv/webapps/corapan/runtime/corapan/config`-> `/app/config`
+- `/srv/webapps/corapan/data`        -> `/app/data`
+- `/srv/webapps/corapan/media`       -> `/app/media`
+- `/srv/webapps/corapan/logs`        -> `/app/logs`
+- `/srv/webapps/corapan/data/config` -> `/app/config`
 
-**Legacy paths are deprecated:**
+**Legacy runtime paths are deprecated:**
 
-- `/srv/webapps/corapan/data|media|logs` are legacy and **not** target paths for deploy scripts.
+- `/srv/webapps/corapan/runtime/corapan/*` are migration leftovers and must not remain the canonical production targets.
 
 **Preflight guard:**
 
 `sync_data.ps1` and `sync_media.ps1` run a remote preflight check. If the container is not running or mounts drift from the contract, the script aborts with:
 
-> Prod mount drift: corapan-webapp is not runtime-first. Fix docker-compose.prod.yml mounts.
+> Prod mount drift: corapan-web-prod is not using the canonical top-level mounts. Fix docker-compose.prod.yml mounts.
 
 ### Production State Protection (Hard-Coded)
 

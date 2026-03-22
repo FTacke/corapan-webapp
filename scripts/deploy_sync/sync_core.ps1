@@ -95,7 +95,7 @@ $script:RsyncAvailabilityLogged = $false
 $script:SyncVerbose = $false
 
 # -----------------------------------------------------------------------------
-# Runtime-First Guard: Validate production container mounts
+# Production mount guard: validate canonical production container mounts
 # -----------------------------------------------------------------------------
 
 function Assert-RemoteRuntimeFirstMounts {
@@ -104,8 +104,8 @@ function Assert-RemoteRuntimeFirstMounts {
         [string]$RuntimeRoot
     )
     
-    $containerName = "corapan-webapp"
-    $errorMessage = "Prod mount drift: corapan-webapp is not runtime-first. Fix docker-compose.prod.yml mounts."
+    $containerName = "corapan-web-prod"
+    $errorMessage = "Prod mount drift: corapan-web-prod is not using the canonical top-level mounts. Fix docker-compose.prod.yml mounts."
     
     try {
         $runningRaw = Invoke-SSHCommand -Command "docker inspect -f '{{.State.Running}}' $containerName 2>/dev/null" -PassThru -NoThrow

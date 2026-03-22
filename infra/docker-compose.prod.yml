@@ -84,13 +84,12 @@ services:
       BLS_BASE_URL: http://corapan-blacklab:8080/blacklab-server
       BLS_CORPUS: corapan
     volumes:
-      # Production uses runtime-first mounts.
-      # Container paths (/app/*) are treated as stable API.
-      - /srv/webapps/corapan/runtime/corapan/data:/app/data
-      - /srv/webapps/corapan/data/blacklab/export:/app/data/blacklab/export:ro
-      - /srv/webapps/corapan/runtime/corapan/media:/app/media
-      - /srv/webapps/corapan/runtime/corapan/logs:/app/logs
-      - /srv/webapps/corapan/runtime/corapan/config:/app/config
+      # Production uses the canonical top-level layout.
+      # Container paths (/app/*) remain the stable internal API.
+      - /srv/webapps/corapan/data:/app/data
+      - /srv/webapps/corapan/media:/app/media
+      - /srv/webapps/corapan/logs:/app/logs
+      - /srv/webapps/corapan/data/config:/app/config
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
       interval: 30s
