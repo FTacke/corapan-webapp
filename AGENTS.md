@@ -20,7 +20,7 @@ If required information is missing or contradictory:
 - ask the user if uncertainty remains
 - never invent defaults or implied values
 
-## Default Order
+## Default Order 
 
 1. Read
 - inspect the relevant compose file, src/app/config/__init__.py, scripts, implementation code, and docs
