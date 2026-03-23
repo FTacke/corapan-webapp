@@ -1,8 +1,4 @@
-# CO.RA.PAN Development Stack: PostgreSQL (Auth-DB) + BlackLab Server
-# Start with: docker compose -f docker-compose.dev-postgres.yml up -d
-# Stop with:  docker compose -f docker-compose.dev-postgres.yml down
-#
-# Default auth DB URL: postgresql+psycopg://corapan_auth:corapan_auth@localhost:54320/corapan_auth
+# CO.RA.PAN canonical development stack rooted at CORAPAN/
 
 services:
   corapan_auth_db:
@@ -15,8 +11,8 @@ services:
     ports:
       - "54320:5432"
     volumes:
-      - ../data/db/restricted/postgres_dev:/var/lib/postgresql/data
-      - ./:/app:ro
+      - ./data/db/restricted/postgres_dev:/var/lib/postgresql/data
+      - ./app:/app:ro
     healthcheck:
       test: ["CMD", "pg_isready", "-U", "corapan_auth", "-d", "corapan_auth"]
       interval: 5s
@@ -26,20 +22,13 @@ services:
     restart: unless-stopped
 
   blacklab-server-v3:
-    # IMPORTANT: Image MUST be pinned to digest (not :latest).
-    # Floating tags cause unpredictable breakage when upstream image updates.
-    # If you need to update this digest, rebuild the dev index:
-    #   Rename-Item data/blacklab/index "index.bad_$(Get-Date -Format yyyyMMdd_HHmmss)"
-    #   docker compose down && docker compose up -d
-    # See: docs/operations/blacklab_dev_health.md
     image: instituutnederlandsetaal/blacklab@sha256:3753dbce4fee11f8706b63c5b94bf06eac9d3843c75bf2eef6412ff47208c2e7
     container_name: blacklab-server-v3
     ports:
       - "8081:8080"
     volumes:
-      # Mount index as /data/index/corapan so BlackLab sees corpus "corapan"
-      - ../data/blacklab/index:/data/index/corapan:ro
-      - ../config/blacklab:/etc/blacklab:ro
+      - ./data/blacklab/index:/data/index/corapan:ro
+      - ./app/config/blacklab:/etc/blacklab:ro
     environment:
       JAVA_OPTS: "-Xmx2g -Xms512m"
       BLACKLAB_CONFIG_DIR: "/etc/blacklab"

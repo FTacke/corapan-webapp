@@ -1,0 +1,38 @@
+# Ignore JSON files
+*.json
+
+# Ignore backup directories
+json-backup/
+
+# Ignore ZIP files
+*.zip
+
+# Ignore Python cache
+__pycache__/
+*.pyc
+
+# Ignore results directories
+results/
+
+# Ignore static images
+static/img/
+
+# Ignore archived files
+archived_*/
+
+# Ignore generated Zenodo data
+_1_zenodo-repos/Zenodo Metadata/
+_1_zenodo-repos/Zenodo Full Corpus/
+_1_zenodo-repos/Zenodo Sample Corpus/
+
+# Ignore analysis results
+_3_analysis_on_json/analysis_*_results_*.csv
+_3_analysis_on_json/tenses_tidy.csv
+_3_analysis_on_json/alte Ergebnisse/
+_3_analysis_on_json/alte Scripte/
+_3_analysis_on_json/analysis_results/
+
+# Ignore log files
+*.log
+_logs/
+_*/logs/

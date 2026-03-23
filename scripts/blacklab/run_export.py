@@ -1,24 +1,12 @@
-#!/usr/bin/env python3
-"""Run the canonical BlackLab export entrypoint from the webapp script path."""
-
 from pathlib import Path
-import os
-import subprocess
+import runpy
 import sys
 
 
-WEBAPP_ROOT = Path(__file__).resolve().parents[2]
-WORKSPACE_ROOT = WEBAPP_ROOT.parent
+workspace_root = Path(__file__).resolve().parents[2]
+implementation = workspace_root / "app" / "scripts" / "blacklab" / "run_export.py"
+if not implementation.is_file():
+	raise FileNotFoundError(f"Could not resolve BlackLab export implementation: {implementation}")
 
-
-if __name__ == "__main__":
-    cmd = [sys.executable, "-m", "src.scripts.blacklab_index_creation", *sys.argv[1:]]
-    print(f"[INFO] Workspace root: {WORKSPACE_ROOT}")
-    print(f"[INFO] Webapp root: {WEBAPP_ROOT}")
-    print(f"[INFO] Invoking: {' '.join(cmd)}")
-    rc = subprocess.call(
-        cmd,
-        cwd=str(WEBAPP_ROOT),
-        env={**os.environ, "PYTHONIOENCODING": "utf-8"},
-    )
-    sys.exit(rc)
+sys.argv[0] = str(implementation)
+runpy.run_path(str(implementation), run_name="__main__")

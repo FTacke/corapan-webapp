@@ -15,7 +15,8 @@
 # Prerequisites on the server:
 #   - GitHub self-hosted runner configured and running
 #   - Docker installed
-#   - /srv/webapps/corapan/{app,config,runtime} directories set up
+#   - /srv/webapps/corapan/app checkout present
+#   - /srv/webapps/corapan/data, /srv/webapps/corapan/media, and /srv/webapps/corapan/logs present
 #   - passwords.env configured in /srv/webapps/corapan/config/
 #
 # =============================================================================
@@ -36,7 +37,7 @@ jobs:
     runs-on: self-hosted
 
     steps:
-      - name: Deploy corapan-webapp
+      - name: Deploy corapan app
         run: |
           cd /srv/webapps/corapan/app
           git fetch --prune origin
