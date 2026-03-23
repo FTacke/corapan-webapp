@@ -111,8 +111,14 @@ echo ""
 # Step 1: Update code from Git
 log_info "Fetching latest code from origin/main..."
 git fetch origin
-git reset --hard origin/main
-log_info "Code updated to: $(git rev-parse --short HEAD)"
+
+if [ -n "${GITHUB_SHA:-}" ]; then
+  git reset --hard "${GITHUB_SHA}"
+  log_info "Code updated to workflow SHA: $(git rev-parse --short HEAD)"
+else
+  git reset --hard origin/main
+  log_info "Code updated to origin/main: $(git rev-parse --short HEAD)"
+fi
 echo ""
 
 # Step 2: Remove legacy container if present (avoid port conflicts)

@@ -42,7 +42,8 @@ jobs:
       run: |
         set -euo pipefail
         export R=/tmp/runtime
-        mkdir -p "$R"/{data,media,logs,config}
+        mkdir -p "$R"/data/config
+        mkdir -p "$R"/{data,media,logs}
         mkdir -p "$R"/data/blacklab/export
         # tests expect this file; empty is fine for collection
         touch "$R"/data/blacklab/export/docmeta.jsonl
@@ -102,7 +103,8 @@ jobs:
         run: |
           set -euo pipefail
           export R=/tmp/runtime
-          mkdir -p "$R"/{data,media,logs,config}
+          mkdir -p "$R"/data/config
+          mkdir -p "$R"/{data,media,logs}
           mkdir -p "$R"/data/blacklab/export
           touch "$R"/data/blacklab/export/docmeta.jsonl
           echo "CI runtime prepared at $R"
