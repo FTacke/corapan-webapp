@@ -1,0 +1,29 @@
+﻿{% extends 'base.html' %}
+{% set page_name = 'atlas' %}
+{% block page_title %}Atlas · CO.RA.PAN{% endblock %}
+
+{% block content %}
+<div class="md3-page">
+  <header class="md3-page__header">
+    <div class="md3-hero md3-hero--card md3-hero__container">
+      <div class="md3-hero__icon" aria-hidden="true"><span class="material-symbols-rounded">public</span></div>
+      <div class="md3-hero__content">
+        <p class="md3-body-small md3-hero__eyebrow">Atlas</p>
+        <h1 class="md3-headline-medium md3-hero__title">Atlas panhispánico</h1>
+        <p class="md3-body-medium md3-hero__intro">
+          Panorama geográfico del corpus: países, regiones y emisoras.
+        </p>
+      </div>
+    </div>
+  </header>
+
+  <!-- Map-only Content -->
+  <main class="md3-atlas-content">
+    <section class="md3-atlas-layout">
+      <div class="md3-atlas-map-container">
+        <div id="atlas-map" class="md3-atlas-map" role="region" aria-label="Mapa panhispánico de emisoras"></div>
+      </div>
+    </section>
+  </main>
+</div>
+{% endblock %}

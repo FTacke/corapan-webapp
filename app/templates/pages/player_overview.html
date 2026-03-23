@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+{% set page_name = 'player_overview' %}
+{% block page_title %}Player · CO.RA.PAN{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/md3/components/tabs.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/md3/components/corpus-metadata.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="md3-page" role="main" aria-label="Player del corpus" data-element="player-overview-root" data-initial-country="{{ country if country else '' }}">
+  <header class="md3-page__header">
+    <div class="md3-hero md3-hero--card md3-hero__container">
+      <div class="md3-hero__icon" aria-hidden="true"><span class="material-symbols-rounded">play_circle</span></div>
+      <div class="md3-hero__content">
+        <p class="md3-body-small md3-hero__eyebrow">Corpus</p>
+        <h1 class="md3-headline-medium md3-hero__title">Player</h1>
+      </div>
+    </div>
+  </header>
+
+  <main class="md3-text-page">
+    {# Country Filter Chips #}
+    <nav class="md3-country-filter" role="tablist" aria-label="Selección de país" data-element="player-tabs">
+      {# Populated by JavaScript #}
+    </nav>
+
+    {# Country Panels Container #}
+    <div class="md3-country-panels" data-element="player-panels">
+      {# Populated by JavaScript #}
+    </div>
+
+    {# Loading State #}
+    <div class="md3-metadata-loading" data-element="player-loading">
+      <div class="md3-metadata-loading__spinner"></div>
+      <p class="md3-body-medium">Cargando grabaciones...</p>
+    </div>
+
+    {# Error State #}
+    <div class="md3-metadata-error" data-element="player-error" hidden>
+      <span class="material-symbols-rounded">error</span>
+      <p class="md3-body-medium">Error al cargar las grabaciones. Por favor, recargue la página.</p>
+    </div>
+  </main>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="{{ url_for('static', filename='js/player-overview-init.js') }}" defer></script>
+<script type="module" src="{{ url_for('static', filename='js/modules/player-overview.js') }}" defer></script>
+{% endblock %}

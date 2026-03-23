@@ -1,0 +1,73 @@
+.venv/
+logs/
+data/
+media/
+runtime/
+
+# Application-local virtualenvs and runtime leftovers
+app/.venv/
+app/.venv*/
+app/runtime/
+webapp/.venv/
+webapp/.venv*/
+webapp/runtime/
+
+# Secrets and local environment files
+.env
+.env.*
+!.env.example
+passwords.env
+app/.env
+app/.env.*
+!app/.env.example
+app/passwords.env
+webapp/.env
+webapp/.env.*
+!webapp/.env.example
+webapp/passwords.env
+
+# Python caches and test artifacts
+**/__pycache__/
+*.py[cod]
+.pytest_cache/
+.coverage
+.coverage.*
+coverage.xml
+.ruff_cache/
+.mypy_cache/
+.hypothesis/
+
+# Node and browser test artifacts
+app/node_modules/
+webapp/node_modules/
+app/test-results/
+app/playwright-report/
+webapp/test-results/
+webapp/playwright-report/
+
+# Local build, temp, and report artifacts
+tmp/
+temp/
+.cache/
+reports/
+*.tmp
+*.bak
+*.backup
+*.old
+*.dump
+*.sql.gz
+*.sql.zip
+*.tar.gz
+
+# App-local scratch areas
+app/tmp/
+webapp/tmp/
+app/.pytest_cache/
+webapp/.pytest_cache/
+
+# Logs
+*.log
+*.log.*
+
+# Legacy runtime data traces that must never become canonical again
+webapp/data/

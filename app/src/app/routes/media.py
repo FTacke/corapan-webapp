@@ -1,0 +1,327 @@
+"""Media-serving endpoints with public toggle."""
+
+from __future__ import annotations
+
+from pathlib import Path
+
+from flask import (
+    Blueprint,
+    abort,
+    current_app,
+    g,
+    jsonify,
+    request,
+    send_file,
+)
+import json
+
+from ..config import code_to_name
+from flask_jwt_extended import jwt_required
+
+from ..auth import Role
+from ..auth.decorators import require_role
+from ..services import audio_snippets, media_store
+
+blueprint = Blueprint("media", __name__, url_prefix="/media")
+
+
+def _secure_path(base: Path, filename: str) -> Path:
+    candidate = (base / filename).resolve()
+    media_store.ensure_within(base, candidate)
+    if not candidate.exists():
+        current_app.logger.warning(
+            "Media file not found: base=%s filename=%s resolved=%s",
+            base,
+            filename,
+            candidate,
+        )
+        abort(404)
+    return candidate
+
+
+def _send_from_base(base: Path, resolved: Path, **kwargs):
+    try:
+        resolved.relative_to(base)
+    except ValueError:
+        current_app.logger.warning(
+            "Resolved media path outside base: base=%s resolved=%s",
+            base,
+            resolved,
+        )
+        abort(404)
+
+    if not resolved.exists():
+        current_app.logger.warning(
+            "Resolved media path missing: resolved=%s",
+            resolved,
+        )
+        abort(404)
+
+    return send_file(resolved, conditional=True, **kwargs)
+
+
+def _temp_access_allowed() -> bool:
+    return (
+        current_app.config.get("ALLOW_PUBLIC_TEMP_AUDIO", False)
+        or getattr(g, "user", None) is not None
+    )
+
+
+@blueprint.get("/full/<path:filename>")
+def download_full(filename: str):
+    """
+    Serve full MP3 files with intelligent country subfolder detection.
+
+    PUBLIC ROUTE (conditionally): No decorator needed.
+    - For authenticated users: Always allowed
+    - For unauthenticated: Only if public access is enabled
+    """
+    # Check if user is authenticated or public access is allowed
+    if not (
+        getattr(g, "user", None)
+        or current_app.config.get("ALLOW_PUBLIC_FULL_AUDIO", False)
+    ):
+        abort(401, "Authentication required to access full audio files")
+
+    # Use intelligent path resolution with country subfolder detection
+    current_app.logger.debug(
+        "Audio request: filename=%s AUDIO_FULL_DIR=%s",
+        filename,
+        current_app.config.get("AUDIO_FULL_DIR"),
+    )
+    path = media_store.safe_audio_full_path(filename)
+    current_app.logger.debug(
+        "Audio resolution: filename=%s resolved_path=%s exists=%s",
+        filename,
+        path,
+        path.exists() if path else None,
+    )
+    if path is None:
+        current_app.logger.warning(
+            "Full audio not found: filename=%s base=%s",
+            filename,
+            current_app.config.get("AUDIO_FULL_DIR"),
+        )
+        abort(404, f"Audio file not found: {filename}")
+
+    # Determine if download or streaming based on query parameter
+    download_flag = request.args.get("download")
+    as_attachment = download_flag is not None
+
+    return _send_from_base(
+        Path(current_app.config["AUDIO_FULL_DIR"]),
+        path,
+        mimetype="audio/mpeg",
+        as_attachment=as_attachment,
+        download_name=path.name if as_attachment else None,
+    )
+
+
+@blueprint.get("/split/<path:filename>")
+@jwt_required()
+def download_split(filename: str):
+    base_dir = media_store.audio_split_dir()
+    path = _secure_path(base_dir, filename)
+    return _send_from_base(base_dir, path, mimetype="audio/mpeg", as_attachment=False)
+
+
+@blueprint.get("/temp/<path:filename>")
+def download_temp(filename: str):
+    """PUBLIC ROUTE (conditionally): Access controlled by ALLOW_PUBLIC_TEMP_AUDIO config."""
+    if not _temp_access_allowed():
+        abort(401)
+    base_dir = media_store.audio_temp_dir()
+    path = _secure_path(base_dir, filename)
+    return _send_from_base(base_dir, path, mimetype="audio/mpeg", as_attachment=False)
+
+
+@blueprint.post("/snippet")
+def create_snippet():
+    """PUBLIC ROUTE (conditionally): Access controlled by ALLOW_PUBLIC_TEMP_AUDIO config.
+
+    CSRF: Required for POST (via JWT-CSRF if user logged in).
+    """
+    # Debug: log presence of JWT cookie and user context (always log, even if access denied)
+    jwt_cookie_name = current_app.config.get(
+        "JWT_ACCESS_COOKIE_NAME", "access_token_cookie"
+    )
+    has_jwt = jwt_cookie_name in request.cookies
+    current_app.logger.debug(
+        f"[Media.play_audio] Attempt to play: JWT cookie present: {has_jwt}; cookie_keys: {list(request.cookies.keys())}; g.user: {getattr(g, 'user', None)}; ALLOW_PUBLIC_TEMP_AUDIO: {current_app.config.get('ALLOW_PUBLIC_TEMP_AUDIO', False)}"
+    )
+    if not _temp_access_allowed():
+        abort(401)
+    payload = request.get_json(silent=True) or {}
+    filename = payload.get("filename")
+    start = payload.get("start")
+    end = payload.get("end")
+    try:
+        start_val = float(start)
+        end_val = float(end)
+    except (TypeError, ValueError):
+        abort(400, "Invalid start/end values")
+    if not filename:
+        abort(400, "Filename required")
+    try:
+        snippet_path = audio_snippets.build_snippet(filename, start_val, end_val)
+    except FileNotFoundError:
+        abort(404, "Audio source not found")
+    except audio_snippets.AudioProcessingDependencyError as exc:
+        current_app.logger.error(
+            "Snippet backend unavailable: filename=%s start=%s end=%s error=%s",
+            filename,
+            start_val,
+            end_val,
+            exc,
+        )
+        abort(503, "Audio snippet backend unavailable")
+    except ValueError as exc:
+        abort(400, str(exc))
+    download_name = snippet_path.name
+    return send_file(
+        snippet_path,
+        mimetype="audio/mpeg",
+        as_attachment=False,
+        download_name=download_name,
+    )
+
+
+@blueprint.get("/transcripts/<path:filename>")
+def fetch_transcript(filename: str):
+    """
+    Serve transcript JSON files.
+
+    PUBLIC ROUTE (conditionally): No decorator needed.
+    - For authenticated users: Always allowed
+    - For unauthenticated: Only if public access is enabled
+    """
+    # Check if user is authenticated or public access is allowed
+    if not (
+        getattr(g, "user", None)
+        or current_app.config.get("ALLOW_PUBLIC_TRANSCRIPTS", False)
+    ):
+        abort(401, "Authentication required to access transcripts")
+
+    current_app.logger.debug(
+        "Transcript request: filename=%s TRANSCRIPTS_DIR=%s",
+        filename,
+        current_app.config.get("TRANSCRIPTS_DIR"),
+    )
+    transcript = media_store.safe_transcript_path(filename)
+    current_app.logger.debug(
+        "Transcript resolution: filename=%s resolved_path=%s exists=%s",
+        filename,
+        transcript,
+        transcript.exists() if transcript else None,
+    )
+    if transcript is None:
+        current_app.logger.warning(
+            "Transcript not found: filename=%s base=%s",
+            filename,
+            current_app.config.get("TRANSCRIPTS_DIR"),
+        )
+        abort(404)
+
+    # Load and augment transcript JSON with a human-readable country display.
+    try:
+        with open(transcript, "r", encoding="utf-8") as fh:
+            data = json.load(fh)
+    except Exception:
+        # Fall back to sending raw file if we cannot parse it
+        return _send_from_base(
+            Path(current_app.config["TRANSCRIPTS_DIR"]),
+            transcript,
+            mimetype="application/json",
+            as_attachment=False,
+        )
+
+    # Look for several possible country fields and compute display name
+    raw_country = (
+        data.get("country")
+        or data.get("country_code")
+        or data.get("countryCode")
+        or data.get("country_name")
+        or data.get("countryName")
+        or data.get("location")
+        or data.get("location_code")
+        or data.get("locationCode")
+        or ""
+    )
+
+    if raw_country:
+        # code_to_name will normalize legacy codes and return a readable name
+        try:
+            display = code_to_name(str(raw_country), fallback=str(raw_country))
+        except Exception:
+            display = str(raw_country)
+        data["country_display"] = display
+
+    return jsonify(data)
+
+
+@blueprint.post("/toggle/temp")
+@jwt_required()
+@require_role(Role.ADMIN)
+def toggle_temp_access():
+    current = current_app.config.get("ALLOW_PUBLIC_TEMP_AUDIO", False)
+    current_app.config["ALLOW_PUBLIC_TEMP_AUDIO"] = not current
+    return jsonify(
+        {"allow_public_temp_audio": current_app.config["ALLOW_PUBLIC_TEMP_AUDIO"]}
+    )
+
+
+@blueprint.get("/play_audio/<path:filename>")
+def play_audio(filename: str):
+    """PUBLIC ROUTE: Audio snippet playback for the Corpus/Advanced search UI.
+
+    This endpoint is intentionally public - it does NOT require authentication
+    and is always available for clients that can reach the server. It is only
+    responsible for building and returning the requested snippet. If you need
+    server-side toggles for other media endpoints, use `/media/temp` or `/media/snippet`.
+    """
+    start = request.args.get("start", type=float)
+    end = request.args.get("end", type=float)
+    token_id = request.args.get("token_id")
+    snippet_type = request.args.get("type")  # 'pal' or 'ctx'
+
+    if start is None or end is None:
+        abort(400, "Missing start/end parameters")
+    if end <= start:
+        abort(400, "End time must be greater than start time")
+    if not filename.lower().endswith(".mp3"):
+        abort(400, "Audio filename must end with .mp3")
+    # Log a simple request trace for diagnostics - but do not inspect g.user
+    jwt_cookie_name = current_app.config.get(
+        "JWT_ACCESS_COOKIE_NAME", "access_token_cookie"
+    )
+    has_jwt = jwt_cookie_name in request.cookies
+    current_app.logger.debug(
+        f"[Media.play_audio] Request received; JWT cookie present: {has_jwt}; cookies: {list(request.cookies.keys())}"
+    )
+    try:
+        snippet_path = audio_snippets.build_snippet(
+            filename, start, end, token_id, snippet_type
+        )
+    except FileNotFoundError:
+        abort(404, "Audio source not found")
+    except audio_snippets.AudioProcessingDependencyError as exc:
+        current_app.logger.error(
+            "play_audio backend unavailable: filename=%s start=%s end=%s token_id=%s type=%s error=%s",
+            filename,
+            start,
+            end,
+            token_id,
+            snippet_type,
+            exc,
+        )
+        abort(503, "Audio snippet backend unavailable")
+    except ValueError as exc:
+        abort(400, str(exc))
+    download_flag = request.args.get("download")
+    as_attachment = download_flag is not None
+    return send_file(
+        snippet_path,
+        mimetype="audio/mpeg",
+        as_attachment=as_attachment,
+        download_name=snippet_path.name if as_attachment else None,
+    )

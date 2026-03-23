@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+
+{% block page_title %}Editor - CO.RA.PAN{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/md3/tokens.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/md3/typography.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/md3/components/editor-overview.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="md3-page">
+  <header class="md3-page__header">
+    <div class="md3-hero md3-hero--card md3-hero__container">
+      <div class="md3-hero__icon" aria-hidden="true"><span class="material-symbols-rounded">edit_note</span></div>
+      <div class="md3-hero__content">
+        <p class="md3-body-small md3-hero__eyebrow">Editor</p>
+        <h1 class="md3-headline-medium md3-hero__title">Editor de Transcripciones</h1>
+      </div>
+    </div>
+  </header>
+  
+  <main class="md3-editor-overview">
+  {% if files_by_country %}
+    <!-- Country Tabs -->
+    <div class="md3-country-tabs" role="tablist">
+      {% for country in files_by_country.keys() %}
+        <button class="md3-country-tab {{ 'active' if loop.first else '' }}" 
+                data-country="{{ country }}"
+                role="tab"
+                aria-selected="{{ 'true' if loop.first else 'false' }}"
+                aria-controls="table-{{ country }}">
+          {{ country }}
+        </button>
+      {% endfor %}
+    </div>
+    
+    <!-- Files Tables (one per country) -->
+    {% for country, files in files_by_country.items() %}
+      <div class="md3-files-table-container {{ 'active' if loop.first else '' }}" 
+           id="table-{{ country }}"
+           role="tabpanel">
+        <table class="md3-files-table">
+          <thead>
+            <tr>
+              <th>Filename</th>
+              <th>Duration</th>
+              <th>Tokens</th>
+              <th>Last Edited</th>
+              <th>Last Editor</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for file in files %}
+              <tr>
+                <td class="md3-filename-cell">{{ file.filename }}</td>
+                <td>{{ file.duration }}</td>
+                <td>{{ "{:,}".format(file.word_count) }}</td>
+                <td>
+                  {% if file.last_edited %}
+                    <span class="md3-status-edited" title="{{ file.last_edited }}">
+                      {{ file.last_edited[:10] }}
+                    </span>
+                  {% else %}
+                    <span class="md3-status-unchanged">unchanged</span>
+                  {% endif %}
+                </td>
+                <td>
+                  {% if file.last_editor %}
+                    <span class="md3-status-edited">{{ file.last_editor }}</span>
+                  {% else %}
+                    <span class="md3-status-unchanged">-</span>
+                  {% endif %}
+                </td>
+                <td>
+                  <a href="{{ url_for('editor.edit_file', file=country + '/' + file.filename) }}" 
+                     class="md3-edit-btn">
+                    <span class="material-symbols-rounded">edit</span> Edit
+                  </a>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% endfor %}
+  {% else %}
+    <div class="md3-empty-state">
+      <span class="material-symbols-rounded">folder_open</span>
+      <p class="md3-body-large">No hay archivos de transcripción disponibles.</p>
+    </div>
+  {% endif %}
+  </main>
+</div>
+
+<script type="module" src="{{ url_for('static', filename='js/modules/editor/overview.js') }}"></script>
+{% endblock %}

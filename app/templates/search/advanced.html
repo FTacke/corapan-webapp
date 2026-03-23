@@ -1,0 +1,564 @@
+{% extends 'base.html' %}
+
+{% block page_title %}Búsquedas{% endblock %}
+
+{% block extra_head %}
+<!-- MD3 Core Styles -->
+<link rel="stylesheet" href="{{ url_for('static', filename='css/md3/tokens.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/md3/typography.css') }}">
+<!-- MD3 Components (Base) -->
+<link rel="stylesheet" href="{{ url_for('static', filename='css/md3/components/hero.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/md3/components/buttons.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/md3/components/textfields.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/md3/components/tabs.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/md3/components/forms.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/md3/components/corpus.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/md3/components/token-chips.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/md3/components/cards.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/md3/components/alerts.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/md3/components/chips.css') }}">
+<!-- Material Symbols (MD3-konform) -->
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+<!-- External Libraries (CDN Base Styles BEFORE Project Overrides) -->
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/jquery.dataTables.min.css">
+<link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.2/css/buttons.dataTables.min.css">
+<!-- Project Overrides (AFTER CDN Styles) -->
+<link rel="stylesheet" href="{{ url_for('static', filename='css/md3/components/datatables.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/md3/components/datatables-theme-lock.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/md3/components/advanced-search.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/md3/components/search-ui.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/md3/components/stats.css') }}"><!-- Material Symbols loaded for help icons -->
+{% endblock %}
+
+{% block content %}
+<article class="md3-corpus-page">
+  <!-- Hero Header (Canonical Format) -->
+  <header class="md3-page__header">
+    <div class="md3-hero md3-hero--card md3-hero__container">
+      <div class="md3-hero__icon" aria-hidden="true"><span class="material-symbols-rounded">manage_search</span></div>
+      <div class="md3-hero__content">
+        <p class="md3-body-small md3-hero__eyebrow">Corpus</p>
+        <h1 class="md3-headline-medium md3-hero__title">Búsquedas simples y avanzadas</h1>
+        <p class="md3-hero__intro">
+          Búsqueda CQL (Corpus Query Language) con BlackLab: simple o avanzada, sobre datos lingüísticos anotados (tokens, lemas, secuencias, POS) y filtrada por metadatos (países/regiones, hablantes, sexo, registro).
+        </p>
+      </div>
+    </div>
+  </header>
+
+  <!-- Content -->
+  <section class="md3-corpus-content">
+    <!-- Tab Navigation -->
+    <nav class="md3-tabs" role="tablist">
+      <button type="button" class="md3-tab md3-tab--active" role="tab" aria-selected="true" data-tab="simple">Consulta simple</button>
+      <button type="button" class="md3-tab" role="tab" aria-selected="false" data-tab="advanced">Modo avanzado (CQL)</button>
+      <button type="button" class="md3-tab" role="tab" aria-selected="false" data-tab="token">Token</button>
+    </nav>
+    
+    <!-- TAB: CONSULTA SIMPLE -->
+    <section id="tab-simple" class="md3-tab-content md3-tab-content--active">
+      <form id="form-simple" class="md3-search-card" role="search" aria-label="Consulta simple">
+          <input type="hidden" name="mode" value="simple">
+          
+          <!-- A: QUERY -->
+          <div class="md3-search-card__section">
+            <h2 class="md3-title-medium md3-search-card__heading">Buscar formas simples y secuencias</h2>
+            <div class="md3-search-card__query-row">
+              <div class="md3-outlined-textfield md3-outlined-textfield--flex">
+                <input type="text" id="q" name="q" class="md3-outlined-textfield__input" placeholder=" Consulta" value="{{ request.args.get('q', '') }}">
+                <label for="q" class="md3-outlined-textfield__label">Consulta</label>
+                <div class="md3-outlined-textfield__outline">
+                  <div class="md3-outlined-textfield__outline-start"></div>
+                  <div class="md3-outlined-textfield__outline-notch"></div>
+                  <div class="md3-outlined-textfield__outline-end"></div>
+                </div>
+              </div>
+              <div class="md3-outlined-textfield md3-outlined-textfield--fixed">
+                <select name="search_type" id="search_type_simple" class="md3-outlined-textfield__input md3-outlined-textfield__input--select">
+                  <option value="forma">Forma</option>
+                  <option value="forma_exacta">Forma exacta</option>
+                  <option value="lema">Lema</option>
+                </select>
+                <label for="search_type_simple" class="md3-outlined-textfield__label md3-outlined-textfield__label--select">Forma/Lema</label>
+                <div class="md3-outlined-textfield__outline">
+                  <div class="md3-outlined-textfield__outline-start"></div>
+                  <div class="md3-outlined-textfield__outline-notch"></div>
+                  <div class="md3-outlined-textfield__outline-end"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- B: FILTERS (Simple) -->
+          {% with suffix='-simple' %}
+          {% include 'search/partials/filters_block.html' %}
+          {% endwith %}
+
+          <!-- Active Filters Bar (Simple) -->
+          <div id="active-filters-bar-simple" class="md3-active-filters" hidden>
+            <div class="md3-active-filters__label">Filtros activos:</div>
+            <div id="active-filters-chips-simple" class="md3-active-filters__chips"></div>
+          </div>
+
+          <!-- C: OPTIONS (Simple) -->
+          <div class="md3-search-card__section">
+            <h2 class="md3-title-medium md3-search-card__heading">Opciones</h2>
+            <div class="md3-options-row">
+              <label class="md3-checkbox-container">
+                <input type="checkbox" id="include-regional-simple" name="include_regional" value="1">
+                <span class="md3-checkbox"><svg class="md3-checkbox__checkmark" viewBox="0 0 18 18"><path class="md3-checkbox__checkmark-path" fill="none" stroke="white" d="M1.73,9.29 l4.75,4.75 l10.04,-10.04"></path></svg></span>
+                <span class="md3-checkbox__label">Incluir regiones</span>
+              </label>
+              <label class="md3-checkbox-container">
+                <input type="checkbox" id="ignore-accents-simple" name="ignore_accents" value="1">
+                <span class="md3-checkbox"><svg class="md3-checkbox__checkmark" viewBox="0 0 18 18"><path class="md3-checkbox__checkmark-path" fill="none" stroke="white" d="M1.73,9.29 l4.75,4.75 l10.04,-10.04"></path></svg></span>
+                <span class="md3-checkbox__label">Ignorar acentos/mayúsculas</span>
+              </label>
+            </div>
+          </div>
+
+          <!-- F: FOOTER -->
+          <div class="md3-search-card__footer">
+            <button type="button" class="md3-button md3-button--outlined reset-btn">
+              <span class="material-symbols-rounded md3-button__icon" aria-hidden="true">restart_alt</span>
+              <span>Restablecer</span>
+            </button>
+            <button type="submit" class="md3-button md3-button--filled">
+              <span class="material-symbols-rounded md3-button__icon" aria-hidden="true">search</span>
+              <span>Buscar</span>
+            </button>
+          </div>
+      </form>
+    </section>
+
+    <!-- TAB: MODO AVANZADO -->
+    <section id="tab-advanced" class="md3-tab-content">
+      <form id="form-advanced" class="md3-search-card" role="search" aria-label="Modo avanzado">
+          <input type="hidden" name="mode" value="advanced">
+
+          <!-- E1: PATTERN BUILDER -->
+          <div class="md3-expert-section overflow-visible">
+              <div class="md3-expert-header">
+                <h2 class="md3-title-medium md3-expert-section__title">Búsquedas mediante el constructor CQL</h2>
+              </div>
+              
+              <!-- Pattern Builder Container -->
+              <div id="cql-builder-container" class="md3-pattern-builder">
+                  <!-- Token rows will be injected here -->
+              </div>
+
+              <div class="md3-pattern-actions md3-mt-4">
+                    <button type="button" id="add-token-btn" class="md3-button md3-button--outlined">
+                      <span class="material-symbols-rounded md3-button__icon" aria-hidden="true">add</span>
+                      <span>Añadir token</span>
+                  </button>
+              </div>
+          </div>
+
+          <!-- E2: CQL PREVIEW -->
+            <div class="md3-expert-section">
+              <hr class="md3-divider" />
+              <h3 class="md3-title-small md3-expert-section__title">Editor CQL (modo experto)</h3>
+              <div class="md3-cql-preview">
+                  <div class="md3-outlined-textfield md3-outlined-textfield--textarea">
+                    <textarea id="cql_query" name="cql_query" class="md3-outlined-textfield__input" rows="4" readonly>{{ request.args.get('cql_query', '') }}</textarea>
+                    <label for="cql_query" class="md3-outlined-textfield__label">Consulta CQL</label>
+                    <div class="md3-outlined-textfield__outline">
+                        <div class="md3-outlined-textfield__outline-start"></div>
+                        <div class="md3-outlined-textfield__outline-notch"></div>
+                        <div class="md3-outlined-textfield__outline-end"></div>
+                    </div>
+                  </div>
+                  
+                      <label class="md3-checkbox-container md3-mt-2">
+                        <input type="checkbox" id="cql_manual_edit" name="cql_manual_edit">
+                        <span class="md3-checkbox"><svg class="md3-checkbox__checkmark" viewBox="0 0 18 18"><path class="md3-checkbox__checkmark-path" fill="none" stroke="white" d="M1.73,9.29 l4.75,4.75 l10.04,-10.04"></path></svg></span>
+                        <span class="md3-checkbox__label">Activar modo experto (editar CQL manualmente) <a href="#" id="cql-guide-link" class="md3-link md3-link--inline">(Guía rápida: usar un prompt para la IA)</a></span>
+                      </label>
+
+                      <div id="cql-warning" class="md3-cql-warning" hidden>
+                      <span class="material-symbols-rounded">warning</span>
+                      <span>Has modificado la consulta CQL manualmente. La configuración del constructor ya no se aplicará.</span>
+                    </div>
+
+                    <!-- guide link restored into checkbox label -->
+              </div>
+          </div>
+
+          <!-- B: FILTERS (Advanced) -->
+          <hr class="md3-divider" />
+          {% with suffix='-advanced' %}
+          {% include 'search/partials/filters_block.html' %}
+          {% endwith %}
+
+          <!-- Active Filters Bar (Advanced) -->
+          <div id="active-filters-bar-advanced" class="md3-active-filters" hidden>
+            <div class="md3-active-filters__label">Filtros activos:</div>
+            <div id="active-filters-chips-advanced" class="md3-active-filters__chips"></div>
+          </div>
+
+          <!-- C: OPTIONS (Advanced) -->
+          <div class="md3-search-card__section">
+            <h2 class="md3-title-medium md3-search-card__heading">Opciones</h2>
+            <div class="md3-options-row">
+              <label class="md3-checkbox-container">
+                <input type="checkbox" id="include-regional-advanced" name="include_regional" value="1">
+                <span class="md3-checkbox"><svg class="md3-checkbox__checkmark" viewBox="0 0 18 18"><path class="md3-checkbox__checkmark-path" fill="none" stroke="white" d="M1.73,9.29 l4.75,4.75 l10.04,-10.04"></path></svg></span>
+                <span class="md3-checkbox__label">Incluir regiones</span>
+              </label>
+              <label class="md3-checkbox-container">
+                <input type="checkbox" id="ignore-accents-advanced" name="ignore_accents" value="1">
+                <span class="md3-checkbox"><svg class="md3-checkbox__checkmark" viewBox="0 0 18 18"><path class="md3-checkbox__checkmark-path" fill="none" stroke="white" d="M1.73,9.29 l4.75,4.75 l10.04,-10.04"></path></svg></span>
+                <span class="md3-checkbox__label">Ignorar acentos/mayúsculas</span>
+              </label>
+            </div>
+          </div>
+
+          <!-- F: FOOTER -->
+          <div class="md3-search-card__footer">
+                <button type="button" class="md3-button md3-button--outlined reset-btn">
+              <span class="material-symbols-rounded md3-button__icon" aria-hidden="true">restart_alt</span>
+              <span>Restablecer</span>
+            </button>
+            <button type="submit" class="md3-button md3-button--filled">
+              <span class="material-symbols-rounded md3-button__icon" aria-hidden="true">search</span>
+              <span>Buscar</span>
+            </button>
+          </div>
+      </form>
+    </section>
+
+        {% include 'search/partials/cql_guide_dialog.html' %}
+
+      <!-- ========================================
+           SUB-TABS: RESULTADOS | ESTADÍSTICAS
+           Hidden by default, shown after successful search
+           ======================================== -->
+      <div id="search-sub-tabs" role="tablist" class="md3-stats-tabs md3-mt-6 hidden">
+          <button type="button" role="tab" id="tab-resultados" class="md3-stats-tab md3-stats-tab--active" data-view="results" aria-controls="panel-resultados" aria-selected="true">
+          <span class="material-symbols-rounded md3-button__icon" aria-hidden="true">table</span>
+          <span>Resultados</span>
+        </button>
+        <button type="button" role="tab" id="tab-estadisticas" class="md3-stats-tab" data-view="stats" aria-controls="panel-estadisticas" aria-selected="false">
+          <span class="material-symbols-rounded md3-button__icon" aria-hidden="true">bar_chart</span>
+          <span>Estadísticas</span>
+        </button>
+      </div>
+
+      <!-- Results Section -->
+      <div id="panel-resultados" role="tabpanel" aria-labelledby="tab-resultados" class="md3-view-content md3-view-content--active">
+        <!-- Error banners will be inserted here -->
+        <div id="results-section"></div>
+        
+        <div id="adv-summary" 
+          class="md3-advanced__summary" 
+          role="status" 
+          aria-live="polite" 
+          aria-atomic="true"
+          tabindex="-1"
+          hidden>
+          <!-- Content loaded via JS -->
+        </div>
+
+        <!-- DataTables Container (hidden until search performed) -->
+        <div id="datatable-container" class="md3-advanced__tablewrap md3-corpus-table-container hidden">
+          <table id="advanced-table" class="md3-corpus-table" role="grid">
+            <caption class="sr-only">
+              Resultados de búsqueda avanzada. 
+              Tabla con contexto izquierdo, palabra coincidente, contexto derecho, audio y metadatos.
+            </caption>
+            <thead>
+              <tr role="row">
+                <th scope="col" role="columnheader">#</th>
+                <th scope="col" role="columnheader">Ctx.←</th>
+                <th scope="col" role="columnheader">Resultado</th>
+                <th scope="col" role="columnheader">Ctx.→</th>
+                <th scope="col" role="columnheader">Audio</th>
+                <th scope="col" role="columnheader">País</th>
+                <th scope="col" role="columnheader">Hablante</th>
+                <th scope="col" role="columnheader">Sexo</th>
+                <th scope="col" role="columnheader">Modo</th>
+                <th scope="col" role="columnheader">Discurso</th>
+                <th scope="col" role="columnheader">Token-ID</th>
+                <th scope="col" role="columnheader">Archivo</th>
+              </tr>
+            </thead>
+            <tbody>
+              <!-- Rendered by DataTables -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Statistics Panel -->
+      <div id="panel-estadisticas" role="tabpanel" aria-labelledby="tab-estadisticas" class="md3-view-content" hidden>
+        <section class="md3-stats-section">
+          <header class="md3-stats-header md3-stack--section">
+            <!-- Summary Line (same style as results) -->
+            <div id="stats-summary" class="md3-advanced__summary md3-stats-summary" role="status" aria-live="polite" aria-atomic="true">
+                <span class="md3-advanced__summary-query" id="stats-summary-query"></span>: 
+                <span class="md3-advanced__summary-count" id="stats-summary-count">—</span>
+                <span class="md3-advanced__summary-total">resultados</span>
+            </div>
+
+            <!-- Controls Line -->
+            <div class="md3-stats-controls md3-row--between">
+                <div class="md3-stats-filter md3-stats-filter-group md3-row">
+                  <div class="md3-outlined-textfield md3-outlined-textfield--compact">
+                    <select id="stats-country-filter" class="md3-outlined-textfield__input md3-outlined-textfield__input--select">
+                      <option value="">Todos los países</option>
+                    </select>
+                    <label for="stats-country-filter" class="md3-outlined-textfield__label md3-outlined-textfield__label--select">Seleccionar</label>
+                    <div class="md3-outlined-textfield__outline">
+                      <div class="md3-outlined-textfield__outline-start"></div>
+                      <div class="md3-outlined-textfield__outline-notch"></div>
+                      <div class="md3-outlined-textfield__outline-end"></div>
+                    </div>
+                  </div>
+                </div>
+                
+                <button type="button" id="btn-download-stats-csv" class="md3-button md3-button--outlined md3-stats-action-end">
+                    <span class="material-symbols-rounded md3-button__icon" aria-hidden="true">download</span>
+                    <span class="md3-button__label">CSV</span>
+                </button>
+            </div>
+          </header>
+
+
+
+          <div id="stats-grid" class="md3-stats-charts-grid">
+            <!-- País -->
+            <article class="md3-card md3-card--elevated" data-chart="by_country">
+              <div class="md3-stats-card-header">
+                <div class="md3-stats-card-title-wrapper">
+                  <h3 class="md3-title-medium md3-stats-card-title">País</h3>
+                  <p class="md3-body-small text-on-surface-variant md3-m-0" data-meta="by_country">—</p>
+                </div>
+                <div class="md3-segmented" data-chart-id="country">
+                    <button class="md3-segmented-btn is-selected" data-mode="count" aria-pressed="true" aria-label="Mostrar números absolutos">
+                    <span class="material-symbols-rounded md3-button__icon" aria-hidden="true">format_list_numbered</span>
+                  </button>
+                  <button class="md3-segmented-btn" data-mode="percent" aria-pressed="false" aria-label="Mostrar porcentajes">
+                    <span class="material-symbols-rounded md3-button__icon" aria-hidden="true">percent</span>
+                  </button>
+                </div>
+              </div>
+              <div class="md3-card__content">
+                <div class="chart-host" id="chart-country" aria-label="Distribución por país"></div>
+              </div>
+            </article>
+
+            <!-- Tipo de hablante -->
+            <article class="md3-card md3-card--elevated" data-chart="by_speaker_type">
+              <div class="md3-stats-card-header">
+                <div class="md3-stats-card-title-wrapper">
+                  <h3 class="md3-title-medium md3-stats-card-title">Tipo de hablante</h3>
+                  <p class="md3-body-small text-on-surface-variant m-0" data-meta="by_speaker_type">—</p>
+                </div>
+                <div class="md3-segmented" data-chart-id="speaker">
+                  <button class="md3-segmented-btn is-selected" data-mode="count" aria-pressed="true" aria-label="Mostrar números absolutos">
+                    <span class="material-symbols-rounded md3-button__icon" aria-hidden="true">format_list_numbered</span>
+                  </button>
+                  <button class="md3-segmented-btn" data-mode="percent" aria-pressed="false" aria-label="Mostrar porcentajes">
+                    <span class="material-symbols-rounded md3-button__icon" aria-hidden="true">percent</span>
+                  </button>
+                </div>
+              </div>
+              <div class="md3-card__content">
+                <div class="chart-host" id="chart-speaker" aria-label="Distribución por tipo de hablante"></div>
+              </div>
+            </article>
+
+            <!-- Sexo -->
+            <article class="md3-card md3-card--elevated" data-chart="by_sexo">
+              <div class="md3-stats-card-header">
+                <div class="md3-stats-card-title-wrapper">
+                  <h3 class="md3-title-medium md3-stats-card-title">Sexo</h3>
+                  <p class="md3-body-small text-on-surface-variant md3-m-0" data-meta="by_sex">—</p>
+                </div>
+                <div class="md3-segmented" data-chart-id="sexo">
+                  <button class="md3-segmented-btn is-selected" data-mode="count" aria-pressed="true" aria-label="Mostrar números absolutos">
+                    <span class="material-symbols-rounded md3-button__icon" aria-hidden="true">format_list_numbered</span>
+                  </button>
+                  <button class="md3-segmented-btn" data-mode="percent" aria-pressed="false" aria-label="Mostrar porcentajes">
+                    <span class="material-symbols-rounded md3-button__icon" aria-hidden="true">percent</span>
+                  </button>
+                </div>
+              </div>
+              <div class="md3-card__content">
+                <div class="chart-host" id="chart-sexo" aria-label="Distribución por sexo"></div>
+              </div>
+            </article>
+
+            <!-- Registro -->
+            <article class="md3-card md3-card--elevated" data-chart="by_modo">
+              <div class="md3-stats-card-header">
+                <div class="md3-stats-card-title-wrapper">
+                  <h3 class="md3-title-medium md3-stats-card-title">Modo de habla</h3>
+                  <p class="md3-body-small text-on-surface-variant md3-m-0" data-meta="by_modo">—</p>
+                </div>
+                <div class="md3-segmented" data-chart-id="modo">
+                  <button class="md3-segmented-btn is-selected" data-mode="count" aria-pressed="true" aria-label="Mostrar números absolutos">
+                    <span class="material-symbols-rounded md3-button__icon" aria-hidden="true">format_list_numbered</span>
+                  </button>
+                  <button class="md3-segmented-btn" data-mode="percent" aria-pressed="false" aria-label="Mostrar porcentajes">
+                    <span class="material-symbols-rounded md3-button__icon" aria-hidden="true">percent</span>
+                  </button>
+                </div>
+              </div>
+              <div class="md3-card__content">
+                <div class="chart-host" id="chart-modo" aria-label="Distribución por modo de habla"></div>
+              </div>
+            </article>
+
+            <!-- Discurso -->
+            <article class="md3-card md3-card--elevated" data-chart="by_discourse">
+              <div class="md3-stats-card-header">
+                <div class="md3-stats-card-title-wrapper">
+                  <h3 class="md3-title-medium md3-stats-card-title">Discurso</h3>
+                  <p class="md3-body-small text-on-surface-variant md3-m-0" data-meta="by_discourse">—</p>
+                </div>
+                <div class="md3-segmented" data-chart-id="discourse">
+                  <button class="md3-segmented-btn is-selected" data-mode="count" aria-pressed="true" aria-label="Mostrar números absolutos">
+                    <span class="material-symbols-rounded md3-button__icon" aria-hidden="true">format_list_numbered</span>
+                  </button>
+                  <button class="md3-segmented-btn" data-mode="percent" aria-pressed="false" aria-label="Mostrar porcentajes">
+                    <span class="material-symbols-rounded md3-button__icon" aria-hidden="true">percent</span>
+                  </button>
+                </div>
+              </div>
+              <div class="md3-card__content">
+                <div class="chart-host" id="chart-discourse" aria-label="Distribución por discurso"></div>
+              </div>
+            </article>
+          </div>
+        </section>
+      </div>
+    </section>
+
+    <!-- Token Search Container (Tab: Token) -->
+    <section id="tab-token" class="md3-tab-content">
+      <!-- Token Search Form (MD3 Search Card) -->
+      <form id="token-search-form" class="md3-search-card" role="search" aria-label="Buscar por Token-IDs">
+        
+        <!-- Token Input Section -->
+        <div class="md3-search-card__section">
+          <h2 class="md3-title-medium md3-search-card__heading">Búsqueda por Token-IDs</h2>
+          
+          <!-- Input Row -->
+          <div class="md3-search-card__query-row">
+            <div class="md3-outlined-textfield md3-outlined-textfield--flex">
+              <input 
+                type="text" 
+                id="tokid-input" 
+                class="md3-outlined-textfield__input"
+                placeholder=" "
+                autocomplete="off">
+              <label for="tokid-input" class="md3-outlined-textfield__label">Token-IDs</label>
+              <div class="md3-outlined-textfield__outline">
+                <div class="md3-outlined-textfield__outline-start"></div>
+                <div class="md3-outlined-textfield__outline-notch"></div>
+                <div class="md3-outlined-textfield__outline-end"></div>
+              </div>
+            </div>
+            
+            <button type="button" class="md3-button md3-button--filled" id="tokid-add-btn">
+              <span class="material-symbols-rounded md3-button__icon" aria-hidden="true">add</span>
+              <span>Añadir</span>
+            </button>
+          </div>
+          
+          <!-- Helper Text: token count moved into chip container -->
+          
+          <!-- Chip Container (active-filters style) -->
+          <div id="tokid-chip-container" class="tokid-chip-container md3-active-filters" aria-live="polite">
+            <span id="tokid-count" class="md3-active-filters__label tokid-count">0 IDs</span>
+            <div id="tokid-chip-items" class="md3-active-filters__chips"></div>
+          </div>
+        </div>
+
+        <!-- Actions Footer -->
+        <div class="md3-search-card__footer">
+          <button type="button" id="clear-tokens-btn" class="md3-button md3-button--outlined">
+            <span class="material-symbols-rounded md3-button__icon" aria-hidden="true">delete</span>
+            <span>Limpiar todo</span>
+          </button>
+          <button type="button" id="token-search-btn" class="md3-button md3-button--filled">
+            <span class="material-symbols-rounded md3-button__icon" aria-hidden="true">table_view</span>
+            <span>Visualizar</span>
+          </button>
+        </div>
+      </form>
+      
+      <!-- Token Results Section -->
+      <section id="token-results" class="md3-view-content hidden md3-mt-8">
+        <!-- Token Sub-Tabs (Resultados | Estadísticas) -->
+        <div id="token-sub-tabs" role="tablist" class="md3-token-stats-tabs md3-stats-tabs md3-mt-2 flex">
+          <button type="button" role="tab" id="token-tab-resultados" class="md3-token-stats-tab md3-stats-tab md3-stats-tab--active" data-view="results" aria-controls="token-panel-resultados" aria-selected="true">
+            <span class="material-symbols-rounded md3-button__icon" aria-hidden="true">table</span>
+            <span>Resultados</span>
+          </button>
+        </div>
+
+        <div id="token-panel-resultados" role="tabpanel" aria-labelledby="token-tab-resultados" class="md3-view-content md3-view-content--active">
+
+        
+        <!-- DataTable Container -->
+        <div class="md3-corpus-table-container">
+          <table id="token-results-table" class="md3-corpus-table w-full">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Ctx.←</th>
+                <th>Resultado</th>
+                <th>Ctx.→</th>
+                <th>Audio</th>
+                <th>País</th>
+                <th>Hablante</th>
+                <th>Sexo</th>
+                <th>Modo</th>
+                <th>Discurso</th>
+                <th>Token-ID</th>
+                <th>Archivo</th>
+              </tr>
+            </thead>
+            <tbody>
+              <!-- DataTables (Server-Side) will populate this dynamically -->
+            </tbody>
+          </table>
+        </div>
+        </div>
+
+        <div id="token-panel-estadisticas" role="tabpanel" aria-labelledby="token-tab-estadisticas" class="md3-view-content" hidden>
+          <div class="md3-body-medium md3-p-4">
+            <div id="stats-grid" class="md3-stats-grid">
+              <div id="chart-country"></div>
+              <div id="chart-speaker"></div>
+              <div id="chart-sexo"></div>
+              <div id="chart-modo"></div>
+              <div id="chart-discourse"></div>
+              <div id="chart-radio"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </section>
+  </section>
+</article>
+
+<!-- Scripts in dependency order -->
+<script src="{{ url_for('static', filename='vendor/jquery-3.7.1.min.js') }}" defer></script>
+<script src="{{ url_for('static', filename='vendor/jquery.dataTables.min.js') }}" defer></script>
+<!-- DataTables Buttons Extension -->
+<script src="https://cdn.datatables.net/buttons/2.4.2/js/dataTables.buttons.min.js" defer></script>
+<script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.html5.min.js" defer></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js" defer></script>
+<script src="{{ url_for('static', filename='vendor/htmx-1.9.10.min.js') }}" defer></script>
+<!-- ECharts for statistics -->
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.5.1/dist/echarts.min.js"></script>
+
+<!-- Advanced Search Entry Point -->
+<script type="module" src="{{ url_for('static', filename='js/modules/search/advanced_entry.js') }}"></script>
+{% endblock %}
+
+{# Styles moved to static/css/md3/components/advanced-search.css and md3/components/editor-edit.css #}

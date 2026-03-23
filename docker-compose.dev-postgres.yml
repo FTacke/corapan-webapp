@@ -1,0 +1,41 @@
+# CO.RA.PAN canonical development stack rooted at CORAPAN/
+
+services:
+  corapan_auth_db:
+    image: postgres:15
+    container_name: corapan_auth_db
+    environment:
+      POSTGRES_USER: corapan_auth
+      POSTGRES_PASSWORD: corapan_auth
+      POSTGRES_DB: corapan_auth
+    ports:
+      - "54320:5432"
+    volumes:
+      - ./data/db/restricted/postgres_dev:/var/lib/postgresql/data
+      - ./app:/app:ro
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "corapan_auth", "-d", "corapan_auth"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+      start_period: 10s
+    restart: unless-stopped
+
+  blacklab-server-v3:
+    image: instituutnederlandsetaal/blacklab@sha256:3753dbce4fee11f8706b63c5b94bf06eac9d3843c75bf2eef6412ff47208c2e7
+    container_name: blacklab-server-v3
+    ports:
+      - "8081:8080"
+    volumes:
+      - ./data/blacklab/index:/data/index/corapan:ro
+      - ./app/config/blacklab:/etc/blacklab:ro
+    environment:
+      JAVA_OPTS: "-Xmx2g -Xms512m"
+      BLACKLAB_CONFIG_DIR: "/etc/blacklab"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/blacklab-server/"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
+    restart: unless-stopped

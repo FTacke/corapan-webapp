@@ -1,0 +1,216 @@
+{% extends 'base.html' %}
+{% from 'partials/page_navigation.html' import page_navigation %}
+
+{% block page_title %}Guía de Búsqueda · CO.RA.PAN{% endblock %}
+
+{% block extra_head %}
+<!-- CSS for code block styling -->
+<link rel="stylesheet" href="{{ url_for('static', filename='css/md3/components/advanced-search.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="md3-page" role="main" aria-label="Guía de Búsqueda">
+  <header class="md3-page__header">
+    <div class="md3-hero md3-hero--card md3-hero__container">
+      <div class="md3-hero__icon" aria-hidden="true"><span class="material-symbols-rounded">school</span></div>
+      <div class="md3-hero__content">
+        <p class="md3-body-small md3-hero__eyebrow">Corpus</p>
+        <h1 class="md3-headline-medium md3-hero__title">Guía paso a paso</h1>
+        <p class="md3-body-medium md3-hero__intro">Uso general de las herramientas de búsqueda.</p>
+      </div>
+    </div>
+  </header>
+
+  <main class="md3-text-page">
+    <div class="md3-text-content">
+    
+    <!-- INTRODUCCIÓN -->
+    <section class="md3-text-section">
+      <p class="md3-body-large">
+        Bienvenido a la herramienta de búsqueda del corpus CO.RA.PAN. La interfaz está diseñada para utilizarse sin conocimientos técnicos previos. En esta guía se describen las funciones disponibles en cada pestaña de búsqueda.
+      </p>
+    </section>
+
+    <!-- 1. BÚSQUEDA SIMPLE -->
+    <section class="md3-text-section">
+      <h2 class="md3-title-large md3-section-title md3-text-heading">Consulta simple</h2>
+      <p class="md3-body-large">
+        La pestaña <strong>Consulta simple</strong> permite realizar búsquedas directas de palabras o secuencias. La consulta se introduce en el campo <strong>Consulta</strong> y puede combinarse con opciones adicionales de filtrado.
+      </p>
+
+      <h3 class="md3-title-medium md3-subsection-title">¿Cómo funciona?</h3>
+      <ol class="md3-body-large md3-text-list">
+        <li>Introducir la forma o secuencia en el cuadro de texto (por ejemplo: <code>casa</code>).</li>
+        <li>Seleccionar la opción correspondiente en el campo <strong>Forma/Lema</strong>:
+          <ul>
+            <li><strong>Forma</strong> (primera mención): busca la forma escrita tal como se introduce.</li>
+            <li>Lema: recupera todas las variantes flexionadas asociadas al lema indicado.</li>
+          </ul>
+        </li>
+        <li>Aplicar filtros si es necesario. En la sección <strong>Filtros</strong> (primera mención) pueden seleccionarse <strong>País</strong>, <strong>Hablante</strong>, <strong>Sexo</strong>, <strong>Modo/registro</strong> y <strong>Discurso</strong>.</li>
+        <li>En la sección <strong>Opciones</strong> (primera mención) pueden activarse las casillas «Incluir regiones» o «Ignorar acentos/mayúsculas».</li>
+        <li>Para ejecutar la consulta, pulsar <strong>Buscar</strong> (primera mención). Para restablecer la configuración, utilizar el botón «Restablecer».</li>
+      </ol>
+    </section>
+
+    <!-- 2. MODO AVANZADO -->
+    <section class="md3-text-section">
+      <h2 class="md3-title-large md3-section-title md3-text-heading">Modo avanzado (CQL)</h2>
+      <p class="md3-body-large">
+        La pestaña <strong>Modo avanzado (CQL)</strong> permite formular consultas estructuradas mediante el constructor de patrones o directamente con el lenguaje CQL. Este modo está orientado a la búsqueda de relaciones gramaticales y combinatorias.
+      </p>
+
+      <h3 class="md3-title-medium md3-subsection-title">El constructor de patrones</h3>
+      <p class="md3-body-large">
+        El apartado <strong>Búsquedas mediante el constructor CQL</strong> (primera mención) permite añadir bloques sucesivos mediante el botón <strong>Añadir token</strong> (primera mención). Cada bloque corresponde a una palabra de la secuencia y contiene los campos <strong>Campo</strong>, <strong>Tipo</strong> y <strong>Valor</strong>.
+      </p>
+      <ul class="md3-body-large md3-text-list">
+        <li>Por ejemplo, para buscar un artículo seguido de un sustantivo:
+          <ol>
+            <li>Añadir un primer bloque y seleccionar en «Campo» la categoría correspondiente.</li>
+            <li>Añadir un segundo bloque y seleccionar la categoría deseada.</li>
+            <li>Ejecutar la consulta mediante el botón «Buscar».</li>
+          </ol>
+        </li>
+      </ul>
+
+      <h3 class="md3-title-medium md3-subsection-title">Uso del editor CQL</h3>
+      <p class="md3-body-large">
+        El apartado <strong>Editor CQL (modo experto)</strong> (primera mención) permite introducir consultas CQL manualmente en el campo «Consulta CQL». El modo experto se activa mediante la casilla «Activar modo experto (editar CQL manualmente)». También se proporciona un enlace a una guía rápida para asistir en la redacción de consultas complejas.
+      </p>
+
+      <h3 class="md3-title-medium md3-subsection-title">Prompt sugerido para generar consultas CQL en CORAPAN (BlackLab)</h3>
+      <p class="md3-body-large">
+        Copie y pegue este prompt en el modelo de IA generativa y añada su descripción al final:
+      </p>
+      <div class="md3-code-block md3-code-block--copyable md3-full-width">
+        <pre class="highlight"><code id="cql-prompt-text" class="language-plaintext">Actúa como generador de consultas CQL para un corpus de español hablado llamado CORAPAN, indexado en BlackLab.
+
+El corpus está anotado con los siguientes atributos a nivel de token (dentro de corchetes `[...]` en CQL):
+
+* `word`   → forma tal como aparece en la transcripción
+* `norm`   → forma normalizada (por ejemplo, en minúsculas)
+* `lemma`  → lema
+* `pos`    → categoría gramatical (UD POS: `NOUN`, `VERB`, `ADJ`, `ADV`, `PRON`, `DET`, `ADP`, `SCONJ`, `CCONJ`, `PART`, `AUX`, etc.)
+* `tense`  → tiempo verbal morfológico (por ejemplo: `"Pres"`, `"Past"`, `"Fut"`)
+* `mood`   → modo verbal (por ejemplo: `"Ind"`, `"Subj"`, `"Imp"`)
+* `person` → persona gramatical (`"1"`, `"2"`, `"3"`)
+* `number` → número gramatical (`"Sing"`, `"Plur"`)
+* `aspect` → aspecto verbal (si está presente)
+* `PastType`   → subtipo de pasado, ya en inglés, derivado de reglas específicas del corpus. Valores posibles, si existen en el token:
+
+  * `"simplePast"`
+  * `"presentPerfect"`
+  * `"pastPerfect"`
+  * `"futurePerfect"`
+  * `"conditionalPerfect"`
+  * `"otherCompoundPast"`
+  * `"otherPast"`
+* `FutureType` → subtipo de futuro analítico (construcciones tipo *ir a + infinitivo*), también en inglés. Valores posibles, si existen en el token:
+
+  * `"periphrasticFuture"` (ir a + INF con auxiliar en presente)
+  * `"periphrasticFuturePast"` (ir a + INF con auxiliar en pasado, futuro en el pasado)
+* `tokid`  → identificador único de cada token
+
+Los campos `PastType` y `FutureType` **no** proceden directamente del etiquetador morfológico, sino que son clasificaciones derivadas a partir de la combinación de `tense`, `morph`, auxiliares y participios. Se consultan como cualquier otro atributo de token y se pueden combinar con `lemma`, `pos`, `tense`, etc.
+
+Algunos ejemplos de uso:
+
+* `[pos="VERB" & PastType="simplePast"]`
+  → verbos en pretérito perfecto simple (pretérito indefinido).
+
+* `[pos="VERB" & PastType="presentPerfect"]`
+  → verbos en pretérito perfecto compuesto (*haber* + participio).
+
+* `[pos="VERB" & PastType="pastPerfect"]`
+  → verbos en pluscuamperfecto.
+
+* `[pos="VERB" & FutureType="periphrasticFuture"]`
+  → futuros perifrásticos del tipo *ir a + infinitivo* con auxiliar en presente.
+
+* `[pos="VERB" & FutureType="periphrasticFuturePast"]`
+  → futuros perifrásticos en el pasado (*iba a + infinitivo*, etc.).
+
+* `[lemma="ir" & pos="VERB" & FutureType="periphrasticFuture"]`
+  → formas de *ir* que participan en futuros perifrásticos.
+
+Además, se pueden usar metadatos de documento/segmento con BlackLab (por ejemplo mediante `within`), como:
+
+* `country_code` → código de país/variedad (por ejemplo `ARG`, `ESP`, `ARG-CBA`, `ESP-SEV`, etc.)
+* `file_id`      → identificador de archivo
+* `date`         → fecha de la grabación/transcripción
+* `radio`        → indica si el texto procede o no de radio (según cómo esté codificado)
+* `city`         → ciudad (si está disponible)
+* `sentence_id`, `utterance_id` → identificadores de oración y enunciado
+
+Su tarea:
+
+1. Léame la descripción en lenguaje natural que le daré.
+
+2. Genere **solo** una consulta CQL válida para BlackLab, sin explicaciones ni comentarios.
+
+3. Use exclusivamente los atributos y metadatos listados arriba.
+
+4. Represente las palabras y rasgos morfológicos con patrones como:
+
+   * `[lemma="hablar"]`
+   * `[pos="VERB" & tense="Pres" & person="1" & number="Sing"]`
+   * `[pos="VERB" & PastType="simplePast"]` para un verbo en pretérito perfecto simple
+   * `[pos="VERB" & PastType="presentPerfect"]` para un verbo en pretérito perfecto compuesto
+   * `[pos="VERB" & FutureType="periphrasticFuture"]` para un futuro perifrástico del tipo *ir a + INF*
+   * `[pos="ADJ"][pos="NOUN"]` para un adjetivo seguido de un sustantivo
+
+5. Si se mencionan restricciones de variedad, origen o tipo de texto, expréselas con metadatos, por ejemplo:
+
+   * `within &lt;country_code="ARG"&gt; [...]`
+   * `within &lt;radio="yes"&gt; [...]`
+
+   (ajuste el valor según la codificación real).
+
+6. Use siempre comillas dobles `"..."` y la sintaxis CQL estándar de BlackLab.
+
+7. Si la descripción es ambigua, elija la interpretación más común en lingüística hispánica, pero **no invente** atributos que no existan en la lista ni valores de `PastType` o `FutureType` que no hayan sido definidos.
+
+Ahora convierta la siguiente descripción en una consulta CQL precisa para CORAPAN:
+
+«[ESCRIBA AQUÍ SU DESCRIPCIÓN EN ESPAÑOL]»</code>
+        <button type="button" id="copy-cql-prompt" class="md3-button md3-button--icon md3-code-block__copy" title="Copiar prompt" aria-label="Prompt kopieren">
+          <span class="material-symbols-rounded" aria-hidden="true">content_copy</span>
+        </button>
+        </pre>
+      </div>
+    </section>
+
+    <!-- 3. BÚSQUEDA POR TOKEN -->
+    <section class="md3-text-section">
+      <h2 class="md3-title-large md3-section-title md3-text-heading">Búsqueda por Token</h2>
+      <p class="md3-body-large">
+        La pestaña <strong>Token</strong> permite recuperar instancias específicas del corpus empleando un identificador único (Token-ID). Esta función es útil cuando se desea volver a consultar ejemplos concretos encontrados en búsquedas previas.
+      </p>
+      <p class="md3-body-large">
+        Para ello, basta con introducir uno o varios identificadores en el campo correspondiente, añadirlos mediante el botón «Añadir» y posteriormente seleccionar «Visualizar».
+      </p>
+    </section>
+
+    <!-- 4. RESULTADOS Y ESTADÍSTICAS -->
+    <section class="md3-text-section">
+      <h2 class="md3-title-large md3-section-title md3-text-heading">Resultados y estadísticas</h2>
+      <p class="md3-body-large">
+        Tras ejecutar una consulta, se muestran las pestañas <strong>Resultados</strong> (primera mención) y <strong>Estadísticas</strong> (primera mención).
+      </p>
+      <ul class="md3-body-large md3-text-list">
+        <li><strong>Resultados</strong>: presenta una lista de fragmentos donde aparece la coincidencia buscada. Puede consultarse el contexto, reproducir el audio original y visualizar la información sociolingüística correspondiente.</li>
+        <li><strong>Estadísticas</strong>: ofrece gráficos que muestran la distribución de los resultados según los metadatos disponibles. Los datos pueden descargarse en formato CSV.</li>
+      </ul>
+    </section>
+
+    </div>
+  </main>
+</div>
+
+{{ page_navigation(prev_url=url_for('advanced_search.index'), prev_title='Consultar', next_url=url_for('corpus.metadata'), next_title='Metadatos') }}
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="{{ url_for('static', filename='js/pages/corpus-guia.js') }}" defer></script>
+{% endblock %}

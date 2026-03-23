@@ -1,0 +1,29 @@
+## Minimal requirements for processing scripts in LOKAL/
+## This file lists only the Python packages required by the LOKAL processing tools
+## (preprocessing, annotation, generating metadata, stats and publishing visuals).
+## It intentionally avoids listing dependencies that belong to the main webapp.
+
+# NOTE: Some tools require system dependencies (ffmpeg) or spaCy models; these are
+# listed below as additional notes rather than strict Python packages.
+
+# Core data-stack used by scripts in LOKAL/_0_json and LOKAL/_1_metadata
+pandas>=1.5
+numpy>=1.25
+matplotlib>=3.6
+
+# NLP / Annotation
+spacy>=3.8
+# Spanish spaCy transformer model (install separately - wheel URL provided)
+es_dep_news_trf @ https://github.com/explosion/spacy-models/releases/download/es_dep_news_trf-3.8.0/es_dep_news_trf-3.8.0-py3-none-any.whl
+
+# Audio processing (MP3 split/normalization)
+pydub~=0.25
+eyed3~=0.9
+Pillow>=9.0
+
+# Optional helpers used by QA script and CSV handling
+# (pandas already covers CSV needs; csv module used as a stdlib fallback)
+
+# System note: pydub requires ffmpeg installed and available in PATH (not a Python package)
+
+# End of minimal LOKAL requirements
