@@ -88,11 +88,10 @@ Wichtig fuer die Einordnung:
 - fuer diesen Finalisierungsrun war keine neue Deploy-Arbeit noetig
 - es wurde nur geprueft, ob der durch den Doku-Push ausgeloeste Run gruen bleibt
 
-Finaler Push:
+Erster Finalisierungspush mit der offenen Abschlussdokumentation:
 
 - Push: `d12a713..e406d8c  main -> main`
-- finaler lokaler `main`: `e406d8cc6a2a1315bb004fd04b7f6cb90c1e7e85`
-- finaler `origin/main`: `e406d8cc6a2a1315bb004fd04b7f6cb90c1e7e85`
+- dieser Push brachte den gesamten offenen Abschlussdoku-Stand erstmals auf `origin/main`
 
 Deploy-Beobachtung fuer den Doku-Push:
 
@@ -103,7 +102,9 @@ Deploy-Beobachtung fuer den Doku-Push:
 - Status: `completed`
 - Conclusion: `success`
 
-Damit blieb auch der durch den Finalisierungspush ausgeloeste Produktions-Deploy gruen.
+Damit blieb auch der durch den ersten Finalisierungspush ausgeloeste Produktions-Deploy gruen.
+
+Danach wurde dieser Report noch einmal aktualisiert, um den tatsaechlich erreichten Repo-Endzustand inklusive Branch-Bereinigung festzuhalten. Der aktuelle lokale `main` und `origin/main` stehen auf demselben Stand wie dieser abschliessende Report-Commit.
 
 ## 6. Bereinigung temporaerer Branches
 
@@ -181,6 +182,4 @@ Bewusst behaltene Branches in diesem Run:
 
 - remote: `root-lift-review`
 
-Finaler Stand auf `main` zum Zeitpunkt vor diesem abschliessenden Report-Update:
-
-- `e406d8cc6a2a1315bb004fd04b7f6cb90c1e7e85`
+Der exakte finale `main`-Commit dieser Phase ist derjenige, der diese abschliessende Report-Aktualisierung versioniert.
