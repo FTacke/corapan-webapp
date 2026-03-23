@@ -35,6 +35,9 @@ jobs:
   deploy:
     name: Deploy to marele.online.uni-marburg.de
     runs-on: self-hosted
+    defaults:
+      run:
+        shell: bash
 
     steps:
       - name: Deploy corapan app

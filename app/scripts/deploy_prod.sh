@@ -25,12 +25,6 @@
 
 set -euo pipefail
 
-# DEBUG (temporary): prove which deploy script revision actually runs
-echo "[DEBUG] deploy_prod.sh path: $0"
-echo "[DEBUG] deploy_prod.sh sha256:"
-sha256sum "$0"
-echo ""
-
 # Configuration
 BASE_DIR="/srv/webapps/corapan"
 APP_DIR="${BASE_DIR}/app"
