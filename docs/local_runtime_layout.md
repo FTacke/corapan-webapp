@@ -21,8 +21,8 @@ corapan-webapp/
 ```
 /srv/corapan/
   ├── app/                    ← Application code (read-only)
-  ├── config/                 ← Configuration (secrets, not in repo)
   ├── data/                   ← Runtime data (databases, indexes, exports)
+   │   └── config/             ← Runtime web config (secrets, not in repo)
   ├── media/                  ← Media files (transcripts, audio)
   └── logs/                   ← Application logs
 ```
@@ -39,8 +39,8 @@ For Windows developers, create this structure **outside the repository**:
 # Example (adjust drive/path as needed)
 C:\dev\runtime\corapan\
   ├── app/                    ← Symlink or direct reference to repo root
-  ├── config/                 ← Local config (JWT keys, secrets)
   ├── data/
+   │   ├── config/             ← Local runtime config (JWT keys, secrets)
   │   ├── db/                 ← SQLite or PostgreSQL data
   │   ├── blacklab_export/    ← Export TSV, metadata
   │   ├── blacklab_index/     ← Lucene index (regenerable)
@@ -64,7 +64,9 @@ C:\dev\runtime\corapan\
 
 1. **Create the runtime directory:**
    ```powershell
-   mkdir -p C:\dev\runtime\corapan\{config,data,media,logs}
+   mkdir -p C:\dev\runtime\corapan\data\config
+   mkdir -p C:\dev\runtime\corapan\media
+   mkdir -p C:\dev\runtime\corapan\logs
    ```
 
 2. **Set the environment variable (persistent, via System Properties):**
@@ -158,14 +160,14 @@ if ($env:CORAPAN_RUNTIME_ROOT) {
 
 ---
 
-### `config/` (Runtime Configuration)
+### `data/config/` (Runtime Configuration)
 
 | Attribute | Value |
 |-----------|-------|
 | **Content** | Local secrets, JWT keys, database credentials |
-| **Examples** | `config/keys/jwt_secret.key`, `config/.env.local` |
+| **Examples** | `data/config/keys/jwt_secret.key`, `data/config/.env.local` |
 | **Git Status** | NOT tracked; must be created per environment |
-| **In Docker** | Mounted as `-v $CORAPAN_RUNTIME_ROOT/config:/config` |
+| **In Docker / Runtime** | Resolved as `$CORAPAN_RUNTIME_ROOT/data/config` |
 | **Notes** | Production copy is managed by deployment system (Kubernetes secrets, etc.) |
 
 ---

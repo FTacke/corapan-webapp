@@ -2,15 +2,11 @@
 
 > **Version 1.0.0** | Januar 2026 | Zenodo Software-Release: DOI 10.5281/zenodo.17834023
 
-Dieses Dokument beschreibt die technische Anwendung unter `app/`. Das Repository als Ganzes ist unter `corapan/` organisiert. Systemweite Struktur, Root-Workflows, Maintenance-Pipelines und Runtime-/Deploy-Grundsaetze stehen in [../README.md](../README.md).
+Dieses Dokument beschreibt die technische Anwendung unter `app/`. Das Repository als Ganzes ist unter `corapan/` organisiert. Systemweite Struktur, Root-Workflows, Maintenance-Pipelines, Publikationskontext sowie Runtime-/Deploy-Grundsaetze stehen in [../README.md](../README.md).
 
-Die CO.RA.PAN Web App ist die zentrale Webanwendung für den Zugriff auf und die Analyse des **CO.RA.PAN — Corpus Radiofónico Panhispánico**, eines linguistischen Forschungsprojekts zur vergleichenden Untersuchung der gesprochenen Standardsprache des zeitgenössischen Spanisch.
+Die Web App ist die versionierte Anwendungs- und Deploy-Implementierung fuer CO.RA.PAN. Sie enthaelt den Flask-Backend-Code, Templates, statische Assets, Migrationsdateien, Tests, Build- und Deploy-Skripte sowie die app-spezifische Infrastrukturdefinition.
 
-CO.RA.PAN basiert auf einem streng kuratierten Radiokorpus, der authentische, professionell produzierte Informations- und Nachrichtensendungen aus den nationalen Rundfunkanstalten nahezu aller spanischsprachigen Länder umfasst. Der Fokus liegt auf professioneller mündlicher Normsprache, wie sie von Moderator:innen und Journalist:innen verwendet wird, und damit auf einem funktional homogenen Register, das bislang in der Korpuslinguistik nur unzureichend abgedeckt ist.
-
-Der Korpus kombiniert Audiomaterial und Transkriptionen mit zeit- und token-alignierten linguistischen Annotationen (u. a. Lemmata, Wortarten, syntaktische Informationen) sowie einer einheitlich modellierten Metadatenstruktur. Diese Konzeption ermöglicht systematische Vergleiche panhispanischer Variation innerhalb eines klar definierten kommunikativen Rahmens.
-
-Die Web App stellt diese Forschungsinfrastruktur in Form einer integrierten Such-, Analyse- und Explorationsumgebung bereit und dient zugleich als technisches Rückgrat für nachhaltige, reproduzierbare korpuslinguistische Forschung.
+Projektweite fachliche Einordnung, getrennte Daten-/Software-Publikationen und Zitationskontext sind bewusst in die Root-README ausgelagert. Diese App-README fokussiert die technische Anwendungssicht.
 
 ## 1. Projektübersicht
 
@@ -276,47 +272,14 @@ Die Produktion laeuft auf einer VM am HRZ der Philipps-Universitaet Marburg und 
 
 → Vollstaendige Dokumentation: [../docs/operations/production.md](../docs/operations/production.md)
 
-## 14. Lizenz / Licensing
+## 14. Lizenz / Zitation
 
-The CO.RA.PAN Web Application is released under the MIT License.  
-This applies to the software code only.
-
-The CO.RA.PAN corpus data (audio, transcripts, annotations, metadata, and any
-derived structured data) is **not** covered by this license and remains
-restricted due to copyright and broadcasting rights.  
-These materials may not be redistributed or reused outside the scope explicitly
-permitted by the project’s legal framework and cannot be considered open data.
-
-## 15. Versionierung & Zitation
-
-- **Aktuelle Version:** 1.0.0 (Januar 2026)
+- **Lizenz:** [LICENSE](LICENSE)
+- **Zitation der Software:** [CITATION.cff](CITATION.cff)
 - **Changelog:** [CHANGELOG.md](CHANGELOG.md)
-- **Zitation:** Siehe [CITATION.cff](CITATION.cff)
-- **Zenodo (Software):** DOI 10.5281/zenodo.17834023
+- **Projektweite Ressourcen und getrennte DOI-Hinweise:** [../README.md](../README.md)
 
-## CO.RA.PAN References and Related Resources
-
-The CO.RA.PAN project consists of multiple, clearly separated components with distinct citation records.  
-Please refer to the appropriate DOI depending on whether you cite the software, metadata, or corpus data.
-
-**CO.RA.PAN Full Corpus (Restricted)**  
-DOI: https://doi.org/10.5281/zenodo.15360942  
-*Audio data and full JSON transcripts; access restricted due to copyright and broadcasting constraints.*
-
-**CO.RA.PAN Sample Corpus (Public)**  
-DOI: https://doi.org/10.5281/zenodo.15378479  
-*Public sample dataset for demonstration, testing, and teaching purposes.*
-
-**CO.RA.PAN Metadata (Public)**  
-DOI: https://doi.org/10.5281/zenodo.17843469  
-*Complete metadata inventory describing the CO.RA.PAN corpus.*
-
-**CO.RA.PAN Web Application**  
-DOI: https://doi.org/10.5281/zenodo.17834023  
-*Software release of the CO.RA.PAN Web Application (this repository).*
-
-
-## Current Status (January 2026)
+## 15. Technischer Snapshot
 
 ### Frontend
 - **Vite** for asset bundling and build process
@@ -377,7 +340,7 @@ python -m src.app.main
 
 ### 🔧 Configuration
 
-* **Database**: PostgreSQL (production/dev default), SQLite (fallback)
+* **Database**: PostgreSQL for auth and core data; SQLite only for explicitly separated side databases
 * **Media Files**: Organized by country in `media/` directory
 * **BlackLab Index**: 146 documents, 1.49M tokens, 15.89 MB index
 * **Access Control**: Public access configurable via `ALLOW_PUBLIC_TEMP_AUDIO`

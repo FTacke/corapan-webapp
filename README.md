@@ -1,6 +1,6 @@
 # CO.RA.PAN
 
-CO.RA.PAN, the Corpus Radiofonico Panhispanico, is a research infrastructure for searching, listening to, and analyzing a pan-Hispanic radio corpus of professionally produced spoken Spanish.
+CO.RA.PAN, the Corpus Radiofónico Panhispánico, is a research infrastructure for searching, listening to, and analyzing a pan-Hispanic radio corpus of professionally produced spoken Spanish.
 
 This repository is the system-level root for the project. It contains the versioned web application under `app/`, the operator-facing maintenance and deployment helpers, the architecture and operations documentation, and the root-level workflow/governance files that define the repository contract.
 
@@ -15,6 +15,17 @@ CO.RA.PAN combines:
 - a web application for search, playback, exploration, and administration
 
 The repository therefore represents more than a single Flask app. It is the GitHub root for the whole operational workspace around the corpus.
+
+## Research Resources
+
+CO.RA.PAN has separate publication surfaces with distinct access and citation scopes:
+
+- Web application software: see [app/CITATION.cff](app/CITATION.cff) and [app/CHANGELOG.md](app/CHANGELOG.md)
+- Full corpus release (restricted access): https://doi.org/10.5281/zenodo.15360942
+- Sample corpus release (public): https://doi.org/10.5281/zenodo.15378479
+- Metadata release (public): https://doi.org/10.5281/zenodo.17843469
+
+This repository versions the software and the repository-level operational contract. Corpus data, media, transcripts, and runtime-generated artifacts remain outside Git.
 
 ## Repository Structure
 
@@ -86,6 +97,6 @@ These root entry points reflect the intended workspace contract after the root l
 
 ## Data and Licensing
 
-The software in this repository is versioned. Corpus data, media, transcripts, and derived runtime artifacts are not part of the Git-tracked repository and remain governed by separate legal and operational constraints.
+The software in this repository is released under the MIT License. Corpus data, media, transcripts, annotations, and derived runtime artifacts are not part of the Git-tracked repository and remain governed by separate legal and operational constraints.
 
 See [app/LICENSE](app/LICENSE) and [app/CITATION.cff](app/CITATION.cff) for software licensing and citation details.

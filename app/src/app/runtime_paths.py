@@ -69,7 +69,7 @@ def get_media_root() -> Path:
 
 
 def get_config_root() -> Path:
-    return get_runtime_root() / "config"
+    return get_data_root() / "config"
 
 
 def get_logs_dir() -> Path:

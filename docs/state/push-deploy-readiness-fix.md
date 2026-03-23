@@ -7,6 +7,12 @@ Umgebung: bestehendes Git-/Deploy-Modell `webapp -> /srv/webapps/corapan/app`
 
 Die drei in der Readiness-Pruefung bestaetigten Push-Blocker wurden innerhalb des echten Repos `webapp/.git` behoben, ohne das Git- oder Deploy-Modell umzubauen.
 
+Hinweis 2026-03-23:
+
+- die damalige Runtime-Pfadkorrektur war ein Zwischenstand vor dem spaeteren Root-Lift-Zielzustand
+- aktueller kanonischer Vertrag fuer Runtime-Web-Config ist `CORAPAN_RUNTIME_ROOT/data/config`
+- siehe `docs/repo_finish/phase_6b_config_root_fix.md`
+
 ## Behobene Blocker
 
 ### 1. Repo-Workflows in `webapp/.github/workflows/`
@@ -45,11 +51,11 @@ Korrigiert:
 
 Korrektur:
 
-- `get_config_root()` zeigt wieder auf `CORAPAN_RUNTIME_ROOT/config`
+- `get_config_root()` zeigte in diesem damaligen Zwischenstand wieder auf `CORAPAN_RUNTIME_ROOT/config`
 
 Bewertung:
 
-- Development bleibt kompatibel mit dem lokalen Runtime-Root
+- Development blieb in diesem damaligen Zwischenstand kompatibel mit dem lokalen Runtime-Root
 - Production bleibt kompatibel mit dem bestaetigten Container-Mount `/app/config`
 
 ## Ergebnis

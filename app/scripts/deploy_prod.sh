@@ -14,7 +14,7 @@
 # Prerequisites:
 #   - Docker installed and running
 #   - Git repository cloned to /srv/webapps/corapan/app
-#   - Data/media directories populated via rsync
+#   - Runtime roots /srv/webapps/corapan/data, /srv/webapps/corapan/media, and /srv/webapps/corapan/logs populated on the host
 #   - passwords.env configured in /srv/webapps/corapan/config/
 #
 # Usage:
@@ -34,7 +34,6 @@ echo ""
 # Configuration
 BASE_DIR="/srv/webapps/corapan"
 APP_DIR="${BASE_DIR}/app"
-RUNTIME_DIR="${BASE_DIR}/runtime/corapan"
 ENV_FILE="${BASE_DIR}/config/passwords.env"
 COMPOSE_FILE="${APP_DIR}/infra/docker-compose.prod.yml"
 CONTAINER_NAME="corapan-web-prod"
