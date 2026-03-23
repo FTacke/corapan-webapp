@@ -2,6 +2,8 @@
 
 > **Version 1.0.0** | Januar 2026 | Zenodo Software-Release: DOI 10.5281/zenodo.17834023
 
+Dieses Dokument beschreibt die technische Anwendung unter `app/`. Das Repository als Ganzes ist unter `corapan/` organisiert. Systemweite Struktur, Root-Workflows, Maintenance-Pipelines und Runtime-/Deploy-Grundsaetze stehen in [../README.md](../README.md).
+
 Die CO.RA.PAN Web App ist die zentrale Webanwendung für den Zugriff auf und die Analyse des **CO.RA.PAN — Corpus Radiofónico Panhispánico**, eines linguistischen Forschungsprojekts zur vergleichenden Untersuchung der gesprochenen Standardsprache des zeitgenössischen Spanisch.
 
 CO.RA.PAN basiert auf einem streng kuratierten Radiokorpus, der authentische, professionell produzierte Informations- und Nachrichtensendungen aus den nationalen Rundfunkanstalten nahezu aller spanischsprachigen Länder umfasst. Der Fokus liegt auf professioneller mündlicher Normsprache, wie sie von Moderator:innen und Journalist:innen verwendet wird, und damit auf einem funktional homogenen Register, das bislang in der Korpuslinguistik nur unzureichend abgedeckt ist.
@@ -47,13 +49,13 @@ Diese Anwendung dient als Frontend und API-Layer für das CO.RA.PAN-Projekt. Sie
 
 - **Backend:** Python 3.12, Flask (Web Framework)
 - **Suchmaschine:** BlackLab Server (Lucene-basiert, via Docker)
-- **Datenbank:** PostgreSQL (Production & Dev Default), SQLite (Fallback/Quickstart)
+- **Datenbank:** PostgreSQL fuer Auth und Kerndaten, SQLite nur fuer explizit getrennte Side-Datenbanken
 - **Frontend:** Jinja2 Templates, Vanilla JS, Material Design 3 (CSS Tokens), ECharts, Leaflet
 - **Deployment:** Gunicorn, Docker Compose
 
 **Auth:** DB-backed JWT-Authentication (Argon2 Password Hashing).
 
-**Hinweis:** Legacy `passwords.env` ist deprecated. Siehe neue Dokumentation unter `docs/`.
+**Hinweis:** `passwords.env` bleibt eine operator-managed Produktions-Secret-Datei ausserhalb von Git. Details stehen in [../docs/operations/production.md](../docs/operations/production.md).
 
 ## 4. Voraussetzungen
 
@@ -87,20 +89,22 @@ powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | ie
 
 ## 5. Setup (Windows)
 
+Der kanonische lokale Einstieg erfolgt vom Repository-Root `corapan/` aus. Fuer normale lokale Entwicklung sind die Root-Wrapper vorzuziehen.
+
 ```powershell
-git clone <repo-url>
-cd <repo-name>
+git clone <repo-url> corapan
+cd corapan
 
 powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
-.\scripts\bootstrap.ps1
+.\scripts\dev-setup.ps1
 
 # optional:
-# .\scripts\bootstrap.ps1 -Dev
+# .\scripts\dev-start.ps1
 
 # nur falls lokal benötigt:
-# Copy-Item .env.example .env
+# Copy-Item .\app\.env.example .\app\.env
 
-python -m <entrypoint>
+# App-spezifische Details siehe unten.
 ```
 
 ## 6. Dependency-Workflow (requirements.in + lock)
@@ -110,7 +114,7 @@ python -m <entrypoint>
 - Dev-Quelle: `requirements-dev.in`
 - Dev-Lock: `requirements-dev.txt`
 
-Lockfiles aktualisieren:
+Lockfiles aktualisieren (aus `app/`):
 
 ```powershell
 .\scripts\refresh-lockfiles.ps1
@@ -118,10 +122,10 @@ Lockfiles aktualisieren:
 
 ## 7. Data / Media (nicht im Git)
 
-- Laufzeitdaten und Medien werden nicht versioniert (`data/`, `runtime/`, `media/`).
+- Laufzeitdaten und Medien werden nicht versioniert (`data/`, `media/`, `logs/`).
 - Für neuen PC manuell migrieren oder aus Quellen neu erzeugen.
 - Details und Größenabschätzung: siehe `MIGRATION.md`.
-- Empfohlene Auslagerung (Windows): `D:\data\corapan-webapp\...`
+- Empfohlene Auslagerung (Windows): `D:\data\corapan\...`
 
 ## 8. Secrets / Environment
 
@@ -156,8 +160,8 @@ Bezugsquelle für Werte:
 
 ### 1. Repository klonen
 ```bash
-git clone <repo-url>
-cd corapan-webapp
+git clone <repo-url> corapan
+cd corapan/app
 ```
 
 ### 2. Virtuelles Environment erstellen
@@ -172,10 +176,10 @@ pip install -r requirements.txt
 pip install -e .
 ```
 
-Note: Heavy corpus processing / LOKAL tool dependencies are maintained separately
-in the LOKAL tools repository (they are not required for the webapp Variant A run).
-If you need the JSON→TSV→indexing pipeline, install the dependency file from the
-LOKAL repo instead of installing the large NLP/audio packages into the webapp env.
+Note: Heavy corpus processing and maintenance pipeline dependencies are maintained
+separately from the app runtime environment.
+If you need the JSON→TSV→indexing pipeline, use the workspace maintenance toolchain
+instead of installing the large NLP/audio packages into the app environment.
 
 ### 4. Konfiguration
 Erstellen Sie eine `.env` Datei basierend auf der Vorlage:
@@ -211,7 +215,7 @@ Falls noch kein Index vorhanden ist, muss dieser erstellt werden. Siehe dazu `do
 ### BlackLab Server starten
 Der Such-Server muss im Hintergrund laufen:
 ```powershell
-.\scripts\start_blacklab_docker_v3.ps1 -Detach
+.\scripts\blacklab\start_blacklab_docker_v3.ps1 -Detach
 ```
 URL: http://localhost:8081/blacklab-server
 
@@ -248,15 +252,13 @@ Eine GitHub Actions Pipeline (`.github/workflows/ci.yml`) prüft bei jedem Push 
 
 ## 12. Dokumentation
 
-Die detaillierte Dokumentation befindet sich im `docs/` Ordner:
+Die detaillierte Dokumentation liegt auf Root-Ebene unter `../docs/`:
 
-- **[Konzepte](docs/concepts/)**: Architektur, Authentifizierung.
-- **[Analytics](docs/analytics/)**: DSGVO-konformes Tracking-System (NEU v1.0).
-- **[Auth Migration Guide](docs/auth-migration/auth-migration.md)**: Praktische Anleitung zur Umstellung von passwords.env auf DB-basierte Auth (JWT / Refresh Token).
-- **[Anleitungen](docs/how-to/)**: Schritt-für-Schritt Guides (z.B. Quickstart).
-- **[Betrieb](docs/operations/)**: Deployment, Security.
-- **[Referenz](docs/reference/)**: API-Doku, Datenbank-Schema.
-- **[Changelog](CHANGELOG.md)**: Versionshistorie und Release Notes.
+- **[Architektur](../docs/architecture/)**
+- **[Betrieb](../docs/operations/)**
+- **[Aenderungen](../docs/changes/)**
+- **[Repo-Finalisierung](../docs/repo_finish/)**
+- **[Changelog](CHANGELOG.md)**
 
 ## 13. Deployment
 
@@ -264,15 +266,15 @@ Für den produktiven Betrieb wird empfohlen:
 - Einsatz eines WSGI-Servers (z.B. Gunicorn).
 - Reverse Proxy (Nginx/Apache) für SSL-Terminierung.
 - Setzen der Environment-Variable `FLASK_ENV=production`.
-- Siehe `docs/operations/deployment.md` für Details.
+- Siehe [../docs/operations/production.md](../docs/operations/production.md) fuer Details.
 
 ### Deployment (Production)
 
-Die Produktion läuft auf einer VM am HRZ der Philipps-Universität Marburg und wird über einen **self-hosted GitHub Runner** automatisiert. Ein `push` auf den `main`-Branch führt automatisch `scripts/deploy_prod.sh` aus, welches das Docker-Image baut und den Container aktualisiert. Große Daten- und Medienbestände kommen **nicht** über Git, sondern werden unter `/srv/webapps/corapan/runtime/corapan/data` und `/srv/webapps/corapan/runtime/corapan/media` per rsync bereitgestellt.
+Die Produktion laeuft auf einer VM am HRZ der Philipps-Universitaet Marburg und wird ueber einen **self-hosted GitHub Runner** automatisiert. Ein `push` auf den `main`-Branch fuehrt `scripts/deploy_prod.sh` aus, welches im App-Checkout unter `/srv/webapps/corapan/app` deployt. Grosse Daten- und Medienbestaende kommen **nicht** ueber Git, sondern werden getrennt unter `/srv/webapps/corapan/data` und `/srv/webapps/corapan/media` bereitgestellt.
 
-> **Secrets:** Die Datei `passwords.env` liegt auf dem Server unter `/srv/webapps/corapan/config/` und wird per `--env-file` in den Container geladen. Die App erwartet die Secrets (z. B. `AUTH_DATABASE_URL`, `FLASK_SECRET_KEY`, `BLS_BASE_URL`, `BLS_CORPUS`) als Umgebungsvariablen.
+> **Secrets:** Die Datei `passwords.env` liegt serverseitig unter `/srv/webapps/corapan/config/passwords.env` und wird per `--env-file` in den Deploy-Prozess eingebunden. Die App erwartet Werte wie `AUTH_DATABASE_URL`, `FLASK_SECRET_KEY`, `BLS_BASE_URL` und `BLS_CORPUS` als Umgebungsvariablen.
 
-→ Vollständige Dokumentation: [`docs/deploy_plan.md`](docs/deploy_plan.md)
+→ Vollstaendige Dokumentation: [../docs/operations/production.md](../docs/operations/production.md)
 
 ## 14. Lizenz / Licensing
 

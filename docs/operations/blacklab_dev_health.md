@@ -107,7 +107,7 @@ docker inspect blacklab-server-v3 --format "{{.Image}}"
 ## Index Management
 
 ### Current Dev Index Location
-- **Host path:** `C:\dev\corapan\webapp\data\blacklab\index`
+- **Host path:** `C:\dev\corapan\data\blacklab\index`
 - **Container mount:** `/data/index/corapan` (read-only)
 - **Size:** ~280 MB
 

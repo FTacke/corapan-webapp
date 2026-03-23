@@ -3,7 +3,7 @@
 **Scope:** Setup und Development Workflow  
 **Source-of-truth:** `startme.md`, `scripts/dev-setup.ps1`, `scripts/dev-start.ps1`
 
-Die Dev-Skripte bevorzugen ein Workspace-Layout mit Geschwisterordnern neben `webapp/`:
+Die Dev-Skripte bevorzugen ein Workspace-Layout mit Geschwisterordnern neben `app/`:
 - `../data`
 - `../media`
 
@@ -42,8 +42,8 @@ Das Skript:
 ### 1. Repository klonen
 
 ```bash
-git clone <repo-url>
-cd corapan-webapp
+git clone <repo-url> corapan
+cd corapan
 ```
 
 ### 2. Virtual Environment
@@ -63,7 +63,7 @@ pip install -r requirements.txt
 ### 4. Docker Services starten
 
 ```powershell
-docker-compose -f docker-compose.dev-postgres.yml up -d
+docker compose -f .\docker-compose.dev-postgres.yml up -d
 ```
 
 **Services:**
@@ -148,7 +148,7 @@ ALLOW_PUBLIC_TEMP_AUDIO=true
 
 ## Runtime-Verzeichnis (Dev)
 
-**Kanonische Lage:** `<WorkspaceRoot>` mit `data/` und `media/` neben `webapp/`
+**Kanonische Lage:** `<WorkspaceRoot>` mit `data/` und `media/` neben `app/`
 
 Die aktive Dev-Runtime liegt damit ausserhalb des Repositories und wird ueber `CORAPAN_RUNTIME_ROOT` aufgeloest:
 
@@ -165,7 +165,7 @@ Die aktive Dev-Runtime liegt damit ausserhalb des Repositories und wird ueber `C
 │   ├── mp3-split/
 │   ├── mp3-temp/
 │   └── transcripts/
-└── webapp/
+└── app/
 ```
 
 ### Auto-Setup beim Start
@@ -196,10 +196,10 @@ Statistics (JSON + PNG-Visualisierungen) werden in `$CORAPAN_RUNTIME_ROOT\data\p
 
 ```powershell
 # CSV-Input generieren (einmalig)
-python .\LOKAL\_0_json\04_internal_country_statistics.py
+python .\maintenance_pipelines\_0_json\04_internal_country_statistics.py
 
 # Statistics generieren und schreiben
-python .\LOKAL\_0_json\05_publish_corpus_statistics.py
+python .\maintenance_pipelines\_0_json\05_publish_corpus_statistics.py
 
 # Verifikation
 ls $env:CORAPAN_RUNTIME_ROOT\data\public\statistics\

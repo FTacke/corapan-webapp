@@ -18,19 +18,20 @@
 ### 1. Code aktualisieren
 
 ```bash
-cd ~/corapan-webapp
-git pull origin main
+cd /srv/webapps/corapan/app
+git fetch origin
+git reset --hard origin/main
 ```
 
 ### 2. Secrets konfigurieren
 
-**Host `.env` (nicht in Git!):**
+**Server-seitige Secrets (`passwords.env`, nicht in Git):**
 ```bash
 FLASK_SECRET_KEY=<64-char-hex-secret>
 JWT_SECRET_KEY=<64-char-hex-secret>
 AUTH_DATABASE_URL=postgresql://corapan:<password>@localhost:5432/corapan_auth
-CORAPAN_RUNTIME_ROOT=/srv/webapps/corapan/runtime/corapan
-CORAPAN_MEDIA_ROOT=/srv/webapps/corapan/runtime/corapan/media
+CORAPAN_RUNTIME_ROOT=/app
+CORAPAN_MEDIA_ROOT=/app/media
 ```
 
 **Generierung:**
@@ -38,11 +39,11 @@ CORAPAN_MEDIA_ROOT=/srv/webapps/corapan/runtime/corapan/media
 python -c "import secrets; print(secrets.token_hex(32))"
 ```
 
-### 3. Production Start (docker-compose v1)
+### 3. Production Start (Docker Compose V2)
 
 ```bash
 cd /srv/webapps/corapan/app
-docker-compose --env-file /srv/webapps/corapan/config/passwords.env \
+docker compose --env-file /srv/webapps/corapan/config/passwords.env \
     -f infra/docker-compose.prod.yml up -d --force-recreate --build
 ```
 
@@ -63,17 +64,18 @@ docker logs corapan-web-prod -f
 
 ## Runtime Roots (Source of Truth)
 
-**Production runtime root:** `/srv/webapps/corapan/runtime/corapan`
+**Production host roots:** `/srv/webapps/corapan/data`, `/srv/webapps/corapan/media`, `/srv/webapps/corapan/logs`
 
 App path resolution (evidence):
-- Data root resolves to `${CORAPAN_RUNTIME_ROOT}/data` in [src/app/config/__init__.py](src/app/config/__init__.py#L66-L120).
-- Media root is required via `CORAPAN_MEDIA_ROOT` in [src/app/config/__init__.py](src/app/config/__init__.py#L137-L154).
-- Statistics root resolves from `CORAPAN_RUNTIME_ROOT` in [src/app/config/__init__.py](src/app/config/__init__.py#L159-L169).
-- Advanced search docmeta reads from `DATA_ROOT/blacklab_export/docmeta.jsonl` in [src/app/search/advanced_api.py](src/app/search/advanced_api.py#L72-L77).
+- Host `/srv/webapps/corapan/data` is mounted into the container as `/app/data` in [app/infra/docker-compose.prod.yml](app/infra/docker-compose.prod.yml#L89).
+- Host `/srv/webapps/corapan/media` is mounted into the container as `/app/media` in [app/infra/docker-compose.prod.yml](app/infra/docker-compose.prod.yml#L90).
+- Host `/srv/webapps/corapan/logs` is mounted into the container as `/app/logs` in [app/infra/docker-compose.prod.yml](app/infra/docker-compose.prod.yml#L91).
+- Host `/srv/webapps/corapan/data/config` is mounted into the container as `/app/config` in [app/infra/docker-compose.prod.yml](app/infra/docker-compose.prod.yml#L92).
 
 **Expected production roots:**
-- Data: `/srv/webapps/corapan/runtime/corapan/data`
-- Media: `/srv/webapps/corapan/runtime/corapan/media`
+- Data: `/srv/webapps/corapan/data`
+- Media: `/srv/webapps/corapan/media`
+- Logs: `/srv/webapps/corapan/logs`
 
 **Expected runtime-first mount destinations (container paths only):**
 - `/app/data`
@@ -210,8 +212,8 @@ docker exec corapan-postgres pg_dump -U corapan corapan_auth > /backup/corapan/d
 
 # Logs, Counters
 tar -czf /backup/corapan/data_${DATE}.tar.gz \
-    /srv/webapps/corapan/runtime/corapan/logs \
-    /srv/webapps/corapan/runtime/corapan/data/counters
+    /srv/webapps/corapan/logs \
+    /srv/webapps/corapan/data/counters
 
 echo "Backup completed: $DATE"
 ```
@@ -227,11 +229,11 @@ echo "Backup completed: $DATE"
 
 ```bash
 # Graceful Restart (Zero-Downtime)
-docker-compose restart
+docker compose --env-file /srv/webapps/corapan/config/passwords.env -f infra/docker-compose.prod.yml restart
 
 # Hard Restart
-docker-compose down
-docker-compose up -d
+docker compose --env-file /srv/webapps/corapan/config/passwords.env -f infra/docker-compose.prod.yml down
+docker compose --env-file /srv/webapps/corapan/config/passwords.env -f infra/docker-compose.prod.yml up -d
 ```
 
 ---
@@ -241,8 +243,8 @@ docker-compose up -d
 ```bash
 # Zu vorherigem Commit
 git checkout <previous-commit-hash>
-docker-compose build
-docker-compose up -d
+docker compose --env-file /srv/webapps/corapan/config/passwords.env -f infra/docker-compose.prod.yml build
+docker compose --env-file /srv/webapps/corapan/config/passwords.env -f infra/docker-compose.prod.yml up -d
 ```
 
 ---
@@ -294,7 +296,7 @@ CLEAN_INPUTS=1 bash /srv/webapps/corapan/app/scripts/blacklab/build_blacklab_ind
 
 Timestamped Logs unter:
 ```
-/srv/webapps/corapan/runtime/corapan/logs/blacklab_build_YYYY-MM-DD_HHMMSS.log
+/srv/webapps/corapan/logs/blacklab_build_YYYY-MM-DD_HHMMSS.log
 ```
 
 ### Nach dem Rebuild

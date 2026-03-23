@@ -20,7 +20,7 @@ This directory contains **orchestrator scripts** that coordinate deployment oper
 
 **Usage:**
 ```powershell
-.\LOKAL\_2_deploy\publish_blacklab.ps1 -WebappRepoPath . -DryRun
+.\maintenance_pipelines\_2_deploy\publish_blacklab.ps1 -AppRepoPath .\app -DryRun
 ```
 
 **What it does:**
@@ -37,13 +37,14 @@ This directory contains **orchestrator scripts** that coordinate deployment oper
 
 **Usage:**
 ```powershell
-.\LOKAL\_2_deploy\deploy_data.ps1 [-WebappRepoPath <path>] [-Force]
+.\maintenance_pipelines\_2_deploy\deploy_data.ps1 [-AppRepoPath <path>] [-Force]
 ```
 
 **Parameters:**
-- `-WebappRepoPath`: Path to webapp repo root (default: resolved relative to script)
+- `-AppRepoPath`: Path to app repo root (default: resolved as `<workspace>/app`)
+- `-WebappRepoPath`: Legacy alias retained for compatibility
 - `-Force`: Force full resync (ignores manifest state)
-- `-LogDir`: Log directory (default: `LOKAL/_2_deploy/_logs`)
+- `-LogDir`: Log directory (default: `maintenance_pipelines/_2_deploy/_logs`)
 
 **What it does:**
 - Resolves paths and validates repo structure
@@ -55,11 +56,11 @@ This directory contains **orchestrator scripts** that coordinate deployment oper
 
 **Example:**
 ```powershell
-# Normal delta sync from repo root
-.\LOKAL\_2_deploy\deploy_data.ps1
+# Normal delta sync from workspace root
+.\maintenance_pipelines\_2_deploy\deploy_data.ps1
 
 # Force full resync from any directory
-.\LOKAL\_2_deploy\deploy_data.ps1 -WebappRepoPath "C:\dev\corapan-webapp" -Force
+.\maintenance_pipelines\_2_deploy\deploy_data.ps1 -AppRepoPath "C:\dev\corapan\app" -Force
 ```
 
 ---
@@ -70,14 +71,15 @@ This directory contains **orchestrator scripts** that coordinate deployment oper
 
 **Usage:**
 ```powershell
-.\LOKAL\_2_deploy\deploy_media.ps1 [-WebappRepoPath <path>] [-Force] [-ForceMP3]
+.\maintenance_pipelines\_2_deploy\deploy_media.ps1 [-AppRepoPath <path>] [-Force] [-ForceMP3]
 ```
 
 **Parameters:**
-- `-WebappRepoPath`: Path to webapp repo root (default: resolved relative to script)
+- `-AppRepoPath`: Path to app repo root (default: resolved as `<workspace>/app`)
+- `-WebappRepoPath`: Legacy alias retained for compatibility
 - `-Force`: Force full resync of all media
 - `-ForceMP3`: Force full resync of MP3 files only
-- `-LogDir`: Log directory (default: `LOKAL/_2_deploy/_logs`)
+- `-LogDir`: Log directory (default: `maintenance_pipelines/_2_deploy/_logs`)
 
 **What it does:**
 - Resolves paths and validates repo structure
@@ -89,11 +91,11 @@ This directory contains **orchestrator scripts** that coordinate deployment oper
 
 **Example:**
 ```powershell
-# Normal delta sync from repo root
-.\LOKAL\_2_deploy\deploy_media.ps1
+# Normal delta sync from workspace root
+.\maintenance_pipelines\_2_deploy\deploy_media.ps1
 
 # Force MP3 resync from any directory
-.\LOKAL\_2_deploy\deploy_media.ps1 -WebappRepoPath "C:\dev\corapan-webapp" -ForceMP3
+.\maintenance_pipelines\_2_deploy\deploy_media.ps1 -AppRepoPath "C:\dev\corapan\app" -ForceMP3
 ```
 
 ---
@@ -173,10 +175,10 @@ For data/media syncs, the underlying scripts use manifest files to track state a
 
 ```powershell
 # 1. Execute data deploy
-.\LOKAL\_2_deploy\deploy_data.ps1
+.\maintenance_pipelines\_2_deploy\deploy_data.ps1
 
 # 2. Execute media deploy
-.\LOKAL\_2_deploy\deploy_media.ps1
+.\maintenance_pipelines\_2_deploy\deploy_media.ps1
 
 # 3. Verify production
 # (manual check or monitoring)
@@ -186,22 +188,22 @@ For data/media syncs, the underlying scripts use manifest files to track state a
 
 ```powershell
 # After metadata or stats changes
-.\LOKAL\_2_deploy\deploy_data.ps1
+.\maintenance_pipelines\_2_deploy\deploy_data.ps1
 ```
 
 ### Media-Only Update
 
 ```powershell
 # After adding new transcripts or audio
-.\LOKAL\_2_deploy\deploy_media.ps1
+.\maintenance_pipelines\_2_deploy\deploy_media.ps1
 ```
 
 ### BlackLab Index Update
 
 ```powershell
-# After building data/blacklab_index.new locally
-.\LOKAL\_2_deploy\publish_blacklab.ps1 -WebappRepoPath . -DryRun
-.\LOKAL\_2_deploy\publish_blacklab.ps1 -WebappRepoPath .
+# After building data/blacklab/index locally
+.\maintenance_pipelines\_2_deploy\publish_blacklab.ps1 -AppRepoPath .\app -DryRun
+.\maintenance_pipelines\_2_deploy\publish_blacklab.ps1 -AppRepoPath .\app
 ```
 
 ---
@@ -209,12 +211,12 @@ For data/media syncs, the underlying scripts use manifest files to track state a
 ## Directory Structure
 
 ```
-LOKAL/_2_deploy/
+maintenance_pipelines/_2_deploy/
 |-- README.md                    # This file
-|-- publish_blacklab.ps1         # BlackLab index orchestrator (existing)
-|-- deploy_data.ps1              # Data sync orchestrator (new)
-|-- deploy_media.ps1             # Media sync orchestrator (new)
-\`-- _logs/                       # Timestamped execution logs
+|-- publish_blacklab.ps1         # BlackLab index orchestrator
+|-- deploy_data.ps1              # Data sync orchestrator
+|-- deploy_media.ps1             # Media sync orchestrator
+\`-- _logs/                      # Timestamped execution logs
     |-- deploy_data_*.log
     |-- deploy_media_*.log
     \`-- publish_blacklab_*.log
@@ -230,7 +232,7 @@ LOKAL/_2_deploy/
 - Direct calls to sync scripts without orchestration
 
 **After (January 2026):**
-- Separated data/media orchestrators in `LOKAL/_2_deploy/`
+- Separated data/media orchestrators in `maintenance_pipelines/_2_deploy/`
 - Clear entry points in `scripts/deploy_sync/`
 - Consistent logging and path handling
 - Legacy scripts archived in `scripts/deploy_sync/legacy/`
@@ -261,7 +263,7 @@ LOKAL/_2_deploy/
 
 **Problem:** `_logs/` directory doesn't exist.
 
-**Solution:** Orchestrators should create it automatically. Verify write permissions on `LOKAL/_2_deploy/`.
+**Solution:** Orchestrators should create it automatically. Verify write permissions on `maintenance_pipelines/_2_deploy/`.
 
 ---
 

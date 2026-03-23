@@ -18,11 +18,11 @@
 .PARAMETER ForceMP3
     Force full resync of MP3 files only (transcripts remain delta)
 .PARAMETER LogDir
-    Directory for log files (default: LOKAL/_2_deploy/_logs)
+    Directory for log files (default: maintenance_pipelines/_2_deploy/_logs)
 .EXAMPLE
-    .\LOKAL\_2_deploy\deploy_media.ps1
+    .\maintenance_pipelines\_2_deploy\deploy_media.ps1
 .EXAMPLE
-    .\LOKAL\_2_deploy\deploy_media.ps1 -AppRepoPath "C:\dev\corapan\app" -ForceMP3
+    .\maintenance_pipelines\_2_deploy\deploy_media.ps1 -AppRepoPath "C:\dev\corapan\app" -ForceMP3
 #>
 
 [CmdletBinding()]

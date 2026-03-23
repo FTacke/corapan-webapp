@@ -8,9 +8,6 @@ runtime/
 app/.venv/
 app/.venv*/
 app/runtime/
-webapp/.venv/
-webapp/.venv*/
-webapp/runtime/
 
 # Secrets and local environment files
 .env
@@ -21,10 +18,6 @@ app/.env
 app/.env.*
 !app/.env.example
 app/passwords.env
-webapp/.env
-webapp/.env.*
-!webapp/.env.example
-webapp/passwords.env
 
 # Python caches and test artifacts
 **/__pycache__/
@@ -39,11 +32,8 @@ coverage.xml
 
 # Node and browser test artifacts
 app/node_modules/
-webapp/node_modules/
 app/test-results/
 app/playwright-report/
-webapp/test-results/
-webapp/playwright-report/
 
 # Local build, temp, and report artifacts
 tmp/
@@ -61,13 +51,10 @@ reports/
 
 # App-local scratch areas
 app/tmp/
-webapp/tmp/
 app/.pytest_cache/
-webapp/.pytest_cache/
 
 # Logs
 *.log
 *.log.*
 
 # Legacy runtime data traces that must never become canonical again
-webapp/data/

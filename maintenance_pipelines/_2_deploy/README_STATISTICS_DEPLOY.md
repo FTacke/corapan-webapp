@@ -48,7 +48,7 @@ $env:PUBLIC_STATS_DIR = "C:\dev\runtime\corapan\data\public\statistics"
 
 **Option 2: Runtime root (auto-derives statistics path)**
 ```powershell
-$env:CORAPAN_RUNTIME_ROOT = "C:\dev\runtime\corapan"
+$env:CORAPAN_RUNTIME_ROOT = "C:\dev\corapan"
 # Statistics path becomes: $CORAPAN_RUNTIME_ROOT\data\public\statistics
 ```
 
@@ -60,17 +60,17 @@ $env:CORAPAN_RUNTIME_ROOT = "C:\dev\runtime\corapan"
 $env:CORAPAN_RUNTIME_ROOT = "C:\dev\runtime\corapan"
 
 # 2. Generate statistics (requires CSV input from step 04)
-python .\LOKAL\_0_json\04_internal_country_statistics.py
-python .\LOKAL\_0_json\05_publish_corpus_statistics.py
+python .\maintenance_pipelines\_0_json\04_internal_country_statistics.py
+python .\maintenance_pipelines\_0_json\05_publish_corpus_statistics.py
 
 # 3. Deploy data + statistics
-.\LOKAL\_2_deploy\deploy_data.ps1
+.\maintenance_pipelines\_2_deploy\deploy_data.ps1
 ```
 
 **Quick regeneration (if CSVs already exist):**
 ```powershell
-python .\LOKAL\_0_json\05_publish_corpus_statistics.py --out "$env:PUBLIC_STATS_DIR"
-.\LOKAL\_2_deploy\deploy_data.ps1
+python .\maintenance_pipelines\_0_json\05_publish_corpus_statistics.py --out "$env:PUBLIC_STATS_DIR"
+.\maintenance_pipelines\_2_deploy\deploy_data.ps1
 ```
 
 ## Deployment Usage
@@ -78,7 +78,7 @@ python .\LOKAL\_0_json\05_publish_corpus_statistics.py --out "$env:PUBLIC_STATS_
 ### Standard Deployment (Data + Statistics)
 
 ```powershell
-.\LOKAL\_2_deploy\deploy_data.ps1
+.\maintenance_pipelines\_2_deploy\deploy_data.ps1
 ```
 
 This will:
@@ -91,7 +91,7 @@ This will:
 ### Skip Statistics
 
 ```powershell
-.\LOKAL\_2_deploy\deploy_data.ps1 -SkipStatistics
+.\maintenance_pipelines\_2_deploy\deploy_data.ps1 -SkipStatistics
 ```
 
 Use this when:
@@ -102,7 +102,7 @@ Use this when:
 ### Force Mode
 
 ```powershell
-.\LOKAL\_2_deploy\deploy_data.ps1 -Force
+.\maintenance_pipelines\_2_deploy\deploy_data.ps1 -Force
 ```
 
 Forces full data resync (ignores manifest state). Statistics upload is always overwrite, so `-Force` doesn't affect statistics behavior.
@@ -123,7 +123,7 @@ These are critical for production stability and must never be lost or overwritte
 In an extreme emergency, you can override the protection with three explicit flags:
 
 ```powershell
-.\LOKAL\_2_deploy\deploy_data.ps1 `
+.\maintenance_pipelines\_2_deploy\deploy_data.ps1 `
     -IncludeCounters `
     -IncludeAuthDb `
     -IUnderstandThisWillOverwriteProductionState
@@ -237,7 +237,7 @@ curl -I https://corapan.com/corpus/api/statistics/viz_total_corpus.png
 **Solution:**
 ```powershell
 # Verify cwRsync installation
-Test-Path "C:\dev\corapan-webapp\tools\cwrsync\bin\rsync.exe"
+Test-Path "C:\dev\corapan\app\tools\cwrsync\bin\rsync.exe"
 
 # Check PATH includes cwRsync
 $env:Path -split ';' | Select-String cwrsync
@@ -263,7 +263,7 @@ New-Item -ItemType Directory -Path $env:PUBLIC_STATS_DIR -Force
 **Solution:**
 ```powershell
 # Run generator with explicit output path
-python .\LOKAL\_0_json\05_publish_corpus_statistics.py --out "$env:PUBLIC_STATS_DIR"
+python .\maintenance_pipelines\_0_json\05_publish_corpus_statistics.py --out "$env:PUBLIC_STATS_DIR"
 ```
 
 ### "No viz_*.png files found"
@@ -273,7 +273,7 @@ python .\LOKAL\_0_json\05_publish_corpus_statistics.py --out "$env:PUBLIC_STATS_
 **Solution:**
 ```powershell
 # Check generator output
-python .\LOKAL\_0_json\05_publish_corpus_statistics.py --out "$env:PUBLIC_STATS_DIR"
+python .\maintenance_pipelines\_0_json\05_publish_corpus_statistics.py --out "$env:PUBLIC_STATS_DIR"
 
 # Look for errors in console output
 ```

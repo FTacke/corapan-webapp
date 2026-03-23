@@ -28,13 +28,13 @@
 .PARAMETER SkipStatistics
     Skip statistics upload (only sync data directories)
 .PARAMETER LogDir
-    Directory for log files (default: LOKAL/_2_deploy/_logs)
+    Directory for log files (default: maintenance_pipelines/_2_deploy/_logs)
 .EXAMPLE
-    .\LOKAL\_2_deploy\deploy_data.ps1
+    .\maintenance_pipelines\_2_deploy\deploy_data.ps1
 .EXAMPLE
-    .\LOKAL\_2_deploy\deploy_data.ps1 -Force
+    .\maintenance_pipelines\_2_deploy\deploy_data.ps1 -Force
 .EXAMPLE
-    .\LOKAL\_2_deploy\deploy_data.ps1 -SkipStatistics
+    .\maintenance_pipelines\_2_deploy\deploy_data.ps1 -SkipStatistics
 #>
 
 [CmdletBinding()]

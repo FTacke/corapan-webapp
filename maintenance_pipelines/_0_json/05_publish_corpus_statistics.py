@@ -94,14 +94,22 @@ SCRIPT_DIR = Path(__file__).resolve().parent
 INPUT_DIR = SCRIPT_DIR / "results"
 
 # Determine output directory - DEFAULT to repo data/public/statistics
+def _is_workspace_root(candidate: Path) -> bool:
+    return (
+        (candidate / "app").is_dir()
+        and (candidate / "maintenance_pipelines").is_dir()
+        and (candidate / "docs").is_dir()
+    )
+
+
 def _find_repo_root():
     """
-    Find the CO.RA.PAN repository root using git command (most reliable).
-    
+    Find the CO.RA.PAN workspace root using git command when available.
+
     Fallback to filesystem markers if git is not available.
     
     Returns:
-        Path: Repository root directory
+        Path: Workspace root directory
         
     Raises:
         RuntimeError: If repo root not found or invalid
@@ -119,42 +127,24 @@ def _find_repo_root():
         )
         if result.returncode == 0:
             repo_root = Path(result.stdout.strip())
-            # Validate repo name
-            if repo_root.name.endswith("corapan-webapp"):
+            if _is_workspace_root(repo_root):
                 return repo_root
     except FileNotFoundError:
         pass  # git not available, fall through to filesystem search
     
-    # Fallback: search filesystem for markers (prioritize pyproject.toml, then .git)
+    # Fallback: search filesystem for the root workspace markers
     current = SCRIPT_DIR
     
     for _ in range(10):  # max 10 levels up to avoid infinite loop
-        # Check for pyproject.toml (most specific repo root marker)
-        if (current / "pyproject.toml").exists():
-            # Validate repo name
-            if current.name.endswith("corapan-webapp"):
-                return current
-        
-        # Check for .git (but only at appropriate depth)
-        if (current / ".git").exists() and (current / ".git").is_dir():
-            # Extra validation: .git should be at repo root, not in LOKAL subdir
-            # Check if pyproject.toml exists at this level or package.json
-            if (current / "pyproject.toml").exists() or (current / "package.json").exists():
-                if current.name.endswith("corapan-webapp"):
-                    return current
-        
-        # Check for combination of src/ and templates/ (indicates repo root)
-        if (current / "src").is_dir() and (current / "templates").is_dir():
-            if (current / "pyproject.toml").exists():  # confirm it's repo root
-                if current.name.endswith("corapan-webapp"):
-                    return current
+        if _is_workspace_root(current):
+            return current
         
         parent = current.parent
         if parent == current:  # reached root filesystem
             raise RuntimeError(
                 f"[ERROR] Could not find repository root starting from {SCRIPT_DIR}\n"
-                "        Expected to find pyproject.toml in parent directory.\n"
-                "        This script must be run from within the corapan-webapp repository."
+                "        Expected to find the CO.RA.PAN workspace root with app/, maintenance_pipelines/, and docs/.\n"
+                "        This script must be run from within the CO.RA.PAN root workspace."
             )
         current = parent
     
@@ -162,7 +152,7 @@ def _find_repo_root():
     raise RuntimeError(
         f"[ERROR] Repository root validation failed\n"
         f"        Starting directory: {SCRIPT_DIR}\n"
-        f"        This script must run from the CO.RA.PAN webapp repository."
+        f"        This script must run from the CO.RA.PAN root workspace."
     )
 
 

@@ -19,7 +19,7 @@ This directory contains the core deployment logic for synchronizing data, media,
 ```
 
 **Key Parameters:**
-- `-RepoRoot`: Path to webapp repository root (default: C:\dev\corapan-webapp)
+- `-RepoRoot`: Path to app repository root (default workspace app path)
 - `-Force`: Force full resync (ignores manifest state)
 - `-DryRun`: Print remote targets only (no transfer)
 
@@ -27,10 +27,10 @@ This directory contains the core deployment logic for synchronizing data, media,
 Connection parameters (hostname/user/port/key) and remote runtime roots are configured in `scripts/deploy_sync/_lib/ssh.ps1` (single source of truth).
 
 **What it syncs:**
-- `runtime/corapan/data/db/public/`
-- `runtime/corapan/data/public/metadata/`
-- `runtime/corapan/data/exports/`
-- Stats databases: `runtime/corapan/data/db/public/stats_files.db`, `runtime/corapan/data/db/public/stats_country.db`
+- `data/db/public/`
+- `data/public/metadata/`
+- `data/exports/`
+- Stats databases: `data/db/public/stats_files.db`, `data/db/public/stats_country.db`
 
 BlackLab export/index trees are intentionally excluded from `sync_data.ps1`.
 Canonical BlackLab paths are managed separately under `/srv/webapps/corapan/data/blacklab`.
@@ -52,7 +52,7 @@ with strict safety guards:
 
 **What gets deployed:**
 - ONLY: `corpus_stats.json` and `viz_*.png` files
-- Target: `/srv/webapps/corapan/runtime/corapan/data/public/statistics`
+- Target: `/srv/webapps/corapan/data/public/statistics`
 - Mode: Overwrite-only (no delete, no directory structures)
 
 **Safety Guards:**
@@ -92,7 +92,7 @@ with strict safety guards:
 ```
 
 **Key Parameters:**
-- `-RepoRoot`: Path to webapp repository root (default: C:\dev\corapan-webapp)
+- `-RepoRoot`: Path to app repository root (default workspace app path)
 - `-Force`: Force full resync of all media
 - `-ForceMP3`: Force full resync of MP3 files only (transcripts remain delta)
 - `-DryRun`: Print remote targets only (no transfer)
@@ -233,7 +233,7 @@ This design prevents accidental overwrites of production runtime state during no
 
 Statistics files (corpus_stats.json, viz_*.png) are:
 - Deployed by `sync_data.ps1` via `Sync-StatisticsFiles`
-- Synced to: `/srv/webapps/corapan/runtime/corapan/data/public/statistics`
+- Synced to: `/srv/webapps/corapan/data/public/statistics`
 - Mode: Overwrite-only (no delete, no atomic swap)
 - Optional: Deployment continues even if stats are not ready
 - Controlled by: `Sync-StatisticsFiles` function in `sync_data.ps1`
@@ -294,22 +294,22 @@ Entry points have varying DryRun support:
 
 **Data deploy with logging (includes statistics):**
 ```powershell
-.\LOKAL\_2_deploy\deploy_data.ps1
+.\maintenance_pipelines\_2_deploy\deploy_data.ps1
 ```
 
 **Data deploy without statistics:**
 ```powershell
-.\LOKAL\_2_deploy\deploy_data.ps1 -SkipStatistics
+.\maintenance_pipelines\_2_deploy\deploy_data.ps1 -SkipStatistics
 ```
 
 **Media deploy with logging:**
 ```powershell
-.\LOKAL\_2_deploy\deploy_media.ps1
+.\maintenance_pipelines\_2_deploy\deploy_media.ps1
 ```
 
 **Publish BlackLab with full orchestration and DryRun:**
 ```powershell
-.\LOKAL\_2_deploy\publish_blacklab.ps1 -WebappRepoPath . -DryRun
+.\maintenance_pipelines\_2_deploy\publish_blacklab.ps1 -AppRepoPath .\app -DryRun
 ```
 
 ---

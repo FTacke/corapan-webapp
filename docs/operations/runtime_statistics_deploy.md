@@ -26,7 +26,7 @@ The `deploy_data.ps1` orchestrator now includes automatic upload of runtime stat
 ### Simple Overwrite (No Atomic Swap)
 
 Statistics deployment uses a **simple overwrite strategy**:
-- ✅ Directly uploads to `/srv/webapps/corapan/runtime/corapan/data/public/statistics/`
+- ✅ Directly uploads to `/srv/webapps/corapan/data/public/statistics/`
 - ✅ Overwrites existing files
 - ❌ No backup creation
 - ❌ No atomic swap
@@ -51,7 +51,7 @@ $env:PUBLIC_STATS_DIR = "C:\dev\runtime\corapan\data\public\statistics"
 
 **Option 2: Runtime root (auto-derives statistics path)**
 ```powershell
-$env:CORAPAN_RUNTIME_ROOT = "C:\dev\runtime\corapan"
+$env:CORAPAN_RUNTIME_ROOT = "C:\dev\corapan"
 # Statistics path becomes: $CORAPAN_RUNTIME_ROOT\data\public\statistics
 ```
 
@@ -60,20 +60,20 @@ $env:CORAPAN_RUNTIME_ROOT = "C:\dev\runtime\corapan"
 **Full workflow:**
 ```powershell
 # 1. Set environment
-$env:CORAPAN_RUNTIME_ROOT = "C:\dev\runtime\corapan"
+$env:CORAPAN_RUNTIME_ROOT = "C:\dev\corapan"
 
 # 2. Generate statistics (requires CSV input from step 04)
-python .\LOKAL\_0_json\04_internal_country_statistics.py
-python .\LOKAL\_0_json\05_publish_corpus_statistics.py
+python .\maintenance_pipelines\_0_json\04_internal_country_statistics.py
+python .\maintenance_pipelines\_0_json\05_publish_corpus_statistics.py
 
 # 3. Deploy data + statistics
-.\LOKAL\_2_deploy\deploy_data.ps1
+.\maintenance_pipelines\_2_deploy\deploy_data.ps1
 ```
 
 **Quick regeneration (if CSVs already exist):**
 ```powershell
-python .\LOKAL\_0_json\05_publish_corpus_statistics.py --out "$env:PUBLIC_STATS_DIR"
-.\LOKAL\_2_deploy\deploy_data.ps1
+python .\maintenance_pipelines\_0_json\05_publish_corpus_statistics.py --out "$env:PUBLIC_STATS_DIR"
+.\maintenance_pipelines\_2_deploy\deploy_data.ps1
 ```
 
 ## Deployment Usage
@@ -81,12 +81,12 @@ python .\LOKAL\_0_json\05_publish_corpus_statistics.py --out "$env:PUBLIC_STATS_
 ### Standard Deployment (Data + Statistics)
 
 ```powershell
-.\LOKAL\_2_deploy\deploy_data.ps1
+.\maintenance_pipelines\_2_deploy\deploy_data.ps1
 ```
 
 This will:
 1. Sync data directories (public/metadata, exports, db/public, blacklab_export, stats databases)
-2. Upload statistics files to `/srv/webapps/corapan/runtime/corapan/data/public/statistics/`
+2. Upload statistics files to `/srv/webapps/corapan/data/public/statistics/`
 3. Set correct ownership (hrzadmin:hrzadmin)
 
 **Note:** `counters/` and `db/auth.db` are protected production state and are NEVER synced by default.
@@ -94,7 +94,7 @@ This will:
 ### Skip Statistics
 
 ```powershell
-.\LOKAL\_2_deploy\deploy_data.ps1 -SkipStatistics
+.\maintenance_pipelines\_2_deploy\deploy_data.ps1 -SkipStatistics
 ```
 
 Use this when:
@@ -105,7 +105,7 @@ Use this when:
 ### Force Mode
 
 ```powershell
-.\LOKAL\_2_deploy\deploy_data.ps1 -Force
+.\maintenance_pipelines\_2_deploy\deploy_data.ps1 -Force
 ```
 
 Forces full data resync (ignores manifest state). Statistics upload is always overwrite, so `-Force` doesn't affect statistics behavior.
@@ -141,13 +141,13 @@ If environment is configured but files don't exist:
 
 rsync or SSH failures during statistics upload:
 - **Exit with code 1** (fatal error)
-- Full error details logged to `LOKAL/_2_deploy/_logs/deploy_data_<timestamp>.log`
+- Full error details logged to `maintenance_pipelines/_2_deploy/_logs/deploy_data_<timestamp>.log`
 
 ## Remote Target
 
 **Production path:**
 ```
-/srv/webapps/corapan/runtime/corapan/data/public/statistics/
+/srv/webapps/corapan/data/public/statistics/
 ```
 
 **Served via FastAPI:**
@@ -182,9 +182,9 @@ Uses the same SSH configuration as data/media sync:
 
 ### Ownership
 
-After upload, sets ownership recursively on `/srv/webapps/corapan/runtime/corapan/data/public/`:
+After upload, sets ownership recursively on `/srv/webapps/corapan/data/public/`:
 ```bash
-chown -R 1000:1000 /srv/webapps/corapan/runtime/corapan/data/public/
+chown -R 1000:1000 /srv/webapps/corapan/data/public/
 ```
 
 **Note:** Applied to parent `data/public/` directory (not just `statistics/` subdirectory) for consistency.
@@ -203,7 +203,7 @@ Remote statistics directory contents:
 
 **Manual verification:**
 ```bash
-ssh root@marele.online.uni-marburg.de "ls -lh /srv/webapps/corapan/runtime/corapan/data/public/statistics/"
+ssh root@marele.online.uni-marburg.de "ls -lh /srv/webapps/corapan/data/public/statistics/"
 ```
 
 **HTTP verification (from production):**
@@ -221,7 +221,7 @@ curl -I https://corapan.com/corpus/api/statistics/viz_total_corpus.png
 **Solution:**
 ```powershell
 # Verify cwRsync installation
-Test-Path "C:\dev\corapan-webapp\tools\cwrsync\bin\rsync.exe"
+Test-Path "C:\dev\corapan\app\tools\cwrsync\bin\rsync.exe"
 
 # Check PATH includes cwRsync
 $env:Path -split ';' | Select-String cwrsync
@@ -247,7 +247,7 @@ New-Item -ItemType Directory -Path $env:PUBLIC_STATS_DIR -Force
 **Solution:**
 ```powershell
 # Run generator with explicit output path
-python .\LOKAL\_0_json\05_publish_corpus_statistics.py --out "$env:PUBLIC_STATS_DIR"
+python .\maintenance_pipelines\_0_json\05_publish_corpus_statistics.py --out "$env:PUBLIC_STATS_DIR"
 ```
 
 ### "No viz_*.png files found"
@@ -257,7 +257,7 @@ python .\LOKAL\_0_json\05_publish_corpus_statistics.py --out "$env:PUBLIC_STATS_
 **Solution:**
 ```powershell
 # Check generator output
-python .\LOKAL\_0_json\05_publish_corpus_statistics.py --out "$env:PUBLIC_STATS_DIR"
+python .\maintenance_pipelines\_0_json\05_publish_corpus_statistics.py --out "$env:PUBLIC_STATS_DIR"
 
 # Look for errors in console output
 ```
@@ -290,6 +290,6 @@ Potential improvements (not currently implemented):
 
 ## See Also
 
-- [LOKAL/_0_json/05_publish_corpus_statistics.py](../../LOKAL/_0_json/05_publish_corpus_statistics.py) - Statistics generator
+- [maintenance_pipelines/_0_json/05_publish_corpus_statistics.py](../../maintenance_pipelines/_0_json/05_publish_corpus_statistics.py) - Statistics generator
 - [scripts/deploy_sync/README.md](../../scripts/deploy_sync/README.md) - Core deploy sync documentation
 - [docs/local_runtime_layout.md](../../docs/local_runtime_layout.md) - Runtime directory structure
