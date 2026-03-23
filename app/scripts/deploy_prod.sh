@@ -13,13 +13,14 @@
 #
 # Prerequisites:
 #   - Docker installed and running
-#   - Git repository cloned to /srv/webapps/corapan/app
+#   - Git repository root cloned to /srv/webapps/corapan/app
+#   - Application subtree present under /srv/webapps/corapan/app/app
 #   - Runtime roots /srv/webapps/corapan/data, /srv/webapps/corapan/media, and /srv/webapps/corapan/logs populated on the host
 #   - passwords.env configured in /srv/webapps/corapan/config/
 #
 # Usage:
 #   cd /srv/webapps/corapan/app
-#   bash scripts/deploy_prod.sh
+#   bash app/scripts/deploy_prod.sh
 #
 # =============================================================================
 
@@ -27,7 +28,8 @@ set -euo pipefail
 
 # Configuration
 BASE_DIR="/srv/webapps/corapan"
-APP_DIR="${BASE_DIR}/app"
+CHECKOUT_DIR="${BASE_DIR}/app"
+APP_DIR="${CHECKOUT_DIR}/app"
 ENV_FILE="${BASE_DIR}/config/passwords.env"
 COMPOSE_FILE="${APP_DIR}/infra/docker-compose.prod.yml"
 CONTAINER_NAME="corapan-web-prod"
@@ -92,7 +94,7 @@ echo "Runner: ${RUNNER_NAME:-unknown}"
 echo "GitHub Actions: ${GITHUB_ACTIONS:-false}"
 echo ""
 
-cd "${APP_DIR}"
+cd "${CHECKOUT_DIR}"
 
 # Step 0: Resolve Docker Compose implementation on the target host
 log_info "Resolving Docker Compose implementation on target host..."
