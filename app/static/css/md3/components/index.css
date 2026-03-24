@@ -67,6 +67,29 @@
   }
 }
 
+/* Desktop homepage-only footer visibility fix.
+   The global app-shell desktop layout keeps a short-page min-height on main.
+   The index page disables the permanent drawer, so that extra min-height becomes
+   unnecessary and combines with the landing page's generous spacing to push the
+   footer below the fold. Keep the fix local to index instead of changing shell-wide rules. */
+@media (min-width: 840px) {
+  body[data-page="index"] #main-content,
+  body[data-page="index"] main.site-main,
+  body[data-page="index"] .site-main {
+    min-height: 0;
+  }
+
+  body[data-page="index"] .md3-index-logo {
+    padding-block: var(--space-2) 0;
+  }
+
+  body[data-page="index"] .md3-index-cards {
+    gap: var(--space-4);
+    padding-top: var(--space-4);
+    padding-bottom: var(--space-2);
+  }
+}
+
 /* ============================================================================
    Index Card Styling - Extends MD3 Landing Card
    ============================================================================ */

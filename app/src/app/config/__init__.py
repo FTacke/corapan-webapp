@@ -120,7 +120,7 @@ def resolve_app_release_metadata(
     )
     app_version = _normalize_app_version(source.get("APP_VERSION") or app_release_tag)
     app_release_url = (source.get("APP_RELEASE_URL") or "").strip()
-    if not app_release_url and app_release_tag:
+    if app_release_tag:
         app_release_url = f"{repository_url}/releases/tag/{app_release_tag}"
 
     return {

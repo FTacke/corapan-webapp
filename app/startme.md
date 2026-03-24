@@ -80,7 +80,7 @@ $env:CORAPAN_RUNTIME_ROOT = "D:\my-custom-runtime"
 ### Footer-Version lokal testen
 
 `dev-start.ps1` und `dev-setup.ps1` fragen beim Start genau einmal das aktuelle offizielle GitHub-Release ab.
-Aus diesem Release werden Tag und Release-URL gelesen und statisch an die App fuer diese lokale Session uebergeben.
+Aus diesem Release wird das Tag gelesen. Die Release-URL wird danach kanonisch aus `APP_REPOSITORY_URL` + `APP_RELEASE_TAG` gebaut und statisch an die App fuer diese lokale Session uebergeben.
 
 ```powershell
 .\scripts\dev-start.ps1
@@ -177,8 +177,9 @@ Die Dev-Skripte setzen automatisch:
 | `BLS_BASE_URL` | `http://localhost:8081/blacklab-server` | Kanonische BlackLab-Basis-URL |
 | `BLACKLAB_BASE_URL` | `http://localhost:8081/blacklab-server` | Legacy-Kompatibilitätsspiegel |
 | `BLS_CORPUS` | `corapan` | Expliziter lokaler BlackLab-Korpus |
+| `APP_REPOSITORY_URL` | `https://github.com/FTacke/corapan-webapp` | KANONISCHE Repo-Basis fuer den GitHub-Release-Link |
 | `APP_RELEASE_TAG` | auto (GitHub latest release) | Letztes offizielles GitHub-Release-Tag fuer die Footer-Anzeige |
-| `APP_RELEASE_URL` | auto (GitHub latest release) | Konkrete Release-URL fuer den klickbaren Footer-Link |
+| `APP_RELEASE_URL` | auto aus `APP_REPOSITORY_URL` + `APP_RELEASE_TAG` | Konkrete Release-URL fuer den klickbaren Footer-Link |
 | `CORAPAN_RUNTIME_ROOT` | `<WorkspaceRoot>` mit `data/` und `media/` neben `app/` | Runtime Data Directory |
 | `PUBLIC_STATS_DIR` | `${CORAPAN_RUNTIME_ROOT}\data\public\statistics` (Auto) | Statistics Output Location |
 

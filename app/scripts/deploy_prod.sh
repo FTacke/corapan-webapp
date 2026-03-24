@@ -86,9 +86,9 @@ fetch_latest_release_metadata() {
 
   compact_json="$(printf '%s' "${release_json}" | tr -d '\r\n')"
   APP_RELEASE_TAG="$(printf '%s' "${compact_json}" | sed -n 's/.*"tag_name"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p')"
-  APP_RELEASE_URL="$(printf '%s' "${compact_json}" | sed -n 's/.*"html_url"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p')"
+  APP_RELEASE_URL=""
 
-  if [ -z "${APP_RELEASE_TAG}" ] || [ -z "${APP_RELEASE_URL}" ]; then
+  if [ -z "${APP_RELEASE_TAG}" ]; then
     log_warn "Latest GitHub release metadata was incomplete. Footer release line will remain hidden."
     APP_RELEASE_TAG=""
     APP_RELEASE_URL=""
@@ -98,6 +98,7 @@ fetch_latest_release_metadata() {
   fi
 
   APP_VERSION="$(normalize_app_version "${APP_RELEASE_TAG}")"
+  APP_RELEASE_URL="${APP_REPOSITORY_URL%/}/releases/tag/${APP_RELEASE_TAG}"
   export APP_RELEASE_TAG APP_RELEASE_URL APP_VERSION
   log_info "Using latest official GitHub release for footer: ${APP_RELEASE_TAG}"
   log_info "Release URL: ${APP_RELEASE_URL}"

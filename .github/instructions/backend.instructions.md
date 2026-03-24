@@ -60,3 +60,6 @@ Do not treat `app/data` or `app/runtime` as canonical local runtime roots unless
 This repository contains legacy docs, scripts, and parallel setup traces.
 Do not assume every existing file represents the current standard.
 Classify competing paths before editing.
+
+For homepage/index layout regressions, prefer page-local fixes in `app/static/css/md3/components/index.css` before changing shared app-shell or global MD3 layout primitives.
+Respect the existing MD3 card and surface composition; only change shared layout rules when the issue is proven to affect multiple pages.

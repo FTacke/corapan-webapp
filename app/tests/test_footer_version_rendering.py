@@ -63,6 +63,20 @@ def test_resolve_app_release_metadata_derives_url_from_release_tag_when_missing(
     assert metadata["app_release_url"] == "https://github.com/example/project/releases/tag/v1.2.4"
 
 
+def test_resolve_app_release_metadata_ignores_malformed_release_url_when_tag_exists():
+    metadata = resolve_app_release_metadata(
+        {
+            "APP_RELEASE_TAG": "v1.0.1",
+            "APP_RELEASE_URL": "https://github.com/FTacke",
+            "APP_REPOSITORY_URL": "https://github.com/FTacke/corapan-webapp",
+        }
+    )
+
+    assert metadata["app_version"] == "1.0.1"
+    assert metadata["app_release_tag"] == "v1.0.1"
+    assert metadata["app_release_url"] == "https://github.com/FTacke/corapan-webapp/releases/tag/v1.0.1"
+
+
 def test_footer_renders_release_link_when_version_present():
     app = make_app()
 

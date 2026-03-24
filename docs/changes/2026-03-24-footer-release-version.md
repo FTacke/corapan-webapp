@@ -38,3 +38,19 @@ Kompatibilitaet:
 - kein Runtime-Call zur GitHub-API
 - keine harte Template-Version
 - kein Default-Release-Link ohne erfolgreich aufgeloestes offizielles Release
+
+## 2026-03-24 Produktionsfix Release-URL
+
+Root Cause:
+- Dev las die GitHub-Release-Daten mit `Invoke-RestMethod` typisiert aus und bekam deshalb die korrekte Release-URL.
+- Prod extrahierte `html_url` in `app/scripts/deploy_prod.sh` mit einer greifenden Regex aus kompaktem JSON.
+- Die GitHub-API-Antwort enthaelt mehrere `html_url`-Felder. Dadurch wurde in Prod effektiv `https://github.com/FTacke` statt der eigentlichen Release-URL uebernommen.
+
+Korrektur:
+- kanonische Quelle fuer GitHub-Release-Links ist jetzt `APP_REPOSITORY_URL`
+- kanonische Release-Identitaet ist `APP_RELEASE_TAG`
+- `APP_RELEASE_URL` wird robust aus `APP_REPOSITORY_URL + '/releases/tag/' + APP_RELEASE_TAG` gebaut
+- die App bevorzugt diese kanonische Ableitung auch dann, wenn ein fehlerhafter `APP_RELEASE_URL`-Wert ankommt
+
+Erwarteter Linkaufbau:
+- `https://github.com/FTacke/corapan-webapp/releases/tag/vX.Y.Z`

@@ -94,20 +94,23 @@ function Set-AppReleaseMetadataFromGitHub {
     param([Parameter(Mandatory = $true)][string]$ApiUrl)
 
     try {
+        if (-not $env:APP_REPOSITORY_URL) {
+            $env:APP_REPOSITORY_URL = 'https://github.com/FTacke/corapan-webapp'
+        }
+
         $headers = @{
             Accept = 'application/vnd.github+json'
             'User-Agent' = 'corapan-dev-start'
         }
         $release = Invoke-RestMethod -Uri $ApiUrl -Headers $headers -Method Get -TimeoutSec 15 -ErrorAction Stop
         $releaseTag = [string]$release.tag_name
-        $releaseUrl = [string]$release.html_url
 
-        if ([string]::IsNullOrWhiteSpace($releaseTag) -or [string]::IsNullOrWhiteSpace($releaseUrl)) {
-            throw "Latest release response did not contain tag_name and html_url."
+        if ([string]::IsNullOrWhiteSpace($releaseTag)) {
+            throw "Latest release response did not contain tag_name."
         }
 
         $env:APP_RELEASE_TAG = $releaseTag.Trim()
-        $env:APP_RELEASE_URL = $releaseUrl.Trim()
+        $env:APP_RELEASE_URL = "$($env:APP_REPOSITORY_URL.TrimEnd('/'))/releases/tag/$($env:APP_RELEASE_TAG)"
         Remove-Item Env:APP_VERSION -ErrorAction SilentlyContinue
 
         $displayVersion = $env:APP_RELEASE_TAG.TrimStart('v', 'V')
