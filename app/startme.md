@@ -79,15 +79,16 @@ $env:CORAPAN_RUNTIME_ROOT = "D:\my-custom-runtime"
 
 ### Footer-Version lokal testen
 
-Die Release-/Versionszeile im Footer erscheint nur, wenn `APP_VERSION` gesetzt ist.
+`dev-start.ps1` und `dev-setup.ps1` fragen beim Start genau einmal das aktuelle offizielle GitHub-Release ab.
+Aus diesem Release werden Tag und Release-URL gelesen und statisch an die App fuer diese lokale Session uebergeben.
 
 ```powershell
-$env:APP_VERSION = "1.1.0"
 .\scripts\dev-start.ps1
 ```
 
-Die App zeigt dann im Footer `v1.1.0` an und verlinkt direkt auf das GitHub-Release `.../releases/tag/v1.1.0`.
-Wenn `APP_VERSION` nicht gesetzt ist, bleibt die Zusatzzeile im Footer ausgeblendet.
+Die App zeigt dann im Footer die letzte offizielle GitHub-Release-Version an, aktuell z. B. `v1.0.1`, und verlinkt direkt auf das konkrete Release.
+Wenn das GitHub-Release nicht aufgeloest werden kann, bleibt die Zusatzzeile im Footer ausgeblendet.
+Nach einem neu veroeffentlichten GitHub-Release musst du `dev-start.ps1` erneut ausfuehren, damit die Anzeige aktualisiert wird.
 
 
 ## Start mit Neuinstallation (Postgres + BlackLab)
@@ -176,7 +177,8 @@ Die Dev-Skripte setzen automatisch:
 | `BLS_BASE_URL` | `http://localhost:8081/blacklab-server` | Kanonische BlackLab-Basis-URL |
 | `BLACKLAB_BASE_URL` | `http://localhost:8081/blacklab-server` | Legacy-Kompatibilitätsspiegel |
 | `BLS_CORPUS` | `corapan` | Expliziter lokaler BlackLab-Korpus |
-| `APP_VERSION` | leer (optional) | Aktiviert die Footer-Releasezeile als `vX.Y.Z` und erzeugt daraus den GitHub-Release-Link |
+| `APP_RELEASE_TAG` | auto (GitHub latest release) | Letztes offizielles GitHub-Release-Tag fuer die Footer-Anzeige |
+| `APP_RELEASE_URL` | auto (GitHub latest release) | Konkrete Release-URL fuer den klickbaren Footer-Link |
 | `CORAPAN_RUNTIME_ROOT` | `<WorkspaceRoot>` mit `data/` und `media/` neben `app/` | Runtime Data Directory |
 | `PUBLIC_STATS_DIR` | `${CORAPAN_RUNTIME_ROOT}\data\public\statistics` (Auto) | Statistics Output Location |
 

@@ -20,11 +20,11 @@ def make_app() -> Flask:
         __name__, template_folder=str(template_dir), static_folder=str(static_dir)
     )
     app.config["TESTING"] = True
-    app.config["APP_VERSION"] = "1.1.0"
     app.config["APP_RELEASE_TAG"] = "v1.1.0"
     app.config["APP_RELEASE_URL"] = (
         "https://github.com/FTacke/corapan-webapp/releases/tag/v1.1.0"
     )
+    app.config["APP_VERSION"] = "1.1.0"
 
     from src.app.extensions import register_extensions
     from src.app.routes import register_blueprints
@@ -36,20 +36,31 @@ def make_app() -> Flask:
     return app
 
 
-def test_resolve_app_release_metadata_normalizes_prefixed_version():
+def test_resolve_app_release_metadata_prefers_release_tag_and_url():
     metadata = resolve_app_release_metadata(
         {
-            "APP_VERSION": "v1.2.3",
+            "APP_RELEASE_TAG": "v1.2.3",
+            "APP_RELEASE_URL": "https://github.com/example/project/releases/tag/v1.2.3",
             "APP_REPOSITORY_URL": "https://github.com/example/project.git",
         }
     )
 
     assert metadata["app_version"] == "1.2.3"
     assert metadata["app_release_tag"] == "v1.2.3"
-    assert (
-        metadata["app_release_url"]
-        == "https://github.com/example/project/releases/tag/v1.2.3"
+    assert metadata["app_release_url"] == "https://github.com/example/project/releases/tag/v1.2.3"
+
+
+def test_resolve_app_release_metadata_derives_url_from_release_tag_when_missing():
+    metadata = resolve_app_release_metadata(
+        {
+            "APP_RELEASE_TAG": "1.2.4",
+            "APP_REPOSITORY_URL": "https://github.com/example/project.git",
+        }
     )
+
+    assert metadata["app_version"] == "1.2.4"
+    assert metadata["app_release_tag"] == "v1.2.4"
+    assert metadata["app_release_url"] == "https://github.com/example/project/releases/tag/v1.2.4"
 
 
 def test_footer_renders_release_link_when_version_present():

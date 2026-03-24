@@ -30,11 +30,6 @@ on:
 
   # Allow manual trigger from GitHub UI
   workflow_dispatch:
-    inputs:
-      app_version:
-        description: Release version without the v prefix. If omitted, deploy derives it from an exact v* tag on the deployed commit.
-        required: false
-        type: string
 
 jobs:
   deploy:
@@ -47,7 +42,7 @@ jobs:
     steps:
       - name: Deploy corapan app
         env:
-          APP_VERSION: ${{ github.event.inputs.app_version || '' }}
+          GITHUB_TOKEN: ${{ github.token }}
         run: |
           cd /srv/webapps/corapan/app
           git fetch --prune origin

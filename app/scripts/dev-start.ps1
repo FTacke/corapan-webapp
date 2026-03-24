@@ -90,6 +90,37 @@ function Test-BlackLabAvailability {
     }
 }
 
+function Set-AppReleaseMetadataFromGitHub {
+    param([Parameter(Mandatory = $true)][string]$ApiUrl)
+
+    try {
+        $headers = @{
+            Accept = 'application/vnd.github+json'
+            'User-Agent' = 'corapan-dev-start'
+        }
+        $release = Invoke-RestMethod -Uri $ApiUrl -Headers $headers -Method Get -TimeoutSec 15 -ErrorAction Stop
+        $releaseTag = [string]$release.tag_name
+        $releaseUrl = [string]$release.html_url
+
+        if ([string]::IsNullOrWhiteSpace($releaseTag) -or [string]::IsNullOrWhiteSpace($releaseUrl)) {
+            throw "Latest release response did not contain tag_name and html_url."
+        }
+
+        $env:APP_RELEASE_TAG = $releaseTag.Trim()
+        $env:APP_RELEASE_URL = $releaseUrl.Trim()
+        Remove-Item Env:APP_VERSION -ErrorAction SilentlyContinue
+
+        $displayVersion = $env:APP_RELEASE_TAG.TrimStart('v', 'V')
+        Write-Host "Using latest official GitHub release for footer: v$displayVersion" -ForegroundColor Green
+        Write-Host "Release URL: $($env:APP_RELEASE_URL)" -ForegroundColor Gray
+    } catch {
+        Remove-Item Env:APP_RELEASE_TAG -ErrorAction SilentlyContinue
+        Remove-Item Env:APP_RELEASE_URL -ErrorAction SilentlyContinue
+        Write-Host "Could not resolve latest official GitHub release. Footer release line stays hidden in dev." -ForegroundColor Yellow
+        Write-Host "Reason: $($_.Exception.Message)" -ForegroundColor Gray
+    }
+}
+
 function Get-DockerMountSource {
     param(
         [Parameter(Mandatory = $true)][string]$ContainerName,
@@ -303,12 +334,8 @@ $env:ALLOW_PUBLIC_FULL_AUDIO = "true"
 $env:BLS_BASE_URL = "http://localhost:8081/blacklab-server"
 $env:BLACKLAB_BASE_URL = $env:BLS_BASE_URL
 $env:BLS_CORPUS = "corapan"
-
-if ($env:APP_VERSION) {
-    Write-Host "Using APP_VERSION for footer release link: v$($env:APP_VERSION.TrimStart('v'))" -ForegroundColor Green
-} else {
-    Write-Host "APP_VERSION not set. Footer release line stays hidden in dev." -ForegroundColor Gray
-}
+$latestReleaseApiUrl = 'https://api.github.com/repos/FTacke/corapan-webapp/releases/latest'
+Set-AppReleaseMetadataFromGitHub -ApiUrl $latestReleaseApiUrl
 
 $blacklabRoot = Join-Path $workspaceRoot "data\blacklab"
 $canonicalBlackLabDirs = @(

@@ -36,6 +36,7 @@ CONTAINER_NAME="corapan-web-prod"
 LEGACY_CONTAINER="corapan-webapp"
 HEALTH_URL="http://127.0.0.1:6000/health"
 DEFAULT_APP_REPOSITORY_URL="https://github.com/FTacke/corapan-webapp"
+LATEST_RELEASE_API_URL="https://api.github.com/repos/FTacke/corapan-webapp/releases/latest"
 
 # Colors for output
 RED='\033[0;31m'
@@ -59,6 +60,47 @@ normalize_app_version() {
   local raw="${1:-}"
   raw="${raw#v}"
   printf '%s' "${raw}"
+}
+
+fetch_latest_release_metadata() {
+  local curl_args=()
+  local release_json
+  local compact_json
+
+  curl_args+=(-fsSL)
+  curl_args+=(-H 'Accept: application/vnd.github+json')
+  curl_args+=(-H 'User-Agent: corapan-deploy')
+
+  if [ -n "${GITHUB_TOKEN:-}" ]; then
+    curl_args+=(-H "Authorization: Bearer ${GITHUB_TOKEN}")
+  fi
+
+  if ! release_json="$(curl "${curl_args[@]}" "${LATEST_RELEASE_API_URL}")"; then
+    log_warn "Could not fetch latest GitHub release metadata. Footer release line will remain hidden."
+    APP_RELEASE_TAG=""
+    APP_RELEASE_URL=""
+    APP_VERSION=""
+    export APP_RELEASE_TAG APP_RELEASE_URL APP_VERSION
+    return 0
+  fi
+
+  compact_json="$(printf '%s' "${release_json}" | tr -d '\r\n')"
+  APP_RELEASE_TAG="$(printf '%s' "${compact_json}" | sed -n 's/.*"tag_name"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p')"
+  APP_RELEASE_URL="$(printf '%s' "${compact_json}" | sed -n 's/.*"html_url"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p')"
+
+  if [ -z "${APP_RELEASE_TAG}" ] || [ -z "${APP_RELEASE_URL}" ]; then
+    log_warn "Latest GitHub release metadata was incomplete. Footer release line will remain hidden."
+    APP_RELEASE_TAG=""
+    APP_RELEASE_URL=""
+    APP_VERSION=""
+    export APP_RELEASE_TAG APP_RELEASE_URL APP_VERSION
+    return 0
+  fi
+
+  APP_VERSION="$(normalize_app_version "${APP_RELEASE_TAG}")"
+  export APP_RELEASE_TAG APP_RELEASE_URL APP_VERSION
+  log_info "Using latest official GitHub release for footer: ${APP_RELEASE_TAG}"
+  log_info "Release URL: ${APP_RELEASE_URL}"
 }
 
 resolve_compose_cmd() {
@@ -102,23 +144,8 @@ echo "GitHub Actions: ${GITHUB_ACTIONS:-false}"
 echo ""
 
 cd "${CHECKOUT_DIR}"
-
-if [ -n "${APP_VERSION:-}" ]; then
-  APP_VERSION="$(normalize_app_version "${APP_VERSION}")"
-  log_info "Using APP_VERSION from workflow environment: v${APP_VERSION}"
-else
-  exact_release_tag="$(git tag --points-at HEAD 'v*' | sort -V | tail -n 1 || true)"
-  if [ -n "${exact_release_tag}" ]; then
-    APP_VERSION="$(normalize_app_version "${exact_release_tag}")"
-    log_info "Derived APP_VERSION from exact git tag: ${exact_release_tag}"
-  else
-    APP_VERSION=""
-    log_warn "No exact v* git tag points at the deployed commit; footer release line will remain hidden."
-  fi
-fi
-
-export APP_VERSION
 export APP_REPOSITORY_URL="${APP_REPOSITORY_URL:-${DEFAULT_APP_REPOSITORY_URL}}"
+fetch_latest_release_metadata
 
 # Step 0: Resolve Docker Compose implementation on the target host
 log_info "Resolving Docker Compose implementation on target host..."
@@ -126,7 +153,7 @@ resolve_compose_cmd
 log_info "Compose command: ${COMPOSE_VARIANT}"
 log_info "Compose version: ${COMPOSE_VERSION}"
 log_info "Docker version: $(docker version --format '{{.Client.Version}}|{{.Server.Version}}')"
-log_info "Release metadata: APP_VERSION=${APP_VERSION:-<unset>} APP_REPOSITORY_URL=${APP_REPOSITORY_URL}"
+log_info "Release metadata: APP_RELEASE_TAG=${APP_RELEASE_TAG:-<unset>} APP_RELEASE_URL=${APP_RELEASE_URL:-<unset>}"
 echo ""
 
 # Step 1: Update code from Git

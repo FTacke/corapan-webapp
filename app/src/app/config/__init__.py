@@ -92,6 +92,14 @@ def _normalize_app_version(value: str | None) -> str:
     return normalized
 
 
+def _normalize_release_tag(value: str | None) -> str:
+    """Normalize APP_RELEASE_TAG to the canonical v-prefixed tag format."""
+    normalized_version = _normalize_app_version(value)
+    if not normalized_version:
+        return ""
+    return f"v{normalized_version}"
+
+
 def _normalize_repository_url(value: str | None) -> str:
     """Return a normalized repository URL without a trailing .git suffix."""
     normalized = (value or DEFAULT_APP_REPOSITORY_URL).strip() or DEFAULT_APP_REPOSITORY_URL
@@ -104,14 +112,16 @@ def _normalize_repository_url(value: str | None) -> str:
 def resolve_app_release_metadata(
     env: Mapping[str, str] | None = None,
 ) -> dict[str, str]:
-    """Resolve normalized version and release URL metadata from environment."""
+    """Resolve normalized release metadata from environment."""
     source = env or os.environ
     repository_url = _normalize_repository_url(source.get("APP_REPOSITORY_URL"))
-    app_version = _normalize_app_version(source.get("APP_VERSION"))
-    app_release_tag = f"v{app_version}" if app_version else ""
-    app_release_url = (
-        f"{repository_url}/releases/tag/{app_release_tag}" if app_release_tag else ""
+    app_release_tag = _normalize_release_tag(
+        source.get("APP_RELEASE_TAG") or source.get("APP_VERSION")
     )
+    app_version = _normalize_app_version(source.get("APP_VERSION") or app_release_tag)
+    app_release_url = (source.get("APP_RELEASE_URL") or "").strip()
+    if not app_release_url and app_release_tag:
+        app_release_url = f"{repository_url}/releases/tag/{app_release_tag}"
 
     return {
         "app_version": app_version,
