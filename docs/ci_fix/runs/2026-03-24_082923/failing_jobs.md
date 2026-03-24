@@ -1,8 +1,7 @@
 # Failing Jobs
 
-In diesem Folge-Run wurden keine neuen lokalen Codefehler im Fast-Pfad reproduziert.
+Im final verifizierten Folge-Run bleiben keine roten Pflichtjobs uebrig.
 
-Offen bleiben nur Remote-/Service-Themen:
-- GitHub-Run nach Push noch nicht ausgewertet
-- `migration-postgres` lokal weiter nicht voll reproduzierbar ohne Docker-Daemon
-- `playwright-e2e` lokal weiter nicht reproduzierbar ohne Node und Docker
+Offen bleiben nur manuelle oder servicegebundene Nacharbeiten:
+- `playwright-e2e` noch nicht manuell per `workflow_dispatch` verifiziert
+- vollstaendige lokale Browser-/Service-Repro blieb auf diesem Host mangels Docker/Node aus

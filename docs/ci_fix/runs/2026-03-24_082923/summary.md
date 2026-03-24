@@ -21,4 +21,10 @@ Lokaler Validierungsstand:
 - keine verbleibenden repo-eigenen Warnings im validierten Fast-Pfad
 
 Remote-Stand:
-- erster Push-Run ausgewertet, Folge-Push nach Remote-Fix noch ausstehend
+- erster Push-Run ausgewertet und Root Causes isoliert
+- Folge-Push `2ad9e94` verifiziert:
+	- `fast-checks`: success
+	- `auth-hash-compat`: success
+	- `migration-postgres`: success
+	- `playwright-e2e`: skipped auf Push wie vorgesehen
+	- `Deploy to Production`: success

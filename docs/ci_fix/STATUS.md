@@ -2,17 +2,17 @@
 
 | Bereich | Status | Befund |
 |---|---|---|
-| Fast Checks | yellow | Lokal warning-clean reproduziert (`168 passed, 8 skipped, 6 deselected`); erster Remote-Run fiel an veralteter Struktur-Allowlist und wurde nachklassifiziert |
-| Auth Hash Support | yellow | Neue fokussierte Kompatibilitaetsabdeckung lokal gruen, Remote-Run ausstehend |
-| Migration Postgres | yellow | Erster Remote-Run zeigte, dass der Job fachfremde BlackLab-/UI-Tests mitlief; auf reinen Auth/Postgres-Smoke eingegrenzt |
-| Playwright E2E | yellow | Von SQLite-Auth auf Postgres umgebaut, manueller Remote-Run noch ausstehend |
+| Fast Checks | green | Lokal warning-clean reproduziert und Remote-Run `#152` erfolgreich verifiziert |
+| Auth Hash Support | green | Fokussierte Kompatibilitaetsabdeckung lokal und Remote in `auth-hash-compat` erfolgreich |
+| Migration Postgres | green | Auf reinen Auth-/Postgres-Smoke eingegrenzt und Remote-Run `#152` erfolgreich verifiziert |
+| Playwright E2E | yellow | Von SQLite-Auth auf Postgres umgebaut; auf Push korrekt geskippt, manueller `workflow_dispatch`-Run noch ausstehend |
 | GitHub Action Warnings | green | Action-Majors aktualisiert; repo-eigene Fast-Pfad-Warnings lokal bereinigt |
 | Agent Integration | green | CI-Lessons in Root- und App-Governance sowie Skillfiles integriert |
 
 Offene Probleme:
 - Remote-GitHub-Run kann nur ueber oeffentliche GitHub-API, nicht ueber `gh`, analysiert werden.
-- Lokale Service-Verifikation fuer Postgres/Playwright konnte nicht vollstaendig erfolgen, weil der Docker-Daemon auf diesem Windows-Host nicht lief.
-- `tests/test_advanced_datatables_results.py` ist jetzt explizit als service-/datengebunden zu behandeln; sinnvoll nur mit echtem BlackLab-Kontext.
+- Lokale Service-Verifikation fuer Playwright blieb mangels Docker-Daemon/Node auf diesem Windows-Host unvollstaendig.
+- `playwright-e2e` muss fuer eine vollstaendige Browser-Verifikation noch manuell gestartet werden.
 
 Bereits geloeste Probleme:
 - Importzeit-Abbrueche durch harte `BLS_CORPUS`-/`AUTH_DATABASE_URL`-Validierung in App-Konfigurationsmodulen beseitigt.
@@ -25,6 +25,8 @@ Bereits geloeste Probleme:
 - Agent-Governance fuer CI-Integritaet, Testklassifikation und importzeit-sichere Config-Validierung erweitert.
 - Remote-Root-Cause im `fast-checks`-Job identifiziert: `app/scripts/check_structure.py` kannte aktuelle legitime App-Root-Dateien nicht.
 - Remote-Root-Cause im `migration-postgres`-Job identifiziert: Der Job lief ueber seinen fachlichen Scope hinaus und zog BlackLab-/UI-Tests mit.
+- Zweiter Remote-Run bestaetigt: `fast-checks`, `auth-hash-compat`, `migration-postgres` und Deploy sind gruen.
+- `playwright-e2e` wird auf Push korrekt als manueller Job geskippt.
 
 Entscheidungsliste:
 

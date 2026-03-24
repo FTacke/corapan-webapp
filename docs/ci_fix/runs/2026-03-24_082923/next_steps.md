@@ -1,6 +1,5 @@
 # Next Steps
 
-1. Folge-Fix committen und nach `origin/main` pushen.
-2. Den naechsten GitHub-Run fuer `fast-checks` und `migration-postgres` verifizieren.
-3. `playwright-e2e` gezielt per `workflow_dispatch` starten und separat bewerten.
-4. Danach `docs/ci_fix/STATUS.md` von gelb auf gruen umstellen, soweit die Remote-Runs dies belegen.
+1. `playwright-e2e` gezielt per `workflow_dispatch` starten und separat bewerten.
+2. Optional entscheiden, ob `playwright-e2e` dauerhaft manuell bleibt oder spaeter als Nightly laufen soll.
+3. Falls gewuenscht, die CI-Entscheidung als kurze Abschlussnotiz in weiteren Operations-Dokumenten referenzieren.
