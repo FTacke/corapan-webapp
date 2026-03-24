@@ -18,6 +18,7 @@ ROOT = Path(__file__).resolve().parents[1]
 
 # Files allowed in root directory
 ALLOWED_ROOT_FILES = {
+    "AGENTS.md",
     # Documentation
     "README.md",
     "LICENSE",
@@ -28,13 +29,17 @@ ALLOWED_ROOT_FILES = {
     # Build/Config
     "pyproject.toml",
     "setup.cfg",
+    "requirements.in",
     "requirements.txt",
+    "requirements-dev.in",
+    "requirements-dev.txt",
     "package.json",
     "package-lock.json",
     "Makefile",
     "Dockerfile",
     "docker-compose.yml",  # Main compose file stays in root
     "docker-compose.dev-postgres.yml",  # PostgreSQL dev variant
+    "uv.lock",
     ".dockerignore",
     ".gitignore",
     ".gitattributes",
@@ -76,6 +81,7 @@ ALLOWED_ROOT_DIRS = {
     "media",
     "logs",
     "reports",  # Generated lint reports (gitignored, created by md3-lint.py)
+    "tmp",  # Temporary local artifacts and backports kept outside versioned app logic
     # Local-only directories (gitignored - for user's local binaries/tools)
     "opt",  # External tools/binaries (e.g., blacklab-server.war)
     "tools",  # cwRsync and other Windows utilities for rsync-based sync

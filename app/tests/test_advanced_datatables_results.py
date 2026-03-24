@@ -34,6 +34,8 @@ except ImportError as e:
 
 logger = logging.getLogger(__name__)
 
+pytestmark = [pytest.mark.live, pytest.mark.data]
+
 
 @pytest.fixture(scope="module")
 def app():

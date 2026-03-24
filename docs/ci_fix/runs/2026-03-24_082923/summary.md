@@ -12,6 +12,8 @@ Ergebnis dieses Runs:
 - timezone-naive `datetime.utcnow`-Hilfen durch timezone-aware Helfer ersetzt
 - bekannte Passlib-Deprecation eng auf pytest-Ebene gefiltert
 - Agent-Governance-Dateien um CI-/Test-Integritaetsregeln erweitert
+- erster Remote-Run ausgewertet: `auth-hash-compat` gruen, Deploy gruen, `playwright-e2e` auf Push korrekt geskippt
+- Remote-Fehler auf zwei konkrete Ursachen reduziert und korrigiert: Struktur-Allowlist in `check_structure.py` sowie zu breiter Test-Scope in `migration-postgres`
 
 Lokaler Validierungsstand:
 - Ruff gruen
@@ -19,4 +21,4 @@ Lokaler Validierungsstand:
 - keine verbleibenden repo-eigenen Warnings im validierten Fast-Pfad
 
 Remote-Stand:
-- vor Push/Run-Analyse noch ausstehend
+- erster Push-Run ausgewertet, Folge-Push nach Remote-Fix noch ausstehend

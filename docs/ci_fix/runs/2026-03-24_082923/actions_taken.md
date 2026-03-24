@@ -13,6 +13,12 @@ Code/Test:
   - operativen Statistik-Hinweis aus pytest-Imports herausgenommen
 - `app/pyproject.toml`
   - gezielter pytest-Filter fuer bekannte Passlib-Deprecation
+- `app/scripts/check_structure.py`
+  - Allowlist fuer den aktuellen App-Root erweitert (`AGENTS.md`, `requirements*.in`, `requirements-dev.txt`, `uv.lock`, `tmp/`)
+- `.github/workflows/ci.yml`
+  - `migration-postgres` auf `tests/test_ci_auth_smoke.py` als reinen Auth-/Postgres-Smoke eingegrenzt
+- `app/tests/test_advanced_datatables_results.py`
+  - explizit als `live` und `data` klassifiziert
 
 Governance/Dokumentation:
 - Root-`AGENTS.md` neu angelegt
