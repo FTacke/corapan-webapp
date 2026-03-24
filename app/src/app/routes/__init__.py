@@ -42,5 +42,11 @@ BLUEPRINTS = [
 
 def register_blueprints(app: Flask) -> None:
     """Register all blueprints with the Flask application."""
+    # Keep blueprint-based test apps aligned with create_app by ensuring
+    # the standard Jinja helpers are available before template rendering.
+    from .. import register_context_processors
+
+    register_context_processors(app)
+
     for bp in BLUEPRINTS:
         app.register_blueprint(bp)

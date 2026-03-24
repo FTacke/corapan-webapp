@@ -178,6 +178,9 @@ def register_maintenance_commands(app: Flask) -> None:
 def register_context_processors(app: Flask) -> None:
     """Expose helpers to the template engine."""
 
+    if app.extensions.get("corapan_context_processors_registered"):
+        return
+
     @app.context_processor
     def inject_utilities():  # pragma: no cover - thin wrapper
         return {
@@ -189,6 +192,8 @@ def register_context_processors(app: Flask) -> None:
             "format_page_title": format_page_title,
             **BRANDING,
         }
+
+    app.extensions["corapan_context_processors_registered"] = True
 
 
 def register_auth_context(app: Flask) -> None:
