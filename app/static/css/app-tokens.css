@@ -1,11 +1,13 @@
 /* =================================================================
    APP TOKENS
-   
-   Application-specific design tokens that extend the MD3 system.
-   These are NOT brand-specific and generally don't need changing
-   when adapting the template for a new project.
-   
-   For brand colors (primary, secondary, etc.), see branding.css
+
+   Application-specific semantic tokens.
+
+   Locked authority chain:
+   - Foundation tokens: static/css/md3/tokens.css
+   - Semantic app tokens: this file
+
+   Do not add parallel token layers for branding or page-local palettes.
    ================================================================= */
 
 :root {
@@ -23,6 +25,7 @@
      ----------------------------------------------------------------- */
   --app-color-login-bg: #f0f2f5;
   --app-background: var(--md-sys-color-surface-container);
+  --app-theme-color: var(--app-background);
   
   /* -----------------------------------------------------------------
      APP: Animation Timings

@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 {% from 'partials/page_navigation.html' import page_navigation %}
-{% block page_title %}Cómo citar · CO.RA.PAN{% endblock %}
+{% block page_title %}{{ format_page_title('Cómo citar') }}{% endblock %}
 {% block content %}
 <div class="md3-page" role="main" aria-label="Cómo citar el corpus">
   <header class="md3-page__header">
@@ -13,7 +13,7 @@
     </div>
   </header>
 
-  <main class="md3-text-page">
+  <div class="md3-text-page">
     <div class="md3-text-content">
     
     <!-- 1. Referencia general del corpus -->
@@ -23,7 +23,7 @@
         <p class="md3-body-large">
           Tacke, Felix (2026). <em>CO.RA.PAN — Corpus Radiofónico Panhispánico</em>.<br>
           Marburg: Philipps-Universität Marburg.<br>
-          Online: <a href="https://corapan.hispanistica.com" target="_blank" rel="noopener noreferrer">https://corapan.hispanistica.com</a><br>
+          Online: <a href="{{ project_url }}" target="_blank" rel="noopener noreferrer">{{ project_url }}</a><br>
           DOI: <a href="https://doi.org/10.5281/zenodo.15360942" target="_blank" rel="noopener noreferrer">10.5281/zenodo.15360942</a>
         </p>
       </div>
@@ -279,7 +279,7 @@
     </section>
 
     </div>
-  </main>
+  </div>
 </div>
 
 {{ page_navigation(prev_title="Quiénes somos", prev_url=url_for('public.proyecto_quienes_somos'), next_title="Referencias", next_url=url_for('public.proyecto_referencias')) }}

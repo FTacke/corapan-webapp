@@ -56,12 +56,12 @@
          class="md3-navigation-drawer__logo-link"
          tabindex="-1"
          aria-hidden="true">
-        <img id="drawerLogoModal" 
-             src="{{ url_for('static', filename='img/corapan_lightmode.png') }}" 
+           <img id="drawerLogoModal" 
+             src="{{ url_for('static', filename=drawer_logo_light_asset) }}" 
              alt="" 
              class="md3-navigation-drawer__logo"
-             data-logo-light="{{ url_for('static', filename='img/corapan_lightmode.png') }}"
-             data-logo-dark="{{ url_for('static', filename='img/corapan_darkmode.png') }}">
+             data-logo-light="{{ url_for('static', filename=drawer_logo_light_asset) }}"
+             data-logo-dark="{{ url_for('static', filename=drawer_logo_dark_asset) }}">
       </a>
     </div>
 
@@ -207,12 +207,12 @@
        class="md3-navigation-drawer__logo-link"
        tabindex="-1"
        aria-hidden="true">
-      <img id="drawerLogoStandard" 
-           src="{{ url_for('static', filename='img/corapan_lightmode.png') }}" 
+       <img id="drawerLogoStandard" 
+         src="{{ url_for('static', filename=drawer_logo_light_asset) }}" 
            alt="" 
            class="md3-navigation-drawer__logo"
-           data-logo-light="{{ url_for('static', filename='img/corapan_lightmode.png') }}"
-           data-logo-dark="{{ url_for('static', filename='img/corapan_darkmode.png') }}">
+         data-logo-light="{{ url_for('static', filename=drawer_logo_light_asset) }}"
+         data-logo-dark="{{ url_for('static', filename=drawer_logo_dark_asset) }}">
     </a>
   </div>
 

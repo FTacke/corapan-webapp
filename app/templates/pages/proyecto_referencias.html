@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 {% from 'partials/page_navigation.html' import page_navigation %}
-{% block page_title %}Referencias · CO.RA.PAN{% endblock %}
+{% block page_title %}{{ format_page_title('Referencias') }}{% endblock %}
 {% block content %}
 <div class="md3-page" role="main" aria-label="Referencias bibliográficas">
   <header class="md3-page__header">
@@ -13,7 +13,7 @@
     </div>
   </header>
 
-  <main class="md3-text-page">
+  <div class="md3-text-page">
     <div class="md3-text-content">
     <section class="md3-text-section">
       <p class="md3-body-large">
@@ -148,7 +148,7 @@
       </ul>
     </section>
   </div>
-  </main>
+  </div>
 </div>
 
 {{ page_navigation(prev_title="Cómo citar", prev_url=url_for('public.proyecto_como_citar')) }}

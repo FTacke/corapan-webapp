@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block page_title %}400 - Solicitud Incorrecta | CO.RA.PAN{% endblock %}
+{% block page_title %}{{ format_page_title('400 - Solicitud Incorrecta') }}{% endblock %}
 
 {% block extra_head %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/md3/components/errors.css') }}">

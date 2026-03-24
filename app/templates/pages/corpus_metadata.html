@@ -2,7 +2,7 @@
 {% extends 'base.html' %}
 {% from 'partials/page_navigation.html' import page_navigation %}
 {% set page_name = 'corpus_metadata' %}
-{% block page_title %}Metadatos · CO.RA.PAN{% endblock %}
+{% block page_title %}{{ format_page_title('Metadatos') }}{% endblock %}
 
 {% block extra_head %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/md3/components/tabs.css') }}">
@@ -23,7 +23,7 @@
     </div>
   </header>
 
-  <main class="md3-metadata-page md3-stack--page">
+  <div class="md3-metadata-page md3-stack--page">
     {# ========================================================================
        PRIMARY VIEW TABS
        ======================================================================== #}
@@ -243,7 +243,7 @@
         <p class="md3-body-medium">Error al cargar los metadatos. Por favor, recargue la página.</p>
       </div>
     </section>
-  </main>
+  </div>
 </div>
 
 {{ page_navigation(prev_title="Guía", prev_url=url_for('corpus.guia'), next_title=None, next_url=None) }}

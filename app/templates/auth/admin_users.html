@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Benutzerverwaltung &middot; CO.RA.PAN{% endblock %}
+{% block page_title %}{{ format_page_title('Benutzerverwaltung') }}{% endblock %}
 
 {% block extra_head %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/md3/components/auth.css') }}">
@@ -20,7 +20,7 @@
     </div>
   </header>
 
-  <main class="md3-page__main">
+  <div class="md3-page__main">
     <section class="md3-page__section md3-auth-page md3-stack--section">
     <div class="md3-card md3-card--outlined">
       <div class="md3-card__content md3-stack--section">
@@ -76,7 +76,7 @@
       </div>
     </div>
     </section>
-  </main>
+  </div>
 </div>
 
 <!-- Create User Dialog (rewritten for improved layout / accessibility) -->

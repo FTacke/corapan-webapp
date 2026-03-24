@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 {% from 'partials/page_navigation.html' import page_navigation %}
 
-{% block page_title %}Guía de Búsqueda · CO.RA.PAN{% endblock %}
+{% block page_title %}{{ format_page_title('Guía de Búsqueda') }}{% endblock %}
 
 {% block extra_head %}
 <!-- CSS for code block styling -->
@@ -21,7 +21,7 @@
     </div>
   </header>
 
-  <main class="md3-text-page">
+  <div class="md3-text-page">
     <div class="md3-text-content">
     
     <!-- INTRODUCCIÓN -->
@@ -205,7 +205,7 @@ Ahora convierta la siguiente descripción en una consulta CQL precisa para CORAP
     </section>
 
     </div>
-  </main>
+  </div>
 </div>
 
 {{ page_navigation(prev_url=url_for('advanced_search.index'), prev_title='Consultar', next_url=url_for('corpus.metadata'), next_title='Metadatos') }}

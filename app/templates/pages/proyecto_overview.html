@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 {% from 'partials/page_navigation.html' import page_navigation %}
-{% block page_title %}CO.RA.PAN · El proyecto{% endblock %}
+{% block page_title %}{{ format_page_title('El proyecto') }}{% endblock %}
 {% block content %}
 <div class="md3-page" role="main" aria-label="El proyecto CO.RA.PAN">
   <header class="md3-page__header">
@@ -13,7 +13,7 @@
     </div>
   </header>
 
-  <main class="md3-text-page">
+  <div class="md3-text-page">
     <div class="md3-text-content">
     <section class="md3-text-section">
       <p class="md3-body-large">
@@ -69,7 +69,7 @@
     </section>
     
   </div>
-  </main>
+  </div>
 </div>
 
 {{ page_navigation(next_title="Diseño", next_url=url_for('public.proyecto_diseno')) }}

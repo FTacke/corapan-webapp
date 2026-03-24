@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% set page_name = 'editor' %}
 
-{% block page_title %}Editor: {{ filename }} - CO.RA.PAN{% endblock %}
+{% block page_title %}{{ format_page_title('Editor: ' ~ filename) }}{% endblock %}
 
 {% block extra_head %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/md3/tokens.css') }}">

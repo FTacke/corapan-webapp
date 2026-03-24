@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 {% from 'partials/page_navigation.html' import page_navigation %}
-{% block page_title %}Quiénes somos · CO.RA.PAN{% endblock %}
+{% block page_title %}{{ format_page_title('Quiénes somos') }}{% endblock %}
 {% block content %}
 <div class="md3-page" role="main" aria-label="Quiénes somos">
   <header class="md3-page__header">
@@ -13,7 +13,7 @@
     </div>
   </header>
 
-  <main class="md3-text-page">
+  <div class="md3-text-page">
     <div class="md3-text-content">
       <section class="md3-text-section">
       <h2 class="md3-title-large md3-section-title md3-text-heading">Créditos</h2>
@@ -41,7 +41,7 @@
       </dl>
     </section>
   </div>
-  </main>
+  </div>
 </div>
 
 {{ page_navigation(prev_title="Diseño", prev_url=url_for('public.proyecto_diseno'), next_title="Cómo citar", next_url=url_for('public.proyecto_como_citar')) }}

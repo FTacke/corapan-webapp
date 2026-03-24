@@ -1,6 +1,6 @@
 ﻿{% extends 'base.html' %}
 {% set page_name = 'atlas' %}
-{% block page_title %}Atlas · CO.RA.PAN{% endblock %}
+{% block page_title %}{{ format_page_title('Atlas') }}{% endblock %}
 
 {% block content %}
 <div class="md3-page">
@@ -18,12 +18,12 @@
   </header>
 
   <!-- Map-only Content -->
-  <main class="md3-atlas-content">
+  <div class="md3-atlas-content">
     <section class="md3-atlas-layout">
       <div class="md3-atlas-map-container">
         <div id="atlas-map" class="md3-atlas-map" role="region" aria-label="Mapa panhispánico de emisoras"></div>
       </div>
     </section>
-  </main>
+  </div>
 </div>
 {% endblock %}

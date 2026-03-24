@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 {% from 'partials/page_navigation.html' import page_navigation %}
-{% block page_title %}Diseño · CO.RA.PAN{% endblock %}
+{% block page_title %}{{ format_page_title('Diseño') }}{% endblock %}
 {% block content %}
 <div class="md3-page" role="main" aria-label="Diseño del proyecto">
   <header class="md3-page__header">
@@ -13,7 +13,7 @@
     </div>
   </header>
 
-  <main class="md3-text-page">
+  <div class="md3-text-page">
     <div class="md3-text-content">
     <section class="md3-text-section">
       <p class="md3-body-large">El diseño técnico de CO.RA.PAN convierte los principios conceptuales del proyecto en una infraestructura empírica rigurosa, curada y comparable. Su objetivo es reunir y procesar de manera homogénea material de habla profesional procedente de emisoras nacionales de todos los países hispanohablantes, garantizando la coherencia metodológica necesaria para el análisis comparativo de las variedades estándar y cuasiestándar.</p>
@@ -67,7 +67,7 @@
       <p class="md3-body-large">El módulo Atlas ofrece una visualización geográfica que documenta la composición y alcance del corpus. El mapa interactivo muestra los países y emisoras que forman parte del proyecto, con especial atención a las capitales nacionales y, en algunos casos, a capitales regionales donde se han realizado grabaciones. Al seleccionar un país o una emisora, se despliegan metadatos detallados sobre las grabaciones: fechas de registro, identificación de los programas y emisoras, y el volumen de material recopilado, tanto en duración de audio como en extensión de las transcripciones. Esta funcionalidad ofrece una visión panorámica de la infraestructura del corpus, permitiendo conocer la representación geográfica del proyecto y la cantidad de datos disponibles para cada variedad nacional.</p>
     </section>
     </div>
-  </main>
+  </div>
 </div>
 
 

@@ -1,18 +1,15 @@
 /* =================================================================
-   BRANDING TOKENS
-   
-   This file contains project-specific branding tokens.
-   Override these values when adapting this template for a new project.
-   
-   INSTRUCTIONS FOR NEW PROJECTS:
-   1. Copy this file or edit in place
-   2. Replace color values with your brand colors
-   3. Update project name references
-   4. Link this file in base.html AFTER app-tokens.css
-   
-   Color generation tools:
-   - https://m3.material.io/theme-builder
-   - https://material-foundation.github.io/material-theme-builder/
+   DEPRECATED BRANDING TOKEN LAYER
+
+   This file is not part of the active token pipeline.
+
+   Locked architecture decisions:
+   - Foundation token authority: static/css/md3/tokens.css
+   - Semantic token authority: static/css/app-tokens.css
+   - Template-facing branding authority: app/src/app/branding.py
+
+   Do not wire this file back into the live shell without an explicit token
+   migration. It remains here only as classified legacy material.
    ================================================================= */
 
 :root {

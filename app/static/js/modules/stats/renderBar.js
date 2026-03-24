@@ -7,7 +7,7 @@
  * NOTE: Requires ECharts to be loaded globally (via CDN or script tag).
  */
 
-import corapanTheme from "./theme/corapanTheme.js";
+import { buildCorapanTheme } from "./theme/corapanTheme.js";
 
 // ECharts is loaded globally from CDN
 // We access it dynamically inside functions to ensure it's available
@@ -38,6 +38,10 @@ function getTextColor() {
       .getPropertyValue("--md-sys-color-on-surface")
       .trim() || "#1C1B1F"
   );
+}
+
+function getCssVar(name, fallback = "") {
+  return getComputedStyle(document.documentElement).getPropertyValue(name).trim() || fallback;
 }
 
 /**
@@ -72,7 +76,7 @@ export function renderBar(
 
   // Register theme if not already registered
   try {
-    echarts.registerTheme("corapan", corapanTheme);
+    echarts.registerTheme("corapan", buildCorapanTheme());
   } catch (e) {
     // Ignore if already registered
   }
@@ -101,14 +105,19 @@ export function renderBar(
 
   // Get primary color from CSS (supports dark mode)
   const primaryColor =
-    getComputedStyle(document.documentElement)
-      .getPropertyValue("--md-sys-color-primary")
-      .trim() || "#1B5E9F";
+    getCssVar("--md-sys-color-primary", "#1B5E9F");
 
   const primaryContainerColor =
-    getComputedStyle(document.documentElement)
-      .getPropertyValue("--md-sys-color-primary-container")
-      .trim() || "#5A7FA3";
+    getCssVar("--md-sys-color-primary-container", "#5A7FA3");
+  const secondaryColor = getCssVar("--md-sys-color-secondary", primaryContainerColor);
+  const tertiaryColor = getCssVar("--md-sys-color-tertiary", primaryColor);
+  const quaternaryColor = getCssVar(
+    "--md-sys-color-secondary-container",
+    primaryContainerColor,
+  );
+  const quinaryColor = getCssVar("--md-sys-color-tertiary-container", secondaryColor);
+  const outlineVariantColor = getCssVar("--md-sys-color-outline-variant", "GrayText");
+  const surfaceContainerColor = getCssVar("--md-sys-color-surface-container", "Canvas");
 
   // Calculate total for percentages if not provided
   const total = data.reduce((sum, item) => sum + item.n, 0);
@@ -151,13 +160,9 @@ export function renderBar(
         type: "shadow",
       },
       backgroundColor:
-        getComputedStyle(document.documentElement).getPropertyValue(
-          "--md-sys-color-surface-container",
-        ) || "#fff",
+        surfaceContainerColor,
       borderColor:
-        getComputedStyle(document.documentElement).getPropertyValue(
-          "--md-sys-color-outline-variant",
-        ) || "#ccc",
+        outlineVariantColor,
       textStyle: {
         color: textColor,
       },
@@ -169,7 +174,7 @@ export function renderBar(
         const percentStr = `(${formatPercent(p)})`;
 
         return `
-          <div style="font-family: Roboto, sans-serif;">
+          <div>
             <strong>${item.name}</strong><br/>
             <span style="display:inline-block;margin-right:4px;border-radius:10px;width:10px;height:10px;background-color:${item.color};"></span>
             ${absVal} hits ${percentStr}
@@ -196,7 +201,7 @@ export function renderBar(
           splitLine: {
             show: true,
             lineStyle: {
-              color: "rgba(128, 128, 128, 0.2)",
+              color: outlineVariantColor,
               type: "dashed",
             },
           },
@@ -215,7 +220,7 @@ export function renderBar(
           splitLine: {
             show: true,
             lineStyle: {
-              color: "rgba(128, 128, 128, 0.2)",
+              color: outlineVariantColor,
               type: "dashed",
             },
           },
@@ -261,11 +266,11 @@ export function renderBar(
             // Use a palette for vertical charts to make them look nicer
             if (isVertical) {
               const palette = [
-                "#1B5E9F",
-                "#006C4C",
-                "#9A4058",
-                "#6750A4",
-                "#8B5000",
+                primaryColor,
+                secondaryColor,
+                tertiaryColor,
+                quaternaryColor,
+                quinaryColor,
               ];
               return palette[params.dataIndex % palette.length];
             }

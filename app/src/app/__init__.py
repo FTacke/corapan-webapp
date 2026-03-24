@@ -11,6 +11,7 @@ from pathlib import Path
 from flask import Flask, flash, jsonify, redirect, render_template, request, url_for
 from werkzeug.middleware.proxy_fix import ProxyFix
 
+from .branding import BRANDING, format_page_title
 from .extensions import register_extensions
 from .routes import register_blueprints
 from .runtime_paths import get_logs_dir
@@ -185,6 +186,8 @@ def register_context_processors(app: Flask) -> None:
             "app_version": app.config.get("APP_VERSION", ""),
             "app_release_tag": app.config.get("APP_RELEASE_TAG", ""),
             "app_release_url": app.config.get("APP_RELEASE_URL", ""),
+            "format_page_title": format_page_title,
+            **BRANDING,
         }
 
 

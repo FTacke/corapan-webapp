@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% block page_title %}Impressum · CO.RA.PAN{% endblock %}
+{% block page_title %}{{ format_page_title('Impressum') }}{% endblock %}
 
 {% block extra_head %}
   <link rel="stylesheet" href="{{ url_for('static', filename='css/md3/tokens.css') }}">
@@ -21,7 +21,7 @@
   </header>
 
   <!-- Main Content: formatted with canonical MD3 page/section classes -->
-  <main class="md3-text-page">
+  <div class="md3-text-page">
     <div class="md3-text-content">
       <section class="md3-text-section">
       <h2 class="md3-title-large md3-section-title">Anbieter dieser Internetpräsenz im Rechtssinne ist</h2>
@@ -66,7 +66,7 @@
         Wilhelm-Röpke-Str. 6D<br>
         35032 Marburg<br>
         Tel.: +49 6421 28-24776<br>
-        E-Mail: <a href="mailto:felix.tacke@uni-marburg.de" class="md3-text-link">felix.tacke@uni-marburg.de</a>
+        E-Mail: <a href="mailto:{{ institution_contact_email }}" class="md3-text-link">{{ institution_contact_email }}</a>
       </p>
     </section>
     <section class="md3-text-section">
@@ -87,6 +87,6 @@
         Die durch die Seitenbetreiber erstellten Inhalte und Werke auf diesen Seiten unterliegen dem deutschen Urheberrecht. Die Vervielfältigung, Bearbeitung, Verbreitung und jede Art der Verwertung außerhalb der Grenzen des Urheberrechts bedürfen der schriftlichen Zustimmung des jeweiligen Autors bzw. Erstellers.
       </p>
     </div>
-  </main>
+  </div>
 </div>
 {% endblock %}

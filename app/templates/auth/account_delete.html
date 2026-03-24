@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Account löschen — CO.RA.PAN{% endblock %}
+{% block page_title %}{{ format_page_title('Account löschen') }}{% endblock %}
 
 {% block extra_head %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/md3/components/auth.css') }}">
@@ -17,7 +17,7 @@
       </div>
     </div>
   </header>
-  <main class="md3-page__main">
+  <div class="md3-page__main">
     <section class="md3-page__section md3-auth-page md3-stack--section">
       <article class="md3-card md3-card--outlined md3-auth-card">
       <header class="md3-card__header">
@@ -49,7 +49,7 @@
       </div>
       </article>
     </section>
-  </main>
+  </div>
 </div>
 
 <script type="module" src="{{ url_for('static', filename='js/auth/account_delete.js') }}"></script>

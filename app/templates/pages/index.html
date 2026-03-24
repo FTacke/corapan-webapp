@@ -1,6 +1,6 @@
 ﻿{% extends 'base.html' %}
 {% set page_name = 'index' %}
-{% block page_title %}CO.RA.PAN{% endblock %}
+{% block page_title %}{{ app_display_name }}{% endblock %}
 
 {% block extra_head %}
   <!-- Index-page specific styles (tokens, typography, cards, buttons already in base.html) -->
@@ -13,13 +13,13 @@
   <h1 class="sr-only">Inicio</h1>
   
   <section class="md3-index-logo">
-    <img id="indexLogo"
-         src="{{ url_for('static', filename='img/corapan_logo_lightmode.png') }}" 
-         alt="CO.RA.PAN" 
+        <img id="indexLogo"
+          src="{{ url_for('static', filename=landing_logo_light_asset) }}" 
+          alt="{{ app_display_name }}" 
          class="md3-index-logo__img" 
          loading="lazy"
-         data-logo-light="{{ url_for('static', filename='img/corapan_logo_lightmode.png') }}"
-         data-logo-dark="{{ url_for('static', filename='img/corapan_logo_darkmode.png') }}">
+          data-logo-light="{{ url_for('static', filename=landing_logo_light_asset) }}"
+          data-logo-dark="{{ url_for('static', filename=landing_logo_dark_asset) }}">
   </section>
   
   <section class="md3-index-cards">

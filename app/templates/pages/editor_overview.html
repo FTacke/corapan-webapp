@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block page_title %}Editor - CO.RA.PAN{% endblock %}
+{% block page_title %}{{ format_page_title('Editor') }}{% endblock %}
 
 {% block extra_head %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/md3/tokens.css') }}">
@@ -20,7 +20,7 @@
     </div>
   </header>
   
-  <main class="md3-editor-overview">
+  <div class="md3-editor-overview">
   {% if files_by_country %}
     <!-- Country Tabs -->
     <div class="md3-country-tabs" role="tablist">
@@ -91,7 +91,7 @@
       <p class="md3-body-large">No hay archivos de transcripción disponibles.</p>
     </div>
   {% endif %}
-  </main>
+  </div>
 </div>
 
 <script type="module" src="{{ url_for('static', filename='js/modules/editor/overview.js') }}"></script>

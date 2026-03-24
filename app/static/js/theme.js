@@ -20,11 +20,21 @@
   const KEY = "site-theme"; // localStorage-Schlüssel
   const root = document.documentElement;
   const mm = window.matchMedia("(prefers-color-scheme: dark)");
+  const themeColorMetas = () =>
+    document.querySelectorAll('meta[name="theme-color"][data-theme-color]');
 
   // Hilfsfunktionen
   const sysDark = () => mm.matches;
+  const cssVar = (name, fallback = "") =>
+    getComputedStyle(root).getPropertyValue(name).trim() || fallback;
   const setSysFlag = () => {
     root.dataset.systemDark = sysDark() ? "true" : "false";
+  };
+  const syncThemeColorMeta = () => {
+    const themeColor = cssVar("--app-theme-color", cssVar("--app-background", ""));
+    themeColorMetas().forEach((meta) => {
+      meta.setAttribute("content", themeColor);
+    });
   };
   const load = () => localStorage.getItem(KEY) || "light"; // Default: light
   const save = (v) => localStorage.setItem(KEY, v);
@@ -36,11 +46,13 @@
     } else {
       root.classList.remove("theme-dark");
     }
+    window.requestAnimationFrame(syncThemeColorMeta);
   };
 
   // Initial setup
   setSysFlag();
   apply(load());
+  window.addEventListener("load", syncThemeColorMeta, { once: true });
 
   // Attach load handlers to stylesheets that were deferred via data-async-onload
   // The pattern uses media="print" to prevent render-blocking, then switches to "all" on load
@@ -80,6 +92,8 @@
     const current = load();
     if (current === "auto") {
       apply("auto"); // Re-apply um classList zu aktualisieren
+    } else {
+      syncThemeColorMeta();
     }
   });
 

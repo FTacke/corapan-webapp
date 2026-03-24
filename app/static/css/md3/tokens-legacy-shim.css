@@ -5,9 +5,12 @@
  * token names that still exist across the repository. The aliases map
  * the legacy names to the canonical `--md-sys-*` / `--space-*` tokens.
  *
- * Purpose: Make the codebase behave identically while templates are
- * gradually migrated to canonical tokens. This file is temporary and
- * will be removed once the lint report shows no live uses of `--md3-*`.
+ * Purpose: deprecated compatibility layer while live callers are still
+ * migrated off legacy `--md3-*` names. New code must not depend on it.
+ *
+ * Locked phase-2 status:
+ * - deprecated but active
+ * - removable only after live CSS/JS callers stop requesting `--md3-*`
  */
 
 :root {

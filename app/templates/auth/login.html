@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Iniciar sesión - CO.RA.PAN{% endblock %}
+{% block page_title %}{{ format_page_title('Iniciar sesión') }}{% endblock %}
 
 {% block extra_head %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/md3/components/login.css') }}">
@@ -20,7 +20,7 @@
     </div>
   </header>
 
-  <main class="md3-page__main md3-stack--page">
+  <div class="md3-page__main md3-stack--page">
     <section class="md3-page__section md3-stack--section">
       <!-- Login Card -->
       <article class="md3-card md3-card--outlined md3-auth-card login-card">
@@ -104,6 +104,6 @@
         </div>
       </article>
     </section>
-  </main>
+  </div>
 </div>
 {% endblock %}

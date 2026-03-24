@@ -1,18 +1,18 @@
 <div class="md3-footer" data-element="site-footer">
   <div class="md3-footer__content">
     <!-- Logo as Border Marker -->
-    <img src="{{ url_for('static', filename='img/corapan_basic.png') }}"
-         alt="CO.RA.PAN Logo"
+    <img src="{{ url_for('static', filename=footer_logo_asset) }}"
+         alt="{{ app_logo_alt }}"
          class="md3-footer__logo-marker"
          width="40" height="40" decoding="async" />
 
     <!-- Brand/Badge First -->
-    <a href="https://hispanistica.com"
+    <a href="{{ footer_brand_url }}"
        class="md3-footer__brand"
        target="_blank" rel="noopener noreferrer"
-       aria-label="Hispanistica – @ Marburg">
-      <img src="{{ url_for('static', filename='img/hispanistica_badge.png') }}"
-           alt="Hispanistica Badge"
+       aria-label="{{ footer_brand_label }}">
+      <img src="{{ url_for('static', filename=footer_brand_badge_asset) }}"
+         alt="{{ footer_brand_badge_alt }}"
            width="85" height="20" decoding="async" />
     </a>
 
@@ -26,7 +26,7 @@
 
     <!-- Copyright -->
     <p class="md3-footer__copy md3-body-small">
-      © {% if now is defined %}{{ now().year }}{% else %}{{ "2025" }}{% endif %} Philipps-Universität Marburg · Felix Tacke
+      © {% if now is defined %}{{ now().year }}{% else %}{{ "2025" }}{% endif %} {{ institution_name }} · {{ footer_copyright_holder }}
     </p>
 
     {% if app_version and app_release_url %}

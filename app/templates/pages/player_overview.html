@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 {% set page_name = 'player_overview' %}
-{% block page_title %}Player · CO.RA.PAN{% endblock %}
+{% block page_title %}{{ format_page_title('Player') }}{% endblock %}
 
 {% block extra_head %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/md3/components/tabs.css') }}">
@@ -19,7 +19,7 @@
     </div>
   </header>
 
-  <main class="md3-text-page">
+  <div class="md3-text-page">
     {# Country Filter Chips #}
     <nav class="md3-country-filter" role="tablist" aria-label="Selección de país" data-element="player-tabs">
       {# Populated by JavaScript #}
@@ -41,7 +41,7 @@
       <span class="material-symbols-rounded">error</span>
       <p class="md3-body-medium">Error al cargar las grabaciones. Por favor, recargue la página.</p>
     </div>
-  </main>
+  </div>
 </div>
 {% endblock %}
 

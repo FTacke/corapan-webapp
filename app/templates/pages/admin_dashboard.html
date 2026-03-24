@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% block page_title %}Admin-Dashboard &middot; CO.RA.PAN{% endblock %}
+{% block page_title %}{{ format_page_title('Admin-Dashboard') }}{% endblock %}
 
 {% block extra_head %}
   <link rel="stylesheet" href="{{ url_for('static', filename='css/md3/tokens.css') }}">
@@ -26,7 +26,7 @@
   </header>
 
   <!-- Main Content -->
-  <main class="md3-page__main md3-stack--page">
+  <div class="md3-page__main md3-stack--page">
     
     <!-- Section: 30-Tage Metriken -->
     <section class="md3-page__section md3-page__section--compact">
@@ -226,7 +226,7 @@
       </article>
     </div>
 
-  </main>
+  </div>
 </div>
 {% endblock %}
 
