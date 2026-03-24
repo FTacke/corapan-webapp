@@ -114,12 +114,12 @@
               <div class="md3-outlined-textfield__outline-end"></div>
             </div>
           </div>
-
-          <div class="md3-dialog__actions">
-            <button type="button" class="md3-button md3-button--text" id="cancel-create">Abbrechen</button>
-            <button type="submit" class="md3-button md3-button--filled">Anlegen</button>
-          </div>
         </form>
+      </div>
+
+      <div class="md3-dialog__actions">
+        <button type="button" class="md3-button md3-button--text" id="cancel-create">Abbrechen</button>
+        <button type="submit" class="md3-button md3-button--filled" form="create-user-form">Anlegen</button>
       </div>
     </div>
   </div>
@@ -170,7 +170,9 @@
           <!-- Error display area -->
           <div id="user-edit-error" class="md3-alert md3-alert--error md3-alert--field" role="alert" hidden>
             <span class="material-symbols-rounded md3-alert__icon" aria-hidden="true">error</span>
-            <span class="md3-alert__message"></span>
+            <div class="md3-alert__content">
+              <p class="md3-alert__message"></p>
+            </div>
           </div>
 
           <!-- Section: Account -->

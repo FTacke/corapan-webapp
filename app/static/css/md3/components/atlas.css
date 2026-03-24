@@ -116,12 +116,12 @@
     max-width: 280px;
   }
   
-  .atlas-tooltip-links {
+  .atlas-tooltip__actions {
     flex-direction: column;
     gap: var(--space-2);
   }
   
-  .atlas-tooltip-link {
+  .atlas-tooltip__action {
     justify-content: center;
     width: 100%;
   }
@@ -150,29 +150,50 @@
 }
 
 .atlas-popup .leaflet-popup-close-button {
+  position: absolute;
+  top: 10px !important;
+  right: 10px !important;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 32px;
-  height: 32px;
-  color: var(--md-sys-color-on-surface-variant);
-  font-size: 20px;
-  padding: 0;
-  top: 10px;
-  right: 10px;
+  width: 30px !important;
+  height: 30px !important;
+  color: var(--md-sys-color-on-surface-variant) !important;
+  font-size: 24px !important;
+  font-weight: 400;
+  line-height: 30px !important;
+  padding: 0 !important;
   border-radius: 999px;
-  background: color-mix(in srgb, var(--md-sys-color-surface) 84%, var(--md-sys-color-scrim) 16%);
+  background: transparent !important;
+  text-decoration: none;
+  text-align: center;
+  box-sizing: border-box;
+  border: 0;
+  box-shadow: none;
 }
 
 .atlas-popup .leaflet-popup-close-button:hover {
-  color: var(--md-sys-color-on-surface);
-  background: var(--md-sys-color-surface-container-high);
+  color: var(--md-sys-color-on-surface) !important;
+  background: transparent !important;
+}
+
+.atlas-popup .leaflet-popup-close-button:focus {
+  color: var(--md-sys-color-on-surface) !important;
+  background: transparent !important;
+  outline: 2px solid var(--md-sys-color-primary);
+  outline-offset: 2px;
+}
+
+@media (max-width: 767px) {
+  .atlas-popup .leaflet-popup-close-button {
+    top: 8px !important;
+    right: 8px !important;
+  }
 }
 
 /* Tooltip inner content */
 .atlas-tooltip {
   padding: var(--space-4);
-  padding-right: calc(var(--space-4) + 32px);
   min-width: 200px;
   max-width: 320px;
 }
@@ -180,19 +201,11 @@
 .atlas-tooltip__header {
   display: flex;
   flex-direction: column;
-  gap: var(--space-1);
-  margin-bottom: var(--space-3);
-  padding-bottom: var(--space-3);
+  gap: 0;
+  margin-bottom: var(--space-4);
+  padding-bottom: var(--space-4);
+  padding-inline-end: 2.5rem;
   border-bottom: 1px solid var(--md-sys-color-outline-variant);
-}
-
-.atlas-tooltip__eyebrow {
-  font-size: 0.75rem;
-  font-weight: 600;
-  line-height: 1;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--md-sys-color-on-surface-variant);
 }
 
 .atlas-tooltip-title {
@@ -202,11 +215,17 @@
   margin: 0;
 }
 
-.atlas-tooltip-row {
-  display: flex;
-  flex-direction: column;
+.atlas-tooltip__facts {
+  display: grid;
+  gap: var(--space-3);
+  margin: 0;
+  padding: 0;
+}
+
+.atlas-tooltip__fact {
+  display: grid;
   gap: var(--space-1);
-  margin-bottom: var(--space-3);
+  margin: 0;
 }
 
 .atlas-tooltip-label {
@@ -221,6 +240,7 @@
   font-size: 0.875rem;
   color: var(--md-sys-color-on-surface);
   line-height: 1.4;
+  margin: 0;
 }
 
 .atlas-tooltip-empty {
@@ -229,7 +249,7 @@
 }
 
 /* Tooltip Links */
-.atlas-tooltip-links {
+.atlas-tooltip__actions {
   display: flex;
   flex-wrap: wrap;
   gap: var(--space-2);
@@ -238,34 +258,40 @@
   border-top: 1px solid var(--md-sys-color-outline-variant);
 }
 
-.atlas-tooltip-link {
+.atlas-popup a.atlas-tooltip__action,
+.atlas-popup a.atlas-tooltip__action:link,
+.atlas-popup a.atlas-tooltip__action:visited {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: var(--space-1);
   min-height: 36px;
   padding: var(--space-2) var(--space-3);
-  background: var(--md-sys-color-secondary-container);
-  color: var(--md-sys-color-on-secondary-container);
+  background: var(--md-sys-color-primary);
+  color: var(--md-sys-color-on-primary) !important;
   border-radius: 999px;
+  border: 1px solid transparent;
   font-size: 0.8125rem;
   font-weight: 500;
-  text-decoration: none;
+  text-decoration: none !important;
   transition: all 200ms cubic-bezier(0.2, 0, 0, 1);
 }
 
-.atlas-tooltip-link:hover {
-  background: color-mix(in oklab, var(--md-sys-color-secondary-container) 84%, var(--md-sys-color-on-secondary-container) 16%);
-  color: var(--md-sys-color-on-secondary-container);
-  text-decoration: none;
+.atlas-popup a.atlas-tooltip__action:hover,
+.atlas-popup a.atlas-tooltip__action:active {
+  background: color-mix(in srgb, var(--md-sys-color-primary) 92%, var(--md-sys-color-on-primary) 8%);
+  color: var(--md-sys-color-on-primary) !important;
+  text-decoration: none !important;
   box-shadow: var(--elev-1);
 }
 
-.atlas-tooltip-link:focus {
+.atlas-popup a.atlas-tooltip__action:focus,
+.atlas-popup a.atlas-tooltip__action:focus-visible {
   outline: 2px solid var(--md-sys-color-primary);
   outline-offset: 2px;
 }
 
-.atlas-tooltip-link .material-symbols-rounded {
+.atlas-tooltip__action .material-symbols-rounded {
   font-size: 18px;
+  color: inherit;
 }

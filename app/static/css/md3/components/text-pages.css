@@ -260,12 +260,15 @@
 /* Copyable code block variant */
 .md3-code-block--copyable {
   position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
 }
 
-/* Make pre the positioning context for the copy button */
-.md3-code-block--copyable pre {
-  position: relative;
-  padding-bottom: calc(var(--space-5) + 48px); /* Extra space for button */
+.md3-code-block__toolbar {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
 }
 
 .md3-code-block h3 {
@@ -285,12 +288,8 @@
   font-size: 0.875rem;
 }
 
-/* Copy button for code blocks - positioned inside pre */
 .md3-code-block__copy {
-  position: absolute;
-  bottom: var(--space-3);
-  right: var(--space-3);
-  z-index: 1;
+  position: static;
 }
 
 .md3-code-block__copy:hover {

@@ -73,7 +73,8 @@ Abbruchkriterium: Jede Lösung, die diese Regeln verletzt, wird verworfen.
 - Phase 2: completed (`docs/template_status/2026-03-24_phase2_architecture.md`)
 - Phase 3: completed (`docs/template_status/2026-03-24_phase3_token_enforcement.md`)
 - Phase 4: substantially completed (`docs/template_status/2026-03-24_phase4_template_harmonization.md`)
-- Phase 5: in progress
+- Phase 5: completed (`docs/template_status/2026-03-24_phase5_finalization.md`)
+- Phase 5b: in progress
 
 ---
 
@@ -119,6 +120,29 @@ Phase-5-Regeln:
 - Player-, Editor-, Search- und Atlas-Runtime-Verhalten dürfen nicht destabilisiert werden
 - `tokens-legacy-shim.css` bleibt bestehen, solange Live-Caller noch `--md3-*` benötigen; Restblocker müssen explizit dokumentiert werden
 - `branding.css` bleibt entweder klar quarantänisiert oder wird nur entfernt, wenn nachweislich keine aktive Bindung mehr existiert
+
+---
+
+## Phase 5b Structural UI Consistency Fixes
+
+Diese Phase ist ein gezielter Korrekturpass nach der Phase-5-Finalisierung. Sie löst reale HTML-/CSS-/Komponentenvertragsfehler, keine kosmetischen Restarbeiten.
+
+Ziel dieser Phase:
+- Dialoge auf eine echte gemeinsame Struktur aus `header`, `content` und `actions` zurückführen
+- übermäßige Dialog-Außenabstände und doppelte Rhythmusregeln an der Shared-Component-Wurzel beheben
+- Alert-/Message-Blöcke auf einen konsistenten Content-Vertrag bringen statt nur Klassen optisch anzugleichen
+- Atlas-Popups als semantische Popup-Karte mit stabilem Header-, Fakten- und Action-Row-Aufbau ausrichten
+- mobile Player-Steuerung und Player-Aktionsreihen über echtes Markup und echte Bedienelemente stabilisieren
+- nur dann neue Mikro-Patterns einführen, wenn ein Shared Contract nachweislich fehlt
+
+Phase-5b-Regeln:
+- strukturelle Probleme werden im Markup- und Component-Layer gelöst, nicht mit lokalem Spacing-Tuning
+- ein Element gilt nur dann als standardisiert, wenn Markup, Selektoren und gerendertes Ergebnis zusammenpassen
+- Dialog-Actions gehören in die kanonische Action-Zone, nicht zufällig in Form- oder Content-Blöcke
+- Alert-Container mit Icon dürfen einen inhaltlichen Wrapper erwarten; Mischformen ohne Content-Block sind Schulden, nicht Standard
+- Player-Controls dürfen für echte Interaktion nicht auf dekorative `span`- oder `div[role="button"]`-Konstruktionen angewiesen bleiben
+- Atlas-Popup-Actions müssen als gemeinsame Action-Row lesbar bleiben und dürfen nicht nur aus lose nebeneinander stehenden Links bestehen
+- Search-, Player-, Editor- und Atlas-Runtime-Verhalten dürfen durch Strukturkorrekturen nicht destabilisiert werden
 
 ---
 

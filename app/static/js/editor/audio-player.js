@@ -158,13 +158,15 @@ export class AudioPlayer {
    * Update mute icon - MD3: Use Material Symbols via textContent
    */
   updateMuteIcon() {
-    // The muteBtn is now a <span class="material-symbols-rounded">
     if (this.audio.muted || this.audio.volume === 0) {
       this.muteBtn.textContent = 'volume_off';
+      this.muteBtn.setAttribute('aria-label', 'Unmute audio');
     } else if (this.audio.volume > 0.5) {
       this.muteBtn.textContent = 'volume_up';
+      this.muteBtn.setAttribute('aria-label', 'Mute audio');
     } else {
       this.muteBtn.textContent = 'volume_down';
+      this.muteBtn.setAttribute('aria-label', 'Mute audio');
     }
   }
 
@@ -246,7 +248,8 @@ export class AudioPlayer {
    */
   onPlay() {
     this.isPlaying = true;
-    this.playPauseBtn.className = "bi bi-pause-circle-fill play-icon";
+    this.playPauseBtn.textContent = 'pause_circle';
+    this.playPauseBtn.setAttribute('aria-label', 'Pause audio');
     console.log("[Player] Playing");
   }
 
@@ -255,7 +258,8 @@ export class AudioPlayer {
    */
   onPause() {
     this.isPlaying = false;
-    this.playPauseBtn.className = "bi bi-play-circle-fill play-icon";
+    this.playPauseBtn.textContent = 'play_circle';
+    this.playPauseBtn.setAttribute('aria-label', 'Play audio');
     console.log("[Player] Paused");
   }
 
@@ -264,7 +268,8 @@ export class AudioPlayer {
    */
   onEnded() {
     this.isPlaying = false;
-    this.playPauseBtn.className = "bi bi-play-circle-fill play-icon";
+    this.playPauseBtn.textContent = 'play_circle';
+    this.playPauseBtn.setAttribute('aria-label', 'Play audio');
     if (this.renderer) {
       this.renderer.clearHighlight();
     }

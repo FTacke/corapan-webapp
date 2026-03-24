@@ -83,9 +83,10 @@ export class TokenCollector {
   async copyToClipboard() {
     if (this.collectedTokenIds.length === 0) {
       this._showSnackbar(
-        "⚠️ Keine Token-IDs zum Kopieren vorhanden",
+        "Keine Token-IDs zum Kopieren vorhanden",
         "warning",
       );
+      this._announceStatus("Keine Token-IDs zum Kopieren vorhanden");
       return;
     }
 
@@ -95,6 +96,7 @@ export class TokenCollector {
       await navigator.clipboard.writeText(text);
       this._showCopySuccess();
       this._showSnackbar("✓ Token-IDs kopiert!", "success");
+      this._announceStatus("Token-IDs kopiert");
     } catch (err) {
       console.error("[Tokens] Failed to copy:", err);
 
@@ -103,6 +105,7 @@ export class TokenCollector {
       document.execCommand("copy");
       this._showCopySuccess();
       this._showSnackbar("✓ Token-IDs kopiert!", "success");
+      this._announceStatus("Token-IDs kopiert");
     }
   }
 
@@ -146,6 +149,13 @@ export class TokenCollector {
     this.copyButton.classList.remove("copy-success");
   }
 
+  _announceStatus(message) {
+    const status = document.getElementById("tokenCollectorStatus");
+    if (status) {
+      status.textContent = message;
+    }
+  }
+
   /**
    * Show snackbar notification
    * @private
@@ -159,13 +169,14 @@ export class TokenCollector {
 
     // Create snackbar
     const snackbar = document.createElement("div");
-    snackbar.className = "copy-snackbar";
+    snackbar.className = `copy-snackbar copy-snackbar--${type}`;
 
-    const icon = document.createElement("i");
+    const icon = document.createElement("span");
+    icon.className = "material-symbols-rounded";
     if (type === "success") {
-      icon.className = "bi bi-check-circle-fill";
+      icon.textContent = "check_circle";
     } else if (type === "warning") {
-      icon.className = "bi bi-exclamation-circle-fill";
+      icon.textContent = "warning";
     }
 
     const text = document.createElement("span");

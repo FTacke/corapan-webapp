@@ -23,7 +23,7 @@
     <div class="player-controls-top">
       <input type="range" id="progressBar" min="0" max="100" value="0" class="progress-bar" aria-label="Audio progress">
       <div class="volume-control-container">
-        <span id="muteBtn" class="material-symbols-rounded volume-icon" aria-label="Mute/Unmute">volume_up</span>
+        <button type="button" id="muteBtn" class="material-symbols-rounded player-icon-button volume-icon" aria-label="Mute audio">volume_up</button>
         <input type="range" id="volumeControl" min="0" max="1" step="0.01" value="1.0" class="volume-control" aria-label="Volume">
       </div>
     </div>
@@ -33,17 +33,17 @@
       <div class="time-display" id="timeDisplay">0:00 / 0:00</div>
       
       <div class="play-container">
-        <div class="skip-control" id="rewindBtn" role="button" aria-label="Rewind 3 seconds">
+        <button type="button" class="skip-control" id="rewindBtn" aria-label="Rewind 3 seconds">
           <span class="material-symbols-rounded skip-icon">rotate_left</span>
           <span class="skip-label">-3s</span>
-        </div>
+        </button>
         
-        <span id="playPauseBtn" class="material-symbols-rounded play-icon" role="button" aria-label="Play/Pause">play_circle</span>
+        <button type="button" id="playPauseBtn" class="material-symbols-rounded player-icon-button play-icon" aria-label="Play audio">play_circle</button>
         
-        <div class="skip-control" id="forwardBtn" role="button" aria-label="Forward 3 seconds">
+        <button type="button" class="skip-control" id="forwardBtn" aria-label="Forward 3 seconds">
           <span class="material-symbols-rounded skip-icon">rotate_right</span>
           <span class="skip-label">+3s</span>
-        </div>
+        </button>
       </div>
       
       <div class="speed-control-container">

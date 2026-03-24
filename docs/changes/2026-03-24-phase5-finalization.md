@@ -54,6 +54,18 @@ These were the remaining visible issues most likely to undermine template-readin
 - `app/static/css/branding.css` remains inactive legacy and was intentionally not reconnected
 - player-local copy/snackbar and tooltip helpers still exist in specialized runtime JS and remain documented hotspots rather than being force-abstracted at the end of the branch
 
+## Phase 5b Follow-up
+
+- Phase 5 left a few structural UI mismatches behind that looked standardized in CSS but were still inconsistent in live markup.
+- The follow-up corrective pass fixed shared dialog rhythm, repaired malformed dialog nesting in the CQL guide dialog, restored a canonical alert content wrapper in the user-edit dialog, converted audio-player controls to semantic buttons, and rebuilt atlas popup internals around a header/facts/actions contract.
+- Player copy feedback was also adjusted away from bootstrap-icon assumptions so the runtime markup matches the icons that are actually loaded.
+- The follow-up was then tightened again for real rendered regressions: hidden alert containers now stay hidden, field alerts keep a visible error surface, the audio play icon renders again after the button reset fix, the atlas popup drops the redundant eyebrow and uses a larger inset close affordance, the corpus-guia copy button sits outside code flow, and large dialogs let the surface use the available width.
+- A final corrective tweak then moved the corpus-guia copy action into a real code-block toolbar, strengthened the error alert background against cascade conflicts, and hardened the atlas close-button chrome so Leaflet defaults no longer win visually.
+- The atlas popup close control was then realigned to the better Leaflet overlay model from `docs/template_status/X.md`: inset overlay positioning, `30x30px` hit area, neutral transparent background, hover by color only, and header-side reserved space instead of a broad popup-wide right padding hack.
+- Atlas popup action chips were then moved to the stronger `primary` / `on-primary` token pairing because the previous container-token pairing produced visibly weak contrast for both label and icon.
+- The live atlas popup still inherited a stronger global anchor color in the non-hover state, so the atlas action selectors were tightened to target actual links (`a.atlas-tooltip__action`) and hold `on-primary` in normal, visited, hover, and active states.
+- Alert error backgrounds were still missing because the active token source `app/static/css/md3/tokens.css` defined `error` and `on-error` but not `error-container` and `on-error-container`; those tokens were added to the canonical light/dark token sets so existing alert, dialog, login, editor, and error-surface rules now resolve instead of being dropped as invalid.
+
 ## Follow-up / Rollback Notes
 
 - if a Phase 5 UI regression appears, first inspect the shared patterns in `alerts.css`, `dialog.css`, `text-pages.css`, `atlas.css`, and `player-mobile.css` before patching page-local CSS

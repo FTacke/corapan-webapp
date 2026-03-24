@@ -75,100 +75,36 @@
         Copie y pegue este prompt en el modelo de IA generativa y añada su descripción al final:
       </p>
       <div class="md3-code-block md3-code-block--copyable md3-full-width">
-        <pre class="highlight"><code id="cql-prompt-text" class="language-plaintext">Actúa como generador de consultas CQL para un corpus de español hablado llamado CORAPAN, indexado en BlackLab.
 
-El corpus está anotado con los siguientes atributos a nivel de token (dentro de corchetes `[...]` en CQL):
+        <pre class="highlight"><code id="cql-prompt-text" class="language-plaintext">Genera una consulta CQL válida para CORAPAN (BlackLab).
+Salida: SOLO la consulta, sin explicación.
 
-* `word`   → forma tal como aparece en la transcripción
-* `norm`   → forma normalizada (por ejemplo, en minúsculas)
-* `lemma`  → lema
-* `pos`    → categoría gramatical (UD POS: `NOUN`, `VERB`, `ADJ`, `ADV`, `PRON`, `DET`, `ADP`, `SCONJ`, `CCONJ`, `PART`, `AUX`, etc.)
-* `tense`  → tiempo verbal morfológico (por ejemplo: `"Pres"`, `"Past"`, `"Fut"`)
-* `mood`   → modo verbal (por ejemplo: `"Ind"`, `"Subj"`, `"Imp"`)
-* `person` → persona gramatical (`"1"`, `"2"`, `"3"`)
-* `number` → número gramatical (`"Sing"`, `"Plur"`)
-* `aspect` → aspecto verbal (si está presente)
-* `PastType`   → subtipo de pasado, ya en inglés, derivado de reglas específicas del corpus. Valores posibles, si existen en el token:
+Atributos:
+word, norm, lemma, pos, tense, mood, person, number, aspect, PastType, FutureType, tokid
 
-  * `"simplePast"`
-  * `"presentPerfect"`
-  * `"pastPerfect"`
-  * `"futurePerfect"`
-  * `"conditionalPerfect"`
-  * `"otherCompoundPast"`
-  * `"otherPast"`
-* `FutureType` → subtipo de futuro analítico (construcciones tipo *ir a + infinitivo*), también en inglés. Valores posibles, si existen en el token:
+Valores:
+PastType="simplePast","presentPerfect","pastPerfect","futurePerfect","conditionalPerfect","otherCompoundPast","otherPast"
+FutureType="periphrasticFuture","periphrasticFuturePast"
 
-  * `"periphrasticFuture"` (ir a + INF con auxiliar en presente)
-  * `"periphrasticFuturePast"` (ir a + INF con auxiliar en pasado, futuro en el pasado)
-* `tokid`  → identificador único de cada token
+Reglas:
+* Usa solo estos atributos.
+* NO inventes nada.
+* Usa comillas dobles.
+* Si es ambiguo, elige la opción más simple.
 
-Los campos `PastType` y `FutureType` **no** proceden directamente del etiquetador morfológico, sino que son clasificaciones derivadas a partir de la combinación de `tense`, `morph`, auxiliares y participios. Se consultan como cualquier otro atributo de token y se pueden combinar con `lemma`, `pos`, `tense`, etc.
+Ejemplos:
+"pretérito perfecto simple" → [pos="VERB" & PastType="simplePast"]
+"pretérito perfecto compuesto" → [pos="VERB" & PastType="presentPerfect"]
+"futuro perifrástico" → [pos="VERB" & FutureType="periphrasticFuture"]
+"adjetivo + sustantivo" → [pos="ADJ"][pos="NOUN"]
 
-Algunos ejemplos de uso:
-
-* `[pos="VERB" & PastType="simplePast"]`
-  → verbos en pretérito perfecto simple (pretérito indefinido).
-
-* `[pos="VERB" & PastType="presentPerfect"]`
-  → verbos en pretérito perfecto compuesto (*haber* + participio).
-
-* `[pos="VERB" & PastType="pastPerfect"]`
-  → verbos en pluscuamperfecto.
-
-* `[pos="VERB" & FutureType="periphrasticFuture"]`
-  → futuros perifrásticos del tipo *ir a + infinitivo* con auxiliar en presente.
-
-* `[pos="VERB" & FutureType="periphrasticFuturePast"]`
-  → futuros perifrásticos en el pasado (*iba a + infinitivo*, etc.).
-
-* `[lemma="ir" & pos="VERB" & FutureType="periphrasticFuture"]`
-  → formas de *ir* que participan en futuros perifrásticos.
-
-Además, se pueden usar metadatos de documento/segmento con BlackLab (por ejemplo mediante `within`), como:
-
-* `country_code` → código de país/variedad (por ejemplo `ARG`, `ESP`, `ARG-CBA`, `ESP-SEV`, etc.)
-* `file_id`      → identificador de archivo
-* `date`         → fecha de la grabación/transcripción
-* `radio`        → indica si el texto procede o no de radio (según cómo esté codificado)
-* `city`         → ciudad (si está disponible)
-* `sentence_id`, `utterance_id` → identificadores de oración y enunciado
-
-Su tarea:
-
-1. Léame la descripción en lenguaje natural que le daré.
-
-2. Genere **solo** una consulta CQL válida para BlackLab, sin explicaciones ni comentarios.
-
-3. Use exclusivamente los atributos y metadatos listados arriba.
-
-4. Represente las palabras y rasgos morfológicos con patrones como:
-
-   * `[lemma="hablar"]`
-   * `[pos="VERB" & tense="Pres" & person="1" & number="Sing"]`
-   * `[pos="VERB" & PastType="simplePast"]` para un verbo en pretérito perfecto simple
-   * `[pos="VERB" & PastType="presentPerfect"]` para un verbo en pretérito perfecto compuesto
-   * `[pos="VERB" & FutureType="periphrasticFuture"]` para un futuro perifrástico del tipo *ir a + INF*
-   * `[pos="ADJ"][pos="NOUN"]` para un adjetivo seguido de un sustantivo
-
-5. Si se mencionan restricciones de variedad, origen o tipo de texto, expréselas con metadatos, por ejemplo:
-
-   * `within &lt;country_code="ARG"&gt; [...]`
-   * `within &lt;radio="yes"&gt; [...]`
-
-   (ajuste el valor según la codificación real).
-
-6. Use siempre comillas dobles `"..."` y la sintaxis CQL estándar de BlackLab.
-
-7. Si la descripción es ambigua, elija la interpretación más común en lingüística hispánica, pero **no invente** atributos que no existan en la lista ni valores de `PastType` o `FutureType` que no hayan sido definidos.
-
-Ahora convierta la siguiente descripción en una consulta CQL precisa para CORAPAN:
-
-«[ESCRIBA AQUÍ SU DESCRIPCIÓN EN ESPAÑOL]»</code>
-        <button type="button" id="copy-cql-prompt" class="md3-button md3-button--icon md3-code-block__copy md3-copy-action md3-copy-action--icon" title="Copiar prompt" aria-label="Prompt kopieren">
-          <span class="material-symbols-rounded" aria-hidden="true">content_copy</span>
-        </button>
-        </pre>
+Consulta:
+«[DESCRIPCIÓN]»</code></pre>
+        <div class="md3-code-block__toolbar">
+          <button type="button" id="copy-cql-prompt" class="md3-button md3-button--icon md3-code-block__copy md3-copy-action md3-copy-action--icon" title="Copiar prompt" aria-label="Prompt kopieren">
+            <span class="material-symbols-rounded" aria-hidden="true">content_copy</span>
+          </button>
+        </div>
       </div>
     </section>
 

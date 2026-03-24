@@ -86,6 +86,41 @@
 - Do not reconnect `app/static/css/branding.css` to the live pipeline without explicit reclassification.
 - Do not remove `app/static/css/md3/tokens-legacy-shim.css` until the remaining live `--md3-*` callers are proven gone.
 
+### Structural UI Component Contracts
+
+- Dialog contract:
+	- `app/static/css/md3/components/dialog.css` expects a live dialog tree of `md3-dialog__surface` -> `md3-dialog__header`, `md3-dialog__content`, `md3-dialog__actions`.
+	- Do not leave dialog action rows inside form/content blocks unless the dialog is intentionally content-only and documented.
+	- Do not stack component-level margins on top of the shared dialog rhythm when the shared surface gap already defines the spacing.
+- Alert contract:
+	- Alerts with icons should use `md3-alert__icon` plus `md3-alert__content`.
+	- `md3-alert__message` is content text, not a standalone layout wrapper.
+	- `md3-alert--field` is for form-/dialog-adjacent messages that should read as deliberate surfaces, not loose banners.
+- Atlas popup contract:
+	- Atlas popup markup should read as `header` + semantic facts block + shared action row.
+	- Leaflet popup chrome is runtime-owned, but inner markup should still follow app card/dialog rhythm.
+- Player control contract:
+	- interactive player controls must be actual buttons, not decorative spans or generic divs with button roles
+	- keep stable control IDs for runtime JS, but preserve a semantic control element around them
+	- player action rows should align through shared button/action classes before adding page-local spacing fixes
+
+### Known Failure Modes
+
+- Dialogs can look over-padded when header/content/actions each add their own external spacing on top of the shared dialog surface gap.
+- A dialog can appear "standardized" in CSS while its live template still places actions outside `md3-dialog__surface` or inside form content.
+- Alerts with an icon but without `md3-alert__content` render misaligned and accumulate one-off template fixes.
+- Atlas popup links become visually inconsistent when they are treated as loose links instead of an action row.
+- Player mobile layout becomes fragile when interaction semantics depend on span/div controls and CSS must compensate with extreme overrides.
+- Player snackbar/pop feedback is structurally risky when JS emits icon markup from a library that the page does not actually load.
+
+### Future Agent Rules
+
+- When a reused component still renders badly, inspect the live HTML structure first; do not assume the shared CSS is the primary defect.
+- If a component contract is incomplete, add the smallest shared pattern that fixes multiple live callers; do not invent a parallel component family.
+- For dialogs, verify the final DOM nesting before tuning spacing.
+- For player/editor controls, preserve runtime IDs and JS behavior, but prefer semantic controls and textContent/icon-state updates over class-swapping icon libraries.
+- For atlas work, preserve Leaflet mechanics and correct only the popup inner structure unless runtime behavior is explicitly in scope.
+
 ### Page Family Rules
 
 - Auth pages must not rebuild their own hero-plus-page shell. Use:

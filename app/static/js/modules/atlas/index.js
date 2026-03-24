@@ -366,7 +366,7 @@ function buildTooltipContent(city) {
 
   // Build links section
   let linksHtml = `
-    <a href="/corpus/metadata?view=paises&country=${code}" class="atlas-tooltip-link">
+    <a href="/corpus/metadata?view=paises&country=${code}" class="atlas-tooltip__action">
       <span class="material-symbols-rounded" aria-hidden="true">dataset</span>
       Metadatos
     </a>
@@ -375,7 +375,7 @@ function buildTooltipContent(city) {
   // Add player link only for authenticated users
   if (isAuthenticated) {
     linksHtml += `
-      <a href="/corpus/player?country=${code}" class="atlas-tooltip-link">
+      <a href="/corpus/player?country=${code}" class="atlas-tooltip__action">
         <span class="material-symbols-rounded" aria-hidden="true">play_circle</span>
         Player
       </a>
@@ -384,23 +384,24 @@ function buildTooltipContent(city) {
 
   return `
     <div class="atlas-tooltip">
-      <div class="atlas-tooltip__header">
-        <span class="atlas-tooltip__eyebrow">Atlas</span>
-        <div class="atlas-tooltip-title">${city.label}</div>
-      </div>
-      <div class="atlas-tooltip-row">
-        <span class="atlas-tooltip-label">Emisoras:</span>
-        <span class="atlas-tooltip-value">${emisorasHtml}</span>
-      </div>
-      <div class="atlas-tooltip-row">
-        <span class="atlas-tooltip-label">Duración total:</span>
-        <span class="atlas-tooltip-value">${durationHtml}</span>
-      </div>
-      <div class="atlas-tooltip-row">
-        <span class="atlas-tooltip-label">Palabras transcritas:</span>
-        <span class="atlas-tooltip-value">${wordsHtml}</span>
-      </div>
-      <div class="atlas-tooltip-links">
+      <header class="atlas-tooltip__header">
+        <h3 class="atlas-tooltip-title">${city.label}</h3>
+      </header>
+      <dl class="atlas-tooltip__facts">
+        <div class="atlas-tooltip__fact">
+          <dt class="atlas-tooltip-label">Emisoras</dt>
+          <dd class="atlas-tooltip-value">${emisorasHtml}</dd>
+        </div>
+        <div class="atlas-tooltip__fact">
+          <dt class="atlas-tooltip-label">Duración total</dt>
+          <dd class="atlas-tooltip-value">${durationHtml}</dd>
+        </div>
+        <div class="atlas-tooltip__fact">
+          <dt class="atlas-tooltip-label">Palabras transcritas</dt>
+          <dd class="atlas-tooltip-value">${wordsHtml}</dd>
+        </div>
+      </dl>
+      <div class="atlas-tooltip__actions">
         ${linksHtml}
       </div>
     </div>

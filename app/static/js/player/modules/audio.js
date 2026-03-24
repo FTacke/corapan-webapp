@@ -243,8 +243,10 @@ export class AudioPlayer {
   _updatePlayPauseButton() {
     if (this.audioElement.paused || this.audioElement.ended) {
       this.controls.playPause.textContent = "play_circle";
+      this.controls.playPause.setAttribute("aria-label", "Play audio");
     } else {
       this.controls.playPause.textContent = "pause_circle";
+      this.controls.playPause.setAttribute("aria-label", "Pause audio");
     }
   }
 
@@ -255,8 +257,10 @@ export class AudioPlayer {
   _updateVolumeIcon(volume) {
     if (this.audioElement.muted || parseFloat(volume) === 0) {
       this.controls.mute.textContent = "volume_off";
+      this.controls.mute.setAttribute("aria-label", "Unmute audio");
     } else {
       this.controls.mute.textContent = "volume_up";
+      this.controls.mute.setAttribute("aria-label", "Mute audio");
     }
   }
 

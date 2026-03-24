@@ -213,11 +213,6 @@
   white-space: nowrap;
 }
 
-.md3-navigation-drawer__trigger[aria-expanded="true"]
-  .md3-navigation-drawer__chevron {
-  transform: rotate(180deg);
-}
-
 /* Wenn Submenu-Item aktiv ist, Trigger im Hover-State anzeigen */
 .md3-navigation-drawer__item--active.md3-navigation-drawer__trigger {
   background: var(--md-sys-color-surface-container-high);

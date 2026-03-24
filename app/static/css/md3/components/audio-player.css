@@ -71,6 +71,34 @@
   gap: 12px;
 }
 
+.player-icon-button,
+.skip-control {
+  border: none;
+  background: none;
+  padding: 0;
+  margin: 0;
+}
+
+.player-icon-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: "Material Symbols Rounded";
+  font-weight: normal;
+  font-style: normal;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  white-space: nowrap;
+}
+
+.player-icon-button:focus-visible,
+.skip-control:focus-visible {
+  outline: 2px solid var(--md-sys-color-primary);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
 /* Top Row: Progress Bar + Volume */
 .player-controls-top {
   display: flex;
