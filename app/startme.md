@@ -5,6 +5,16 @@
 Wenn alles bereits eingerichtet ist:
 
 ```powershell
+# Im Workspace-Root C:\dev\corapan
+.\scripts\dev-start.ps1
+```
+
+Der Root-Wrapper ist jetzt der kanonische Einstieg nach dem Lift von `webapp/` nach `app/`.
+Er delegiert intern an `app\scripts\dev-start.ps1` und verwendet fuer Python automatisch die Workspace-Venv unter `C:\dev\corapan\.venv`.
+
+Wenn du bereits im Ordner `C:\dev\corapan\app` stehst, funktioniert weiterhin auch:
+
+```powershell
 .\scripts\dev-start.ps1
 ```
 
@@ -14,7 +24,8 @@ Das Skript:
 2. Erstellt Runtime-Verzeichnis(se): `${CORAPAN_RUNTIME_ROOT}/data/public/statistics/`
 3. Warnt, wenn Statistics noch nicht generiert wurden (mit Anleitung zum Generieren)
 4. Prüft, ob Docker-Services laufen und startet sie bei Bedarf
-5. Startet den Flask Dev-Server
+5. Erkennt einen noch laufenden BlackLab-Container mit altem `webapp/config/blacklab`-Mount und erstellt ihn mit dem kanonischen `app/config/blacklab`-Mount neu
+6. Startet den Flask Dev-Server
 
 Wenn dieses kanonische Layout fehlt, bricht das Skript ab. `runtime/corapan` innerhalb des Repositories ist in Dev inaktiv.
 

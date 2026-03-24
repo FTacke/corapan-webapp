@@ -90,6 +90,85 @@ function Test-BlackLabAvailability {
     }
 }
 
+function Get-DockerMountSource {
+    param(
+        [Parameter(Mandatory = $true)][string]$ContainerName,
+        [Parameter(Mandatory = $true)][string]$Destination
+    )
+
+    $inspectRaw = & docker inspect $ContainerName 2>$null
+    if (-not $inspectRaw) {
+        return $null
+    }
+
+    try {
+        $inspectData = $inspectRaw | ConvertFrom-Json
+    } catch {
+        return $null
+    }
+
+    if ($inspectData -is [array]) {
+        $mounts = $inspectData[0].Mounts
+    } else {
+        $mounts = $inspectData.Mounts
+    }
+
+    foreach ($mount in $mounts) {
+        if ($mount.Destination -eq $Destination) {
+            return [string]$mount.Source
+        }
+    }
+
+    return $null
+}
+
+function Test-NormalizedPathEquals {
+    param(
+        [Parameter(Mandatory = $true)][string]$ExpectedPath,
+        [Parameter(Mandatory = $true)][string]$ActualPath
+    )
+
+    if ([string]::IsNullOrWhiteSpace($ExpectedPath) -or [string]::IsNullOrWhiteSpace($ActualPath)) {
+        return $false
+    }
+
+    $normalizedExpected = [System.IO.Path]::GetFullPath($ExpectedPath).TrimEnd('\\')
+    $normalizedActual = [System.IO.Path]::GetFullPath($ActualPath).TrimEnd('\\')
+    return $normalizedExpected -ieq $normalizedActual
+}
+
+function Ensure-CanonicalBlackLabConfigMount {
+    param(
+        [Parameter(Mandatory = $true)][string]$ComposeFile,
+        [Parameter(Mandatory = $true)][string]$ExpectedConfigRoot
+    )
+
+    $activeConfigRoot = Get-DockerMountSource -ContainerName 'blacklab-server-v3' -Destination '/etc/blacklab'
+    if ([string]::IsNullOrWhiteSpace($activeConfigRoot)) {
+        return $false
+    }
+
+    if (Test-NormalizedPathEquals -ExpectedPath $ExpectedConfigRoot -ActualPath $activeConfigRoot) {
+        return $false
+    }
+
+    Write-Host "Detected stale BlackLab config mount from a pre-root-lift container." -ForegroundColor Yellow
+    Write-Host "  active:   $activeConfigRoot" -ForegroundColor Yellow
+    Write-Host "  expected: $ExpectedConfigRoot" -ForegroundColor Yellow
+    Write-Host "Recreating blacklab-server-v3 with canonical compose mounts..." -ForegroundColor Yellow
+    docker rm -f blacklab-server-v3 | Out-Null
+    if ($LASTEXITCODE -ne 0) {
+        throw "Failed to remove the stale blacklab-server-v3 container before recreating it."
+    }
+
+    docker compose -f $ComposeFile up -d blacklab-server-v3
+    if ($LASTEXITCODE -ne 0) {
+        throw "Failed to recreate blacklab-server-v3 with the canonical config mount."
+    }
+
+    return $true
+}
+
 # Repository root
 $repoRoot = Split-Path -Parent $PSScriptRoot
 Set-Location $repoRoot
@@ -277,6 +356,7 @@ $dockerAvailable = Get-Command docker -ErrorAction SilentlyContinue
 
 if ($dockerAvailable) {
     $needsStart = @()
+    $recreatedBlackLab = $false
 
     # Check Postgres (always required)
     $pgRunning = docker ps --filter "name=corapan_auth_db" --format "{{.Names}}" 2>$null
@@ -289,6 +369,9 @@ if ($dockerAvailable) {
         $blRunning = docker ps --filter "name=blacklab-server-v3" --format "{{.Names}}" 2>$null
         if (-not $blRunning) {
             $needsStart += "blacklab-server-v3"
+        } else {
+            $expectedBlackLabConfigRoot = Join-Path $repoRoot 'config\blacklab'
+            $recreatedBlackLab = Ensure-CanonicalBlackLabConfigMount -ComposeFile $composeFile -ExpectedConfigRoot $expectedBlackLabConfigRoot
         }
     }
 
@@ -321,7 +404,7 @@ if ($dockerAvailable) {
                 exit 1
             }
         }
-    } else {
+    } elseif (-not $recreatedBlackLab) {
         Write-Host "Docker services already running." -ForegroundColor Gray
     }
 
