@@ -1,24 +1,24 @@
-"""
-Quick test script for Advanced Search API endpoint.
+"""Live smoke checks for the Advanced Search API.
 
-Tests:
-1. Health check (if BLS is reachable)
-2. Simple lemma search without filters
-3. Search with country filter
-4. Search with speaker filters
-5. POS mode search
+These tests talk to a running local app and BlackLab instance and therefore
+must not run in the deterministic fast suite.
 """
 
-import requests
 import json
 import sys
+
+import pytest
+import requests
+
+
+pytestmark = pytest.mark.live
 
 
 BLS_BASE_URL = "http://localhost:8081/blacklab-server"
 FLASK_BASE_URL = "http://localhost:8000"
 
 
-def test_health():
+def _health_ok() -> bool:
     """Test BLS health check."""
     print("\n" + "=" * 80)
     print("TEST 1: Health Check")
@@ -34,7 +34,7 @@ def test_health():
         return False
 
 
-def test_simple_search():
+def _simple_search_ok() -> bool:
     """Test simple lemma search."""
     print("\n" + "=" * 80)
     print("TEST 2: Simple Lemma Search (q=casa, mode=lemma)")
@@ -69,7 +69,7 @@ def test_simple_search():
         return False
 
 
-def test_country_filter():
+def _country_filter_ok() -> bool:
     """Test search with country filter."""
     print("\n" + "=" * 80)
     print("TEST 3: Lemma Search with Country Filter (q=casa, country=VEN)")
@@ -102,7 +102,7 @@ def test_country_filter():
         return False
 
 
-def test_speaker_filters():
+def _speaker_filters_ok() -> bool:
     """Test search with speaker attribute filters."""
     print("\n" + "=" * 80)
     print("TEST 4: Search with Speaker Filters (sex=f)")
@@ -136,7 +136,7 @@ def test_speaker_filters():
         return False
 
 
-def test_pos_mode():
+def _pos_mode_ok() -> bool:
     """Test POS mode search."""
     print("\n" + "=" * 80)
     print("TEST 5: POS Mode Search (q=VERB, mode=pos)")
@@ -162,6 +162,26 @@ def test_pos_mode():
         return False
 
 
+def test_health():
+    assert _health_ok()
+
+
+def test_simple_search():
+    assert _simple_search_ok()
+
+
+def test_country_filter():
+    assert _country_filter_ok()
+
+
+def test_speaker_filters():
+    assert _speaker_filters_ok()
+
+
+def test_pos_mode():
+    assert _pos_mode_ok()
+
+
 def main():
     """Run all tests."""
     print("\n" + "=" * 80)
@@ -169,11 +189,11 @@ def main():
     print("=" * 80)
 
     results = {
-        "Health Check": test_health(),
-        "Simple Search": test_simple_search(),
-        "Country Filter": test_country_filter(),
-        "Speaker Filters": test_speaker_filters(),
-        "POS Mode": test_pos_mode(),
+        "Health Check": _health_ok(),
+        "Simple Search": _simple_search_ok(),
+        "Country Filter": _country_filter_ok(),
+        "Speaker Filters": _speaker_filters_ok(),
+        "POS Mode": _pos_mode_ok(),
     }
 
     print("\n" + "=" * 80)

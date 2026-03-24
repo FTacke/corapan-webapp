@@ -58,6 +58,15 @@ Determine:
 
 When implementation code adds extra runtime wiring beyond config code, inspect that code before trusting documentation.
 
+## CI and Testability Guardrails
+
+When config validation affects tests or CI:
+- keep required variables strict at app-config load time or at the concrete runtime call site
+- do not force required-variable checks so early that Python import or pytest collection fails
+- do not invent fake defaults to avoid test failures
+- if a check depends on live services or large runtime state, classify the affected test as `live`, `e2e`, or `data` instead of weakening config truth
+- auth/core CI validation must keep PostgreSQL semantics intact; do not reintroduce SQLite shortcuts for convenience
+
 ## Repository Policy
 
 Canonical variables:

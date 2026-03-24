@@ -169,6 +169,25 @@ Always also state whether the change applies to:
 - versioned application/deploy implementation under `app/`
 - or both
 
+## CI and Test Integrity
+
+The root CI source of truth is `.github/workflows/`.
+
+Agents must not make CI cosmetically green.
+Forbidden examples:
+- replacing a real failing check with `echo`
+- using `|| true` on required quality checks
+- adding `continue-on-error` to required gates without an explicit policy decision
+
+Required CI behavior:
+- keep the fast path deterministic and service-free whenever feasible
+- classify localhost, external-service, browser, BlackLab, and large-data tests explicitly as `live`, `e2e`, or `data` instead of letting them leak into the default fast suite
+- keep PostgreSQL as the required auth/core database for CI flows that validate auth or core app startup
+- do not introduce SQLite auth/core shortcuts just to simplify CI
+- preserve strict config requirements, but do not enforce them at module import time if that breaks Python import, test collection, or service-free CI validation
+- for auth hash support, prefer focused compatibility coverage over a full-suite matrix when the product behavior is compatibility-oriented rather than algorithm-specific across the entire app
+- if warnings are filtered in CI or pytest config, the filter must be narrow, justified, and used only for known third-party noise after repo-owned warnings have been fixed
+
 ## Service and Deployment Safety
 
 Unless the user explicitly asks for it, agents must not:

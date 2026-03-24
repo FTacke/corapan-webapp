@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import os
 import warnings
+import sys
 import logging
 from pathlib import Path
 
@@ -46,6 +47,15 @@ logger = logging.getLogger(__name__)
 DEFAULT_SECRET_SENTINEL = "___SENTINEL_CHANGE_ME___"
 
 
+def _require_config_value(name: str, value: str | None, message: str) -> str:
+    """Validate a required config value after the config object is loaded."""
+    if value is None:
+        raise RuntimeError(message)
+    if isinstance(value, str) and not value.strip():
+        raise RuntimeError(message)
+    return value.strip() if isinstance(value, str) else value
+
+
 def _ensure_stats_permissions(path: Path) -> None:
     """Best-effort chmod to keep statistics assets world-readable."""
     try:
@@ -79,19 +89,14 @@ class BaseConfig:
     # Environment
     _env_name = (os.getenv("FLASK_ENV") or os.getenv("APP_ENV") or "production").lower()
     _is_dev = _env_name in ("development", "dev")
+    _is_testing = _env_name in ("testing", "test")
     _runtime_root = get_runtime_root()
 
     # BlackLab configuration
     BLS_BASE_URL = os.getenv(
         "BLS_BASE_URL", "http://localhost:8081/blacklab-server"
     ).rstrip("/")
-    _bls_corpus = os.getenv("BLS_CORPUS")
-    if not _bls_corpus or not _bls_corpus.strip():
-        raise RuntimeError(
-            "BLS_CORPUS environment variable is required. "
-            "For the canonical dev stack, set BLS_CORPUS=corapan."
-        )
-    BLS_CORPUS = _bls_corpus.strip()
+    BLS_CORPUS = os.getenv("BLS_CORPUS", "")
 
     # Flask
     SECRET_KEY = os.getenv("FLASK_SECRET_KEY", DEFAULT_SECRET_SENTINEL)
@@ -178,7 +183,7 @@ class BaseConfig:
         logger.warning("Failed to create STATS_TEMP_DIR at %s: %s", STATS_TEMP_DIR, exc)
 
     _stats_file = PUBLIC_STATS_DIR / "corpus_stats.json"
-    if not _stats_file.exists():
+    if not _is_testing and "pytest" not in sys.modules and not _stats_file.exists():
         warnings.warn(
             "Statistics not generated yet; stats endpoints will return 404 until corpus_stats.json exists. "
             f"Expected: {_stats_file}",
@@ -201,13 +206,7 @@ class BaseConfig:
     # Auth DB - Must be explicitly configured via AUTH_DATABASE_URL env var
     # No fallback to SQLite - dev must use Postgres from docker-compose.dev-postgres.yml
     # Production sets this via environment/secrets
-    AUTH_DATABASE_URL = os.getenv("AUTH_DATABASE_URL")
-    if not AUTH_DATABASE_URL:
-        raise RuntimeError(
-            "AUTH_DATABASE_URL environment variable is required.\n"
-            "For development: Start Postgres with 'docker compose -f docker-compose.dev-postgres.yml up -d'\n"
-            "Then set: AUTH_DATABASE_URL=postgresql+psycopg2://corapan_auth:corapan_auth@localhost:54320/corapan_auth"
-        )
+    AUTH_DATABASE_URL = os.getenv("AUTH_DATABASE_URL", "")
 
     # Hashing (argon2 or bcrypt)
     AUTH_HASH_ALGO = os.getenv("AUTH_HASH_ALGO", "argon2")
@@ -240,8 +239,18 @@ class DevConfig(BaseConfig):
     SEND_FILE_MAX_AGE_DEFAULT = 0
 
 
+class TestingConfig(DevConfig):
+    """Testing configuration used by CI smoke tests and app factory tests."""
+
+    TESTING = True
+    SESSION_COOKIE_SECURE = False
+    JWT_COOKIE_SECURE = False
+    JWT_COOKIE_CSRF_PROTECT = False
+
+
 CONFIG_MAPPING = {
     "development": DevConfig,
+    "testing": TestingConfig,
     "production": BaseConfig,
 }
 
@@ -251,6 +260,20 @@ def load_config(app, env_name: str | None) -> None:
     env = env_name or os.getenv("FLASK_ENV", "production").lower()
     config_obj = CONFIG_MAPPING.get(env, BaseConfig)
     app.config.from_object(config_obj)
+
+    app.config["BLS_CORPUS"] = _require_config_value(
+        "BLS_CORPUS",
+        app.config.get("BLS_CORPUS"),
+        "BLS_CORPUS environment variable is required. "
+        "For the canonical dev stack, set BLS_CORPUS=corapan.",
+    )
+    app.config["AUTH_DATABASE_URL"] = _require_config_value(
+        "AUTH_DATABASE_URL",
+        app.config.get("AUTH_DATABASE_URL"),
+        "AUTH_DATABASE_URL environment variable is required.\n"
+        "For development: Start Postgres with 'docker compose -f docker-compose.dev-postgres.yml up -d'\n"
+        "Then set: AUTH_DATABASE_URL=postgresql+psycopg2://corapan_auth:corapan_auth@localhost:54320/corapan_auth",
+    )
 
     log_resolved_paths(app.logger)
 

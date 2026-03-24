@@ -34,7 +34,7 @@ def test_central_runtime_getters_resolve_canonical_paths(monkeypatch, tmp_path):
     assert runtime_paths.get_runtime_root() == runtime_root
     assert runtime_paths.get_data_root() == runtime_root / "data"
     assert runtime_paths.get_media_root() == media_root
-    assert runtime_paths.get_config_root() == runtime_root / "config"
+    assert runtime_paths.get_config_root() == runtime_root / "data" / "config"
     assert runtime_paths.get_stats_dir() == runtime_root / "data" / "public" / "statistics"
     assert runtime_paths.get_stats_temp_dir() == runtime_root / "data" / "stats_temp"
     assert runtime_paths.get_metadata_dir() == runtime_root / "data" / "public" / "metadata" / "latest"

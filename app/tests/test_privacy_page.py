@@ -1,5 +1,6 @@
 import pytest
 from flask import Flask
+from datetime import datetime, timezone
 
 
 @pytest.fixture
@@ -14,9 +15,7 @@ def client():
     # Provide minimal context helpers required by templates
     @app.context_processor
     def _inject_now():
-        from datetime import datetime
-
-        return {"now": datetime.utcnow}
+        return {"now": lambda: datetime.now(timezone.utc)}
 
     from src.app.extensions import register_extensions
     from src.app.routes import register_blueprints

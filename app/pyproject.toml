@@ -22,6 +22,9 @@ dev = [
 testpaths = ["tests"]
 norecursedirs = ["LOKAL", "data", "media", "static", "templates"]
 addopts = "-v -m \"not live and not e2e and not data\""
+filterwarnings = [
+  'ignore:Accessing argon2\.__version__ is deprecated.*:DeprecationWarning:passlib\.handlers\.argon2'
+]
 markers = [
   "live: requires external services / live endpoints",
   "data: requires large runtime data files",
@@ -29,11 +32,11 @@ markers = [
 ]
 
 [tool.ruff]
-extend-select = ["E", "F"]
 line-length = 140
 src = ["src/app"]
 
 [tool.ruff.lint]
+extend-select = ["E", "F"]
 ignore = ["E501"]
 
 [tool.ruff.lint.per-file-ignores]

@@ -49,11 +49,11 @@ def list_users():
             if status == "active":
                 sel = sel.where(UserModel.is_active)
             elif status == "inactive":
-                sel = sel.where(not UserModel.is_active)
+                sel = sel.where(UserModel.is_active.is_(False))
             elif status == "deleted":
-                sel = sel.where(UserModel.deleted_at is not None)
+                sel = sel.where(UserModel.deleted_at.is_not(None))
             elif status == "locked":
-                sel = sel.where(UserModel.locked_until is not None)
+                sel = sel.where(UserModel.locked_until.is_not(None))
             elif status == "all":
                 pass  # No filter - show all
         elif not include_inactive:
@@ -233,7 +233,7 @@ def patch_user(id):
             admin_count_stmt = select(UserModel).where(
                 UserModel.role == "admin",
                 UserModel.is_active,
-                UserModel.deleted_at is None,
+                UserModel.deleted_at.is_(None),
             )
             active_admins = session.execute(admin_count_stmt).scalars().all()
             if len(active_admins) <= 1:

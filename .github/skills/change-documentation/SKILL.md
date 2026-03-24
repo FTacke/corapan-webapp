@@ -28,6 +28,7 @@ Do not use this skill for:
 Create or update:
 - a docs/changes entry for implementation-facing impact
 - a docs/adr entry when the change alters architecture, policy, or source-of-truth selection
+- a `docs/ci_fix/` update when the change is part of a CI audit, repair, warning-cleanup, or workflow-governance run
 
 ## Must Capture
 
@@ -43,3 +44,4 @@ Create or update:
 
 Do not leave runtime, database, deployment, or config changes undocumented.
 Do not let historical docs become the only record of a new workflow or policy choice.
+Do not change CI governance without also recording the lesson in the relevant agent or skill files when agent behavior was part of the failure pattern.

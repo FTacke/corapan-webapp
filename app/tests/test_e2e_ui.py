@@ -98,13 +98,13 @@ def test_password_forgot_and_reset(client):
 
     rc = client.post(
         "/auth/reset-password/confirm",
-        json={"resetToken": raw, "newPassword": "newpass123"},
+        json={"resetToken": raw, "newPassword": "Newpass123"},
     )
     assert rc.status_code == 200
 
     # login with new password
     login_resp = client.post(
-        "/auth/login", json={"username": "e2e_reset", "password": "newpass123"}
+        "/auth/login", json={"username": "e2e_reset", "password": "Newpass123"}
     )
     assert login_resp.status_code in (200, 303, 204)
 

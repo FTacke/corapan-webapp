@@ -33,14 +33,9 @@ BLS_BASE_URL = os.environ.get(
     "BLS_BASE_URL", "http://localhost:8081/blacklab-server"
 ).rstrip("/")
 
-# Configurable BlackLab corpus name. No default is allowed.
-_bls_corpus = os.environ.get("BLS_CORPUS")
-if not _bls_corpus or not _bls_corpus.strip():
-    raise RuntimeError(
-        "BLS_CORPUS environment variable is required. "
-        "For the canonical dev stack, set BLS_CORPUS=corapan."
-    )
-BLS_CORPUS = _bls_corpus.strip()
+# Configurable BlackLab corpus name. No default is allowed for runtime usage,
+# but the validation must happen lazily so imports do not fail during test collection.
+BLS_CORPUS = (os.environ.get("BLS_CORPUS") or "").strip()
 
 # Corpus availability cache
 _CORPORA_CACHE_TTL = 60.0
@@ -52,12 +47,24 @@ class BlackLabCorpusNotFound(RuntimeError):
     """Raised when configured BLS_CORPUS is not present on the BlackLab server."""
 
 
+def require_bls_corpus() -> str:
+    """Return the configured corpus or raise when BlackLab features are used without it."""
+    corpus = (os.environ.get("BLS_CORPUS") or BLS_CORPUS or "").strip()
+    if not corpus:
+        raise RuntimeError(
+            "BLS_CORPUS environment variable is required. "
+            "For the canonical dev stack, set BLS_CORPUS=corapan."
+        )
+    return corpus
+
+
 def build_bls_corpus_path(endpoint: Optional[str] = None) -> str:
     """Build a BlackLab v5 corpus path for the configured corpus."""
+    corpus = require_bls_corpus()
     if endpoint:
         endpoint = endpoint.lstrip("/")
-        return f"/corpora/{BLS_CORPUS}/{endpoint}"
-    return f"/corpora/{BLS_CORPUS}"
+        return f"/corpora/{corpus}/{endpoint}"
+    return f"/corpora/{corpus}"
 
 
 def _parse_corpora_payload(payload: object) -> list[str]:
@@ -119,8 +126,9 @@ def get_corpus_not_found_message(response: httpx.Response) -> str | None:
     """Return a friendly message if the response indicates a missing corpus."""
     text = response.text or ""
     if response.status_code == 404 or "CANNOT_OPEN_INDEX" in text:
+        corpus = require_bls_corpus()
         available = get_available_corpora(force=True)
-        return format_corpus_not_found_message(BLS_CORPUS, available)
+        return format_corpus_not_found_message(corpus, available)
     return None
 
 
@@ -131,9 +139,10 @@ def warn_if_configured_corpus_missing() -> None:
         return
     _CORPUS_CHECKED = True
 
+    corpus = require_bls_corpus()
     available = get_available_corpora()
-    if available and BLS_CORPUS not in available:
-        logger.warning(format_corpus_not_found_message(BLS_CORPUS, available))
+    if available and corpus not in available:
+        logger.warning(format_corpus_not_found_message(corpus, available))
 
 
 def get_http_client() -> httpx.Client:

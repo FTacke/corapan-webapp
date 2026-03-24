@@ -83,6 +83,17 @@ Every task must follow this sequence:
 
 Direct implementation without these steps is not allowed.
 
+## CI And Test Integrity
+
+- `.github/workflows/*.yml` at the root repository are the active CI truth
+- do not make failing CI appear green with `|| true`, placeholder `echo` steps, or hidden `continue-on-error`
+- keep the fast path deterministic and service-free whenever possible
+- tests that hit localhost services, external systems, browser automation, BlackLab, or large runtime data must be marked and excluded from the default fast pytest selection
+- do not restore SQLite auth/core fallbacks just to simplify CI
+- preserve strict config requirements, but do not enforce them so early that Python import or pytest collection fails
+- when only hash compatibility differs, prefer focused compatibility tests over a full-suite algorithm matrix
+- fix repo-owned warnings at the source; only use narrow filters for known third-party warnings
+
 ## Repository-Specific Rules
 
 - PostgreSQL is mandatory for auth and core data

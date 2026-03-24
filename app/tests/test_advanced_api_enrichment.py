@@ -6,7 +6,6 @@ os.environ.setdefault("CORAPAN_RUNTIME_ROOT", str(Path(__file__).resolve().paren
 os.environ.setdefault("BLS_BASE_URL", "http://localhost:8081/blacklab-server")
 os.environ.setdefault("BLS_CORPUS", "corapan")
 
-from src.app.search.advanced_api import _DOCMETA_CACHE
 from src.app.services.blacklab_search import _hit_to_canonical
 from src.app.search.advanced_api import _enrich_hits_with_docmeta
 
@@ -27,11 +26,20 @@ def test_enrich_hits_with_docmeta_test_full_hit():
     hits = data.get("hits", [])
     docinfos = data.get("docInfos", {})
 
+    docmeta_cache = {
+        "2022-01-18_VEN_RCR": {
+            "file_id": "2022-01-18_VEN_RCR",
+            "country_code": "VEN",
+            "radio": "RCR",
+            "date": "2022-01-18",
+        }
+    }
+
     # Map to canonical items
     items = [_hit_to_canonical(h) for h in hits]
 
-    # Try to enrich using DOCMETA_CACHE
-    enriched = _enrich_hits_with_docmeta(items, hits, docinfos, _DOCMETA_CACHE)
+    # Enrichment should work from the supplied fixture metadata without relying on runtime docmeta.jsonl
+    enriched = _enrich_hits_with_docmeta(items, hits, docinfos, docmeta_cache)
 
     # First enriched item should have country_code populated (from docmeta)
     assert enriched[0].get("country_code")
@@ -44,7 +52,7 @@ def test_map_speaker_attributes_fills_speaker_fields():
         "match": {"tokid": ["ven_sample"], "speaker_code": ["lib-pm"]},
     }
     item = _hit_to_canonical(hit)
-    enriched = _enrich_hits_with_docmeta([item], [hit], {}, _DOCMETA_CACHE)
+    enriched = _enrich_hits_with_docmeta([item], [hit], {}, {})
     # After enrichment, speaker_type and sex should be populated
     assert enriched[0].get("speaker_type") == "pro"
     assert enriched[0].get("sex") == "m"

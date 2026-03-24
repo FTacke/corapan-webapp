@@ -206,7 +206,6 @@ def rotate_refresh_token(
     # use module-level helper
     old_hash = _hash_refresh_token(old_raw_token)
     marker = f"rotating-{uuid.uuid4()}"
-    now = datetime.now(timezone.utc)
 
     with get_session() as session:
         # Attempt to mark the row as rotating in a single atomic UPDATE so concurrent
@@ -215,9 +214,8 @@ def rotate_refresh_token(
             session.query(RefreshToken)
             .filter(
                 RefreshToken.token_hash == old_hash,
-                RefreshToken.replaced_by is None,
-                RefreshToken.revoked_at is None,
-                RefreshToken.expires_at >= now,
+                RefreshToken.replaced_by.is_(None),
+                RefreshToken.revoked_at.is_(None),
             )
             .update({RefreshToken.replaced_by: marker}, synchronize_session=False)
         )
@@ -282,7 +280,7 @@ def rotate_refresh_token(
 def revoke_all_refresh_tokens_for_user(user_id: str) -> None:
     with get_session() as session:
         session.query(RefreshToken).filter(
-            RefreshToken.user_id == user_id, RefreshToken.revoked_at is None
+            RefreshToken.user_id == user_id, RefreshToken.revoked_at.is_(None)
         ).update({RefreshToken.revoked_at: datetime.now(timezone.utc)})
 
 
@@ -343,7 +341,7 @@ def anonymize_soft_deleted_users_older_than(days: int) -> int:
     anonymized = 0
     with get_session() as session:
         stmt = select(User).where(
-            User.deleted_at is not None, User.deleted_at <= cutoff
+            User.deleted_at.is_not(None), User.deleted_at <= cutoff
         )
         rows = session.execute(stmt).scalars().all()
         for u in rows:

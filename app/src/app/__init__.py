@@ -3,7 +3,8 @@
 from __future__ import annotations
 
 import logging
-from datetime import datetime
+from datetime import datetime, timezone
+from importlib import metadata
 from logging.handlers import RotatingFileHandler
 from pathlib import Path
 
@@ -32,12 +33,15 @@ def _verify_critical_dependencies() -> list[str]:
 
     # Check argon2-cffi for secure password hashing
     try:
-        import argon2
-
-        logging.getLogger(__name__).debug(f"argon2-cffi version: {argon2.__version__}")
+        argon2_version = metadata.version("argon2-cffi")
+        logging.getLogger(__name__).debug(f"argon2-cffi version: {argon2_version}")
     except ImportError as e:
         errors.append(
             f"argon2-cffi not available: {e}. Secure password hashing may be degraded."
+        )
+    except metadata.PackageNotFoundError as e:
+        errors.append(
+            f"argon2-cffi package metadata unavailable: {e}. Secure password hashing may be degraded."
         )
 
     # Check passlib argon2 backend
@@ -176,7 +180,7 @@ def register_context_processors(app: Flask) -> None:
     @app.context_processor
     def inject_utilities():  # pragma: no cover - thin wrapper
         return {
-            "now": datetime.utcnow,
+            "now": lambda: datetime.now(timezone.utc),
             "allow_public_temp_audio": app.config.get("ALLOW_PUBLIC_TEMP_AUDIO", False),
         }
 
