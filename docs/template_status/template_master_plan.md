@@ -161,7 +161,7 @@ Der Branch ist erst dann sauber abschließbar, wenn alle folgenden Punkte erfül
 - Dialog-, Message-, Field- und Copy-Actions folgen Shared Patterns statt seitenlokaler Einzelregeln
 - Atlas-Popup, Search-Dialoge und Auth-Dialoge lesen als konsistente Derivate derselben Komponentenfamilie
 - `player-mobile.css`, Search-Runtime und Audio-/Editor-Hotspots bleiben als kontrollierte Ausnahmen dokumentiert
-- verbleibende Legacy-Layer (`tokens-legacy-shim.css`, `branding.css`, einzelne `--md3-*` Caller) sind entweder sicher reduziert oder mit konkreten Blockern dokumentiert
+- verbleibende Legacy-Layer (`branding.css` und sonstige dokumentierte Altspuren) sind klar klassifiziert; `tokens-legacy-shim.css` ist entfernt und `--md3-*` Caller sind im Live-Pfad nicht mehr erlaubt
 - `.github/agents/skills.md` beschreibt die finale Runtime-Map, Regeln und Hotspots so konkret, dass ein Folge-Agent ohne Neu-Audit sicher weiterarbeiten kann
 - `docs/template_status/` und `docs/changes/` enthalten eine ehrliche finale Readiness-Bewertung inklusive Stärken, Ausnahmen, Restschuld und Release-Empfehlung
 

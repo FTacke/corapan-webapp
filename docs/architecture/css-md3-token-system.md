@@ -256,7 +256,7 @@ git revert e1cd924..9732d87
 ### Core Token Files
 - `static/css/md3/tokens.css` - MD3 system tokens (light + dark)
 - `static/css/app-tokens.css` - App-level aliases (`--app-background`, etc.)
-- `static/css/md3/tokens-legacy-shim.css` - Backward compatibility shims
+- no legacy token shim remains in the live asset pipeline
 
 ### Modified Components (This Sprint)
 - `templates/base.html` - Critical CSS fallbacks (MD3-approximated)

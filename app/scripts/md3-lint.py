@@ -158,7 +158,7 @@ EXCLUDED_PAGES = {
     "templates/pages/editor.html",
     "templates/pages/index.html",  # Homepage uses special card layout
 }
-ALLOWED_LEGACY_TOKEN_FILES = {"static/css/md3/tokens-legacy-shim.css"}
+ALLOWED_LEGACY_TOKEN_FILES = set()
 IGNORED_DIRS = {".venv", "node_modules", ".git", "build", "__pycache__", "data"}
 # Pages excluded from Hero validation (login page has no Hero by design)
 NO_HERO_PAGES = {"templates/auth/login.html"}

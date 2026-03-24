@@ -208,15 +208,9 @@ let mobileMenuAnimationFrame = null;
 
 function getMobileMenuTransitionDuration() {
   if (!mobileMenu) return MOBILE_MENU_TRANSITION_FALLBACK;
-  // Try canonical app token first, fall back to legacy token for compatibility
   let raw = getComputedStyle(mobileMenu)
     .getPropertyValue("--app-mobile-menu-duration")
     .trim();
-  if (!raw) {
-    raw = getComputedStyle(mobileMenu)
-      .getPropertyValue("--md3-mobile-menu-duration")
-      .trim();
-  }
   if (!raw) return MOBILE_MENU_TRANSITION_FALLBACK;
   if (raw.endsWith("ms")) {
     const value = Number.parseFloat(raw);

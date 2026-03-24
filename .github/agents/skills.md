@@ -17,7 +17,7 @@ Use this file for the durable template and UI contract. It is intentionally shor
 - do not add new hardcoded UI colors outside the canonical token files
 - JS must read CSS tokens instead of maintaining its own palette
 - do not reconnect `app/static/css/branding.css` without explicit reclassification
-- do not add new `--md3-*` callers; `tokens-legacy-shim.css` is compatibility only
+- do not add or retain `--md3-*` callers; the legacy token shim has been removed
 
 ## Canonical Page Families
 

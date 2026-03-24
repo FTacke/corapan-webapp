@@ -46,7 +46,6 @@ class CSSAuditor:
     # Token definition files (allowed to have hardcoded colors)
     TOKEN_FILES = {
         "static/css/md3/tokens.css",
-        "static/css/md3/tokens-legacy-shim.css",
         "static/css/app-tokens.css",
         "templates/base.html",  # Critical CSS fallbacks
     }
