@@ -54,7 +54,8 @@
     "logo"
     "brand"
     "nav"
-    "copy";
+    "copy"
+    "version";
 }
 
 /* ========== GRID AREAS & ELEMENTS ========== */
@@ -168,6 +169,29 @@
   color: var(--md-sys-color-on-surface-variant);
 }
 
+.md3-footer__version {
+  grid-area: version;
+  margin: -0.25rem 0 0;
+  text-align: center;
+}
+
+.md3-footer__version-link {
+  color: var(--md-sys-color-outline);
+  text-decoration: none;
+  font-size: 0.75rem;
+  letter-spacing: 0.02em;
+  transition: color 200ms cubic-bezier(0.2, 0, 0, 1);
+}
+
+.md3-footer__version-link:hover {
+  color: var(--md-sys-color-on-surface-variant);
+}
+
+.md3-footer__version-link:focus-visible {
+  outline: 2px solid var(--md-sys-color-primary);
+  outline-offset: 2px;
+}
+
 /* ========== RESPONSIVE: Only adjust gap and padding on larger screens ========== */
 
 /* Tablet: slightly larger gap */
@@ -200,7 +224,8 @@
 /* ========== REDUCED MOTION ========== */
 @media (prefers-reduced-motion: reduce) {
   .md3-footer__brand,
-  .md3-footer__list a {
+  .md3-footer__list a,
+  .md3-footer__version-link {
     transition: none;
   }
 }

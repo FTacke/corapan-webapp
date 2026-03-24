@@ -77,6 +77,18 @@ $env:CORAPAN_RUNTIME_ROOT = "D:\my-custom-runtime"
 # Dann: $env:CORAPAN_RUNTIME_ROOT = "D:\my-custom-runtime"
 ```
 
+### Footer-Version lokal testen
+
+Die Release-/Versionszeile im Footer erscheint nur, wenn `APP_VERSION` gesetzt ist.
+
+```powershell
+$env:APP_VERSION = "1.1.0"
+.\scripts\dev-start.ps1
+```
+
+Die App zeigt dann im Footer `v1.1.0` an und verlinkt direkt auf das GitHub-Release `.../releases/tag/v1.1.0`.
+Wenn `APP_VERSION` nicht gesetzt ist, bleibt die Zusatzzeile im Footer ausgeblendet.
+
 
 ## Start mit Neuinstallation (Postgres + BlackLab)
 
@@ -164,6 +176,7 @@ Die Dev-Skripte setzen automatisch:
 | `BLS_BASE_URL` | `http://localhost:8081/blacklab-server` | Kanonische BlackLab-Basis-URL |
 | `BLACKLAB_BASE_URL` | `http://localhost:8081/blacklab-server` | Legacy-Kompatibilitätsspiegel |
 | `BLS_CORPUS` | `corapan` | Expliziter lokaler BlackLab-Korpus |
+| `APP_VERSION` | leer (optional) | Aktiviert die Footer-Releasezeile als `vX.Y.Z` und erzeugt daraus den GitHub-Release-Link |
 | `CORAPAN_RUNTIME_ROOT` | `<WorkspaceRoot>` mit `data/` und `media/` neben `app/` | Runtime Data Directory |
 | `PUBLIC_STATS_DIR` | `${CORAPAN_RUNTIME_ROOT}\data\public\statistics` (Auto) | Statistics Output Location |
 

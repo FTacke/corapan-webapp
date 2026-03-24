@@ -182,6 +182,9 @@ def register_context_processors(app: Flask) -> None:
         return {
             "now": lambda: datetime.now(timezone.utc),
             "allow_public_temp_audio": app.config.get("ALLOW_PUBLIC_TEMP_AUDIO", False),
+            "app_version": app.config.get("APP_VERSION", ""),
+            "app_release_tag": app.config.get("APP_RELEASE_TAG", ""),
+            "app_release_url": app.config.get("APP_RELEASE_URL", ""),
         }
 
 

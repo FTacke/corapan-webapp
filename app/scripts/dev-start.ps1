@@ -304,6 +304,12 @@ $env:BLS_BASE_URL = "http://localhost:8081/blacklab-server"
 $env:BLACKLAB_BASE_URL = $env:BLS_BASE_URL
 $env:BLS_CORPUS = "corapan"
 
+if ($env:APP_VERSION) {
+    Write-Host "Using APP_VERSION for footer release link: v$($env:APP_VERSION.TrimStart('v'))" -ForegroundColor Green
+} else {
+    Write-Host "APP_VERSION not set. Footer release line stays hidden in dev." -ForegroundColor Gray
+}
+
 $blacklabRoot = Join-Path $workspaceRoot "data\blacklab"
 $canonicalBlackLabDirs = @(
     $blacklabRoot,

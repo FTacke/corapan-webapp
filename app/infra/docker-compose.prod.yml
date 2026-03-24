@@ -53,6 +53,8 @@ services:
       FLASK_ENV: production
       FLASK_DEBUG: "false"
       FLASK_SECRET_KEY: ${FLASK_SECRET_KEY:?FLASK_SECRET_KEY is required}
+      APP_VERSION: ${APP_VERSION:-}
+      APP_REPOSITORY_URL: ${APP_REPOSITORY_URL:-https://github.com/FTacke/corapan-webapp}
       
       # Auth Database: connect to 'db' service (hostname inside Docker network)
       AUTH_DATABASE_URL: postgresql+psycopg2://corapan_app:${POSTGRES_PASSWORD}@db:5432/corapan_auth

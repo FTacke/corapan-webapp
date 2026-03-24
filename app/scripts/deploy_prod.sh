@@ -35,6 +35,7 @@ COMPOSE_FILE="${APP_DIR}/infra/docker-compose.prod.yml"
 CONTAINER_NAME="corapan-web-prod"
 LEGACY_CONTAINER="corapan-webapp"
 HEALTH_URL="http://127.0.0.1:6000/health"
+DEFAULT_APP_REPOSITORY_URL="https://github.com/FTacke/corapan-webapp"
 
 # Colors for output
 RED='\033[0;31m'
@@ -52,6 +53,12 @@ log_warn() {
 
 log_error() {
     echo -e "${RED}[ERROR]${NC} $1"
+}
+
+normalize_app_version() {
+  local raw="${1:-}"
+  raw="${raw#v}"
+  printf '%s' "${raw}"
 }
 
 resolve_compose_cmd() {
@@ -96,12 +103,30 @@ echo ""
 
 cd "${CHECKOUT_DIR}"
 
+if [ -n "${APP_VERSION:-}" ]; then
+  APP_VERSION="$(normalize_app_version "${APP_VERSION}")"
+  log_info "Using APP_VERSION from workflow environment: v${APP_VERSION}"
+else
+  exact_release_tag="$(git tag --points-at HEAD 'v*' | sort -V | tail -n 1 || true)"
+  if [ -n "${exact_release_tag}" ]; then
+    APP_VERSION="$(normalize_app_version "${exact_release_tag}")"
+    log_info "Derived APP_VERSION from exact git tag: ${exact_release_tag}"
+  else
+    APP_VERSION=""
+    log_warn "No exact v* git tag points at the deployed commit; footer release line will remain hidden."
+  fi
+fi
+
+export APP_VERSION
+export APP_REPOSITORY_URL="${APP_REPOSITORY_URL:-${DEFAULT_APP_REPOSITORY_URL}}"
+
 # Step 0: Resolve Docker Compose implementation on the target host
 log_info "Resolving Docker Compose implementation on target host..."
 resolve_compose_cmd
 log_info "Compose command: ${COMPOSE_VARIANT}"
 log_info "Compose version: ${COMPOSE_VERSION}"
 log_info "Docker version: $(docker version --format '{{.Client.Version}}|{{.Server.Version}}')"
+log_info "Release metadata: APP_VERSION=${APP_VERSION:-<unset>} APP_REPOSITORY_URL=${APP_REPOSITORY_URL}"
 echo ""
 
 # Step 1: Update code from Git

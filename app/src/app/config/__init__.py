@@ -7,6 +7,7 @@ import warnings
 import sys
 import logging
 from pathlib import Path
+from typing import Mapping
 
 from ..runtime_paths import (
     get_audio_full_dir,
@@ -42,6 +43,7 @@ from .countries import (
 )
 
 logger = logging.getLogger(__name__)
+DEFAULT_APP_REPOSITORY_URL = "https://github.com/FTacke/corapan-webapp"
 
 # Sentinel value to detect missing SECRET_KEY
 DEFAULT_SECRET_SENTINEL = "___SENTINEL_CHANGE_ME___"
@@ -73,6 +75,50 @@ def _ensure_stats_permissions(path: Path) -> None:
             f"Failed to adjust statistics permissions for {path}: {exc}",
             RuntimeWarning,
         )
+
+
+def _normalize_app_version(value: str | None) -> str:
+    """Normalize APP_VERSION to a plain semantic version string."""
+    if value is None:
+        return ""
+
+    normalized = value.strip()
+    if not normalized:
+        return ""
+
+    if normalized.lower().startswith("v"):
+        normalized = normalized[1:].strip()
+
+    return normalized
+
+
+def _normalize_repository_url(value: str | None) -> str:
+    """Return a normalized repository URL without a trailing .git suffix."""
+    normalized = (value or DEFAULT_APP_REPOSITORY_URL).strip() or DEFAULT_APP_REPOSITORY_URL
+    normalized = normalized.rstrip("/")
+    if normalized.endswith(".git"):
+        normalized = normalized[:-4]
+    return normalized
+
+
+def resolve_app_release_metadata(
+    env: Mapping[str, str] | None = None,
+) -> dict[str, str]:
+    """Resolve normalized version and release URL metadata from environment."""
+    source = env or os.environ
+    repository_url = _normalize_repository_url(source.get("APP_REPOSITORY_URL"))
+    app_version = _normalize_app_version(source.get("APP_VERSION"))
+    app_release_tag = f"v{app_version}" if app_version else ""
+    app_release_url = (
+        f"{repository_url}/releases/tag/{app_release_tag}" if app_release_tag else ""
+    )
+
+    return {
+        "app_version": app_version,
+        "app_repository_url": repository_url,
+        "app_release_tag": app_release_tag,
+        "app_release_url": app_release_url,
+    }
 
 
 # Note: passwords.env support (env-based auth) is deprecated and has been
@@ -261,6 +307,12 @@ def load_config(app, env_name: str | None) -> None:
     config_obj = CONFIG_MAPPING.get(env, BaseConfig)
     app.config.from_object(config_obj)
 
+    release_metadata = resolve_app_release_metadata()
+    app.config["APP_VERSION"] = release_metadata["app_version"]
+    app.config["APP_REPOSITORY_URL"] = release_metadata["app_repository_url"]
+    app.config["APP_RELEASE_TAG"] = release_metadata["app_release_tag"]
+    app.config["APP_RELEASE_URL"] = release_metadata["app_release_url"]
+
     app.config["BLS_CORPUS"] = _require_config_value(
         "BLS_CORPUS",
         app.config.get("BLS_CORPUS"),
@@ -302,6 +354,12 @@ def load_config(app, env_name: str | None) -> None:
         app.config.get("BLS_CORPUS"),
     )
 
+    app.logger.info(
+        "Release config: APP_VERSION=%s APP_RELEASE_URL=%s",
+        app.config.get("APP_VERSION") or "<unset>",
+        app.config.get("APP_RELEASE_URL") or "<unset>",
+    )
+
     # We now assume the auth system is DB-backed. Legacy env-based auth (passwords.env)
     # support is deprecated and not automatically enabled by configuration.
 
@@ -315,6 +373,7 @@ __all__ = [
     "load_config",
     "BaseConfig",
     "DevConfig",
+    "resolve_app_release_metadata",
     "Location",
     "LOCATIONS",
     "normalize_country_code",
