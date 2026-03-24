@@ -1,30 +1,12 @@
-{% extends 'base.html' %}
+{% extends '_md3_skeletons/page_text_skeleton.html' %}
 {% block page_title %}{{ format_page_title('Datenschutz') }}{% endblock %}
+{% set text_page_aria_label = 'Datenschutzerklärung' %}
+{% set text_page_icon = 'lock' %}
+{% set text_page_eyebrow = 'Rechtliche Informationen' %}
+{% set text_page_heading = 'Datenschutzerklärung' %}
 
-{% block extra_head %}
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/md3/tokens.css') }}">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/md3/typography.css') }}">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/md3/components/hero.css') }}">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/md3/components/text-pages.css') }}">
-{% endblock %}
-
-{% block content %}
-<div class="md3-page" role="main" aria-label="Datenschutzerklärung">
-  <!-- Hero Header (Card Hero) -->
-  <header class="md3-page__header">
-    <div class="md3-hero md3-hero--card md3-hero__container">
-      <div class="md3-hero__icon" aria-hidden="true"><span class="material-symbols-rounded">lock</span></div>
-      <div class="md3-hero__content">
-        <p class="md3-body-small md3-hero__eyebrow">Rechtliche Informationen</p>
-        <h1 class="md3-headline-medium md3-hero__title">Datenschutzerklärung</h1>
-      </div>
-    </div>
-  </header>
-
-  <!-- Main Content -->
-  <div class="md3-text-page">
-    <div class="md3-text-content">
-    <section class="md3-text-section">
+{% block text_page_body %}
+<section class="md3-text-section">
       <h2 class="md3-title-large md3-section-title">1. Verantwortlicher</h2>
       <p class="md3-body-large">
         Verantwortlich für die Verarbeitung personenbezogener Daten auf dieser Website ist die:<br>
@@ -118,7 +100,4 @@
         E-Mail: <a href="mailto:poststelle@datenschutz.hessen.de" class="md3-text-link">poststelle@datenschutz.hessen.de</a>
       </p>
     </section>
-    </div>
-  </div>
-</div>
 {% endblock %}

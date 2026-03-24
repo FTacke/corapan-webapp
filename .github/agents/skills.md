@@ -36,8 +36,22 @@
 - Branding lives in `app/src/app/branding.py`.
 - Title formatting lives in `format_page_title(...)` inside `app/src/app/branding.py` and is exposed via `app/src/app/__init__.py`.
 - Shell ownership lives in `app/templates/base.html`.
+- Shared shell layout primitives live in `app/static/css/layout.css` and `app/static/css/md3/layout.css`.
+- The drawerless landing-shell variant is now a reusable shell primitive via `shell_class = 'app-shell--drawerless'`, not an index-only shell hack.
+- Canonical page-family sources:
+	- auth access pages: `app/templates/_md3_skeletons/auth_login_skeleton.html`
+	- auth account/admin pages: `app/templates/_md3_skeletons/auth_profile_skeleton.html`
+	- static and long-form text pages: `app/templates/_md3_skeletons/page_text_skeleton.html`
+	- admin/dashboard pages: `app/templates/_md3_skeletons/page_admin_skeleton.html`
+	- landing page: `app/templates/pages/index.html` as a specialized drawerless-shell page
+	- search UI: `app/templates/search/advanced.html` remains specialized; `app/templates/pages/corpus_guia.html` now follows the text-page family
+	- player/editor detail pages: `app/templates/pages/player.html` and `app/templates/pages/editor.html` remain specialized owners of the player/editor runtime
 - Foundation tokens live in `app/static/css/md3/tokens.css`.
 - Semantic app tokens live in `app/static/css/app-tokens.css`.
+- Player mobile containment now lives only where it is needed:
+	- `app/static/css/player-mobile.css` is loaded by `app/templates/pages/player.html`
+	- `app/static/css/player-mobile.css` is loaded by `app/templates/pages/editor.html`
+	- it is no longer part of the global base shell
 - Deprecated but still present token-layer files:
 	- `app/static/css/branding.css` — deprecated legacy, not active token authority
 	- `app/static/css/md3/tokens-legacy-shim.css` — deprecated compatibility layer, still loaded
@@ -66,10 +80,40 @@
 - Legacy `--md3-*` names are transitional only. Do not introduce new callers.
 - When touching a hotspot file, reduce repeated literal values and redundant overrides before inventing a new abstraction.
 
+### Page Family Rules
+
+- Auth pages must not rebuild their own hero-plus-page shell. Use:
+	- `app/templates/_md3_skeletons/auth_login_skeleton.html` for login/reset/request-access flows
+	- `app/templates/_md3_skeletons/auth_profile_skeleton.html` for account/admin-auth flows
+- Text-heavy pages must use `app/templates/_md3_skeletons/page_text_skeleton.html` unless they have a verified structural reason not to.
+- Dashboard/admin overview pages should prefer `app/templates/_md3_skeletons/page_admin_skeleton.html` when they fit the hero-plus-section pattern.
+- `app/templates/search/advanced.html` is a deliberate exception because its tabbed search runtime is page-specific.
+- `app/templates/pages/player.html` and `app/templates/pages/editor.html` are deliberate exceptions because they own transcript/audio/editor runtime structure.
+- `app/templates/pages/player_overview.html` and `app/templates/pages/editor_overview.html` remain transitional specialized overview pages; do not force them into an unrelated wrapper without proving the structure is truly shared.
+
+### Layout Rules
+
+- `app/templates/base.html` is authoritative for header, drawer, main, footer, and shell wiring.
+- Reusable shell variants belong in shared layout primitives, not page-local CSS files.
+- New shell behavior should be introduced through `app/static/css/layout.css` or `app/static/css/md3/layout.css` first.
+- Page CSS must not recreate drawer/grid/body shell behavior when a shared primitive can carry it.
+- `body[data-page]` selectors are exceptions, not the default mechanism for layout control.
+- If a page needs to suppress the standard drawer, prefer a reusable shell class like `app-shell--drawerless` over a page-specific shell override.
+
+### Template System Rules (Phase 4)
+
+- When a skeleton exists but live pages still bypass it, either migrate the live family to it or classify that skeleton as non-authoritative.
+- Prefer family wrappers that remove repeated page scaffolding over generic macros that hide real structure.
+- Keep player/editor, search, and landing exceptions explicit. Do not normalize them by force.
+- Keep `player-mobile.css` scoped to player/editor ownership and reduce stale selectors before adding new overrides.
+- Do not reintroduce global page-specific CSS for behavior that now lives in shared shell/layout primitives.
+
 ### Hotspot Warnings
 
-- `app/static/css/player-mobile.css`: very high override density; keep changes narrow, token-driven, and behavior-preserving.
-- `app/static/css/md3/components/index.css`: shell override file; only keep page-local rules that are demonstrably required.
+- `app/static/css/player-mobile.css`: still the densest override hotspot; it now belongs only to player/editor pages, so keep changes local, behavior-preserving, and focused on live selectors first.
+- `app/templates/pages/player.html` and `app/templates/pages/editor.html`: specialized runtime pages; avoid casual family abstraction here.
+- `app/templates/pages/player_overview.html` and `app/templates/pages/editor_overview.html`: partially transitional page family; treat as candidates for later harmonization, not opportunistic rewrites.
+- `app/static/css/md3/components/index.css`: no longer owns shell suppression; keep it focused on landing-page content layout only.
 - `app/static/js/modules/stats/theme/corapanTheme.js` and `app/static/js/modules/stats/renderBar.js`: chart theming must stay aligned with CSS token authority.
 - `app/static/js/modules/search/searchUI.js`: avoid reintroducing inline summary/error styling or manual display toggles when class/hidden state is enough.
 - `app/static/css/md3/components/editor.css`: contains legacy raw success/overlay colors and compatibility overrides; treat as structurally risky.

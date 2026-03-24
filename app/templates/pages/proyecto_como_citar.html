@@ -1,23 +1,14 @@
-{% extends 'base.html' %}
+{% extends '_md3_skeletons/page_text_skeleton.html' %}
 {% from 'partials/page_navigation.html' import page_navigation %}
 {% block page_title %}{{ format_page_title('Cómo citar') }}{% endblock %}
-{% block content %}
-<div class="md3-page" role="main" aria-label="Cómo citar el corpus">
-  <header class="md3-page__header">
-    <div class="md3-hero md3-hero--card md3-hero__container">
-      <div class="md3-hero__icon" aria-hidden="true"><span class="material-symbols-rounded">format_quote</span></div>
-      <div class="md3-hero__content">
-        <p class="md3-body-small md3-hero__eyebrow">Proyecto</p>
-        <h1 class="md3-headline-medium md3-hero__title">Cómo citar</h1>
-      </div>
-    </div>
-  </header>
+{% set text_page_aria_label = 'Cómo citar el corpus' %}
+{% set text_page_icon = 'format_quote' %}
+{% set text_page_eyebrow = 'Proyecto' %}
+{% set text_page_heading = 'Cómo citar' %}
 
-  <div class="md3-text-page">
-    <div class="md3-text-content">
-    
-    <!-- 1. Referencia general del corpus -->
-    <section class="md3-text-section">
+{% block text_page_body %}
+<!-- 1. Referencia general del corpus -->
+<section class="md3-text-section">
       <h2 class="md3-title-large md3-section-title md3-text-heading">1. Referencia general del corpus</h2>
       <div class="md3-text-citation md3-body-medium">
         <p class="md3-body-large">
@@ -25,13 +16,12 @@
           Marburg: Philipps-Universität Marburg.<br>
           Online: <a href="{{ project_url }}" target="_blank" rel="noopener noreferrer">{{ project_url }}</a><br>
           DOI: <a href="https://doi.org/10.5281/zenodo.15360942" target="_blank" rel="noopener noreferrer">10.5281/zenodo.15360942</a>
-        </p>
-      </div>
-    </section>
-
-    <!-- 2. Formatos de cita -->
-    <section class="md3-text-section">
+        </div>
+        </div>
+      </section>
+  {% endblock %}
       <h2 class="md3-title-large md3-section-title md3-text-heading">2. Formatos de cita</h2>
+  {% block text_page_after %}
       <p class="md3-body-medium">Seleccione el formato de cita y copie el texto generado.</p>
       
       <section class="citation-block" aria-labelledby="citation-format-label">

@@ -1,30 +1,15 @@
-{% extends "base.html" %}
+{% extends "_md3_skeletons/auth_login_skeleton.html" %}
 
 {% block page_title %}{{ format_page_title('Iniciar sesión') }}{% endblock %}
 
-{% block extra_head %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/md3/components/login.css') }}">
-<link rel="stylesheet" href="{{ url_for('static', filename='css/md3/components/auth.css') }}">
-{% endblock %}
+{% set auth_icon = 'login' %}
+{% set auth_eyebrow = 'Acceso' %}
+{% set auth_heading = 'Iniciar sesión' %}
+{% set auth_intro = 'Acceda a su cuenta para explorar el corpus y sus herramientas.' %}
 
-{% block content %}
-<div class="md3-page">
-  <header class="md3-page__header">
-    <div class="md3-hero md3-hero--card md3-hero__container">
-      <div class="md3-hero__icon" aria-hidden="true"><span class="material-symbols-rounded">login</span></div>
-      <div class="md3-hero__content">
-        <p class="md3-body-small md3-hero__eyebrow">Acceso</p>
-        <h1 class="md3-headline-medium md3-hero__title">Iniciar sesión</h1>
-        <p class="md3-body-medium md3-hero__intro">Acceda a su cuenta para explorar el corpus y sus herramientas.</p>
-      </div>
-    </div>
-  </header>
-
-  <div class="md3-page__main md3-stack--page">
-    <section class="md3-page__section md3-stack--section">
-      <!-- Login Card -->
-      <article class="md3-card md3-card--outlined md3-auth-card login-card">
-        <div class="md3-card__content">
+{% block auth_body %}
+<article class="md3-card md3-card--outlined md3-auth-card login-card">
+  <div class="md3-card__content">
 
           <!-- Error Messages (if any) -->
           {# Global form error banner (MD3, compact inline) #}
@@ -101,9 +86,6 @@
               <input type="hidden" name="next" value="{{ next }}">
             {% endif %}
           </form>
-        </div>
-      </article>
-    </section>
   </div>
-</div>
+</article>
 {% endblock %}

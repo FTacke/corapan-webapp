@@ -1,35 +1,19 @@
-{% extends 'base.html' %}
+{% extends '_md3_skeletons/page_admin_skeleton.html' %}
 {% block page_title %}{{ format_page_title('Admin-Dashboard') }}{% endblock %}
 
 {% block extra_head %}
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/md3/tokens.css') }}">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/md3/typography.css') }}">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/md3/components/hero.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/md3/components/progress.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/md3/components/admin-dashboard.css') }}">
 {% endblock %}
 
-{% block content %}
-<!-- MD3 Admin Dashboard - Analytics (Variante 3a: nur Zähler, keine Suchinhalte) -->
-<div class="md3-page">
-  <header class="md3-page__header">
-    <div class="md3-hero md3-hero--card md3-hero__container">
-      <div class="md3-hero__icon" aria-hidden="true"><span class="material-symbols-rounded">dashboard</span></div>
-      <div class="md3-hero__content">
-        <p class="md3-body-small md3-hero__eyebrow">Admin</p>
-        <h1 class="md3-headline-medium md3-hero__title">Analytics Dashboard</h1>
-        <p class="md3-body-medium md3-hero__intro">
-          Anonyme Nutzungsstatistiken
-        </p>
-      </div>
-    </div>
-  </header>
+{% block overview_icon %}dashboard{% endblock %}
+{% block overview_eyebrow %}Admin{% endblock %}
+{% block overview_heading %}Analytics Dashboard{% endblock %}
+{% block overview_intro %}Anonyme Nutzungsstatistiken{% endblock %}
 
-  <!-- Main Content -->
-  <div class="md3-page__main md3-stack--page">
-    
-    <!-- Section: 30-Tage Metriken -->
-    <section class="md3-page__section md3-page__section--compact">
+{% block overview_body %}
+<!-- Section: 30-Tage Metriken -->
+<section class="md3-page__section md3-page__section--compact">
       <h2 class="md3-title-large md3-section-title">Letzte 30 Tage</h2>
       
       <!-- KPI Cards Grid (30 Tage) -->
@@ -212,7 +196,7 @@
     </section>
 
     <!-- Error State (hidden initially) -->
-    <div class="md3-error-banner" id="error-banner" hidden aria-live="polite">
+  <div class="md3-error-banner" id="error-banner" hidden aria-live="polite">
       <article class="md3-card md3-card--outlined md3-error-card md3-alert" role="alert">
         <span class="material-symbols-rounded md3-error-card__icon" aria-hidden="true">error</span>
         <div class="md3-error-card__content">
@@ -225,9 +209,6 @@
         </button>
       </article>
     </div>
-
-  </div>
-</div>
 {% endblock %}
 
 {% block extra_scripts %}

@@ -4,10 +4,10 @@
 {% block page_title %}{{ format_page_title('Editor: ' ~ filename) }}{% endblock %}
 
 {% block extra_head %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/md3/tokens.css') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/md3/components/transcription-shared.css') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/md3/components/editor.css') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/md3/components/audio-player.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/player-mobile.css') }}">
 {% endblock %}
 
 {% block content %}

@@ -1,21 +1,13 @@
-{% extends 'base.html' %}
+{% extends '_md3_skeletons/page_text_skeleton.html' %}
 {% from 'partials/page_navigation.html' import page_navigation %}
 {% block page_title %}{{ format_page_title('Quiénes somos') }}{% endblock %}
-{% block content %}
-<div class="md3-page" role="main" aria-label="Quiénes somos">
-  <header class="md3-page__header">
-    <div class="md3-hero md3-hero--card md3-hero__container">
-      <div class="md3-hero__icon" aria-hidden="true"><span class="material-symbols-rounded">group</span></div>
-      <div class="md3-hero__content">
-        <p class="md3-body-small md3-hero__eyebrow">Proyecto</p>
-        <h1 class="md3-headline-medium md3-hero__title">Equipo</h1>
-      </div>
-    </div>
-  </header>
+{% set text_page_aria_label = 'Quiénes somos' %}
+{% set text_page_icon = 'group' %}
+{% set text_page_eyebrow = 'Proyecto' %}
+{% set text_page_heading = 'Equipo' %}
 
-  <div class="md3-text-page">
-    <div class="md3-text-content">
-      <section class="md3-text-section">
+{% block text_page_body %}
+<section class="md3-text-section">
       <h2 class="md3-title-large md3-section-title md3-text-heading">Créditos</h2>
       <dl class="md3-text-dl md3-body-medium">
         <div class="md3-text-dl__item">
@@ -40,9 +32,8 @@
         </div>
       </dl>
     </section>
-  </div>
-  </div>
-</div>
+{% endblock %}
 
+{% block text_page_after %}
 {{ page_navigation(prev_title="Diseño", prev_url=url_for('public.proyecto_diseno'), next_title="Cómo citar", next_url=url_for('public.proyecto_como_citar')) }}
 {% endblock %}

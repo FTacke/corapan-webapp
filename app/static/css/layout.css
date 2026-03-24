@@ -39,6 +39,13 @@ body.app-shell {
     min-height: 100vh;
     /* Body scrollt normal - kein overflow:hidden */
   }
+
+  body.app-shell.app-shell--drawerless {
+    grid-template-areas:
+      "main"
+      "footer";
+    grid-template-columns: 1fr;
+  }
   
   /* Navigation Drawer: Fixed am linken Rand, scrollt eigenständig */
   #navigation-drawer {
@@ -53,6 +60,10 @@ body.app-shell {
     overflow-x: visible;
     z-index: 5;
   }
+
+  body.app-shell.app-shell--drawerless #navigation-drawer {
+    display: none !important;
+  }
   
   /* Main Content: Normale Höhe, kein internes Scrollen */
   #main-content,
@@ -63,10 +74,20 @@ body.app-shell {
     min-height: calc(100vh - 200px); /* Mindesthöhe für kurze Seiten */
     overflow: visible;
   }
+
+  body.app-shell.app-shell--drawerless #main-content,
+  body.app-shell.app-shell--drawerless main.site-main,
+  body.app-shell.app-shell--drawerless .site-main {
+    min-height: 0;
+  }
   
   /* Footer wird normal am Ende angezeigt */
   #site-footer {
     grid-area: footer;
+  }
+
+  body.app-shell.app-shell--drawerless .md3-top-app-bar__navigation-icon {
+    display: none !important;
   }
 }
 

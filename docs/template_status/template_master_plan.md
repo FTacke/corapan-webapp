@@ -71,7 +71,29 @@ Abbruchkriterium: Jede Lösung, die diese Regeln verletzt, wird verworfen.
 
 - Phase 1: completed (`docs/template_status/2026-03-24_phase1_audit.md`)
 - Phase 2: completed (`docs/template_status/2026-03-24_phase2_architecture.md`)
-- Phase 3: in progress
+- Phase 3: substantially completed (`docs/template_status/2026-03-24_phase3_token_enforcement.md`)
+- Phase 4: in progress
+
+---
+
+## Phase 4 Execution Focus
+
+Diese Phase reduziert strukturelle Varianz, nicht die visuelle Identität.
+
+Ziel dieser Phase:
+- Page-Template-Harmonisierung über die wichtigsten Live-Seitenfamilien
+- Reduktion seitenbezogener Shell- und Layout-Overrides
+- Extraktion oder Standardisierung real genutzter Page-Family-Patterns
+- fokussierte Eindämmung von `app/static/css/player-mobile.css`
+- stärkere Autorität für wiederverwendbare Skeletons, Partials und Family-Wrapper
+- Vorbereitung späterer Legacy-Bereinigung und finaler Template-Readiness-Bewertung
+
+Phase-4-Regeln:
+- `base.html` bleibt die einzige Shell-Autorität
+- Laufzeitverhalten von Auth, Search, Landing und Player/Editor darf nicht brechen
+- Landing-, Search-, Player- und Editor-Flows dürfen spezialisiert bleiben, wenn Produktverhalten das erfordert
+- neue Abstraktionen sind nur erlaubt, wenn sie die Live-Struktur klarer und nicht abstrakter machen
+- `player-mobile.css` ist ein kontrollierter Hotspot, kein Rewrite-Ziel
 
 ---
 
@@ -270,17 +292,20 @@ Enthält:
 - hartcodierte Farben und Inline-Visual-Styling in Hotspot-Dateien abbauen
 - Override-Dichte in den riskantesten Seiten-Dateien reduzieren
 - sichere Vorbereitung für spätere Entfernung des Legacy-Shims schaffen
-- Status: in Arbeit
+- Status: weitgehend abgeschlossen
 
 ### Phase 3 – Foundations refactoren
 - Tokens vereinheitlichen
 - Branding zentralisieren
 - Config bereinigen
 
-### Phase 4 – System durchziehen
-- Komponenten anpassen
-- Layout fixen
-- Seiten harmonisieren
+### Phase 4 – Template-Harmonisierung & Override-Containment
+- Seitenfamilien auf kanonische Family-Wrapper oder Skeletons ausrichten
+- page-spezifische Shell- und Layout-Ausnahmen weiter reduzieren
+- reusable Strukturen aus Skeletons und Partials real autoritativ machen
+- Player-Mobile-Hotspot auf klare Ownership und schmalere Override-Fläche begrenzen
+- verbleibende Ausnahmen für die finale Template-Readiness explizit dokumentieren
+- Status: in Arbeit
 
 ### Phase 5 – Cleanup
 - Hardcodings entfernen
@@ -319,6 +344,15 @@ Phase-3-Regel:
 - reduziere die schädlichsten Abweichungen zuerst
 - bevorzuge wiederverwendbare Reduktion statt großflächiger Umschreibung
 - lasse riskante Legacy-Schichten markiert bestehen, wenn Live-Abhängigkeiten noch vorhanden sind
+
+---
+
+## Phase 4 Working Rules
+
+- Page-CSS darf Shell-Verhalten nicht nachbauen, wenn ein wiederverwendbares Layout-Primitive dasselbe sicher leisten kann.
+- Page-Familien sollen nur dann direkt `base.html` erweitern, wenn kein real geteilter Familienrahmen existiert oder die Seite bewusst eine Ausnahme bleibt.
+- Skeletons und Partials sind nur dann kanonisch, wenn Live-Seiten tatsächlich über sie laufen.
+- `player-mobile.css` darf nur kontrolliert konsolidiert werden: tote Selektoren, doppelte Literale und unnötige globale Reichweite abbauen, aber keine riskante Neuarchitektur erzwingen.
 
 ---
 

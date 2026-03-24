@@ -1,21 +1,13 @@
-{% extends 'base.html' %}
+{% extends '_md3_skeletons/page_text_skeleton.html' %}
 {% from 'partials/page_navigation.html' import page_navigation %}
 {% block page_title %}{{ format_page_title('El proyecto') }}{% endblock %}
-{% block content %}
-<div class="md3-page" role="main" aria-label="El proyecto CO.RA.PAN">
-  <header class="md3-page__header">
-    <div class="md3-hero md3-hero--card md3-hero__container">
-      <div class="md3-hero__icon" aria-hidden="true"><span class="material-symbols-rounded">assignment</span></div>
-      <div class="md3-hero__content">
-        <p class="md3-body-small md3-hero__eyebrow">Proyecto</p>
-        <h1 class="md3-headline-medium md3-hero__title">El proyecto CO.RA.PAN</h1>
-      </div>
-    </div>
-  </header>
+{% set text_page_aria_label = 'El proyecto CO.RA.PAN' %}
+{% set text_page_icon = 'assignment' %}
+{% set text_page_eyebrow = 'Proyecto' %}
+{% set text_page_heading = 'El proyecto CO.RA.PAN' %}
 
-  <div class="md3-text-page">
-    <div class="md3-text-content">
-    <section class="md3-text-section">
+{% block text_page_body %}
+<section class="md3-text-section">
       <p class="md3-body-large">
         El Corpus Radiofónico Panhispánico (CO.RA.PAN) parte de una constatación fundamental: a pesar de los avances en la descripción del español pluricéntrico, todavía falta una base empírica sistemática y comparable que permita medir y describir las variedades nacionales del español estándar en todo el ámbito hispanohablante. La mayoría de los estudios existentes se concentran en la variación comunitaria o en los niveles coloquiales, mientras que la lengua estándar hablada, es decir, aquella empleada por profesionales en contextos formales de comunicación, sigue siendo un campo poco explorado.
       </p>
@@ -67,10 +59,8 @@
         <li>Comparativo panhispánico, que mide las distancias y afinidades entre las variedades nacionales y permite observar la distribución geográfica y funcional de las variantes que configuran el español pluricéntrico actual.</li>
       </ul>
     </section>
-    
-  </div>
-  </div>
-</div>
+{% endblock %}
 
+{% block text_page_after %}
 {{ page_navigation(next_title="Diseño", next_url=url_for('public.proyecto_diseno')) }}
 {% endblock %}

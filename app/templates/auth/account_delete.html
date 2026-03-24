@@ -1,25 +1,13 @@
-{% extends "base.html" %}
+{% extends "_md3_skeletons/auth_profile_skeleton.html" %}
 
 {% block page_title %}{{ format_page_title('Account löschen') }}{% endblock %}
 
-{% block extra_head %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/md3/components/auth.css') }}">
-{% endblock %}
+{% set auth_icon = 'delete_forever' %}
+{% set auth_eyebrow = 'Konto' %}
+{% set auth_heading = 'Account löschen' %}
 
-{% block content %}
-<div class="md3-page">
-  <header class="md3-page__header">
-    <div class="md3-hero md3-hero--card md3-hero__container">
-      <div class="md3-hero__icon" aria-hidden="true"><span class="material-symbols-rounded">delete_forever</span></div>
-      <div class="md3-hero__content">
-        <p class="md3-body-small md3-hero__eyebrow">Konto</p>
-        <h1 class="md3-headline-medium md3-hero__title">Account löschen</h1>
-      </div>
-    </div>
-  </header>
-  <div class="md3-page__main">
-    <section class="md3-page__section md3-auth-page md3-stack--section">
-      <article class="md3-card md3-card--outlined md3-auth-card">
+{% block auth_body %}
+<article class="md3-card md3-card--outlined md3-auth-card">
       <header class="md3-card__header">
         <h2 class="md3-title-large">Bestätigung erforderlich</h2>
         <p class="md3-body-small">Dies ist eine irreversible Aktion</p>
@@ -44,13 +32,11 @@
             </button>
           </div>
         </form>
-        <!-- Status messages (populated by JS) -->
         <div id="status" class="md3-form-status" role="status" aria-live="polite"></div>
       </div>
-      </article>
-    </section>
-  </div>
-</div>
+    </article>
+{% endblock %}
 
+{% block auth_after %}
 <script type="module" src="{{ url_for('static', filename='js/auth/account_delete.js') }}"></script>
 {% endblock %}

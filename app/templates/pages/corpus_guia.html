@@ -1,4 +1,4 @@
-{% extends 'base.html' %}
+{% extends '_md3_skeletons/page_text_skeleton.html' %}
 {% from 'partials/page_navigation.html' import page_navigation %}
 
 {% block page_title %}{{ format_page_title('Guía de Búsqueda') }}{% endblock %}
@@ -8,24 +8,15 @@
 <link rel="stylesheet" href="{{ url_for('static', filename='css/md3/components/advanced-search.css') }}">
 {% endblock %}
 
-{% block content %}
-<div class="md3-page" role="main" aria-label="Guía de Búsqueda">
-  <header class="md3-page__header">
-    <div class="md3-hero md3-hero--card md3-hero__container">
-      <div class="md3-hero__icon" aria-hidden="true"><span class="material-symbols-rounded">school</span></div>
-      <div class="md3-hero__content">
-        <p class="md3-body-small md3-hero__eyebrow">Corpus</p>
-        <h1 class="md3-headline-medium md3-hero__title">Guía paso a paso</h1>
-        <p class="md3-body-medium md3-hero__intro">Uso general de las herramientas de búsqueda.</p>
-      </div>
-    </div>
-  </header>
+{% set text_page_aria_label = 'Guía de Búsqueda' %}
+{% set text_page_icon = 'school' %}
+{% set text_page_eyebrow = 'Corpus' %}
+{% set text_page_heading = 'Guía paso a paso' %}
+{% set text_page_intro = 'Uso general de las herramientas de búsqueda.' %}
 
-  <div class="md3-text-page">
-    <div class="md3-text-content">
-    
-    <!-- INTRODUCCIÓN -->
-    <section class="md3-text-section">
+{% block text_page_body %}
+<!-- INTRODUCCIÓN -->
+<section class="md3-text-section">
       <p class="md3-body-large">
         Bienvenido a la herramienta de búsqueda del corpus CO.RA.PAN. La interfaz está diseñada para utilizarse sin conocimientos técnicos previos. En esta guía se describen las funciones disponibles en cada pestaña de búsqueda.
       </p>
@@ -203,11 +194,9 @@ Ahora convierta la siguiente descripción en una consulta CQL precisa para CORAP
         <li><strong>Estadísticas</strong>: ofrece gráficos que muestran la distribución de los resultados según los metadatos disponibles. Los datos pueden descargarse en formato CSV.</li>
       </ul>
     </section>
+{% endblock %}
 
-    </div>
-  </div>
-</div>
-
+{% block text_page_after %}
 {{ page_navigation(prev_url=url_for('advanced_search.index'), prev_title='Consultar', next_url=url_for('corpus.metadata'), next_title='Metadatos') }}
 {% endblock %}
 

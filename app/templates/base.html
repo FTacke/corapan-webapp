@@ -95,7 +95,6 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/md3/components/layout-helpers.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/md3/components/stats.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/md3/components/como-citar.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/player-mobile.css') }}">
     <!-- Mobile Responsive Overrides (muss nach allen Komponenten kommen) -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/md3/components/mobile-responsive.css') }}">
     
@@ -117,7 +116,7 @@
   {% for category, message in flash_messages %}
     {% set _ = flash_json.append({'category': category, 'message': message}) %}
   {% endfor %}
-  <body class="app-shell" {% if page_name %}data-page="{{ page_name }}"{% endif %} data-config='{"allowPublicTempAudio": {{ "true" if allow_public_temp_audio else "false" }}}' {% if flash_json %}data-flash-messages='{{ flash_json | tojson | e }}'{% endif %}>
+  <body class="app-shell{% if shell_class %} {{ shell_class }}{% endif %}" {% if page_name %}data-page="{{ page_name }}"{% endif %} data-config='{"allowPublicTempAudio": {{ "true" if allow_public_temp_audio else "false" }}}' {% if flash_json %}data-flash-messages='{{ flash_json | tojson | e }}'{% endif %}>
      {# MD3 Navigation System #}
      {# status_banner was removed from the top bar in favour of focused account UI.
        If you need an inline status / flash area later, include partials/status_banner.html

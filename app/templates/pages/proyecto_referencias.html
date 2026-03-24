@@ -1,21 +1,13 @@
-{% extends 'base.html' %}
+{% extends '_md3_skeletons/page_text_skeleton.html' %}
 {% from 'partials/page_navigation.html' import page_navigation %}
 {% block page_title %}{{ format_page_title('Referencias') }}{% endblock %}
-{% block content %}
-<div class="md3-page" role="main" aria-label="Referencias bibliográficas">
-  <header class="md3-page__header">
-    <div class="md3-hero md3-hero--card md3-hero__container">
-      <div class="md3-hero__icon" aria-hidden="true"><span class="material-symbols-rounded">menu_book</span></div>
-      <div class="md3-hero__content">
-        <p class="md3-body-small md3-hero__eyebrow">Proyecto</p>
-        <h1 class="md3-headline-medium md3-hero__title">Referencias</h1>
-      </div>
-    </div>
-  </header>
+{% set text_page_aria_label = 'Referencias bibliográficas' %}
+{% set text_page_icon = 'menu_book' %}
+{% set text_page_eyebrow = 'Proyecto' %}
+{% set text_page_heading = 'Referencias' %}
 
-  <div class="md3-text-page">
-    <div class="md3-text-content">
-    <section class="md3-text-section">
+{% block text_page_body %}
+<section class="md3-text-section">
       <p class="md3-body-large">
         Esta selección de referencias bibliográficas reúne trabajos fundamentales sobre la pluricentricidad del español, la estandarización lingüística y los estudios de corpus en el ámbito de la investigación sobre el habla culta y los medios de comunicación. La lista no pretende ser exhaustiva, sino ofrecer un punto de partida para profundizar en los fundamentos teóricos y metodológicos del proyecto CO.RA.PAN.
       </p>
@@ -147,9 +139,8 @@
 
       </ul>
     </section>
-  </div>
-  </div>
-</div>
+{% endblock %}
 
+{% block text_page_after %}
 {{ page_navigation(prev_title="Cómo citar", prev_url=url_for('public.proyecto_como_citar')) }}
 {% endblock %}

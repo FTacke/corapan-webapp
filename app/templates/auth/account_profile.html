@@ -1,26 +1,14 @@
-{% extends "base.html" %}
+{% extends "_md3_skeletons/auth_profile_skeleton.html" %}
 
 {% block page_title %}{{ format_page_title('Profil') }}{% endblock %}
 
-{% block extra_head %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/md3/components/auth.css') }}">
-{% endblock %}
+{% set auth_icon = 'account_circle' %}
+{% set auth_eyebrow = 'Konto' %}
+{% set auth_heading = 'Dein Profil' %}
+{% set auth_intro = 'Persönliche Daten und Einstellungen.' %}
 
-{% block content %}
-<div class="md3-page">
-  <header class="md3-page__header">
-    <div class="md3-hero md3-hero--card md3-hero__container">
-      <div class="md3-hero__icon" aria-hidden="true"><span class="material-symbols-rounded">account_circle</span></div>
-      <div class="md3-hero__content">
-        <p class="md3-body-small md3-hero__eyebrow">Konto</p>
-        <h1 class="md3-headline-medium md3-hero__title">Dein Profil</h1>
-        <p class="md3-hero__intro">Persönliche Daten und Einstellungen.</p>
-      </div>
-    </div>
-  </header>
-  <div class="md3-page__main">
-    <section class="md3-page__section md3-auth-page md3-stack--section">
-      <article class="md3-card md3-card--outlined md3-auth-card">
+{% block auth_body %}
+<article class="md3-card md3-card--outlined md3-auth-card">
       <header class="md3-card__header">
         <h2 class="md3-title-large">Grunddaten</h2>
       </header>
@@ -83,10 +71,10 @@
       <div class="md3-card__content">
         <p class="md3-body-medium">Hier kannst du dein Passwort ändern.</p>
         <div class="md3-actions">
-            <a href="{{ url_for('auth.account_password_page') }}" class="md3-button md3-button--filled" role="button">
-              <span class="material-symbols-rounded md3-button__icon" aria-hidden="true">lock_reset</span>
-              Passwort ändern
-            </a>
+          <a href="{{ url_for('auth.account_password_page') }}" class="md3-button md3-button--filled" role="button">
+            <span class="material-symbols-rounded md3-button__icon" aria-hidden="true">lock_reset</span>
+            Passwort ändern
+          </a>
         </div>
       </div>
     </article>
@@ -98,17 +86,16 @@
       <div class="md3-card__content">
         <p class="md3-body-medium">Hier kannst du dein Konto löschen. Diese Aktion kann nicht rückgängig gemacht werden.</p>
         <div class="md3-actions">
-            <button id="delete-account-btn" class="md3-button md3-button--filled md3-button--danger" type="button">
-              <span class="material-symbols-rounded md3-button__icon" aria-hidden="true">delete_forever</span>
-              Konto löschen
-            </button>
+          <button id="delete-account-btn" class="md3-button md3-button--filled md3-button--danger" type="button">
+            <span class="material-symbols-rounded md3-button__icon" aria-hidden="true">delete_forever</span>
+            Konto löschen
+          </button>
         </div>
       </div>
     </article>
-    </section>
-  </div>
-</div>
+{% endblock %}
 
+{% block auth_after %}
 <dialog id="delete-dialog" class="md3-dialog" role="dialog" aria-modal="true" aria-labelledby="delete-dialog-title">
   <div class="md3-dialog__container">
     <div class="md3-dialog__surface">

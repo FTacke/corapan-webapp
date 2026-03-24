@@ -1,29 +1,19 @@
-{% extends "base.html" %}
+{% extends "_md3_skeletons/auth_profile_skeleton.html" %}
 
 {% block page_title %}{{ format_page_title('Benutzerverwaltung') }}{% endblock %}
 
-{% block extra_head %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/md3/components/auth.css') }}">
+{% block auth_extra_head %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/md3/components/search-ui.css') }}">
 {% endblock %}
 
-{% block content %}
-<div class="md3-page">
-  <header class="md3-page__header">
-    <div class="md3-hero md3-hero--card md3-hero__container">
-      <div class="md3-hero__icon" aria-hidden="true"><span class="material-symbols-rounded">group</span></div>
-      <div class="md3-hero__content">
-        <p class="md3-body-small md3-hero__eyebrow">Admin</p>
-        <h1 class="md3-headline-medium md3-hero__title">Benutzerverwaltung</h1>
-        <p class="md3-hero__intro">Verwalte Benutzerkonten, Rollen und Zugriffsrechte.</p>
-      </div>
-    </div>
-  </header>
+{% set auth_icon = 'group' %}
+{% set auth_eyebrow = 'Admin' %}
+{% set auth_heading = 'Benutzerverwaltung' %}
+{% set auth_intro = 'Verwalte Benutzerkonten, Rollen und Zugriffsrechte.' %}
 
-  <div class="md3-page__main">
-    <section class="md3-page__section md3-auth-page md3-stack--section">
-    <div class="md3-card md3-card--outlined">
-      <div class="md3-card__content md3-stack--section">
+{% block auth_body %}
+<div class="md3-card md3-card--outlined">
+  <div class="md3-card__content md3-stack--section">
         <div class="md3-row--between align-items-center">
             <div class="md3-row md3-fill-max max-w-400">
               <div class="md3-outlined-textfield w-100">
@@ -73,12 +63,11 @@
             </tbody>
           </table>
         </div>
-      </div>
-    </div>
-    </section>
   </div>
 </div>
+{% endblock %}
 
+{% block auth_after %}
 <!-- Create User Dialog (rewritten for improved layout / accessibility) -->
 <dialog id="create-user-dialog" class="md3-dialog" role="dialog" aria-modal="true" aria-labelledby="create-user-title">
   <div class="md3-dialog__container">

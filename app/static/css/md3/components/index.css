@@ -112,46 +112,13 @@
    ============================================ */
 
 @media (min-width: 840px) {
-  body[data-page="index"] #main-content,
-  body[data-page="index"] main.site-main,
-  body[data-page="index"] .site-main {
-    min-height: 0;
-  }
-
-  body[data-page="index"] .md3-index-logo {
+  .md3-index-logo {
     padding-block: var(--space-2) 0;
   }
 
-  body[data-page="index"] .md3-index-cards {
+  .md3-index-cards {
     gap: var(--space-4);
     padding-top: var(--space-4);
     padding-bottom: var(--space-2);
-  }
-
-  body[data-page="index"] #navigation-drawer {
-    /* NEEDS_IMPORTANT: app-shell layout override */
-    display: none !important;
-  }
-
-  body[data-page="index"].app-shell {
-    /* NEEDS_IMPORTANT: app-shell layout override */
-    grid-template-areas:
-      "main"
-      "footer" !important;
-    grid-template-columns: 1fr !important;
-  }
-  
-  /* Hide burger icon only on desktop (where we hide the drawer) */
-  body[data-page="index"] .md3-top-app-bar__navigation-icon {
-    /* Burger stays hidden on desktop since there's no drawer to open */
-    display: none !important;
-  }
-}
-
-/* MOBILE (<840px): Burger icon remains visible for modal drawer access */
-@media (max-width: 839px) {
-  body[data-page="index"] .md3-top-app-bar__navigation-icon {
-    /* Explicitly show burger on mobile for index page */
-    display: flex !important;
   }
 }
