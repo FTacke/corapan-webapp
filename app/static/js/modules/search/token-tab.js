@@ -17,7 +17,7 @@ import {
 let tokIds = [];
 
 function normalizeTokId(str) {
-  return str.trim().toLowerCase();
+  return str.trim();
 }
 function isValidTokId(str) {
   return /^[0-9a-z]+$/i.test(str);

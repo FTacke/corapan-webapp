@@ -118,6 +118,29 @@ EXPORT_TIMEOUT = httpx.Timeout(connect=5.0, read=30.0, write=30.0, pool=5.0)
 EXPORT_CHUNK_BYTES = 8192
 
 
+def _parse_token_ids_raw(token_ids_raw: str) -> list[str]:
+    """Split a raw token-id string while preserving exact token-id case."""
+    if not token_ids_raw:
+        return []
+
+    import re
+
+    raw_list = re.split(r"[,;\n\r\t\s]+", token_ids_raw)
+    return [token_id.strip() for token_id in raw_list if token_id.strip()]
+
+
+def _build_token_search_cql(token_ids: list[str]) -> str:
+    """Build an exact-case CQL token-id query for the tokid annotation."""
+    if not token_ids:
+        raise ValueError("At least one token ID is required")
+
+    if len(token_ids) == 1:
+        return f'[tokid="{token_ids[0]}"]'
+
+    conditions = " | ".join([f'tokid="{token_id}"' for token_id in token_ids])
+    return f"[{conditions}]"
+
+
 def _build_bls_url(corpus: str | None = None) -> str:
     """Build BlackLab Server base URL."""
     corpus_name = corpus or BLS_CORPUS
@@ -477,14 +500,7 @@ def token_search():
     token_ids_raw = request.json.get("token_ids_raw", "") if request.json else ""
 
     # Normalize and validate token IDs
-    token_ids = []
-    if token_ids_raw:
-        # Split by comma, newline, semicolon, whitespace
-        import re
-
-        raw_list = re.split(r"[,;\n\r\t\s]+", token_ids_raw)
-        # Trim and filter empty strings
-        token_ids = [tid.strip() for tid in raw_list if tid.strip()]
+    token_ids = _parse_token_ids_raw(token_ids_raw)
 
     # Limit token IDs (max 500 to prevent abuse)
     MAX_TOKEN_IDS = 500
@@ -512,13 +528,7 @@ def token_search():
             }
         ), 200
 
-    # Build CQL pattern with tokid filter
-    if len(token_ids) == 1:
-        cql_pattern = f'[tokid="{token_ids[0]}"]'
-    else:
-        # Multiple IDs: [tokid="ID1" | tokid="ID2" | tokid="ID3"]
-        conditions = " | ".join([f'tokid="{tid}"' for tid in token_ids])
-        cql_pattern = f"[{conditions}]"
+    cql_pattern = _build_token_search_cql(token_ids)
 
     try:
         # Build BlackLab request parameters

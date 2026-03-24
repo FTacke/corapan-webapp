@@ -4,6 +4,14 @@ Ensures that token IDs like 'VENb379fcc75' remain exactly as-is,
 not lowercased to 'venb379fcc75'.
 """
 
+import os
+from pathlib import Path
+
+os.environ.setdefault("CORAPAN_RUNTIME_ROOT", str(Path(__file__).resolve().parents[2]))
+os.environ.setdefault(
+    "CORAPAN_MEDIA_ROOT", str(Path(__file__).resolve().parents[2] / "media")
+)
+
 from src.app.services.blacklab_search import _hit_to_canonical
 
 
