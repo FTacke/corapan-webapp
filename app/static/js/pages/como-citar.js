@@ -161,7 +161,7 @@ ER  -`
     // Visual feedback - change icon temporarily
     if (icon) {
       icon.textContent = success ? 'check' : 'error';
-      copyButton.classList.add(success ? 'icon-button--success' : 'icon-button--error');
+      copyButton.classList.add(success ? 'is-success' : 'is-error');
     }
 
     // Screen reader feedback
@@ -173,7 +173,7 @@ ER  -`
     setTimeout(() => {
       if (icon) {
         icon.textContent = originalIcon;
-        copyButton.classList.remove('icon-button--success', 'icon-button--error');
+        copyButton.classList.remove('is-success', 'is-error');
       }
       // Clear status for next action
       setTimeout(() => {

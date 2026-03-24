@@ -91,6 +91,27 @@
     order: -1; /* OBEN in der Reihenfolge */
   }
 
+  .mobile-layout .md3-player-sidebar-cards {
+    gap: var(--space-2) !important;
+    padding: 0 var(--space-2) var(--space-2) !important;
+  }
+
+  .mobile-layout .md3-player-card {
+    padding: var(--space-3) !important;
+    border-radius: var(--radius-md) !important;
+  }
+
+  .mobile-layout .md3-player-card-header {
+    align-items: flex-start !important;
+    gap: var(--space-2) !important;
+    margin-bottom: var(--space-2) !important;
+    padding-bottom: var(--space-2) !important;
+  }
+
+  .mobile-layout .md3-player-card-title {
+    line-height: 1.3 !important;
+  }
+
   /* Full-width transcription container mit Flexbox für Reordering */
   .mobile-layout .md3-player-container,
   .player-container {
@@ -368,6 +389,23 @@
     height: 40px !important;
     flex-shrink: 0 !important;
     margin: 0 !important;
+  }
+
+  .mobile-layout .md3-player-token-input {
+    margin-bottom: var(--space-3) !important;
+  }
+
+  .mobile-layout .md3-player-token-icons {
+    justify-content: flex-end !important;
+    gap: var(--space-2) !important;
+  }
+
+  .mobile-layout .md3-player-token-icons .md3-copy-action--icon,
+  .mobile-layout .md3-player-token-icons .token-icon {
+    width: 40px !important;
+    height: 40px !important;
+    min-width: 40px !important;
+    min-height: 40px !important;
   }
 
   /* Progress bar container - 100% Breite */

@@ -18,14 +18,21 @@
       if (!textToCopy) return;
       
       navigator.clipboard.writeText(textToCopy).then(function() {
-        // Show success feedback
-        copyBtn.innerHTML = '<span class="material-symbols-rounded" aria-hidden="true">check</span>';
-        copyBtn.classList.add('md3-code-block__copy--success');
+        const icon = copyBtn.querySelector('.material-symbols-rounded');
+        if (icon) icon.textContent = 'check';
+        copyBtn.classList.add('md3-code-block__copy--success', 'is-success');
         setTimeout(function() {
-          copyBtn.innerHTML = '<span class="material-symbols-rounded" aria-hidden="true">content_copy</span>';
-          copyBtn.classList.remove('md3-code-block__copy--success');
+          if (icon) icon.textContent = 'content_copy';
+          copyBtn.classList.remove('md3-code-block__copy--success', 'is-success');
         }, 2000);
       }).catch(function(err) {
+        const icon = copyBtn.querySelector('.material-symbols-rounded');
+        if (icon) icon.textContent = 'error';
+        copyBtn.classList.add('is-error');
+        setTimeout(function() {
+          if (icon) icon.textContent = 'content_copy';
+          copyBtn.classList.remove('is-error');
+        }, 2000);
         console.error('Copy failed:', err);
       });
     });

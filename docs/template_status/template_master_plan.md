@@ -71,8 +71,9 @@ Abbruchkriterium: Jede Lösung, die diese Regeln verletzt, wird verworfen.
 
 - Phase 1: completed (`docs/template_status/2026-03-24_phase1_audit.md`)
 - Phase 2: completed (`docs/template_status/2026-03-24_phase2_architecture.md`)
-- Phase 3: substantially completed (`docs/template_status/2026-03-24_phase3_token_enforcement.md`)
-- Phase 4: in progress
+- Phase 3: completed (`docs/template_status/2026-03-24_phase3_token_enforcement.md`)
+- Phase 4: substantially completed (`docs/template_status/2026-03-24_phase4_template_harmonization.md`)
+- Phase 5: in progress
 
 ---
 
@@ -94,6 +95,30 @@ Phase-4-Regeln:
 - Landing-, Search-, Player- und Editor-Flows dürfen spezialisiert bleiben, wenn Produktverhalten das erfordert
 - neue Abstraktionen sind nur erlaubt, wenn sie die Live-Struktur klarer und nicht abstrakter machen
 - `player-mobile.css` ist ein kontrollierter Hotspot, kein Rewrite-Ziel
+
+---
+
+## Phase 5 Execution Focus
+
+Diese Phase schließt den Branch verantwortungsvoll ab. Sie ist ein gezielter Konsistenz- und Readiness-Pass, kein Redesign.
+
+Ziel dieser Phase:
+- letzte sichtbare UI-Konsistenzprobleme in wiederverwendbaren Patterns schließen
+- Dialog-, Feld-, Message- und Action-Ausrichtung vereinheitlichen
+- Copy-/Clipboard-Aktionen auf ein kanonisches Muster bringen
+- Atlas-Popup als saubere Card/Dialog-Ableitung ausrichten
+- fokussierte sichtbare Bereinigung von `app/static/css/player-mobile.css`
+- sichere Legacy-Reduktion in berührten Bereichen dokumentiert vorantreiben
+- finale Template-Readiness ehrlich bewerten
+
+Phase-5-Regeln:
+- `base.html` bleibt die einzige Shell-Autorität
+- neue UI-Fixes müssen primär in wiederverwendbaren Dialog-, Alert-, Snippet-, Popup- oder Field-Patterns landen
+- keine lokalen Dialog-Spacings oder Copy-Button-Hacks, wenn ein Shared Pattern denselben Fall abdecken kann
+- Atlas-Header, Popup-Actions und Close-Verhalten müssen Shared Card/Dialog-Konventionen folgen
+- Player-, Editor-, Search- und Atlas-Runtime-Verhalten dürfen nicht destabilisiert werden
+- `tokens-legacy-shim.css` bleibt bestehen, solange Live-Caller noch `--md3-*` benötigen; Restblocker müssen explizit dokumentiert werden
+- `branding.css` bleibt entweder klar quarantänisiert oder wird nur entfernt, wenn nachweislich keine aktive Bindung mehr existiert
 
 ---
 
@@ -307,14 +332,34 @@ Enthält:
 - verbleibende Ausnahmen für die finale Template-Readiness explizit dokumentieren
 - Status: in Arbeit
 
-### Phase 5 – Cleanup
-- Hardcodings entfernen
-- Altlasten löschen
-- CSS bereinigen
+### Phase 5 – Finalization & Readiness
+- letzte sichtbare UI-Inkonsistenzen über Shared Patterns bereinigen
+- Dialog-, Message-, Field- und Copy-Action-Patterns kanonisch ausrichten
+- Atlas-Popup, mobile Player-Polish und sichere Legacy-Reduktion abschließen
+- ehrliche finale Template-Readiness bewerten und dokumentieren
 
 ### Phase 6 – Governance & Agent-Integration
 - Regeln in `agents/skills.md` überführen
 - verbindliche Standards definieren
+
+---
+
+## Definition of Done
+
+Der Branch ist erst dann sauber abschließbar, wenn alle folgenden Punkte erfüllt sind:
+
+- Branding-Autorität bleibt ausschließlich in `app/src/app/branding.py`
+- Dokumenttitel laufen ausschließlich über `format_page_title(...)`
+- `app/templates/base.html` bleibt die einzige Shell-Autorität; Familienwrapper und Seiten erzeugen keine konkurrierende Shell
+- aktive Token-Autorität bleibt auf `app/static/css/md3/tokens.css` und `app/static/css/app-tokens.css` begrenzt
+- JS-Theme-Zugriff läuft über CSS-Custom-Properties und die gemeinsame Token-Lese-Pipeline
+- Auth-, Text- und Admin-Familien nutzen ihre kanonischen Skeletons; bewusste Spezialfälle sind explizit klassifiziert
+- Dialog-, Message-, Field- und Copy-Actions folgen Shared Patterns statt seitenlokaler Einzelregeln
+- Atlas-Popup, Search-Dialoge und Auth-Dialoge lesen als konsistente Derivate derselben Komponentenfamilie
+- `player-mobile.css`, Search-Runtime und Audio-/Editor-Hotspots bleiben als kontrollierte Ausnahmen dokumentiert
+- verbleibende Legacy-Layer (`tokens-legacy-shim.css`, `branding.css`, einzelne `--md3-*` Caller) sind entweder sicher reduziert oder mit konkreten Blockern dokumentiert
+- `.github/agents/skills.md` beschreibt die finale Runtime-Map, Regeln und Hotspots so konkret, dass ein Folge-Agent ohne Neu-Audit sicher weiterarbeiten kann
+- `docs/template_status/` und `docs/changes/` enthalten eine ehrliche finale Readiness-Bewertung inklusive Stärken, Ausnahmen, Restschuld und Release-Empfehlung
 
 ---
 

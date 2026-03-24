@@ -384,7 +384,10 @@ function buildTooltipContent(city) {
 
   return `
     <div class="atlas-tooltip">
-      <div class="atlas-tooltip-title">${city.label}</div>
+      <div class="atlas-tooltip__header">
+        <span class="atlas-tooltip__eyebrow">Atlas</span>
+        <div class="atlas-tooltip-title">${city.label}</div>
+      </div>
       <div class="atlas-tooltip-row">
         <span class="atlas-tooltip-label">Emisoras:</span>
         <span class="atlas-tooltip-value">${emisorasHtml}</span>

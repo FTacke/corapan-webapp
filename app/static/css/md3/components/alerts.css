@@ -54,6 +54,17 @@
   border-left-width: 4px;
 }
 
+/* Field/message surface: inline alerts that should read like a deliberate
+   form-adjacent surface instead of a loose banner. */
+.md3-alert--field {
+  border: 1px solid color-mix(
+    in srgb,
+    currentColor 14%,
+    transparent
+  );
+  box-shadow: inset 0 1px 0 color-mix(in srgb, currentColor 6%, transparent);
+}
+
 /* ============================================
    3. Alert Icon
    ============================================ */
@@ -127,6 +138,10 @@
 .md3-alert--inline .md3-alert__message {
   font-size: var(--md-sys-typescale-body-small-font-size, 0.75rem);
   line-height: var(--md-sys-typescale-body-small-line-height, 1rem);
+}
+
+.md3-alert--field .md3-alert__content {
+  gap: var(--space-1);
 }
 
 /* ============================================

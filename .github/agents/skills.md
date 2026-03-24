@@ -31,44 +31,37 @@
 - JS theming must read CSS custom properties instead of maintaining a separate palette.
 - If a page appears to need shell-specific layout fixes, strengthen shared shell/layout primitives first. Page-local shell hacks are the exception, not the rule.
 
-### Template System Runtime Map
+### Final Template Runtime Map
 
-- Branding lives in `app/src/app/branding.py`.
-- Title formatting lives in `format_page_title(...)` inside `app/src/app/branding.py` and is exposed via `app/src/app/__init__.py`.
-- Shell ownership lives in `app/templates/base.html`.
-- Shared shell layout primitives live in `app/static/css/layout.css` and `app/static/css/md3/layout.css`.
-- The drawerless landing-shell variant is now a reusable shell primitive via `shell_class = 'app-shell--drawerless'`, not an index-only shell hack.
+- Branding authority: `app/src/app/branding.py`.
+- Title formatting path: `format_page_title(...)` in `app/src/app/branding.py`, exposed through `app/src/app/__init__.py`.
+- Shell authority: `app/templates/base.html`.
+- Shared shell/layout primitives: `app/static/css/layout.css` and `app/static/css/md3/layout.css`.
+- Canonical token authority:
+	- foundation tokens: `app/static/css/md3/tokens.css`
+	- semantic app tokens: `app/static/css/app-tokens.css`
+- JS theme access path: `app/static/js/modules/core/themeTokens.js`, consumed by runtime theming and token-aware JS modules.
 - Canonical page-family sources:
 	- auth access pages: `app/templates/_md3_skeletons/auth_login_skeleton.html`
 	- auth account/admin pages: `app/templates/_md3_skeletons/auth_profile_skeleton.html`
-	- static and long-form text pages: `app/templates/_md3_skeletons/page_text_skeleton.html`
+	- text/static/project pages: `app/templates/_md3_skeletons/page_text_skeleton.html`
 	- admin/dashboard pages: `app/templates/_md3_skeletons/page_admin_skeleton.html`
-	- landing page: `app/templates/pages/index.html` as a specialized drawerless-shell page
-	- search UI: `app/templates/search/advanced.html` remains specialized; `app/templates/pages/corpus_guia.html` now follows the text-page family
-	- player/editor detail pages: `app/templates/pages/player.html` and `app/templates/pages/editor.html` remain specialized owners of the player/editor runtime
-- Foundation tokens live in `app/static/css/md3/tokens.css`.
-- Semantic app tokens live in `app/static/css/app-tokens.css`.
-- Player mobile containment now lives only where it is needed:
-	- `app/static/css/player-mobile.css` is loaded by `app/templates/pages/player.html`
-	- `app/static/css/player-mobile.css` is loaded by `app/templates/pages/editor.html`
-	- it is no longer part of the global base shell
-- Deprecated but still present token-layer files:
-	- `app/static/css/branding.css` — deprecated legacy, not active token authority
-	- `app/static/css/md3/tokens-legacy-shim.css` — deprecated compatibility layer, still loaded
-- Shared JS CSS-token access now lives in `app/static/js/modules/core/themeTokens.js`.
-- Known JS theme hotspot files:
-	- `app/static/js/modules/stats/theme/corapanTheme.js`
-	- `app/static/js/modules/stats/renderBar.js`
-	- `app/static/js/modules/search/searchUI.js`
-	- `app/static/js/modules/advanced/formHandler.js`
-	- `app/static/js/modules/advanced/initTable.js`
-	- `app/static/js/modules/stats/initStatsTab.js`
-	- `app/static/js/modules/stats/initStatsTabAdvanced.js`
-- Known CSS hotspot files:
-	- `app/static/css/player-mobile.css`
-	- `app/static/css/md3/components/index.css`
-	- `app/static/css/md3/components/player.css`
-	- `app/static/css/md3/components/editor.css`
+	- landing page: `app/templates/pages/index.html` with `shell_class = 'app-shell--drawerless'`
+	- search runtime: `app/templates/search/advanced.html` remains specialized
+	- player/editor runtime: `app/templates/pages/player.html` and `app/templates/pages/editor.html` remain specialized
+- Reusable dialog/message/action patterns:
+	- dialogs and snippets: `app/static/css/md3/components/dialog.css`
+	- message/error surfaces: `app/static/css/md3/components/alerts.css`
+	- auth/dialog field integration: `app/static/css/md3/components/auth.css`
+	- text-page code/copy presentation: `app/static/css/md3/components/text-pages.css`
+	- atlas popup/card styling: `app/static/css/md3/components/atlas.css`
+- Deprecated or legacy layers still present:
+	- `app/static/css/branding.css` — deprecated legacy file, not active token authority
+	- `app/static/css/md3/tokens-legacy-shim.css` — deprecated compatibility layer, still required by remaining legacy callers
+	- remaining legacy `--md3-*` callers are transitional only and must be treated as migration debt, not standards
+- Runtime ownership boundaries to keep explicit:
+	- `app/static/css/player-mobile.css` is loaded only by player/editor pages
+	- `app/static/css/md3/components/audio-player.css` and player runtime JS remain coupled to specialized transcript/audio behavior
 
 ### Template System Rules (Phase 3)
 
@@ -79,6 +72,19 @@
 - Page CSS must not bypass shell/layout contracts unless the shell contract is proven insufficient and the exception is documented.
 - Legacy `--md3-*` names are transitional only. Do not introduce new callers.
 - When touching a hotspot file, reduce repeated literal values and redundant overrides before inventing a new abstraction.
+
+### Final Template Rules
+
+- No new hardcoded visual literals outside canonical token files.
+- No new local dialog spacing hacks when shared dialog patterns can carry the change.
+- Copy and clipboard actions must follow the canonical copy-action pattern used by dialogs, snippets, text pages, and player controls.
+- Atlas popup header, close-button spacing, and action links must follow shared card/dialog rhythm rather than ad hoc marker UI styling.
+- Message and error surfaces near forms or dialogs should use canonical alert/message patterns, not one-off banners.
+- Page CSS must not bypass shell/layout contracts; strengthen shared shell primitives first.
+- Player, editor, and search runtime pages remain specialized and must be changed carefully.
+- Legacy `--md3-*` usage remains transitional only. Do not add new callers.
+- Do not reconnect `app/static/css/branding.css` to the live pipeline without explicit reclassification.
+- Do not remove `app/static/css/md3/tokens-legacy-shim.css` until the remaining live `--md3-*` callers are proven gone.
 
 ### Page Family Rules
 
@@ -108,12 +114,15 @@
 - Keep `player-mobile.css` scoped to player/editor ownership and reduce stale selectors before adding new overrides.
 - Do not reintroduce global page-specific CSS for behavior that now lives in shared shell/layout primitives.
 
-### Hotspot Warnings
+### Final Hotspot Warnings
 
-- `app/static/css/player-mobile.css`: still the densest override hotspot; it now belongs only to player/editor pages, so keep changes local, behavior-preserving, and focused on live selectors first.
-- `app/templates/pages/player.html` and `app/templates/pages/editor.html`: specialized runtime pages; avoid casual family abstraction here.
-- `app/templates/pages/player_overview.html` and `app/templates/pages/editor_overview.html`: partially transitional page family; treat as candidates for later harmonization, not opportunistic rewrites.
-- `app/static/css/md3/components/index.css`: no longer owns shell suppression; keep it focused on landing-page content layout only.
-- `app/static/js/modules/stats/theme/corapanTheme.js` and `app/static/js/modules/stats/renderBar.js`: chart theming must stay aligned with CSS token authority.
-- `app/static/js/modules/search/searchUI.js`: avoid reintroducing inline summary/error styling or manual display toggles when class/hidden state is enough.
-- `app/static/css/md3/components/editor.css`: contains legacy raw success/overlay colors and compatibility overrides; treat as structurally risky.
+- `app/static/css/player-mobile.css`: still the densest override hotspot; keep edits narrow, behavior-preserving, and limited to live selectors.
+- `app/static/css/md3/components/audio-player.css`: still tightly coupled to player/editor runtime behavior and should be changed with the mobile player in mind.
+- `app/templates/pages/player.html` and `app/templates/pages/editor.html`: specialized runtime pages; do not force them into generic wrappers.
+- `app/templates/pages/player_overview.html` and `app/templates/pages/editor_overview.html`: still transitional overview pages; harmonize only with a proven shared structure.
+- `app/templates/search/advanced.html` and `app/static/js/modules/search/searchUI.js`: specialized search runtime; avoid casual dialog/state rewrites or new inline-state workarounds.
+- `app/static/js/modules/advanced/formHandler.js` and `app/static/js/modules/advanced/initTable.js`: advanced-search stateful modules; keep visual changes class-based and low risk.
+- `app/static/js/modules/atlas/index.js` and `app/static/css/md3/components/atlas.css`: popup/card derivative in transition; preserve Leaflet behavior while refining structure.
+- `app/static/js/player/modules/tokens.js` and `app/static/js/player/modules/ui.js`: still contain player-local copy/snackbar/tooltip patterns that should be treated carefully.
+- `app/static/css/md3/components/editor.css`: still contains compatibility and legacy color rules; treat as structurally risky.
+- `app/static/css/md3/components/datatables.css` and `app/static/css/md3/components/forms.css`: still documented legacy `--md3-*` callers; do not assume the shim is removable while these remain.

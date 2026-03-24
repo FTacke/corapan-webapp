@@ -420,17 +420,27 @@ document.addEventListener('DOMContentLoaded', function () {
     copyInviteBtn.addEventListener('click', () => {
       const text = inviteLinkCode.textContent || inviteLinkCode.innerText || '';
       navigator.clipboard.writeText(text).then(() => {
-        const originalIcon = copyInviteBtn.innerHTML;
-        copyInviteBtn.innerHTML = '<span class="material-symbols-rounded">check</span>';
+        const icon = copyInviteBtn.querySelector('.material-symbols-rounded');
+        if (icon) icon.textContent = 'check';
+        copyInviteBtn.classList.add('is-success');
         const status = document.getElementById('invite-copy-status');
         if (status) status.textContent = 'Invite-Link in die Zwischenablage kopiert.';
         setTimeout(() => {
-          copyInviteBtn.innerHTML = originalIcon;
+          if (icon) icon.textContent = 'content_copy';
+          copyInviteBtn.classList.remove('is-success');
           if (status) status.textContent = '';
         }, 2000);
       }).catch(err => {
         const status = document.getElementById('invite-copy-status');
         if (status) status.textContent = 'Kopieren fehlgeschlagen.';
+        copyInviteBtn.classList.add('is-error');
+        const icon = copyInviteBtn.querySelector('.material-symbols-rounded');
+        if (icon) icon.textContent = 'error';
+        setTimeout(() => {
+          if (icon) icon.textContent = 'content_copy';
+          copyInviteBtn.classList.remove('is-error');
+          if (status) status.textContent = '';
+        }, 2000);
         console.error('Clipboard error', err);
       });
     });

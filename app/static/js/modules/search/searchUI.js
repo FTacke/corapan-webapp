@@ -827,12 +827,33 @@ export class SearchUI {
   /**
    * Show copy feedback on button
    */
-  showCopyFeedback(button) {
-    const originalText = button.innerHTML;
-    button.innerHTML =
-      '<span class="material-symbols-rounded">check</span> Copiado';
+  showCopyFeedback(button, success = true) {
+    if (!button) return;
+
+    const icon = button.querySelector(".material-symbols-rounded");
+    const label = button.querySelector(".md3-copy-action__label");
+
+    button.classList.remove("is-success", "is-error");
+    button.classList.add(success ? "is-success" : "is-error");
+    button.dataset.copyState = success ? "done" : "error";
+
+    if (icon) {
+      icon.textContent = success ? "check" : "error";
+    }
+
+    if (label) {
+      label.textContent = success ? "Copiado" : "Error al copiar";
+    }
+
     setTimeout(() => {
-      button.innerHTML = originalText;
+      button.classList.remove("is-success", "is-error");
+      button.dataset.copyState = "idle";
+      if (icon) {
+        icon.textContent = "content_copy";
+      }
+      if (label) {
+        label.textContent = "Copiar prompt";
+      }
     }, 2000);
   }
 
@@ -851,13 +872,15 @@ export class SearchUI {
       textarea.select();
       const successful = document.execCommand("copy");
       if (successful) {
-        this.showCopyFeedback(button);
+        this.showCopyFeedback(button, true);
       } else {
+        this.showCopyFeedback(button, false);
         console.warn(
           "[SearchUI] Fallback copy failed: execCommand returned false",
         );
       }
     } catch (err) {
+      this.showCopyFeedback(button, false);
       console.error("[SearchUI] Fallback copy error:", err);
     } finally {
       document.body.removeChild(textarea);
@@ -922,7 +945,14 @@ export class SearchUI {
           return;
         }
 
-        // Always use fallback since it's more reliable in all contexts
+        if (navigator.clipboard?.writeText) {
+          navigator.clipboard
+            .writeText(textToCopy)
+            .then(() => this.showCopyFeedback(copyBtn, true))
+            .catch(() => this.copyViaFallback(textToCopy, copyBtn));
+          return;
+        }
+
         this.copyViaFallback(textToCopy, copyBtn);
       });
     }

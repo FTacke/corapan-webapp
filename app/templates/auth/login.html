@@ -15,7 +15,7 @@
           {# Global form error banner (MD3, compact inline) #}
           {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
-              <div class="md3-alert md3-alert--error md3-alert--inline" role="alert" aria-live="assertive">
+              <div class="md3-alert md3-alert--error md3-alert--inline md3-alert--field" role="alert" aria-live="assertive">
                 <span class="material-symbols-rounded md3-alert__icon" aria-hidden="true">error</span>
                 <div class="md3-alert__content">
                   <p class="md3-alert__title">Error</p>

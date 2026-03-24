@@ -94,8 +94,12 @@
           </div>
           <textarea id="tokenCollectorInput" class="md3-player-token-input" placeholder="Token IDs ..." readonly></textarea>
           <div class="md3-player-token-icons">
-            <span id="copyTokenIdsBtn" class="material-symbols-rounded token-icon" title="Copiar al portapapeles">content_copy</span>
-            <span id="resetTokenCollectorBtn" class="material-symbols-rounded token-icon" title="Borrar lista de tokens">delete</span>
+            <button type="button" id="copyTokenIdsBtn" class="token-icon md3-copy-action md3-copy-action--icon" title="Copiar al portapapeles" aria-label="Copiar token IDs">
+              <span class="material-symbols-rounded" aria-hidden="true">content_copy</span>
+            </button>
+            <button type="button" id="resetTokenCollectorBtn" class="token-icon md3-copy-action--icon" title="Borrar lista de tokens" aria-label="Borrar lista de tokens">
+              <span class="material-symbols-rounded" aria-hidden="true">delete</span>
+            </button>
           </div>
         </div>
 

@@ -290,21 +290,6 @@
   position: absolute;
   bottom: var(--space-3);
   right: var(--space-3);
-  width: 40px;
-  height: 40px;
-  min-width: 40px;
-  min-height: 40px;
-  padding: 0;
-  border-radius: 50%;
-  border: none;
-  background: var(--md-sys-color-surface-container-high);
-  color: var(--md-sys-color-on-surface-variant);
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: background-color 200ms ease, color 200ms ease;
-  box-shadow: var(--elev-1);
   z-index: 1;
 }
 
@@ -506,7 +491,7 @@
 .citation-output {
   display: grid;
   grid-template-columns: 1fr auto;
-  gap: 0.5rem;
+  gap: var(--space-3);
   align-items: start;
 }
 
@@ -530,43 +515,9 @@
   border-color: var(--md-sys-color-primary);
 }
 
-/* Citation Copy Icon Button */
-.citation-block .icon-button {
-  border: none;
-  border-radius: 999px;
-  width: 40px;
-  height: 40px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--md-sys-color-surface-variant);
-  color: var(--md-sys-color-on-surface-variant);
-  cursor: pointer;
-  transition: background-color 0.2s ease;
-}
 
-.citation-block .icon-button:hover {
-  background: var(--md-sys-color-surface-container-highest);
-}
-
-.citation-block .icon-button:focus-visible {
-  outline: 2px solid var(--md-sys-color-primary);
-  outline-offset: 2px;
-}
-
-.citation-block .icon-button:active {
-  background: var(--md-sys-color-surface-container-high);
-}
-
-/* Copy button feedback states */
-.citation-block .icon-button--success {
-  background: var(--md-sys-color-primary-container);
-  color: var(--md-sys-color-on-primary-container);
-}
-
-.citation-block .icon-button--error {
-  background: var(--md-sys-color-error-container);
-  color: var(--md-sys-color-on-error-container);
+.citation-output .md3-copy-action--icon {
+  margin-top: var(--space-1);
 }
 
 /* Responsive: Stack on very narrow screens */
@@ -575,18 +526,9 @@
     grid-template-columns: 1fr;
   }
   
-  .citation-block .icon-button {
+  .citation-output .md3-copy-action--icon {
     justify-self: end;
   }
-}
-
-/* Copy button feedback states */
-.md3-button--success .material-symbols-rounded {
-  color: var(--md-sys-color-primary);
-}
-
-.md3-button--error .material-symbols-rounded {
-  color: var(--md-sys-color-error);
 }
 
 /* Blockquote for citations */
