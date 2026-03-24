@@ -67,6 +67,14 @@ Abbruchkriterium: Jede Lösung, die diese Regeln verletzt, wird verworfen.
 
 ---
 
+## Current Status
+
+- Phase 1: completed (`docs/template_status/2026-03-24_phase1_audit.md`)
+- Phase 2: completed (`docs/template_status/2026-03-24_phase2_architecture.md`)
+- Phase 3: in progress
+
+---
+
 ## Audit-Blöcke
 
 ### 1. Branding & App Identity
@@ -246,6 +254,7 @@ Enthält:
 ### Phase 1 – Audit (Ist-Zustand)
 - vollständige Analyse aller Blöcke
 - Dokumentation unter `docs/template_status/`
+- Status: abgeschlossen
 
 ### Phase 2 – Zielarchitektur festziehen
 - finale Definition:
@@ -253,6 +262,15 @@ Enthält:
   - Token-System
   - Layout-Shell
   - Component-System
+- Status: abgeschlossen
+
+### Phase 3 – Token Enforcement & Hotspot Reduction
+- Token-Durchsetzung in Live-CSS und Live-JS verstärken
+- JS-Theme-Verbrauch an CSS-Token-Autorität ausrichten
+- hartcodierte Farben und Inline-Visual-Styling in Hotspot-Dateien abbauen
+- Override-Dichte in den riskantesten Seiten-Dateien reduzieren
+- sichere Vorbereitung für spätere Entfernung des Legacy-Shims schaffen
+- Status: in Arbeit
 
 ### Phase 3 – Foundations refactoren
 - Tokens vereinheitlichen
@@ -272,6 +290,35 @@ Enthält:
 ### Phase 6 – Governance & Agent-Integration
 - Regeln in `agents/skills.md` überführen
 - verbindliche Standards definieren
+
+---
+
+## Phase 3 Execution Focus
+
+Diese Phase ist kein Redesign und kein Beauty-Pass.
+
+Ziel dieser Phase:
+- konsequente Token-Enforcement in Live-Dateien
+- weitere Angleichung von JS-Theme-Verhalten an CSS-Token-Autorität
+- Reduktion von hartcodierten Farben, Inline-Visual-Styling und wiederholten Literalwerten
+- Reduktion der Override-Dichte in bekannten Hotspot-Dateien
+- gezielte Migration berührter Live-Caller weg von `--md3-*`, soweit sicher
+- Vorbereitung einer späteren Legacy-Shim-Entfernung ohne Laufzeitbruch
+
+Phase-3-Hotspots:
+- `app/static/js/modules/stats/theme/corapanTheme.js`
+- `app/static/js/modules/stats/renderBar.js`
+- `app/static/js/modules/search/searchUI.js`
+- `app/static/js/modules/advanced/formHandler.js`
+- `app/static/css/md3/components/index.css`
+- `app/static/css/player-mobile.css`
+- `app/static/css/md3/components/player.css`
+- `app/static/css/md3/components/editor.css`
+
+Phase-3-Regel:
+- reduziere die schädlichsten Abweichungen zuerst
+- bevorzuge wiederverwendbare Reduktion statt großflächiger Umschreibung
+- lasse riskante Legacy-Schichten markiert bestehen, wenn Live-Abhängigkeiten noch vorhanden sind
 
 ---
 

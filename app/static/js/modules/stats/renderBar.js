@@ -8,6 +8,7 @@
  */
 
 import { buildCorapanTheme } from "./theme/corapanTheme.js";
+import { getCssVar } from "../core/themeTokens.js";
 
 // ECharts is loaded globally from CDN
 // We access it dynamically inside functions to ensure it's available
@@ -33,15 +34,7 @@ function formatPercent(p) {
  * Get text color from CSS variable based on current theme
  */
 function getTextColor() {
-  return (
-    getComputedStyle(document.documentElement)
-      .getPropertyValue("--md-sys-color-on-surface")
-      .trim() || "#1C1B1F"
-  );
-}
-
-function getCssVar(name, fallback = "") {
-  return getComputedStyle(document.documentElement).getPropertyValue(name).trim() || fallback;
+  return getCssVar("--md-sys-color-on-surface", "CanvasText");
 }
 
 /**
@@ -105,10 +98,10 @@ export function renderBar(
 
   // Get primary color from CSS (supports dark mode)
   const primaryColor =
-    getCssVar("--md-sys-color-primary", "#1B5E9F");
+    getCssVar("--md-sys-color-primary", "LinkText");
 
   const primaryContainerColor =
-    getCssVar("--md-sys-color-primary-container", "#5A7FA3");
+    getCssVar("--md-sys-color-primary-container", primaryColor);
   const secondaryColor = getCssVar("--md-sys-color-secondary", primaryContainerColor);
   const tertiaryColor = getCssVar("--md-sys-color-tertiary", primaryColor);
   const quaternaryColor = getCssVar(
@@ -176,7 +169,7 @@ export function renderBar(
         return `
           <div>
             <strong>${item.name}</strong><br/>
-            <span style="display:inline-block;margin-right:4px;border-radius:10px;width:10px;height:10px;background-color:${item.color};"></span>
+            ${item.marker}
             ${absVal} hits ${percentStr}
           </div>
         `;

@@ -139,6 +139,9 @@
 }
 
 .chart-skeleton {
+  height: 360px;
+  background: var(--md-sys-color-surface-container-low);
+  border-radius: var(--radius-md);
   animation: pulse 1.5s ease-in-out infinite;
 }
 

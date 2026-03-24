@@ -251,6 +251,11 @@ body.token-active #adv-summary {
   color: var(--md-sys-color-on-surface);
 }
 
+.md3-advanced__summary-mode {
+  font-weight: 700;
+  color: var(--md-sys-color-primary);
+}
+
 .md3-advanced__summary-count {
   font-weight: 700;
   color: var(--md-sys-color-primary);
@@ -267,6 +272,27 @@ body.token-active #adv-summary {
   justify-content: flex-start;
   gap: var(--space-3, 0.75rem);
   width: 100%;
+}
+
+.md3-advanced__summary-loading {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-height: 60px;
+  width: 100%;
+}
+
+.md3-advanced__summary-spacer {
+  flex: 1 1 auto;
+}
+
+.md3-advanced__summary-progress {
+  width: min(10rem, 100%);
+}
+
+.md3-advanced__summary-error {
+  color: var(--md-sys-color-error);
+  font-weight: 600;
 }
 
 /* ========================================

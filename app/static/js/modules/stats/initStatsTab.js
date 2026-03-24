@@ -95,14 +95,12 @@ function showLoading() {
   if (!container) return;
 
   isLoading = true;
-  container.style.opacity = "0.5";
-  container.style.pointerEvents = "none";
+  container.classList.add("is-loading");
 
   // Show skeleton loaders in chart containers
   const chartHosts = container.querySelectorAll(".chart-host");
   chartHosts.forEach((host) => {
-    host.innerHTML =
-      '<div class="chart-skeleton" style="height: 360px; background: var(--md-sys-color-surface-container-low); border-radius: 8px; animation: pulse 1.5s ease-in-out infinite;"></div>';
+    host.innerHTML = '<div class="chart-skeleton"></div>';
   });
 }
 
@@ -114,8 +112,7 @@ function hideLoading() {
   if (!container) return;
 
   isLoading = false;
-  container.style.opacity = "1";
-  container.style.pointerEvents = "auto";
+  container.classList.remove("is-loading");
 }
 
 /**
@@ -127,7 +124,7 @@ function showError(message = "No se pudieron cargar las estadísticas.") {
 
   // MD3: Use Material Symbols
   container.innerHTML = `
-    <div class="md3-alert md3-alert--error" style="grid-column: 1 / -1;">
+    <div class="md3-alert md3-alert--error md3-stats-grid__message">
       <span class="material-symbols-rounded">error</span>
       <span>${message}</span>
     </div>
@@ -141,7 +138,7 @@ function updateTotal(total) {
   const totalEl = document.getElementById("stats-total");
   if (totalEl) {
     const formatted = new Intl.NumberFormat("es-ES").format(total);
-    totalEl.innerHTML = `Tokens coincidentes: <strong style="color: var(--md-sys-color-primary);">${formatted}</strong>`;
+    totalEl.innerHTML = `Tokens coincidentes: <strong class="md3-stats-total-value">${formatted}</strong>`;
   }
 }
 

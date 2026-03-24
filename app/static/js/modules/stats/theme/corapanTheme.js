@@ -1,36 +1,26 @@
 /**
  * CO.RA.PAN ECharts Theme
  *
- * Phase-2 locked rule: runtime chart colors must resolve from CSS tokens,
- * not from an independent JS palette.
+ * Phase-3 rule: runtime chart colors resolve from live CSS token authority.
  */
 
-function cssVar(name, fallback) {
-  if (typeof document === "undefined") {
-    return fallback;
-  }
-
-  return (
-    getComputedStyle(document.documentElement).getPropertyValue(name).trim() ||
-    fallback
-  );
-}
+import { getCssVar } from "../../core/themeTokens.js";
 
 export function buildCorapanTheme() {
   const palette = [
-    cssVar("--md-sys-color-primary", "#1B5E9F"),
-    cssVar("--md-sys-color-primary-container", "#5A7FA3"),
-    cssVar("--md-sys-color-secondary", "#78909C"),
-    cssVar("--md-sys-color-secondary-container", "#B0BEC5"),
-    cssVar("--md-sys-color-tertiary", "#455A64"),
-    cssVar("--md-sys-color-surface-container-high", "#90A4AE"),
+    getCssVar("--md-sys-color-primary", "LinkText"),
+    getCssVar("--md-sys-color-primary-container", getCssVar("--md-sys-color-primary", "LinkText")),
+    getCssVar("--md-sys-color-secondary", getCssVar("--md-sys-color-primary", "LinkText")),
+    getCssVar("--md-sys-color-secondary-container", getCssVar("--md-sys-color-primary-container", getCssVar("--md-sys-color-primary", "LinkText"))),
+    getCssVar("--md-sys-color-tertiary", getCssVar("--md-sys-color-secondary", getCssVar("--md-sys-color-primary", "LinkText"))),
+    getCssVar("--md-sys-color-surface-container-high", getCssVar("--md-sys-color-secondary-container", getCssVar("--md-sys-color-primary-container", getCssVar("--md-sys-color-primary", "LinkText")))),
   ];
-  const surface = cssVar("--md-sys-color-surface", "#ffffff");
-  const onSurface = cssVar("--md-sys-color-on-surface", "CanvasText");
-  const outline = cssVar("--md-sys-color-outline", "GrayText");
-  const outlineVariant = cssVar("--md-sys-color-outline-variant", outline);
-  const success = cssVar("--md-sys-color-success", palette[0]);
-  const error = cssVar("--md-sys-color-error", palette[2]);
+  const surface = getCssVar("--md-sys-color-surface", "Canvas");
+  const onSurface = getCssVar("--md-sys-color-on-surface", "CanvasText");
+  const outline = getCssVar("--md-sys-color-outline", onSurface);
+  const outlineVariant = getCssVar("--md-sys-color-outline-variant", outline);
+  const success = getCssVar("--app-color-success", palette[0]);
+  const error = getCssVar("--md-sys-color-error", palette[2]);
 
   return {
     color: palette,

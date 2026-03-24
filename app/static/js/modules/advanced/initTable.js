@@ -27,6 +27,13 @@ import {
   renderFileLink,
 } from "./datatableFactory.js";
 
+function setElementVisible(element, isVisible) {
+  if (!element) return;
+
+  element.classList.toggle("hidden", !isVisible);
+  element.toggleAttribute("hidden", !isVisible);
+}
+
 export function initAdvancedTable(queryParams) {
   console.log("[Advanced] initAdvancedTable called with params:", queryParams);
   // Guard: jQuery must be present
@@ -550,13 +557,11 @@ export function updateSummary(data, queryParams, initialLoad = false) {
     summaryBox.hidden = true;
     const subTabs = document.getElementById("search-sub-tabs");
     if (subTabs) {
-      subTabs.style.display = "none";
-      subTabs.classList.add("hidden");
+      setElementVisible(subTabs, false);
     }
     const tableContainer = document.getElementById("datatable-container");
     if (tableContainer) {
-      tableContainer.style.display = "none";
-      tableContainer.classList.add("hidden");
+      setElementVisible(tableContainer, false);
     }
     console.log("[Summary] Initial load: summary and results hidden.");
     return;
@@ -591,7 +596,7 @@ export function updateSummary(data, queryParams, initialLoad = false) {
   }
 
   let html = `
-    <span class="md3-advanced__summary-mode" style="font-weight: bold; color: var(--md-sys-color-primary);">${modeLabel}</span> 
+    <span class="md3-advanced__summary-mode">${modeLabel}</span> 
     <span class="md3-advanced__summary-separator">|</span>
     <span class="md3-advanced__summary-label">${queryLabel}:</span> 
     <span class="md3-advanced__summary-query">"${escapeHtml(query)}"</span> 

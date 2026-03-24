@@ -171,7 +171,7 @@ async function loadSearchResults(queryParams) {
   } catch (error) {
     console.error("❌ Error loading results:", error);
     if (summaryBox) {
-      summaryBox.innerHTML = `<span style="color: var(--md-sys-color-error);">Error: ${escapeHtml(error.message)}</span>`;
+      summaryBox.innerHTML = `<span class="md3-advanced__summary-error">Error: ${escapeHtml(error.message)}</span>`;
     }
   }
 }

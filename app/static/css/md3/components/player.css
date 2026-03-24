@@ -18,11 +18,6 @@
   background: var(--app-background);
 }
 
-/* Scope background override to Player page only */
-body.app-shell[data-page="player"] {
-  background-color: var(--app-background) !important;
-}
-
 /* Player Header */
 .md3-player-header {
   display: flex;

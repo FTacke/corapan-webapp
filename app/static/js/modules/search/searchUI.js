@@ -20,6 +20,21 @@ import { destroyTokenTable } from "./initTokenTable.js";
 import { cleanupStats } from "../stats/initStatsTabAdvanced.js";
 import { trackSearch } from "../analytics.js";
 
+function setElementVisible(element, isVisible) {
+  if (!element) return;
+
+  element.classList.toggle("hidden", !isVisible);
+  element.toggleAttribute("hidden", !isVisible);
+}
+
+function isElementVisible(element) {
+  return !!element && !element.classList.contains("hidden") && !element.hasAttribute("hidden");
+}
+
+function setBodyScrollLocked(isLocked) {
+  document.body.classList.toggle("overflow-hidden", isLocked);
+}
+
 export class SearchUI {
   constructor() {
     this.advancedMode = false;
@@ -87,8 +102,7 @@ export class SearchUI {
               // Hide the main search sub-tabs and any search results when token tab is active.
               // We keep DataTables instances intact so data is persistent; we only hide the containers.
               if (subTabs) {
-                subTabs.classList.add('hidden');
-                subTabs.style.display = 'none';
+                setElementVisible(subTabs, false);
               }
 
               // hide summary and results panels specifically
@@ -100,8 +114,7 @@ export class SearchUI {
               if (resultsPanel) resultsPanel.setAttribute('hidden', '');
               if (statsPanel) statsPanel.setAttribute('hidden', '');
               if (tableContainer) {
-                tableContainer.classList.add('hidden');
-                tableContainer.style.display = 'none';
+                setElementVisible(tableContainer, false);
               }
               if (advSummary) advSummary.hidden = true;
 
@@ -130,14 +143,13 @@ export class SearchUI {
               // - the table container / panels themselves are already visible.
               const resultsPanel = document.getElementById('panel-resultados');
               const statsPanel = document.getElementById('panel-estadisticas');
-              const tableVisible = tableContainer && (tableContainer.classList.contains('hidden') === false && tableContainer.style.display !== 'none');
+              const tableVisible = isElementVisible(tableContainer);
               const resultsPanelVisible = resultsPanel && !resultsPanel.hasAttribute('hidden');
               const statsPanelVisible = statsPanel && !statsPanel.hasAttribute('hidden');
               const shouldShowSubTabs = !!(lastSearch || advHasContent || tableVisible || resultsPanelVisible || statsPanelVisible);
 
               if (subTabs && shouldShowSubTabs) {
-                subTabs.classList.remove('hidden');
-                subTabs.style.display = '';
+                setElementVisible(subTabs, true);
               }
 
               // restore visibility of main panels (do not destroy data) — only when we actually have a saved search
@@ -145,8 +157,7 @@ export class SearchUI {
               if (resultsPanel) resultsPanel.removeAttribute('hidden');
               if (statsPanel) statsPanel.removeAttribute('hidden');
               if (tableContainer && (lastSearch || advHasContent || tableVisible)) {
-                tableContainer.classList.remove('hidden');
-                tableContainer.style.display = '';
+                setElementVisible(tableContainer, true);
 
                 // Ensure DataTables reflows/adjusts after becoming visible
                 setTimeout(() => {
@@ -190,7 +201,7 @@ export class SearchUI {
 
             // If the advanced table is present and was hidden, show it
             if (tableContainer) {
-              if (tableContainer.classList.contains('hidden') || tableContainer.style.display === 'none') {
+              if (!isElementVisible(tableContainer)) {
                 // If we have a saved lastSearch params, restore previous view.
                 // Prefer reusing an existing DataTable instance (preserve paging/sort state).
                 const lastSearch = sessionStorage.getItem('lastSearch');
@@ -198,8 +209,7 @@ export class SearchUI {
                   try {
                     if (window.jQuery && $.fn.dataTable && $.fn.dataTable.isDataTable('#advanced-table')) {
                       // Table instance exists — keep it and just make it visible and reflow
-                      tableContainer.classList.remove('hidden');
-                      tableContainer.style.display = '';
+                      setElementVisible(tableContainer, true);
                       setTimeout(() => {
                         try {
                           const dt = $('#advanced-table').DataTable();
@@ -219,8 +229,7 @@ export class SearchUI {
                     console.warn('[SearchUI] Could not re-init or show advanced table on tab restore:', err);
                   }
                 } else {
-                  tableContainer.classList.remove('hidden');
-                  tableContainer.style.display = '';
+                  setElementVisible(tableContainer, true);
                 }
               }
             }
@@ -541,15 +550,13 @@ export class SearchUI {
     try {
       if (summaryBox) {
         summaryBox.hidden = false;
-        // Reuse the full-width summary style so loading looks like Results summary
-        // IMPORTANT: adv-summary already has class md3-advanced__summary, avoid nesting the same class inside it.
         summaryBox.innerHTML = `
-          <div style="display:flex; align-items:center; gap:0.75rem; min-height:60px; width:100%;">
-            <span class="md3-advanced__summary-mode" style="font-weight:700; color:var(--md-sys-color-primary);">Cargando</span>
+          <div class="md3-advanced__summary-loading">
+            <span class="md3-advanced__summary-mode">Cargando</span>
             <span class="md3-advanced__summary-separator">|</span>
             <span class="md3-advanced__summary-label">Consultando…</span>
-            <div style="flex:1"></div>
-            <div style="width:160px;">
+            <div class="md3-advanced__summary-spacer"></div>
+            <div class="md3-advanced__summary-progress">
               <div role="progressbar" class="md3-linear-progress md3-linear-progress--indeterminate" aria-label="Cargando resultados">
                 <div class="md3-linear-progress__buffer"></div>
                 <div class="md3-linear-progress__bar md3-linear-progress__primary-bar"><span class="md3-linear-progress__bar-inner"></span></div>
@@ -599,13 +606,11 @@ export class SearchUI {
       // Ensure UI container is visible (in case DataTables is initialized while hidden)
       const tableContainer = document.getElementById("datatable-container");
       if (tableContainer) {
-        tableContainer.style.display = "";
-        tableContainer.classList.remove("hidden");
+        setElementVisible(tableContainer, true);
       }
       const subTabs = document.getElementById("search-sub-tabs");
       if (subTabs) {
-        subTabs.style.display = "";
-        subTabs.classList.remove("hidden");
+        setElementVisible(subTabs, true);
       }
 
       // Force switch to "Resultados" tab
@@ -625,7 +630,7 @@ export class SearchUI {
       console.error("❌ Search error:", error);
       if (summaryBox) {
         summaryBox.innerHTML = `
-          <span style="color: var(--md-sys-color-error);">
+          <span class="md3-advanced__summary-error">
             Error: ${this.escapeHtml(error.message)}
           </span>
         `;
@@ -713,13 +718,11 @@ export class SearchUI {
     // Hide containers
     const tableContainer = document.getElementById("datatable-container");
     if (tableContainer) {
-      tableContainer.style.display = "none";
-      tableContainer.classList.add("hidden");
+      setElementVisible(tableContainer, false);
     }
     const subTabs = document.getElementById("search-sub-tabs");
     if (subTabs) {
-      subTabs.style.display = "none";
-      subTabs.classList.add("hidden");
+      setElementVisible(subTabs, false);
     }
 
     // Hide stats panel explicitly
@@ -893,7 +896,7 @@ export class SearchUI {
       e.preventDefault();
       overlay.classList.add("active");
       overlay.removeAttribute("aria-hidden");
-      document.body.style.overflow = "hidden";
+      setBodyScrollLocked(true);
       dialog.focus();
     });
 
@@ -901,7 +904,7 @@ export class SearchUI {
       closeBtn.addEventListener("click", () => {
         overlay.classList.remove("active");
         overlay.setAttribute("aria-hidden", "true");
-        document.body.style.overflow = "";
+        setBodyScrollLocked(false);
       });
     }
 
@@ -928,7 +931,7 @@ export class SearchUI {
       if (e.target === overlay) {
         overlay.classList.remove("active");
         overlay.setAttribute("aria-hidden", "true");
-        document.body.style.overflow = "";
+        setBodyScrollLocked(false);
       }
     });
 
@@ -936,7 +939,7 @@ export class SearchUI {
       if (e.key === "Escape" && overlay.classList.contains("active")) {
         overlay.classList.remove("active");
         overlay.setAttribute("aria-hidden", "true");
-        document.body.style.overflow = "";
+        setBodyScrollLocked(false);
       }
     });
   }

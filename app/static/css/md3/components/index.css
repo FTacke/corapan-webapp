@@ -72,23 +72,6 @@
    The index page disables the permanent drawer, so that extra min-height becomes
    unnecessary and combines with the landing page's generous spacing to push the
    footer below the fold. Keep the fix local to index instead of changing shell-wide rules. */
-@media (min-width: 840px) {
-  body[data-page="index"] #main-content,
-  body[data-page="index"] main.site-main,
-  body[data-page="index"] .site-main {
-    min-height: 0;
-  }
-
-  body[data-page="index"] .md3-index-logo {
-    padding-block: var(--space-2) 0;
-  }
-
-  body[data-page="index"] .md3-index-cards {
-    gap: var(--space-4);
-    padding-top: var(--space-4);
-    padding-bottom: var(--space-2);
-  }
-}
 
 /* ============================================================================
    Index Card Styling - Extends MD3 Landing Card
@@ -128,16 +111,28 @@
    DESKTOP: Permanenter Drawer wird ausgeblendet für volle Breite
    ============================================ */
 
-/* Hide Standard (permanent) Drawer on Index Page (Desktop only) */
 @media (min-width: 840px) {
+  body[data-page="index"] #main-content,
+  body[data-page="index"] main.site-main,
+  body[data-page="index"] .site-main {
+    min-height: 0;
+  }
+
+  body[data-page="index"] .md3-index-logo {
+    padding-block: var(--space-2) 0;
+  }
+
+  body[data-page="index"] .md3-index-cards {
+    gap: var(--space-4);
+    padding-top: var(--space-4);
+    padding-bottom: var(--space-2);
+  }
+
   body[data-page="index"] #navigation-drawer {
     /* NEEDS_IMPORTANT: app-shell layout override */
     display: none !important;
   }
-}
 
-/* Adjust Grid Layout on Index Page (Desktop) - Full width without drawer */
-@media (min-width: 840px) {
   body[data-page="index"].app-shell {
     /* NEEDS_IMPORTANT: app-shell layout override */
     grid-template-areas:

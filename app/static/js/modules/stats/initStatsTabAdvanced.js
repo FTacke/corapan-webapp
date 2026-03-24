@@ -38,8 +38,7 @@ function showLoading() {
   isLoading = true;
   const container = document.getElementById("stats-grid");
   if (container) {
-    container.style.opacity = "0.5";
-    container.style.pointerEvents = "none";
+    container.classList.add("is-loading");
   }
   const btn = document.getElementById("btn-download-stats-csv");
   if (btn) btn.disabled = true;
@@ -52,8 +51,7 @@ function hideLoading() {
   isLoading = false;
   const container = document.getElementById("stats-grid");
   if (container) {
-    container.style.opacity = "1";
-    container.style.pointerEvents = "auto";
+    container.classList.remove("is-loading");
   }
   const btn = document.getElementById("btn-download-stats-csv");
   if (btn) btn.disabled = false;
@@ -66,10 +64,10 @@ function showError() {
   const container = document.getElementById("stats-grid");
   if (container) {
     container.innerHTML = `
-      <div class="md3-placeholder-panel" style="grid-column: 1 / -1;">
-        <span class="material-symbols-rounded md3-placeholder-panel__icon">error</span>
-        <h3 class="md3-placeholder-panel__title">Error al cargar estadísticas</h3>
-        <p class="md3-placeholder-panel__text">
+      <div class="md3-stats-grid__placeholder">
+        <span class="material-symbols-rounded md3-stats-grid__placeholder-icon">error</span>
+        <h3 class="md3-stats-grid__placeholder-title">Error al cargar estadísticas</h3>
+        <p class="md3-stats-grid__placeholder-text">
           No se pudieron cargar las estadísticas. Por favor, intenta de nuevo.
         </p>
       </div>
@@ -97,7 +95,7 @@ function updateTotal(total) {
   }
 
   let html = `
-    <span class="md3-advanced__summary-mode" style="font-weight: bold; color: var(--md-sys-color-primary);">${modeLabel}</span> 
+    <span class="md3-advanced__summary-mode">${modeLabel}</span> 
     <span class="md3-advanced__summary-separator">|</span>
     <span class="md3-advanced__summary-label">${queryLabel}:</span> 
     <span class="md3-advanced__summary-query">"${escapeHtml(query)}"</span> 

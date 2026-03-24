@@ -753,11 +753,6 @@
   background: var(--app-background);
 }
 
-/* Scope background override to Editor page only */
-body.app-shell[data-page="editor"] {
-  background-color: var(--app-background) !important;
-}
-
 /* Player Header */
 .md3-player-header {
   display: flex;
@@ -939,14 +934,9 @@ body.app-shell[data-page="editor"] {
 /* Styles are inherited from transcription-shared.css */
 
 .md3-speaker-text .word.modified-word {
-  background: rgba(
-    76,
-    175,
-    80,
-    0.2
-  ); /* Grüner Hintergrund für geänderte Wörter */
-  color: var(--md-sys-color-on-surface);
-  border-bottom: 2px solid rgba(76, 175, 80, 0.6); /* Grüne Unterstreichung */
+  background: var(--app-color-success-container);
+  color: var(--app-color-on-success-container);
+  border-bottom: 2px solid var(--app-color-success);
   font-weight: 500;
 }
 
@@ -986,7 +976,7 @@ body.app-shell[data-page="editor"] {
 
 /* Geänderter Speaker - Grüne Markierung */
 .md3-speaker-name.modified-speaker {
-  color: rgba(76, 175, 80, 1); /* Grüne Farbe */
+  color: var(--app-color-success);
   font-weight: 700;
   position: relative;
 }
@@ -998,7 +988,7 @@ body.app-shell[data-page="editor"] {
   left: 0;
   right: 0;
   height: 2px;
-  background: rgba(76, 175, 80, 0.6);
+  background: var(--app-color-success);
 }
 
 /* ============================================
@@ -1072,7 +1062,7 @@ body.app-shell[data-page="editor"] {
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.4);
+  background: color-mix(in srgb, var(--md-sys-color-scrim) 40%, transparent);
   display: none; /* hidden by default, enabled when active */
   align-items: center;
   justify-content: center;
