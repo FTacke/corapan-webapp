@@ -51,11 +51,13 @@ test('logout smoke clears authenticated access to protected profile page', async
   await expect(page).toHaveURL(/\/auth\/account\/profile\/page$/);
 
   await page.locator('[data-account-menu-trigger], [data-user-menu-toggle]').click();
-  await expect(page.locator('[data-user-menu]')).toBeVisible();
+  const activeUserMenu = page.locator('[data-user-menu]').filter({ has: page.locator('[data-logout="fetch"]') });
+  await expect(activeUserMenu).toBeVisible();
+  const canonicalLogoutAction = activeUserMenu.locator('[data-logout="fetch"]');
 
   await Promise.all([
     page.waitForURL(url => !url.pathname.startsWith('/auth/account/profile')),
-    page.locator('[data-logout="fetch"]').click(),
+    canonicalLogoutAction.click(),
   ]);
 
   await page.waitForLoadState('networkidle');
