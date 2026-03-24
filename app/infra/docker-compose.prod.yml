@@ -1,20 +1,4 @@
-# CO.RA.PAN Production Stack: App + PostgreSQL Auth DB 19.01.2026
-#
-# Usage:
-#   docker-compose -f infra/docker-compose.prod.yml up -d --build     # Deploy
-#   docker-compose -f infra/docker-compose.prod.yml down              # Stop
-#   docker-compose -f infra/docker-compose.prod.yml logs -f web       # Follow logs
-#
-# REQUIRED environment variables (set in shell or .env file):
-#   FLASK_SECRET_KEY     - Strong random secret (generate: python -c "import secrets; print(secrets.token_hex(32))")
-#   JWT_SECRET_KEY       - Strong random secret for JWT
-#   POSTGRES_PASSWORD    - Database password
-#   START_ADMIN_PASSWORD - Initial admin password (first deploy only)
-#
-# Production checklist:
-#   [ ] Set all required environment variables
-#   [ ] Configure reverse proxy (nginx) for HTTPS
-#   [ ] Set up backup for postgres volume
+# Canonical production compose for the application stack.
 
 services:
   db:
@@ -59,8 +43,6 @@ services:
       
       # Auth Database: connect to 'db' service (hostname inside Docker network)
       AUTH_DATABASE_URL: postgresql+psycopg2://corapan_app:${POSTGRES_PASSWORD}@db:5432/corapan_auth
-      DATABASE_URL: postgresql+psycopg2://corapan_app:${POSTGRES_PASSWORD}@db:5432/corapan_auth
-      
       # JWT settings (production: secure cookies)
       JWT_SECRET_KEY: ${JWT_SECRET_KEY:?JWT_SECRET_KEY is required}
       JWT_COOKIE_SECURE: "true"

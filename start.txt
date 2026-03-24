@@ -1,0 +1,4 @@
+```powershell
+# Im Workspace-Root C:\dev\corapan
+.\scripts\dev-start.ps1
+```

@@ -172,7 +172,7 @@ Verbleibende Legacy-Pfade, die nicht mehr aktiv sind:
 - `webapp/data/_legacy_blacklab_invalid/prior_unused_snapshot`
 - `data/blacklab_export.duplicate_20260320`
 - `webapp/.venv_webapp_legacy_20260320`
-- historische Doku unter `webapp/docs/state/` mit bewusstem Forensik-Kontext
+- historische Doku unter der frueheren `webapp/docs/`-Struktur, inzwischen bereinigt oder in kanonische Root-Dokumentation ueberfuehrt
 
 ## 7. Naechste Schritte / Roadmap
 

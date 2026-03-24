@@ -1,263 +1,69 @@
-# Lokale Entwicklung
+# Local Development
 
-**Scope:** Setup und Development Workflow  
-**Source-of-truth:** `startme.md`, `scripts/dev-setup.ps1`, `scripts/dev-start.ps1`
+Use the root workspace as the canonical development entry point.
 
-Die Dev-Skripte bevorzugen ein Workspace-Layout mit Geschwisterordnern neben `app/`:
-- `../data`
-- `../media`
+## Source of Truth
 
-Dieses Layout ist jetzt verpflichtend fuer den kanonischen Dev-Start.
-`runtime/corapan` innerhalb des Repositories ist in Dev inaktiv und wird von den aktiven Dev-Skripten nicht mehr als Fallback verwendet.
+- `../docker-compose.dev-postgres.yml`
+- `../scripts/dev-setup.ps1`
+- `../scripts/dev-start.ps1`
+
+`runtime/corapan` inside the repository is not a valid development fallback.
 
 ## Quick Start
 
-**Ein Befehl startet alles:**
-
 ```powershell
+cd ..
 .\scripts\dev-setup.ps1
 ```
 
-Das Skript:
-1. Richtet `.venv` + Dependencies ein
-2. Startet PostgreSQL + BlackLab via Docker
-3. Führt Auth-DB-Migration aus
-4. Startet Flask Dev-Server unter `http://localhost:8000`
-
-**Login:** `admin` / `change-me`
-
----
-
-## Voraussetzungen
-
-- **Python 3.12+**
-- **Docker Desktop** (muss laufen)
-- **PowerShell 5.1+** (Windows) oder Bash (Linux/Mac)
-- **Git**
-
----
-
-## Manuelles Setup (Schritt für Schritt)
-
-### 1. Repository klonen
-
-```bash
-git clone <repo-url> corapan
-cd corapan
-```
-
-### 2. Virtual Environment
-
-```powershell
-python -m venv .venv
-.\.venv\Scripts\Activate.ps1  # PowerShell
-# oder: source .venv/bin/activate  # Bash
-```
-
-### 3. Dependencies installieren
-
-```powershell
-pip install -r requirements.txt
-```
-
-### 4. Docker Services starten
-
-```powershell
-docker compose -f .\docker-compose.dev-postgres.yml up -d
-```
-
-**Services:**
-- PostgreSQL (Port 5432)
-- BlackLab Server (Port 8080)
-
-### 5. Datenbank migrieren
-
-```powershell
-# PowerShell
-$env:AUTH_DATABASE_URL = "postgresql+psycopg2://corapan_auth:corapan_auth@127.0.0.1:54320/corapan_auth"
-$env:BLS_BASE_URL = "http://localhost:8081/blacklab-server"
-$env:BLS_CORPUS = "corapan"
-python -c "from src.app.extensions.sqlalchemy_ext import init_engine; from src.app.config import load_config; from flask import Flask; app = Flask(__name__); load_config(app, 'development'); init_engine(app); from src.app.auth.models import Base; Base.metadata.create_all(app.config['AUTH_DATABASE_URL'])"
-```
-
-**Oder manuell:**
-```bash
-psql -U corapan -h localhost -d corapan_auth -f migrations/0001_create_auth_schema_postgres.sql
-psql -U corapan -h localhost -d corapan_auth -f migrations/0002_create_analytics_tables.sql
-```
-
-### 6. Initial Admin erstellen
-
-```powershell
-python scripts/create_initial_admin.py
-```
-
-**Credentials:** `admin` / `change-me`
-
-### 7. Dev-Server starten
-
-```powershell
-python -m src.app.main
-```
-
-**URL:** `http://localhost:8000`
-
----
-
-## Nur neu starten (nach Setup)
+Daily restart:
 
 ```powershell
 .\scripts\dev-start.ps1
 ```
 
-Prüft ob Docker-Services laufen und startet sie bei Bedarf.
+## Required Local Layout
 
----
+The canonical dev layout is the workspace root with sibling runtime folders:
 
-## Environment Variables (Dev)
-
-**Empfohlen:** `.env` Datei im Root (nicht in Git!)
-
-```bash
-# .env
-FLASK_ENV=development
-FLASK_SECRET_KEY=dev-secret-change-me
-JWT_SECRET_KEY=dev-jwt-secret-change-me
-AUTH_DATABASE_URL=postgresql+psycopg2://corapan_auth:corapan_auth@127.0.0.1:54320/corapan_auth
-BLS_BASE_URL=http://localhost:8081/blacklab-server
-BLS_CORPUS=corapan
-ALLOW_PUBLIC_TEMP_AUDIO=true
+```text
+CORAPAN/
+    app/
+    data/
+    media/
 ```
 
-**Laden via python-dotenv (automatisch in Flask):**
-```python
-# Wird automatisch geladen wenn .env vorhanden
-```
+The dev scripts set:
 
----
+- `CORAPAN_RUNTIME_ROOT` to the workspace root
+- `CORAPAN_MEDIA_ROOT` to `CORAPAN/media`
+- `AUTH_DATABASE_URL` to the local PostgreSQL DSN
+- `BLS_BASE_URL` and `BLS_CORPUS` for the local BlackLab stack
 
-## Port-Übersicht (Dev)
+## Ports
 
-| Port | Service | URL |
-|------|---------|-----|
-| 8000 | Flask Dev-Server | `http://localhost:8000` |
-| 5432 | PostgreSQL | `postgresql://localhost:5432` |
-| 8080 | BlackLab Server | `http://localhost:8080/blacklab-server` |
+- app: `http://localhost:8000`
+- auth database: `localhost:54320`
+- BlackLab: `http://localhost:8081/blacklab-server`
 
----
+## Optional Local Overrides
 
-## Runtime-Verzeichnis (Dev)
+Use `app/.env.example` as the reference for a local `.env` file. The dev scripts already provide the canonical defaults for normal local work.
 
-**Kanonische Lage:** `<WorkspaceRoot>` mit `data/` und `media/` neben `app/`
+## Statistics
 
-Die aktive Dev-Runtime liegt damit ausserhalb des Repositories und wird ueber `CORAPAN_RUNTIME_ROOT` aufgeloest:
+Statistics files are runtime output under `data/public/statistics/` and are not versioned.
 
-```
-<WorkspaceRoot>/
-├── data/
-│   ├── public/
-│   │   └── statistics/       ← Generierte Statistik-Daten (JSON + PNG)
-│   ├── public/metadata/
-│   ├── db/
-│   └── blacklab_export/      ← Dev-docmeta fuer die Web-App
-├── media/
-│   ├── mp3-full/
-│   ├── mp3-split/
-│   ├── mp3-temp/
-│   └── transcripts/
-└── app/
-```
+The maintenance pipeline that generates them is outside the scope of the app runtime contract.
 
-### Auto-Setup beim Start
-
-`scripts/dev-start.ps1` erstellt das Runtime-Verzeichnis automatisch:
-- Setzt `CORAPAN_RUNTIME_ROOT` auf den Workspace-Root mit den Geschwisterordnern `data/` und `media/`
-- Setzt `CORAPAN_MEDIA_ROOT` auf `<WorkspaceRoot>/media`
-- Erstellt fehlende Unterordner unter der kanonischen Dev-Struktur
-- bricht ab, wenn nur die alte repo-lokale `runtime/corapan`-Struktur verfuegbar ist
-
-### Custom Runtime-Pfad
-
-Falls du die Runtime an einem anderen Ort brauchst, muss dort dieselbe kanonische Struktur mit `data/` und `media/` existieren. Ueberschreibe dann vor dem Start:
+## Validation
 
 ```powershell
-$env:CORAPAN_RUNTIME_ROOT = "D:\custom-runtime\corapan"
-.\scripts\dev-start.ps1
-```
-
-Oder persistent im PowerShell-Profil (`notepad $PROFILE`):
-```powershell
-$env:CORAPAN_RUNTIME_ROOT = "D:\custom-runtime\corapan"
-```
-
-### Statistics-Generierung
-
-Statistics (JSON + PNG-Visualisierungen) werden in `$CORAPAN_RUNTIME_ROOT\data\public\statistics\` geschrieben:
-
-```powershell
-# CSV-Input generieren (einmalig)
-python .\maintenance_pipelines\_0_json\04_internal_country_statistics.py
-
-# Statistics generieren und schreiben
-python .\maintenance_pipelines\_0_json\05_publish_corpus_statistics.py
-
-# Verifikation
-ls $env:CORAPAN_RUNTIME_ROOT\data\public\statistics\
-```
-
-Der API-Endpoint `/api/statistics` serviert diese Dateien.
-
----
-
-## Hot Reload
-
-**Flask Dev-Server:**
-```python
-# src/app/main.py
-if __name__ == "__main__":
-    app.run(debug=True, use_reloader=True)
-```
-
-**Wichtig:** In `create_app()` ist `use_reloader=False` gesetzt (Stabilitätsgründe). Kann überschrieben werden.
-
----
-
-## Tests ausführen
-
-```powershell
+cd app
 pytest
+ruff check src tests
 ```
-
-**Config:** `pyproject.toml`
-
-```toml
-[tool.pytest.ini_options]
-testpaths = ["tests"]
-norecursedirs = ["LOKAL", "data", "media", "static", "templates"]
-```
-
----
-
-## Docker Services verwalten
-
-### Starten
-```powershell
-docker-compose -f docker-compose.dev-postgres.yml up -d
-```
-
-### Stoppen
-```powershell
-docker-compose -f docker-compose.dev-postgres.yml down
-```
-
-### Logs anzeigen
-```powershell
-docker-compose -f docker-compose.dev-postgres.yml logs -f
-```
-
-### DB-Shell öffnen
-```powershell
-docker exec -it corapan-postgres psql -U corapan -d corapan_auth
 ```
 
 ---

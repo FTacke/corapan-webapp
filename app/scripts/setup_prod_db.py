@@ -11,15 +11,13 @@ The script is idempotent - running it multiple times is safe and will not
 create duplicate admin users or cause errors.
 
 Usage (inside container):
-    docker exec corapan-webapp python scripts/setup_prod_db.py
+    docker exec corapan-web-prod python scripts/setup_prod_db.py
 
 Environment Variables:
-    DATABASE_URL or AUTH_DATABASE_URL - PostgreSQL connection string
-        Example: postgresql://corapan_app:password@localhost:5432/corapan_auth
+    AUTH_DATABASE_URL - PostgreSQL connection string
+        Example: postgresql+psycopg2://corapan_app:password@db:5432/corapan_auth
     ADMIN_EMAIL - Optional email for admin user (default: admin@example.org)
     AUTH_HASH_ALGO - Password hashing algorithm (default: argon2)
-
-The script reads DATABASE_URL from the environment or from passwords.env if present.
 """
 
 from __future__ import annotations
@@ -35,43 +33,13 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 
-def load_env_file(env_path: Path) -> dict[str, str]:
-    """Load environment variables from a file."""
-    env_vars = {}
-    if not env_path.exists():
-        return env_vars
-
-    with open(env_path, "r", encoding="utf-8") as f:
-        for line in f:
-            line = line.strip()
-            if not line or line.startswith("#"):
-                continue
-            if "=" in line:
-                key, _, value = line.partition("=")
-                # Strip quotes if present
-                value = value.strip().strip("'\"")
-                env_vars[key.strip()] = value
-    return env_vars
-
-
 def get_database_url() -> str:
-    """Get database URL from environment or passwords.env file."""
-    # Try environment variables first
-    db_url = os.environ.get("DATABASE_URL") or os.environ.get("AUTH_DATABASE_URL")
+    """Get the canonical auth/core database URL from the environment."""
+    db_url = os.environ.get("AUTH_DATABASE_URL", "").strip()
     if db_url:
         return db_url
 
-    # Try loading from passwords.env
-    passwords_env = ROOT / "passwords.env"
-    if passwords_env.exists():
-        env_vars = load_env_file(passwords_env)
-        db_url = env_vars.get("DATABASE_URL") or env_vars.get("AUTH_DATABASE_URL")
-        if db_url:
-            return db_url
-
-    raise RuntimeError(
-        "DATABASE_URL not found. Set it in environment or in passwords.env"
-    )
+    raise RuntimeError("AUTH_DATABASE_URL not found. Set it in the environment.")
 
 
 def apply_migrations(db_url: str) -> None:

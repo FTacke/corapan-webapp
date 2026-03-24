@@ -1,221 +1,44 @@
-# Verzeichnisstruktur
+# Directory Structure
 
-**Scope:** Organisation des Repositories  
-**Source-of-truth:** Repo Root, `pyproject.toml`, `.gitignore`
+This document reflects the current repository layout after the cleanup pass.
 
-## Top-Level Struktur
+## Root
 
-```
-corapan-webapp/
-├── .venv/                    # Python Virtual Environment (lokal, nicht in Git)
-├── config/                   # Externe Konfiguration (Keys, BlackLab-Configs)
-├── data/                     # Runtime-Datenbanken, Exporte, Counters
-├── docs/                     # Dokumentation (Status quo)
-├── infra/                    # Docker Compose Files (Dev/Prod)
-├── logs/                     # Anwendungs-Logs (lokal/prod)
-├── media/                    # Audio-Dateien, Transkripte (große Binärdaten)
-├── migrations/               # SQL-Migrationen (Auth-Schema)
-├── reports/                  # Automatisierte Reports (z.B. MD3-Lint)
-├── scripts/                  # Hilfsskripte (Setup, Deploy, Maintenance)
-├── src/                      # Hauptanwendung (Python-Code)
-├── static/                   # Frontend Assets (CSS, JS, Bilder)
-├── templates/                # Jinja2 Templates
-├── tests/                    # Unit- und Integrationstests
-├── tools/                    # Build-Tools, Utilities
-├── docker-compose.yml        # Produktion Docker Compose
-├── Dockerfile                # Multi-Stage Build
-├── Makefile                  # Convenience-Targets
-├── pyproject.toml            # Python Projekt-Metadaten
-├── requirements.txt          # Python Dependencies
-├── README.md                 # Projekt-Übersicht
-└── startme.md                # Quick Start Guide
+```text
+corapan/
+    .github/                    active governance and workflows
+    app/                        versioned application and deploy implementation
+    docs/                       canonical maintainer documentation
+    scripts/                    root dev entry points
+    data/                       runtime state, not versioned
+    media/                      runtime media, not versioned
+    maintenance_pipelines/      separate operational subtree
+    docker-compose.dev-postgres.yml
+    README.md
+    AGENTS.md
 ```
 
----
+## App
 
-## `src/` — Application Code
-
-```
-src/
-└── app/
-    ├── __init__.py           # Application Factory (create_app)
-    ├── main.py               # Entry Point (python -m src.app.main)
-    ├── analytics/            # Analytics-Modul (DSGVO-konform)
-    │   ├── __init__.py
-    │   └── models.py         # AnalyticsDaily Model
-    ├── auth/                 # Authentication & Authorization
-    │   ├── __init__.py
-    │   ├── decorators.py     # @require_role, @jwt_required
-    │   ├── models.py         # User, RefreshToken, ResetToken
-    │   └── services.py       # User Management, Login/Logout Logic
-    ├── config/               # Konfiguration
-    │   ├── __init__.py       # BaseConfig, DevConfig, load_config
-    │   └── countries.py      # Location Data (CO.RA.PAN-spezifisch)
-    ├── extensions/           # Flask Extensions Init
-    │   ├── __init__.py
-    │   └── sqlalchemy_ext.py # SQLAlchemy Engine, Session Management
-    ├── models/               # (Leer - Models in Feature-Modulen)
-    ├── routes/               # Blueprints (Route Definitions)
-    │   ├── __init__.py       # register_blueprints()
-    │   ├── admin.py          # Admin Dashboard
-    │   ├── admin_users.py    # User Management (Admin)
-    │   ├── analytics.py      # Analytics Dashboard
-    │   ├── atlas.py          # Geografische Visualisierung
-    │   ├── auth.py           # Login, Logout, Token Refresh
-    │   ├── bls_proxy.py      # BlackLab Server Proxy
-    │   ├── corpus.py         # Korpussuche (einfach + CQL)
-    │   ├── editor.py         # JSON-Editor (Editor-Rolle)
-    │   ├── media.py          # Audio-Datei-Serving
-    │   ├── player.py         # Audio-Player
-    │   ├── public.py         # Startseite, Impressum, etc.
-    │   └── stats.py          # Statistiken, Charts, Export
-    ├── search/               # Suchlogik (BlackLab Integration)
-    │   ├── __init__.py
-    │   ├── search_service.py # Search Execution
-    │   └── cql_builder.py    # CQL Query Builder (Pattern Builder)
-    └── services/             # Shared Services
-        └── (diverse)
+```text
+app/
+    src/app/                    Flask backend and shared services
+    templates/                  Jinja templates
+    static/                     CSS, JS, images
+    migrations/                 SQL migrations
+    scripts/                    app-level helpers and deploy scripts
+    infra/                      production compose and secondary full-stack helper
+    requirements*.in|txt        Python dependency sources and compiled locks
+    package.json                Playwright-only Node manifest
+    pyproject.toml              Python project metadata and tool config
 ```
 
-**Prinzipien:**
-- **Feature-basierte Module:** Jedes Feature hat eigenes Paket (auth, search, analytics)
-- **Blueprints in `routes/`:** Route-Definitionen getrennt von Logik
-- **Services in Feature-Modulen:** Business Logic in `<feature>/services.py`
-- **Models in Feature-Modulen:** SQLAlchemy Models in `<feature>/models.py`
+## Key Ownership Rules
 
----
-
-## `templates/` — Jinja2 Templates
-
-```
-templates/
-├── base.html                 # Base Layout (NavDrawer, TopAppBar, Footer)
-├── home/
-│   └── index.html            # Startseite
-├── pages/
-│   ├── impressum.html
-│   ├── privacy.html
-│   └── ...
-├── auth/
-│   ├── login.html            # Login-Seite (mit Login-Sheet)
-│   └── ...
-├── admin/
-│   ├── dashboard.html
-│   └── users.html
-├── search/
-│   ├── simple.html           # Einfache Suche
-│   ├── advanced.html         # CQL/Pattern Builder
-│   └── results.html          # KWIC-Ansicht
-├── atlas/
-│   └── index.html            # Karten-Visualisierung
-├── stats/
-│   └── index.html            # Statistik-Dashboard
-├── editor/
-│   └── index.html            # JSON-Editor
-├── player/
-│   └── (keine Templates, nur JSON-API)
-├── partials/                 # Wiederverwendbare Komponenten
-│   ├── _navigation_drawer.html
-│   ├── _top_app_bar.html
-│   ├── _footer.html
-│   ├── _login_sheet.html
-│   └── ...
-├── errors/
-│   ├── 403.html
-│   ├── 404.html
-│   └── 500.html
-└── _md3_skeletons/           # Template-Vorlagen für neue Seiten
-```
-
-**Konventionen:**
-- **Partials:** `_` Prefix für inkludierbare Komponenten
-- **Feature-Ordner:** Pro Modul ein Unterordner
-- **MD3-konform:** Alle Templates nutzen Design System Tokens
-
----
-
-## `static/` — Frontend Assets
-
-```
-static/
-├── css/
-│   ├── layout.css            # Global Layout (Grid, Container)
-│   ├── app-tokens.css        # App-spezifische Token-Overrides
-│   └── md3/                  # Material Design 3 System
-│       ├── tokens.css        # Design Tokens (Colors, Spacing, etc.)
-│       ├── typography.css    # Typografie-System
-│       ├── layout.css        # Layout-Utilities
-│       ├── tokens-legacy-shim.css  # Mapping alter Namen (deprecated)
-│       └── components/       # UI-Komponenten
-│           ├── buttons.css
-│           ├── cards.css
-│           ├── dialog.css
-│           ├── textfields.css
-│           ├── navbar.css
-│           ├── navigation-drawer.css
-│           ├── top-app-bar.css
-│           ├── snackbar.css
-│           ├── alerts.css
-│           └── ...
-├── js/
-│   ├── theme.js              # Dark/Light Mode Toggle
-│   ├── auth-setup.js         # JWT Refresh Logic
-│   ├── logout.js             # Logout Handler
-│   ├── navigation-drawer-init.js
-│   ├── theme-toggle.js
-│   └── ...
-├── img/
-│   ├── logo.svg
-│   ├── favicon.ico
-│   └── ...
-├── fonts/                    # (Falls lokale Fonts)
-└── vendor/
-    └── htmx.min.js           # Externe Libraries (lokal gecacht)
-```
-
-**CSS-Architektur:**
-1. **Tokens:** Zentrale Design-Variablen (`tokens.css`)
-2. **App-Overrides:** Projekt-spezifische Anpassungen (`app-tokens.css`)
-3. **Komponenten:** Wiederverwendbare UI-Elemente (`components/`)
-4. **Layout:** Grid, Container, Spacing (`layout.css`)
-
-**JavaScript:**
-- **Vanilla JS:** Keine Build-Tools, kein Bundler
-- **htmx:** Progressive Enhancement für AJAX
-- **Modular:** Ein File pro Feature (theme, auth, drawer, etc.)
-
----
-
-## `config/` — Externe Konfiguration
-
-```
-config/
-├── blacklab/                 # BlackLab Server Konfiguration
-│   └── blacklab-server.yaml
-└── keys/                     # JWT Private Keys (nicht in Git!)
-    └── jwt_private_key.pem
-```
-
-**Wichtig:** `keys/` ist in `.gitignore` und muss lokal/prod manuell erstellt werden.
-
----
-
-## `data/` — Runtime-Datenbanken
-
-```
-data/
-├── db/                       # SQLite/Postgres Daten (lokal)
-│   ├── public/               # Öffentliche DBs (falls vorhanden)
-│   └── restricted/           # Sensitive DBs (lokal/prod getrennt)
-├── counters/                 # App-Counters (z.B. Export-IDs)
-├── exports/                  # Generierte CSV/TSV Exporte
-├── public/metadata/          # Metadaten-Cache
-├── stats_temp/               # Temp-Files für Statistiken
-├── blacklab_index/           # BlackLab Index (große Dateien, nicht in Git)
-└── blacklab_export/          # BlackLab Export-Files
-```
-
-**Hinweis:** `data/` wird lokal ignoriert, in Produktion via Volumes gemountet.
+- root `scripts/` and root `docker-compose.dev-postgres.yml` define the canonical local dev path
+- `app/infra/docker-compose.prod.yml` defines the canonical production compose path
+- runtime data and media are outside the versioned app tree
+- `.github/` is the active governance layer for the whole repository
 
 ---
 

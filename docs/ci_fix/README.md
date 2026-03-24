@@ -13,7 +13,15 @@ Vorgehensweise:
 2. direkte GitHub-Daten nutzen, falls `gh` verfuegbar ist
 3. sonst Jobs lokal moeglichst CI-nah reproduzieren
 4. Root Causes einzeln beheben
-5. nach jedem Durchgang `docs/ci_fix/runs/<timestamp>/` aktualisieren
+# CI Fix Notes
+
+This directory is for the current CI stabilization state only.
+
+Keep it lean:
+
+- record durable CI findings
+- summarize the current CI contract
+- do not keep a long tail of timestamped run transcripts once the lesson has been integrated into workflows, tests, or agent rules
 
 Aktuellen Status lesen:
 - [STATUS.md](STATUS.md) zeigt den Gesamtstand, offene Probleme und Entscheidungen

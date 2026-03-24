@@ -1,263 +1,43 @@
-# template_master_plan.md
+# Template Master Plan
 
-## Ziel
-Die Webapp soll als **sauberes, wartbares, sofort adaptierbares Template** dienen.  
-Alle zentralen Aspekte (Branding, Design-System, Layout, Config, Dev/Prod) müssen:
-- eindeutig gesteuert sein (Single Source of Truth)
-- konsistent angewendet werden
-- ohne Seiteneffekte änderbar sein
+## Goal
 
----
+The repository should remain a clean, adaptable template with a single source of truth for branding, UI structure, runtime configuration, and operational workflows.
 
-## Leitprinzipien (nicht verhandelbar)
+## Locked Decisions
 
-- **Single Source of Truth** für alles (Branding, Farben, Layout-Regeln)
-- **Keine Hardcodings** (Farben, Abstände, Layouts, Texte)
-- **Keine Seiten-Sonderlogik**, wenn es systemisch lösbar ist
-- **Globale Shell steuert Layout**, nicht einzelne Seiten
-- **Tokens → Semantik → Komponenten → Seiten**, niemals umgekehrt
-- **Dev = Prod Verhalten identisch**
-- **Neue Features dürfen System nicht umgehen**
+- branding authority: `app/src/app/branding.py`
+- shell authority: `app/templates/base.html`
+- token authority: `app/static/css/md3/tokens.css` and `app/static/css/app-tokens.css`
+- local development authority: root `scripts/dev-setup.ps1`, root `scripts/dev-start.ps1`, root `docker-compose.dev-postgres.yml`
+- production authority: `app/infra/docker-compose.prod.yml`, `app/scripts/deploy_prod.sh`, `.github/workflows/deploy.yml`
 
-Abbruchkriterium: Jede Lösung, die diese Regeln verletzt, wird verworfen.
+## Non-Negotiable Rules
 
----
+- no parallel branding, token, or runtime configuration systems
+- no new page-local shell hacks when the shared shell can carry the behavior
+- no new auth/core SQLite workflows
+- no new undocumented canonical workflow changes
 
-## Locked Architecture Decisions (Phase 2)
+## Final Status
 
-### Branding Authority
+- template architecture is established
+- the UI/template system has a stable authority model
+- repository cleanup and canonicalization are now part of the final branch closeout
 
-- `app/src/app/branding.py` ist die einzige zulässige Quelle für template-seitige App-Identität.
-- Dorthin gehören: App-Name, Title-Formatierung, Footer-Identität, Kontaktadresse, externe Projekt-Links und Shell-Asset-Dateinamen.
-- Templates dürfen Branding-Werte nur aus dem bereitgestellten Context konsumieren.
-- Neue Branding-Konstanten in Templates, CSS oder JS sind verboten.
+## Repo Hygiene and Canonicalization Pass
 
-### Token Authority
+This pass covers:
 
-- Foundation Tokens leben ausschließlich in `app/static/css/md3/tokens.css`.
-- App-semantische Tokens leben ausschließlich in `app/static/css/app-tokens.css`.
-- `app/static/css/branding.css` ist als Legacy klassifiziert und nicht Teil der aktiven Pipeline.
-- `app/static/css/md3/tokens-legacy-shim.css` ist deprecated, darf aber nur als Kompatibilitätsschicht bestehen bleiben, bis alle Live-Caller migriert sind.
-- Neue JS-Farbpaletten sind verboten; JS muss CSS-Tokens lesen.
+- repository root hygiene
+- dependency and config file consolidation
+- documentation canonization
+- removal of obsolete migration and process artifacts
+- final agent-guidance efficiency review
 
-### Layout Authority
+This pass intentionally excludes `maintenance_pipelines/`.
 
-- `app/templates/base.html` ist die einzige Shell mit den Landmarken `header`, `aside`, `main` und `footer`.
-- Seiten und Skeletons liefern nur Content-Struktur innerhalb des Content-Blocks.
-- Verschachtelte `main`-Elemente unterhalb von `base.html` sind verboten.
-- Neue `body[data-page]`- oder Shell-Fighting-Overrides sind nur zulässig, wenn die Shell nachweislich erweitert werden muss und der Eingriff dokumentiert wird.
-
-### Page Title Contract
-
-- Dokumenttitel werden über `format_page_title(...)` aus `app/src/app/branding.py` erzeugt.
-- `block page_title` bleibt der einzige zulässige Titelblock.
-- Neue Seiten dürfen den App-Namen nicht manuell an den Titel anhängen.
-
-### Runtime Theme Contract
-
-- `theme.js` synchronisiert `meta[name="theme-color"]` aus kanonischen CSS-Tokens.
-- `base.html` darf keine festen Theme-Farben oder Light/Dark-Hex-Fallbacks mehr definieren.
-- Chart-Themes und andere JS-Visualisierungen müssen ihr Farbsystem aus CSS-Variablen auflösen.
-
-### Cleanup Boundary
-
-- Phase 2 entfernt nur hochwirksame Parallelstrukturen und Landmark-Verstöße.
-- Deprecated Layer bleiben markiert erhalten, wenn Live-Code noch von ihnen abhängt.
-- Löschung von Legacy-Dateien erfolgt erst nach nachgewiesener Entkopplung.
-
----
-
-## Current Status
-
-- Phase 1: completed (`docs/template_status/2026-03-24_phase1_audit.md`)
-- Phase 2: completed (`docs/template_status/2026-03-24_phase2_architecture.md`)
-- Phase 3: completed (`docs/template_status/2026-03-24_phase3_token_enforcement.md`)
-- Phase 4: substantially completed (`docs/template_status/2026-03-24_phase4_template_harmonization.md`)
-- Phase 5: completed (`docs/template_status/2026-03-24_phase5_finalization.md`)
-- Phase 5b: in progress
-
----
-
-## Phase 4 Execution Focus
-
-Diese Phase reduziert strukturelle Varianz, nicht die visuelle Identität.
-
-Ziel dieser Phase:
-- Page-Template-Harmonisierung über die wichtigsten Live-Seitenfamilien
-- Reduktion seitenbezogener Shell- und Layout-Overrides
-- Extraktion oder Standardisierung real genutzter Page-Family-Patterns
-- fokussierte Eindämmung von `app/static/css/player-mobile.css`
-- stärkere Autorität für wiederverwendbare Skeletons, Partials und Family-Wrapper
-- Vorbereitung späterer Legacy-Bereinigung und finaler Template-Readiness-Bewertung
-
-Phase-4-Regeln:
-- `base.html` bleibt die einzige Shell-Autorität
-- Laufzeitverhalten von Auth, Search, Landing und Player/Editor darf nicht brechen
-- Landing-, Search-, Player- und Editor-Flows dürfen spezialisiert bleiben, wenn Produktverhalten das erfordert
-- neue Abstraktionen sind nur erlaubt, wenn sie die Live-Struktur klarer und nicht abstrakter machen
-- `player-mobile.css` ist ein kontrollierter Hotspot, kein Rewrite-Ziel
-
----
-
-## Phase 5 Execution Focus
-
-Diese Phase schließt den Branch verantwortungsvoll ab. Sie ist ein gezielter Konsistenz- und Readiness-Pass, kein Redesign.
-
-Ziel dieser Phase:
-- letzte sichtbare UI-Konsistenzprobleme in wiederverwendbaren Patterns schließen
-- Dialog-, Feld-, Message- und Action-Ausrichtung vereinheitlichen
-- Copy-/Clipboard-Aktionen auf ein kanonisches Muster bringen
-- Atlas-Popup als saubere Card/Dialog-Ableitung ausrichten
-- fokussierte sichtbare Bereinigung von `app/static/css/player-mobile.css`
-- sichere Legacy-Reduktion in berührten Bereichen dokumentiert vorantreiben
-- finale Template-Readiness ehrlich bewerten
-
-Phase-5-Regeln:
-- `base.html` bleibt die einzige Shell-Autorität
-- neue UI-Fixes müssen primär in wiederverwendbaren Dialog-, Alert-, Snippet-, Popup- oder Field-Patterns landen
-- keine lokalen Dialog-Spacings oder Copy-Button-Hacks, wenn ein Shared Pattern denselben Fall abdecken kann
-- Atlas-Header, Popup-Actions und Close-Verhalten müssen Shared Card/Dialog-Konventionen folgen
-- Player-, Editor-, Search- und Atlas-Runtime-Verhalten dürfen nicht destabilisiert werden
-- `tokens-legacy-shim.css` bleibt bestehen, solange Live-Caller noch `--md3-*` benötigen; Restblocker müssen explizit dokumentiert werden
-- `branding.css` bleibt entweder klar quarantänisiert oder wird nur entfernt, wenn nachweislich keine aktive Bindung mehr existiert
-
----
-
-## Phase 5b Structural UI Consistency Fixes
-
-Diese Phase ist ein gezielter Korrekturpass nach der Phase-5-Finalisierung. Sie löst reale HTML-/CSS-/Komponentenvertragsfehler, keine kosmetischen Restarbeiten.
-
-Ziel dieser Phase:
-- Dialoge auf eine echte gemeinsame Struktur aus `header`, `content` und `actions` zurückführen
-- übermäßige Dialog-Außenabstände und doppelte Rhythmusregeln an der Shared-Component-Wurzel beheben
-- Alert-/Message-Blöcke auf einen konsistenten Content-Vertrag bringen statt nur Klassen optisch anzugleichen
-- Atlas-Popups als semantische Popup-Karte mit stabilem Header-, Fakten- und Action-Row-Aufbau ausrichten
-- mobile Player-Steuerung und Player-Aktionsreihen über echtes Markup und echte Bedienelemente stabilisieren
-- nur dann neue Mikro-Patterns einführen, wenn ein Shared Contract nachweislich fehlt
-
-Phase-5b-Regeln:
-- strukturelle Probleme werden im Markup- und Component-Layer gelöst, nicht mit lokalem Spacing-Tuning
-- ein Element gilt nur dann als standardisiert, wenn Markup, Selektoren und gerendertes Ergebnis zusammenpassen
-- Dialog-Actions gehören in die kanonische Action-Zone, nicht zufällig in Form- oder Content-Blöcke
-- Alert-Container mit Icon dürfen einen inhaltlichen Wrapper erwarten; Mischformen ohne Content-Block sind Schulden, nicht Standard
-- Player-Controls dürfen für echte Interaktion nicht auf dekorative `span`- oder `div[role="button"]`-Konstruktionen angewiesen bleiben
-- Atlas-Popup-Actions müssen als gemeinsame Action-Row lesbar bleiben und dürfen nicht nur aus lose nebeneinander stehenden Links bestehen
-- Search-, Player-, Editor- und Atlas-Runtime-Verhalten dürfen durch Strukturkorrekturen nicht destabilisiert werden
-
----
-
-## Audit-Blöcke
-
-### 1. Branding & App Identity
-**Ziel:** Eine zentrale Stelle steuert alles.
-
-Prüfen:
-- App-Name (Tab, Header, Footer)
-- Meta-Titel / SEO
-- Logo / Favicons
-- Footer-Text
-- externe Links (GitHub, Kontakt etc.)
-
-Soll:
-- zentrale `branding/config` (eine Datei, kein Wildwuchs)
-
----
-
-### 2. Design Token System
-**Ziel:** Vollständig zentralisierte Steuerung aller visuellen Grundlagen.
-
-Struktur:
-- Foundation Tokens (z. B. Farben, Spacing, Radius)
-- Semantic Tokens (background, surface, text, border)
-- Component Tokens (card, button, nav, footer)
-
-Prüfen:
-- konkurrierende Farbdefinitionen
-- direkte Hex-Werte im Code
-- uneinheitliche Backgrounds (z. B. Footer vs Page)
-
-Soll:
-- Änderung einer Farbe wirkt global korrekt
-- keine Tokens außerhalb des Systems
-
----
-
-### 3. MD3-Komponentensystem
-**Ziel:** Einheitliche, wiederverwendbare UI-Bausteine.
-
-Prüfen:
-- doppelte Komponenten
-- abweichende Varianten pro Seite
-- fehlende Standardisierung (Cards, Buttons, Inputs, Dialoge)
-
-Soll:
-- klar definierte Komponenten mit Varianten
-- keine Copy-Paste-UI
-
----
-
-### 4. Layout & App Shell
-**Ziel:** Global gesteuertes Layout.
-
-Prüfen:
-- Header / Main / Footer Verhalten
-- Footer-Position (kein Scroll-Zwang)
-- Container-Breiten
-- Spacing zwischen Sections
-- responsive Verhalten
-
-Soll:
-- zentrale Layout-Shell
-- Seiten enthalten nur Content, kein Layout-Hacking
-
----
-
-### 5. Page Templates
-**Ziel:** Standardisierte Seitentypen.
-
-Templates definieren für:
-- Landing
-- Auth (Login etc.)
-- Search
-- Detail
-- Static
-- Error / Empty States
-
-Prüfen:
-- Sonderlösungen pro Seite
-- inkonsistente Struktur
-
----
-
-### 6. Hardcoding & CSS-Audit
-**Ziel:** Eliminierung aller versteckten Inkonsistenzen.
-
-Suchen nach:
-- Inline-Styles
-- `!important`
-- direkten Farbwerten
-- seitenlokalen CSS-Hacks
-
-Soll:
-- alles läuft über Tokens und Systemklassen
-
----
-
-### 7. Theming & States
-**Ziel:** Konsistente Zustände.
-
-Prüfen:
-- Hover / Focus / Disabled
-- Form Errors / Success
-- aktive Navigation
-- Dark Mode (falls relevant)
-
----
-
-### 8. Dev / Prod Parität
-**Ziel:** Identisches Verhalten.
-
-Prüfen:
+The output of the pass is tracked in `docs/template_status/2026-03-24_repo_hygiene_canonicalization.md`.
 - Pfade
 - ENV-Handling
 - Asset-Ladeverhalten

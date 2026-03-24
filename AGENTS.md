@@ -1,13 +1,14 @@
 # Agent Workflow for CORAPAN Root
 
-This file governs work at the workspace and repository root.
+Use this file for root-level work. The active repository rules live in `.github/`; this file is only the short root contract.
 
-Root workflow and governance truth lives in `CORAPAN/.github`.
-Application implementation truth lives in `CORAPAN/app`.
+## Ownership
 
-If a task touches both layers, agents must keep the boundary explicit and state which layer they are changing.
+- `CORAPAN/.github` is the active governance and workflow layer
+- `CORAPAN/app` is the versioned application and deploy implementation
+- if a task touches both, keep the boundary explicit
 
-## Priority Chain
+## Decision Order
 
 When sources disagree, use this order:
 
@@ -15,44 +16,46 @@ When sources disagree, use this order:
 2. canonical environment files and `app/src/app/config/__init__.py`
 3. affected implementation or workflow code
 4. documentation
-5. legacy or historical material
+5. legacy material
 
 Documentation is context, not truth.
 
-## Root CI Integrity Rules
+## Canonical Paths
 
-- `.github/workflows/*.yml` is the active CI and deploy truth for the root repository
-- do not make CI look green by replacing real checks with `echo`, `continue-on-error`, `|| true`, or placeholder steps
-- fast CI must stay service-free and deterministic whenever possible
-- tests that require localhost servers, external services, BlackLab, browser automation, or large runtime data must be marked and kept out of default fast pytest selection
-- auth and core-data CI must use PostgreSQL, not SQLite fallbacks
-- strict required-config validation is allowed at app-config load time or at feature use, but must not break Python import or pytest collection
-- repo-owned CI warnings should be fixed at the source; third-party warnings may be filtered only narrowly and explicitly
-- full-suite algorithm matrices are not a substitute for focused compatibility coverage; prefer targeted tests when only compatibility behavior differs
+Development:
 
-## Required Read Order For CI Changes
+- `docker-compose.dev-postgres.yml`
+- `scripts/dev-setup.ps1`
+- `scripts/dev-start.ps1`
 
-Before changing CI, tests, runtime wiring, or agent governance, inspect:
+Production:
 
-1. `.github/workflows/*.yml` relevant to the task
+- `app/infra/docker-compose.prod.yml`
+- `app/scripts/deploy_prod.sh`
+- `.github/workflows/*.yml`
+
+## Hard Rules
+
+- `AUTH_DATABASE_URL` is the only valid auth/core database variable
+- `BLS_BASE_URL` is the canonical BlackLab base URL variable
+- `BLS_CORPUS` must always be explicit
+- PostgreSQL is required for auth and core data
+- do not introduce new SQLite auth/core flows
+- do not make CI cosmetically green with `echo`, `continue-on-error`, or `|| true`
+- do not start containers, run deployments, or run migrations without explicit approval
+
+## Required Reads
+
+Before changing CI, governance, runtime wiring, or deployment-adjacent files, inspect:
+
+1. the relevant `.github/workflows/*.yml`
 2. `app/src/app/config/__init__.py`
-3. relevant scripts under `scripts/` or `app/scripts/`
-4. affected tests and implementation code
-5. `docs/ci_fix/`, `docs/changes/`, and `docs/adr/` as context
+3. the relevant scripts under `scripts/` or `app/scripts/`
+4. the affected implementation
+5. `docs/changes/`, `docs/adr/`, and `docs/ci_fix/` as context
 
-## Documentation Requirements
+## Documentation
 
-When a CI or governance change is real and non-trivial, update:
-
-- `docs/changes/` for implementation-facing behavior
-- `docs/adr/` for workflow or policy decisions
-- `docs/ci_fix/` for audit and repair history when the work is part of CI stabilization
-
-## Escalation Triggers
-
-Ask before proceeding if:
-
-- a change would start containers, run migrations, or perform deployment work
-- a test cannot be made deterministic without changing product behavior
-- the correct CI owner layer is ambiguous between root governance and app implementation
-- BlackLab state, auth database wiring, or runtime root selection is unclear
+- use `docs/changes/` for implementation-facing repository changes
+- use `docs/adr/` for policy or architecture decisions
+- use `docs/ci_fix/` only for current CI stabilization state, not as a dump for every run

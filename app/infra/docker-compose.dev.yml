@@ -1,13 +1,5 @@
-# CO.RA.PAN Development Stack: App + PostgreSQL Auth DB + BlackLab
-# 
-# Usage:
-#   docker compose -f infra/docker-compose.dev.yml up -d          # Start all services
-#   docker compose -f infra/docker-compose.dev.yml up -d db       # Start only DB
-#   docker compose -f infra/docker-compose.dev.yml down           # Stop all
-#   docker compose -f infra/docker-compose.dev.yml logs -f web    # Follow app logs
-#
-# Environment variables can be set in .env file or shell
-# Default admin: admin / admin (set START_ADMIN_PASSWORD env to override)
+# Secondary full-stack dev helper.
+# The canonical local dev path remains the root docker-compose.dev-postgres.yml plus root scripts.
 
 services:
   db:
@@ -49,8 +41,6 @@ services:
       
       # Auth Database: connect to 'db' service (hostname inside Docker network)
       AUTH_DATABASE_URL: postgresql+psycopg2://corapan_app:${POSTGRES_PASSWORD:-corapan_dev_password}@db:5432/corapan_auth
-      DATABASE_URL: postgresql+psycopg2://corapan_app:${POSTGRES_PASSWORD:-corapan_dev_password}@db:5432/corapan_auth
-      
       # JWT settings
       JWT_SECRET_KEY: ${JWT_SECRET_KEY:-dev-jwt-secret-change-in-production}
       JWT_COOKIE_SECURE: "false"

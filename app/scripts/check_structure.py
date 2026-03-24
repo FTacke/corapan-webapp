@@ -23,7 +23,6 @@ ALLOWED_ROOT_FILES = {
     "README.md",
     "LICENSE",
     "CHANGELOG.md",
-    "startme.md",
     "CONTRIBUTING.md",
     "CITATION.cff",  # GitHub/Zenodo citation metadata (must be in root)
     # Build/Config
@@ -39,7 +38,6 @@ ALLOWED_ROOT_FILES = {
     "Dockerfile",
     "docker-compose.yml",  # Main compose file stays in root
     "docker-compose.dev-postgres.yml",  # PostgreSQL dev variant
-    "uv.lock",
     ".dockerignore",
     ".gitignore",
     ".gitattributes",
@@ -215,7 +213,7 @@ def main() -> int:
 
     if all_violations:
         print(f"Found {len(all_violations)} structure violation(s).")
-        print("\nSee docs/reference/project_structure.md for guidelines.")
+        print("\nSee docs/architecture/directory-structure.md for guidelines.")
         return 1
 
     print("Project structure is valid.")
