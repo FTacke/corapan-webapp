@@ -11,6 +11,7 @@ Use these documents in this order:
 5. `logging_contract.md` for per-run summary expectations
 6. `refactor_implementation_report.md` for what was actually changed
 7. `post_refactor_validation_report.md` for the practical post-refactor proof, residual risks, and legacy classification
+8. `blacklab_prod_fix_report.md` for the DEV-vs-PROD BlackLab drift, production repair, and canonical config mount contract
 
 Source mapping note:
 

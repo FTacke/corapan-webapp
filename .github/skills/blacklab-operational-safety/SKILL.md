@@ -26,8 +26,9 @@ Do not use this skill for:
 1. inspect live BlackLab behavior if observable
 2. run or inspect a real hits query, not only `/blacklab-server/`
 3. inspect container logs for `InvalidIndex`, `CorruptIndexException`, file mismatch, or mount errors
-4. inspect canonical dev compose/start/build sources
-5. inspect active BLF/config and only then inspect app CQL/backend logic
+4. if dev works and prod fails, compare live DEV and PROD container image, env, cmd, mounts, and `/etc/blacklab` contents before changing anything
+5. inspect canonical dev compose/start/build sources
+6. inspect active BLF/config and only then inspect app CQL/backend logic
 
 ## Hard Rules
 
@@ -53,6 +54,22 @@ Legacy or suspicious local alternatives:
 - `app/runtime`
 - `data/blacklab_index`
 - `data/blacklab_export`
+
+## Production Config Mount Contract
+
+For the current root-lifted production checkout layout, the versioned BlackLab config directory is:
+
+- `/srv/webapps/corapan/app/app/config/blacklab`
+
+The following path is stale or dangerous unless live runtime proves otherwise:
+
+- `/srv/webapps/corapan/app/config/blacklab`
+
+When production search fails while DEV works, explicitly compare:
+
+- host config directory contents on DEV and PROD
+- the host path mounted to `/etc/blacklab`
+- the live contents visible inside `/etc/blacklab`
 
 ## Required Output
 

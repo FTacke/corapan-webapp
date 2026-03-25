@@ -63,6 +63,11 @@ BlackLab dev path discipline:
 - after rebuild/start, require a real hits query
 - if valid hits return 500, inspect logs for `InvalidIndex` or `CorruptIndexException` before changing app logic
 
+BlackLab production config discipline:
+- for the current root-lifted production checkout layout, the versioned BlackLab config directory is `/srv/webapps/corapan/app/app/config/blacklab`
+- do not assume `/srv/webapps/corapan/app/config/blacklab` is the active production config path; treat it as stale or dangerous unless live runtime proves otherwise
+- if DEV search works and PROD search fails, compare live DEV vs PROD mounts and `/etc/blacklab` contents before changing app/backend code
+
 ## passwords.env
 
 passwords.env is part of the production setup.

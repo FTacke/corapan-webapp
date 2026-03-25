@@ -8,11 +8,11 @@
 #
 # Prerequisites:
 #   - BlackLab index in /srv/webapps/corapan/data/blacklab/index
-#   - BlackLab config in /srv/webapps/corapan/app/config/blacklab
+#   - BlackLab config in /srv/webapps/corapan/app/app/config/blacklab
 #   - Docker network: corapan-network
 #
 # Usage:
-#   sudo bash /srv/webapps/corapan/app/scripts/blacklab/run_bls_prod.sh
+#   sudo bash /srv/webapps/corapan/app/app/scripts/blacklab/run_bls_prod.sh
 #
 # Options:
 #   HEAP_MAX  - Maximum heap size (default: 2g)
@@ -31,9 +31,10 @@ NETWORK_NAME="corapan-network-prod"
 
 # Paths
 DATA_ROOT="/srv/webapps/corapan/data"
-APP_ROOT="/srv/webapps/corapan/app"
+CHECKOUT_DIR="/srv/webapps/corapan/app"
+APP_DIR="${CHECKOUT_DIR}/app"
 INDEX_DIR="${DATA_ROOT}/blacklab/index"
-CONFIG_DIR="${APP_ROOT}/config/blacklab"
+CONFIG_DIR="${APP_DIR}/config/blacklab"
 
 # JVM settings
 HEAP_MAX="${HEAP_MAX:-2g}"
@@ -111,6 +112,7 @@ docker run -d \
     --network "$NETWORK_NAME" \
     -p "${HOST_PORT}:${CONTAINER_PORT}" \
     -e JAVA_TOOL_OPTIONS="-Xmx${HEAP_MAX} -Xms${HEAP_INIT}" \
+    -e BLACKLAB_CONFIG_DIR="/etc/blacklab" \
     -v "${INDEX_DIR}:/data/index/corapan:ro" \
     -v "${CONFIG_DIR}:/etc/blacklab:ro" \
     "$IMAGE"

@@ -386,7 +386,10 @@ function Sync-StatisticsFiles {
         Write-Host ""
 
         # Set file permissions (non-fatal if missing)
-        Invoke-SSHCommand -Command "bash -lc 'chmod 644 \"$RemoteStatsDir\"/corpus_stats.json \"$RemoteStatsDir\"/viz_*.png 2>/dev/null || true'" -NoThrow | Out-Null
+        $chmodCmd = @"
+    bash -lc "chmod 644 '$RemoteStatsDir'/corpus_stats.json '$RemoteStatsDir'/viz_*.png 2>/dev/null || true"
+    "@
+        Invoke-SSHCommand -Command $chmodCmd -NoThrow | Out-Null
         
         # =====================================================================
         # PHASE 6: Post-upload verification (CRITICAL)

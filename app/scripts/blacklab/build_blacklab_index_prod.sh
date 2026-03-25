@@ -12,10 +12,10 @@
 #   - TSV files in /srv/webapps/corapan/data/tsv
 #   - Metadata files in /srv/webapps/corapan/data/metadata
 #   - BlackLab Docker image: instituutnederlandsetaal/blacklab:latest
-#   - BlackLab config: /srv/webapps/corapan/app/config/blacklab/corapan-tsv.blf.yaml
+#   - BlackLab config: /srv/webapps/corapan/app/app/config/blacklab/corapan-tsv.blf.yaml
 #
 # Usage:
-#   sudo bash /srv/webapps/corapan/app/scripts/blacklab/build_blacklab_index_prod.sh
+#   sudo bash /srv/webapps/corapan/app/app/scripts/blacklab/build_blacklab_index_prod.sh
 #
 # After building, run run_bls_prod.sh to restart the BlackLab server.
 #
@@ -64,14 +64,15 @@ exit 1
 
 # Configuration
 DATA_ROOT="/srv/webapps/corapan/data"
-APP_ROOT="/srv/webapps/corapan/app"
+CHECKOUT_DIR="/srv/webapps/corapan/app"
+APP_DIR="${CHECKOUT_DIR}/app"
 TSV_DIR="${DATA_ROOT}/tsv"
 TSV_FOR_INDEX="${DATA_ROOT}/tsv_for_index"
 BLACKLAB_ROOT="${DATA_ROOT}/blacklab"
 INDEX_DIR="${BLACKLAB_ROOT}/index"
 INDEX_DIR_NEW="${BLACKLAB_ROOT}/quarantine/index.build"
 METADATA_DIR="${BLACKLAB_ROOT}/export/metadata"
-BLF_CONFIG="${APP_ROOT}/config/blacklab/corapan-tsv.blf.yaml"
+BLF_CONFIG="${APP_DIR}/config/blacklab/corapan-tsv.blf.yaml"
 TIMESTAMP=$(date +%F_%H%M%S)
 LOG_FILE="${BLACKLAB_ROOT}/quarantine/blacklab_build_${TIMESTAMP}.log"
 BLACKLAB_IMAGE="instituutnederlandsetaal/blacklab:latest"
@@ -233,7 +234,7 @@ docker pull "$BLACKLAB_IMAGE" 2>&1 | tee -a "$LOG_FILE"
 docker run --rm "${DOCKER_LIMITS[@]}" \
     -v "$DATA_ROOT:/data/export:ro" \
     -v "$INDEX_DIR_NEW:/data/index:rw" \
-    -v "$APP_ROOT/config/blacklab:/config:ro" \
+    -v "$APP_DIR/config/blacklab:/config:ro" \
     "$BLACKLAB_IMAGE" \
     java -Xms"${JAVA_XMS}" -Xmx"${JAVA_XMX}" -cp '/usr/local/lib/blacklab-tools/*' \
         nl.inl.blacklab.tools.IndexTool create \
@@ -330,7 +331,7 @@ else
         -p "127.0.0.1:${TEST_PORT}:8080" \
         -e JAVA_TOOL_OPTIONS="-Xmx1g -Xms512m" \
         -v "$INDEX_DIR_NEW:/data/index/corapan:ro" \
-        -v "$APP_ROOT/config/blacklab:/etc/blacklab:ro" \
+        -v "$APP_DIR/config/blacklab:/etc/blacklab:ro" \
         "$BLACKLAB_IMAGE" \
         > /dev/null 2>"$DOCKER_RUN_ERR"
     DOCKER_RUN_RC=$?
