@@ -4,7 +4,7 @@ param(
     [string]$User,
     [int]$Port = 22,
     [string]$DataDir,
-    [string]$ConfigDir = '/srv/webapps/corapan/app/config/blacklab',
+    [string]$ConfigDir = '/srv/webapps/corapan/app/app/config/blacklab',
     [switch]$DryRun,
     [int]$KeepBackups = 2,
     [switch]$NoBackupCleanup

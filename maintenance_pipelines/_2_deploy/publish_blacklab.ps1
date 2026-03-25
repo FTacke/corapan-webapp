@@ -245,7 +245,7 @@ try {
         # Build parameter hashtable for direct invocation
         $PublishParams = @{
           DataDir = $RemoteBlackLabDataRoot
-          ConfigDir = "$RemoteAppRoot/config/blacklab"
+          ConfigDir = "$RemoteAppRoot/app/config/blacklab"
         }
         
         # Pass through flags that were explicitly set by user

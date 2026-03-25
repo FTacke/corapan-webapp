@@ -37,6 +37,10 @@ Do not use this skill for:
 - do not assume a valid build log proves the active index is readable
 - do not blame CQL or field logic before checking logs and active mounts when valid hits return 500
 - do not treat legacy path trees as equal to `data/blacklab/{index,export,backups,quarantine}` without explicit reclassification
+- do not run a BlackLab publish without a storage preflight covering active index size, existing backups, stale uploads, and free disk space
+- do not start repeated publish retries while `index.upload_*` residues from failed attempts still exist
+- do not assume `KeepBackups` alone enforces deletion; verify the real retention execution path
+- never let multiple full index copies accumulate blindly on a space-constrained host
 
 ## Canonical Local BlackLab Model
 
@@ -71,6 +75,8 @@ When production search fails while DEV works, explicitly compare:
 - the host path mounted to `/etc/blacklab`
 - the live contents visible inside `/etc/blacklab`
 
+Do not switch back to `/srv/webapps/corapan/app/config/blacklab` for visual symmetry alone. Any future layout change must be justified as a broader checkout/runtime contract change, not as an isolated BlackLab exception.
+
 ## Required Output
 
 State explicitly:
@@ -79,3 +85,4 @@ State explicitly:
 - which competing paths are legacy, dangerous, or redundant
 - whether a real hits query succeeded or failed
 - what evidence was stronger than generic readiness
+- for publish work, the preflight space calculation and whether backup/upload residues were removed before retry

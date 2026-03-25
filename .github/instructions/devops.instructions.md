@@ -67,6 +67,14 @@ BlackLab production config discipline:
 - for the current root-lifted production checkout layout, the versioned BlackLab config directory is `/srv/webapps/corapan/app/app/config/blacklab`
 - do not assume `/srv/webapps/corapan/app/config/blacklab` is the active production config path; treat it as stale or dangerous unless live runtime proves otherwise
 - if DEV search works and PROD search fails, compare live DEV vs PROD mounts and `/etc/blacklab` contents before changing app/backend code
+- do not revert to the stale outer production path just to make DEV and PROD look similar; treat such a move as a broader layout migration decision with explicit cost/risk review
+
+BlackLab publish safety discipline:
+- no publish without an explicit storage preflight for active index size, existing `index.backup_*` or `backups/index_*`, stale `index.upload_*`, and free disk space
+- calculate both conceptual worst-case capacity (`old + new + backup`) and the practical on-host copy count during upload/swap
+- if a publish attempt aborts before swap completion, inspect and remove stale `index.upload_*` residues before retrying
+- do not assume retention is active just because `KeepBackups` is set; verify the server-side retention path and outcome
+- on constrained hosts, keep the number of simultaneous full index copies intentional and documented
 
 ## passwords.env
 

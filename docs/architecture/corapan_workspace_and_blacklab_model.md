@@ -3,19 +3,24 @@
 Datum: 2026-03-20
 Geltungsbereich: Development und Repository-Struktur unter `corapan/`
 
+Hinweis:
+- Dieses Dokument beschreibt ein aelteres Root-Lift-Modell und ist nicht die aktuelle Pfadquelle fuer BlackLab-Konfigurations-Mounts.
+- Der aktuelle BlackLab-Vertrag lautet lokal `app/config/blacklab -> /etc/blacklab` und in Produktion `/srv/webapps/corapan/app/app/config/blacklab -> /etc/blacklab`.
+- Fuer den aktuellen Vertrag sind `docs/blacklab/README.md`, `docs/rsync/blacklab_prod_fix_report.md` und `docs/rsync/blacklab_config_path_cleanup_audit.md` massgeblich.
+
 ## 1. Grundprinzip
 
 Der einzige kanonische Workspace-Root ist `corapan/`.
 
 Alle aktiven Dev-Pfade werden relativ zu diesem Root bestimmt.
 
-`webapp/` ist kein Workspace-Root mehr, sondern der Implementierungsbereich der Webanwendung innerhalb des Gesamtprojekts.
+`app/` ist der versionierte Implementierungsbereich der Webanwendung innerhalb des Gesamtprojekts.
 
 Daraus folgen drei verbindliche Regeln:
 
 1. Daten- und Media-Pfade werden relativ zu `corapan/` aufgeloest.
-2. BlackLab-Artefakte liegen nur unter `corapan/data/blacklab/`.
-3. `webapp/data` darf keine aktive BlackLab-Struktur mehr enthalten.
+2. BlackLab-Laufzeitdaten liegen nur unter `corapan/data/blacklab/`.
+3. Die versionierte BlackLab-Konfiguration liegt unter `corapan/app/config/blacklab/`.
 
 ## 2. Kanonische Struktur
 
@@ -25,8 +30,6 @@ Die verbindliche Zielstruktur fuer den lokalen Dev-Betrieb lautet:
 corapan/
   .github/
   .venv/
-  config/
-    blacklab/
   data/
     blacklab/
       index/
@@ -35,9 +38,11 @@ corapan/
       quarantine/
   docs/
   media/
+  app/
+    config/
+      blacklab/
   scripts/
     blacklab/
-  webapp/
 ```
 
 Kanonische Rollen:

@@ -4,11 +4,11 @@
 
 This document defines the operational safety rules for the dev BlackLab stack in the canonical local layout:
 
-- Git root: `webapp/`
+- Git root: `CORAPAN/`
 - Dev runtime root: sibling workspace root
 - Active dev index: `data/blacklab/index`
 - Active dev export: `data/blacklab/export`
-- Active dev config: `config/blacklab`
+- Active dev versioned config: `app/config/blacklab`
 
 These rules exist because the 2026-03-21 incident was not caused by CQL, BLF, or export metadata. The failure was an active Lucene/BlackLab index corruption (`InvalidIndex` / `CorruptIndexException`) inside the mounted dev index.
 
@@ -36,7 +36,7 @@ These rules exist because the 2026-03-21 incident was not caused by CQL, BLF, or
 
 - BlackLab dev depends on the exact mount contract:
   - `data/blacklab/index -> /data/index/corapan`
-  - `config/blacklab -> /etc/blacklab`
+  - `app/config/blacklab -> /etc/blacklab`
 - Starting a container against the wrong host tree can mask or recreate corruption problems.
 
 ### Deploy Risk
@@ -58,7 +58,7 @@ These rules exist because the 2026-03-21 incident was not caused by CQL, BLF, or
 ### `scripts/blacklab/start_blacklab_docker_v3.ps1`
 
 - Refuses repo-local `webapp/data` and legacy `data/blacklab_index` / `data/blacklab_export` layouts.
-- Requires canonical `config/blacklab` files.
+- Requires canonical `app/config/blacklab` files.
 - Refuses to replace an existing container unless `-Restart` is explicit.
 - After startup, runs a real hits smoke query against the active index.
 - Stops with an error if the container is reachable but the index is unreadable.

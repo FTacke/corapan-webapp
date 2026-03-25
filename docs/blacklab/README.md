@@ -5,9 +5,13 @@ BlackLab is an operational dependency, not a static asset.
 ## Canonical Inputs
 
 - versioned config: `app/config/blacklab/`
+- DEV container mount contract: `app/config/blacklab -> /etc/blacklab`
+- PROD container mount contract in the current root-lifted checkout layout: `/srv/webapps/corapan/app/app/config/blacklab -> /etc/blacklab`
 - local dev compose: `docker-compose.dev-postgres.yml`
 - production app wiring: `app/infra/docker-compose.prod.yml`
 - runtime export path: `data/blacklab/export/docmeta.jsonl`
+
+Do not infer the production config path from the DEV repository path. The stale outer production path `/srv/webapps/corapan/app/config/blacklab` is not the active config source.
 
 ## Canonical Variables
 
@@ -27,3 +31,5 @@ BlackLab is an operational dependency, not a static asset.
 
 - `../operations/blacklab_dev_health.md`
 - `../architecture/blacklab_operational_safety.md`
+- `../rsync/blacklab_prod_fix_report.md`
+- `../rsync/blacklab_config_path_cleanup_audit.md`

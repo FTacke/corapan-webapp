@@ -29,7 +29,7 @@ param(
     [string]$User,
     [int]$Port = 22,
     [string]$DataDir,
-    [string]$ConfigDir = "/srv/webapps/corapan/app/config/blacklab",
+    [string]$ConfigDir = "/srv/webapps/corapan/app/app/config/blacklab",
     [switch]$DryRun,
     [int]$KeepBackups = 2,
     [switch]$NoBackupCleanup
@@ -70,19 +70,20 @@ function Test-BlackLabHitsQuery {
         [string]$Label
     )
 
-    $hitsUrl = "http://127.0.0.1:$TargetPort/blacklab-server/corpora/corapan/hits?patt=$([System.Uri]::EscapeDataString($SMOKE_PATTERN))&number=1"
+    $hitsUrl = "http://127.0.0.1:$TargetPort/blacklab-server/corpora/corapan/hits?patt=$([System.Uri]::EscapeDataString($SMOKE_PATTERN))&number=1&outputformat=json"
     $hitsJson = Invoke-SSHCommand -Command "curl -fsS '$hitsUrl' 2>/dev/null" -PassThru
+    $hitsPayload = ($hitsJson | Out-String).Trim()
 
-    if ([string]::IsNullOrWhiteSpace($hitsJson)) {
+    if ([string]::IsNullOrWhiteSpace($hitsPayload)) {
         throw "$Label hits endpoint returned empty response"
     }
 
-    if ($hitsJson -notmatch '"summary"' -and $hitsJson -notmatch '"hits"') {
+    if ($hitsPayload -notmatch '"summary"' -and $hitsPayload -notmatch '"hits"') {
         throw "$Label hits endpoint did not return a valid hits payload"
     }
 
     Write-Success "$Label hits query OK"
-    return $hitsJson
+    return $hitsPayload
 }
 
 # ==========================================================================
@@ -428,7 +429,7 @@ if ($DryRun) {
 else {
     $statsScript = @"
 find '$remoteNew' -type f | wc -l
-du -sb '$remoteNew' | awk '{print \$1}'
+    du -sb '$remoteNew' | awk '{print `$1}'
 "@
     $remoteStats = Invoke-RemoteBash -Script $statsScript -PassThru
     $lines = $remoteStats -split "`n"

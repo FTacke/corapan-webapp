@@ -129,7 +129,7 @@ Connection parameters (hostname/user/port/key) and remote runtime roots are conf
 - `-User`: SSH user (default: from `scripts/deploy_sync/_lib/ssh.ps1`)
 - `-Port`: SSH port (default: from `scripts/deploy_sync/_lib/ssh.ps1`)
 - `-DataDir`: Remote BlackLab root (default: `/srv/webapps/corapan/data/blacklab` via `scripts/deploy_sync/_lib/ssh.ps1`)
-- `-ConfigDir`: Remote BlackLab config directory (default: /srv/webapps/corapan/app/config/blacklab)
+- `-ConfigDir`: Remote BlackLab config directory (default: /srv/webapps/corapan/app/app/config/blacklab)
 - `-DryRun`: Show what would be done without making changes
 - `-KeepBackups`: Number of backups to retain (default: 2)
 - `-NoBackupCleanup`: Skip automatic cleanup of old backups

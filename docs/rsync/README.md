@@ -12,6 +12,8 @@ Use these documents in this order:
 6. `refactor_implementation_report.md` for what was actually changed
 7. `post_refactor_validation_report.md` for the practical post-refactor proof, residual risks, and legacy classification
 8. `blacklab_prod_fix_report.md` for the DEV-vs-PROD BlackLab drift, production repair, and canonical config mount contract
+9. `blacklab_config_path_cleanup_audit.md` for the path-reference audit, active/stale classification, and outer-path evaluation
+10. `blacklab_publish_proof_run.md` for the controlled BlackLab publish proof, storage preflight, cleanup decisions, and observed backup behavior
 
 Source mapping note:
 

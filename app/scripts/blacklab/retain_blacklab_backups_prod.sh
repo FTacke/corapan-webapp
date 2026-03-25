@@ -164,7 +164,7 @@ for i in "${!sorted_backups[@]}"; do
         fi
         
         delete_cnt=$((delete_cnt + 1))
-        local delete_marker="(dry-run)"
+        delete_marker="(dry-run)"
         if [ "$BLACKLAB_RETENTION_DELETE" = "1" ]; then
             delete_marker=""
             if rm -rf "$dir" 2>/dev/null; then
@@ -179,7 +179,7 @@ for i in "${!sorted_backups[@]}"; do
 done
 
 # Summary
-local mode="dry-run"
+mode="dry-run"
 [ "$BLACKLAB_RETENTION_DELETE" = "1" ] && mode="executed"
 
 log "[RETENTION] Summary: keep=$keep_cnt, delete=$delete_cnt, mode=$mode"

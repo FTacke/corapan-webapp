@@ -2,6 +2,11 @@
 
 Datum: 2026-03-25
 
+Hinweis:
+- Dieser Bericht ist ein historischer Auditstand.
+- Die darin mehrfach genannte BlackLab-Prod-Config unter `/srv/webapps/corapan/app/config/blacklab` ist nicht mehr der aktuelle kanonische Vertrag.
+- Fuer den aktuellen DEV-/PROD-BlackLab-Pfadvertrag gelten `docs/rsync/blacklab_prod_fix_report.md` und `docs/rsync/blacklab_config_path_cleanup_audit.md`.
+
 Scope:
 - Ausschliesslich `/srv/webapps/corapan`
 - Keine Aenderungen ausser dem Anlegen dieses Berichts

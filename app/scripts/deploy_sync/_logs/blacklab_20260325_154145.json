@@ -1,0 +1,21 @@
+﻿{
+    "lane":  "blacklab",
+    "source":  "C:\\dev\\corapan\\data\\blacklab\\quarantine\\index.build",
+    "target":  "/srv/webapps/corapan/data/blacklab",
+    "transport":  "tar-ssh",
+    "dryRun":  true,
+    "startTime":  "2026-03-25T15:41:45.3040394+01:00",
+    "endTime":  "2026-03-25T15:41:45.3740825+01:00",
+    "exitCode":  0,
+    "noChange":  false,
+    "changeCount":  1,
+    "deleteCount":  0,
+    "fallbackUsed":  false,
+    "notes":  [
+
+              ],
+    "details":  [
+
+                ],
+    "summaryFile":  "C:\\dev\\corapan\\app\\scripts\\deploy_sync\\_logs\\blacklab_20260325_154145.json"
+}
