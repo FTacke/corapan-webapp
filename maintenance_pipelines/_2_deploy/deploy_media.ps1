@@ -61,7 +61,7 @@ function Test-AppRepoRoot([string]$CandidatePath) {
     }
 
     $requiredFiles = @(
-        "scripts\deploy_sync\sync_media.ps1",
+        "scripts\deploy_sync\tasks\sync_media.ps1",
         "scripts\deploy_sync\sync_core.ps1"
     )
 
@@ -136,9 +136,9 @@ if (-not (Test-Path $RepoRoot)) {
     exit 1
 }
 
-$SyncMediaScript = Join-Path $RepoRoot "scripts\deploy_sync\sync_media.ps1"
+$SyncMediaScript = Join-Path $RepoRoot "scripts\deploy_sync\tasks\sync_media.ps1"
 if (-not (Test-Path $SyncMediaScript)) {
-    Write-Err "sync_media.ps1 not found at: $SyncMediaScript"
+    Write-Err "tasks\\sync_media.ps1 not found at: $SyncMediaScript"
     exit 1
 }
 
@@ -170,7 +170,7 @@ Write-Info "Workflow:      run after BlackLab publish and data deploy"
 # EXECUTE SYNC
 # ============================================================================
 
-Write-StepHeader "Calling sync_media.ps1"
+Write-StepHeader "Calling tasks\\sync_media.ps1"
 
 $SyncArgs = @{
     'RepoRoot' = $RepoRoot

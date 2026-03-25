@@ -1,262 +1,80 @@
 # Runtime Statistics Deployment
 
-## Overview
+This document is limited to the active production sync lane.
 
-The `deploy_data.ps1` orchestrator now includes automatic upload of runtime statistics files to production. These files are generated locally and deployed separately from the main data sync.
+## Canonical Flow
 
-## Statistics Files
+The only canonical statistics deployment path is:
 
-**Generated files:**
-- `corpus_stats.json` - JSON data for dynamic frontend consumption
-- `viz_*.png` - Visualization images (pie charts, bar charts, country summaries)
+1. `maintenance_pipelines/_2_deploy/deploy_data.ps1`
+2. `app/scripts/deploy_sync/tasks/sync_data.ps1`
+3. `app/scripts/deploy_sync/sync_data.ps1`
+4. `Sync-StatisticsFiles`
 
-**Examples:**
-- `viz_total_corpus.png`
-- `viz_genero_profesionales.png`
-- `viz_modo_genero_profesionales.png`
-- `viz_argentina_resumen.png`
-- `viz_colombia_resumen.png`
-- etc.
+There is no second orchestrator-side statistics upload anymore.
 
-## Deployment Behavior
+## Included Runtime Data
 
-### Simple Overwrite (No Atomic Swap)
+The data lane syncs:
 
-Statistics deployment uses a **simple overwrite strategy**:
-- ✅ Directly uploads to `/srv/webapps/corapan/data/public/statistics/`
-- ✅ Overwrites existing files
-- ❌ No backup creation
-- ❌ No atomic swap
-- ❌ No rollback mechanism
+- `data/db/public`
+- `data/public/metadata`
+- `data/exports`
+- `data/db/stats_files.db`
+- `data/db/stats_country.db`
+- runtime statistics files in `data/public/statistics`
 
-**Rationale:** Statistics files are:
-- Non-critical for app functionality
-- Quick to regenerate locally
-- Small in size (< 10 MB total)
-- Updated infrequently
+The data lane does not sync `data/blacklab/export`.
+BlackLab remains a separate lane.
 
-## Local Setup
-
-### Required Environment Variables
-
-Set **ONE** of the following before deploying statistics:
-
-**Option 1: Direct statistics path**
-```powershell
-$env:PUBLIC_STATS_DIR = "C:\dev\runtime\corapan\data\public\statistics"
-```
-
-**Option 2: Runtime root (auto-derives statistics path)**
-```powershell
-$env:CORAPAN_RUNTIME_ROOT = "C:\dev\corapan"
-# Statistics path becomes: $CORAPAN_RUNTIME_ROOT\data\public\statistics
-```
-
-### Generating Statistics
-
-**Full workflow:**
-```powershell
-# 1. Set environment
-$env:CORAPAN_RUNTIME_ROOT = "C:\dev\runtime\corapan"
-
-# 2. Generate statistics (requires CSV input from step 04)
-python .\maintenance_pipelines\_0_json\04_internal_country_statistics.py
-python .\maintenance_pipelines\_0_json\05_publish_corpus_statistics.py
-
-# 3. Deploy data + statistics
-.\maintenance_pipelines\_2_deploy\deploy_data.ps1
-```
-
-**Quick regeneration (if CSVs already exist):**
-```powershell
-python .\maintenance_pipelines\_0_json\05_publish_corpus_statistics.py --out "$env:PUBLIC_STATS_DIR"
-.\maintenance_pipelines\_2_deploy\deploy_data.ps1
-```
-
-## Deployment Usage
-
-### Standard Deployment (Data + Statistics)
+## Operator Usage
 
 ```powershell
 .\maintenance_pipelines\_2_deploy\deploy_data.ps1
 ```
 
-This will:
-1. Sync data directories (metadata, exports, db/public, blacklab_export, stats databases)
-2. Upload statistics files to `/srv/webapps/corapan/data/public/statistics/`
-3. Set correct ownership (hrzadmin:hrzadmin)
-
-**Note:** `counters/` and `db/auth.db` are protected production state and are NEVER synced by default.
-
-### Skip Statistics
+Skip runtime statistics intentionally:
 
 ```powershell
 .\maintenance_pipelines\_2_deploy\deploy_data.ps1 -SkipStatistics
 ```
 
-Use this when:
-- Statistics haven't been generated yet
-- Only data directories need updating
-- Testing data sync independently
+## Source Resolution
 
-### Force Mode
+Set one of these before deploying statistics:
 
 ```powershell
-.\maintenance_pipelines\_2_deploy\deploy_data.ps1 -Force
+$env:PUBLIC_STATS_DIR = "C:\dev\corapan\data\public\statistics"
 ```
 
-Forces full data resync (ignores manifest state). Statistics upload is always overwrite, so `-Force` doesn't affect statistics behavior.
-
-## Production State Protection
-
-### What is NEVER Synced
-
-The following paths contain production runtime state and are **always protected** from being overwritten by a normal data deploy:
-
-- **`data/counters/`** - Runtime state files (page views, downloads, feature counters, etc.)
-- **`data/db/auth.db`** - Production authentication database
-
-These are critical for production stability and must never be lost or overwritten.
-
-### Emergency Override (Very Rare)
-
-In an extreme emergency, you can override the protection with three explicit flags:
+or
 
 ```powershell
-.\maintenance_pipelines\_2_deploy\deploy_data.ps1 `
-    -IncludeCounters `
-    -IncludeAuthDb `
-    -IUnderstandThisWillOverwriteProductionState
+$env:CORAPAN_RUNTIME_ROOT = "C:\dev\corapan"
 ```
 
-**This is DANGEROUS and should only be done with explicit approval from a senior team member.** The script will:
-1. Show a prominent 5-second warning
-2. Require you to acknowledge each override flag explicitly
-3. Log everything to the deployment log
+## Transport Reality
 
-**Do NOT use these flags unless you fully understand the consequences.**
+- standard transport: repo-bundled cwRSync `rsync.exe`
+- SSH transport for rsync: repo-bundled cwRSync `ssh.exe`
+- live operator identity may differ from historical `marele` defaults
+- do not rewrite this lane to generic Windows OpenSSH rsync without live validation
 
-## Error Handling
+## Safety Rules
 
-### Missing Environment Variables
+- statistics upload is allowlist-only
+- statistics upload does not use `--delete`
+- production auth/core state is still excluded
+- wrapper logs stay in `_2_deploy/_logs`
+- task summaries now also land in `app/scripts/deploy_sync/_logs`
 
-If neither `PUBLIC_STATS_DIR` nor `CORAPAN_RUNTIME_ROOT` is set:
-- Deployment prints clear error message
-- Provides setup instructions
-- **Exits with code 0** (graceful skip, not fatal error)
+## Removed Drift
 
-### Missing Statistics Files
+The following old statements are no longer valid and must not be reintroduced:
 
-If environment is configured but files don't exist:
-- Validates presence of `corpus_stats.json`
-- Validates presence of at least one `viz_*.png`
-- Prints generation instructions
-- **Exits with code 0** (graceful skip)
-
-### Upload Failures
-
-rsync or SSH failures during statistics upload:
-- **Exit with code 1** (fatal error)
-- Full error details logged to `LOKAL/_2_deploy/_logs/deploy_data_<timestamp>.log`
-
-## Remote Target
-
-**Production path:**
-```
-/srv/webapps/corapan/data/public/statistics/
-```
-
-**Served via FastAPI:**
-- `/corpus/corpus/corpus/api/corpus_stats` → `corpus_stats.json`
-- `/corpus/api/statistics/viz_total_corpus.png` → image files
-- etc.
-
-## Technical Details
-
-### Transport Mechanism
-
-**rsync via cwRsync:**
-- Selective file upload (only `corpus_stats.json` and `viz_*.png`)
-- Compression enabled (`-z`)
-- Verbose output (`-v`)
-- No `--delete` flag (doesn't remove untracked files on server)
-
-**rsync pattern matching:**
-```powershell
---include "corpus_stats.json"
---include "viz_*.png"
---exclude "*"
-```
-
-### SSH Authentication
-
-Uses the same SSH configuration as data/media sync:
-- Key: `$env:USERPROFILE\.ssh\marele` (8.3 short name for cwRsync)
-- User: `root`
-- Host: `marele.online.uni-marburg.de` (137.248.186.51)
-- No passphrase (dedicated deploy key)
-
-### Ownership
-
-After upload, sets ownership recursively on `/srv/webapps/corapan/data/public/`:
-```bash
-chown -R 1000:1000 /srv/webapps/corapan/data/public/
-```
-
-**Note:** Applied to parent `data/public/` directory (not just `statistics/` subdirectory) for consistency.
-
-## Verification
-
-After successful deployment, the script shows remote directory listing:
-
-```
-Remote statistics directory contents:
-  -rw-r--r-- 1 hrzadmin hrzadmin  45231 Jan 17 12:34 corpus_stats.json
-  -rw-r--r-- 1 hrzadmin hrzadmin 123456 Jan 17 12:34 viz_total_corpus.png
-  -rw-r--r-- 1 hrzadmin hrzadmin  98765 Jan 17 12:34 viz_genero_profesionales.png
-  ...
-```
-
-**Manual verification:**
-```bash
-ssh root@marele.online.uni-marburg.de "ls -lh /srv/webapps/corapan/data/public/statistics/"
-```
-
-**HTTP verification (from production):**
-```bash
-curl https://corapan.com/corpus/corpus/corpus/api/corpus_stats
-curl -I https://corapan.com/corpus/api/statistics/viz_total_corpus.png
-```
-
-## Troubleshooting
-
-### "rsync not available"
-
-**Cause:** cwRsync not found in PATH
-
-**Solution:**
-```powershell
-# Verify cwRsync installation
-Test-Path "C:\dev\corapan\app\tools\cwrsync\bin\rsync.exe"
-
-# Check PATH includes cwRsync
-$env:Path -split ';' | Select-String cwrsync
-```
-
-### "Statistics directory does not exist"
-
-**Cause:** Environment variable points to non-existent directory
-
-**Solution:**
-```powershell
-# Verify path
-Test-Path $env:PUBLIC_STATS_DIR
-
-# Create if needed
-New-Item -ItemType Directory -Path $env:PUBLIC_STATS_DIR -Force
-```
-
-### "corpus_stats.json not found"
+- `blacklab_export` is part of the standard data lane
+- `deploy_data.ps1` should source `sync_data.ps1` a second time for stats
+- emergency flags documented here but not implemented in the active wrapper are usable operator paths
 
 **Cause:** Statistics haven't been generated
 

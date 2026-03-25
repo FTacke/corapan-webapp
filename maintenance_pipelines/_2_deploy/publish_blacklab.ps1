@@ -34,7 +34,7 @@ param(
 
   # Optional: Publish-Script im Webapp-Repo
   [Parameter(Mandatory = $false)]
-  [string]$PublishScriptRelPath = "scripts\deploy_sync\publish_blacklab_index.ps1",
+  [string]$PublishScriptRelPath = "scripts\deploy_sync\tasks\publish_blacklab_index.ps1",
 
   # Build-Parameter (wird an build_blacklab_index.ps1 weitergegeben)
   [Parameter(Mandatory = $false)]
@@ -92,7 +92,7 @@ function Test-AppRepoRoot([string]$CandidatePath) {
   $requiredFiles = @(
     "src\scripts\blacklab_index_creation.py",
     "scripts\blacklab\build_blacklab_index.ps1",
-    "scripts\deploy_sync\publish_blacklab_index.ps1"
+    "scripts\deploy_sync\tasks\publish_blacklab_index.ps1"
   )
 
   foreach ($relativePath in $requiredFiles) {

@@ -22,6 +22,42 @@
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
+$coreSsh = Join-Path (Split-Path -Parent $PSScriptRoot) 'core\ssh.ps1'
+if (Test-Path $coreSsh) {
+    . $coreSsh
+}
+
+function Get-DefaultSshKeyPath {
+    $candidates = @(
+        (Join-Path $env:USERPROFILE '.ssh\marele'),
+        (Join-Path $env:USERPROFILE '.ssh\id_ed25519')
+    )
+
+    foreach ($candidate in $candidates) {
+        if (Test-Path $candidate) {
+            return $candidate
+        }
+    }
+
+    return $candidates[0]
+}
+
+function Get-DefaultSshKeyPathShort {
+    param(
+        [string]$ResolvedKeyPath = (Get-DefaultSshKeyPath)
+    )
+
+    $legacyShortPath = 'C:\Users\FELIXT~1\.ssh\marele'
+    if ($ResolvedKeyPath -like '*\\marele' -and (Test-Path $legacyShortPath)) {
+        return $legacyShortPath
+    }
+
+    return $ResolvedKeyPath
+}
+
+$script:DefaultSSHKeyPath = Get-DefaultSshKeyPath
+$script:DefaultSSHKeyPathShort = Get-DefaultSshKeyPathShort -ResolvedKeyPath $script:DefaultSSHKeyPath
+
 # -----------------------------------------------------------------------------
 # Konfiguration
 # -----------------------------------------------------------------------------
@@ -33,9 +69,9 @@ $script:SSHConfig = @{
     Port            = 22
     SSHExe          = "C:\Windows\System32\OpenSSH\ssh.exe"
     # Full path for OpenSSH
-    SSHKeyPath      = "$env:USERPROFILE\.ssh\marele"
-    # Short path for cwRsync (8.3 format)
-    SSHKeyPathShort = "C:\Users\FELIXT~1\.ssh\marele"
+    SSHKeyPath      = $script:DefaultSSHKeyPath
+    # Short path for cwRsync (8.3 format) when available; otherwise use the resolved full path.
+    SSHKeyPathShort = $script:DefaultSSHKeyPathShort
     DryRun          = $false
 }
 
@@ -56,8 +92,8 @@ function Set-SSHConfig {
         [string]$User,
         [int]$Port = 22,
         [string]$SSHExe = "C:\Windows\System32\OpenSSH\ssh.exe",
-        [string]$SSHKeyPath = "$env:USERPROFILE\.ssh\marele",
-        [string]$SSHKeyPathShort = "C:\Users\FELIXT~1\.ssh\marele",
+        [string]$SSHKeyPath = $script:DefaultSSHKeyPath,
+        [string]$SSHKeyPathShort = $script:DefaultSSHKeyPathShort,
         [switch]$DryRun
     )
     
@@ -136,52 +172,16 @@ function Invoke-SSHCommand {
         [switch]$DryRun
     )
     
-    # DryRun from config or parameter
-    $isDryRun = $DryRun.IsPresent -or $script:SSHConfig.DryRun
-    
-    # Validate required params
-    if (-not $Hostname -or -not $User) {
-        throw "Hostname and User must be set via Set-SSHConfig or parameters"
+    $effectiveConfig = @{
+        Hostname   = $Hostname
+        User       = $User
+        Port       = $Port
+        SSHExe     = $script:SSHConfig.SSHExe
+        SSHKeyPath = $script:SSHConfig.SSHKeyPath
+        DryRun     = ($DryRun.IsPresent -or $script:SSHConfig.DryRun)
     }
-    
-    # Build SSH args array
-    $sshArgs = @(
-        "-i", $script:SSHConfig.SSHKeyPath,
-        "-o", "StrictHostKeyChecking=no",
-        "-o", "ServerAliveInterval=60",
-        "-o", "ServerAliveCountMax=3",
-        "-o", "ConnectTimeout=30"
-    )
-    
-    if ($Port -ne 22) {
-        $sshArgs += @("-p", $Port)
-    }
-    
-    $sshArgs += @("${User}@${Hostname}", $Command)
-    
-    if ($isDryRun) {
-        Write-Host "  [DRY-RUN] SSH: $Command" -ForegroundColor DarkYellow
-        if ($PassThru) {
-            return ""
-        }
-        return $true
-    }
-    
-    # Execute
-    if ($PassThru) {
-        $result = & $script:SSHConfig.SSHExe @sshArgs 2>&1
-        if ($LASTEXITCODE -ne 0 -and -not $NoThrow) {
-            throw "SSH command failed (exit code $LASTEXITCODE): $result"
-        }
-        return $result
-    }
-    else {
-        & $script:SSHConfig.SSHExe @sshArgs
-        if ($LASTEXITCODE -ne 0 -and -not $NoThrow) {
-            throw "SSH command failed with exit code $LASTEXITCODE"
-        }
-        return $true
-    }
+
+    return Invoke-SyncOpenSshCommand -SSHConfig $effectiveConfig -Command $Command -PassThru:$PassThru -NoThrow:$NoThrow -DryRun:$DryRun
 }
 
 # -----------------------------------------------------------------------------
@@ -229,55 +229,16 @@ fi
         [switch]$DryRun
     )
     
-    # DryRun from config or parameter
-    $isDryRun = $DryRun.IsPresent -or $script:SSHConfig.DryRun
-    
-    # Validate
-    if (-not $Hostname -or -not $User) {
-        throw "Hostname and User must be set via Set-SSHConfig or parameters"
+    $effectiveConfig = @{
+        Hostname   = $Hostname
+        User       = $User
+        Port       = $Port
+        SSHExe     = $script:SSHConfig.SSHExe
+        SSHKeyPath = $script:SSHConfig.SSHKeyPath
+        DryRun     = ($DryRun.IsPresent -or $script:SSHConfig.DryRun)
     }
-    
-    # Build SSH args for bash -s
-    $sshArgs = @(
-        "-i", $script:SSHConfig.SSHKeyPath,
-        "-o", "StrictHostKeyChecking=no",
-        "-o", "ServerAliveInterval=60",
-        "-o", "ServerAliveCountMax=3",
-        "-o", "ConnectTimeout=30"
-    )
-    
-    if ($Port -ne 22) {
-        $sshArgs += @("-p", $Port)
-    }
-    
-    $sshArgs += @("${User}@${Hostname}", "bash", "-s")
-    
-    if ($isDryRun) {
-        Write-Host "  [DRY-RUN] Remote Bash Script:" -ForegroundColor DarkYellow
-        Write-Host "  ---" -ForegroundColor DarkGray
-        $Script -split "`n" | ForEach-Object { Write-Host "  $_" -ForegroundColor DarkGray }
-        Write-Host "  ---" -ForegroundColor DarkGray
-        if ($PassThru) {
-            return ""
-        }
-        return $true
-    }
-    
-    # Execute: pipe script to stdin
-    if ($PassThru) {
-        $result = $Script | & $script:SSHConfig.SSHExe @sshArgs 2>&1
-        if ($LASTEXITCODE -ne 0 -and -not $NoThrow) {
-            throw "Remote bash script failed (exit code $LASTEXITCODE): $result"
-        }
-        return $result
-    }
-    else {
-        $Script | & $script:SSHConfig.SSHExe @sshArgs
-        if ($LASTEXITCODE -ne 0 -and -not $NoThrow) {
-            throw "Remote bash script failed with exit code $LASTEXITCODE"
-        }
-        return $true
-    }
+
+    return Invoke-SyncRemoteBash -SSHConfig $effectiveConfig -Script $Script -PassThru:$PassThru -NoThrow:$NoThrow -DryRun:$DryRun
 }
 
 # -----------------------------------------------------------------------------
@@ -321,47 +282,16 @@ function Invoke-SCP {
         [switch]$DryRun
     )
     
-    # DryRun from config or parameter
-    $isDryRun = $DryRun.IsPresent -or $script:SSHConfig.DryRun
-    
-    # Validate
-    if (-not $Hostname -or -not $User) {
-        throw "Hostname and User must be set via Set-SSHConfig or parameters"
+    $effectiveConfig = @{
+        Hostname   = $Hostname
+        User       = $User
+        Port       = $Port
+        SSHExe     = $script:SSHConfig.SSHExe
+        SSHKeyPath = $script:SSHConfig.SSHKeyPath
+        DryRun     = ($DryRun.IsPresent -or $script:SSHConfig.DryRun)
     }
-    
-    if (-not (Test-Path $LocalPath)) {
-        throw "Local path does not exist: $LocalPath"
-    }
-    
-    # Build SCP args
-    $scpArgs = @(
-        "-i", $script:SSHConfig.SSHKeyPath,
-        "-o", "StrictHostKeyChecking=no"
-    )
-    
-    if ($Port -ne 22) {
-        $scpArgs += @("-P", $Port)  # Note: SCP uses -P (uppercase)
-    }
-    
-    if ($Recursive) {
-        $scpArgs += "-r"
-    }
-    
-    $scpArgs += @($LocalPath, "${User}@${Hostname}:${RemotePath}")
-    
-    if ($isDryRun) {
-        Write-Host "  [DRY-RUN] SCP: $LocalPath -> ${User}@${Hostname}:${RemotePath}" -ForegroundColor DarkYellow
-        return $true
-    }
-    
-    # Execute
-    & "scp" @scpArgs
-    
-    if ($LASTEXITCODE -ne 0) {
-        throw "SCP failed with exit code $LASTEXITCODE"
-    }
-    
-    return $true
+
+    return Invoke-SyncScpLegacy -SSHConfig $effectiveConfig -LocalPath $LocalPath -RemotePath $RemotePath -Recursive:$Recursive -DryRun:$DryRun
 }
 
 # Note: Functions are automatically available when dot-sourced

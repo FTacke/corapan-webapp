@@ -115,6 +115,8 @@ $remotePaths = Get-RemotePaths
 $REMOTE_RUNTIME_ROOT = $remotePaths.RuntimeRoot
 $REMOTE_MEDIA_ROOT = $remotePaths.MediaRoot
 
+$mediaRunRecord = New-SyncRunRecord -Lane 'media' -Source $LOCAL_BASE_PATH -Target $REMOTE_MEDIA_ROOT -Transport 'rsync-cwrsync' -DryRun:$DryRun
+
 # Runtime-first guard (fail fast if prod mounts drift)
 Assert-RemoteRuntimeFirstMounts -RuntimeRoot $REMOTE_RUNTIME_ROOT
 
@@ -149,6 +151,7 @@ if (-not (Test-Path $LOCAL_BASE_PATH)) {
 
 # Synchronisation fuer jedes Verzeichnis
 $errorCount = 0
+$mediaResults = @()
 if ($DryRun) {
     Write-Host "[DRY RUN] Remote targets:" -ForegroundColor Cyan
     Write-Host "  - Base: $REMOTE_MEDIA_ROOT" -ForegroundColor DarkGray
@@ -156,6 +159,8 @@ if ($DryRun) {
         Write-Host "  - media/$dir -> $REMOTE_MEDIA_ROOT/$dir" -ForegroundColor DarkGray
     }
     Write-Host ""
+    $summaryPath = Complete-SyncRunRecord -Run $mediaRunRecord -ExitCode 0 -NoChange $true -ChangeCount 0 -DeleteCount 0 -FallbackUsed $false
+    Write-Host "Dry-run summary: $summaryPath" -ForegroundColor DarkGray
     exit 0
 }
 foreach ($dir in $MEDIA_DIRECTORIES) {
@@ -172,11 +177,12 @@ foreach ($dir in $MEDIA_DIRECTORIES) {
         # Force-Logik: -Force gilt fuer alle, -ForceMP3 nur fuer mp3-*
         $useForce = $Force -or ($ForceMP3 -and $dir -like "mp3-*")
         
-        Sync-DirectoryWithDiff `
+        $dirResult = Sync-DirectoryWithDiff `
             -LocalBasePath $LOCAL_BASE_PATH `
             -RemoteBasePath $REMOTE_MEDIA_ROOT `
             -DirName $dir `
             -Force:$useForce
+        $mediaResults += $dirResult
     } catch {
         $errorCount++
         Write-Host "  FEHLER bei $dir : $($_.Exception.Message)" -ForegroundColor Red
@@ -188,6 +194,12 @@ if ($errorCount -eq 0) {
     Set-RemoteOwnership -RemotePath $REMOTE_MEDIA_ROOT
 }
 
+$mediaChangeCount = (($mediaResults | Measure-Object -Property ChangeCount -Sum).Sum)
+if ($null -eq $mediaChangeCount) { $mediaChangeCount = 0 }
+$mediaDeleteCount = (($mediaResults | Measure-Object -Property DeleteCount -Sum).Sum)
+if ($null -eq $mediaDeleteCount) { $mediaDeleteCount = 0 }
+$mediaFallbackUsed = (@($mediaResults | Where-Object { $_.FallbackUsed }).Count -gt 0)
+
 # Zusammenfassung
 Write-Host ""
 Write-Host "=============================================" -ForegroundColor Magenta
@@ -196,9 +208,13 @@ Write-Host "=============================================" -ForegroundColor Mage
 Write-Host ""
 
 if ($errorCount -gt 0) {
+    $summaryPath = Complete-SyncRunRecord -Run $mediaRunRecord -ExitCode 1 -NoChange $false -ChangeCount $mediaChangeCount -DeleteCount $mediaDeleteCount -FallbackUsed $mediaFallbackUsed
+    Write-Host "Run summary: $summaryPath" -ForegroundColor DarkGray
     Write-Host "WARNUNG: $errorCount Fehler aufgetreten!" -ForegroundColor Red
     exit 1
 } else {
+    $summaryPath = Complete-SyncRunRecord -Run $mediaRunRecord -ExitCode 0 -NoChange ($mediaChangeCount -eq 0 -and $mediaDeleteCount -eq 0) -ChangeCount $mediaChangeCount -DeleteCount $mediaDeleteCount -FallbackUsed $mediaFallbackUsed
+    Write-Host "Run summary: $summaryPath" -ForegroundColor DarkGray
     Write-Host "Alle $($MEDIA_DIRECTORIES.Count) Verzeichnisse erfolgreich synchronisiert." -ForegroundColor Green
     exit 0
 }

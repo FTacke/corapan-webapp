@@ -2,8 +2,8 @@
 .SYNOPSIS
     Orchestrates data synchronization and statistics deployment to production server
 .DESCRIPTION
-    Wrapper script that calls scripts/deploy_sync/sync_data.ps1 for data sync
-    and Sync-StatisticsFiles function for statistics deployment.
+    Wrapper script that calls scripts/deploy_sync/tasks/sync_data.ps1 for the
+    canonical data lane, including the built-in statistics step.
     Works from any directory.
     
     Data Sync:
@@ -12,12 +12,9 @@
       - EXCLUDES production state: counters/, db/ (hard-protected)
     - EXCLUDES BlackLab data: handled separately via publish_blacklab.ps1
     
-    Statistics Deployment:
-      - Uploads corpus_stats.json and viz_*.png files
-      - Target: /srv/webapps/corapan/data/public/statistics
-      - Mode: Overwrite-only (no delete)
-      - Requires: PUBLIC_STATS_DIR or CORAPAN_RUNTIME_ROOT env var
-      - Non-critical (script continues if stats not ready)
+        Statistics Deployment:
+            - Owned by sync_data.ps1 as the single canonical transfer point
+            - Can be skipped via -SkipStatistics
     
     Connection Parameters:
       Configured in scripts/deploy_sync/sync_core.ps1
@@ -73,7 +70,7 @@ function Test-AppRepoRoot([string]$CandidatePath) {
     }
 
     $requiredFiles = @(
-        "scripts\deploy_sync\sync_data.ps1",
+        "scripts\deploy_sync\tasks\sync_data.ps1",
         "scripts\deploy_sync\sync_core.ps1"
     )
 
@@ -148,9 +145,9 @@ if (-not (Test-Path $RepoRoot)) {
     exit 1
 }
 
-$SyncDataScript = Join-Path $RepoRoot "scripts\deploy_sync\sync_data.ps1"
+$SyncDataScript = Join-Path $RepoRoot "scripts\deploy_sync\tasks\sync_data.ps1"
 if (-not (Test-Path $SyncDataScript)) {
-    Write-Err "sync_data.ps1 not found at: $SyncDataScript"
+    Write-Err "tasks\\sync_data.ps1 not found at: $SyncDataScript"
     exit 1
 }
 
@@ -209,6 +206,10 @@ if ($Force) {
     Write-Warn "Force mode enabled - all files will be synced"
 }
 
+if ($SkipStatistics) {
+    $SyncArgs['SkipStatistics'] = $true
+}
+
 try {
     Write-Info "Executing: $SyncDataScript"
 
@@ -222,50 +223,6 @@ catch {
     Write-Err $_.Exception.Message
     Write-Info "Check log for details: $LogFile"
     exit 1
-}
-
-# ============================================================================
-# DEPLOY STATISTICS (Optional)
-# ============================================================================
-
-if (-not $SkipStatistics) {
-    Write-StepHeader "Statistics Deployment"
-    
-    # Load sync_core to access Sync-StatisticsFiles function
-    $syncCoreScript = Join-Path $RepoRoot "scripts\deploy_sync\sync_core.ps1"
-    $syncDataScript = Join-Path $RepoRoot "scripts\deploy_sync\sync_data.ps1"
-    
-    if (-not (Test-Path $syncCoreScript)) {
-        Write-Err "sync_core.ps1 not found at: $syncCoreScript"
-        exit 1
-    }
-    
-    if (-not (Test-Path $syncDataScript)) {
-        Write-Err "sync_data.ps1 not found at: $syncDataScript"
-        exit 1
-    }
-    
-    # Source both scripts to get Sync-StatisticsFiles function and sync config
-    . $syncCoreScript
-    . $syncDataScript
-    
-    # Call statistics deployment function
-    try {
-        $success = Sync-StatisticsFiles -LocalStatsDir $null -RepoRoot $RepoRoot -RemoteRuntimeRoot "/srv/webapps/corapan"
-        
-        if ($success) {
-            Write-Success "Statistics deployment completed"
-        }
-        else {
-            Write-Warn "Statistics deployment encountered issues (non-critical)"
-        }
-    }
-    catch {
-        Write-Warn "Statistics deployment failed (non-critical): $($_.Exception.Message)"
-    }
-}
-else {
-    Write-Info "Statistics deployment skipped (-SkipStatistics)"
 }
 
 # ============================================================================

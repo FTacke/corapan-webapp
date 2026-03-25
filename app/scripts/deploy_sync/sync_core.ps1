@@ -72,21 +72,45 @@ if (Test-Path $sshLib) {
     . $sshLib
 }
 
+$coreModules = @(
+    'core\paths.ps1',
+    'core\guards.ps1',
+    'core\logging.ps1',
+    'core\ssh.ps1',
+    'core\rsync.ps1',
+    'core\transport.ps1'
+)
+
+foreach ($coreModule in $coreModules) {
+    $corePath = Join-Path $PSScriptRoot $coreModule
+    if (Test-Path $corePath) {
+        . $corePath
+    }
+}
+
+$script:SyncRepoRoot = Get-SyncRepoRoot -AnchorPath (Join-Path $PSScriptRoot 'core')
+$script:SyncToolPaths = Get-SyncToolPaths -RepoRoot $script:SyncRepoRoot
+
 $script:SyncConfig = @{
     ServerHost     = $script:SSHConfig.Hostname
     ServerIP       = "137.248.186.51"
     ServerUser     = $script:SSHConfig.User
+    Port           = $script:SSHConfig.Port
     # Deploy-Key ohne Passphrase - 8.3-Format fuer cwRsync-Kompatibilitaet
     SSHKeyPath     = $script:SSHConfig.SSHKeyPathShort
     # Voller Pfad zum Key (fuer Windows OpenSSH)
     SSHKeyPathFull = $script:SSHConfig.SSHKeyPath
     # Windows OpenSSH fuer direkte SSH-Aufrufe
     WindowsSSHPath = $script:SSHConfig.SSHExe
+    TransportSSHPath = $script:SyncToolPaths.TransportSSHExe
     AppUser        = "hrzadmin"
     AppUid         = 1000
     AppGid         = 1000
-    CwRsyncPath    = (Join-Path (Split-Path -Parent (Split-Path -Parent $PSScriptRoot)) "tools\cwrsync\bin")
+    CwRsyncPath    = (Split-Path -Parent $script:SyncToolPaths.RsyncExe)
+    RsyncExe       = $script:SyncToolPaths.RsyncExe
 }
+
+$script:SyncRsyncPort = if ($script:SSHConfig.Port) { $script:SSHConfig.Port } else { 22 }
 
 # Flag um rsync-Verfuegbarkeits-Log nur einmal auszugeben
 $script:RsyncAvailabilityLogged = $false
@@ -115,26 +139,24 @@ function Assert-RemoteRuntimeFirstMounts {
             exit 3
         }
         
-        $mountsRaw = Invoke-SSHCommand -Command "docker inspect -f '{{range .Mounts}}{{println .Source \"->\" .Destination}}{{end}}' $containerName 2>/dev/null" -PassThru -NoThrow
+        $mountsRaw = Invoke-SSHCommand -Command "docker inspect --format '{{json .Mounts}}' $containerName 2>/dev/null" -PassThru -NoThrow
         if ($null -eq $mountsRaw) {
             Write-Host $errorMessage -ForegroundColor Red
             exit 3
         }
-        
-        $mountLines = @()
-        if ($mountsRaw -is [System.Object[]]) {
-            $mountLines = $mountsRaw
+
+        $mountsJson = if ($mountsRaw -is [System.Object[]]) { ($mountsRaw -join "") } else { [string]$mountsRaw }
+        $mountRecords = $mountsJson | ConvertFrom-Json
+        if ($mountRecords -isnot [System.Array]) {
+            $mountRecords = @($mountRecords)
         }
-        else {
-            $mountLines = ([string]$mountsRaw) -split "`n"
-        }
-        $mountLines = $mountLines | ForEach-Object { $_.Trim() } | Where-Object { $_ -ne "" }
+        $mountLines = $mountRecords | ForEach-Object { "{0}->{1}" -f $_.Source, $_.Destination }
         
         $expected = @(
             @{ Source = "$RuntimeRoot/data";  Destination = "/app/data" },
             @{ Source = "$RuntimeRoot/media"; Destination = "/app/media" },
             @{ Source = "$RuntimeRoot/logs";  Destination = "/app/logs" },
-            @{ Source = "$RuntimeRoot/config"; Destination = "/app/config" }
+            @{ Source = "$RuntimeRoot/data/config"; Destination = "/app/config" }
         )
         
         $missing = @()
@@ -351,30 +373,19 @@ function Format-FileSize {
 function Test-RsyncAvailable {
     [OutputType([bool])]
     param()
-    
-    # Stelle sicher, dass cwRsync im PATH ist
-    if ($script:SyncConfig.CwRsyncPath -and (Test-Path $script:SyncConfig.CwRsyncPath)) {
-        if ($env:Path -notlike "*$($script:SyncConfig.CwRsyncPath)*") {
-            $env:Path = "$($script:SyncConfig.CwRsyncPath);$env:Path"
+
+    $available = Test-RepoBoundRsyncAvailable -RepoRoot $script:SyncRepoRoot -SyncConfig $script:SyncConfig
+    if (-not $script:RsyncAvailabilityLogged) {
+        if ($available) {
+            Write-Host "[Sync] repo-bound cwRsync verfuegbar ($($script:SyncConfig.RsyncExe)) - rsync-Modus aktiv" -ForegroundColor DarkGreen
         }
-    }
-    
-    try {
-        $cmd = Get-Command rsync -ErrorAction Stop
-        
-        if (-not $script:RsyncAvailabilityLogged) {
-            Write-Host "[Sync] rsync verfuegbar ($($cmd.Source)) - rsync-Modus aktiv" -ForegroundColor DarkGreen
-            $script:RsyncAvailabilityLogged = $true
+        else {
+            Write-Host "[Sync] repo-bound cwRsync nicht verfuegbar - verwende tar+base64 Fallback" -ForegroundColor DarkYellow
         }
-        return $true
+        $script:RsyncAvailabilityLogged = $true
     }
-    catch {
-        if (-not $script:RsyncAvailabilityLogged) {
-            Write-Host "[Sync] rsync nicht gefunden - verwende tar+base64 Fallback" -ForegroundColor DarkYellow
-            $script:RsyncAvailabilityLogged = $true
-        }
-        return $false
-    }
+
+    return $available
 }
 
 function Convert-ToRsyncPath {
@@ -385,26 +396,7 @@ function Convert-ToRsyncPath {
         [switch]$PreserveShortName
     )
     
-    if ($PreserveShortName) {
-        # Behalte 8.3-Namen bei (wichtig fuer Pfade mit Leerzeichen)
-        $path = $WindowsPath
-    }
-    else {
-        # Volle Normalisierung (loest 8.3-Namen auf)
-        $path = [System.IO.Path]::GetFullPath($WindowsPath)
-    }
-    
-    # Laufwerksbuchstabe und Rest trennen
-    if ($path -match '^([a-zA-Z]):(.*)$') {
-        $drive = $Matches[1].ToLower()
-        $rest = $Matches[2] -replace '\\', '/'
-        
-        # cwRsync / Cygwin-Style Pfad
-        return "/cygdrive/$drive$rest"
-    }
-    
-    # Falls kein Laufwerkspfad, einfach Backslashes ersetzen
-    return $path -replace '\\', '/'
+    return Convert-ToCwRsyncPath -WindowsPath $WindowsPath -PreserveShortName:$PreserveShortName
 }
 
 function Sync-DirectoryWithRsync {
@@ -427,10 +419,10 @@ function Sync-DirectoryWithRsync {
     
     $localPath = Join-Path $LocalBasePath $DirName
     $remotePath = "$RemoteBasePath/$DirName"
-    
-    if (-not (Test-Path $localPath)) {
-        throw "Lokales Verzeichnis existiert nicht: $localPath"
-    }
+
+    Assert-SyncDirectoryNotEmpty -Path $localPath -Reason 'Refusing rsync with --delete from empty source directory'
+    $allowTestPaths = ($env:CORAPAN_SYNC_ALLOW_TEST_PATHS -eq '1')
+    Assert-SyncRemotePathPlausible -RemotePath $remotePath -AllowTestPath:$allowTestPaths
     
     $server = "$($script:SyncConfig.ServerUser)@$($script:SyncConfig.ServerHost)"
     
@@ -449,13 +441,7 @@ function Sync-DirectoryWithRsync {
     
     # Konvertiere lokalen Pfad fuer rsync (mit trailing slash fuer Inhalt)
     $rsyncSource = (Convert-ToRsyncPath $localPath) + "/"
-    
-    # cwRsync verwendet sein eigenes ssh - Key-Pfad in Cygwin-Format
-    # Verwende 8.3-Pfad um Leerzeichen zu vermeiden
-    $sshKeyCygwin = Convert-ToRsyncPath $script:SyncConfig.SSHKeyPath -PreserveShortName
-    
-    # SSH-Optionen: Key ohne Passphrase, Timeout-Schutz
-    $sshCmd = "ssh -i '$sshKeyCygwin' -o StrictHostKeyChecking=no -o ServerAliveInterval=60 -o ServerAliveCountMax=3"
+    $sshCmd = New-RepoBoundRsyncSshCommand -SyncConfig $script:SyncConfig -RepoRoot $script:SyncRepoRoot
     
     # rsync-Befehl zusammenbauen
     # --partial: Ermoeglicht Fortsetzung unterbrochener Transfers bei grossen Dateien
@@ -465,6 +451,8 @@ function Sync-DirectoryWithRsync {
         "--partial",
         "--progress",
         "--delete",
+        "--itemize-changes",
+        "--out-format=%i %n%L",
         "-e", $sshCmd,
         "--exclude", "blacklab",
         "--exclude", "stats_temp",
@@ -492,10 +480,11 @@ function Sync-DirectoryWithRsync {
     
     # rsync ausfuehren und Output parsen fuer Fortschrittsanzeige
     $rsyncOutput = @()
-    
-    # rsync direkt ausfuehren
-    & rsync @rsyncArgs 2>&1 | ForEach-Object {
-        $line = $_
+    $changeCount = 0
+    $deleteCount = 0
+
+    $rsyncResult = Invoke-RepoBoundRsync -Arguments $rsyncArgs -RepoRoot $script:SyncRepoRoot -SyncConfig $script:SyncConfig
+    foreach ($line in $rsyncResult.Output) {
         $rsyncOutput += $line
         
         # Zeige rsync-Output wenn verbose
@@ -503,6 +492,13 @@ function Sync-DirectoryWithRsync {
             Write-Host $line
         }
         else {
+            if ($line -match '^\*deleting\s+') {
+                $deleteCount++
+            }
+            elseif ($line -match '^[<>ch\.\*][^ ]+\s+') {
+                $changeCount++
+            }
+
             # Parse rsync Output fuer Fortschritt
             # Dateitransfer-Zeilen enthalten Prozentangaben
             if ($line -match '^\s*[\d,]+\s+\d+%') {
@@ -533,7 +529,7 @@ function Sync-DirectoryWithRsync {
         }
     }
     
-    $exitCode = $LASTEXITCODE
+    $exitCode = $rsyncResult.ExitCode
     
     # Zeilenumbruch nach Fortschrittsanzeige
     if (-not $script:SyncVerbose -and $LocalFileCount -gt 0 -and $transferredCount -gt 10) {
@@ -553,6 +549,10 @@ function Sync-DirectoryWithRsync {
     if ($sentLine) {
         Write-Host "    $sentLine" -ForegroundColor DarkGray
     }
+
+    if ($changeCount -eq 0 -and $deleteCount -eq 0) {
+        Write-Host "    [rsync] Keine inhaltlichen Aenderungen erkannt" -ForegroundColor DarkGray
+    }
     
     Write-Host "    [rsync] $DirName - OK ($('{0:mm\:ss}' -f $duration))" -ForegroundColor Green
     
@@ -560,6 +560,11 @@ function Sync-DirectoryWithRsync {
         ExitCode = $exitCode
         Duration = $duration
         TransferredFiles = $transferredCount
+        ChangeCount = $changeCount
+        DeleteCount = $deleteCount
+        NoChange = ($changeCount -eq 0 -and $deleteCount -eq 0)
+        Transport = 'rsync-cwrsync'
+        FallbackUsed = $false
     }
 }
 
@@ -575,40 +580,15 @@ function Invoke-SSHCommand {
         [switch]$NoThrow
     )
     
-    # Verwende Windows OpenSSH mit dem passwortlosen Deploy-Key
-    $sshExe = $script:SyncConfig.WindowsSSHPath
-    $sshKeyPath = $script:SyncConfig.SSHKeyPathFull
-    
-    $sshArgs = @(
-        "-i", $sshKeyPath,
-        "-o", "StrictHostKeyChecking=no",
-        "-o", "ServerAliveInterval=60",
-        "-o", "ServerAliveCountMax=3",
-        "-o", "ConnectTimeout=30",
-        "$($script:SyncConfig.ServerUser)@$($script:SyncConfig.ServerHost)",
-        $Command
-    )
-    
-    if ($PassThru) {
-        $result = & $sshExe @sshArgs 2>&1
-        if ($LASTEXITCODE -ne 0) {
-            if ($NoThrow) {
-                return $null
-            }
-            throw "SSH command failed (exit code $LASTEXITCODE): $result"
-        }
-        return $result
+    $effectiveConfig = @{
+        Hostname   = $script:SyncConfig.ServerHost
+        User       = $script:SyncConfig.ServerUser
+        Port       = $script:SyncRsyncPort
+        SSHExe     = $script:SyncConfig.WindowsSSHPath
+        SSHKeyPath = $script:SyncConfig.SSHKeyPathFull
     }
-    else {
-        & $sshExe @sshArgs
-        if ($LASTEXITCODE -ne 0) {
-            if ($NoThrow) {
-                return $false
-            }
-            throw "SSH command failed with exit code $LASTEXITCODE"
-        }
-        return $true
-    }
+
+    return Invoke-SyncOpenSshCommand -SSHConfig $effectiveConfig -Command $Command -PassThru:$PassThru -NoThrow:$NoThrow
 }
 
 # -----------------------------------------------------------------------------
@@ -717,7 +697,7 @@ function New-DirectoryManifest {
         }
     }
     
-    return $manifest
+    return ,$manifest
 }
 
 # -----------------------------------------------------------------------------
@@ -747,11 +727,14 @@ function Get-RemoteManifest {
         $result = Invoke-SSHCommand -Command $readManifestCmd -PassThru -NoThrow
         if ($null -ne $result -and $result.Trim() -ne "[]" -and $result.Trim() -ne "") {
             $manifest = $result | ConvertFrom-Json
+            if ($null -eq $manifest) {
+                return ,@()
+            }
+            if ($manifest -isnot [array]) {
+                $manifest = @($manifest)
+            }
             if ($null -ne $manifest -and $manifest.Count -gt 0) {
                 Write-VerboseSync "    Manifest gelesen: $($manifest.Count) Eintraege"
-                if ($manifest -isnot [array]) {
-                    return ,@($manifest)
-                }
                 return ,$manifest
             }
         }
@@ -1027,15 +1010,17 @@ function Update-RemoteManifest {
                 # Konvertiere Pfad fuer rsync
                 $rsyncSource = Convert-ToRsyncPath $tempFile
                 
-                # rsync SSH-Optionen
-                $sshKeyCygwin = Convert-ToRsyncPath $script:SyncConfig.SSHKeyPath -PreserveShortName
-                $sshCmd = "ssh -i '$sshKeyCygwin' -o StrictHostKeyChecking=no -o ServerAliveInterval=60"
-                
                 $server = "$($script:SyncConfig.ServerUser)@$($script:SyncConfig.ServerHost)"
-                
-                # rsync ausfuehren
-                & rsync -avz -e $sshCmd "$rsyncSource" "${server}:$manifestFile" 2>&1 | Out-Null
-                $result = ($LASTEXITCODE -eq 0)
+
+                $manifestArgs = @(
+                    '-avz',
+                    '-e', (New-RepoBoundRsyncSshCommand -SyncConfig $script:SyncConfig -RepoRoot $script:SyncRepoRoot),
+                    "$rsyncSource",
+                    "${server}:$manifestFile"
+                )
+
+                $manifestResult = Invoke-RepoBoundRsync -Arguments $manifestArgs -RepoRoot $script:SyncRepoRoot -SyncConfig $script:SyncConfig
+                $result = ($manifestResult.ExitCode -eq 0)
                 return $result
             }
             finally {
@@ -1081,6 +1066,11 @@ function Sync-DirectoryWithDiff {
         RsyncSuccess    = $false
         ManifestSuccess = $false
         Skipped         = $false
+        ChangeCount     = 0
+        DeleteCount     = 0
+        NoChange        = $false
+        Transport       = 'unknown'
+        FallbackUsed    = $false
     }
     
     Write-Host ""
@@ -1125,6 +1115,7 @@ function Sync-DirectoryWithDiff {
         $result.Skipped = $true
         $result.RsyncSuccess = $true
         $result.ManifestSuccess = $true
+        $result.NoChange = $true
         return $result
     }
     
@@ -1155,12 +1146,19 @@ function Sync-DirectoryWithDiff {
                 -LocalFileCount $localFileCount `
                 -LocalTotalSize $localTotalSize `
                 -Force:$Force
+            $result.ChangeCount = $rsyncResult.ChangeCount
+            $result.DeleteCount = $rsyncResult.DeleteCount
+            $result.NoChange = $rsyncResult.NoChange
+            $result.Transport = $rsyncResult.Transport
+            $result.FallbackUsed = $rsyncResult.FallbackUsed
         }
         else {
             Sync-DirTarBase64 `
                 -LocalBasePath $LocalBasePath `
                 -DirName $DirName `
                 -RemoteBasePath $RemoteBasePath
+            $result.Transport = 'tar-base64-legacy'
+            $result.FallbackUsed = $true
         }
         
         $result.RsyncSuccess = $true

@@ -89,6 +89,7 @@ param(
     
     [switch]$Force,
     [switch]$DryRun,
+    [switch]$SkipStatistics,
     
     # PRODUCTION STATE PROTECTION
     # These switches allow syncing of runtime state (normally excluded for safety)
@@ -349,20 +350,20 @@ function Sync-StatisticsFiles {
         
         # Get SSH config
         $server = "$($script:SyncConfig.ServerUser)@$($script:SyncConfig.ServerHost)"
-        $sshKeyCygwin = Convert-ToRsyncPath $script:SyncConfig.SSHKeyPath -PreserveShortName
+        $sshCmd = New-RepoBoundRsyncSshCommand -SyncConfig $script:SyncConfig -RepoRoot $script:SyncRepoRoot
         
         # Upload corpus_stats.json
         Write-Host "  Uploading corpus_stats.json..." -ForegroundColor DarkGray
         $corpusJsonRsyncPath = Convert-ToRsyncPath $corpusStatsJson
         $rsyncArgs = @(
             "-avz",
-            "-e", "ssh -i '$sshKeyCygwin' -o StrictHostKeyChecking=no -o ServerAliveInterval=60",
+            "-e", $sshCmd,
             "$corpusJsonRsyncPath",
             "${server}:$RemoteStatsDir/"
         )
-        & rsync @rsyncArgs 2>&1 | Out-Null
-        if ($LASTEXITCODE -ne 0) {
-            throw "rsync failed for corpus_stats.json (exit code $LASTEXITCODE)"
+        $statsUpload = Invoke-RepoBoundRsync -Arguments $rsyncArgs -RepoRoot $script:SyncRepoRoot -SyncConfig $script:SyncConfig
+        if ($statsUpload.ExitCode -ne 0) {
+            throw "rsync failed for corpus_stats.json (exit code $($statsUpload.ExitCode))"
         }
         Write-Host "  corpus_stats.json: OK" -ForegroundColor Green
         
@@ -372,13 +373,13 @@ function Sync-StatisticsFiles {
             $vizRsyncPath = Convert-ToRsyncPath $viz.FullName
             $rsyncArgs = @(
                 "-avz",
-                "-e", "ssh -i '$sshKeyCygwin' -o StrictHostKeyChecking=no -o ServerAliveInterval=60",
+                "-e", $sshCmd,
                 "$vizRsyncPath",
                 "${server}:$RemoteStatsDir/"
             )
-            & rsync @rsyncArgs 2>&1 | Out-Null
-            if ($LASTEXITCODE -ne 0) {
-                throw "rsync failed for $($viz.Name) (exit code $LASTEXITCODE)"
+            $vizUpload = Invoke-RepoBoundRsync -Arguments $rsyncArgs -RepoRoot $script:SyncRepoRoot -SyncConfig $script:SyncConfig
+            if ($vizUpload.ExitCode -ne 0) {
+                throw "rsync failed for $($viz.Name) (exit code $($vizUpload.ExitCode))"
             }
         }
         Write-Host "  All visualization files: OK" -ForegroundColor Green
@@ -493,6 +494,8 @@ if (-not (Test-Path $coreScript)) {
 $remotePaths = Get-RemotePaths
 $REMOTE_RUNTIME_ROOT = $remotePaths.RuntimeRoot
 $REMOTE_DATA_ROOT = $remotePaths.DataRoot
+
+$dataRunRecord = New-SyncRunRecord -Lane 'data' -Source $LOCAL_BASE_PATH -Target $REMOTE_DATA_ROOT -Transport 'rsync-cwrsync' -DryRun:$DryRun
 
 # Runtime-first guard (fail fast if prod mounts drift)
 Assert-RemoteRuntimeFirstMounts -RuntimeRoot $REMOTE_RUNTIME_ROOT
@@ -634,7 +637,14 @@ if ($DryRun) {
     }
     Write-Host "  - stats DBs -> $REMOTE_DATA_ROOT/db" -ForegroundColor DarkGray
     Write-Host ""
-    Sync-StatisticsFiles -RepoRoot $RepoRoot -RemoteRuntimeRoot $REMOTE_RUNTIME_ROOT -DryRun
+    if (-not $SkipStatistics) {
+        Sync-StatisticsFiles -RepoRoot $RepoRoot -RemoteRuntimeRoot $REMOTE_RUNTIME_ROOT -DryRun
+    }
+    else {
+        Add-SyncRunNote -Run $dataRunRecord -Note 'Statistics upload skipped by operator switch.'
+    }
+    $summaryPath = Complete-SyncRunRecord -Run $dataRunRecord -ExitCode 0 -NoChange $true -ChangeCount 0 -DeleteCount 0 -FallbackUsed $false
+    Write-Host "Dry-run summary: $summaryPath" -ForegroundColor DarkGray
     exit 0
 }
 
@@ -644,6 +654,7 @@ if ($DryRun) {
 
 # Synchronisation fuer jedes Verzeichnis
 $errorCount = 0
+$syncResults = @()
 foreach ($dir in $DATA_DIRECTORIES) {
     $localDir = Join-Path $LOCAL_BASE_PATH $dir
     
@@ -655,11 +666,12 @@ foreach ($dir in $DATA_DIRECTORIES) {
     }
     
     try {
-        Sync-DirectoryWithDiff `
+        $dirResult = Sync-DirectoryWithDiff `
             -LocalBasePath $LOCAL_BASE_PATH `
             -RemoteBasePath $REMOTE_DATA_ROOT `
             -DirName $dir `
             -Force:$Force
+        $syncResults += $dirResult
     } catch {
         $errorCount++
         Write-Host "  FEHLER bei $dir : $($_.Exception.Message)" -ForegroundColor Red
@@ -691,8 +703,6 @@ foreach ($dbFile in $STATS_DB_FILES) {
         # rsync fuer einzelne Datei verwenden
         $rsyncSource = (Convert-ToRsyncPath $localFile)
         $server = "$($script:SyncConfig.ServerUser)@$($script:SyncConfig.ServerHost)"
-        $sshKeyCygwin = Convert-ToRsyncPath $script:SyncConfig.SSHKeyPath -PreserveShortName
-        $sshCmd = "ssh -i '$sshKeyCygwin' -o StrictHostKeyChecking=no -o ServerAliveInterval=60 -o ServerAliveCountMax=3"
         
         # Stelle sicher, dass das Zielverzeichnis existiert
         Invoke-SSHCommand -Command "mkdir -p '$dbRemotePath'" | Out-Null
@@ -700,18 +710,25 @@ foreach ($dbFile in $STATS_DB_FILES) {
         # rsync fuer einzelne Datei
         $rsyncArgs = @(
             "-avz",
-            "-e", $sshCmd,
+            "-e", (New-RepoBoundRsyncSshCommand -SyncConfig $script:SyncConfig -RepoRoot $script:SyncRepoRoot),
             "$rsyncSource",
             "${server}:$dbRemotePath/"
         )
         
-        & rsync @rsyncArgs 2>&1 | Out-Null
-        $exitCode = $LASTEXITCODE
+        $dbRsyncResult = Invoke-RepoBoundRsync -Arguments $rsyncArgs -RepoRoot $script:SyncRepoRoot -SyncConfig $script:SyncConfig
+        $exitCode = $dbRsyncResult.ExitCode
         
         if ($exitCode -ne 0) {
             throw "rsync fehlgeschlagen (Exit-Code: $exitCode)"
         }
         
+        $syncResults += [PSCustomObject]@{
+            ChangeCount = 1
+            DeleteCount = 0
+            NoChange = $false
+            Transport = 'rsync-cwrsync'
+            FallbackUsed = $false
+        }
         Write-Host "  $dbFile - OK" -ForegroundColor Green
     } catch {
         $errorCount++
@@ -723,10 +740,15 @@ foreach ($dbFile in $STATS_DB_FILES) {
 # Statistik-Dateien (public/statistics)
 # -----------------------------------------------------------------------------
 
-$statsOk = Sync-StatisticsFiles -RepoRoot $RepoRoot -RemoteRuntimeRoot $REMOTE_RUNTIME_ROOT
-if (-not $statsOk) {
-    $errorCount++
-    Write-Host "  FEHLER: Statistik-Dateien konnten nicht synchronisiert werden" -ForegroundColor Red
+if (-not $SkipStatistics) {
+    $statsOk = Sync-StatisticsFiles -RepoRoot $RepoRoot -RemoteRuntimeRoot $REMOTE_RUNTIME_ROOT
+    if (-not $statsOk) {
+        $errorCount++
+        Write-Host "  FEHLER: Statistik-Dateien konnten nicht synchronisiert werden" -ForegroundColor Red
+    }
+}
+else {
+    Add-SyncRunNote -Run $dataRunRecord -Note 'Statistics upload skipped by operator switch.'
 }
 
 # Rechte auf Server setzen
@@ -742,10 +764,18 @@ Write-Host "=============================================" -ForegroundColor Cyan
 Write-Host ""
 
 if ($errorCount -gt 0) {
+    $summaryPath = Complete-SyncRunRecord -Run $dataRunRecord -ExitCode 1 -NoChange $false -ChangeCount (($syncResults | Measure-Object -Property ChangeCount -Sum).Sum) -DeleteCount (($syncResults | Measure-Object -Property DeleteCount -Sum).Sum) -FallbackUsed ($syncResults.Where({ $_.FallbackUsed }).Count -gt 0)
+    Write-Host "Run summary: $summaryPath" -ForegroundColor DarkGray
     Write-Host "WARNUNG: $errorCount Fehler aufgetreten!" -ForegroundColor Red
     exit 1
 } else {
     $totalSynced = $DATA_DIRECTORIES.Count + $STATS_DB_FILES.Count
+    $changeCount = (($syncResults | Measure-Object -Property ChangeCount -Sum).Sum)
+    if ($null -eq $changeCount) { $changeCount = 0 }
+    $deleteCount = (($syncResults | Measure-Object -Property DeleteCount -Sum).Sum)
+    if ($null -eq $deleteCount) { $deleteCount = 0 }
+    $summaryPath = Complete-SyncRunRecord -Run $dataRunRecord -ExitCode 0 -NoChange ($changeCount -eq 0 -and $deleteCount -eq 0) -ChangeCount $changeCount -DeleteCount $deleteCount -FallbackUsed ($syncResults.Where({ $_.FallbackUsed }).Count -gt 0)
+    Write-Host "Run summary: $summaryPath" -ForegroundColor DarkGray
     Write-Host "Alle $totalSynced Elemente erfolgreich synchronisiert." -ForegroundColor Green
     Write-Host "  - $($DATA_DIRECTORIES.Count) Verzeichnisse" -ForegroundColor DarkGray
     Write-Host "  - $($STATS_DB_FILES.Count) Stats-DBs aus data/db" -ForegroundColor DarkGray

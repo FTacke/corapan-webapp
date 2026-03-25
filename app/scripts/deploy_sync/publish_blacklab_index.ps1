@@ -44,6 +44,11 @@ Set-StrictMode -Version Latest
 
 . "$PSScriptRoot\_lib\ssh.ps1"
 
+$coreLogging = Join-Path $PSScriptRoot 'core\logging.ps1'
+if (Test-Path $coreLogging) {
+    . $coreLogging
+}
+
 # ============================================================================
 # CONFIGURATION
 # ============================================================================
@@ -54,6 +59,31 @@ $PROD_PORT = 8081
 $MIN_FILES = 10
 $MIN_SIZE_MB = 50
 $timestamp = Get-Date -Format "yyyy-MM-dd_HHmmss"
+$SMOKE_PATTERN = '[word="casa"]'
+
+function Test-BlackLabHitsQuery {
+    param(
+        [Parameter(Mandatory=$true)]
+        [int]$TargetPort,
+
+        [Parameter(Mandatory=$true)]
+        [string]$Label
+    )
+
+    $hitsUrl = "http://127.0.0.1:$TargetPort/blacklab-server/corpora/corapan/hits?patt=$([System.Uri]::EscapeDataString($SMOKE_PATTERN))&number=1"
+    $hitsJson = Invoke-SSHCommand -Command "curl -fsS '$hitsUrl' 2>/dev/null" -PassThru
+
+    if ([string]::IsNullOrWhiteSpace($hitsJson)) {
+        throw "$Label hits endpoint returned empty response"
+    }
+
+    if ($hitsJson -notmatch '"summary"' -and $hitsJson -notmatch '"hits"') {
+        throw "$Label hits endpoint did not return a valid hits payload"
+    }
+
+    Write-Success "$Label hits query OK"
+    return $hitsJson
+}
 
 # ==========================================================================
 # MAIN SCRIPT
@@ -78,6 +108,8 @@ if (-not $DataDir) {
     }
     $DataDir = $remotePaths.BlackLabDataRoot
 }
+
+$script:uploadTransport = 'tar-ssh'
 
 function Write-Section {
     param([string]$Title)
@@ -109,6 +141,13 @@ function Write-Info {
 
 function Exit-WithError {
     param([string]$Message, [int]$Code = 1)
+
+    if ($script:blacklabRunRecord) {
+        $script:blacklabRunRecord.transport = $script:uploadTransport
+        $summaryPath = Complete-SyncRunRecord -Run $script:blacklabRunRecord -ExitCode $Code -NoChange $false -ChangeCount 0 -DeleteCount 0 -FallbackUsed ($script:uploadTransport -ne 'tar-ssh')
+        Write-Host "  [INFO] Run summary: $summaryPath" -ForegroundColor Gray
+    }
+
     Write-Host ""
     Write-Error $Message
     exit $Code
@@ -210,8 +249,9 @@ Set-SSHConfig -Hostname $Hostname -User $User -Port $Port -DryRun:$DryRun
 Write-Section "STEP 1: LOCAL PREFLIGHT"
 
 # Calculate repo root (script is now in scripts/deploy_sync/)
-$repoRoot = (Get-Item $PSScriptRoot).Parent.Parent.FullName
+$repoRoot = Split-Path -Parent (Split-Path -Parent (Split-Path -Parent $PSScriptRoot))
 $localNew = Join-Path $repoRoot "data\blacklab\quarantine\index.build"
+$script:blacklabRunRecord = New-SyncRunRecord -Lane 'blacklab' -Source $localNew -Target $DataDir -Transport 'tar-ssh' -DryRun:$DryRun
 
 Write-Step "Checking local staging index: $localNew"
 
@@ -301,6 +341,7 @@ Write-Step "Preparing upload (tar+ssh streaming method)..."
 
 if (-not (Test-Command "tar")) {
     Write-Info "Warning: tar not found, attempting scp fallback..."
+    $script:uploadTransport = 'scp-legacy'
     
     if (-not (Test-Command "scp")) {
         Exit-WithError "Neither tar nor scp available. Cannot upload."
@@ -501,6 +542,8 @@ else {
             $tokenCount = $Matches[1]
             Write-Success "Tokens: $tokenCount"
         }
+
+        [void](Test-BlackLabHitsQuery -TargetPort $VALIDATE_PORT -Label 'Validation')
     }
     catch {
         Write-Error "Validation failed: $_"
@@ -601,6 +644,8 @@ else {
             $prodTokens = $Matches[1]
             Write-Success "Production tokens: $prodTokens"
         }
+
+        [void](Test-BlackLabHitsQuery -TargetPort $PROD_PORT -Label 'Production')
     }
     catch {
         Write-Error "Production check failed: $_"
@@ -617,6 +662,10 @@ else {
 # ============================================================================
 
 Invoke-BackupCleanup -RemoteDataDir $DataDir -Keep $KeepBackups -IsPublished $true
+
+$script:blacklabRunRecord.transport = $script:uploadTransport
+$summaryPath = Complete-SyncRunRecord -Run $script:blacklabRunRecord -ExitCode 0 -NoChange $false -ChangeCount 1 -DeleteCount 0 -FallbackUsed ($script:uploadTransport -ne 'tar-ssh')
+Write-Host "Run summary: $summaryPath" -ForegroundColor DarkGray
 
 # ============================================================================
 # FINAL SUMMARY

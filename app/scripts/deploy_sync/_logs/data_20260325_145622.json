@@ -1,0 +1,21 @@
+﻿{
+    "lane":  "data",
+    "source":  "C:\\dev\\corapan\\data",
+    "target":  "/srv/webapps/corapan/data",
+    "transport":  "rsync-cwrsync",
+    "dryRun":  true,
+    "startTime":  "2026-03-25T14:56:22.0311867+01:00",
+    "endTime":  "2026-03-25T14:56:23.0224640+01:00",
+    "exitCode":  0,
+    "noChange":  true,
+    "changeCount":  0,
+    "deleteCount":  0,
+    "fallbackUsed":  false,
+    "notes":  [
+
+              ],
+    "details":  [
+
+                ],
+    "summaryFile":  "C:\\dev\\corapan\\app\\scripts\\deploy_sync\\_logs\\data_20260325_145622.json"
+}

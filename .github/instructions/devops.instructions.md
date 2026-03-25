@@ -80,3 +80,25 @@ Any change to:
 requires documentation updates.
 
 For workflow and governance changes under `CORAPAN/.github`, document whether they affect local agent behavior, versioned CI/deploy behavior, or both.
+
+## Local Sync Lane Discipline
+
+When editing or reviewing:
+- `app/scripts/deploy_sync/**`
+- `maintenance_pipelines/_2_deploy/**`
+- `docs/rsync/**`
+
+you must also apply the `server-sync-production-lanes` skill.
+
+Required assumptions for that area:
+- repo-bundled cwRSync plus bundled `ssh.exe` is the live-validated standard rsync path
+- `scp -O` remains a required fallback
+- `tar|ssh` is not a standard large-file transport
+- Data, Media, and BlackLab lanes must remain explicit and separate
+
+Before removing a fallback, deleting a legacy sync artifact, or changing transport/guard behavior in that area, you must first:
+- run the refactored Data and Media task entry points in dry-run
+- if transport or guards changed, run at least one isolated live transfer under `/srv/webapps/corapan/tmp_sync_test/`
+- verify the JSON summary contract still holds
+
+Do not classify a legacy sync artifact as removable until the refactored standard path has been proven stable in practical validation.

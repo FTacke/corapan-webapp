@@ -1,0 +1,21 @@
+﻿{
+    "lane":  "media",
+    "source":  "C:\\dev\\corapan\\media",
+    "target":  "/srv/webapps/corapan/media",
+    "transport":  "rsync-cwrsync",
+    "dryRun":  false,
+    "startTime":  "2026-03-25T15:12:54.7686443+01:00",
+    "endTime":  "2026-03-25T15:13:12.5586903+01:00",
+    "exitCode":  0,
+    "noChange":  false,
+    "changeCount":  3080,
+    "deleteCount":  0,
+    "fallbackUsed":  false,
+    "notes":  [
+
+              ],
+    "details":  [
+
+                ],
+    "summaryFile":  "C:\\dev\\corapan\\app\\scripts\\deploy_sync\\_logs\\media_20260325_151254.json"
+}
