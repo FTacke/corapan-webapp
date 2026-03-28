@@ -100,7 +100,7 @@ This directory contains **orchestrator scripts** that coordinate deployment oper
 
 ---
 
-## Design Principles
+## Design Principles 
 
 ### 1. Orchestration Only
 
