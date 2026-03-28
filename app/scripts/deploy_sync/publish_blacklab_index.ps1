@@ -140,6 +140,164 @@ function Write-Info {
     Write-Host "  [INFO] $Message" -ForegroundColor Gray
 }
 
+function Format-VisibleString {
+    param([AllowNull()][string]$Value)
+
+    if ($null -eq $Value) {
+        return "<null>"
+    }
+
+    $builder = New-Object System.Text.StringBuilder
+    [void]$builder.Append("'")
+
+    foreach ($char in $Value.ToCharArray()) {
+        $code = [int][char]$char
+        switch ($code) {
+            9 { [void]$builder.Append('\t') }
+            10 { [void]$builder.Append('\n') }
+            13 { [void]$builder.Append('\r') }
+            39 { [void]$builder.Append("''") }
+            92 { [void]$builder.Append('\\') }
+            default {
+                if ($code -lt 32 -or $code -eq 127) {
+                    [void]$builder.AppendFormat('\\u{0:X4}', $code)
+                }
+                else {
+                    [void]$builder.Append($char)
+                }
+            }
+        }
+    }
+
+    [void]$builder.Append("'")
+    return $builder.ToString()
+}
+
+function Assert-CanonicalRemoteIndexPath {
+    param(
+        [Parameter(Mandatory=$true)]
+        [string]$Path,
+
+        [Parameter(Mandatory=$true)]
+        [string]$ExpectedRoot,
+
+        [Parameter(Mandatory=$true)]
+        [string]$Label
+    )
+
+    $expected = "$ExpectedRoot/index"
+    $visiblePath = Format-VisibleString $Path
+    $visibleExpected = Format-VisibleString $expected
+    $leaf = ($Path -split '/')[-1]
+
+    if ($Path -cne $Path.Trim()) {
+        throw "$Label contains leading or trailing whitespace: $visiblePath"
+    }
+
+    if ($Path.IndexOf("`r") -ge 0 -or $Path.IndexOf("`n") -ge 0) {
+        throw "$Label contains a newline control character: $visiblePath"
+    }
+
+    if ($Path -match '[\x00-\x1F\x7F]') {
+        throw "$Label contains a control character: $visiblePath"
+    }
+
+    if ($leaf -cne 'index') {
+        throw "$Label must end in exact leaf name 'index': $visiblePath"
+    }
+
+    if ($Path -cne $expected) {
+        throw "$Label is not the canonical path. Expected $visibleExpected but got $visiblePath"
+    }
+}
+
+function Assert-RemoteIndexHostState {
+    param(
+        [Parameter(Mandatory=$true)]
+        [string]$RemoteDataDir,
+
+        [Parameter(Mandatory=$true)]
+        [string]$RemoteActive,
+
+        [Parameter(Mandatory=$true)]
+        [string]$ContextLabel
+    )
+
+    $hostStateScript = @"
+set -euo pipefail
+quote_path() {
+    printf '%q' "$1"
+}
+
+fail() {
+    echo "${ContextLabel}: $1" >&2
+    exit 1
+}
+
+validate_exact_index_target() {
+    local path="$1"
+    local expected_root="$2"
+    local expected="${expected_root}/index"
+    local leaf="${path##*/}"
+
+    if [[ "$path" != "$expected" ]]; then
+        fail "active index path mismatch; expected $(quote_path "$expected") but got $(quote_path "$path")"
+    fi
+
+    if [[ "$leaf" != "index" ]]; then
+        fail "active index leaf must be exact index, got $(quote_path "$leaf") from $(quote_path "$path")"
+    fi
+
+    if [[ "$path" =~ [[:cntrl:]] ]]; then
+        fail "active index path contains control characters: $(quote_path "$path")"
+    fi
+
+    if [[ "$path" =~ ^[[:space:]] || "$path" =~ [[:space:]]$ ]]; then
+        fail "active index path contains leading/trailing whitespace: $(quote_path "$path")"
+    fi
+}
+
+check_index_conflicts() {
+    local root="$1"
+    local found=0
+    while IFS= read -r -d '' entry; do
+        local base
+        local normalized
+        base="$(basename "$entry")"
+        normalized="$(printf '%s' "$base" | tr -d '[:cntrl:]' | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')"
+        if [[ "$normalized" == "index" && "$base" != "index" ]]; then
+            echo "$(quote_path "$entry")"
+            found=1
+        fi
+    done < <(find "$root" -mindepth 1 -maxdepth 1 -type d -print0)
+
+    return $found
+}
+
+validate_exact_index_target '$RemoteActive' '$RemoteDataDir'
+
+if [[ ! -d '$RemoteActive' ]]; then
+    fail "active index directory missing: $(quote_path '$RemoteActive')"
+fi
+
+if [[ -z "$(find '$RemoteActive' -mindepth 1 -print -quit)" ]]; then
+    fail "active index directory is empty: $(quote_path '$RemoteActive')"
+fi
+
+if conflicts="$(check_index_conflicts '$RemoteDataDir')"; then
+    :
+else
+    fail "suspicious BlackLab index sibling path(s) detected under $(quote_path '$RemoteDataDir'): ${conflicts}"
+fi
+
+echo "HOST_INDEX_OK $(quote_path '$RemoteActive')"
+"@
+
+    $result = Invoke-RemoteBash -Script $hostStateScript -PassThru
+    $visibleResult = Format-VisibleString (($result | Out-String).Trim())
+    Write-Success "$ContextLabel host path OK: $visibleResult"
+}
+
 function Exit-WithError {
     param([string]$Message, [int]$Code = 1)
 
@@ -233,8 +391,8 @@ Write-Host "BlackLab Index Publisher" -ForegroundColor Magenta
 Write-Host "=========================" -ForegroundColor Magenta
 Write-Host ""
 Write-Host "Target:    ${User}@${Hostname}:$Port" -ForegroundColor Gray
-Write-Host "Data Dir:  $DataDir" -ForegroundColor Gray
-Write-Host "Config:    $ConfigDir" -ForegroundColor Gray
+Write-Host "Data Dir:  $(Format-VisibleString $DataDir)" -ForegroundColor Gray
+Write-Host "Config:    $(Format-VisibleString $ConfigDir)" -ForegroundColor Gray
 if ($DryRun) {
     Write-Host "Mode:      DRY-RUN (no changes will be made)" -ForegroundColor Yellow
 }
@@ -305,6 +463,13 @@ Write-Step "Verifying remote paths..."
 
 $remoteActive = "$DataDir/index"
 $remoteNew = "$DataDir/quarantine/index.upload_$timestamp"
+
+try {
+    Assert-CanonicalRemoteIndexPath -Path $remoteActive -ExpectedRoot $DataDir -Label 'Remote active index path'
+}
+catch {
+    Exit-WithError $_.Exception.Message
+}
 
 if ($DryRun) {
     Write-Info "[DRY-RUN] Would verify paths: $DataDir, $ConfigDir"
@@ -571,8 +736,8 @@ $remoteBak = "$DataDir/backups/index_$timestamp"
 $remoteFailed = "$DataDir/quarantine/index.failed_$timestamp"
 
 Write-Step "Performing atomic swap..."
-Write-Info "ACTIVE -> BAK:    $remoteActive -> $remoteBak"
-Write-Info "NEW -> ACTIVE:    $remoteNew -> $remoteActive"
+Write-Info "ACTIVE -> BAK:    $(Format-VisibleString $remoteActive) -> $(Format-VisibleString $remoteBak)"
+Write-Info "NEW -> ACTIVE:    $(Format-VisibleString $remoteNew) -> $(Format-VisibleString $remoteActive)"
 
 if ($DryRun) {
     Write-Info "[DRY-RUN] Would execute swap commands"
@@ -581,6 +746,39 @@ else {
     try {
         $swapScript = @"
 set -euo pipefail
+quote_path() {
+    printf '%q' "$1"
+}
+
+fail() {
+    echo "$1" >&2
+    exit 1
+}
+
+validate_exact_index_target() {
+    local path="$1"
+    local expected_root="$2"
+    local expected="${expected_root}/index"
+    local leaf="${path##*/}"
+
+    if [[ "$path" != "$expected" ]]; then
+        fail "swap target mismatch; expected $(quote_path "$expected") but got $(quote_path "$path")"
+    fi
+
+    if [[ "$leaf" != "index" ]]; then
+        fail "swap target leaf must be exact index, got $(quote_path "$leaf") from $(quote_path "$path")"
+    fi
+
+    if [[ "$path" =~ [[:cntrl:]] ]]; then
+        fail "swap target contains control characters: $(quote_path "$path")"
+    fi
+
+    if [[ "$path" =~ ^[[:space:]] || "$path" =~ [[:space:]]$ ]]; then
+        fail "swap target contains leading/trailing whitespace: $(quote_path "$path")"
+    fi
+}
+
+validate_exact_index_target '$remoteActive' '$DataDir'
 if [ -d '$remoteActive' ]; then
     mv '$remoteActive' '$remoteBak'
 fi
@@ -597,6 +795,13 @@ mv '$remoteNew' '$remoteActive'
     $swapCheck = Invoke-SSHCommand -Command "ls -lhd '$remoteActive' '$remoteBak' 2>/dev/null" -PassThru
     Write-Info "Post-swap directories:"
     Write-Host $swapCheck -ForegroundColor DarkGray
+
+    try {
+        Assert-RemoteIndexHostState -RemoteDataDir $DataDir -RemoteActive $remoteActive -ContextLabel 'Post-publish host index check'
+    }
+    catch {
+        Exit-WithError $_.Exception.Message 4
+    }
 }
 
 # ============================================================================
@@ -644,6 +849,13 @@ else {
         if ($prodJson -match '"tokens":(\d+)') {
             $prodTokens = $Matches[1]
             Write-Success "Production tokens: $prodTokens"
+        }
+
+        try {
+            Assert-RemoteIndexHostState -RemoteDataDir $DataDir -RemoteActive $remoteActive -ContextLabel 'Production smoke test host index check'
+        }
+        catch {
+            Exit-WithError $_.Exception.Message 4
         }
 
         [void](Test-BlackLabHitsQuery -TargetPort $PROD_PORT -Label 'Production')

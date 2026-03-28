@@ -116,6 +116,67 @@ warn() {
     echo "${msg}" >> "$LOG_FILE" 2>/dev/null || true
 }
 
+quote_path() {
+    printf '%q' "$1"
+}
+
+fail_path_check() {
+    error "$1"
+    exit 1
+}
+
+validate_exact_index_path() {
+    local path="$1"
+    local expected_root="$2"
+    local expected="${expected_root}/index"
+    local leaf="${path##*/}"
+
+    if [[ "$path" != "$expected" ]]; then
+        fail_path_check "Active index path mismatch. Expected $(quote_path "$expected") but got $(quote_path "$path")"
+    fi
+
+    if [[ "$leaf" != "index" ]]; then
+        fail_path_check "Active index leaf must be exact index, got $(quote_path "$leaf") from $(quote_path "$path")"
+    fi
+
+    if [[ "$path" =~ [[:cntrl:]] ]]; then
+        fail_path_check "Active index path contains control characters: $(quote_path "$path")"
+    fi
+
+    if [[ "$path" =~ ^[[:space:]] || "$path" =~ [[:space:]]$ ]]; then
+        fail_path_check "Active index path contains leading or trailing whitespace: $(quote_path "$path")"
+    fi
+}
+
+collect_index_conflicts() {
+    local parent_dir="$1"
+    local found=0
+
+    while IFS= read -r -d '' entry; do
+        local base
+        local normalized
+        base="$(basename "$entry")"
+        normalized="$(printf '%s' "$base" | tr -d '[:cntrl:]' | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')"
+        if [[ "$normalized" == "index" && "$base" != "index" ]]; then
+            printf '%s\n' "$(quote_path "$entry")"
+            found=1
+        fi
+    done < <(find "$parent_dir" -mindepth 1 -maxdepth 1 -type d -print0)
+
+    return $found
+}
+
+assert_index_activation_target() {
+    validate_exact_index_path "$INDEX_DIR" "$BLACKLAB_ROOT"
+
+    local conflict_output
+    if conflict_output="$(collect_index_conflicts "$BLACKLAB_ROOT")"; then
+        :
+    else
+        fail_path_check "Suspicious BlackLab index sibling path(s) detected under $(quote_path "$BLACKLAB_ROOT"): ${conflict_output}"
+    fi
+}
+
 pick_free_port() {
     python3 - <<PY
 import socket
@@ -171,6 +232,7 @@ echo "=============================================="
 echo "CO.RA.PAN Production BlackLab Index Build"
 echo "=============================================="
 log "=== BlackLab Index Build Started ==="
+assert_index_activation_target
 
 # Step 1: Verify prerequisites
 log "Verifying prerequisites..."
@@ -219,7 +281,7 @@ mkdir -p "$INDEX_DIR_NEW"
 # Step 4: Build index using Docker
 log "Building BlackLab index (this may take a while)..."
 log "Image: $BLACKLAB_IMAGE"
-log "Config: $BLF_CONFIG"
+log "Config: $(quote_path "$BLF_CONFIG")"
 log "Java heap: -Xms${JAVA_XMS} -Xmx${JAVA_XMX}"
 if [ -n "$DOCKER_MEM" ]; then
     log "Docker memory limit: ${DOCKER_MEM}"
@@ -502,7 +564,7 @@ if [ "$VALIDATION_PASSED" = false ]; then
     FAILED="${INDEX_DIR_NEW}.failed_${TS}"
     if [ -d "$INDEX_DIR_NEW" ]; then
         mv "$INDEX_DIR_NEW" "$FAILED"
-        error "Preserved failed index at: $FAILED"
+        error "Preserved failed index at: $(quote_path "$FAILED")"
     else
         error "Failed index directory missing; nothing to preserve"
     fi
@@ -515,6 +577,8 @@ log "Performing atomic index switch..."
 
 BACKUP_DIR="${INDEX_DIR}.bak_${TIMESTAMP}"
 
+assert_index_activation_target
+
 if [ -d "$INDEX_DIR" ]; then
     log "Backing up current index to timestamped backup..."
     # Remove old non-timestamped backup if it exists
@@ -522,14 +586,14 @@ if [ -d "$INDEX_DIR" ]; then
     
     # Create timestamped backup
     mv "$INDEX_DIR" "$BACKUP_DIR"
-    log "Current index backed up to $BACKUP_DIR"
+    log "Current index backed up to $(quote_path "$BACKUP_DIR")"
 else
     log "No previous index to backup"
 fi
 
 # Perform the swap
 mv "$INDEX_DIR_NEW" "$INDEX_DIR"
-log "New index activated: $INDEX_DIR"
+log "New index activated: $(quote_path "$INDEX_DIR")"
 
 # Verify the swap was successful
 if [ ! -d "$INDEX_DIR" ] || [ -z "$(ls -A "$INDEX_DIR")" ]; then
@@ -547,6 +611,8 @@ if [ ! -d "$INDEX_DIR" ] || [ -z "$(ls -A "$INDEX_DIR")" ]; then
     fi
     exit 1
 fi
+
+assert_index_activation_target
 
 log "Index swap verified successfully"
 

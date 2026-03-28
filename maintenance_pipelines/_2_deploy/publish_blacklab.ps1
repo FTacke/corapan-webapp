@@ -77,6 +77,53 @@ $WorkspaceRoot = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
 $RemoteAppRoot = "/srv/webapps/corapan/app"
 $RemoteBlackLabDataRoot = "/srv/webapps/corapan/data/blacklab"
 
+function Format-VisibleString([AllowNull()][string]$Value) {
+  if ($null -eq $Value) {
+    return "<null>"
+  }
+
+  $builder = New-Object System.Text.StringBuilder
+  [void]$builder.Append("'")
+  foreach ($char in $Value.ToCharArray()) {
+    $code = [int][char]$char
+    switch ($code) {
+      9 { [void]$builder.Append('\\t') }
+      10 { [void]$builder.Append('\\n') }
+      13 { [void]$builder.Append('\\r') }
+      39 { [void]$builder.Append("''") }
+      92 { [void]$builder.Append('\\\\') }
+      default {
+        if ($code -lt 32 -or $code -eq 127) {
+          [void]$builder.AppendFormat('\\u{0:X4}', $code)
+        }
+        else {
+          [void]$builder.Append($char)
+        }
+      }
+    }
+  }
+  [void]$builder.Append("'")
+  return $builder.ToString()
+}
+
+function Assert-CanonicalRemoteBlackLabRoot([string]$Path) {
+  $expected = "/srv/webapps/corapan/data/blacklab"
+  $visiblePath = Format-VisibleString $Path
+  $visibleExpected = Format-VisibleString $expected
+
+  if ($Path -cne $Path.Trim()) {
+    throw "Remote BlackLab root contains leading or trailing whitespace: $visiblePath"
+  }
+
+  if ($Path.IndexOf("`r") -ge 0 -or $Path.IndexOf("`n") -ge 0 -or $Path -match '[\x00-\x1F\x7F]') {
+    throw "Remote BlackLab root contains control characters: $visiblePath"
+  }
+
+  if ($Path -cne $expected) {
+    throw "Remote BlackLab root mismatch. Expected $visibleExpected but got $visiblePath"
+  }
+}
+
 function Resolve-FullPath([string]$PathLike) {
   if ([System.IO.Path]::IsPathRooted($PathLike)) {
     return (Resolve-Path -LiteralPath $PathLike).Path
@@ -147,6 +194,8 @@ function Invoke-Step {
 }
 
 # --- Prep paths ---
+Assert-CanonicalRemoteBlackLabRoot $RemoteBlackLabDataRoot
+
 $AppRepoPath = Resolve-AppRepoRoot -CandidatePath $AppRepoPath -WorkspaceRootPath $WorkspaceRoot
 Assert-Dir $AppRepoPath "AppRepoPath"
 
@@ -174,8 +223,8 @@ try {
   Write-Host "  Export script:   $ExportScriptPath"
   Write-Host "  Build script:    $BuildScriptPath"
   Write-Host "  Publish script:  $PublishScriptPath"
-  Write-Host "  Remote app:      $RemoteAppRoot"
-  Write-Host "  Remote BL data:  $RemoteBlackLabDataRoot"
+  Write-Host "  Remote app:      $(Format-VisibleString $RemoteAppRoot)"
+  Write-Host "  Remote BL data:  $(Format-VisibleString $RemoteBlackLabDataRoot)"
   Write-Host "  Log file:        $logFile"
   Write-Host "  Workflow:        export -> build -> publish (serial only)"
   Write-Host ""

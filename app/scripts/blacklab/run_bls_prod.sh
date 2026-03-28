@@ -58,6 +58,75 @@ warn() {
     echo -e "${YELLOW}[WARN]${NC} $1"
 }
 
+quote_path() {
+    printf '%q' "$1"
+}
+
+fail_path_check() {
+    error "$1"
+    exit 1
+}
+
+validate_exact_index_path() {
+    local path="$1"
+    local expected_root="$2"
+    local expected="${expected_root}/blacklab/index"
+    local leaf="${path##*/}"
+
+    if [[ "$path" != "$expected" ]]; then
+        fail_path_check "Active index path mismatch. Expected $(quote_path "$expected") but got $(quote_path "$path")"
+    fi
+
+    if [[ "$leaf" != "index" ]]; then
+        fail_path_check "Active index leaf must be exact index, got $(quote_path "$leaf") from $(quote_path "$path")"
+    fi
+
+    if [[ "$path" =~ [[:cntrl:]] ]]; then
+        fail_path_check "Active index path contains control characters: $(quote_path "$path")"
+    fi
+
+    if [[ "$path" =~ ^[[:space:]] || "$path" =~ [[:space:]]$ ]]; then
+        fail_path_check "Active index path contains leading or trailing whitespace: $(quote_path "$path")"
+    fi
+}
+
+collect_index_conflicts() {
+    local parent_dir="$1"
+    local found=0
+
+    while IFS= read -r -d '' entry; do
+        local base
+        local normalized
+        base="$(basename "$entry")"
+        normalized="$(printf '%s' "$base" | tr -d '[:cntrl:]' | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')"
+        if [[ "$normalized" == "index" && "$base" != "index" ]]; then
+            printf '%s\n' "$(quote_path "$entry")"
+            found=1
+        fi
+    done < <(find "$parent_dir" -mindepth 1 -maxdepth 1 -type d -print0)
+
+    return $found
+}
+
+assert_index_ready_for_start() {
+    validate_exact_index_path "$INDEX_DIR" "$DATA_ROOT"
+
+    if [[ ! -d "$INDEX_DIR" ]]; then
+        fail_path_check "BlackLab index not found: $(quote_path "$INDEX_DIR")"
+    fi
+
+    if [[ -z "$(find "$INDEX_DIR" -mindepth 1 -print -quit)" ]]; then
+        fail_path_check "BlackLab index directory is empty: $(quote_path "$INDEX_DIR")"
+    fi
+
+    local conflict_output
+    if conflict_output="$(collect_index_conflicts "${DATA_ROOT}/blacklab")"; then
+        :
+    else
+        fail_path_check "Suspicious BlackLab index sibling path(s) detected under $(quote_path "${DATA_ROOT}/blacklab"): ${conflict_output}"
+    fi
+}
+
 echo "=============================================="
 echo "CO.RA.PAN Production BlackLab Server Start"
 echo "=============================================="
@@ -66,25 +135,15 @@ log "Starting BlackLab server..."
 # Step 1: Verify prerequisites
 log "Verifying prerequisites..."
 
-if [ ! -d "$INDEX_DIR" ]; then
-    error "BlackLab index not found: $INDEX_DIR"
-    error "Run build_blacklab_index_prod.sh first"
-    exit 1
-fi
+assert_index_ready_for_start
 
 if [ ! -d "$CONFIG_DIR" ]; then
-    error "BlackLab config not found: $CONFIG_DIR"
-    exit 1
-fi
-
-if [ -z "$(ls -A "$INDEX_DIR")" ]; then
-    error "BlackLab index directory is empty: $INDEX_DIR"
-    error "Run build_blacklab_index_prod.sh first"
+    error "BlackLab config not found: $(quote_path "$CONFIG_DIR")"
     exit 1
 fi
 
 INDEX_SIZE=$(du -sh "$INDEX_DIR" | cut -f1)
-log "Index directory: $INDEX_DIR ($INDEX_SIZE)"
+log "Index directory: $(quote_path "$INDEX_DIR") ($INDEX_SIZE)"
 
 # Step 2: Create network if not exists
 log "Ensuring Docker network exists..."
@@ -105,6 +164,8 @@ log "  Container: $CONTAINER_NAME"
 log "  Port: $HOST_PORT -> $CONTAINER_PORT"
 log "  Network: $NETWORK_NAME"
 log "  Heap: Xms=$HEAP_INIT, Xmx=$HEAP_MAX"
+log "  Index mount: $(quote_path "$INDEX_DIR") -> /data/index/corapan"
+log "  Config mount: $(quote_path "$CONFIG_DIR") -> /etc/blacklab"
 
 docker run -d \
     --name "$CONTAINER_NAME" \
@@ -135,10 +196,12 @@ log "Checking BlackLab health..."
 MAX_RETRIES=12
 RETRY_INTERVAL=5
 RETRIES=0
+CORPORA_URL="http://localhost:${HOST_PORT}/blacklab-server/corpora/?outputformat=json"
+CORPORA_RESPONSE=""
 
 while [ $RETRIES -lt $MAX_RETRIES ]; do
-    if curl -s -f "http://localhost:${HOST_PORT}/blacklab-server/" > /dev/null 2>&1; then
-        log "BlackLab server is responding"
+    if CORPORA_RESPONSE="$(curl -s -f "$CORPORA_URL" 2>/dev/null)" && [[ -n "$CORPORA_RESPONSE" ]]; then
+        log "BlackLab corpora endpoint is responding"
         break
     fi
     RETRIES=$((RETRIES + 1))
@@ -149,16 +212,18 @@ while [ $RETRIES -lt $MAX_RETRIES ]; do
 done
 
 if [ $RETRIES -eq $MAX_RETRIES ]; then
-    warn "BlackLab did not respond within the timeout"
-    warn "Check logs with: docker logs $CONTAINER_NAME"
+    error "BlackLab corpora endpoint did not respond within the timeout: $(quote_path "$CORPORA_URL")"
+    docker logs "$CONTAINER_NAME" 2>&1 | tail -20
+    exit 1
 else
-    # Check for corpus
-    CORPUS_CHECK=$(curl -s "http://localhost:${HOST_PORT}/blacklab-server/" 2>/dev/null || echo "error")
-    if echo "$CORPUS_CHECK" | grep -q "corapan"; then
+    assert_index_ready_for_start
+
+    if echo "$CORPORA_RESPONSE" | grep -q '"corapan"'; then
         log "Corpus 'corapan' is available"
     else
-        warn "Corpus 'corapan' may not be indexed correctly"
-        warn "Response: $CORPUS_CHECK"
+        error "Corpus 'corapan' not found in corpora response from $(quote_path "$CORPORA_URL")"
+        error "Corpora response: $(quote_path "$CORPORA_RESPONSE")"
+        exit 1
     fi
 fi
 
@@ -171,7 +236,7 @@ echo "Container: $CONTAINER_NAME"
 echo "Image: $IMAGE"
 echo "Port: http://localhost:$HOST_PORT/blacklab-server/"
 echo "Network: $NETWORK_NAME"
-echo "Index: $INDEX_DIR ($INDEX_SIZE)"
+echo "Index: $(quote_path "$INDEX_DIR") ($INDEX_SIZE)"
 echo ""
 echo "To check logs: docker logs -f $CONTAINER_NAME"
 echo "To verify: curl http://localhost:$HOST_PORT/blacklab-server/"
