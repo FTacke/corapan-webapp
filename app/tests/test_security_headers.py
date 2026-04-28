@@ -1,10 +1,17 @@
+import os
+from pathlib import Path
+
 import pytest
+
+WORKSPACE_ROOT = Path(__file__).resolve().parents[2]
+os.environ.setdefault("CORAPAN_RUNTIME_ROOT", str(WORKSPACE_ROOT))
+os.environ.setdefault("CORAPAN_MEDIA_ROOT", str(WORKSPACE_ROOT / "media"))
+os.environ.setdefault("BLS_CORPUS", "corapan")
 
 
 @pytest.fixture
 def client():
     from flask import Flask
-    from pathlib import Path
 
     project_root = Path(__file__).resolve().parents[1]
     template_dir = project_root / "templates"
@@ -57,3 +64,32 @@ def test_csp_script_src_no_unsafe_inline(client):
     # NOTE: style-src still contains 'unsafe-inline' due to jQuery/DataTables dependency
     # This will be removed after jQuery migration (see TODO in src/app/__init__.py:213)
     # For now, we only verify that script-src doesn't have unsafe-inline
+
+
+def test_goatcounter_disabled_by_default(client):
+    response = client.get("/")
+    html = response.get_data(as_text=True)
+
+    assert response.status_code == 200
+    assert 'data-goatcounter=' not in html
+    assert 'https://gc.zgo.at/count.js' not in html
+    assert 'js/modules/core/entry.js' in html
+    assert "Content-Security-Policy" in response.headers
+    csp = response.headers["Content-Security-Policy"]
+    assert "https://gc.zgo.at" not in csp
+
+
+def test_goatcounter_enabled_renders_once_and_updates_csp(client):
+    client.application.config["GOATCOUNTER_URL"] = "https://corapan.goatcounter.com/count"
+
+    response = client.get("/")
+    html = response.get_data(as_text=True)
+
+    assert response.status_code == 200
+    assert html.count('data-goatcounter="https://corapan.goatcounter.com/count"') == 1
+    assert html.count('src="https://gc.zgo.at/count.js"') == 1
+    assert 'js/modules/core/entry.js' in html
+
+    csp = response.headers["Content-Security-Policy"]
+    assert "https://gc.zgo.at" in csp
+    assert "connect-src 'self' https://corapan.goatcounter.com;" in csp

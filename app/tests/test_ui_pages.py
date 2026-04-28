@@ -1,9 +1,16 @@
+import os
 import secrets
 from datetime import datetime, timezone
+from pathlib import Path
 
 import pytest
 
 from flask import Flask
+
+WORKSPACE_ROOT = Path(__file__).resolve().parents[2]
+os.environ.setdefault("CORAPAN_RUNTIME_ROOT", str(WORKSPACE_ROOT))
+os.environ.setdefault("CORAPAN_MEDIA_ROOT", str(WORKSPACE_ROOT / "media"))
+os.environ.setdefault("BLS_CORPUS", "corapan")
 
 from src.app.extensions.sqlalchemy_ext import get_engine
 from src.app.auth.models import Base, User

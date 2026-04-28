@@ -259,6 +259,10 @@ class BaseConfig:
         os.getenv("ALLOW_PUBLIC_TRANSCRIPTS", "false").lower() == "true"
     )
 
+    # Optional third-party pageview tracking. Disabled by default in dev/test
+    # unless explicitly configured via environment.
+    GOATCOUNTER_URL = (os.getenv("GOATCOUNTER_URL") or "").strip()
+
     # Auth DB - Must be explicitly configured via AUTH_DATABASE_URL env var
     # No fallback to SQLite - dev must use Postgres from docker-compose.dev-postgres.yml
     # Production sets this via environment/secrets

@@ -7,6 +7,7 @@ from datetime import datetime, timezone
 from importlib import metadata
 from logging.handlers import RotatingFileHandler
 from pathlib import Path
+from urllib.parse import urlparse
 
 from flask import Flask, flash, jsonify, redirect, render_template, request, url_for
 from werkzeug.middleware.proxy_fix import ProxyFix
@@ -189,6 +190,7 @@ def register_context_processors(app: Flask) -> None:
             "app_version": app.config.get("APP_VERSION", ""),
             "app_release_tag": app.config.get("APP_RELEASE_TAG", ""),
             "app_release_url": app.config.get("APP_RELEASE_URL", ""),
+            "goatcounter_url": app.config.get("GOATCOUNTER_URL", ""),
             "format_page_title": format_page_title,
             **BRANDING,
         }
@@ -301,6 +303,15 @@ def register_security_headers(app: Flask) -> None:
     @app.after_request
     def set_security_headers(response):
         """Set security headers on every response."""
+        goatcounter_url = (app.config.get("GOATCOUNTER_URL") or "").strip()
+        goatcounter_origin = ""
+        if goatcounter_url:
+            parsed_goatcounter = urlparse(goatcounter_url)
+            if parsed_goatcounter.scheme and parsed_goatcounter.netloc:
+                goatcounter_origin = (
+                    f"{parsed_goatcounter.scheme}://{parsed_goatcounter.netloc}"
+                )
+
         # Prevent MIME type sniffing
         response.headers["X-Content-Type-Options"] = "nosniff"
 
@@ -326,13 +337,15 @@ def register_security_headers(app: Flask) -> None:
             "default-src 'self'; "
             # we removed 'unsafe-inline' for scripts after moving inline scripts to external files
             "script-src 'self' https://code.jquery.com https://cdn.jsdelivr.net "
-            "https://cdn.datatables.net https://cdnjs.cloudflare.com https://unpkg.com; "
+            "https://cdn.datatables.net https://cdnjs.cloudflare.com https://unpkg.com"
+            f"{' https://gc.zgo.at' if goatcounter_url else ''}; "
             "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdn.datatables.net "
             "https://cdnjs.cloudflare.com https://unpkg.com https://fonts.googleapis.com; "
             "img-src 'self' data: https: blob:; "
             "font-src 'self' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net "
             "https://fonts.googleapis.com https://fonts.gstatic.com; "
-            "connect-src 'self'; "
+            "connect-src 'self'"
+            f"{' ' + goatcounter_origin if goatcounter_origin else ''}; "
             "media-src 'self' blob:; "
             "frame-ancestors 'none';"
         )
