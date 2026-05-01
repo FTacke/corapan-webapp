@@ -67,6 +67,7 @@ services:
       - ./data/db:/app/data/db
       - ./data/counters:/app/data/counters
       - ./logs:/app/logs
+    # Liveness probe only; readiness is exposed at /ready.
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
       interval: 30s

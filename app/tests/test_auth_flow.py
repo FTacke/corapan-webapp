@@ -1,12 +1,66 @@
+import logging
 import secrets
 from datetime import datetime, timezone
 
+import httpx
 import pytest
 
 from flask import Flask
 
 from src.app.extensions.sqlalchemy_ext import init_engine, get_engine, get_session
 from src.app.auth.models import Base, User, ResetToken, RefreshToken
+
+
+class _ReadyConnection:
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc, tb):
+        return False
+
+    def execute(self, statement):
+        return None
+
+
+class _ReadyEngine:
+    def __init__(self, *, fail: bool = False, backend: str = "postgresql"):
+        self.fail = fail
+        self.dialect = type("Dialect", (), {"name": backend})()
+
+    def connect(self):
+        if self.fail:
+            raise RuntimeError(
+                "could not connect to postgresql://corapan_app:supersecret@db:5432/corapan_auth"
+            )
+        return _ReadyConnection()
+
+
+class _ReadyResponse:
+    def __init__(self, status_code: int = 200, payload: dict | None = None):
+        self.status_code = status_code
+        self._payload = payload or {}
+        self.text = ""
+
+    def raise_for_status(self):
+        if self.status_code >= 400:
+            request = httpx.Request("GET", "http://blacklab.local/corpora")
+            raise httpx.HTTPStatusError(
+                f"HTTP {self.status_code}", request=request, response=self
+            )
+
+    def json(self):
+        return self._payload
+
+
+class _ReadyHttpClient:
+    def __init__(self, response: _ReadyResponse | None = None, error: Exception | None = None):
+        self.response = response or _ReadyResponse()
+        self.error = error
+
+    def get(self, *args, **kwargs):
+        if self.error is not None:
+            raise self.error
+        return self.response
 
 
 @pytest.fixture
@@ -358,25 +412,114 @@ class TestLoginFlow:
 class TestHealthEndpoint:
     """Health endpoint tests."""
 
-    def test_health_returns_json(self, client):
-        """Test /health returns JSON with correct structure."""
+    def test_health_returns_liveness_only(self, client, monkeypatch):
+        """Test /health stays a pure liveness check."""
+        from src.app.extensions import http_client as http_client_module
+        from src.app.extensions import sqlalchemy_ext as sqlalchemy_module
+
+        monkeypatch.setattr(
+            sqlalchemy_module,
+            "get_engine",
+            lambda: (_ for _ in ()).throw(AssertionError("auth DB should not be checked")),
+        )
+        monkeypatch.setattr(
+            http_client_module,
+            "get_http_client",
+            lambda: (_ for _ in ()).throw(AssertionError("BlackLab should not be checked")),
+        )
+
         resp = client.get("/health")
 
-        # Health should always return 200 or 503
-        assert resp.status_code in (200, 503)
-
-        data = resp.json
-        assert "status" in data
-        assert "service" in data
-        assert "checks" in data
-        assert data["service"] == "corapan-web"
+        assert resp.status_code == 200
+        assert resp.json == {"status": "healthy", "service": "corapan", "checks": {"flask": True}}
 
     def test_health_checks_flask(self, client):
         """Test /health reports Flask as healthy."""
         resp = client.get("/health")
         data = resp.json
 
-        assert data["checks"]["flask"]["ok"] is True
+        assert data["checks"]["flask"] is True
+
+    def test_ready_reports_healthy(self, client, monkeypatch):
+        """Test /ready returns healthy when auth DB and BlackLab are available."""
+        from src.app.extensions import http_client as http_client_module
+        from src.app.extensions import sqlalchemy_ext as sqlalchemy_module
+
+        client.application.config["BLS_BASE_URL"] = "http://blacklab.local/blacklab-server"
+        client.application.config["BLS_CORPUS"] = "corapan"
+
+        monkeypatch.setattr(sqlalchemy_module, "get_engine", lambda: _ReadyEngine())
+        monkeypatch.setattr(
+            http_client_module,
+            "get_http_client",
+            lambda: _ReadyHttpClient(
+                _ReadyResponse(200, {"corpora": [{"corpusId": "corapan"}]})
+            ),
+        )
+
+        resp = client.get("/ready")
+
+        assert resp.status_code == 200
+        data = resp.json
+        assert data["status"] == "healthy"
+        assert data["checks"]["auth_db"]["ok"] is True
+        assert data["checks"]["blacklab"]["ok"] is True
+
+    def test_ready_degrades_when_blacklab_is_unavailable(self, client, monkeypatch):
+        """Test /ready degrades when BlackLab cannot be reached."""
+        from src.app.extensions import http_client as http_client_module
+        from src.app.extensions import sqlalchemy_ext as sqlalchemy_module
+
+        client.application.config["BLS_BASE_URL"] = "http://blacklab.local/blacklab-server"
+        client.application.config["BLS_CORPUS"] = "corapan"
+
+        monkeypatch.setattr(sqlalchemy_module, "get_engine", lambda: _ReadyEngine())
+        monkeypatch.setattr(
+            http_client_module,
+            "get_http_client",
+            lambda: _ReadyHttpClient(error=RuntimeError("blacklab unreachable")),
+        )
+
+        resp = client.get("/ready")
+
+        assert resp.status_code == 200
+        data = resp.json
+        assert data["status"] == "degraded"
+        assert data["checks"]["auth_db"]["ok"] is True
+        assert data["checks"]["blacklab"]["ok"] is False
+
+    def test_ready_is_unhealthy_when_auth_db_is_unavailable(
+        self, client, monkeypatch, caplog
+    ):
+        """Test /ready returns unhealthy and redacts secrets when auth DB fails."""
+        from src.app.extensions import http_client as http_client_module
+        from src.app.extensions import sqlalchemy_ext as sqlalchemy_module
+
+        client.application.config["BLS_BASE_URL"] = "http://blacklab.local/blacklab-server"
+        client.application.config["BLS_CORPUS"] = "corapan"
+
+        monkeypatch.setattr(sqlalchemy_module, "get_engine", lambda: _ReadyEngine(fail=True))
+        monkeypatch.setattr(
+            http_client_module,
+            "get_http_client",
+            lambda: _ReadyHttpClient(
+                _ReadyResponse(200, {"corpora": [{"corpusId": "corapan"}]})
+            ),
+        )
+
+        with caplog.at_level(logging.WARNING):
+            resp = client.get("/ready")
+
+        assert resp.status_code == 503
+        data = resp.json
+        assert data["status"] == "unhealthy"
+        assert data["checks"]["auth_db"]["ok"] is False
+        assert "supersecret" not in resp.get_data(as_text=True)
+
+        log_text = "\n".join(record.getMessage() for record in caplog.records)
+        assert "supersecret" not in log_text
+        assert "postgresql://" not in log_text
+        assert "check=auth_db" in log_text
 
     def test_health_auth_endpoint(self, client):
         """Test /health/auth returns auth DB status."""

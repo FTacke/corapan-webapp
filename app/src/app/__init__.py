@@ -81,7 +81,7 @@ def _verify_auth_db_connection(app: Flask) -> None:
             "Run scripts/dev-setup.ps1 or apply the auth migration before starting the app."
         )
 
-    app.logger.info(f"Auth DB connection verified: {engine.url}")
+    app.logger.info("Auth DB connection verified: backend=%s", engine.dialect.name)
 
 
 def create_app(env_name: str | None = None) -> Flask:

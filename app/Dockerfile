@@ -71,7 +71,7 @@ COPY scripts/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
 RUN chmod 755 /usr/local/bin/docker-entrypoint.sh
 USER corapan
 
-# Healthcheck endpoint (requires /health route in app)
+# Liveness healthcheck endpoint; readiness is exposed separately at /ready.
 HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
   CMD curl -f http://localhost:5000/health || exit 1
 

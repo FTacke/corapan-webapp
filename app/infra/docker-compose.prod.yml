@@ -76,6 +76,7 @@ services:
       - /srv/webapps/corapan/media:/app/media
       - /srv/webapps/corapan/logs:/app/logs
       - /srv/webapps/corapan/data/config:/app/config
+    # Liveness probe only; readiness is exposed at /ready.
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
       interval: 30s

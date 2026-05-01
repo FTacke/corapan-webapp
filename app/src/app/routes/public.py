@@ -2,11 +2,13 @@
 
 from __future__ import annotations
 
+import re
 import logging
 import time
 from concurrent.futures import ThreadPoolExecutor, TimeoutError as FutureTimeout
 from flask import (
     Blueprint,
+    current_app,
     make_response,
     render_template,
     request,
@@ -20,6 +22,103 @@ import httpx
 logger = logging.getLogger(__name__)
 
 blueprint = Blueprint("public", __name__)
+
+_SECRET_URL_RE = re.compile(
+    r"(?P<scheme>[a-zA-Z][a-zA-Z0-9+.-]*://)(?P<user>[^:/?#@\s]+)(?::(?P<password>[^@\s/?#]*))?@"
+)
+_PASSWORD_PAIR_RE = re.compile(r"(?i)(password|passwd|pwd)=([^\s&]+)")
+_URI_RE = re.compile(r"\b[a-zA-Z][a-zA-Z0-9+.-]*://[^\s'\"]+")
+
+
+def _redact_sensitive_text(value: str | None) -> str:
+    if not value:
+        return ""
+
+    redacted = str(value)
+    redacted = _SECRET_URL_RE.sub(r"\g<scheme>\g<user>:***@", redacted)
+    redacted = _PASSWORD_PAIR_RE.sub(r"\1=***", redacted)
+    redacted = _URI_RE.sub("<redacted-url>", redacted)
+    return redacted
+
+
+def _exception_summary(exc: Exception) -> tuple[str, str]:
+    exc_type = type(exc).__name__
+    message = _redact_sensitive_text(str(exc)).strip()
+    return exc_type, message
+
+
+def _engine_backend_name(engine) -> str:
+    dialect = getattr(engine, "dialect", None)
+    return getattr(dialect, "name", "unknown") or "unknown"
+
+
+def _run_timed_check(
+    name: str,
+    check_fn,
+    *,
+    timeout_s: float,
+    failure_status: str,
+) -> dict[str, object]:
+    start = time.perf_counter()
+    result: dict[str, object] = {"ok": True, "status": "healthy"}
+    executor = ThreadPoolExecutor(max_workers=1)
+
+    try:
+        future = executor.submit(check_fn)
+        payload = future.result(timeout=timeout_s)
+        if isinstance(payload, dict):
+            result.update(payload)
+    except FutureTimeout:
+        result.update(
+            {
+                "ok": False,
+                "status": failure_status,
+                "error": "TimeoutError",
+                "message": f"timed out after {timeout_s:.2f}s",
+                "timeout_s": timeout_s,
+            }
+        )
+    except Exception as exc:
+        exc_type, message = _exception_summary(exc)
+        result.update(
+            {
+                "ok": False,
+                "status": failure_status,
+                "error": exc_type,
+                "message": message or None,
+            }
+        )
+    finally:
+        executor.shutdown(wait=False, cancel_futures=True)
+
+    elapsed_ms = int((time.perf_counter() - start) * 1000)
+    result["ms"] = elapsed_ms
+
+    if not result.get("ok", False):
+        error_type = str(result.get("error") or "error")
+        message = str(result.get("message") or "")
+        log_fn = logger.error if failure_status == "unhealthy" else logger.warning
+        if message:
+            log_fn(
+                "Readiness subcheck failed: check=%s status=%s duration_ms=%s timeout_s=%.2f error=%s: %s",
+                name,
+                result.get("status"),
+                elapsed_ms,
+                timeout_s,
+                error_type,
+                message,
+            )
+        else:
+            log_fn(
+                "Readiness subcheck failed: check=%s status=%s duration_ms=%s timeout_s=%.2f error=%s",
+                name,
+                result.get("status"),
+                elapsed_ms,
+                timeout_s,
+                error_type,
+            )
+
+    return result
 
 # NOTE: Visit tracking moved to new analytics system (see src/app/routes/analytics.py)
 # Frontend now calls /api/analytics/event directly via static/js/modules/analytics.js
@@ -51,64 +150,30 @@ def login_page():
 
 @blueprint.get("/health")
 def health_check():
-    """
-    Health check endpoint for Docker/Kubernetes monitoring.
+    """Liveness check for Docker/Kubernetes monitoring."""
 
-    Checks:
-    - Flask app is running (HTTP 200)
-    - Auth database is reachable (SELECT 1)
-    - BlackLab server is reachable (if BLS_BASE_URL is configured)
-
-    Response:
-    {
-        "status": "healthy" | "degraded" | "unhealthy",
-        "service": "corapan-web",
-        "checks": {
-            "flask": {"ok": true},
-            "auth_db": {"ok": true|false, "backend": "postgresql|sqlite", "error": "..."},
-            "blacklab": {"ok": true|false, "url": "...", "error": "..."}
+    return jsonify(
+        {
+            "status": "healthy",
+            "service": "corapan",
+            "checks": {"flask": True},
         }
-    }
+    ), 200
 
-    HTTP Status:
-    - 200: All critical checks pass (auth_db OK)
-    - 503: Critical checks fail (auth_db down)
-    """
-    from ..extensions.http_client import BLS_BASE_URL, get_http_client
-    from ..extensions.sqlalchemy_ext import get_engine
+
+@blueprint.get("/ready")
+def readiness_check():
+    """Readiness check for auth DB and BlackLab dependencies."""
+
     from sqlalchemy import text
 
-    def safe_check(fn, *, timeout_s: float, base: dict | None = None) -> dict:
-        start = time.perf_counter()
-        payload = {"ok": True, "error": None}
-        if base:
-            payload.update(base)
+    from ..extensions.http_client import get_http_client
+    from ..extensions.sqlalchemy_ext import get_engine
 
-        executor = ThreadPoolExecutor(max_workers=1)
-        try:
-            future = executor.submit(fn)
-            result = future.result(timeout=timeout_s)
-            if isinstance(result, dict):
-                payload.update(result)
-        except FutureTimeout:
-            payload["ok"] = False
-            payload["error"] = "timeout"
-        except Exception as e:
-            payload["ok"] = False
-            payload["error"] = f"{type(e).__name__}: {str(e)}"
-        finally:
-            executor.shutdown(wait=False, cancel_futures=True)
+    bls_base_url = (current_app.config.get("BLS_BASE_URL") or "").rstrip("/")
+    bls_corpus = (current_app.config.get("BLS_CORPUS") or "").strip()
 
-        payload["ms"] = int((time.perf_counter() - start) * 1000)
-        return payload
-
-    checks = {
-        "flask": {"ok": True, "ms": 0}  # If we got here, Flask is healthy
-    }
-
-    # Check Auth DB availability (critical for production)
-
-    def check_auth_db() -> dict:
+    def check_auth_db() -> dict[str, object]:
         engine = get_engine()
         if engine is None:
             raise RuntimeError("Auth engine not initialized")
@@ -116,62 +181,80 @@ def health_check():
         with engine.connect() as conn:
             conn.execute(text("SELECT 1"))
 
-        url = str(engine.url)
-        if "sqlite" in url:
-            backend = "sqlite"
-        elif "postgresql" in url or "postgres" in url:
-            backend = "postgresql"
-        else:
-            backend = "unknown"
+        return {"backend": _engine_backend_name(engine)}
 
-        return {"backend": backend}
+    def _extract_corpora_ids(payload: object) -> list[str]:
+        if not isinstance(payload, dict):
+            return []
 
-    checks["auth_db"] = safe_check(
-        check_auth_db,
-        timeout_s=0.8,
-        base={"backend": None},
-    )
+        corpora = payload.get("corpora") or payload.get("corpus") or payload.get("list")
+        if isinstance(corpora, dict):
+            return [str(key) for key in corpora.keys()]
+        if isinstance(corpora, list):
+            values: list[str] = []
+            for item in corpora:
+                if isinstance(item, str):
+                    values.append(item)
+                elif isinstance(item, dict):
+                    corpus_id = item.get("corpusId") or item.get("id") or item.get("name")
+                    if corpus_id:
+                        values.append(str(corpus_id))
+            return values
+        return []
 
-    # Check BlackLab availability (quick preflight)
-
-    def check_blacklab() -> dict:
-        if not BLS_BASE_URL:
-            raise RuntimeError("BLS_BASE_URL not configured")
+    def check_blacklab() -> dict[str, object]:
+        if not bls_base_url:
+            raise RuntimeError("BLS_BASE_URL is not configured")
 
         client = get_http_client()
         response = client.get(
-            f"{BLS_BASE_URL}/", timeout=httpx.Timeout(0.5)
-        )  # Single timeout value for all operations
-        if response.status_code not in (200, 404):
-            raise RuntimeError(f"HTTP {response.status_code}")
+            f"{bls_base_url}/corpora",
+            params={"outputformat": "json"},
+            headers={"Accept": "application/json"},
+            timeout=httpx.Timeout(0.8),
+        )
+        response.raise_for_status()
 
-        return {"url": BLS_BASE_URL}
+        available_corpora = _extract_corpora_ids(response.json())
+        if available_corpora and bls_corpus and bls_corpus not in available_corpora:
+            raise RuntimeError(
+                f"Configured corpus '{bls_corpus}' is not available on BlackLab"
+            )
 
-    checks["blacklab"] = safe_check(
-        check_blacklab,
-        timeout_s=0.8,
-        base={"url": BLS_BASE_URL},
-    )
+        return {
+            "url": bls_base_url,
+            "corpus": bls_corpus,
+            "available_corpora": len(available_corpora),
+        }
 
-    # Determine overall status
-    # Auth DB is critical, BlackLab is not (degraded mode still works)
-    if checks["flask"]["ok"] and checks["auth_db"]["ok"] and checks["blacklab"]["ok"]:
-        overall_status = "healthy"
-        http_code = 200
-    elif checks["flask"]["ok"] and checks["auth_db"]["ok"]:
-        # Flask + Auth OK but BlackLab not available - degraded but functional
+    checks = {
+        "flask": {"ok": True, "status": "healthy", "ms": 0},
+        "auth_db": _run_timed_check(
+            "auth_db",
+            check_auth_db,
+            timeout_s=0.8,
+            failure_status="unhealthy",
+        ),
+        "blacklab": _run_timed_check(
+            "blacklab",
+            check_blacklab,
+            timeout_s=0.8,
+            failure_status="degraded",
+        ),
+    }
+
+    if not checks["auth_db"]["ok"]:
+        overall_status = "unhealthy"
+        http_code = 503
+    elif not checks["blacklab"]["ok"]:
         overall_status = "degraded"
         http_code = 200
-    elif checks["flask"]["ok"] and not checks["auth_db"]["ok"]:
-        # Auth DB down - critical failure
-        overall_status = "unhealthy"
-        http_code = 503
     else:
-        overall_status = "unhealthy"
-        http_code = 503
+        overall_status = "healthy"
+        http_code = 200
 
     return jsonify(
-        {"status": overall_status, "service": "corapan-web", "checks": checks}
+        {"status": overall_status, "service": "corapan", "checks": checks}
     ), http_code
 
 
@@ -194,7 +277,7 @@ def health_check_bls():
     """
     from ..extensions.http_client import BLS_BASE_URL, get_http_client
 
-    logger.debug(f"BlackLab diagnostic check: {BLS_BASE_URL}")
+    logger.debug("BlackLab diagnostic check: %s", BLS_BASE_URL)
 
     try:
         client = get_http_client()
@@ -211,7 +294,7 @@ def health_check_bls():
         ), 200 if ok else 502
 
     except httpx.ConnectError as e:
-        logger.warning(f"BlackLab not reachable: {e}")
+        logger.warning("BlackLab not reachable: %s", _redact_sensitive_text(str(e)))
         return jsonify(
             {
                 "ok": False,
@@ -222,7 +305,7 @@ def health_check_bls():
         ), 502
 
     except httpx.TimeoutException:
-        logger.warning(f"BlackLab timeout at {BLS_BASE_URL}")
+        logger.warning("BlackLab timeout at %s", BLS_BASE_URL)
         return jsonify(
             {
                 "ok": False,
@@ -233,13 +316,15 @@ def health_check_bls():
         ), 504
 
     except Exception as e:
-        logger.error(f"BlackLab health check error: {e}")
+        logger.error(
+            "BlackLab health check error: %s", _redact_sensitive_text(str(e))
+        )
         return jsonify(
             {
                 "ok": False,
                 "url": BLS_BASE_URL,
                 "status_code": None,
-                "error": f"{type(e).__name__}: {str(e)}",
+                "error": _redact_sensitive_text(f"{type(e).__name__}: {str(e)}"),
             }
         ), 500
 
@@ -277,21 +362,18 @@ def health_check_auth():
         with engine.connect() as conn:
             conn.execute(text("SELECT 1"))
 
-        # Determine backend type from URL
-        url = str(engine.url)
-        if "sqlite" in url:
-            backend = "sqlite"
-        elif "postgresql" in url or "postgres" in url:
-            backend = "postgresql"
-        else:
-            backend = "unknown"
+        backend = _engine_backend_name(engine)
 
         return jsonify({"ok": True, "backend": backend, "error": None}), 200
 
     except Exception as e:
-        logger.error(f"Auth DB health check error: {e}")
+        logger.error("Auth DB health check error: %s", _redact_sensitive_text(str(e)))
         return jsonify(
-            {"ok": False, "backend": None, "error": f"{type(e).__name__}: {str(e)}"}
+            {
+                "ok": False,
+                "backend": None,
+                "error": _redact_sensitive_text(f"{type(e).__name__}: {str(e)}"),
+            }
         ), 503
 
 
