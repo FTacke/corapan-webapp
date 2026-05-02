@@ -440,6 +440,45 @@ class TestHealthEndpoint:
 
         assert data["checks"]["flask"] is True
 
+    def test_health_is_not_rate_limited(self, client):
+        """Test /health stays available across many repeated requests."""
+        for attempt in range(1, 206):
+            resp = client.get("/health")
+            assert resp.status_code == 200, f"/health rate limited on attempt {attempt}"
+
+    def test_ready_is_not_rate_limited(self, client, monkeypatch):
+        """Test /ready stays available across many repeated requests."""
+        from src.app.extensions import http_client as http_client_module
+        from src.app.extensions import sqlalchemy_ext as sqlalchemy_module
+
+        client.application.config["BLS_BASE_URL"] = "http://blacklab.local/blacklab-server"
+        client.application.config["BLS_CORPUS"] = "corapan"
+
+        monkeypatch.setattr(sqlalchemy_module, "get_engine", lambda: _ReadyEngine())
+        monkeypatch.setattr(
+            http_client_module,
+            "get_http_client",
+            lambda: _ReadyHttpClient(
+                _ReadyResponse(200, {"corpora": [{"corpusId": "corapan"}]})
+            ),
+        )
+
+        for attempt in range(1, 206):
+            resp = client.get("/ready")
+            assert resp.status_code == 200, f"/ready rate limited on attempt {attempt}"
+
+    def test_rate_limited_route_still_rate_limited(self, client):
+        """Test a normal route still returns 429 after its limit is exceeded."""
+        for attempt in range(1, 7):
+            resp = client.post(
+                "/auth/reset-password/request",
+                json={"email": "missing@example.org"},
+            )
+            if attempt < 6:
+                assert resp.status_code == 200
+            else:
+                assert resp.status_code == 429
+
     def test_ready_reports_healthy(self, client, monkeypatch):
         """Test /ready returns healthy when auth DB and BlackLab are available."""
         from src.app.extensions import http_client as http_client_module

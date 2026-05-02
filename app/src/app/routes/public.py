@@ -19,6 +19,8 @@ from flask import (
 from flask_jwt_extended import jwt_required
 import httpx
 
+from ..extensions import limiter
+
 logger = logging.getLogger(__name__)
 
 blueprint = Blueprint("public", __name__)
@@ -148,6 +150,7 @@ def login_page():
     return response, 200
 
 
+@limiter.exempt
 @blueprint.get("/health")
 def health_check():
     """Liveness check for Docker/Kubernetes monitoring."""
@@ -161,6 +164,7 @@ def health_check():
     ), 200
 
 
+@limiter.exempt
 @blueprint.get("/ready")
 def readiness_check():
     """Readiness check for auth DB and BlackLab dependencies."""
