@@ -1,0 +1,2 @@
+cd C:\dev\corapan
+powershell -ExecutionPolicy Bypass -File maintenance_pipelines\_0_json\run_full_transcripts_annotation.ps1
