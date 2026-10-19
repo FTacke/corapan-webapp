@@ -302,3 +302,125 @@ Offen:
 2. Konfiguration und Topologie in CO.RA.PAN (`.env`-Variablen, §19.10 `PRESENT`), Inventarzeile `legacy corapan` in `STORAGE_REDUNDANCY_INVENTORY.md`. Owner: CO.RA.PAN.
 3. Ungecachte Wiederholung der Backup-Verifikation (optional; empfohlen vor Freigabe der Original-MP3).
 4. Entscheidung über den alten D:-Bestand `protected_secondary/legacy_corapan` (31,6 GiB), jetzt durch Primary + B1 abgelöst.
+
+
+---
+
+## 15. Abschluss 2026-10-19 (ab 19:23): A7-Gate, ungecachte Fixity, Original-MP3, alte D:-Sicherung, Git
+
+Der in §14.7 als nicht freigegeben dokumentierte Stand von `media/mp3-full` ist hier aufgelöst; §14 bleibt unverändert stehen.
+
+### 15.1 Bewertung
+
+| Teil | Status |
+|---|---|
+| NEW_FS-Retention | **PASS** – Baum `corapan` A5 PRESERVED, jetzt auch nach vollständigem **ungecachtem** Rücklesen |
+| B1-Backup | **PASS** – vollständig ungecacht verifiziert (3.082/3.082), Manifest byte-gleich mit dem Primary |
+| A7-Freigabe | **PASS** für `media/mp3-full` (D128 + eigene Gates); `media/transcripts` bewusst lokal erhalten |
+| Lokaler Cleanup | **PASS** – 146 Original-MP3 entfernt (6,45 GiB); Repo 1,70 GiB |
+| Alte D:-Sicherung | **PROTECTED** – nach CO.RA.PAN-Regeln weiter `KEEP_REQUIRED`; nicht gelöscht |
+| Git | **PASS** – 6 lokale Commits, lokal in `main` integriert (Fast-Forward), kein Push |
+
+### 15.2 v3-Release-Gate (D128)
+
+Beobachtet nur lesend (Pin auf den Bericht im Haupt-Checkout, 90 s, 19:23–20:04; `local_reports/a7_probe.log`). Bericht
+`C:\dev\panhispanic_media_corpora\corapan\docs\agent-runs\2026-10-19_legacy-reader-retirement-and-c-release.md`: Status COMPLETE,
+`LEGACY_C_RELEASE_READY = true` (Scope `media/{mp3-full,transcripts}`, 296 Dateien, 7,17 GiB), Entscheidung D128.
+
+| Start-Gate | Nachweis | Ergebnis |
+|---|---|---|
+| 1 READY im abgeschlossenen Bericht | Kopf des Berichts | erfüllt |
+| 2 integriert | `32d01a207` ist Vorfahre von CO.RA.PAN `main`; `config/corpus_paths.yml` führt die Medien nur noch unter `${CORAPAN_LEGACY_ARCHIVE_TREE}`; `paths.py` wirft `LegacyMediaRetired` | erfüllt (im Code geprüft) |
+| 3 Tests, A6/A7 | D128 §4/§6: A6 PASS, A7 PASS; Tests 309/21/410/813 passed, Fehlschläge nur vorbestehend und fremd | erfüllt (laut Bericht; hier nicht neu ausgeführt) |
+| 4 keine aktive v3-Komponente braucht die C:-Audios | D128 §2: „Weiterhin notwendig: nothing“; kein Produktionsmodul importiert den Zugriff | erfüllt |
+| 5 NEW_FS A5 PRESERVED | ungecachtes Vollrücklesen §15.3 | erfüllt |
+| 6 B1 PASS | ungecachte Verifikation §15.3 | erfüllt |
+| 7 lokale Dateien = Manifest | pro Datei unmittelbar vor dem Löschen §15.4 | erfüllt (146/146) |
+| 8 kein Zugriff | keine Prozess-Kommandozeile mit `mp3-full`; v3-Leser stillgelegt | erfüllt |
+
+### 15.3 Ungecachte Fixity
+
+Werkzeug: `corapan_playground.storage.archive_secondary.sha256_uncached` (CO.RA.PAN, Windows `FILE_FLAG_NO_BUFFERING`; meldet je Datei den Lesemodus).
+
+- **B1** (`D:\…\legacy\corapan\preservation_backup\corapan`), 19:32: 3.082/3.082 Dateien `uncached` gelesen, alle = Manifest; keine nicht gelisteten Dateien. Primary- und Backup-Manifest byte-gleich (SHA-256 `c651f9ba572d169eba0b6180dadb373206ba7a72f8570e3eb2b35c1ac765e73b`), `tree_sha256 f70bcbb3…80ae5f`, Primary-Identität `IDENTITY_OK`, Backup-Marker `holding LEGACY`. Dauer 10 s (lokale SSD).
+- **Primary** (NEW_FS), 18:14 UTC: alle 3.082 Dateien `uncached` über das Netz gelesen (561 s ≈ 23 MB/s), `archive_tree` → keine Codes, **PRESERVED**.
+- Einordnung: `FILE_FLAG_NO_BUFFERING` umgeht den Windows-Dateicache des Arbeitsplatzes. Caches des Fileservers oder des Plattencontrollers sind damit nicht ausgeschlossen. Ein vollständiger Restore wurde nicht durchgeführt; Read-back-Proben: 41/41 (§14.4) und 40/40 im D128-Lauf.
+
+### 15.4 Gelöschte lokale MP3
+
+Journal `local_reports/phasec_mp3_full_journal.jsonl`. Gate je Datei: frischer lokaler SHA-256 = `ARCHIVE_MANIFEST.json` = ungecacht gelesene B1-Kopie (Größe und Digest).
+
+| | Dateien | Bytes |
+|---|---:|---:|
+| Original-MP3 `media/mp3-full/<Land>/*.mp3` gelöscht | 146 | 6.930.281.882 |
+| mitgelöscht und sofort byte-identisch aus B1 wiederhergestellt: `media/mp3-full/.gitkeep` (Platzhalter; `media/` ist gitignoriert, das Skript hatte ihn als versioniert angenommen) | 1 | 42 |
+| leere Länderordner entfernt | 25 | – |
+| wegen Abweichung behalten | 0 | – |
+
+Nicht verändert: der Produktivserver (seine Full-MP3, Splits, Transkripte, Index), NEW_FS, D:. `media/mp3-temp` (6 Snippet-Cache-Dateien, 0,56 MiB, nicht archiviert, regenerierbar) bleibt lokal.
+
+### 15.5 Alte D:-Sicherung `protected_secondary\legacy_corapan` – PROTECTED
+
+Inhaltlicher Abgleich aller 45.030 Objekte (33.947.564.625 Bytes) über die SHA-256 ihres eigenen, 2026-10-15 ungecacht geführten Journals (`local_reports/old_secondary_classification.json`):
+
+| Klasse | Dateien | GiB | Nachweis |
+|---|---:|---:|---|
+| identisch im LEGACY-Baum (NEW_FS und B1) | 4.726 | 14,81 | SHA-256 im Manifest |
+| alte Zenodo-v3-ZIPs | 25 | 6,39 | ZIP-SHA = Alt-ZIP-Inventar; alle 292 Mitglieder im Baum |
+| Splits (regenerierbar; auf dem Server vorhanden) | 2.706 | 7,64 | – |
+| `.venv` | 22.570 | 1,27 | Paketliste in `docs/agent-runs` |
+| `tmp` (synthetische Sync-Testdaten) | 4 | 1,00 | Klassifikation 2026-10-19 |
+| Caches (`__pycache__`, `.pytest_cache`, `.ruff_cache`) | 10.907 | 0,20 | – |
+| `.git` | 1.306 | 0,19 | alle Refs im aktuellen Repo außer einem Codex-Checkpoint (`refs/codex/turn-diffs/…`, Commit `03307845…`); dessen 641 Blobs liegen alle im aktuellen Repo |
+| Dev-PostgreSQL | 2.155 | 0,09 | lokal auf C: |
+| Git-versionierte Dateien | 611 | 0,03 | Blob vorhanden (130 davon nach Zeilenend-Normalisierung) |
+| identisch mit noch lokalen, gitignorierten Entwicklungsresten (Snippet-Cache, `app/tmp`, Deploy-/CI-Logs, Test-TSV, Pipeline-Report) | 20 | < 0,01 | SHA = lokale Datei |
+| **einzigartige wissenschaftlich relevante Dateien** | **0** | – | – |
+
+Trotzdem nicht gelöscht: `STORAGE_REDUNDANCY_INVENTORY.md` (CO.RA.PAN) führt den Bestand als `KEEP_REQUIRED`. Ein Bestand verlässt die Tabelle nur über sein Gate und eine dort dokumentierte Operator-Freigabe. D128 §5 bestätigt den Schutz und verlangt pro Klasse eine dokumentierte Entscheidung und ein Werkzeug, das jede Datei prüft. Ein solches Werkzeug gibt es nicht (`archive_secondary_copy_v1.py` kennt nur `run`/`verify`). Damit sind Voraussetzungen 3 („v3 hat die Regeln geprüft“: ja, Ergebnis geschützt), 4 und 8 nicht erfüllt. Freigegeben auf D: in diesem Run: 0 GiB. Die Klassifikation oben ist die Evidenz für eine spätere Freigabe pro Klasse.
+
+### 15.6 Verbleibende lokale Bestände (1,697 GiB)
+
+| Bestand | GiB | Grund |
+|---|---:|---|
+| `media/transcripts` | 0,71 | lokale Webapp (Player, Editor, Atlas), `03_build_metadata_stats.py`; im Archiv und auf Zenodo v4 |
+| `data/blacklab/index`, `export/{tsv,metadata}`, `data/public`, `data/db/public` | 0,63 | lokale Suche und Statistik, Index-Rebuild |
+| `data/db/restricted` | 0,09 | Dev-Datenbank (bewusst nicht archiviert) |
+| `.git` | 0,19 | Historie |
+| `app`, `docs`, `maintenance_pipelines`, Release-Record | 0,07 | Software, Doku, Evidenz |
+
+### 15.7 Speicherbilanz
+
+| Bereich | Vorher (Tagesbeginn) | Nachher | Ergebnis |
+|---|---:|---:|---|
+| Lokales Legacy-Repository | 25,22 GiB (31,6 vor ZIP-Löschung) | **1,70 GiB** | 23,53 GiB freigegeben (+ 6,39 alte ZIPs am Vormittag) |
+| Separates Zenodo-Staging | 6,51 GiB | 0 | 6,51 GiB freigegeben |
+| NEW_FS Legacy | 0 | 12,57 GiB | gesichert, PRESERVED |
+| D: Legacy-Backup (B1) | 0 | 12,57 GiB | verifiziert |
+| D: alte Sicherung | 31,62 GiB | 31,62 GiB | geschützt, unverändert |
+
+Dieser Abschnitt: **6,45 GiB auf C:** (146 MP3). Über den ganzen Tag auf C: (ohne Doppelzählung, nach Journalen): alte ZIPs 6,39 + Staging 6,51 + Splits/`tmp`/`.venv`/Duplikate 11,99 + Phase B 5,09 + MP3 6,45 = **36,43 GiB**. Auf D: freigegeben: 0. Neu belegt: NEW_FS 12,57 GiB, D: 12,57 GiB.
+
+### 15.8 Git
+
+- Ausgangs-HEAD `713629b` (`main`). Lokaler `main` jetzt per Fast-Forward auf **`b35fe13`**, identisch mit `legacy/v3.2-provenance-and-retention`:
+  1. `76669b5` Pipeline v3.2 (Skripte, Tests, Tools)
+  2. `2059ff7` v3.2-Run-Records, archivierte Kommandos, entfernte überholte Smoke-Audits
+  3. `95ca435` Berichte, Manifeste, Release-Record, Archiv-/Restore-Anleitung
+  4. `bdde85f` Annotation-Resume-Zustand nach v3.2 (`annotation_state.sqlite`: 146 Zeilen `done`, Pipeline v3.2; die Datei war schon versioniert)
+  5. `b35fe13` Doku: lokale MP3 entfernt, v3-Leser stillgelegt
+  6. (Abschlussbericht dieses Abschnitts)
+- `main` ist lokal 6 Commits vor `origin/main`. **Kein Push.** Ein Push auf `main` würde den Produktiv-Rebuild auslösen; die Commits ändern keinen App-Code (nur `maintenance_pipelines`, `docs`).
+- Arbeitsbaum sauber. Keine großen Korpusdateien in Git (größte neue Datei: Provenienz-ZIP 1,3 MiB im Release-Record); keine Secrets (Musterprüfung).
+- Validierung: `pytest maintenance_pipelines/_0_json/tests` mit System-Python, ohne Cache/Bytecode-Schreiben: **9 passed**. Doku-Verweise geprüft (existieren). App-Tests nicht ausgeführt (App-Code unverändert).
+
+### 15.9 Produktivserver und Schwester-Repositories
+
+Kein Zugriff auf den Produktivserver, kein Deployment, kein Push. CO.RA.PAN_v3 und CO.PRE.PAN_v3 nur gelesen bzw. ihre Werkzeuge mit Prozessvariablen ausgeführt (Python `-B`); keine Datei dort geändert. Keine Zenodo-Aktion. Archivbaum auf NEW_FS und B1 nur gelesen.
+
+### 15.10 Verbleibende Risiken und Entscheidungen
+
+1. Alte D:-Sicherung (31,62 GiB): Freigabe nur pro Klasse mit dokumentierter Operator-Entscheidung in `STORAGE_REDUNDANCY_INVENTORY.md` (CO.RA.PAN) und einem prüfenden Werkzeug. Die Evidenz in §15.5 zeigt keinen einzigartigen wissenschaftlichen Inhalt.
+2. Original-Audio liegt jetzt institutionell nur auf NEW_FS (HRZ-Backup dort nicht von hier geprüft), auf D: (B1, gleicher Rechner) und in Zenodo v3/v4 (restricted, Dateiliste öffentlich nicht prüfbar) – sowie auf dem Produktivserver.
+3. Für den write-once-Baum ist kein Re-Verifikationszyklus geplant (D128 §8).
+4. Ein Push des lokalen `main` löst den Produktiv-Rebuild aus; bei Bedarf bewusst und zu einem gewählten Zeitpunkt.
