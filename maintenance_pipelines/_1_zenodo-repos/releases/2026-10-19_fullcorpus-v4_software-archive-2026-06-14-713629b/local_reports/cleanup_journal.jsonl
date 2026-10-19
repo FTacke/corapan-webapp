@@ -1,0 +1,10 @@
+{"cls": "staging", "action": "release_record_copied", "files": 42, "dest": "C:\\dev\\panhispanic_media_corpora\\legacy\\corapan\\maintenance_pipelines\\_1_zenodo-repos\\releases\\2026-10-19_fullcorpus-v4_software-archive-2026-06-14-713629b", "ts": "2026-10-19T15:14:07"}
+{"cls": "staging", "action": "removed", "files": 75, "bytes": 6994155930, "ts": "2026-10-19T15:14:07"}
+{"cls": "tsv_for_index.bak_20260117_002730", "action": "removed", "files": 146, "bytes": 381955540, "ts": "2026-10-19T15:14:07"}
+{"cls": "tsv_for_index.bak_20260117_005855", "action": "removed", "files": 146, "bytes": 381955540, "ts": "2026-10-19T15:14:07"}
+{"cls": "index_build", "action": "removed", "files": 74, "bytes": 292150609, "ts": "2026-10-19T15:14:07"}
+{"cls": "tmp", "action": "removed", "files": 114, "bytes": 1776222857, "ts": "2026-10-19T15:14:07"}
+{"cls": "smoke_backup_duplicates", "action": "removed", "files": 55, "bytes": 264876217, "ts": "2026-10-19T15:14:07"}
+{"cls": "mp3_split", "action": "removed", "files": 2705, "bytes": 8200720408, "empty_dirs_removed": 25, "ts": "2026-10-19T15:14:27"}
+{"cls": "venv", "action": "removed", "files": 34043, "bytes": 1573907641, "note": "first rmtree hit a transient lock on Scripts/python.exe after 34030 files; no process ran from the venv; remaining 13 files removed on retry", "ts": "2026-10-19T15:15:00"}
+{"cls": "zip_process_log", "action": "renamed", "to": "zip_process.history_v3_2026-02-26.log", "ts": "2026-10-19T15:15:00"}

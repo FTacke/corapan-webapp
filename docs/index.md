@@ -11,6 +11,7 @@ Start here, then branch into the specific area you need.
 - [architecture/template-customization.md](architecture/template-customization.md) — template adaptation guide
 - [operations/local-dev.md](operations/local-dev.md) — canonical local development workflow
 - [operations/production.md](operations/production.md) — production deployment and operations contract
+- [operations/legacy-archive.md](operations/legacy-archive.md) — where the archived corpus data and historical states are, and how to restore them
 - [blacklab/README.md](blacklab/README.md) — BlackLab wiring and operational guardrails
 
 ## Feature Docs
