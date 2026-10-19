@@ -3,7 +3,13 @@
 Since 2026-10-19 the corpus data, historical states and processing evidence of this repository are archived outside the
 checkout. The local checkout keeps the software, the documentation and the data the local web application and the
 maintenance scripts need (`media/transcripts`, `data/blacklab/index`, `data/blacklab/export/tsv` and `export/metadata`,
-`data/public`, `data/db/public`). The production server is not affected; it keeps its own copies.
+`data/public`, `data/db/public`). The production server is not affected; it keeps its own copies (full MP3, split MP3,
+transcripts, index).
+
+**Local audio:** the 146 original recordings were removed from `media/mp3-full/` on 2026-10-19 (only `.gitkeep` remains) after
+the archive tree was verified (uncached re-read, A5 PRESERVED), its backup was verified (uncached) and CO.RA.PAN_v3 retired its
+readers of the local media (decision D128 there). `media/mp3-split/` is empty locally as well. Restore them from the archive when
+local audio playback is needed (below).
 
 ## Where the data are
 
@@ -51,7 +57,7 @@ Never write into the archive tree. Check restored files against `ARCHIVE_MANIFES
 
 ## Readers in the CO.RA.PAN repository
 
-CO.RA.PAN (v3) reads this checkout through the named root `CORAPAN_LEGACY_ROOT` (`config/corpus_paths.yml`:
-`media/transcripts`, `media/mp3-full`, `media/mp3-split`). Because the tree mirrors the layout, pointing that variable at the
-archived tree makes those readers read the archive instead (read-only). That switch is a configuration change in the CO.RA.PAN
-repository and is made there.
+Since D128 (2026-10-19) CO.RA.PAN (v3) no longer reads this checkout's media. Its optional historical readers resolve the
+media keys of `config/corpus_paths.yml` only below the archived tree, named per process by `CORAPAN_LEGACY_ARCHIVE_TREE`
+(`…\legacy\corapan\corapan`) and checked against its `ARCHIVE_MANIFEST.json`; unset, a read fails (`LegacyMediaRetired`).
+`CORAPAN_LEGACY_ROOT` there is only a write-refusal guard.
