@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import importlib.util
 import json
+from collections import defaultdict
 from pathlib import Path
 
 import pytest
@@ -139,7 +140,9 @@ def test_process_preserves_existing_ids_adds_missing_and_skips_second_run(tmp_pa
     assert all("past_type" not in word and "future_type" not in word for word in words)
 
     assert words[1]["morph"]["PastType"] == "pastPerfect"
-    assert words[1]["morph"]["TenseRole"] == "compound_participle"
+    assert "TenseRole" not in words[1]["morph"]
+    assert words[0]["morph"]["TenseRole"] == "copula_or_aux"
+    assert words[0]["morph"]["VerbLemma"] == "haber"
     assert words[2]["pos"] == "X"
     assert words[2]["morph"]["TranscriptSpecial"] == "self_correction"
     assert words[3]["foreign"] == "1"
@@ -220,3 +223,63 @@ def test_tense_role_stats_match_final_token_counts() -> None:
         if "TenseRole" in morph:
             final_counts[morph["TenseRole"]] = final_counts.get(morph["TenseRole"], 0) + 1
     assert stats["TenseRole"] == final_counts
+
+
+def test_coprepan_finite_past_role_and_verblemma() -> None:
+    mod = load_module()
+    words = [
+        {
+            "text": "dijo",
+            "token_id": "t1",
+            "lemma": "decir",
+            "pos": "VERB",
+            "morph": {"Tense": "Past", "VerbForm": "Fin"},
+        }
+    ]
+    stats = {"PastType": {}, "FutureType": {}, "VoiceType": {}, "TenseRole": {}, "samples": defaultdict(list)}
+    mod.apply_tense_to_words(words, stats)
+    morph = words[0]["morph"]
+    assert morph["PastType"] == "simplePast"
+    assert morph["TenseRole"] == "finite_verb"
+    assert morph["VerbLemma"] == "decir"
+    assert morph["TenseRole"] != "finite_past"
+
+
+def test_coprepan_passive_aux_and_participle_schema() -> None:
+    mod = load_module()
+    words = [
+        {
+            "text": "fue",
+            "token_id": "t1",
+            "lemma": "ser",
+            "pos": "AUX",
+            "morph": {"Tense": "Past", "VerbForm": "Fin"},
+        },
+        {
+            "text": "aprobada",
+            "token_id": "t2",
+            "lemma": "aprobar",
+            "pos": "VERB",
+            "morph": {"Tense": "Past", "VerbForm": "Part"},
+        },
+    ]
+    stats = {"PastType": {}, "FutureType": {}, "VoiceType": {}, "TenseRole": {}, "samples": defaultdict(list)}
+    mod.apply_tense_to_words(words, stats)
+    aux = words[0]["morph"]
+    part = words[1]["morph"]
+    assert aux["TenseRole"] == "aux_passive"
+    assert aux["VoiceType"] == "passive"
+    assert aux["VerbLemma"] == "ser"
+    assert part["TenseRole"] == "lexical_participle"
+    assert part["VoiceType"] == "passive"
+    assert part["PastType"] == "simplePast"
+
+
+def test_validation_rejects_legacy_finite_past() -> None:
+    mod = load_module()
+    data = sample_data()
+    word = data["segments"][0]["words"][0]
+    word["morph"]["PastType"] = "simplePast"
+    word["morph"]["TenseRole"] = "finite_past"
+    result = mod.validate_transcript(data, existing_ids=mod.token_id_snapshot(data))
+    assert any("finite_past" in error for error in result.errors)

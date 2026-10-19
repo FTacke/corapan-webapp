@@ -48,7 +48,21 @@ from typing import Any
 # ==============================================================================
 
 SCRIPT_DIR = Path(__file__).resolve().parent
-PROJECT_ROOT = SCRIPT_DIR.parent.parent  # LOKAL/_1_json -> PROJECT_ROOT
+
+
+def find_project_root(start: Path = SCRIPT_DIR) -> Path:
+    """Find the Corapan repository root from this maintenance script."""
+    candidates = [start, *start.parents]
+    for candidate in candidates:
+        if not (candidate / "media" / "transcripts").exists():
+            continue
+        if (candidate / ".git").exists() or (candidate / "app").exists() or (candidate / "maintenance_pipelines").exists():
+            return candidate
+    searched = ", ".join(str(path) for path in candidates)
+    raise RuntimeError(f"Cannot locate Corapan project root from {start}. Searched: {searched}")
+
+
+PROJECT_ROOT = find_project_root()
 TRANSCRIPTS_DIR = PROJECT_ROOT / "media" / "transcripts"
 
 def resolve_data_root() -> Path:
@@ -65,7 +79,11 @@ PUBLIC_DB_DIR = DATA_ROOT / "db" / "public"
 PUBLIC_DB_DIR.mkdir(parents=True, exist_ok=True)
 
 # Country-Code-Normalisierung importieren
-COUNTRIES_PY = PROJECT_ROOT / "src" / "app" / "config" / "countries.py"
+COUNTRIES_PY_CANDIDATES = (
+    PROJECT_ROOT / "src" / "app" / "config" / "countries.py",
+    PROJECT_ROOT / "app" / "src" / "app" / "config" / "countries.py",
+)
+COUNTRIES_PY = next((path for path in COUNTRIES_PY_CANDIDATES if path.exists()), COUNTRIES_PY_CANDIDATES[-1])
 
 def load_country_normalizer():
     """Lädt normalize_country_code aus countries.py."""

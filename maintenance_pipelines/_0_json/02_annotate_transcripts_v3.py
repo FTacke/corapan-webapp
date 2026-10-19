@@ -74,12 +74,12 @@ SMOKE_BACKUP_DIR = SCRIPT_DIR / "backups" / "smoke-tests"
 
 ANN_VERSION = "corapan-ann/v3"
 SCHEMA_VERSION = "corapan-transcript-json/v3"
-PIPELINE_VERSION = "corapan-transcript-ann-v3.1"
+PIPELINE_VERSION = "corapan-transcript-ann-v3.2"
 SCRIPT_NAME = "maintenance_pipelines/_0_json/02_annotate_transcripts_v3.py"
 SPACY_MODEL = "es_dep_news_trf"
 SPACY_STAGE_VERSION = "spacy-transcript-adapter-v2"
-TENSE_RULES_VERSION = "tense-v3-corapan-adapter-v1"
-VALIDATION_VERSION = "transcript-validation-v2"
+TENSE_RULES_VERSION = "tense-v4-coprepan-compatible"
+VALIDATION_VERSION = "transcript-validation-v3"
 TOKEN_ID_POLICY_VERSION = "token-id-preserve-v2"
 TRANSCRIPT_SPECIAL_RULES_VERSION = "transcript-special-v2"
 
@@ -121,6 +121,9 @@ CUSTOM_FOREIGN_WORDS = frozenset(
 )
 
 IGNORED_POS_GAP = frozenset({"PRON", "ADV", "PART", "ADP", "SCONJ", "CCONJ", "PUNCT", "DET"})
+PASSIVE_GAP_POS = frozenset({"ADV", "PART", "PRON"})
+SHORT_FUTURE_GAP_TOKENS = frozenset({"no", "ya", "se", "me", "te", "nos", "os", "lo", "la", "los", "las", "le", "les"})
+MODAL_PARTICIPLE_LEMMAS = frozenset({"poder", "querer", "deber", "soler", "necesitar", "intentar"})
 IGNORED_TOKENS_GAP = frozenset({"no", "ya", "aun", "aún", "todavia", "todavía", "tambien", "también", "solo", "sólo"})
 
 PAST_LABELS = frozenset(
@@ -133,20 +136,34 @@ PAST_LABELS = frozenset(
         "conditionalPerfect",
         "otherCompoundPast",
         "otherPast",
+        "perfectInfinitive",
     }
 )
 FUTURE_LABELS = frozenset({"periphrasticFuture", "periphrasticFuturePast"})
-VOICE_LABELS = frozenset({"passive", "resultative"})
+VOICE_LABELS = frozenset({"passive", "resultative_or_state"})
 TENSE_ROLE_LABELS = frozenset(
     {
-        "finite_past",
-        "auxiliary",
-        "compound_participle",
-        "future_infinitive",
+        "finite_verb",
+        "copula_or_aux",
+        "aux_passive",
+        "aux_pass_chain",
+        "copula_resultative",
+        "aux_nonfinite_perfect",
+        "nonfinite_perfect",
         "lexical_participle",
     }
 )
-TENSE_FEATURES = ("PastType", "FutureType", "VoiceType", "TenseRole")
+TENSE_FEATURES = (
+    "PastType",
+    "FutureType",
+    "VoiceType",
+    "TenseRole",
+    "VerbLemma",
+    "TenseSubtype",
+    "LinkedInfinitive",
+    "LinkedInfinitiveTokenId",
+    "LinkedInfinitiveLemma",
+)
 
 logger = logging.getLogger("corapan.annotation")
 _NLP: Any | None = None
@@ -732,6 +749,17 @@ def set_tense_feature(word: dict[str, Any], key: str, value: str) -> None:
     token_morph(word)[key] = value
 
 
+def set_past_value(word: dict[str, Any], value: str, **features: str) -> None:
+    morph = token_morph(word)
+    morph["PastType"] = value
+    for key, feature_value in features.items():
+        morph[key] = feature_value
+
+
+def token_lemma(word: dict[str, Any]) -> str:
+    return str(word.get("lemma") or "").lower()
+
+
 def is_ignorable_gap_token(word: dict[str, Any]) -> bool:
     return word.get("pos") in IGNORED_POS_GAP or normalize_token(str(word.get("text") or "")) in IGNORED_TOKENS_GAP
 
@@ -741,19 +769,18 @@ def has_finite_verb(word: dict[str, Any]) -> bool:
     return "Fin" in morph_values(morph, "VerbForm") and word.get("pos") in {"VERB", "AUX"}
 
 
-def find_near_haber_aux(words: list[dict[str, Any]], idx_part: int, max_gap: int = 4) -> dict[str, Any] | None:
-    for direction in (-1, 1):
-        skipped = 0
-        j = idx_part + direction
-        while 0 <= j < len(words) and abs(j - idx_part) <= max_gap + 1:
-            candidate = words[j]
-            if str(candidate.get("lemma") or "").lower() == "haber" and candidate.get("pos") in {"AUX", "VERB"}:
-                return candidate
-            if not is_ignorable_gap_token(candidate):
-                skipped += 1
-                if skipped > max_gap:
-                    break
-            j += direction
+def is_participle(word: dict[str, Any]) -> bool:
+    return "Part" in morph_values(token_morph(word), "VerbForm")
+
+
+def is_infinitive(word: dict[str, Any]) -> bool:
+    return "Inf" in morph_values(token_morph(word), "VerbForm")
+
+
+def next_non_ignorable(words: list[dict[str, Any]], start: int, end: int) -> int | None:
+    for idx in range(start, min(end, len(words))):
+        if not is_ignorable_gap_token(words[idx]):
+            return idx
     return None
 
 
@@ -774,49 +801,224 @@ def compound_past_label_from_haber(aux: dict[str, Any]) -> str:
     return "otherCompoundPast"
 
 
-def find_ser_estar_participle_aux(words: list[dict[str, Any]], idx_part: int, max_gap: int = 5) -> dict[str, Any] | None:
-    j = idx_part - 1
-    while j >= 0 and idx_part - j <= max_gap:
-        candidate = words[j]
-        lemma = str(candidate.get("lemma") or "").lower()
-        if lemma in {"ser", "estar"} and has_finite_verb(candidate):
-            return candidate
-        if has_finite_verb(candidate):
-            break
-        j -= 1
+def find_near_haber_aux(words: list[dict[str, Any]], idx_part: int, max_gap: int = 3) -> dict[str, Any] | None:
+    def ok_gap(start_idx: int, end_idx: int) -> bool:
+        gap = words[min(start_idx, end_idx) + 1 : max(start_idx, end_idx)]
+        return len(gap) <= max_gap and all(is_ignorable_gap_token(word) for word in gap)
+
+    for idx, word in enumerate(words):
+        if idx == idx_part:
+            continue
+        if word.get("pos") == "AUX" and token_lemma(word) == "haber" and ok_gap(idx, idx_part):
+            return word
     return None
 
 
-def apply_compound_futures(words: list[dict[str, Any]], stats: dict[str, Any]) -> None:
+def find_passive_chain(words: list[dict[str, Any]], idx_haber: int) -> tuple[int, int] | None:
+    haber = words[idx_haber]
+    if token_lemma(haber) != "haber":
+        return None
+    if haber.get("pos") not in {"AUX", "VERB"}:
+        return None
+    j = next_non_ignorable(words, idx_haber + 1, idx_haber + 5)
+    if j is None:
+        return None
+    sido = words[j]
+    if token_lemma(sido) != "ser" or not is_participle(sido):
+        return None
+    k = next_non_ignorable(words, j + 1, j + 5)
+    if k is None:
+        return None
+    lexical = words[k]
+    if is_participle(lexical) and token_lemma(lexical) not in {"ser", "haber"}:
+        return j, k
+    return None
+
+
+def apply_passive_chains(words: list[dict[str, Any]], stats: dict[str, Any]) -> None:
     for idx, word in enumerate(words):
-        if str(word.get("lemma") or "").lower() != "ir":
+        chain = find_passive_chain(words, idx)
+        if not chain:
             continue
-        if word.get("pos") not in {"AUX", "VERB"}:
+        sido_idx, lexical_idx = chain
+        past_type = compound_past_label_from_haber(word)
+        set_past_value(words[sido_idx], past_type, TenseRole="aux_pass_chain")
+        set_past_value(
+            words[lexical_idx],
+            past_type,
+            TenseRole="lexical_participle",
+            VoiceType="passive",
+        )
+        add_tense_sample(stats, "passive_chain", words[lexical_idx], words)
+
+
+def apply_perfect_infinitives(words: list[dict[str, Any]], stats: dict[str, Any]) -> None:
+    for idx, word in enumerate(words):
+        if token_lemma(word) != "haber" or not is_infinitive(word):
             continue
-        tense = morph_values(token_morph(word), "Tense")
-        label = None
-        if "Pres" in tense:
-            label = "periphrasticFuture"
-        elif tense.intersection({"Imp", "Past"}):
-            label = "periphrasticFuturePast"
-        if label is None:
+        part_idx = next_non_ignorable(words, idx + 1, idx + 5)
+        if part_idx is None or not is_participle(words[part_idx]):
             continue
-        for j in range(idx + 1, min(len(words), idx + 8)):
-            if normalize_token(str(words[j].get("text") or "")) != "a":
-                if not is_ignorable_gap_token(words[j]):
-                    break
-                continue
-            for k in range(j + 1, min(len(words), j + 8)):
-                candidate = words[k]
-                if "Inf" in morph_values(token_morph(candidate), "VerbForm") and candidate.get("pos") == "VERB":
-                    set_tense_feature(candidate, "FutureType", label)
-                    set_tense_feature(candidate, "TenseRole", "future_infinitive")
-                    stats["FutureType"][label] += 1
-                    add_tense_sample(stats, "FutureType", candidate, words)
-                    break
-                if not is_ignorable_gap_token(candidate):
-                    break
+        token_morph(word)["TenseRole"] = "aux_nonfinite_perfect"
+        set_past_value(
+            words[part_idx],
+            "perfectInfinitive",
+            TenseRole="nonfinite_perfect",
+            TenseSubtype="perfectInfinitive",
+        )
+        add_tense_sample(stats, "perfectInfinitive", words[part_idx], words)
+
+
+def past_type_from_finite_ser_estar(word: dict[str, Any]) -> str | None:
+    morph = token_morph(word)
+    tense = morph_values(morph, "Tense")
+    verbform = morph_values(morph, "VerbForm")
+    if "Fin" not in verbform:
+        return None
+    if "Past" in tense:
+        return "simplePast"
+    if "Imp" in tense:
+        return "imperfectPast"
+    return None
+
+
+def find_ser_estar_participle(words: list[dict[str, Any]], idx_aux: int, max_gap: int = 4) -> int | None:
+    for idx in range(idx_aux + 1, min(len(words), idx_aux + max_gap + 2)):
+        word = words[idx]
+        if is_participle(word) and token_lemma(word) not in {"ser", "estar", "haber"}:
+            return idx
+        if "Fin" in morph_values(token_morph(word), "VerbForm"):
             break
+        if word.get("pos") not in PASSIVE_GAP_POS:
+            break
+    return None
+
+
+def apply_ser_estar_participle_chains(words: list[dict[str, Any]], stats: dict[str, Any]) -> None:
+    for idx, word in enumerate(words):
+        lemma = token_lemma(word)
+        if lemma not in {"ser", "estar"} or word.get("pos") not in {"AUX", "VERB"}:
+            continue
+        past_type = past_type_from_finite_ser_estar(word)
+        if past_type is None:
+            continue
+        part_idx = find_ser_estar_participle(words, idx)
+        if part_idx is None:
+            continue
+
+        if lemma == "ser":
+            aux_role = "aux_passive"
+            voice_type = "passive"
+        else:
+            aux_role = "copula_resultative"
+            voice_type = "resultative_or_state"
+
+        set_past_value(
+            word,
+            past_type,
+            TenseRole=aux_role,
+            VoiceType=voice_type,
+            VerbLemma=lemma,
+        )
+        set_past_value(
+            words[part_idx],
+            past_type,
+            TenseRole="lexical_participle",
+            VoiceType=voice_type,
+        )
+        add_tense_sample(stats, f"{voice_type}_participle", words[part_idx], words)
+
+
+def attach_linked_infinitives(words: list[dict[str, Any]]) -> None:
+    for idx, word in enumerate(words):
+        morph = token_morph(word)
+        if "PastType" not in morph:
+            continue
+        if token_lemma(word) not in MODAL_PARTICIPLE_LEMMAS:
+            continue
+        inf_idx = next_non_ignorable(words, idx + 1, idx + 6)
+        if inf_idx is None or not is_infinitive(words[inf_idx]):
+            continue
+        linked = words[inf_idx]
+        morph["LinkedInfinitive"] = linked.get("text", "")
+        morph["LinkedInfinitiveTokenId"] = linked.get("token_id", "")
+        morph["LinkedInfinitiveLemma"] = linked.get("lemma", "")
+
+
+def classify_past(word: dict[str, Any], words: list[dict[str, Any]], idx: int, stats: dict[str, Any]) -> None:
+    morph = token_morph(word)
+    if "PastType" in morph:
+        return
+    tense = morph_values(morph, "Tense")
+    verbform = morph_values(morph, "VerbForm")
+    lemma = token_lemma(word)
+
+    if "Past" in tense and "Fin" in verbform:
+        set_past_value(
+            word,
+            "simplePast",
+            TenseRole="copula_or_aux" if word.get("pos") == "AUX" else "finite_verb",
+            VerbLemma=lemma,
+        )
+        add_tense_sample(stats, "simplePast", word, words)
+        return
+
+    if "Imp" in tense and "Fin" in verbform:
+        set_past_value(
+            word,
+            "imperfectPast",
+            TenseRole="copula_or_aux" if word.get("pos") == "AUX" else "finite_verb",
+            VerbLemma=lemma,
+        )
+        add_tense_sample(stats, "imperfectPast", word, words)
+        return
+
+    if "Part" in verbform and lemma != "haber":
+        aux = find_near_haber_aux(words, idx)
+        if aux:
+            label = compound_past_label_from_haber(aux)
+            set_tense_feature(word, "PastType", label)
+            add_tense_sample(stats, label, word, words)
+            return
+
+    if "Past" in tense and "Part" not in verbform:
+        set_tense_feature(word, "PastType", "otherPast")
+        add_tense_sample(stats, "otherPast", word, words)
+
+
+def can_skip_future_gap(word: dict[str, Any]) -> bool:
+    return normalize_token(str(word.get("text") or "")) in SHORT_FUTURE_GAP_TOKENS or word.get("pos") in {"PRON", "PART", "ADV"}
+
+
+def find_direct_future_infinitive(words: list[dict[str, Any]], idx_ir: int) -> int | None:
+    n = len(words)
+    j = idx_ir + 1
+    while j < min(idx_ir + 7, n) and can_skip_future_gap(words[j]):
+        j += 1
+    if j >= n or normalize_token(str(words[j].get("text") or "")) != "a":
+        return None
+    k = j + 1
+    while k < min(j + 5, n) and can_skip_future_gap(words[k]):
+        k += 1
+    if k < n and words[k].get("pos") == "VERB" and is_infinitive(words[k]):
+        return k
+    return None
+
+
+def apply_future_rules(words: list[dict[str, Any]], stats: dict[str, Any]) -> None:
+    for idx, word in enumerate(words):
+        if token_lemma(word) != "ir" or word.get("pos") not in {"AUX", "VERB"}:
+            continue
+        ir_tense = morph_values(token_morph(word), "Tense")
+        inf_idx = find_direct_future_infinitive(words, idx)
+        if inf_idx is None:
+            continue
+        if "Pres" in ir_tense:
+            set_tense_feature(words[inf_idx], "FutureType", "periphrasticFuture")
+            add_tense_sample(stats, "periphrasticFuture", words[inf_idx], words)
+        elif "Imp" in ir_tense:
+            set_tense_feature(words[inf_idx], "FutureType", "periphrasticFuturePast")
+            add_tense_sample(stats, "periphrasticFuturePast", words[inf_idx], words)
 
 
 def add_tense_sample(stats: dict[str, Any], key: str, word: dict[str, Any], words: list[dict[str, Any]]) -> None:
@@ -835,55 +1037,19 @@ def apply_tense_to_words(words: list[dict[str, Any]], stats: dict[str, Any]) -> 
     for word in words:
         clear_tense_features(word)
 
+    apply_passive_chains(words, stats)
+    apply_perfect_infinitives(words, stats)
+    apply_ser_estar_participle_chains(words, stats)
+
     for idx, word in enumerate(words):
         morph = token_morph(word)
         tense = morph_values(morph, "Tense")
         verbform = morph_values(morph, "VerbForm")
-        lemma = str(word.get("lemma") or "").lower()
-        pos = word.get("pos")
+        if {"Past", "Imp"} & tense or "Part" in verbform:
+            classify_past(word, words, idx, stats)
 
-        if "Part" in verbform and lemma != "haber":
-            aux = find_near_haber_aux(words, idx)
-            if aux is not None:
-                label = compound_past_label_from_haber(aux)
-                set_tense_feature(word, "PastType", label)
-                set_tense_feature(word, "TenseRole", "compound_participle")
-                set_tense_feature(aux, "TenseRole", "auxiliary")
-                stats["PastType"][label] += 1
-                add_tense_sample(stats, label, word, words)
-                continue
-            se_aux = find_ser_estar_participle_aux(words, idx)
-            if se_aux is not None:
-                voice = "resultative" if str(se_aux.get("lemma") or "").lower() == "estar" else "passive"
-                set_tense_feature(word, "VoiceType", voice)
-                set_tense_feature(word, "TenseRole", "lexical_participle")
-                set_tense_feature(se_aux, "TenseRole", "auxiliary")
-                stats["VoiceType"][voice] += 1
-                stats["TenseRole"]["lexical_participle"] += 1
-                add_tense_sample(stats, f"{voice}_participle", word, words)
-                continue
-            set_tense_feature(word, "TenseRole", "lexical_participle")
-            stats["TenseRole"]["lexical_participle"] += 1
-            continue
-
-        if "Fin" in verbform and pos == "VERB":
-            label = None
-            if "Past" in tense:
-                label = "simplePast"
-            elif "Imp" in tense:
-                label = "imperfectPast"
-            if label:
-                set_tense_feature(word, "PastType", label)
-                set_tense_feature(word, "TenseRole", "finite_past")
-                stats["PastType"][label] += 1
-                add_tense_sample(stats, label, word, words)
-            elif "Past" in tense or "Imp" in tense:
-                set_tense_feature(word, "PastType", "otherPast")
-                set_tense_feature(word, "TenseRole", "finite_past")
-                stats["PastType"]["otherPast"] += 1
-                add_tense_sample(stats, "otherPast", word, words)
-
-    apply_compound_futures(words, stats)
+    attach_linked_infinitives(words)
+    apply_future_rules(words, stats)
 
 
 def apply_tense(data: dict[str, Any]) -> dict[str, Any]:
@@ -897,17 +1063,22 @@ def apply_tense(data: dict[str, Any]) -> dict[str, Any]:
     for seg in data.get("segments", []):
         if isinstance(seg, dict) and isinstance(seg.get("words"), list):
             apply_tense_to_words(seg["words"], stats)
-    final_tense_roles: Counter[str] = Counter()
+    final_counts: dict[str, Counter[str]] = {
+        "PastType": Counter(),
+        "FutureType": Counter(),
+        "VoiceType": Counter(),
+        "TenseRole": Counter(),
+    }
     for _seg_idx, _word_idx, _seg, word in iter_words(data):
         morph = word.get("morph") if isinstance(word.get("morph"), dict) else {}
-        if "TenseRole" in morph:
-            final_tense_roles[str(morph["TenseRole"])] += 1
-    stats["TenseRole"] = final_tense_roles
+        for key, counter in final_counts.items():
+            if key in morph:
+                counter[str(morph[key])] += 1
     return {
-        "PastType": dict(stats["PastType"]),
-        "FutureType": dict(stats["FutureType"]),
-        "VoiceType": dict(stats["VoiceType"]),
-        "TenseRole": dict(stats["TenseRole"]),
+        "PastType": dict(final_counts["PastType"]),
+        "FutureType": dict(final_counts["FutureType"]),
+        "VoiceType": dict(final_counts["VoiceType"]),
+        "TenseRole": dict(final_counts["TenseRole"]),
         "samples": {key: list(value) for key, value in stats["samples"].items()},
     }
 
@@ -994,6 +1165,15 @@ def validate_transcript(data: dict[str, Any], existing_ids: dict[tuple[int, int]
             for key, allowed in labels.items():
                 if key in morph and morph[key] not in allowed:
                     result.errors.append(f"segment[{seg_idx}].words[{word_idx}] invalid {key}={morph[key]}")
+            tense_role = morph.get("TenseRole")
+            if tense_role == "finite_past":
+                result.errors.append(f"segment[{seg_idx}].words[{word_idx}] invalid legacy TenseRole=finite_past")
+            if tense_role in {"finite_verb", "copula_or_aux", "aux_passive", "copula_resultative"} and not morph.get("VerbLemma"):
+                result.errors.append(f"segment[{seg_idx}].words[{word_idx}] missing VerbLemma for TenseRole={tense_role}")
+            if morph.get("VoiceType") == "passive" and tense_role == "auxiliary":
+                result.errors.append(f"segment[{seg_idx}].words[{word_idx}] passive auxiliary uses legacy TenseRole=auxiliary")
+            if morph.get("VoiceType") == "passive" and tense_role == "lexical_participle" and "PastType" not in morph:
+                result.errors.append(f"segment[{seg_idx}].words[{word_idx}] passive lexical participle missing PastType")
         if word_starts and word_ends:
             if min(word_starts) < utt_start - 2000 or max(word_ends) > utt_end + 2000:
                 result.warnings.append(f"segment[{seg_idx}] word times outside utterance range")
@@ -1196,13 +1376,19 @@ class ProgressTracker:
     def write(self, status: str) -> None:
         if self.dry_run:
             return
-        atomic_write_json(self.progress_json, self.snapshot(status))
+        try:
+            atomic_write_json(self.progress_json, self.snapshot(status))
+        except OSError as exc:
+            logger.warning("Could not write progress JSON %s: %s", self.progress_json, exc)
 
     def append_jsonl(self) -> None:
         if self.dry_run:
             return
-        with self.progress_jsonl.open("a", encoding="utf-8") as fh:
-            fh.write(json.dumps(self.snapshot("running"), ensure_ascii=False) + "\n")
+        try:
+            with self.progress_jsonl.open("a", encoding="utf-8") as fh:
+                fh.write(json.dumps(self.snapshot("running"), ensure_ascii=False) + "\n")
+        except OSError as exc:
+            logger.warning("Could not append progress JSONL %s: %s", self.progress_jsonl, exc)
 
 
 # =============================================================================
