@@ -35,6 +35,11 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     PATH=/home/corapan/.local/bin:$PATH
 
+# Security floor for libbrotli1 (CVE-2026-111497, fixed in 1.1.0-2+deb13u1 on
+# Debian 13). libbrotli1 is pulled in by curl/ffmpeg; it is named explicitly so an
+# already installed older version is upgraded, and the build fails below the floor.
+ARG LIBBROTLI1_MIN_VERSION=1.1.0-2+deb13u1
+
 # Install runtime dependencies only (including libpq for psycopg2 runtime)
 RUN apt-get update && apt-get install -y --no-install-recommends \
     ffmpeg \
@@ -42,6 +47,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
     libpq5 \
     postgresql-client \
+    libbrotli1 \
+    && dpkg --compare-versions "$(dpkg-query -W -f='${Version}' libbrotli1)" ge "${LIBBROTLI1_MIN_VERSION}" \
     && rm -rf /var/lib/apt/lists/*
 
 # Create non-root user for security

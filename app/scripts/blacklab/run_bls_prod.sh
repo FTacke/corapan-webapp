@@ -17,6 +17,15 @@
 # Options:
 #   HEAP_MAX  - Maximum heap size (default: 2g)
 #   HEAP_INIT - Initial heap size (default: 512m)
+#   BLACKLAB_IMAGE_ID - override the pinned image ID (rollback only)
+#
+# Image:
+#   The security overlay of the upstream BlackLab image (same BlackLab build,
+#   patched libbrotli1, CVE-2026-111497) is built locally and published to the
+#   server by build_blacklab_security_image.sh; it is not in a registry, so the
+#   script does not pull. The container is started by the pinned image ID and
+#   the old container is only stopped after that ID has been found locally.
+#   Previous image: instituutnederlandsetaal/blacklab@sha256:3753dbce4fee11f8706b63c5b94bf06eac9d3843c75bf2eef6412ff47208c2e7
 #
 # =============================================================================
 
@@ -24,7 +33,8 @@ set -euo pipefail
 
 # Configuration
 CONTAINER_NAME="corapan-blacklab"
-IMAGE="instituutnederlandsetaal/blacklab@sha256:3753dbce4fee11f8706b63c5b94bf06eac9d3843c75bf2eef6412ff47208c2e7"
+IMAGE="corapan/blacklab:5.0.0-snapshot-20260112-sec1"
+IMAGE_ID="${BLACKLAB_IMAGE_ID:-sha256:327fe4fb0849ee9c20ed9e63b7d7fab06fa623d97657bcaa7f79114b23b161f5}"
 HOST_PORT=8081
 CONTAINER_PORT=8080
 NETWORK_NAME="corapan-network-prod"
@@ -142,6 +152,13 @@ if [ ! -d "$CONFIG_DIR" ]; then
     exit 1
 fi
 
+if ! docker image inspect "$IMAGE_ID" >/dev/null 2>&1; then
+    error "Pinned BlackLab image not present on this host: $IMAGE_ID ($IMAGE)"
+    error "Publish it with app/scripts/blacklab/build_blacklab_security_image.sh --publish <host>"
+    exit 1
+fi
+log "Pinned image present: $IMAGE_ID"
+
 INDEX_SIZE=$(du -sh "$INDEX_DIR" | cut -f1)
 log "Index directory: $(quote_path "$INDEX_DIR") ($INDEX_SIZE)"
 
@@ -154,13 +171,10 @@ log "Stopping old container (if running)..."
 docker stop "$CONTAINER_NAME" 2>/dev/null && log "Stopped: $CONTAINER_NAME" || true
 docker rm "$CONTAINER_NAME" 2>/dev/null && log "Removed: $CONTAINER_NAME" || true
 
-# Step 4: Pull latest image
-log "Pulling latest BlackLab image..."
-docker pull "$IMAGE"
-
-# Step 5: Start new container
+# Step 4: Start new container (image presence was verified before the stop)
 log "Starting BlackLab container..."
 log "  Container: $CONTAINER_NAME"
+log "  Image: $IMAGE_ID ($IMAGE)"
 log "  Port: $HOST_PORT -> $CONTAINER_PORT"
 log "  Network: $NETWORK_NAME"
 log "  Heap: Xms=$HEAP_INIT, Xmx=$HEAP_MAX"
@@ -176,9 +190,9 @@ docker run -d \
     -e BLACKLAB_CONFIG_DIR="/etc/blacklab" \
     -v "${INDEX_DIR}:/data/index/corapan:ro" \
     -v "${CONFIG_DIR}:/etc/blacklab:ro" \
-    "$IMAGE"
+    "$IMAGE_ID"
 
-# Step 6: Wait for container to be ready
+# Step 5: Wait for container to be ready
 log "Waiting for BlackLab to start..."
 sleep 5
 
@@ -191,7 +205,7 @@ else
     exit 1
 fi
 
-# Step 7: Health check
+# Step 6: Health check
 log "Checking BlackLab health..."
 MAX_RETRIES=12
 RETRY_INTERVAL=5
@@ -233,7 +247,7 @@ echo "=============================================="
 log "BlackLab server started successfully!"
 echo "=============================================="
 echo "Container: $CONTAINER_NAME"
-echo "Image: $IMAGE"
+echo "Image: $IMAGE_ID ($IMAGE)"
 echo "Port: http://localhost:$HOST_PORT/blacklab-server/"
 echo "Network: $NETWORK_NAME"
 echo "Index: $(quote_path "$INDEX_DIR") ($INDEX_SIZE)"

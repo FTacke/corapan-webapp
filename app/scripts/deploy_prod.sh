@@ -6,10 +6,10 @@
 # This script is executed by the GitHub self-hosted runner on the server
 # after a push to the main branch. It performs the following steps:
 #   1. Fetches latest code from origin/main
-#   2. Builds the Docker image
-#   3. Stops and removes the old container
-#   4. Starts a new container with the configured volumes
-#   5. Optionally runs the database setup script
+#   2. Builds the web Docker image (the running container is untouched if it fails)
+#   3. Recreates only the web container with the configured volumes
+#      (the db container is started if needed, never recreated)
+#   4. Verifies mounts and health
 #
 # Prerequisites:
 #   - Docker installed and running
@@ -180,13 +180,23 @@ else
 fi
 echo ""
 
-# Step 3: Start via Docker Compose (canonical top-level mounts)
-log_info "Starting production stack via ${COMPOSE_VARIANT}..."
+# Step 3: Build the web image first; a failed build leaves the running container untouched
+log_info "Building web image via ${COMPOSE_VARIANT}..."
 "${COMPOSE_CMD[@]}" --env-file "${ENV_FILE}" \
-  -f "${COMPOSE_FILE}" up -d --force-recreate --build
+  -f "${COMPOSE_FILE}" build web
+WEB_IMAGE="$("${COMPOSE_CMD[@]}" --env-file "${ENV_FILE}" -f "${COMPOSE_FILE}" config --images | grep -- '-web$' | head -n 1)"
+log_info "Built image: ${WEB_IMAGE} $(docker image inspect "${WEB_IMAGE}" --format '{{.Id}}')"
+log_info "Built image libbrotli1: $(docker run --rm --entrypoint dpkg-query "${WEB_IMAGE}" -W -f='${Version}' libbrotli1)"
 echo ""
 
-# Step 4: Verify container is running
+# Step 4: Recreate only the web container; the db container is started if
+# needed but not recreated (its volume and container stay as they are)
+log_info "Recreating web container via ${COMPOSE_VARIANT}..."
+"${COMPOSE_CMD[@]}" --env-file "${ENV_FILE}" \
+  -f "${COMPOSE_FILE}" up -d --no-build --force-recreate web
+echo ""
+
+# Step 5: Verify container is running
 log_info "Verifying container is running..."
 if docker ps --format '{{.Names}}' | grep -qx "${CONTAINER_NAME}"; then
     log_info "Container is running: ${CONTAINER_NAME}"
@@ -197,7 +207,7 @@ else
 fi
 echo ""
 
-# Step 5: Verify canonical mounts (container destinations + write test)
+# Step 6: Verify canonical mounts (container destinations + write test)
 log_info "Verifying canonical mounts..."
 
 mount_dests="$(docker inspect "${CONTAINER_NAME}" --format '{{range .Mounts}}{{println .Destination}}{{end}}' \
@@ -231,7 +241,7 @@ log_info "Mount destinations present"
 log_info "Write check ok"
 echo ""
 
-# Step 6: Health check (wait/retry)
+# Step 7: Health check (wait/retry)
 log_info "Checking health endpoint (with retries)..."
 
 max_tries=60
